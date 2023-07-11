@@ -144,49 +144,66 @@ class Mill:
 
     async def update_devices(self):
         """Request data."""
-        window_states = {0: "disabled", 3: "enabled_not_active", 2: "enabled_active"}
         homes = await self.get_home_list()
+        tasks = []
         for home in homes:
-            for room in await self.request(f"houses/{home.get('id')}/devices"):
-                for device in room.get("devices", []):
-                    device_type = device.get("deviceType", {}).get("parentType", {}).get("name")
-                    if device_type in ("Heaters", "Sockets"):
-                        _id = device.get("deviceId")
-                        heater: Heater = self.heaters.get(_id, Heater())
-                        if heater.last_updated and (
-                            dt.datetime.now() - heater.last_updated
-                            < dt.timedelta(seconds=15)
-                        ):
-                            continue
-                        heater.name = device.get("customName")
-                        heater.room_name = device.get("roomName")
-                        heater.device_id = _id
-                        heater.available = device.get("isConnected")
-                        heater.model = (
-                            device.get("deviceType", {}).get("deviceType", {}).get("name")
-                        )
-                        heater.home_id = home.get("houseId")
-                        heater.set_temp = device.get("lastMetrics").get(
-                            "temperature"
-                        )
-                        heater.current_temp = device.get("lastMetrics").get(
-                            "temperatureAmbient"
-                        )
-                        heater.power_status = (
-                            device.get("lastMetrics").get("powerStatus", 0) > 0
-                        )
-                        heater.open_window = window_states.get(
-                            device.get("lastMetrics").get("openWindowsStatus")
-                        )
-                        heater.day_consumption = device.get("energyUsageForCurrentDay", 0)
-                        # if heater.last_updated_year_consumption is None or now - heater.last_updated_year_consumption > dt.timedelta(hours=2):
-                        #     heater.year_consumption =  # call statistics endpoint
-                        #     heater.last_updated_year_consumption = now
-                        self.heaters[_id] = heater
-                        print(heater.name, heater.current_temp, heater.set_temp )
-                        print(device)
-                    else:
-                        _LOGGER.error("Unsupported device, %s %s", device_type, device)
+            tasks.append(self._update_home(home))
+        await asyncio.gather(*tasks)
+
+    async def _update_home(self, home):
+        tasks = []
+        for room in await self.request(f"houses/{home.get('id')}/devices"):
+            tasks.append(self._update_room(home, room))
+        await asyncio.gather(*tasks)
+
+    async def _update_room(self, home, room):
+        room_data = await self.request(f"rooms/{home.get('id')}/devices")
+        print(room_data)
+
+        tasks = []
+        for device in room.get("devices", []):
+            tasks.append(self._update_device(device, home, room_data))
+        await asyncio.gather(*tasks)
+
+    async def _update_device(self, device, home, room_data):
+        window_states = {0: "disabled", 3: "enabled_not_active", 2: "enabled_active"}
+        device_type = device.get("deviceType", {}).get("parentType", {}).get("name")
+
+        now = dt.datetime.now()
+
+        if device_type in ("Heaters", "Sockets"):
+            _id = device.get("deviceId")
+            device_stats = await self.request(
+                f"devices/{_id}/statistics",
+                {"period": "monthly", "year": now.year, "month": 1, "day": 1},
+            )
+            heater: Heater = self.heaters.get(_id, Heater() if device_type == "Heaters" else Socket())
+            if heater.last_updated and (
+                now - heater.last_updated < dt.timedelta(seconds=15)
+            ):
+                return
+            heater.name = device.get("customName")
+            heater.room_name = device.get("roomName")
+            heater.device_id = _id
+            heater.available = device.get("isConnected")
+            heater.model = (
+                device.get("deviceType", {}).get("deviceType", {}).get("name")
+            )
+            heater.home_id = home.get("houseId")
+            heater.set_temp = device.get("lastMetrics").get("temperature")
+            heater.current_temp = device.get("lastMetrics").get("temperatureAmbient")
+            heater.power_status = device.get("lastMetrics").get("powerStatus", 0) > 0
+            heater.open_window = window_states.get(
+                device.get("lastMetrics").get("openWindowsStatus")
+            )
+            heater.day_consumption = device.get("energyUsageForCurrentDay", 0) / 1000.0
+            heater.year_consumption = (
+                device_stats.get("deviceInfo", {}).get("totalPower", 0) / 1000.0
+            )
+            heater.room_avg_temp = room_data.get("averageTemperature")
+            self.heaters[_id] = heater
+        else:
+            _LOGGER.error("Unsupported device, %s %s", device_type, device)
 
     async def set_room_temperatures_by_name(
         self, room_name, sleep_temp=None, comfort_temp=None, away_temp=None
@@ -230,10 +247,15 @@ class Mill:
 
     async def heater_control(self, device_id, power_status):
         """Set heater temps."""
+        if device_id not in self.heaters:
+            _LOGGER.error("Device id %s not found", device_id)
+            return
         payload = {
-            "deviceType": "Heaters",
+            "deviceType": "Sockets" if isinstance(self.heaters[device_id], Socket) else "Heaters",
             "enabled": power_status > 0,
-            "settings": {"operation_mode": "control_individually" if power_status > 0 else "off"}
+            "settings": {
+                "operation_mode": "control_individually" if power_status > 0 else "off"
+            },
         }
         if await self.request(f"devices/{device_id}/settings", payload, patch=True):
             if power_status > 0:
@@ -248,14 +270,16 @@ class Mill:
         payload = {
             "deviceType": "Heaters",
             "enabled": True,
-            "settings": {"operation_mode": "control_individually",
-                         "temperature_normal": set_temp,
-                         }
+            "settings": {
+                "operation_mode": "control_individually",
+                "temperature_normal": set_temp,
+            },
         }
         print("set_heater_temp", set_temp)
         if await self.request(f"devices/{device_id}/settings", payload, patch=True):
             self.heaters[device_id].set_temp = set_temp
             self.heaters[device_id].last_updated = dt.datetime.now()
+
 
 @dataclass
 class MillDevice:
@@ -283,9 +307,11 @@ class Heater(MillDevice):
     is_heating: bool | None = None
     day_consumption: float | None = None
     year_consumption: float | None = None
-    last_updated_year_consumption: dt.datetime | None = None
     room_name: str | None = None
+    room_avg_temp: float | None = None
 
+@dataclass
+class Socket(Heater):
 
 @dataclass
 class _SensorAttr:
