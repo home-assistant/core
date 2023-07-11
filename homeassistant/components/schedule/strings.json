@@ -20,5 +20,11 @@
         }
       }
     }
+  },
+  "services": {
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads schedules from the YAML-configuration."
+    }
   }
 }

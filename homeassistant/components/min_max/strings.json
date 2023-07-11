@@ -43,5 +43,11 @@
         "sum": "Sum"
       }
     }
+  },
+  "services": {
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads min/max sensors from the YAML-configuration."
+    }
   }
 }
