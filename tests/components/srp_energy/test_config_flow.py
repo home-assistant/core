@@ -1,13 +1,23 @@
 """Test the SRP Energy config flow."""
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import ACCNT_ID, ACCNT_IS_TOU, ACCNT_PASSWORD, ACCNT_USERNAME, TEST_USER_INPUT
+from . import (
+    ACCNT_ID,
+    ACCNT_ID_2,
+    ACCNT_IS_TOU,
+    ACCNT_NAME,
+    ACCNT_NAME_2,
+    ACCNT_PASSWORD,
+    ACCNT_USERNAME,
+    TEST_USER_INPUT,
+    TEST_USER_INPUT_2,
+)
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +27,7 @@ async def test_show_form(
 ) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -34,7 +44,7 @@ async def test_show_form(
         await hass.async_block_till_done()
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "test home"
+        assert result["title"] == ACCNT_NAME
 
         assert "data" in result
         assert result["data"][CONF_ID] == ACCNT_ID
@@ -56,7 +66,7 @@ async def test_form_invalid_account(
     mock_srp_energy_config_flow.validate.side_effect = ValueError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -75,7 +85,7 @@ async def test_form_invalid_auth(
     mock_srp_energy_config_flow.validate.return_value = False
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -94,7 +104,7 @@ async def test_form_unknown_error(
     mock_srp_energy_config_flow.validate.side_effect = Exception
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -109,18 +119,53 @@ async def test_flow_entry_already_configured(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test user input for config_entry that already exists."""
-    user_input = {
-        CONF_ID: init_integration.data[CONF_ID],
-        CONF_USERNAME: "abba2",
-        CONF_PASSWORD: "ana2",
-        CONF_IS_TOU: False,
-    }
+
+    # Verify mock config setup from fixture
+    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.data[CONF_ID] == ACCNT_ID
+    assert init_integration.unique_id == ACCNT_ID
+
+    # Attempt a second config using same account id. This is the unique id between configs.
+    user_input = TEST_USER_INPUT_2
+    user_input[CONF_ID] = init_integration.data[CONF_ID]
 
     assert user_input[CONF_ID] == ACCNT_ID
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}, data=user_input
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input
     )
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_multiple_configs(
+    hass: HomeAssistant, init_integration: MockConfigEntry, capsys
+) -> None:
+    """Test multiple config entries."""
+    # Verify mock config setup from fixture
+    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.data[CONF_ID] == ACCNT_ID
+    assert init_integration.unique_id == ACCNT_ID
+
+    # Attempt a second config using different account id. This is the unique id between configs.
+    assert TEST_USER_INPUT_2[CONF_ID] != ACCNT_ID
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=TEST_USER_INPUT_2
+    )
+
+    # Verify created
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == ACCNT_NAME_2
+
+    assert "data" in result
+    assert result["data"][CONF_ID] == ACCNT_ID_2
+    assert result["data"][CONF_USERNAME] == ACCNT_USERNAME
+    assert result["data"][CONF_PASSWORD] == ACCNT_PASSWORD
+    assert result["data"][CONF_IS_TOU] == ACCNT_IS_TOU
+
+    # Verify multiple configs
+    entries = hass.config_entries.async_entries()
+    domain_entries = [entry for entry in entries if entry.domain == DOMAIN]
+    assert len(domain_entries) == 2

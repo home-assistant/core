@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.srp_energy.const import DOMAIN, PHOENIX_TIME_ZONE
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
@@ -42,8 +43,7 @@ def fixture_test_date(hass: HomeAssistant, hass_tz_info) -> dt.datetime | None:
 def fixture_mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_USER_INPUT,
+        domain=DOMAIN, data=TEST_USER_INPUT, unique_id=TEST_USER_INPUT[CONF_ID]
     )
 
 
