@@ -41,5 +41,41 @@
         }
       }
     }
+  },
+  "services": {
+    "see": {
+      "name": "See",
+      "description": "Control tracked device.",
+      "fields": {
+        "mac": {
+          "name": "MAC address",
+          "description": "MAC address of device."
+        },
+        "dev_id": {
+          "name": "Device ID",
+          "description": "Id of device (find id in known_devices.yaml)."
+        },
+        "host_name": {
+          "name": "Host name",
+          "description": "Hostname of device."
+        },
+        "location_name": {
+          "name": "Location name",
+          "description": "Name of location where device is located (not_home is away)."
+        },
+        "gps": {
+          "name": "GPS coordinates",
+          "description": "GPS coordinates where device is located, specified by latitude and longitude."
+        },
+        "gps_accuracy": {
+          "name": "GPS accuracy",
+          "description": "Accuracy of GPS coordinates."
+        },
+        "battery": {
+          "name": "Battery level",
+          "description": "Battery level of device."
+        }
+      }
+    }
   }
 }
