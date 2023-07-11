@@ -99,6 +99,7 @@ def validate_services(config: Config, integration: Integration) -> None:
         integration.add_error(
             "services", f"Invalid services.yaml: {humanize_error(data, err)}"
         )
+        return
 
     # Try loading translation strings
     if integration.core:
