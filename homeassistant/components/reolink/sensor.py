@@ -9,6 +9,7 @@ from decimal import Decimal
 from reolink_aio.api import Host
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -62,11 +63,13 @@ async def async_setup_entry(
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
+    entities: list[ReolinkHostSensorEntity | EventConnectionSensorEntity] = [
         ReolinkHostSensorEntity(reolink_data, entity_description)
         for entity_description in HOST_SENSORS
         if entity_description.supported(reolink_data.host.api)
-    )
+    ]
+    entities.append(EventConnectionSensorEntity(reolink_data))
+    async_add_entities(entities)
 
 
 class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
@@ -89,3 +92,30 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api)
+
+
+class EventConnectionSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
+    """Reolink Event connection sensor."""
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+    ) -> None:
+        """Initialize Reolink binary sensor."""
+        super().__init__(reolink_data)
+        self.entity_description = SensorEntityDescription(
+            key="event_connection",
+            name="Event connection",
+            icon="mdi:swap-horizontal",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            options=["ONVIF push", "ONVIF long poll", "Fast poll"],
+        )
+
+        self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
+
+    @property
+    def native_value(self) -> str:
+        """Return the value reported by the sensor."""
+        return self._host.event_connection
