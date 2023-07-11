@@ -302,7 +302,7 @@ aioqsw==0.3.2
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2023.01.0
+aioridwell==2023.07.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
