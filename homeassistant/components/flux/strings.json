@@ -37,5 +37,15 @@
         }
       }
     }
+  },
+  "issues": {
+    "future_yaml_deprecation": {
+      "title": "Flux YAML configuration will eventually be removed",
+      "description": "Flux integration can now be configured from the user interface.\n\nEventually, support for configuring Flux via YAML will be phased out.\nThis transition will occur once code has been written to convert existing Flux YAML configurations into config entries.\n\nYou could be the one to write this code!\nClick \"Learn more\" to learn more\n\nUntil then, you'll encounter a somewhat persistent, albeit slightly annoying, notification. =)"
+    },
+    "deprecated_yaml": {
+      "title": "Flux YAML configuration is being removed",
+      "description": "Configuring Flux using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Flux YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
   }
 }
