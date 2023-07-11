@@ -252,15 +252,15 @@
         },
         "rgb_color": {
           "name": "Color",
-          "description": "The color (based on RGB - red, green, blue)."
+          "description": "The color in RGB format. A list of three integers between 0 and 255 representing the values of red, green, and blue."
         },
         "rgbw_color": {
           "name": "RGBW-color",
-          "description": "A list containing four integers between 0 and 255 representing the RGBW (red, green, blue, white) color."
+          "description": "The color in RGBW format. A list of four integers between 0 and 255 representing the values of red, green, blue, and white."
         },
         "rgbww_color": {
           "name": "RGBWW-color",
-          "description": "A list containing five integers between 0 and 255 representing the RGBWW (red, green, blue, cold white, warm white) color."
+          "description": "The color in RGBWW format. A list of five integers between 0 and 255 representing the values of red, green, blue, cold white, and warm white."
         },
         "color_name": {
           "name": "Color name",
@@ -268,11 +268,11 @@
         },
         "hs_color": {
           "name": "Hue/Sat color",
-          "description": "Color in hue/sat format. Hue is 0-360 and Sat is 0-100."
+          "description": "Color in hue/sat format. A list of two integers. Hue is 0-360 and Sat is 0-100."
         },
         "xy_color": {
           "name": "XY-color",
-          "description": "Color in XY-format."
+          "description": "Color in XY-format. A list of two decimal numbers between 0 and 1."
         },
         "color_temp": {
           "name": "Color temperature",
