@@ -16,5 +16,17 @@
         "title": "Connect"
       }
     }
+  },
+  "services": {
+    "set_time_to": {
+      "name": "Set time to",
+      "description": "Controls timers to turn the system on or off after a set number of minutes.",
+      "fields": {
+        "minutes": {
+          "name": "Minutes",
+          "description": "Minutes until action."
+        }
+      }
+    }
   }
 }
