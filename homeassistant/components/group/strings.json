@@ -190,5 +190,55 @@
         "product": "Product"
       }
     }
+  },
+  "services": {
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads group configuration, entities, and notify services from YAML-configuration."
+    },
+    "set": {
+      "name": "Set",
+      "description": "Creates/Updates a user group.",
+      "fields": {
+        "object_id": {
+          "name": "Object ID",
+          "description": "Group ID and part of entity ID."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name of group."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Name of icon for the group."
+        },
+        "entities": {
+          "name": "Entities",
+          "description": "List of all members in the group. Not compatible with 'delta'."
+        },
+        "add_entities": {
+          "name": "Add Entities",
+          "description": "List of members that will change on group listening."
+        },
+        "remove_entities": {
+          "name": "Remove Entities",
+          "description": "List of members that will be removed from group listening."
+        },
+        "all": {
+          "name": "All",
+          "description": "Enable this option if the group should only turn on when all entities are on."
+        }
+      }
+    },
+    "remove": {
+      "name": "Remove",
+      "description": "Removes a user group.",
+      "fields": {
+        "object_id": {
+          "name": "Object ID",
+          "description": "Group ID and part of entity ID."
+        }
+      }
+    }
   }
 }
