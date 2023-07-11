@@ -18,7 +18,7 @@
         },
         "domain": {
           "name": "Domain",
-          "description": "Integration domain to use the icon of, for displaying the logbook entry."
+          "description": "Determines which icon is used in the logbook entry. The icon illustrates the integration domain related to this logbook entry."
         }
       }
     }
