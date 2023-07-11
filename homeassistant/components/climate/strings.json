@@ -164,7 +164,7 @@
         },
         "target_temp_low": {
           "name": "Target temperature low",
-          "description": "Low target temperatuire."
+          "description": "Low target temperature."
         },
         "hvac_mode": {
           "name": "HVAC mode",
@@ -228,8 +228,8 @@
         "auto": "Auto",
         "cool": "Cool",
         "dry": "Dry",
-        "fan_only": "Fan Only",
-        "heat_cool": "Heat/Cool",
+        "fan_only": "Fan only",
+        "heat_cool": "Heat/cool",
         "heat": "Heat"
       }
     }
