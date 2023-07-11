@@ -436,10 +436,10 @@ class ReolinkHost:
     def event_connection(self) -> str:
         """Return the event connection type."""
         if self._webhook_reachable:
-            return "onvifpush"
+            return "onvif_push"
         if self._long_poll_received:
-            return "onviflongpoll"
-        return "fastpoll"
+            return "onvif_long_poll"
+        return "fast_poll"
 
     async def _async_long_polling(self, *_) -> None:
         """Use ONVIF long polling to immediately receive events."""

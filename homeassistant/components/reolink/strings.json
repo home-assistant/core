@@ -96,9 +96,9 @@
       "event_connection": {
         "name": "Event connection",
         "state": {
-          "onvifpush": "ONVIF push",
-          "onviflongpoll": "ONVIF long poll",
-          "fastpoll": "Fast poll"
+          "onvif_push": "ONVIF push",
+          "onvif_long_poll": "ONVIF long poll",
+          "fast_poll": "Fast poll"
         }
       },
       "wifi_signal": {

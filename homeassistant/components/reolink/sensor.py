@@ -110,7 +110,7 @@ class EventConnectionSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-            options=["onvifpush", "onviflongpoll", "fastpoll"],
+            options=["onvif_push", "onvif_long_poll", "fast_poll"],
         )
 
         self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
