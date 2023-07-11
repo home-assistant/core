@@ -2,12 +2,11 @@
 from typing import Any, Optional
 
 
-def get_default_device_response(device_type: int) -> dict[str, Any]:
+def get_default_device_response(device_type: int | None) -> dict[str, Any]:
     """Return default device response."""
-    return {
+    response = {
         "version": "2.59.32",
         "mac": "6001940376EB",
-        "type": device_type,
         "ssid": "personal",
         "ip": "192.168.0.23",
         "mask": "255.255.255.0",
@@ -17,6 +16,9 @@ def get_default_device_response(device_type: int) -> dict[str, Any]:
         "connected": True,
         "signal": 94,
     }
+    if device_type is not None:
+        response["type"] = device_type
+    return response
 
 
 def get_default_bulb_state() -> dict[str, Any]:

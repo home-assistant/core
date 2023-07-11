@@ -77,19 +77,19 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
 
-    TURN_ON = 1
-    TURN_OFF = 2
+    TURN_ON = 1  # Deprecated, not supported by StateVacuumEntity
+    TURN_OFF = 2  # Deprecated, not supported by StateVacuumEntity
     PAUSE = 4
     STOP = 8
     RETURN_HOME = 16
     FAN_SPEED = 32
     BATTERY = 64
-    STATUS = 128
+    STATUS = 128  # Deprecated, not supported by StateVacuumEntity
     SEND_COMMAND = 256
     LOCATE = 512
     CLEAN_SPOT = 1024
     MAP = 2048
-    STATE = 4096
+    STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
 
 
@@ -127,24 +127,73 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
     component.async_register_entity_service(
-        SERVICE_START_PAUSE, {}, "async_start_pause"
+        SERVICE_TURN_ON,
+        {},
+        "async_turn_on",
+        [VacuumEntityFeature.TURN_ON],
     )
-    component.async_register_entity_service(SERVICE_START, {}, "async_start")
-    component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
     component.async_register_entity_service(
-        SERVICE_RETURN_TO_BASE, {}, "async_return_to_base"
+        SERVICE_TURN_OFF,
+        {},
+        "async_turn_off",
+        [VacuumEntityFeature.TURN_OFF],
     )
-    component.async_register_entity_service(SERVICE_CLEAN_SPOT, {}, "async_clean_spot")
-    component.async_register_entity_service(SERVICE_LOCATE, {}, "async_locate")
-    component.async_register_entity_service(SERVICE_STOP, {}, "async_stop")
+    component.async_register_entity_service(
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [VacuumEntityFeature.TURN_OFF | VacuumEntityFeature.TURN_ON],
+    )
+    # start_pause is a legacy service, only supported by VacuumEntity, and only needs
+    # VacuumEntityFeature.PAUSE
+    component.async_register_entity_service(
+        SERVICE_START_PAUSE,
+        {},
+        "async_start_pause",
+        [VacuumEntityFeature.PAUSE],
+    )
+    component.async_register_entity_service(
+        SERVICE_START,
+        {},
+        "async_start",
+        [VacuumEntityFeature.START],
+    )
+    component.async_register_entity_service(
+        SERVICE_PAUSE,
+        {},
+        "async_pause",
+        [VacuumEntityFeature.PAUSE],
+    )
+    component.async_register_entity_service(
+        SERVICE_RETURN_TO_BASE,
+        {},
+        "async_return_to_base",
+        [VacuumEntityFeature.RETURN_HOME],
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAN_SPOT,
+        {},
+        "async_clean_spot",
+        [VacuumEntityFeature.CLEAN_SPOT],
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCATE,
+        {},
+        "async_locate",
+        [VacuumEntityFeature.LOCATE],
+    )
+    component.async_register_entity_service(
+        SERVICE_STOP,
+        {},
+        "async_stop",
+        [VacuumEntityFeature.STOP],
+    )
     component.async_register_entity_service(
         SERVICE_SET_FAN_SPEED,
         {vol.Required(ATTR_FAN_SPEED): cv.string},
         "async_set_fan_speed",
+        [VacuumEntityFeature.FAN_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_SEND_COMMAND,
@@ -153,6 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
         },
         "async_send_command",
+        [VacuumEntityFeature.SEND_COMMAND],
     )
 
     return True
@@ -379,12 +429,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
-    async def async_pause(self) -> None:
-        """Not supported."""
-
-    async def async_start(self) -> None:
-        """Not supported."""
-
 
 @dataclass
 class StateVacuumEntityDescription(EntityDescription):
@@ -432,12 +476,3 @@ class StateVacuumEntity(_BaseVacuum):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Not supported."""
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Not supported."""
-
-    async def async_toggle(self, **kwargs: Any) -> None:
-        """Not supported."""

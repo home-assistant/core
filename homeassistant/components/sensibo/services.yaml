@@ -146,6 +146,7 @@ full_state:
           options:
             - "on"
             - "off"
+            - "dim"
 enable_climate_react:
   name: Enable Climate React
   description: Enable and configure Climate React
