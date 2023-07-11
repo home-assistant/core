@@ -12,5 +12,133 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "services": {
+    "start_program": {
+      "name": "Start program",
+      "description": "Selects a program and starts it.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Id of the device."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Program to select."
+        },
+        "key": {
+          "name": "Option key",
+          "description": "Key of the option."
+        },
+        "value": {
+          "name": "Option value",
+          "description": "Value of the option."
+        },
+        "unit": {
+          "name": "Option unit",
+          "description": "Unit for the option."
+        }
+      }
+    },
+    "select_program": {
+      "name": "Select program",
+      "description": "Selects a program without starting it.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Id of the device."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Program to select."
+        },
+        "key": {
+          "name": "Option key",
+          "description": "Key of the option."
+        },
+        "value": {
+          "name": "Option value",
+          "description": "Value of the option."
+        },
+        "unit": {
+          "name": "Option unit",
+          "description": "Unit for the option."
+        }
+      }
+    },
+    "pause_program": {
+      "name": "Pause program",
+      "description": "Pauses the current running program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Id of the device."
+        }
+      }
+    },
+    "resume_program": {
+      "name": "Resume program",
+      "description": "Resumes a paused program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Id of the device."
+        }
+      }
+    },
+    "set_option_active": {
+      "name": "Set active program option",
+      "description": "Sets an option for the active program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Id of the device."
+        },
+        "key": {
+          "name": "Key",
+          "description": "Key of the option."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value of the option."
+        }
+      }
+    },
+    "set_option_selected": {
+      "name": "Set selected program option",
+      "description": "Sets an option for the selected program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Id of the device."
+        },
+        "key": {
+          "name": "Key",
+          "description": "Key of the option."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value of the option."
+        }
+      }
+    },
+    "change_setting": {
+      "name": "Change setting",
+      "description": "Changes a setting.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Id of the device."
+        },
+        "key": {
+          "name": "Key",
+          "description": "Key of the setting."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value of the setting."
+        }
+      }
+    }
   }
 }
