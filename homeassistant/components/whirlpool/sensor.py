@@ -272,6 +272,10 @@ class WasherDryerTimeClass(RestoreSensor):
         """Return True if entity is available."""
         return self._wd.get_online()
 
+    async def async_update(self) -> None:
+        """Update status of Whirlpool."""
+        self._wd.fetch_data()
+
     @callback
     def update_from_latest_data(self) -> None:
         """Calculate the time stamp for completion."""
