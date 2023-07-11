@@ -413,29 +413,6 @@ class FritzBoxTools(
             return {int(item["DeflectionId"]): item for item in items}
         return {}
 
-    async def _async_get_wan_access(self, ip_address: str) -> bool | None:
-        """Get WAN access rule for given IP address."""
-        try:
-            wan_access = await self.hass.async_add_executor_job(
-                partial(
-                    self.connection.call_action,
-                    "X_AVM-DE_HostFilter:1",
-                    "GetWANAccessByIP",
-                    NewIPv4Address=ip_address,
-                )
-            )
-            return not wan_access.get("NewDisallow")
-        except FRITZ_EXCEPTIONS as ex:
-            _LOGGER.debug(
-                (
-                    "could not get WAN access rule for client device with IP '%s',"
-                    " error: %s"
-                ),
-                ip_address,
-                ex,
-            )
-            return None
-
     def manage_device_info(
         self, dev_info: Device, dev_mac: str, consider_home: bool
     ) -> bool:
@@ -493,7 +470,7 @@ class FritzBoxTools(
                 connection_type="",
                 ip_address=host["IPAddress"],
                 ssid=None,
-                wan_access=None,
+                wan_access="granted" in host["X_AVM-DE_WANAccess"],
             )
 
         if not self.fritz_status.device_has_mesh_support or (
@@ -505,8 +482,6 @@ class FritzBoxTools(
             )
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
-                if info.ip_address:
-                    info.wan_access = await self._async_get_wan_access(info.ip_address)
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
             await self.async_send_signal_device_update(new_device)
@@ -555,11 +530,6 @@ class FritzBoxTools(
                     continue
 
                 dev_info: Device = hosts[dev_mac]
-
-                if dev_info.ip_address:
-                    dev_info.wan_access = await self._async_get_wan_access(
-                        dev_info.ip_address
-                    )
 
                 for link in interf["node_links"]:
                     intf = mesh_intf.get(link["node_interface_1_uid"])
