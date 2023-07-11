@@ -8,7 +8,7 @@ from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant import config_entries
 from homeassistant.components.light import ATTR_TRANSITION
-from homeassistant.const import CONF_LIGHTS, CONF_MODE, Platform
+from homeassistant.const import CONF_LIGHTS, CONF_MODE, CONF_NAME, Platform
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
@@ -52,9 +52,10 @@ _LOGGER = logging.getLogger(__name__)
 
 MINIMAL_FLUX_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME, default="Flux"): str,
         vol.Required(CONF_LIGHTS): EntitySelector(
             EntitySelectorConfig(domain=Platform.LIGHT, multiple=True)
-        )
+        ),
     }
 )
 
@@ -93,12 +94,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
 
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
         if user_input is not None:
             user_input.update(default_settings())
-            return self.async_create_entry(title="Flux", data=user_input)
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -154,7 +152,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
             # modify the existing entry...
             self.hass.config_entries.async_update_entry(
-                self._config_entry, data=user_input
+                self._config_entry, title=user_input[CONF_NAME], data=user_input
             )
 
             # instead of adding options to it..
@@ -166,6 +164,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_NAME, default=settings.get(CONF_NAME)): str,
                     vol.Required(
                         CONF_LIGHTS, default=settings.get(CONF_LIGHTS)
                     ): EntitySelector(

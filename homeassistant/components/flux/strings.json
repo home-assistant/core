@@ -4,6 +4,7 @@
       "user": {
         "description": "Flux will update the temperature and brightness of your lights based on the time of day. During the day they will be bright, and they will gradually dim and fade to a red/orange at night. It will only affect lights that are turned on and listed below.",
         "data": {
+          "name": "A name for your flux configuration",
           "lights": "Select the lights you want controlled by Flux"
         }
       }
@@ -21,6 +22,7 @@
       "init": {
         "description": "Flux will update the temperature and brightness of your lights based on the time of day. During the day they will be bright, and they will gradually dim and fade to a red/orange at night. It will only affect lights that are turned on and listed below.",
         "data": {
+          "name": "A name for your flux configuration",
           "lights": "Select the lights you want controlled by Flux",
           "start_time": "Start time. If left empty this will be automatically calculated based on the location. To reset this value set it to 13:37",
           "sunset_time": "Sunset time. If left empty this will be automatically calculated based on the location. To reset this value set it to 13:37",
