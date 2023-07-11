@@ -264,11 +264,6 @@
   eep: D2-01-14
   model: EEP D2-01-14 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 14)
 
-# D2-05-00
-- uid: D2-05-00
-  eep: D2-05-00
-  model: EEP D2-05-00 (Blinds Control for Position and Angle, Type 0x00)
-
 # F6-02 Light and Blind Control
 - uid: F6-02-01
   eep: F6-02-01
@@ -286,7 +281,7 @@
 # Other Devices
 
 - uid: Eltako_FUD61NPN
-  eep: A5-38-08ltakoFUD61
+  eep: A5-38-08
   manufacturer: Eltako
   model: FUD61NPN
 
@@ -324,11 +319,6 @@
   eep: D2-01-12
   manufacturer: NodOn
   model: SIN-2-2-01
-
-- uid: NodOn_SIN-2-RS-01
-  eep: D2-05-00
-  manufacturer: NodOn
-  model: SIN-2-RS-01
 
 - uid: Permundo_PSC234
   eep: D2-01-09

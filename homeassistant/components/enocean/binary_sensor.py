@@ -16,15 +16,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    EnOceanPlatformConfig,
-    register_platform_config_for_migration_to_config_entry,
-)
 from .config_flow import (
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
 )
 from .device import EnOceanEntity
+from .importer import (
+    EnOceanPlatformConfig,
+    register_platform_config_for_migration_to_config_entry,
+)
 from .supported_device_type import (
     EnOceanSupportedDeviceType,
     get_supported_enocean_device_types,
