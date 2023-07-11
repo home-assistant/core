@@ -9,7 +9,14 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    CoreState,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import (
     device_registry as dr,
@@ -1489,6 +1496,75 @@ async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
     assert len(entities) == 2
     assert entity1 in entities
     assert entity2 in entities
+
+
+async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:
+    """Test an entity service that does not support response data."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        return {target.entity_id: {"response-key": "response-value"}}
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity = MockEntity(entity_id="mock_integration.entity")
+    await entity_platform.async_add_entities([entity])
+
+    entity_platform.async_register_entity_service(
+        "hello",
+        {"some": str},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"entity_id": "mock_integration.entity"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {
+        "mock_integration.entity": {"response-key": "response-value"}
+    }
+
+
+async def test_register_entity_service_response_data_multiple_matches(
+    hass: HomeAssistant,
+) -> None:
+    """Test asking for service response data but matching many entities."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        raise ValueError("Should not be invoked")
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    entity_platform.async_register_entity_service(
+        "hello",
+        {},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    with pytest.raises(HomeAssistantError, match="matched more than one entity"):
+        await hass.services.async_call(
+            "mock_platform",
+            "hello",
+            target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+            blocking=True,
+            return_response=True,
+        )
 
 
 async def test_invalid_entity_id(hass: HomeAssistant) -> None:
