@@ -150,12 +150,12 @@ class Mill:
             for room in await self.request(f"houses/{home.get('id')}/devices"):
                 for device in room.get("devices", []):
                     device_type = device.get("deviceType", {}).get("parentType", {}).get("name")
-                    if device_type == "Heaters":
+                    if device_type in ("Heaters", "Sockets"):
                         _id = device.get("deviceId")
                         heater: Heater = self.heaters.get(_id, Heater())
                         if heater.last_updated and (
                             dt.datetime.now() - heater.last_updated
-                            < dt.timedelta(seconds=30)
+                            < dt.timedelta(seconds=15)
                         ):
                             continue
                         heater.name = device.get("customName")
