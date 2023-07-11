@@ -78,7 +78,7 @@
   "services": {
     "set_mode": {
       "name": "Set mode",
-      "description": "Sets humidifier operation mode.",
+      "description": "Sets the humidifier operation mode.",
       "fields": {
         "mode": {
           "description": "Operation mode."
@@ -105,7 +105,7 @@
     },
     "toggle": {
       "name": "Toggle",
-      "description": "Toggles a humidifier on/off."
+      "description": "Toggles the humidifier on/off."
     }
   }
 }
