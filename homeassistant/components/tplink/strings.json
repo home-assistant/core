@@ -40,6 +40,24 @@
     "switch": {
       "led": {
         "name": "LED"
+      },
+      "plug_1": {
+        "name": "Plug 1"
+      },
+      "plug_2": {
+        "name": "Plug 2"
+      },
+      "plug_3": {
+        "name": "Plug 3"
+      },
+      "plug_4": {
+        "name": "Plug 4"
+      },
+      "plug_5": {
+        "name": "Plug 5"
+      },
+      "plug_6": {
+        "name": "Plug 6"
       }
     }
   }

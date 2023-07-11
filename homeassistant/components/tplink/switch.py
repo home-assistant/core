@@ -34,8 +34,8 @@ async def async_setup_entry(
     if device.is_strip:
         # Historically we only add the children if the device is a strip
         _LOGGER.debug("Initializing strip with %s sockets", len(device.children))
-        for child in device.children:
-            entities.append(SmartPlugSwitch(child, coordinator))
+        for i, child in enumerate(device.children):
+            entities.append(SmartPlugSwitch(child, coordinator, i))
     elif device.is_plug:
         entities.append(SmartPlugSwitch(device, coordinator))
 
@@ -84,17 +84,20 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
-    _attr_name = None
-
     def __init__(
         self,
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
+        plug_id: int | None = None,
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
         # For backwards compat with pyHS100
         self._attr_unique_id = legacy_device_id(device)
+        if plug_id is not None:
+            self._attr_translation_key = f"plug_{plug_id}"
+        else:
+            self._attr_name = None
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
