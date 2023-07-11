@@ -74,5 +74,38 @@
     "humidifier": {
       "name": "[%key:component::humidifier::entity_component::_::name%]"
     }
+  },
+  "services": {
+    "set_mode": {
+      "name": "Set mode",
+      "description": "Sets humidifier operation mode.",
+      "fields": {
+        "mode": {
+          "description": "Operation mode."
+        }
+      }
+    },
+    "set_humidity": {
+      "name": "Set humidity",
+      "description": "Sets target humidity.",
+      "fields": {
+        "humidity": {
+          "name": "Humidity",
+          "description": "Target humidity."
+        }
+      }
+    },
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Turns humidifier on."
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Turns humidifier off."
+    },
+    "toggle": {
+      "name": "Toggle",
+      "description": "Toggles a humidifier on/off."
+    }
   }
 }
