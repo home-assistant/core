@@ -312,6 +312,7 @@ class Heater(MillDevice):
 
 @dataclass
 class Socket(Heater):
+    pass
 
 @dataclass
 class _SensorAttr:
