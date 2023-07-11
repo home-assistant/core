@@ -7,8 +7,8 @@
   },
   "services": {
     "set_value": {
-      "name": "Set Date/Time",
-      "description": "Set the date/time for a datetime entity.",
+      "name": "Set date/time",
+      "description": "Sets the date/time for a datetime entity.",
       "fields": {
         "datetime": {
           "name": "Date & Time",
