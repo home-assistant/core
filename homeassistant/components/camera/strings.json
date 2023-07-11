@@ -86,7 +86,7 @@
         },
         "duration": {
           "name": "Duration",
-          "description": "Targeted recording length."
+          "description": "Planned duration of the recording. The actual duration may vary."
         },
         "lookback": {
           "name": "Lookback",
