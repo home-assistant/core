@@ -117,11 +117,12 @@ HOST_BUTTON_ENTITIES = (
         name="Reboot",
         icon="mdi:restart",
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default = False,
+        entity_registry_enabled_default=False,
         supported=lambda api: api.supported(None, "reboot"),
         method=lambda api: api.reboot(),
     ),
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -185,9 +186,7 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
         super().__init__(reolink_data)
         self.entity_description = entity_description
 
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{entity_description.key}"
-        )
+        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
 
     async def async_press(self) -> None:
         """Execute the button action."""
