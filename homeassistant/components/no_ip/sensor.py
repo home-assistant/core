@@ -80,4 +80,6 @@ class NoIPSensor(NoIPBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        return str(self.coordinator.data[CONF_IP_ADDRESS])
+        if CONF_IP_ADDRESS in self.coordinator.data:
+            return str(self.coordinator.data[CONF_IP_ADDRESS])
+        return None

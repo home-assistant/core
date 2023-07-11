@@ -1,11 +1,13 @@
 """Coordinator for No-IP.com."""
 from __future__ import annotations
 
+import asyncio
 import base64
 from datetime import timedelta
 import logging
 from typing import Any
 
+import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
 import async_timeout
 
@@ -44,47 +46,62 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = entry
 
-        self.no_ip_domain = self.config_entry.data[CONF_DOMAIN]
-        self.params = {"hostname": self.no_ip_domain}
-
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update the data from No-IP.com."""
+        if (
+            not self.config_entry
+            or not hasattr(self.config_entry, "data")
+            or not self.config_entry.data
+        ):
+            return {}
+        no_ip_domain = self.config_entry.data[CONF_DOMAIN]
         user = self.config_entry.data[CONF_USERNAME]
         password = self.config_entry.data[CONF_PASSWORD]
+
         auth_str = base64.b64encode(f"{user}:{password}".encode())
 
-        self.headers = {
+        session = aiohttp_client.async_create_clientsession(self.hass)
+        params = {"hostname": no_ip_domain}
+
+        headers = {
             AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
             USER_AGENT: HA_USER_AGENT,
         }
 
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update the data from No-IP.com."""
-
         data: dict[str, Any] = {}
 
-        session = aiohttp_client.async_create_clientsession(self.hass)
-
-        async with async_timeout.timeout(DEFAULT_TIMEOUT):
-            resp = await session.get(
-                UPDATE_URL, params=self.params, headers=self.headers
-            )
-            body = await resp.text()
-
-            if body.startswith("good") or body.startswith("nochg"):
-                ipAddress = str(body.split(" ")[1]).strip()
-                _LOGGER.debug(
-                    "Updating No-IP.com success: %s IP: %s",
-                    self.no_ip_domain,
-                    ipAddress,
-                )
-
-                data = {
-                    CONF_IP_ADDRESS: ipAddress,
-                    CONF_DOMAIN: self.no_ip_domain,
-                }
-            else:
-                _LOGGER.debug(
-                    "Updating No-IP.com Failed: %s => %s",
-                    self.no_ip_domain,
-                    body.strip(),
-                )
+        try:
+            async with async_timeout.timeout(DEFAULT_TIMEOUT):
+                resp = await session.get(UPDATE_URL, params=params, headers=headers)
+                body = (await resp.text()).strip()
+                if (
+                    resp.status == 200
+                    and body.startswith("good")
+                    or body.startswith("nochg")
+                ):
+                    ipAddress = body.split(" ")[1]
+                    data = {
+                        CONF_IP_ADDRESS: ipAddress,
+                        CONF_DOMAIN: no_ip_domain,
+                    }
+                    _LOGGER.debug(
+                        "Updating No-IP.com success: %s IP: %s", no_ip_domain, ipAddress
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Updating No-IP.com Failed: %s => %s", no_ip_domain, body
+                    )
+                    data = {
+                        CONF_DOMAIN: no_ip_domain,
+                    }
+        except aiohttp.ClientError:
+            _LOGGER.warning("Can't connect to No-IP.com API")
+            data = {
+                CONF_DOMAIN: no_ip_domain,
+            }
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Timeout from No-IP.com API for domain: %s", no_ip_domain)
+            data = {
+                CONF_DOMAIN: no_ip_domain,
+            }
         return data
