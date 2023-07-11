@@ -93,6 +93,19 @@
           "alwaysonatnight": "Auto & always on at night"
         }
       }
+    },
+    "sensor": {
+      "event_connection": {
+        "name": "Event connection",
+        "state": {
+          "onvif_push": "ONVIF push",
+          "onvif_long_poll": "ONVIF long poll",
+          "fast_poll": "Fast poll"
+        }
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      }
     }
   }
 }
