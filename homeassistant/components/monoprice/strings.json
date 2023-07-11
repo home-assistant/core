@@ -36,5 +36,15 @@
         }
       }
     }
+  },
+  "services": {
+    "snapshot": {
+      "name": "Snapshot",
+      "description": "Takes a snapshot of the media player zone."
+    },
+    "restore": {
+      "name": "Restore",
+      "description": "Restores a snapshot of the media player zone."
+    }
   }
 }
