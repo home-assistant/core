@@ -71,5 +71,59 @@
         }
       }
     }
+  },
+  "services": {
+    "alarm_sound": {
+      "name": "Set warning sound level.",
+      "description": "Setx movement warning sound level.",
+      "fields": {
+        "level": {
+          "name": "Sound level",
+          "description": "Sound level (2 is disabled, 1 intensive, 0 soft)."
+        }
+      }
+    },
+    "ptz": {
+      "name": "PTZ",
+      "description": "Moves the camera to the direction, with defined speed.",
+      "fields": {
+        "direction": {
+          "name": "Direction",
+          "description": "Direction to move camera (up, down, left, right)."
+        },
+        "speed": {
+          "name": "Speed",
+          "description": "Speed of movement (from 1 to 9)."
+        }
+      }
+    },
+    "set_alarm_detection_sensibility": {
+      "name": "Detection sensitivity",
+      "description": "Sets the detection sensibility level.",
+      "fields": {
+        "level": {
+          "name": "Sensitivity level",
+          "description": "Sensibility level (1-6) for type 0 (Normal camera) or (1-100) for type 3 (PIR sensor camera)."
+        },
+        "type_value": {
+          "name": "Detection type",
+          "description": "Type of detection. Options : 0 - Camera or 3 - PIR Sensor Camera."
+        }
+      }
+    },
+    "sound_alarm": {
+      "name": "Sound alarm",
+      "description": "Sounds the alarm on your camera.",
+      "fields": {
+        "enable": {
+          "name": "Alarm sound",
+          "description": "Enter 1 or 2 (1=disable, 2=enable)."
+        }
+      }
+    },
+    "wake_device": {
+      "name": "Wake camera",
+      "description": "This can be used to wake the camera/device from hibernation."
+    }
   }
 }
