@@ -252,15 +252,15 @@
         },
         "rgb_color": {
           "name": "Color",
-          "description": "The color for the light (based on RGB - red, green, blue)."
+          "description": "The color (based on RGB - red, green, blue)."
         },
         "rgbw_color": {
           "name": "RGBW-color",
-          "description": "A list containing four integers between 0 and 255 representing the RGBW (red, green, blue, white) color for the light."
+          "description": "A list containing four integers between 0 and 255 representing the RGBW (red, green, blue, white) color."
         },
         "rgbww_color": {
           "name": "RGBWW-color",
-          "description": "A list containing five integers between 0 and 255 representing the RGBWW (red, green, blue, cold white, warm white) color for the light."
+          "description": "A list containing five integers between 0 and 255 representing the RGBWW (red, green, blue, cold white, warm white) color."
         },
         "color_name": {
           "name": "Color name",
@@ -268,27 +268,27 @@
         },
         "hs_color": {
           "name": "Hue/Sat color",
-          "description": "Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100."
+          "description": "Color in hue/sat format. Hue is 0-360 and Sat is 0-100."
         },
         "xy_color": {
           "name": "XY-color",
-          "description": "Color for the light in XY-format."
+          "description": "Color in XY-format."
         },
         "color_temp": {
           "name": "Color temperature",
-          "description": "Color temperature for the light in mireds."
+          "description": "Color temperature in mireds."
         },
         "kelvin": {
           "name": "Color temperature",
-          "description": "Color temperature for the light in Kelvin."
+          "description": "Color temperature in Kelvin."
         },
         "brightness": {
           "name": "Brightness value",
-          "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light."
+          "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness."
         },
         "brightness_pct": {
           "name": "Brightness",
-          "description": "Number indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light."
+          "description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness."
         },
         "brightness_step": {
           "name": "Brightness step value",
