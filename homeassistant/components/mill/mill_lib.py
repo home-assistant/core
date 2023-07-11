@@ -126,6 +126,8 @@ class Mill:
             return None
 
         result = await resp.text()
+        if "error" in result:
+            raise Exception(result)
         if "InvalidAuthTokenError" in result:
             _LOGGER.error("Invalid auth token, %s", result)
             if await self.connect():
@@ -153,19 +155,18 @@ class Mill:
     async def _update_home(self, home):
         tasks = []
         for room in await self.request(f"houses/{home.get('id')}/devices"):
-            tasks.append(self._update_room(home, room))
+            tasks.append(self._update_room(room))
         await asyncio.gather(*tasks)
 
-    async def _update_room(self, home, room):
-        room_data = await self.request(f"rooms/{home.get('id')}/devices")
-        print(room_data)
+    async def _update_room(self, room):
+        room_data = await self.request(f"rooms/{room.get('roomId')}/devices")
 
         tasks = []
         for device in room.get("devices", []):
-            tasks.append(self._update_device(device, home, room_data))
+            tasks.append(self._update_device(device, room_data))
         await asyncio.gather(*tasks)
 
-    async def _update_device(self, device, home, room_data):
+    async def _update_device(self, device, room_data):
         window_states = {0: "disabled", 3: "enabled_not_active", 2: "enabled_active"}
         device_type = device.get("deviceType", {}).get("parentType", {}).get("name")
 
@@ -189,7 +190,7 @@ class Mill:
             heater.model = (
                 device.get("deviceType", {}).get("deviceType", {}).get("name")
             )
-            heater.home_id = home.get("houseId")
+            heater.home_id = room_data.get("houseId")
             heater.set_temp = device.get("lastMetrics").get("temperature")
             heater.current_temp = device.get("lastMetrics").get("temperatureAmbient")
             heater.power_status = device.get("lastMetrics").get("powerStatus", 0) > 0
