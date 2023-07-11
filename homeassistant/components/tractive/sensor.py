@@ -52,8 +52,6 @@ class TractiveSensorEntityDescription(
 class TractiveSensor(TractiveEntity, SensorEntity):
     """Tractive sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         user_id: str,

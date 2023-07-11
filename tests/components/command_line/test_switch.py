@@ -684,16 +684,18 @@ async def test_updating_to_often(
         )
         await hass.async_block_till_done()
 
-    assert len(called) == 0
+    assert not called
     assert (
         "Updating Command Line Switch Test took longer than the scheduled update interval"
         not in caplog.text
     )
+    called.clear()
+    caplog.clear()
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(called) == 1
+    assert called
     assert (
         "Updating Command Line Switch Test took longer than the scheduled update interval"
         in caplog.text
@@ -710,13 +712,11 @@ async def test_updating_manually(
     called = []
 
     class MockCommandSwitch(CommandSwitch):
-        """Mock entity that updates slow."""
+        """Mock entity that updates."""
 
         async def _async_update(self) -> None:
             """Update slow."""
             called.append(1)
-            # Add waiting time
-            await asyncio.sleep(1)
 
     with patch(
         "homeassistant.components.command_line.switch.CommandSwitch",
@@ -743,7 +743,8 @@ async def test_updating_manually(
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert len(called) == 1
+    assert called
+    called.clear()
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -752,6 +753,4 @@ async def test_updating_manually(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert len(called) == 2
-
-    await asyncio.sleep(0.2)
+    assert called

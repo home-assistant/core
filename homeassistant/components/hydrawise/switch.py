@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from hydrawiser.core import Hydrawiser
+from pydrawise.legacy import LegacyHydrawise
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -63,7 +63,7 @@ def setup_platform(
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
     coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
-    hydrawise: Hydrawiser = coordinator.api
+    hydrawise: LegacyHydrawise = coordinator.api
     monitored_conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
     default_watering_timer: int = config[CONF_WATERING_TIME]
 

@@ -22,14 +22,19 @@ import pytest
 from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .common import (
     PROJECT_ID,
     SUBSCRIBER_ID,
+    TEST_CONFIG_ENTRY_LEGACY,
+    TEST_CONFIG_LEGACY,
     TEST_CONFIGFLOW_APP_CREDS,
     FakeSubscriber,
     YieldFixture,
 )
+
+from tests.common import MockConfigEntry
 
 PLATFORM = "sensor"
 
@@ -276,3 +281,26 @@ async def test_migrate_unique_id(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == PROJECT_ID
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY])
+async def test_legacy_works_with_nest_yaml(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test integration won't start with legacy works with nest yaml config."""
+    config_entry.add_to_hass(hass)
+    assert not await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_ENTRY_LEGACY])
+async def test_legacy_works_with_nest_cleanup(
+    hass: HomeAssistant, setup_platform
+) -> None:
+    """Test legacy works with nest config entries are silently removed once yaml is removed."""
+    await setup_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 0

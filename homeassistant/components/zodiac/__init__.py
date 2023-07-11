@@ -3,7 +3,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
@@ -20,12 +20,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
         breaks_in_ha_version="2024.1.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Zodiac",
+        },
     )
 
     hass.async_create_task(
