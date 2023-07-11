@@ -45,7 +45,7 @@
   "services": {
     "see": {
       "name": "See",
-      "description": "Control tracked device.",
+      "description": "Records a seen tracked device.",
       "fields": {
         "mac": {
           "name": "MAC address",
@@ -53,14 +53,14 @@
         },
         "dev_id": {
           "name": "Device ID",
-          "description": "Id of device (find id in known_devices.yaml)."
+          "description": "ID of device (find the ID in `known_devices.yaml`)."
         },
         "host_name": {
-          "name": "Host name",
+          "name": "Hostname",
           "description": "Hostname of device."
         },
         "location_name": {
-          "name": "Location name",
+          "name": "Location",
           "description": "Name of location where device is located (not_home is away)."
         },
         "gps": {
