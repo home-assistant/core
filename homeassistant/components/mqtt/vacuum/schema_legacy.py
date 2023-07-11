@@ -419,9 +419,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         )
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
-        """Check for a missing feature or command topic."""
+        """Publish a command."""
 
-        if self._command_topic is None or self.supported_features & feature == 0:
+        if self._command_topic is None:
             return
 
         await self.async_publish(

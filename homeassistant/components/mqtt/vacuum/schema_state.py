@@ -259,8 +259,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
-        """Check for a missing feature or command topic."""
-        if self._command_topic is None or self.supported_features & feature == 0:
+        """Publish a command."""
+        if self._command_topic is None:
             return
 
         await self.async_publish(
