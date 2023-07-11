@@ -11,7 +11,7 @@ from aioesphomeapi import (
     UserService,
 )
 
-from homeassistant.const import ATTR_RESTORED, STATE_ON
+from homeassistant.const import ATTR_RESTORED, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDevice
@@ -130,3 +130,57 @@ async def test_entity_info_object_ids(
     )
     state = hass.states.get("binary_sensor.test_object_id_is_used")
     assert state is not None
+
+
+async def test_deep_sleep_device(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a deep sleep device."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    user_service = []
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"has_deep_sleep": True},
+    )
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await mock_device.mock_disconnect(False)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await mock_device.mock_disconnect(True)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON

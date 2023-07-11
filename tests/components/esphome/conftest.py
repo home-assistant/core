@@ -154,6 +154,7 @@ class MockESPHomeDevice:
         self.entry = entry
         self.state_callback: Callable[[EntityState], None]
         self.on_disconnect: Callable[[bool], None]
+        self.on_connect: Callable[[bool], None]
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -170,6 +171,14 @@ class MockESPHomeDevice:
     async def mock_disconnect(self, expected_disconnect: bool) -> None:
         """Mock disconnecting."""
         await self.on_disconnect(expected_disconnect)
+
+    def set_on_connect(self, on_connect: Callable[[], None]) -> None:
+        """Set the connect callback."""
+        self.on_connect = on_connect
+
+    async def mock_connect(self) -> None:
+        """Mock connecting."""
+        await self.on_connect()
 
 
 async def _mock_generic_device_entry(
@@ -226,6 +235,7 @@ async def _mock_generic_device_entry(
             """Init the mock."""
             super().__init__(*args, **kwargs)
             mock_device.set_on_disconnect(kwargs["on_disconnect"])
+            mock_device.set_on_connect(kwargs["on_connect"])
             self._try_connect = self.mock_try_connect
 
         async def mock_try_connect(self):
@@ -313,9 +323,15 @@ async def mock_esphome_device(
         user_service: list[UserService],
         states: list[EntityState],
         entry: MockConfigEntry | None = None,
+        device_info: dict[str, Any] | None = None,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
-            hass, mock_client, {}, (entity_info, user_service), states, entry
+            hass,
+            mock_client,
+            device_info or {},
+            (entity_info, user_service),
+            states,
+            entry,
         )
 
     return _mock_device
