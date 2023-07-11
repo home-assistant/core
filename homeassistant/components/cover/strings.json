@@ -88,7 +88,7 @@
     },
     "toggle": {
       "name": "Toggle",
-      "description": "Toggle a cover open/closed."
+      "description": "Toggles a cover open/closed."
     },
     "set_cover_position": {
       "name": "Set position",
@@ -102,7 +102,7 @@
     },
     "stop_cover": {
       "name": "Stop",
-      "description": "Stops cover movement."
+      "description": "Stops the cover movement."
     },
     "open_cover_tilt": {
       "name": "Open tilt",
