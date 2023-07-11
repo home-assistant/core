@@ -112,17 +112,5 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterGenericSwitch,
         required_attributes=(clusters.Switch.Attributes.CurrentPosition,),
-        # restrict device type to prevent discovery by the wrong platform
-        not_device_type=(
-            device_types.ColorTemperatureLight,
-            device_types.DimmableLight,
-            device_types.ExtendedColorLight,
-            device_types.OnOffLight,
-            device_types.DoorLock,
-            device_types.ColorDimmerSwitch,
-            device_types.DimmerSwitch,
-            device_types.OnOffLightSwitch,
-            device_types.Thermostat,
-        ),
     ),
 ]
