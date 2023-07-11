@@ -6,7 +6,7 @@
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/flux",
-  "integration_type": "hub",
+  "integration_type": "service",
   "iot_class": "calculated",
   "quality_scale": "internal",
   "requirements": []
