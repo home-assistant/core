@@ -717,8 +717,6 @@ async def test_updating_to_often(
         in caplog.text
     )
 
-    await asyncio.sleep(0.2)
-
 
 async def test_updating_manually(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
