@@ -3,7 +3,7 @@
   "services": {
     "process": {
       "name": "Process",
-      "description": "Launch a conversation from a transcribed text.",
+      "description": "Launches a conversation from a transcribed text.",
       "fields": {
         "text": {
           "name": "Text",
