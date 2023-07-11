@@ -44,5 +44,39 @@
         }
       }
     }
+  },
+  "services": {
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Enables an automation."
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Disables an automation.",
+      "fields": {
+        "stop_actions": {
+          "name": "Stop actions",
+          "description": "Stops currently running actions."
+        }
+      }
+    },
+    "toggle": {
+      "name": "Toggle",
+      "description": "Toggles (enable / disable) an automation."
+    },
+    "trigger": {
+      "name": "Trigger",
+      "description": "Triggers the actions of an automation.",
+      "fields": {
+        "skip_condition": {
+          "name": "Skip conditions",
+          "description": "Defines whether or not the conditions will be skipped."
+        }
+      }
+    },
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads the automation configuration."
+    }
   }
 }
