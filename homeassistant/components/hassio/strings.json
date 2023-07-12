@@ -357,7 +357,7 @@
         },
         "homeassistant": {
           "name": "[%key:component::hassio::services::backup_partial::fields::homeassistant::name%]",
-          "description": "Restore Home Assistant."
+          "description": "Restores Home Assistant."
         },
         "folders": {
           "name": "[%key:component::hassio::services::backup_partial::fields::folders::name%]",
