@@ -63,7 +63,7 @@
           "description": "Your iCloud account username (email) or account name."
         },
         "device_name": {
-          "name": "Device Name",
+          "name": "Device name",
           "description": "The name of the Apple device to play a sound."
         }
       }
@@ -77,7 +77,7 @@
           "description": "Your iCloud account username (email) or account name."
         },
         "device_name": {
-          "name": "Device Name",
+          "name": "Device name",
           "description": "The name of the Apple device to display the message."
         },
         "message": {
@@ -99,7 +99,7 @@
           "description": "Your iCloud account username (email) or account name."
         },
         "device_name": {
-          "name": "Device Name",
+          "name": "Device name",
           "description": "The name of the Apple device to set lost."
         },
         "number": {
