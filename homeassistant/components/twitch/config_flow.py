@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-import time
 from typing import Any
 
 from twitchAPI.helper import first
@@ -24,7 +23,6 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, LOGGER, OAUTH_SCOPES
 
@@ -163,25 +161,4 @@ class OAuth2FlowHandler(
                     )
                 }
             ),
-        )
-
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Handle import of yaml configuration."""
-        if len(self._async_current_entries()) > 0:
-            return self.async_abort(reason="already_configured")
-        scopes = [scope.value for scope in OAUTH_SCOPES]
-        return self.async_create_entry(
-            title="",
-            data={
-                "auth_implementation": DOMAIN,
-                "token": {
-                    CONF_CLIENT_ID: import_config[CONF_CLIENT_ID],
-                    CONF_CLIENT_SECRET: import_config[CONF_CLIENT_SECRET],
-                    "access_token": "",
-                    "refresh_token": "",
-                    "expires_at": time.time(),
-                    "scope": " ".join(scopes),
-                },
-            },
-            options={CONF_CHANNELS: import_config[CONF_CHANNELS]},
         )

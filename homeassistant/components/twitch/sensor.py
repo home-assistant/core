@@ -11,12 +11,8 @@ from twitchAPI.twitch import (
 )
 import voluptuous as vol
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -67,28 +63,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Twitch platform."""
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(
-            config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET], name=DOMAIN
-        ),
-    )
 
     async_create_issue(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.9.0",
+        breaks_in_ha_version="2024.1.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
     )
 
 

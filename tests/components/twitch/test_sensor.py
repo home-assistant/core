@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from homeassistant.components import sensor
 from homeassistant.components.twitch.const import CONF_CHANNELS, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -46,8 +45,7 @@ async def test_legacy_migration(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
         await hass.async_block_till_done()
         entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
-        assert entries[0].state is ConfigEntryState.LOADED
+        assert len(entries) == 0
         issue_registry = ir.async_get(hass)
         assert len(issue_registry.issues) == 1
 

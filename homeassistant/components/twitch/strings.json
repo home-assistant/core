@@ -18,5 +18,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "Wrong account: Please authenticate with {username}."
     }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The {integration_title} YAML configuration is being removed",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration couldn't be automatically imported.\n\nPlease add Twitch again via the UI.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
   }
 }
