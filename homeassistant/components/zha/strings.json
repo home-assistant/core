@@ -450,7 +450,7 @@
         },
         "duty_cycle": {
           "name": "Duty cycle",
-          "description": "Indicates the length of the flash cycle. This provides a means of varying the flash duration for different alarm types (e.g., fire, police, burglar). Valid range is 0-100 in increments of 10. All other values SHALL be rounded to the nearest valid value. Strobe SHALL calculate duty cycle over a duration of one second. The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle Field specifies \u201c40,\u201d then the strobe SHALL flash ON for 4/10ths of a second and then turn OFF for 6/10ths of a second."
+          "description": "Indicates the length of the flash cycle. This allows you to vary the flash duration for different alarm types (e.g., fire, police, burglar). The valid range is 0-100 in increments of 10. All other values must be rounded to the nearest valid value. Strobe calculates a duty cycle over a duration of one second. The ON state must precede the OFF state. For example, if Strobe Duty Cycle Field specifies \u201c40,\u201d, then the strobe flashes ON for 4/10ths of a second and then turns OFF for 6/10ths of a second."
         },
         "intensity": {
           "name": "Intensity",
