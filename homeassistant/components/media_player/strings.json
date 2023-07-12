@@ -159,5 +159,178 @@
     "receiver": {
       "name": "Receiver"
     }
+  },
+  "services": {
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Turns a media player power on."
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Turns a media player power off."
+    },
+    "toggle": {
+      "name": "Toggle",
+      "description": "Toggles a media player on/off."
+    },
+    "volume_up": {
+      "name": "Turn up volume",
+      "description": "Turns up the volume."
+    },
+    "volume_down": {
+      "name": "Turn down volume",
+      "description": "Turns down the volume."
+    },
+    "volume_mute": {
+      "name": "Mute/unmute volume",
+      "description": "Mutes or unmutes a media player's volume.",
+      "fields": {
+        "is_volume_muted": {
+          "name": "Muted",
+          "description": "Weather or not it should be muted or unmuted."
+        }
+      }
+    },
+    "volume_set": {
+      "name": "Set volume",
+      "description": "Sets the volume level.",
+      "fields": {
+        "volume_level": {
+          "name": "Level",
+          "description": "Volume level to set as float."
+        }
+      }
+    },
+    "media_play_pause": {
+      "name": "Play/Pause",
+      "description": "Toggles media player play/pause state."
+    },
+    "media_play": {
+      "name": "Play",
+      "description": "Sends the media player the command for play."
+    },
+    "media_pause": {
+      "name": "Pause",
+      "description": "Sends the media player the command for pause."
+    },
+    "media_stop": {
+      "name": "Stop",
+      "description": "Sends the media player the stop command."
+    },
+    "media_next_track": {
+      "name": "Next",
+      "description": "Sends the media player the command for next track."
+    },
+    "media_previous_track": {
+      "name": "Previous",
+      "description": "Sends the media player the command for previous track."
+    },
+    "media_seek": {
+      "name": "Seek",
+      "description": "Sends the media player the command to seek in current playing media.",
+      "fields": {
+        "seek_position": {
+          "name": "Position",
+          "description": "Position to seek to. The format is platform dependent."
+        }
+      }
+    },
+    "play_media": {
+      "name": "Play media",
+      "description": "Sends the media player the command for playing media.",
+      "fields": {
+        "media_content_id": {
+          "name": "Content ID",
+          "description": "The ID of the content to play. Platform dependent."
+        },
+        "media_content_type": {
+          "name": "Content type",
+          "description": "The type of the content to play. Like image, music, tvshow, video, episode, channel or playlist."
+        },
+        "enqueue": {
+          "name": "Enqueue",
+          "description": "If the content should be played now or be added to the queue."
+        },
+        "announce": {
+          "name": "Announce",
+          "description": "If the media should be played as an announcement."
+        }
+      }
+    },
+    "select_source": {
+      "name": "Select source",
+      "description": "Sends the media player the command to change input source.",
+      "fields": {
+        "source": {
+          "name": "Source",
+          "description": "Name of the source to switch to. Platform dependent."
+        }
+      }
+    },
+    "select_sound_mode": {
+      "name": "Select sound mode",
+      "description": "Sends the media player the command to change sound mode.",
+      "fields": {
+        "sound_mode": {
+          "name": "Sound mode",
+          "description": "Name of the sound mode to switch to."
+        }
+      }
+    },
+    "clear_playlist": {
+      "name": "Clear playlist",
+      "description": "Sends the media player the command to clear players playlist."
+    },
+    "shuffle_set": {
+      "name": "Shuffle",
+      "description": "Sets shuffling state.",
+      "fields": {
+        "shuffle": {
+          "name": "Shuffle",
+          "description": "True/false for enabling/disabling shuffle."
+        }
+      }
+    },
+    "repeat_set": {
+      "name": "Repeat",
+      "description": "Sets repeat mode.",
+      "fields": {
+        "repeat": {
+          "name": "Repeat mode",
+          "description": "Repeat mode to set."
+        }
+      }
+    },
+    "join": {
+      "name": "Join",
+      "description": "Groups players together. Only works on platforms with support for player groups.",
+      "fields": {
+        "group_members": {
+          "name": "Group members",
+          "description": "The players which will be synced with the target player."
+        }
+      }
+    },
+    "unjoin": {
+      "name": "Unjoin",
+      "description": "Unjoins the player from a group. Only works on platforms with support for player groups."
+    }
+  },
+  "selector": {
+    "enqueue": {
+      "options": {
+        "play": "Play now",
+        "next": "Play next",
+        "add": "Add to queue",
+        "replace": "Play now and clear queue"
+      }
+    },
+    "repeat": {
+      "options": {
+        "off": "Off",
+        "all": "Repeat all",
+        "one": "Repeat one"
+      }
+    }
   }
 }
