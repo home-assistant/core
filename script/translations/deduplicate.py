@@ -46,6 +46,8 @@ def run():
 
     merged = {**secondary, **primary}
 
+    # Questionable translations are ones that are duplicate but are not referenced
+    # by the common strings.json or strings.json from an entity component.
     questionable = set(secondary.values())
     suggest_new_common = set()
     update_keys = {}
@@ -84,7 +86,7 @@ def run():
         for key in sorted(suggest_new_common):
             print(key)
 
-    components = sorted({key_integration for key in update_keys})
+    components = sorted({key.split("::")[1] for key in update_keys})
 
     strings = {}
 
