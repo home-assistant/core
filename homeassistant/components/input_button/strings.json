@@ -17,7 +17,7 @@
   "services": {
     "press": {
       "name": "Press",
-      "description": "Presses the button."
+      "description": "Mimics the physical button press on the device."
     }
   }
 }
