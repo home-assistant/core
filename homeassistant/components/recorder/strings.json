@@ -21,7 +21,7 @@
       "fields": {
         "keep_days": {
           "name": "Days to keep",
-          "description": "Number of history days to keep in database after purge."
+          "description": "Number of days to keep the data in the database. Starting today, counting backward. A value of `7` means that everything older than a week will be purged."
         },
         "repack": {
           "name": "Repack",
@@ -29,25 +29,25 @@
         },
         "apply_filter": {
           "name": "Apply filter",
-          "description": "Apply `entity_id` and `event_type` filters in addition to time based purge."
+          "description": "Applys `entity_id` and `event_type` filters in addition to time-based purge."
         }
       }
     },
     "purge_entities": {
       "name": "Purge entities",
-      "description": "Starts a purge task to remove specific entities from your database.",
+      "description": "Starts a purge task to remove the data related to specific entities from your database.",
       "fields": {
         "domains": {
           "name": "Domains to remove",
-          "description": "List the domains that need to be removed from the recorder database."
+          "description": "List of domains for which the data needs to be removed from the recorder database."
         },
         "entity_globs": {
           "name": "Entity globs to remove",
-          "description": "List the glob patterns to select entities for removal from the recorder database."
+          "description": "List of glob patterns used to select the entities for which the data is to be removed from the recorder database."
         },
         "keep_days": {
           "name": "Days to keep",
-          "description": "Number of history days to keep in database of matching rows. The default of 0 days will remove all matching rows."
+          "description": "Number of days to keep the data for rows matching the filter. Starting today, counting backward. A value of `7` means that everything older than a week will be purged. The default of 0 days will remove all matching rows immediately."
         }
       }
     },
