@@ -119,7 +119,7 @@ class UrlProtocolSchema(StrEnum):
 EXTERNAL_URL_PROTOCOL_SCHEMA_LIST = frozenset(
     {UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
 )
-COMBINED_URL_PROTOCOL_SCHEMA_LIST = frozenset(
+CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
     {UrlProtocolSchema.HOMEASSISANT, UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
 )
 
@@ -760,7 +760,7 @@ def url(
 
 def configuration_url(value: Any) -> str:
     """Validate an URL that allows the homeassistant schema."""
-    return url(value, COMBINED_URL_PROTOCOL_SCHEMA_LIST)
+    return url(value, CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST)
 
 
 def url_no_path(value: Any) -> str:

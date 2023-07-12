@@ -96,11 +96,7 @@ from .subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import (
-    get_mqtt_data,
-    mqtt_config_entry_enabled,
-    valid_subscribe_topic,
-)
+from .util import get_mqtt_data, mqtt_config_entry_enabled, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
