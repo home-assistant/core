@@ -236,7 +236,7 @@
       "fields": {
         "object_id": {
           "name": "Object ID",
-          "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: <domain>.<object_id>."
+          "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id]."
         }
       }
     }
