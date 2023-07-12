@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import MockESPHomeDevice
@@ -105,6 +106,48 @@ async def test_update_entity(
     if expected_state != "on":
         return
 
+    # Compile failed, don't try to upload
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=False
+    ) as mock_compile, patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
+    ) as mock_upload, pytest.raises(
+        HomeAssistantError, match="compiling"
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.none_firmware"},
+            blocking=True,
+        )
+
+    assert len(mock_compile.mock_calls) == 1
+    assert mock_compile.mock_calls[0][1][0] == "test.yaml"
+
+    assert len(mock_upload.mock_calls) == 0
+
+    # Compile success, upload fails
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
+    ) as mock_compile, patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=False
+    ) as mock_upload, pytest.raises(
+        HomeAssistantError, match="OTA"
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.none_firmware"},
+            blocking=True,
+        )
+
+    assert len(mock_compile.mock_calls) == 1
+    assert mock_compile.mock_calls[0][1][0] == "test.yaml"
+
+    assert len(mock_upload.mock_calls) == 1
+    assert mock_upload.mock_calls[0][1][0] == "test.yaml"
+
+    # Everything works
     with patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
     ) as mock_compile, patch(

@@ -14,6 +14,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -25,6 +26,9 @@ from .domain_data import DomainData
 from .entry_data import RuntimeEntryData
 
 KEY_UPDATE_LOCK = "esphome_update_lock"
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -161,16 +165,18 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     ) -> None:
         """Install an update."""
         async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
-            device = self.coordinator.data.get(self._device_info.name)
+            coordinator = self.coordinator
+            api = coordinator.api
+            device = coordinator.data.get(self._device_info.name)
             assert device is not None
-            if not await self.coordinator.api.compile(device["configuration"]):
-                logging.getLogger(__name__).error(
-                    "Error compiling %s. Try again in ESPHome dashboard for error",
-                    device["configuration"],
-                )
-            if not await self.coordinator.api.upload(device["configuration"], "OTA"):
-                logging.getLogger(__name__).error(
-                    "Error OTA updating %s. Try again in ESPHome dashboard for error",
-                    device["configuration"],
-                )
-            await self.coordinator.async_request_refresh()
+            try:
+                if not await api.compile(device["configuration"]):
+                    raise HomeAssistantError(
+                        f"Error compiling {device['configuration']}; Try again in ESPHome dashboard for more information."
+                    )
+                if not await api.upload(device["configuration"], "OTA"):
+                    raise HomeAssistantError(
+                        f"Error updating via OTA: {device['configuration']}; Try again in ESPHome dashboard for more information."
+                    )
+            finally:
+                await self.coordinator.async_request_refresh()
