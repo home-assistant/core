@@ -145,5 +145,51 @@
         "custom": "Custom"
       }
     }
+  },
+  "services": {
+    "publish": {
+      "name": "Publish",
+      "description": "Publishes a message to an MQTT topic.",
+      "fields": {
+        "topic": {
+          "name": "Topic",
+          "description": "Topic to publish to."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "The payload to publish."
+        },
+        "payload_template": {
+          "name": "Payload template",
+          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
+        },
+        "qos": {
+          "name": "QoS",
+          "description": "Quality of Service to use. O. At most once. 1: At least once. 2: Exactly once."
+        },
+        "retain": {
+          "name": "Retain",
+          "description": "If the message should have the retain flag set. If set, the broker stores the most recent message on a topic."
+        }
+      }
+    },
+    "dump": {
+      "name": "Export",
+      "description": "Writes all messages on a specific topic into the `mqtt_dump.txt` file in your configuration folder.",
+      "fields": {
+        "topic": {
+          "name": "Topic",
+          "description": "Topic to listen to."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "How long we should listen for messages in seconds."
+        }
+      }
+    },
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads MQTT entities from the YAML-configuration."
+    }
   }
 }
