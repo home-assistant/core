@@ -76,7 +76,7 @@
     },
     "alarm_arm_custom_bypass": {
       "name": "Arm with custom bypass",
-      "description": "Send arm custom bypass command.",
+      "description": "Arms the alarm while allowing to bypass a custom area.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -86,7 +86,7 @@
     },
     "alarm_arm_home": {
       "name": "Arm home",
-      "description": "Send the alarm the command for arm home.",
+      "description": "Sets the alarm to: _armed, but someone is home_.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -96,7 +96,7 @@
     },
     "alarm_arm_away": {
       "name": "Arm away",
-      "description": "Send the alarm the command for arm away.",
+      "description": "Sets the alarm to: _armed, no one home_.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -106,7 +106,7 @@
     },
     "alarm_arm_night": {
       "name": "Arm night",
-      "description": "Send the alarm the command for arm night.",
+      "description": "Sets the alarm to: _armed for the night_.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -116,7 +116,7 @@
     },
     "alarm_arm_vacation": {
       "name": "Arm vacation",
-      "description": "Send the alarm the command for arm vacation.",
+      "description": "Sets the alarm to: _armed for vacation_.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
@@ -126,7 +126,7 @@
     },
     "alarm_trigger": {
       "name": "Trigger",
-      "description": "Send the alarm the command for trigger.",
+      "description": "Enables an external alarm trigger.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
