@@ -34,5 +34,67 @@
       "title": "The {platform} custom integration is using deprecated vacuum feature",
       "description": "The custom integration `{platform}` is extending the deprecated base class `VacuumEntity` instead of `StateVacuumEntity`.\n\nPlease report it to the author of the `{platform}` custom integration.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
     }
+  },
+  "services": {
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Starts a new cleaning task."
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Stops the current cleaning task and return to home."
+    },
+    "stop": {
+      "name": "Stop",
+      "description": "Stops the current cleaning task."
+    },
+    "locate": {
+      "name": "Locate",
+      "description": "Locates the vacuum cleaner robot."
+    },
+    "start_pause": {
+      "name": "Start/pause",
+      "description": "Starts, pauses, or resumes the cleaning task."
+    },
+    "start": {
+      "name": "Start",
+      "description": "Starts or resumes the cleaning task."
+    },
+    "pause": {
+      "name": "Pause",
+      "description": "Pauses the cleaning task."
+    },
+    "return_to_base": {
+      "name": "Return to base",
+      "description": "Tells the vacuum cleaner to return to its dock."
+    },
+    "clean_spot": {
+      "name": "Clean spot",
+      "description": "Tells the vacuum cleaner to do a spot clean-up."
+    },
+    "send_command": {
+      "name": "Send command",
+      "description": "Sends a raw command to the vacuum cleaner.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command to execute."
+        },
+        "params": {
+          "name": "Parameters",
+          "description": "Parameters for the command."
+        }
+      }
+    },
+    "set_fan_speed": {
+      "name": "Set fan speed",
+      "description": "Sets the fan speed of the vacuum cleaner.",
+      "fields": {
+        "fan_speed": {
+          "name": "Fan speed",
+          "description": "Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium' or by percentage, between 0 and 100."
+        }
+      }
+    }
   }
 }
