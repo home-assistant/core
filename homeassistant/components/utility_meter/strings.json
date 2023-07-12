@@ -63,7 +63,7 @@
       "description": "Calibrates a utility meter sensor.",
       "fields": {
         "value": {
-          "name": "Value",
+          "name": "[%key:component::number::services::set_value::fields::value::name%]",
           "description": "Value to which set the meter."
         }
       }

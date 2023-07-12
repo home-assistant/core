@@ -79,14 +79,14 @@
       "remote_rotate_from_side_6": "Device rotated from \"side 6\" to \"{subtype}\""
     },
     "trigger_subtype": {
-      "turn_on": "Turn on",
-      "turn_off": "Turn off",
+      "turn_on": "[%key:common::action::turn_on%]",
+      "turn_off": "[%key:common::action::turn_off%]",
       "dim_up": "Dim up",
       "dim_down": "Dim down",
       "left": "Left",
       "right": "Right",
-      "open": "Open",
-      "close": "Close",
+      "open": "[%key:common::action::open%]",
+      "close": "[%key:common::action::close%]",
       "both_buttons": "Both buttons",
       "top_buttons": "Top buttons",
       "bottom_buttons": "Bottom buttons",

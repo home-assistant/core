@@ -29,7 +29,7 @@
       }
     },
     "scan": {
-      "name": "Scan",
+      "name": "[%key:component::image_processing::services::scan::name%]",
       "description": "Scans the velbus modules, this will be need if you see unknown module warnings in the logs, or when you added new modules.",
       "fields": {
         "interface": {

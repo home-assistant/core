@@ -1,7 +1,7 @@
 {
   "services": {
     "reload": {
-      "name": "Reload",
+      "name": "[%key:component::scene::services::reload::name%]",
       "description": "Reloads REST entities from the YAML-configuration."
     }
   }
