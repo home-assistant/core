@@ -32,7 +32,7 @@
       "fields": {
         "activity": {
           "name": "Activity",
-          "description": "Activity ID or activity name to start."
+          "description": "Activity ID or activity name to be started."
         }
       }
     },
@@ -42,7 +42,7 @@
     },
     "turn_off": {
       "name": "Turn off",
-      "description": "Sends the power off command."
+      "description": "Turns the device off."
     },
     "send_command": {
       "name": "Send command",
