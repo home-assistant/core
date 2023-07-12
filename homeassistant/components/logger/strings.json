@@ -12,7 +12,7 @@
     },
     "set_level": {
       "name": "Set level",
-      "description": "Sets log level for one or more integrations."
+      "description": "Sets the log level for one or more integrations."
     }
   },
   "selector": {
