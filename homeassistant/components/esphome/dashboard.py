@@ -93,13 +93,10 @@ class ESPHomeDashboardManager:
             hass, addon_slug, url, async_get_clientsession(hass)
         )
         await dashboard.async_request_refresh()
-        if not cur_dashboard and not dashboard.last_update_success:
-            # If there was no previous dashboard and the new one is not available,
-            # we skip setup and wait for discovery.
-            _LOGGER.error(
-                "Dashboard unavailable; skipping setup: %s", dashboard.last_exception
+        if not dashboard.last_update_success:
+            _LOGGER.warning(
+                "Dashboard unavailable; will retry later: %s", dashboard.last_exception
             )
-            return
 
         self._current_dashboard = dashboard
 
