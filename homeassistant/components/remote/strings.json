@@ -58,7 +58,7 @@
         },
         "num_repeats": {
           "name": "Repeats",
-          "description": "The number of times you want to repeat the command(s)."
+          "description": "The number of times you want to repeat the commands."
         },
         "delay_secs": {
           "name": "Delay seconds",
