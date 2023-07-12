@@ -156,6 +156,7 @@ FLOWS = {
         "frontier_silicon",
         "fully_kiosk",
         "garages_amsterdam",
+        "gardena_bluetooth",
         "gdacs",
         "generic",
         "geo_json_events",

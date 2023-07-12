@@ -17,5 +17,23 @@
         }
       }
     }
+  },
+  "services": {
+    "toggle": {
+      "name": "Toggle",
+      "description": "Toggles the helper on/off."
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Turns off the helper."
+    },
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Turns on the helper."
+    },
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads helpers from the YAML-configuration."
+    }
   }
 }
