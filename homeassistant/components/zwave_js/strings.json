@@ -157,7 +157,7 @@
         "step": {
           "confirm": {
             "title": "Dry and Fan preset modes will be removed: {entity_id}",
-            "description": "You are using the Dry or Fan preset modes in your entity `{entity_id}`.\n\nDry and Fan preset modes are deprecated and will be removed in Home Assistant {breaks_in_ha_version}. Please update your automations to use the corresponding Dry and Fan **HVAC modes** instead.\n\nClick on SUBMIT below once you have manually fixed this issue."
+            "description": "You are using the Dry or Fan preset modes in your entity `{entity_id}`.\n\nDry and Fan preset modes are deprecated and will be removed. Please update your automations to use the corresponding Dry and Fan **HVAC modes** instead.\n\nClick on SUBMIT below once you have manually fixed this issue."
           }
         }
       }

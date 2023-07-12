@@ -510,19 +510,17 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. "
                 "Please use the corresponding Dry and Fan HVAC modes instead"
             )
-            breaks_in_ha_version = "2024.2.0"
             async_create_issue(
                 self.hass,
                 DOMAIN,
                 f"dry_fan_presets_deprecation_{self.entity_id}",
-                breaks_in_ha_version=breaks_in_ha_version,
+                breaks_in_ha_version="2024.2.0",
                 is_fixable=True,
                 is_persistent=True,
                 severity=IssueSeverity.WARNING,
                 translation_key="dry_fan_presets_deprecation",
                 translation_placeholders={
                     "entity_id": self.entity_id,
-                    "breaks_in_ha_version": breaks_in_ha_version,
                 },
             )
 
