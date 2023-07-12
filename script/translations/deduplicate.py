@@ -15,6 +15,12 @@ from .util import get_base_arg_parser
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
     parser = get_base_arg_parser()
+    parser.add_argument(
+        "--limit-reference",
+        "--lr",
+        action="store_true",
+        help="Only allow references to same strings.json or common.",
+    )
     return parser.parse_args()
 
 
@@ -24,6 +30,7 @@ ENTITY_COMPONENT_PREFIX = tuple(f"component::{domain}::" for domain in Platform)
 
 def run():
     """Clean translations."""
+    args = get_arguments()
     translations = upload.generate_upload_data()
     flattened_translations = flatten_translations(translations)
     flattened_translations = {
@@ -60,15 +67,17 @@ def run():
 
         key_to_reference = merged[value]
         key_to_reference_integration = key_to_reference.split("::")[1]
+        is_common = key_to_reference.startswith("common::")
 
-        # Uncomment if we want to only add references to own integrations
+        # If we want to only add references to own integrations
         # but not include entity integrations
-        # if (
-        #     key_integration != key_to_reference_integration
-        #     # Do not create self-references in entity integrations
-        #     or key_integration in Platform.__members__.values()
-        # ):
-        #     continue
+        if (
+            args.limit_reference
+            and (key_integration != key_to_reference_integration and not is_common)
+            # Do not create self-references in entity integrations
+            or key_integration in Platform.__members__.values()
+        ):
+            continue
 
         if (
             # We don't want integrations to reference arbitrary other integrations
