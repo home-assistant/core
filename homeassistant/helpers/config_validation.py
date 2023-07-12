@@ -113,14 +113,14 @@ class UrlProtocolSchema(StrEnum):
 
     HTTP = "http"
     HTTPS = "https"
-    HOMEASSISANT = "homeassistant"
+    HOMEASSISTANT = "homeassistant"
 
 
 EXTERNAL_URL_PROTOCOL_SCHEMA_LIST = frozenset(
     {UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
 )
 CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
-    {UrlProtocolSchema.HOMEASSISANT, UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
+    {UrlProtocolSchema.HOMEASSISTANT, UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
 )
 
 # Home Assistant types
