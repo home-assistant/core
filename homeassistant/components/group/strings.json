@@ -214,15 +214,15 @@
         },
         "entities": {
           "name": "Entities",
-          "description": "List of all members in the group. Cannot be used in combination with `Add Entities` or `Remove Entities`."
+          "description": "List of all members in the group. Cannot be used in combination with `Add entities` or `Remove entities`."
         },
         "add_entities": {
-          "name": "Add Entities",
-          "description": "List of members to be added to the group. Cannot be used in combination with `Entities` or `Remove Entities`."
+          "name": "Add entities",
+          "description": "List of members to be added to the group. Cannot be used in combination with `Entities` or `Remove entities`."
         },
         "remove_entities": {
-          "name": "Remove Entities",
-          "description": "List of members to be removed from a group. Cannot be used in combination with `Entities` or `Add Entities`."
+          "name": "Remove entities",
+          "description": "List of members to be removed from a group. Cannot be used in combination with `Entities` or `Add entities`."
         },
         "all": {
           "name": "All",
