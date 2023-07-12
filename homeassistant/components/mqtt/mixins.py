@@ -244,6 +244,20 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
+@callback
+def async_handle_schema_error(
+    discovery_payload: MQTTDiscoveryPayload, err: vol.MultipleInvalid
+) -> None:
+    """Help handling schema errors on MQTT discovery messages."""
+    discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+    _LOGGER.error(
+        "Error '%s' when processing MQTT discovery message topic: '%s', message: '%s'",
+        err,
+        discovery_topic,
+        discovery_payload,
+    )
+
+
 async def async_setup_entry_helper(
     hass: HomeAssistant,
     domain: str,
@@ -269,8 +283,15 @@ async def async_setup_entry_helper(
         try:
             config: DiscoveryInfoType = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_data)
+        except vol.Invalid as err:
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+            async_handle_schema_error(discovery_payload, err)
         except Exception:
-            discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
             clear_discovery_hash(hass, discovery_hash)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
@@ -1037,7 +1058,11 @@ class MqttEntity(
 
     async def discovery_update(self, discovery_payload: MQTTDiscoveryPayload) -> None:
         """Handle updated discovery message."""
-        config: DiscoveryInfoType = self.config_schema()(discovery_payload)
+        try:
+            config: DiscoveryInfoType = self.config_schema()(discovery_payload)
+        except vol.Invalid as err:
+            async_handle_schema_error(discovery_payload, err)
+            return
         self._config = config
         self._setup_common_attributes_from_config(self._config)
         self._setup_from_config(self._config)

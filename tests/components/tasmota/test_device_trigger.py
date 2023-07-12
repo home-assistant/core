@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 from hatasmota.switch import TasmotaSwitchTriggerConfig
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -18,7 +19,6 @@ from homeassistant.setup import async_setup_component
 from .test_common import DEFAULT_CONFIG, remove_device
 
 from tests.common import (
-    assert_lists_same,
     async_fire_mqtt_message,
     async_get_device_automations,
 )
@@ -74,7 +74,7 @@ async def test_get_triggers_btn(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_swc(
@@ -109,7 +109,7 @@ async def test_get_triggers_swc(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_unknown_triggers(
@@ -158,7 +158,7 @@ async def test_get_unknown_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, [])
+    assert triggers == []
 
 
 async def test_get_non_existing_triggers(
@@ -183,7 +183,7 @@ async def test_get_non_existing_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, [])
+    assert triggers == []
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -215,7 +215,7 @@ async def test_discover_bad_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, [])
+    assert triggers == []
 
     # Trigger an exception when the entity is discovered
     class FakeTrigger(TasmotaSwitchTriggerConfig):
@@ -251,7 +251,7 @@ async def test_discover_bad_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, [])
+    assert triggers == []
 
     # Rediscover without exception
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
@@ -271,7 +271,7 @@ async def test_discover_bad_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_update_remove_triggers(

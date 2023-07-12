@@ -16,5 +16,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/rapt_ble",
   "iot_class": "local_push",
-  "requirements": ["rapt-ble==0.1.1"]
+  "requirements": ["rapt-ble==0.1.2"]
 }

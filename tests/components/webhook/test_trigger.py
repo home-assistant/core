@@ -137,7 +137,7 @@ async def test_webhook_allowed_methods_internet(
                     "platform": "webhook",
                     "webhook_id": "post_webhook",
                     "allowed_methods": "PUT",
-                    # Enable after 2023.4.0: "local_only": False,
+                    # Enable after 2023.11.0: "local_only": False,
                 },
                 "action": {
                     "event": "test_success",

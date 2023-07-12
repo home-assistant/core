@@ -31,10 +31,8 @@
     "step": {
       "init": {
         "data": {
-          "enable_conversation_agent": "Enable the conversation agent",
           "language_code": "Language code"
-        },
-        "description": "Set language for interactions with Google Assistant and whether you want to enable the conversation agent."
+        }
       }
     }
   },

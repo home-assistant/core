@@ -17,7 +17,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "city": "City",
           "country": "Country",
-          "state": "state"
+          "state": "State"
         }
       },
       "reauth_confirm": {

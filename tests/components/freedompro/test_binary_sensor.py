@@ -74,7 +74,7 @@ async def test_binary_sensor_get_state(
     assert state.state == STATE_OFF
 
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=[],
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -100,7 +100,7 @@ async def test_binary_sensor_get_state(
     elif states_response[0]["type"] == "contactSensor":
         states_response[0]["state"]["contactSensorState"] = True
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

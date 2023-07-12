@@ -43,5 +43,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "departures": {
+        "name": "Departures"
+      }
+    }
   }
 }

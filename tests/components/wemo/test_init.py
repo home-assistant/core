@@ -138,9 +138,9 @@ async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
         device.host = f"{MOCK_HOST}_{counter}"
         device.port = MOCK_PORT + counter
         device.name = f"{MOCK_NAME}_{counter}"
-        device.serialnumber = f"{MOCK_SERIAL_NUMBER}_{counter}"
+        device.serial_number = f"{MOCK_SERIAL_NUMBER}_{counter}"
         device.model_name = "Motion"
-        device.udn = f"uuid:{device.model_name}-1_0-{device.serialnumber}"
+        device.udn = f"uuid:{device.model_name}-1_0-{device.serial_number}"
         device.firmware_version = MOCK_FIRMWARE_VERSION
         device.get_state.return_value = 0  # Default to Off
         device.supports_long_press.return_value = False

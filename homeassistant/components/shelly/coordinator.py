@@ -535,7 +535,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
         if self.device.connected:
-            await async_stop_scanner(self.device)
+            try:
+                await async_stop_scanner(self.device)
+            except InvalidAuthError:
+                self.entry.async_start_reauth(self.hass)
         await self.device.shutdown()
         await self._async_disconnected()
 

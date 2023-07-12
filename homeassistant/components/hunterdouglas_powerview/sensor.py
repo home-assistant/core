@@ -70,7 +70,7 @@ SENSORS: Final = [
     PowerviewSensorDescription(
         key="signal",
         name="Signal",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        icon="mdi:signal",
         native_unit_of_measurement=PERCENTAGE,
         native_value_fn=lambda shade: round(
             shade.raw_data[ATTR_SIGNAL_STRENGTH] / ATTR_SIGNAL_STRENGTH_MAX * 100

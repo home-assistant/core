@@ -85,6 +85,13 @@ NO_STORE = re.compile(
 # pylint: enable=implicit-str-concat
 # fmt: on
 
+RESPONSE_HEADERS_FILTER = {
+    TRANSFER_ENCODING,
+    CONTENT_LENGTH,
+    CONTENT_TYPE,
+    CONTENT_ENCODING,
+}
+
 
 class HassIOView(HomeAssistantView):
     """Hass.io view to handle base part."""
@@ -170,8 +177,9 @@ class HassIOView(HomeAssistantView):
             )
             response.content_type = client.content_type
 
+            response.enable_compression()
             await response.prepare(request)
-            async for data in client.content.iter_chunked(4096):
+            async for data in client.content.iter_chunked(8192):
                 await response.write(data)
 
             return response
@@ -190,21 +198,13 @@ class HassIOView(HomeAssistantView):
 
 def _response_header(response: aiohttp.ClientResponse, path: str) -> dict[str, str]:
     """Create response header."""
-    headers = {}
-
-    for name, value in response.headers.items():
-        if name in (
-            TRANSFER_ENCODING,
-            CONTENT_LENGTH,
-            CONTENT_TYPE,
-            CONTENT_ENCODING,
-        ):
-            continue
-        headers[name] = value
-
+    headers = {
+        name: value
+        for name, value in response.headers.items()
+        if name not in RESPONSE_HEADERS_FILTER
+    }
     if NO_STORE.match(path):
         headers[CACHE_CONTROL] = "no-store, max-age=0"
-
     return headers
 
 

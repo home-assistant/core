@@ -907,6 +907,7 @@ async def websocket_bind_devices(
         ATTR_TARGET_IEEE,
         target_ieee,
     )
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -935,6 +936,7 @@ async def websocket_unbind_devices(
         ATTR_TARGET_IEEE,
         target_ieee,
     )
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -951,13 +953,14 @@ async def websocket_bind_group(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Directly bind a device to a group."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = get_gateway(hass)
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
     source_device = zha_gateway.get_device(source_ieee)
     assert source_device
     await source_device.async_bind_to_group(group_id, bindings)
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -974,13 +977,19 @@ async def websocket_unbind_group(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Unbind a device from a group."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = get_gateway(hass)
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
     source_device = zha_gateway.get_device(source_ieee)
     assert source_device
     await source_device.async_unbind_from_group(group_id, bindings)
+    connection.send_result(msg[ID])
+
+
+def get_gateway(hass: HomeAssistant) -> ZHAGateway:
+    """Return Gateway, mainly as fixture for mocking during testing."""
+    return hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
 
 async def async_binding_operation(

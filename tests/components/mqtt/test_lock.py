@@ -796,7 +796,7 @@ async def test_discovery_removal_lock(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered lock."""
-    data = '{ "name": "test",' '  "command_topic": "test_topic" }'
+    data = '{ "name": "test", "command_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, lock.DOMAIN, data)
 
 
@@ -855,7 +855,7 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, lock.DOMAIN, data1, data2
     )

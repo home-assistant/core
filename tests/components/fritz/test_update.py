@@ -113,7 +113,7 @@ async def test_available_update_can_be_installed(
         assert update is not None
         assert update.state == "on"
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             "update",
             "install",
             {"entity_id": "update.mock_title_fritz_os"},

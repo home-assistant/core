@@ -37,6 +37,7 @@ ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
     "TIRE_WEAR_REAR",
     "VEHICLE_CHECK",
     "VEHICLE_TUV",
+    "WASHING_FLUID",
 }
 LOGGED_CONDITION_BASED_SERVICE_WARNINGS: set[str] = set()
 
@@ -122,7 +123,7 @@ class BMWBinarySensorEntityDescription(
 SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="lids",
-        name="Lids",
+        translation_key="lids",
         device_class=BinarySensorDeviceClass.OPENING,
         icon="mdi:car-door-lock",
         # device class opening: On means open, Off means closed
@@ -133,7 +134,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     ),
     BMWBinarySensorEntityDescription(
         key="windows",
-        name="Windows",
+        translation_key="windows",
         device_class=BinarySensorDeviceClass.OPENING,
         icon="mdi:car-door",
         # device class opening: On means open, Off means closed
@@ -144,7 +145,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     ),
     BMWBinarySensorEntityDescription(
         key="door_lock_state",
-        name="Door lock state",
+        translation_key="door_lock_state",
         device_class=BinarySensorDeviceClass.LOCK,
         icon="mdi:car-key",
         # device class lock: On means unlocked, Off means locked
@@ -157,7 +158,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     ),
     BMWBinarySensorEntityDescription(
         key="condition_based_services",
-        name="Condition based services",
+        translation_key="condition_based_services",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:wrench",
         # device class problem: On means problem detected, Off means no problem
@@ -166,7 +167,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     ),
     BMWBinarySensorEntityDescription(
         key="check_control_messages",
-        name="Check control messages",
+        translation_key="check_control_messages",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:car-tire-alert",
         # device class problem: On means problem detected, Off means no problem
@@ -176,7 +177,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     # electric
     BMWBinarySensorEntityDescription(
         key="charging_status",
-        name="Charging status",
+        translation_key="charging_status",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         icon="mdi:ev-station",
         # device class power: On means power detected, Off means no power
@@ -184,14 +185,14 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     ),
     BMWBinarySensorEntityDescription(
         key="connection_status",
-        name="Connection status",
+        translation_key="connection_status",
         device_class=BinarySensorDeviceClass.PLUG,
         icon="mdi:car-electric",
         value_fn=lambda v: v.fuel_and_battery.is_charger_connected,
     ),
     BMWBinarySensorEntityDescription(
         key="is_pre_entry_climatization_enabled",
-        name="Pre entry climatization",
+        translation_key="is_pre_entry_climatization_enabled",
         icon="mdi:car-seat-heater",
         value_fn=lambda v: v.charging_profile.is_pre_entry_climatization_enabled
         if v.charging_profile

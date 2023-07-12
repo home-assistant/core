@@ -6,6 +6,8 @@ turn_on:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.TURN_ON
 
 turn_off:
   name: Turn off
@@ -13,6 +15,8 @@ turn_off:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.TURN_OFF
 
 toggle:
   name: Toggle
@@ -20,6 +24,9 @@ toggle:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - - media_player.MediaPlayerEntityFeature.TURN_OFF
+          - media_player.MediaPlayerEntityFeature.TURN_ON
 
 volume_up:
   name: Turn up volume
@@ -27,6 +34,9 @@ volume_up:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
+        - media_player.MediaPlayerEntityFeature.VOLUME_STEP
 
 volume_down:
   name: Turn down volume
@@ -34,6 +44,9 @@ volume_down:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
+        - media_player.MediaPlayerEntityFeature.VOLUME_STEP
 
 volume_mute:
   name: Mute volume
@@ -41,6 +54,8 @@ volume_mute:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_MUTE
   fields:
     is_volume_muted:
       name: Muted
@@ -55,6 +70,8 @@ volume_set:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
   fields:
     volume_level:
       name: Level
@@ -72,6 +89,9 @@ media_play_pause:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - - media_player.MediaPlayerEntityFeature.PAUSE
+          - media_player.MediaPlayerEntityFeature.PLAY
 
 media_play:
   name: Play
@@ -79,6 +99,8 @@ media_play:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY
 
 media_pause:
   name: Pause
@@ -86,6 +108,8 @@ media_pause:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PAUSE
 
 media_stop:
   name: Stop
@@ -93,6 +117,8 @@ media_stop:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.STOP
 
 media_next_track:
   name: Next
@@ -100,6 +126,8 @@ media_next_track:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.NEXT_TRACK
 
 media_previous_track:
   name: Previous
@@ -107,6 +135,8 @@ media_previous_track:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK
 
 media_seek:
   name: Seek
@@ -114,6 +144,8 @@ media_seek:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SEEK
   fields:
     seek_position:
       name: Position
@@ -132,6 +164,8 @@ play_media:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
   fields:
     media_content_id:
       name: Content ID
@@ -154,6 +188,9 @@ play_media:
     enqueue:
       name: Enqueue
       description: If the content should be played now or be added to the queue.
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.MEDIA_ENQUEUE
       required: false
       selector:
         select:
@@ -169,6 +206,9 @@ play_media:
     announce:
       name: Announce
       description: If the media should be played as an announcement.
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
       required: false
       example: "true"
       selector:
@@ -180,6 +220,8 @@ select_source:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SELECT_SOURCE
   fields:
     source:
       name: Source
@@ -195,6 +237,8 @@ select_sound_mode:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE
   fields:
     sound_mode:
       name: Sound mode
@@ -209,6 +253,8 @@ clear_playlist:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.CLEAR_PLAYLIST
 
 shuffle_set:
   name: Shuffle
@@ -216,6 +262,8 @@ shuffle_set:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SHUFFLE_SET
   fields:
     shuffle:
       name: Shuffle
@@ -230,6 +278,8 @@ repeat_set:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.REPEAT_SET
   fields:
     repeat:
       name: Repeat mode
@@ -253,6 +303,8 @@ join:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.GROUPING
   fields:
     group_members:
       name: Group members
@@ -274,3 +326,5 @@ unjoin:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.GROUPING

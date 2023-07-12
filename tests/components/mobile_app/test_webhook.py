@@ -1026,15 +1026,19 @@ async def test_webhook_handle_conversation_process(
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
 
-    resp = await webhook_client.post(
-        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
-        json={
-            "type": "conversation_process",
-            "data": {
-                "text": "Turn the kitchen light off",
+    with patch(
+        "homeassistant.components.conversation.AgentManager.async_get_agent",
+        return_value=mock_agent,
+    ):
+        resp = await webhook_client.post(
+            "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+            json={
+                "type": "conversation_process",
+                "data": {
+                    "text": "Turn the kitchen light off",
+                },
             },
-        },
-    )
+        )
 
     assert resp.status == HTTPStatus.OK
     json = await resp.json()

@@ -1,9 +1,0 @@
-{
-  "domain": "goalfeed",
-  "name": "Goalfeed",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/goalfeed",
-  "iot_class": "cloud_push",
-  "loggers": ["pysher"],
-  "requirements": ["Pysher==1.0.7"]
-}

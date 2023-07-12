@@ -25,14 +25,13 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=TYPE_TEMPERATURE,
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=TYPE_WIFI_STRENGTH,
-        name="Wifi Signal",
+        translation_key="wifi_rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -57,10 +56,11 @@ async def async_setup_entry(
 class BlinkSensor(SensorEntity):
     """A Blink camera sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, data, camera, description: SensorEntityDescription) -> None:
         """Initialize sensors from Blink camera."""
         self.entity_description = description
-        self._attr_name = f"{DOMAIN} {camera} {description.name}"
         self.data = data
         self._camera = data.cameras[camera]
         self._attr_unique_id = f"{self._camera.serial}-{description.key}"
@@ -71,7 +71,7 @@ class BlinkSensor(SensorEntity):
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._camera.serial)},
-            name=camera,
+            name=f"{DOMAIN} {camera}",
             manufacturer=DEFAULT_BRAND,
             model=self._camera.camera_type,
         )

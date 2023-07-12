@@ -459,9 +459,9 @@ async def async_setup_entry(
                     @callback
                     def close_transport(_event: EventType) -> None:
                         """Close the transport on HA shutdown."""
-                        if not transport:
+                        if not transport:  # noqa: B023
                             return
-                        transport.close()
+                        transport.close()  # noqa: B023
 
                     stop_listener = hass.bus.async_listen_once(
                         EVENT_HOMEASSISTANT_STOP, close_transport

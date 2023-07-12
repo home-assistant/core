@@ -94,6 +94,7 @@ class SeasonSensorEntity(SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_options = ["spring", "summer", "autumn", "winter"]
     _attr_translation_key = "season"
 

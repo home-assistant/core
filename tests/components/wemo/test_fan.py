@@ -106,7 +106,7 @@ async def test_fan_reset_filter_service(
     hass: HomeAssistant, pywemo_device, wemo_entity
 ) -> None:
     """Verify that SERVICE_RESET_FILTER_LIFE is registered and works."""
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         fan.SERVICE_RESET_FILTER_LIFE,
         {ATTR_ENTITY_ID: wemo_entity.entity_id},
@@ -130,7 +130,7 @@ async def test_fan_set_humidity_service(
     hass: HomeAssistant, pywemo_device, wemo_entity, test_input, expected
 ) -> None:
     """Verify that SERVICE_SET_HUMIDITY is registered and works."""
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         fan.SERVICE_SET_HUMIDITY,
         {
@@ -157,7 +157,7 @@ async def test_fan_set_percentage(
     hass: HomeAssistant, pywemo_device, wemo_entity, percentage, expected_fan_mode
 ) -> None:
     """Verify set_percentage works properly through the entire range of FanModes."""
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
         {ATTR_ENTITY_ID: [wemo_entity.entity_id], ATTR_PERCENTAGE: percentage},
@@ -170,7 +170,7 @@ async def test_fan_mode_high_initially(hass: HomeAssistant, pywemo_device) -> No
     """Verify the FanMode is set to High when turned on."""
     pywemo_device.fan_mode = FanMode.Off
     wemo_entity = await async_create_wemo_entity(hass, pywemo_device, "")
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: [wemo_entity.entity_id]},

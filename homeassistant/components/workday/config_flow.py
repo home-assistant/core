@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from holidays import country_holidays, list_supported_countries
+import holidays
+from holidays import HolidayBase, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -76,10 +77,12 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
+    cls: HolidayBase = getattr(holidays, user_input[CONF_COUNTRY])
     year: int = dt_util.now().year
-    obj_holidays = country_holidays(
-        user_input[CONF_COUNTRY], user_input.get(CONF_PROVINCE), year
-    )
+
+    obj_holidays = cls(
+        subdiv=user_input.get(CONF_PROVINCE), years=year, language=cls.default_language
+    )  # type: ignore[operator]
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
         if dt_util.parse_date(remove_date) is None:
@@ -247,7 +250,10 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="options",
             data_schema=new_schema,
             errors=errors,
-            description_placeholders={"name": self.data[CONF_NAME]},
+            description_placeholders={
+                "name": self.data[CONF_NAME],
+                "country": self.data[CONF_COUNTRY],
+            },
         )
 
 
@@ -304,6 +310,10 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=new_schema,
             errors=errors,
+            description_placeholders={
+                "name": self.options[CONF_NAME],
+                "country": self.options[CONF_COUNTRY],
+            },
         )
 
 

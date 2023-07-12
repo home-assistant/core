@@ -3,20 +3,20 @@
   "device_automation": {
     "condition_type": {
       "is_buffering": "{entity_name} is buffering",
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off",
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]",
       "is_idle": "{entity_name} is idle",
       "is_paused": "{entity_name} is paused",
       "is_playing": "{entity_name} is playing"
     },
     "trigger_type": {
       "buffering": "{entity_name} starts buffering",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
       "idle": "{entity_name} becomes idle",
       "paused": "{entity_name} is paused",
       "playing": "{entity_name} starts playing",
-      "changed_states": "{entity_name} changed states"
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]"
     }
   },
   "entity_component": {
@@ -122,7 +122,7 @@
           "name": "Repeat",
           "state": {
             "all": "All",
-            "off": "Off",
+            "off": "[%key:common::state::off%]",
             "one": "One"
           }
         },
@@ -158,12 +158,6 @@
     },
     "receiver": {
       "name": "Receiver"
-    }
-  },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }

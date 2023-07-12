@@ -692,10 +692,7 @@ async def test_default_availability_list_single(
 ) -> None:
     """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
-        hass,
-        caplog,
-        sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, caplog, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 

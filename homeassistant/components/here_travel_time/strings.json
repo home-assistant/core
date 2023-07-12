@@ -85,5 +85,24 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "duration": {
+        "name": "Duration"
+      },
+      "duration_in_traffic": {
+        "name": "Duration in traffic"
+      },
+      "distance": {
+        "name": "Distance"
+      },
+      "origin": {
+        "name": "Origin"
+      },
+      "destination": {
+        "name": "Destination"
+      }
+    }
   }
 }

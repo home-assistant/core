@@ -11,6 +11,9 @@ turn_on:
       name: Activity
       description: Activity ID or Activity Name to start.
       example: "BedroomTV"
+      filter:
+        supported_features:
+          - remote.RemoteEntityFeature.ACTIVITY
       selector:
         text:
 

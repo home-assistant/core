@@ -82,6 +82,12 @@ async def websocket_create_network(
         return
 
     try:
+        await data.delete_active_dataset()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "delete_active_dataset_failed", str(exc))
+        return
+
+    try:
         await data.create_active_dataset(
             python_otbr_api.ActiveDataSet(
                 channel=channel, network_name="home-assistant"

@@ -12,6 +12,9 @@
     "_": {
       "name": "[%key:component::button::title%]"
     },
+    "identify": {
+      "name": "Identify"
+    },
     "restart": {
       "name": "Restart"
     },
@@ -19,10 +22,10 @@
       "name": "Update"
     }
   },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+  "services": {
+    "press": {
+      "name": "Press",
+      "description": "Press the button entity."
     }
   }
 }

@@ -76,7 +76,7 @@ from .models import (
     BluetoothScanningMode,
     HaBluetoothConnector,
 )
-from .scanner import HaScanner, ScannerStartError
+from .scanner import MONOTONIC_TIME, HaScanner, ScannerStartError
 from .storage import BluetoothStorage
 
 if TYPE_CHECKING:
@@ -108,6 +108,7 @@ __all__ = [
     "HaBluetoothConnector",
     "SOURCE_LOCAL",
     "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
+    "MONOTONIC_TIME",
 ]
 
 _LOGGER = logging.getLogger(__name__)

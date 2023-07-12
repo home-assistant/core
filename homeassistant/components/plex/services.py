@@ -145,7 +145,7 @@ def process_plex_payload(
             plex_server = get_plex_server(hass, plex_server_id=server_id)
         else:
             # Handle legacy payloads without server_id in URL host position
-            if plex_url.host == "search":
+            if plex_url.host == "search":  # noqa: PLR5501
                 content = {}
             else:
                 content = int(plex_url.host)  # type: ignore[arg-type]
