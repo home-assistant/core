@@ -46,13 +46,18 @@ FIELD_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
-        vol.Optional("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None),
-        vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
-    }
+SERVICE_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Optional("description"): str,
+            vol.Optional("name"): str,
+            vol.Optional("target"): vol.Any(
+                selector.TargetSelector.CONFIG_SCHEMA, None
+            ),
+            vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
+        }
+    ),
+    None,
 )
 
 SERVICES_SCHEMA = vol.Schema({cv.slug: SERVICE_SCHEMA})
@@ -116,6 +121,8 @@ def validate_services(config: Config, integration: Integration) -> None:
     # For each service in the integration, check if the description if set,
     # if not, check if it's in the strings file. If not, add an error.
     for service_name, service_schema in services.items():
+        if service_schema is None:
+            continue
         if "name" not in service_schema:
             try:
                 strings["services"][service_name]["name"]

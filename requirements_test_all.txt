@@ -108,7 +108,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.0.3
 
 # homeassistant.components.python_script
-RestrictedPython==6.0
+RestrictedPython==6.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.4
+aioesphomeapi==15.1.6
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -302,7 +302,7 @@ aioqsw==0.3.2
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2023.01.0
+aioridwell==2023.07.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -481,7 +481,7 @@ caldav==1.2.0
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.6.0
+colorlog==6.7.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -1148,7 +1148,7 @@ pyElectra==1.2.0
 pyRFXtrx==0.30.1
 
 # homeassistant.components.tibber
-pyTibber==0.27.2
+pyTibber==0.28.0
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1660,7 +1660,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.1
+reolink-aio==0.7.3
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -2023,10 +2023,10 @@ zigpy-xbee==0.18.1
 zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.11.2
+zigpy-znp==0.11.3
 
 # homeassistant.components.zha
-zigpy==0.56.1
+zigpy==0.56.2
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.49.0

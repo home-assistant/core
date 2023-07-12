@@ -143,7 +143,14 @@ class ESPHomeDashboardManager:
 
 @callback
 def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboard | None:
-    """Get an instance of the dashboard if set."""
+    """Get an instance of the dashboard if set.
+
+    This is only safe to call after `async_setup` has been completed.
+
+    It should not be called from the config flow because there is a race
+    where manager can be an asyncio.Event instead of the actual manager
+    because the singleton decorator is not yet done.
+    """
     manager: ESPHomeDashboardManager | None = hass.data.get(KEY_DASHBOARD_MANAGER)
     return manager.async_get() if manager else None
 
