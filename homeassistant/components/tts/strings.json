@@ -1,0 +1,60 @@
+{
+  "services": {
+    "say": {
+      "name": "Say a TTS message",
+      "description": "Says something using text-to-speech on a media player.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of media player entities."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Text to speak on devices."
+        },
+        "cache": {
+          "name": "Cache",
+          "description": "Control file cache of this message."
+        },
+        "language": {
+          "name": "Language",
+          "description": "Language to use for speech generation."
+        },
+        "options": {
+          "name": "Options",
+          "description": "A dictionary containing platform-specific options. Optional depending on the platform."
+        }
+      }
+    },
+    "speak": {
+      "name": "Speak",
+      "description": "Speaks something using text-to-speech on a media player.",
+      "fields": {
+        "media_player_entity_id": {
+          "name": "Media player entity",
+          "description": "Name(s) of media player entities."
+        },
+        "message": {
+          "name": "[%key:component::tts::services::say::fields::message::name%]",
+          "description": "[%key:component::tts::services::say::fields::message::description%]"
+        },
+        "cache": {
+          "name": "[%key:component::tts::services::say::fields::cache::name%]",
+          "description": "[%key:component::tts::services::say::fields::cache::description%]"
+        },
+        "language": {
+          "name": "[%key:component::tts::services::say::fields::language::name%]",
+          "description": "[%key:component::tts::services::say::fields::language::description%]"
+        },
+        "options": {
+          "name": "[%key:component::tts::services::say::fields::options::name%]",
+          "description": "[%key:component::tts::services::say::fields::options::description%]"
+        }
+      }
+    },
+    "clear_cache": {
+      "name": "Clear TTS cache",
+      "description": "Removes all text-to-speech cache files and memory."
+    }
+  }
+}
