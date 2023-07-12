@@ -30,5 +30,19 @@
     "outlet": {
       "name": "Outlet"
     }
+  },
+  "services": {
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Turns a switch on."
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Turns a switch off."
+    },
+    "toggle": {
+      "name": "Toggle",
+      "description": "Toggles a switch on/off."
+    }
   }
 }
