@@ -44,7 +44,7 @@ async def async_setup_entry(
         nonlocal unsubs
         assert dashboard is not None
         # Keep listening until device is available
-        if not entry_data.available:
+        if not entry_data.available or not dashboard.last_update_success:
             return
 
         for unsub in unsubs:
@@ -53,7 +53,7 @@ async def async_setup_entry(
 
         async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
 
-    if entry_data.available:
+    if entry_data.available and dashboard.last_update_success:
         _async_setup_update_entity()
         return
 

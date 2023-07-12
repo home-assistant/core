@@ -1,23 +1,34 @@
 """Test ESPHome update entities."""
 import asyncio
+from collections.abc import Awaitable, Callable
 import dataclasses
 from unittest.mock import Mock, patch
 
+from aioesphomeapi import (
+    APIClient,
+    EntityInfo,
+    EntityState,
+    UserService,
+)
 import pytest
 
 from homeassistant.components.esphome.dashboard import (
     async_get_dashboard,
-    async_set_dashboard_info,
 )
 from homeassistant.components.update import UpdateEntityFeature
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
+from .conftest import MockESPHomeDevice
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def stub_reconnect():
     """Stub reconnect."""
     with patch("homeassistant.components.esphome.manager.ReconnectLogic.start"):
@@ -65,6 +76,7 @@ def stub_reconnect():
 )
 async def test_update_entity(
     hass: HomeAssistant,
+    stub_reconnect,
     mock_config_entry,
     mock_device_info,
     mock_dashboard,
@@ -114,6 +126,7 @@ async def test_update_entity(
 
 async def test_update_static_info(
     hass: HomeAssistant,
+    stub_reconnect,
     mock_config_entry,
     mock_device_info,
     mock_dashboard,
@@ -160,6 +173,7 @@ async def test_update_static_info(
 )
 async def test_update_device_state_for_availability(
     hass: HomeAssistant,
+    stub_reconnect,
     expected_disconnect_state: tuple[bool, str],
     mock_config_entry,
     mock_device_info,
@@ -215,7 +229,11 @@ async def test_update_device_state_for_availability(
 
 
 async def test_update_entity_dashboard_not_available_startup(
-    hass: HomeAssistant, mock_config_entry, mock_device_info, mock_dashboard
+    hass: HomeAssistant,
+    stub_reconnect,
+    mock_config_entry,
+    mock_device_info,
+    mock_dashboard,
 ) -> None:
     """Test ESPHome update entity when dashboard is not available at startup."""
     with patch(
@@ -230,6 +248,7 @@ async def test_update_entity_dashboard_not_available_startup(
             mock_config_entry, "update"
         )
 
+    # We have a dashboard but it is not available
     state = hass.states.get("update.none_firmware")
     assert state is None
 
@@ -244,7 +263,7 @@ async def test_update_entity_dashboard_not_available_startup(
     await hass.async_block_till_done()
 
     state = hass.states.get("update.none_firmware")
-    assert state.state == "on"
+    assert state.state == STATE_ON
     expected_attributes = {
         "latest_version": "2023.2.0-dev",
         "installed_version": "1.0.0",
@@ -255,27 +274,57 @@ async def test_update_entity_dashboard_not_available_startup(
 
 
 async def test_update_entity_dashboard_discovered_after_startup_but_update_failed(
-    hass: HomeAssistant, mock_config_entry, mock_device_info
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    mock_dashboard,
 ) -> None:
     """Test ESPHome update entity when dashboard is discovered after startup and the first update fails."""
-    state = hass.states.get("update.none_firmware")
-    assert state is None
-
     with patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
         side_effect=asyncio.TimeoutError,
     ):
-        await async_set_dashboard_info(
-            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+        await async_get_dashboard(hass).async_refresh()
+        await hass.async_block_till_done()
+        mock_device = await mock_esphome_device(
+            mock_client=mock_client,
+            entity_info=[],
+            user_service=[],
+            states=[],
         )
         await hass.async_block_till_done()
+    state = hass.states.get("update.test_firmware")
+    assert state is None
 
-    state = hass.states.get("update.none_firmware")
-    assert state.state == STATE_UNAVAILABLE
+    await mock_device.mock_disconnect(False)
+
+    mock_dashboard["configured"] = [
+        {
+            "name": "test",
+            "current_version": "2023.2.0-dev",
+            "configuration": "test.yaml",
+        }
+    ]
+    # Device goes unavailable, and dashboard becomes available
+    await async_get_dashboard(hass).async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_firmware")
+    assert state is None
+
+    # Finally both are available
+    await mock_device.mock_connect()
+    await async_get_dashboard(hass).async_refresh()
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_firmware")
+    assert state is not None
 
 
 async def test_update_entity_not_present_without_dashboard(
-    hass: HomeAssistant, mock_config_entry, mock_device_info
+    hass: HomeAssistant, stub_reconnect, mock_config_entry, mock_device_info
 ) -> None:
     """Test ESPHome update entity does not get created if there is no dashboard."""
     with patch(
