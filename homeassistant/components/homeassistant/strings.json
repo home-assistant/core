@@ -53,7 +53,7 @@
     },
     "reload_core_config": {
       "name": "Reload core configuration",
-      "description": "Reloads core configuration from the YAML-configuration."
+      "description": "Reloads the core configuration from the YAML-configuration."
     },
     "restart": {
       "name": "Restart",
@@ -99,11 +99,11 @@
     },
     "reload_config_entry": {
       "name": "Reload config entry",
-      "description": "Reloads a config entry that matches a target.",
+      "description": "Reloads the specified config entry.",
       "fields": {
         "entry_id": {
           "name": "Config entry ID",
-          "description": "A configuration entry ID."
+          "description": "The configuration entry ID of the entry to be reloaded."
         }
       }
     },
