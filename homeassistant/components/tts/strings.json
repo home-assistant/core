@@ -14,7 +14,7 @@
         },
         "cache": {
           "name": "Cache",
-          "description": "Stores this message locally so that when the text is requested again, the output can be  produced more quickly."
+          "description": "Stores this message locally so that when the text is requested again, the output can be produced more quickly."
         },
         "language": {
           "name": "Language",
