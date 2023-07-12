@@ -32,7 +32,7 @@
       "fields": {
         "media_player_entity_id": {
           "name": "Media player entity",
-          "description": "Names of the media player entities."
+          "description": "Media players to play the message."
         },
         "message": {
           "name": "[%key:component::tts::services::say::fields::message::name%]",
