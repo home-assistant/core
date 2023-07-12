@@ -10,11 +10,11 @@
         },
         "message": {
           "name": "Message",
-          "description": "Text to speak on devices."
+          "description": "The text you want to convert into speech so that you can listen to it on your device."
         },
         "cache": {
           "name": "Cache",
-          "description": "Control file cache of this message."
+          "description": "Stores this message locally so that when the text is requested again, the output can be  produced more quickly."
         },
         "language": {
           "name": "Language",
@@ -22,7 +22,7 @@
         },
         "options": {
           "name": "Options",
-          "description": "A dictionary containing platform-specific options. Optional depending on the platform."
+          "description": "A dictionary containing integration-specific options."
         }
       }
     },
@@ -32,7 +32,7 @@
       "fields": {
         "media_player_entity_id": {
           "name": "Media player entity",
-          "description": "Name(s) of media player entities."
+          "description": "Names of the media player entities."
         },
         "message": {
           "name": "[%key:component::tts::services::say::fields::message::name%]",
@@ -54,7 +54,7 @@
     },
     "clear_cache": {
       "name": "Clear TTS cache",
-      "description": "Removes all text-to-speech cache files and memory."
+      "description": "Removes all cached text-to-speech files and purges the memory."
     }
   }
 }
