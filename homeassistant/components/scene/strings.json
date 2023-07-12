@@ -1,1 +1,51 @@
-{ "title": "Scene" }
+{
+  "title": "Scene",
+  "services": {
+    "turn_on": {
+      "name": "Activate",
+      "description": "Activates a scene.",
+      "fields": {
+        "transition": {
+          "name": "Transition",
+          "description": "Transition duration it takes to bring devices to the state defined in the scene."
+        }
+      }
+    },
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads scenes from the YAML-configuration."
+    },
+    "apply": {
+      "name": "Apply",
+      "description": "Activates a scene with configuration.",
+      "fields": {
+        "entities": {
+          "name": "Entities state",
+          "description": "The entities and the state that they need to be."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Transition duration it takes to bring devices to the state defined in the scene."
+        }
+      }
+    },
+    "create": {
+      "name": "Create",
+      "description": "Creates a new scene.",
+      "fields": {
+        "scene_id": {
+          "name": "Scene entity ID",
+          "description": "The entity_id of the new scene."
+        },
+        "entities": {
+          "name": "Entities state",
+          "description": "The entities to control with the scene."
+        },
+        "snapshot_entities": {
+          "name": "Snapshot entities",
+          "description": "The entities of which a snapshot is to be taken."
+        }
+      }
+    }
+  }
+}
