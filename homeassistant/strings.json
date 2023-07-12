@@ -28,6 +28,10 @@
       "open": "Open",
       "close": "Close",
       "reload": "Reload",
+      "restart": "Restart",
+      "start": "Start",
+      "stop": "Stop",
+      "pause": "Pause",
       "turn_on": "Turn on",
       "turn_off": "Turn off",
       "toggle": "Toggle"

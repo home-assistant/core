@@ -56,7 +56,7 @@
       "description": "Reloads the core configuration from the YAML-configuration."
     },
     "restart": {
-      "name": "Restart",
+      "name": "[%key:common::action::restart%]",
       "description": "Restarts Home Assistant."
     },
     "set_location": {
@@ -74,7 +74,7 @@
       }
     },
     "stop": {
-      "name": "Stop",
+      "name": "[%key:common::action::stop%]",
       "description": "Stops Home Assistant."
     },
     "toggle": {
