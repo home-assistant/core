@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import wake
+from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,18 +38,18 @@ class BaseProvider:
         """Init test provider."""
 
     @property
-    def supported_wake_words(self) -> list[wake.WakeWord]:
+    def supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
-        return [wake.WakeWord(ww_id="test_ww", name="Test Wake Word")]
+        return [wake_word.WakeWord(ww_id="test_ww", name="Test Wake Word")]
 
     async def async_process_audio_stream(
         self, stream: AsyncIterable[tuple[bytes, int]]
-    ) -> wake.DetectionResult | None:
+    ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         async for _chunk, timestamp in stream:
             if timestamp >= 2000:
                 # Trigger a detection after 2 seconds of audio
-                return wake.DetectionResult(
+                return wake_word.DetectionResult(
                     ww_id=self.supported_wake_words[0].ww_id, timestamp=timestamp
                 )
 
@@ -57,10 +57,10 @@ class BaseProvider:
         return None
 
 
-class MockProviderEntity(BaseProvider, wake.WakeWordDetectionEntity):
+class MockProviderEntity(BaseProvider, wake_word.WakeWordDetectionEntity):
     """Mock provider entity."""
 
-    url_path = "wake.test"
+    url_path = "wake_word.test"
     _attr_name = "test"
 
 
@@ -108,14 +108,18 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, wake.DOMAIN)
+        await hass.config_entries.async_forward_entry_setup(
+            config_entry, wake_word.DOMAIN
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload up test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, wake.DOMAIN)
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, wake_word.DOMAIN
+        )
         return True
 
     mock_integration(
@@ -173,7 +177,7 @@ async def test_detected_entity(
     result = await mock_provider_entity.async_process_audio_stream(
         three_second_stream()
     )
-    assert result == wake.DetectionResult("test_ww", last_timestamp)
+    assert result == wake_word.DetectionResult("test_ww", last_timestamp)
 
 
 async def test_not_detected_entity(
@@ -204,7 +208,7 @@ async def test_ws_detect(
 
     client = await hass_ws_client()
 
-    await client.send_json_auto_id({"type": "wake/detect"})
+    await client.send_json_auto_id({"type": "wake_word/detect"})
 
     msg = await client.receive_json()
     assert msg["success"]
@@ -225,10 +229,10 @@ async def test_ws_detect(
 
 async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test async_default_engine."""
-    assert await async_setup_component(hass, wake.DOMAIN, {wake.DOMAIN: {}})
+    assert await async_setup_component(hass, wake_word.DOMAIN, {wake_word.DOMAIN: {}})
     await hass.async_block_till_done()
 
-    assert wake.async_default_engine(hass) is None
+    assert wake_word.async_default_engine(hass) is None
 
 
 async def test_default_engine_entity(
@@ -237,7 +241,7 @@ async def test_default_engine_entity(
     """Test async_default_engine."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
-    assert wake.async_default_engine(hass) == f"{wake.DOMAIN}.{TEST_DOMAIN}"
+    assert wake_word.async_default_engine(hass) == f"{wake_word.DOMAIN}.{TEST_DOMAIN}"
 
 
 async def test_get_engine_entity(
@@ -247,6 +251,6 @@ async def test_get_engine_entity(
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
     assert (
-        wake.async_get_wake_word_detection_entity(hass, f"{wake.DOMAIN}.test")
+        wake_word.async_get_wake_word_detection_entity(hass, f"{wake_word.DOMAIN}.test")
         is mock_provider_entity
     )

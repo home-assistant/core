@@ -1,2 +1,2 @@
 """WWD constants."""
-DOMAIN = "wake"
+DOMAIN = "wake_word"

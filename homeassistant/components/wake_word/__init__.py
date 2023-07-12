@@ -97,7 +97,7 @@ class WakeWordDetectionEntity(RestoreEntity):
     vol.All(
         websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
             {
-                vol.Required("type"): "wake/detect",
+                vol.Required("type"): "wake_word/detect",
                 vol.Optional("entity_id"): vol.Any(str, None),
                 vol.Optional("timestamp_start"): vol.Any(int, None),
             },

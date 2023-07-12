@@ -7,7 +7,7 @@ from wyoming.audio import AudioChunk, AudioStart
 from wyoming.client import AsyncTcpClient
 from wyoming.wake import Detection
 
-from homeassistant.components import wake
+from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,12 +28,12 @@ async def async_setup_entry(
     service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            WyomingWakeProvider(config_entry, service),
+            WyomingWakeWordProvider(config_entry, service),
         ]
     )
 
 
-class WyomingWakeProvider(wake.WakeWordDetectionEntity):
+class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
     """Wyoming wake-word-detection provider."""
 
     def __init__(
@@ -46,19 +46,20 @@ class WyomingWakeProvider(wake.WakeWordDetectionEntity):
         wake_service = service.info.wake[0]
 
         self._supported_wake_words = [
-            wake.WakeWord(ww_id=ww.name, name=ww.name) for ww in wake_service.models
+            wake_word.WakeWord(ww_id=ww.name, name=ww.name)
+            for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-stt"
 
     @property
-    def supported_wake_words(self) -> list[wake.WakeWord]:
+    def supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         return self._supported_wake_words
 
     async def async_process_audio_stream(
         self, stream: AsyncIterable[tuple[bytes, int]]
-    ) -> wake.DetectionResult | None:
+    ) -> wake_word.DetectionResult | None:
         """Try to detect one or more wake words in an audio stream.
 
         Audio must be 16Khz sample rate with 16-bit mono PCM samples.
@@ -116,7 +117,7 @@ class WyomingWakeProvider(wake.WakeWordDetectionEntity):
                                 # Successful detection
                                 detection = Detection.from_event(event)
                                 _LOGGER.info(detection)
-                                return wake.DetectionResult(
+                                return wake_word.DetectionResult(
                                     ww_id=detection.name, timestamp=detection.timestamp
                                 )
 

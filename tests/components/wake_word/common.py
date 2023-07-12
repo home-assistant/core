@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from pathlib import Path
 from typing import Any
 
-from homeassistant.components import wake
+from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,5 +25,5 @@ def mock_wwd_entity_platform(
 ) -> MockPlatform:
     """Specialize the mock platform for stt."""
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry)
-    mock_platform(hass, f"{integration}.{wake.DOMAIN}", loaded_platform)
+    mock_platform(hass, f"{integration}.{wake_word.DOMAIN}", loaded_platform)
     return loaded_platform

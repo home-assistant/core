@@ -1,8 +1,9 @@
 {
-  "domain": "wake",
+  "domain": "wake_word",
   "name": "Wake-word detection (WWD)",
   "codeowners": ["@home-assistant/core", "@synesthesiam"],
-  "documentation": "https://www.home-assistant.io/integrations/wake",
+  "documentation": "https://www.home-assistant.io/integrations/wake_word",
   "integration_type": "entity",
+  "iot_class": "local_polling",
   "quality_scale": "internal"
 }
