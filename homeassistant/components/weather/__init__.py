@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -51,6 +51,7 @@ from .const import (
     DOMAIN,
     UNIT_CONVERSIONS,
     VALID_UNITS,
+    WeatherEntityFeature,
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
