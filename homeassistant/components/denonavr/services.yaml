@@ -21,6 +21,21 @@ set_dynamic_eq:
       default: true
       selector:
         boolean:
+send_telnet_commands:
+  name: Send telnet commands
+  description: "Send generic telnet commands."
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player
+  fields:
+    command:
+      name: Commands
+      description: One telnet command per line.
+      required: true
+      selector:
+        text:
+          multiline: true
 update_audyssey:
   target:
     entity:

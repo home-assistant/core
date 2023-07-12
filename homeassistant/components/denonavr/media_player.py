@@ -1,14 +1,24 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
+import time
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from denonavr.const import (
+    MAIN_ZONE,
+    POWER_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    TELNET_EVENTS,
+)
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -26,7 +36,12 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    SupportsResponse,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,6 +52,7 @@ from .config_flow import (
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,
+    DEFAULT_TIMEOUT,
     DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
 )
@@ -70,6 +86,7 @@ PARALLEL_UPDATES = 1
 # Services
 SERVICE_GET_COMMAND = "get_command"
 SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
+SERVICE_TELNET_COMMANDS = "send_telnet_commands"
 SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 
 _DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
@@ -83,6 +100,9 @@ DENON_STATE_MAPPING = {
     STATE_PLAYING: MediaPlayerState.PLAYING,
     STATE_PAUSED: MediaPlayerState.PAUSED,
 }
+
+TELNET_EVENTS_SORTED = list(TELNET_EVENTS)
+TELNET_EVENTS_SORTED.sort(key=len, reverse=True)
 
 
 async def async_setup_entry(
@@ -131,6 +151,31 @@ async def async_setup_entry(
         SERVICE_UPDATE_AUDYSSEY,
         {},
         f"async_{SERVICE_UPDATE_AUDYSSEY}",
+    )
+
+    async def async_service_handle(service_call: ServiceCall):
+        """Handle dispatched services."""
+        assert platform is not None
+        entities = await platform.async_extract_from_service(service_call)
+
+        response = {}
+
+        for entity in entities:
+            assert isinstance(entity, DenonDevice)
+
+            if service_call.service == SERVICE_TELNET_COMMANDS:
+                response[entity.entity_id] = await entity.async_send_telnet_commands(
+                    service_call.data[ATTR_COMMAND]
+                )
+
+        return response
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TELNET_COMMANDS,
+        async_service_handle,
+        schema=cv.make_entity_service_schema({vol.Required(ATTR_COMMAND): cv.string}),
+        supports_response=SupportsResponse.ONLY,
     )
 
     async_add_entities(entities, update_before_add=True)
@@ -304,17 +349,17 @@ class DenonDevice(MediaPlayerEntity):
         return DENON_STATE_MAPPING.get(self._receiver.state)
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """Return a list of available input sources."""
         return self._receiver.input_func_list
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Return boolean if volume is currently muted."""
         return self._receiver.muted
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         # Volume is sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0
@@ -323,12 +368,12 @@ class DenonDevice(MediaPlayerEntity):
         return (float(self._receiver.volume) + 80) / 100
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         return self._receiver.input_func
 
     @property
-    def sound_mode(self):
+    def sound_mode(self) -> str | None:
         """Return the current matched sound mode."""
         return self._receiver.sound_mode
 
@@ -340,7 +385,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._supported_features_base
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> None:
         """Content ID of current playing media."""
         return None
 
@@ -352,19 +397,19 @@ class DenonDevice(MediaPlayerEntity):
         return MediaType.CHANNEL
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> None:
         """Duration of current playing media in seconds."""
         return None
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         if self._receiver.input_func in self._receiver.playing_func_list:
             return self._receiver.image_url
         return None
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         if self._receiver.input_func not in self._receiver.playing_func_list:
             return self._receiver.input_func
@@ -373,46 +418,46 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.frequency
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if self._receiver.artist is not None:
             return self._receiver.artist
         return self._receiver.band
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         if self._receiver.album is not None:
             return self._receiver.album
         return self._receiver.station
 
     @property
-    def media_album_artist(self):
+    def media_album_artist(self) -> None:
         """Album artist of current playing media, music track only."""
         return None
 
     @property
-    def media_track(self):
+    def media_track(self) -> None:
         """Track number of current playing media, music track only."""
         return None
 
     @property
-    def media_series_title(self):
+    def media_series_title(self) -> None:
         """Title of series of current playing media, TV show only."""
         return None
 
     @property
-    def media_season(self):
+    def media_season(self) -> None:
         """Season of current playing media, TV show only."""
         return None
 
     @property
-    def media_episode(self):
+    def media_episode(self) -> None:
         """Episode of current playing media, TV show only."""
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         if self._receiver.power != POWER_ON:
             return {}
@@ -427,7 +472,7 @@ class DenonDevice(MediaPlayerEntity):
         return state_attributes
 
     @property
-    def dynamic_eq(self):
+    def dynamic_eq(self) -> bool | None:
         """Status of DynamicEQ."""
         return self._receiver.dynamic_eq
 
@@ -505,17 +550,17 @@ class DenonDevice(MediaPlayerEntity):
         await self._receiver.async_mute(mute)
 
     @async_log_errors
-    async def async_get_command(self, command: str, **kwargs):
+    async def async_get_command(self, command: str, **kwargs) -> str:
         """Send generic command."""
         return await self._receiver.async_get_command(command)
 
     @async_log_errors
-    async def async_update_audyssey(self):
+    async def async_update_audyssey(self) -> None:
         """Get the latest audyssey information from device."""
         await self._receiver.async_update_audyssey()
 
     @async_log_errors
-    async def async_set_dynamic_eq(self, dynamic_eq: bool):
+    async def async_set_dynamic_eq(self, dynamic_eq: bool) -> None:
         """Turn DynamicEQ on or off."""
         if dynamic_eq:
             await self._receiver.async_dynamic_eq_on()
@@ -524,3 +569,58 @@ class DenonDevice(MediaPlayerEntity):
 
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
+
+    @async_log_errors
+    async def async_send_telnet_commands(self, commands: str) -> list[dict[str, str]]:
+        """Send telnet commands to receiver and subscribe to its responses."""
+        command_list = commands.splitlines()
+        events = []
+        for command in command_list:
+            found = False
+            for event in TELNET_EVENTS_SORTED:
+                if command.startswith(event):
+                    events.append(event)
+                    found = True
+                    break
+            if not found:
+                raise HomeAssistantError(
+                    f"Invalid command {command}. Valid commands start with these prefixes: {TELNET_EVENTS_SORTED}"
+                )
+
+        result = []
+        times = {"last_message": 0.0}
+
+        async def async_telnet_callback(zone: str, event: str, parameter: str) -> None:
+            times["last_message"] = time.monotonic()
+            if zone in [MAIN_ZONE, self._receiver.zone]:
+                result.append({"event": event, "parameter": parameter})
+
+        for event in events:
+            self._receiver.register_callback(event, async_telnet_callback)
+
+        times["start"] = time.monotonic()
+        success = self._receiver.send_telnet_commands(*command_list)
+        if success:
+            while True:
+                if time.monotonic() - times["start"] > DEFAULT_TIMEOUT:
+                    _LOGGER.debug("Telnet command returns because timeout elapsed")
+                    break
+                if (
+                    times["last_message"]
+                    and time.monotonic() - times["last_message"] > 0.2
+                ):
+                    _LOGGER.debug(
+                        "Telnet command returns because last message timeout elapsed"
+                    )
+                    break
+                await asyncio.sleep(0.1)
+
+        for event in events:
+            self._receiver.unregister_callback(event, async_telnet_callback)
+
+        if not success:
+            raise HomeAssistantError(
+                "No telnet connection or connection is not healthy"
+            )
+
+        return result
