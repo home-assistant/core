@@ -14,13 +14,15 @@ from twitchAPI.twitch import (
 )
 from twitchAPI.types import AuthScope, AuthType
 
-USER_OBJECT: TwitchUser = TwitchUser(
-    id=123,
-    display_name="channel123",
-    offline_image_url="logo.png",
-    profile_image_url="logo.png",
-    view_count=42,
-)
+
+def _get_twitch_user(user_id: str = "123") -> TwitchUser:
+    return TwitchUser(
+        id=user_id,
+        display_name="channel123",
+        offline_image_url="logo.png",
+        profile_image_url="logo.png",
+        view_count=42,
+    )
 
 
 class TwitchUserFollowResultMock:
@@ -77,6 +79,7 @@ class TwitchMock:
         is_subscribed: bool = False,
         is_following: bool = True,
         user_found: bool = True,
+        different_user_id: bool = False,
     ) -> None:
         """Initialize mock."""
         self._is_streaming = is_streaming
@@ -84,6 +87,7 @@ class TwitchMock:
         self._is_subscribed = is_subscribed
         self._is_following = is_following
         self._user_found = user_found
+        self._different_user_id = different_user_id
 
     async def _noop(self):
         """Fake function to create task."""
@@ -93,7 +97,7 @@ class TwitchMock:
         self, user_ids: Optional[list[str]] = None, logins: Optional[list[str]] = None
     ) -> AsyncGenerator[TwitchUser, None]:
         """Get list of mock users."""
-        users = [USER_OBJECT]
+        users = [_get_twitch_user("234" if self._different_user_id else "123")]
         if not self._user_found:
             users = []
         for user in users:
