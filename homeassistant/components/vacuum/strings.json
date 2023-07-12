@@ -42,7 +42,7 @@
     },
     "turn_off": {
       "name": "Turn off",
-      "description": "Stops the current cleaning task and return to home."
+      "description": "Stops the current cleaning task and returns to its dock."
     },
     "stop": {
       "name": "Stop",
@@ -78,11 +78,11 @@
       "fields": {
         "command": {
           "name": "Command",
-          "description": "Command to execute."
+          "description": "Command to execute. The commands are integration-specific."
         },
         "params": {
           "name": "Parameters",
-          "description": "Parameters for the command."
+          "description": "Parameters for the command. The parameters are integration-specific."
         }
       }
     },
@@ -92,7 +92,7 @@
       "fields": {
         "fan_speed": {
           "name": "Fan speed",
-          "description": "Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium' or by percentage, between 0 and 100."
+          "description": "Fan speed. The value depends on the integration. Some integrations have speed steps, like 'medium'. Some use a percentage, between 0 and 100."
         }
       }
     }
