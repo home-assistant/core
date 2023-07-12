@@ -28,7 +28,7 @@
         "description": "Login to your Vulcan Account using mobile app registration page.",
         "data": {
           "token": "Token",
-          "region": "[%key:component::vulcan::config::step::auth::data::region%]",
+          "region": "Symbol",
           "pin": "Pin"
         }
       },
