@@ -42,10 +42,9 @@ SUPPORT_ROMY_ROBOT = (
     | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.SEND_COMMAND
-    | VacuumEntityFeature.STATUS
+    | VacuumEntityFeature.STATE
+    | VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
-    | VacuumEntityFeature.TURN_OFF
-    | VacuumEntityFeature.TURN_ON
     | VacuumEntityFeature.FAN_SPEED
 )
 
@@ -119,12 +118,17 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         """Return the name of the device."""
         return self.romy.name
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_start(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
-        LOGGER.debug("async_turn_on")
+        LOGGER.debug("async_start")
         ret = await self.romy.async_clean_start_or_continue()
         if ret:
             self._is_on = True
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Stop the vacuum cleaner. (-> send it back to docking station)."""
+        LOGGER.debug("async_stop")
+        await self.async_return_to_base()
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return vacuum back to base."""
@@ -132,16 +136,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         ret = await self.romy.async_return_to_base()
         if ret:
             self._is_on = False
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the vacuum off (-> send it back to docking station)."""
-        LOGGER.debug("async_turn_off")
-        await self.async_return_to_base()
-
-    async def async_stop(self, **kwargs: Any) -> None:
-        """Stop the vacuum cleaner. (-> send it back to docking station)."""
-        LOGGER.debug("async_stop")
-        await self.async_return_to_base()
 
     async def async_pause(self, **kwargs: Any) -> None:
         """Pause the cleaning cycle (api call stop means stop robot where is is and not sending back to docking station)."""
@@ -156,7 +150,7 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         if self.is_on:
             await self.async_pause()
         else:
-            await self.async_turn_on()
+            await self.async_start()
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
