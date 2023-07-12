@@ -18,8 +18,8 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import HassType
 
 from .const import DOMAIN
 from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
@@ -108,12 +108,12 @@ SENSORS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HassType[ElgatoDataUpdateCoordinator],
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato sensor based on a config entry."""
-    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         ElgatoSensorEntity(

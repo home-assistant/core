@@ -2,6 +2,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HassType
 
 from .const import DOMAIN
 from .coordinator import ElgatoDataUpdateCoordinator
@@ -9,7 +10,9 @@ from .coordinator import ElgatoDataUpdateCoordinator
 PLATFORMS = [Platform.BUTTON, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HassType[ElgatoDataUpdateCoordinator], entry: ConfigEntry
+) -> bool:
     """Set up Elgato Light from a config entry."""
     coordinator = ElgatoDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
