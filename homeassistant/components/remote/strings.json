@@ -24,5 +24,91 @@
         "on": "[%key:common::state::on%]"
       }
     }
+  },
+  "services": {
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Sends the power on command.",
+      "fields": {
+        "activity": {
+          "name": "Activity",
+          "description": "Activity ID or activity name to start."
+        }
+      }
+    },
+    "toggle": {
+      "name": "Toggle",
+      "description": "Toggles a device on/off."
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Sends the power off command."
+    },
+    "send_command": {
+      "name": "Send command",
+      "description": "Sends a command or a list of commands to a device.",
+      "fields": {
+        "device": {
+          "name": "Device",
+          "description": "Device ID to send command to."
+        },
+        "command": {
+          "name": "Command",
+          "description": "A single command or a list of commands to send."
+        },
+        "num_repeats": {
+          "name": "Repeats",
+          "description": "The number of times you want to repeat the command(s)."
+        },
+        "delay_secs": {
+          "name": "Delay seconds",
+          "description": "The time you want to wait in between repeated commands."
+        },
+        "hold_secs": {
+          "name": "Hold seconds",
+          "description": "The time you want to have it held before the release is send."
+        }
+      }
+    },
+    "learn_command": {
+      "name": "Learn command",
+      "description": "Learns a command or a list of commands from a device.",
+      "fields": {
+        "device": {
+          "name": "Device",
+          "description": "Device ID to learn command from."
+        },
+        "command": {
+          "name": "Command",
+          "description": "A single command or a list of commands to learn."
+        },
+        "command_type": {
+          "name": "Command type",
+          "description": "The type of command to be learned."
+        },
+        "alternative": {
+          "name": "Alternative",
+          "description": "If code must be stored as alternative (useful for discrete remotes)."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for the command to be learned."
+        }
+      }
+    },
+    "delete_command": {
+      "name": "Delete command",
+      "description": "Deletes a command or a list of commands from the database.",
+      "fields": {
+        "device": {
+          "name": "Device",
+          "description": "Name of the device from which commands will be deleted."
+        },
+        "command": {
+          "name": "Command",
+          "description": "A single command or a list of commands to delete."
+        }
+      }
+    }
   }
 }
