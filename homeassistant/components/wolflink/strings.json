@@ -28,9 +28,9 @@
     "sensor": {
       "state": {
         "state": {
-          "ein": "Enabled",
+          "ein": "[%key:common::state::enabled%]",
           "deaktiviert": "Inactive",
-          "aus": "Disabled",
+          "aus": "[%key:common::state::disabled%]",
           "standby": "Standby",
           "auto": "Auto",
           "permanent": "Permanent",
