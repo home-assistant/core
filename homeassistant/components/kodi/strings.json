@@ -61,7 +61,7 @@
           "description": "Unique Id of the media entry to add (`songid` or albumid`). If not defined, `media_name` and `artist_name` are needed to search the Kodi music library."
         },
         "media_name": {
-          "name": "Media Name",
+          "name": "Media name",
           "description": "Optional media name for filtering media. Can be 'ALL' when `media_type` is 'ALBUM' and `artist_name` is specified, to add all songs from one artist."
         },
         "artist_name": {
