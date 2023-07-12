@@ -819,6 +819,9 @@ fritzconnection[qr]==1.12.2
 # homeassistant.components.google_translate
 gTTS==2.2.4
 
+# homeassistant.components.gardena_bluetooth
+gardena_bluetooth==1.0.1
+
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
 
