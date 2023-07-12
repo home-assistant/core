@@ -13,5 +13,51 @@
       "title": "Update MariaDB to {min_version} or later resolve a significant performance issue",
       "description": "Older versions of MariaDB suffer from a significant performance regression when retrieving history data or purging the database. Update to MariaDB version {min_version} or later and restart Home Assistant. If you are using the MariaDB core add-on, make sure to update it to the latest version."
     }
+  },
+  "services": {
+    "purge": {
+      "name": "Purge",
+      "description": "Starts purge task - to clean up old data from your database.",
+      "fields": {
+        "keep_days": {
+          "name": "Days to keep",
+          "description": "Number of history days to keep in database after purge."
+        },
+        "repack": {
+          "name": "Repack",
+          "description": "Attempt to save disk space by rewriting the entire database file."
+        },
+        "apply_filter": {
+          "name": "Apply filter",
+          "description": "Apply `entity_id` and `event_type` filters in addition to time based purge."
+        }
+      }
+    },
+    "purge_entities": {
+      "name": "Purge entities",
+      "description": "Starts a purge task to remove specific entities from your database.",
+      "fields": {
+        "domains": {
+          "name": "Domains to remove",
+          "description": "List the domains that need to be removed from the recorder database."
+        },
+        "entity_globs": {
+          "name": "Entity globs to remove",
+          "description": "List the glob patterns to select entities for removal from the recorder database."
+        },
+        "keep_days": {
+          "name": "Days to keep",
+          "description": "Number of history days to keep in database of matching rows. The default of 0 days will remove all matching rows."
+        }
+      }
+    },
+    "disable": {
+      "name": "Disable",
+      "description": "Stops the recording of events and state changes."
+    },
+    "enable": {
+      "name": "Enable",
+      "description": "Starts the recording of events and state changes."
+    }
   }
 }
