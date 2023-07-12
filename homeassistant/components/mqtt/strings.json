@@ -153,29 +153,29 @@
       "fields": {
         "topic": {
           "name": "Topic",
-          "description": "Topic to publish payload."
+          "description": "Topic to publish to."
         },
         "payload": {
           "name": "Payload",
-          "description": "Payload to publish."
+          "description": "The payload to publish."
         },
         "payload_template": {
           "name": "Payload template",
-          "description": "Template to render as payload value. Ignored if payload given."
+          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
         },
         "qos": {
           "name": "QoS",
-          "description": "Quality of Service to use."
+          "description": "Quality of Service to use. O. At most once. 1: At least once. 2: Exactly once."
         },
         "retain": {
           "name": "Retain",
-          "description": "If message should have the retain flag set."
+          "description": "If the message should have the retain flag set. If set, the broker stores the most recent message on a topic."
         }
       }
     },
     "dump": {
-      "name": "Dump",
-      "description": "Dumps messages on a topic selector to the `mqtt_dump.txt` file in your configuration folder.",
+      "name": "Export",
+      "description": "Writes all messages on a specific topic into the `mqtt_dump.txt` file in your configuration folder.",
       "fields": {
         "topic": {
           "name": "Topic",
