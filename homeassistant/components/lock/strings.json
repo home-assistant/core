@@ -34,5 +34,37 @@
         }
       }
     }
+  },
+  "services": {
+    "lock": {
+      "name": "Lock",
+      "description": "Locks a lock.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to lock the lock with."
+        }
+      }
+    },
+    "open": {
+      "name": "Open",
+      "description": "Opens a lock.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::lock::services::lock::fields::code::name%]",
+          "description": "Code to open the lock with."
+        }
+      }
+    },
+    "unlock": {
+      "name": "Unlock",
+      "description": "Unlocks a lock.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::lock::services::lock::fields::code::name%]",
+          "description": "Code to unlock the lock with."
+        }
+      }
+    }
   }
 }
