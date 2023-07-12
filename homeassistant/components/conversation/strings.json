@@ -7,7 +7,7 @@
       "fields": {
         "text": {
           "name": "Text",
-          "description": "Transcribed text."
+          "description": "Transcribed text input."
         },
         "language": {
           "name": "Language",
@@ -15,7 +15,7 @@
         },
         "agent_id": {
           "name": "Agent",
-          "description": "Assist engine to process your request."
+          "description": "Conversation agent to process your request. The conversation agent is the brains of your assistant. It processes the incoming text commands."
         }
       }
     }
