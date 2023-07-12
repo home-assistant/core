@@ -46,11 +46,32 @@ def run():
 
     merged = {**secondary, **primary}
 
-    update_keys = {
-        key: f"[%key:{merged[value]}%]"
-        for key, value in flattened_translations.items()
-        if merged[value] != key
-    }
+    questionable = set(secondary.values())
+    suggest_new_common = set()
+    update_keys = {}
+    # print(questionable)
+
+    for key, value in flattened_translations.items():
+        if merged[value] == key:
+            continue
+
+        key_to_reference = merged[value]
+
+        if (
+            # We don't want integrations to reference arbitrary other integrations
+            key_to_reference in questionable
+            # Allow reference own integration
+            and key_to_reference.split("::")[1] != key.split("::")[1]
+        ):
+            suggest_new_common.add(value)
+            continue
+
+        update_keys[key] = f"[%key:{key_to_reference}%]"
+
+    if suggest_new_common:
+        print("Suggested new common words:")
+        for key in sorted(suggest_new_common):
+            print(key)
 
     components = sorted({key.split("::")[1] for key in update_keys})
 
