@@ -93,6 +93,11 @@ class ESPHomeDashboardManager:
             hass, addon_slug, url, async_get_clientsession(hass)
         )
         await dashboard.async_request_refresh()
+        if not dashboard.last_update_success:
+            _LOGGER.warning(
+                "Dashboard unavailable; will retry later: %s", dashboard.last_exception
+            )
+
         self._current_dashboard = dashboard
 
         async def on_hass_stop(_: Event) -> None:
