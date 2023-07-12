@@ -6,7 +6,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Name(s) of media player entities."
+          "description": "Media players to play the message."
         },
         "message": {
           "name": "Message",
