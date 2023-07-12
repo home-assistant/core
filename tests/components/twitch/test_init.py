@@ -65,7 +65,7 @@ async def test_expired_token_refresh_success(
         (
             time.time() - 3600,
             http.HTTPStatus.UNAUTHORIZED,
-            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             time.time() - 3600,

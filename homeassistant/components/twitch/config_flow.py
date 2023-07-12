@@ -1,7 +1,6 @@
 """Config flow for Twitch."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -9,7 +8,6 @@ from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -53,7 +51,6 @@ class OAuth2FlowHandler(
     DOMAIN = DOMAIN
     _data: dict[str, Any] = {}
 
-    reauth_entry: ConfigEntry | None = None
     _user_display_name: str = ""
     _user_id: str = ""
 
@@ -66,21 +63,6 @@ class OAuth2FlowHandler(
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join([scope.value for scope in OAUTH_SCOPES])}
-
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Confirm reauth dialog."""
-        if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
-        return await self.async_step_user()
 
     async def async_oauth_create_entry(
         self,
@@ -102,23 +84,10 @@ class OAuth2FlowHandler(
         self._user_id = user.id
         self._data = data
 
-        if not self.reauth_entry:
-            await self.async_set_unique_id(user.id)
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(user.id)
+        self._abort_if_unique_id_configured()
 
-            return await self.async_step_channels()
-
-        if self.reauth_entry.unique_id == user.id:
-            self.hass.config_entries.async_update_entry(
-                self.reauth_entry, data=data, title=user.display_name
-            )
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
-        return self.async_abort(
-            reason="wrong_account",
-            description_placeholders={"username": self.reauth_entry.title},
-        )
+        return await self.async_step_channels()
 
     async def async_step_channels(
         self, user_input: dict[str, Any] | None = None

@@ -5,7 +5,7 @@ from aiohttp.client_exceptions import ClientError, ClientResponseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await session.async_ensure_token_valid()
     except ClientResponseError as err:
         if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryNotReady(
                 "OAuth session is not valid, reauth required"
             ) from err
         raise ConfigEntryNotReady from err
