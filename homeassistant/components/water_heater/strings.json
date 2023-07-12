@@ -32,21 +32,21 @@
     },
     "set_temperature": {
       "name": "Set temperature",
-      "description": "Sets target temperature.",
+      "description": "Sets the target temperature.",
       "fields": {
         "temperature": {
           "name": "Temperature",
-          "description": "New target temperature for water heater."
+          "description": "New target temperature for the water heater."
         },
         "operation_mode": {
           "name": "Operation mode",
-          "description": "New value of operation mode."
+          "description": "New value of the operation mode. For a list of possible modes, refer to the integration documentation."
         }
       }
     },
     "set_operation_mode": {
       "name": "Set operation mode",
-      "description": "Sets operation mode.",
+      "description": "Sets the operation mode.",
       "fields": {
         "operation_mode": {
           "name": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::name%]",
