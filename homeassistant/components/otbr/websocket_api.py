@@ -47,7 +47,8 @@ async def websocket_info(
     data: OTBRData = hass.data[DOMAIN]
 
     try:
-        dataset = await data.get_active_dataset_tlvs()
+        dataset = await data.get_active_dataset()
+        dataset_tlvs = await data.get_active_dataset_tlvs()
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "get_dataset_failed", str(exc))
         return
@@ -56,7 +57,8 @@ async def websocket_info(
         msg["id"],
         {
             "url": data.url,
-            "active_dataset_tlvs": dataset.hex() if dataset else None,
+            "active_dataset_tlvs": dataset_tlvs.hex() if dataset_tlvs else None,
+            "channel": dataset.channel if dataset else None,
         },
     )
 
