@@ -45,5 +45,71 @@
       "version": "Version",
       "virtualenv": "Virtual Environment"
     }
+  },
+  "services": {
+    "check_config": {
+      "name": "Check configuration",
+      "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs."
+    },
+    "reload_core_config": {
+      "name": "Reload core configuration",
+      "description": "Reloads the core configuration from the YAML-configuration."
+    },
+    "restart": {
+      "name": "Restart",
+      "description": "Restarts Home Assistant."
+    },
+    "set_location": {
+      "name": "Set location",
+      "description": "Updates the Home Assistant location.",
+      "fields": {
+        "latitude": {
+          "name": "Latitude",
+          "description": "Latitude of your location."
+        },
+        "longitude": {
+          "name": "Longitude",
+          "description": "Longitude of your location."
+        }
+      }
+    },
+    "stop": {
+      "name": "Stop",
+      "description": "Stops Home Assistant."
+    },
+    "toggle": {
+      "name": "Generic toggle",
+      "description": "Generic service to toggle devices on/off under any domain."
+    },
+    "turn_on": {
+      "name": "Generic turn on",
+      "description": "Generic service to turn devices on under any domain."
+    },
+    "turn_off": {
+      "name": "Generic turn off",
+      "description": "Generic service to turn devices off under any domain."
+    },
+    "update_entity": {
+      "name": "Update entity",
+      "description": "Forces one or more entities to update its data."
+    },
+    "reload_custom_templates": {
+      "name": "Reload custom Jinja2 templates",
+      "description": "Reloads Jinja2 templates found in the `custom_templates` folder in your config. New values will be applied on the next render of the template."
+    },
+    "reload_config_entry": {
+      "name": "Reload config entry",
+      "description": "Reloads the specified config entry.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry ID",
+          "description": "The configuration entry ID of the entry to be reloaded."
+        }
+      }
+    },
+    "save_persistent_states": {
+      "name": "Save persistent states",
+      "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval."
+    }
   }
 }
