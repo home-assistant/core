@@ -22,11 +22,11 @@
       "fields": {
         "version": {
           "name": "Version",
-          "description": "Version to install, if omitted, the latest version will be installed."
+          "description": "The version to install. If omitted, the latest version will be installed."
         },
         "backup": {
           "name": "Backup",
-          "description": "Backup before installing the update, if supported by the integration."
+          "description": "If supported by the integration, this creates a backup before starting the update ."
         }
       }
     },
