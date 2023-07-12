@@ -202,41 +202,41 @@
       "fields": {
         "object_id": {
           "name": "Object ID",
-          "description": "Group ID and part of entity ID."
+          "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: <domain>.<object_id>."
         },
         "name": {
           "name": "Name",
-          "description": "Name of group."
+          "description": "Name of the group."
         },
         "icon": {
           "name": "Icon",
-          "description": "Name of icon for the group."
+          "description": "Name of the icon for the group."
         },
         "entities": {
           "name": "Entities",
-          "description": "List of all members in the group. Not compatible with 'delta'."
+          "description": "List of all members in the group. Cannot be used in combination with `Add Entities` or `Remove Entities`."
         },
         "add_entities": {
           "name": "Add Entities",
-          "description": "List of members that will change on group listening."
+          "description": "List of members to be added to the group. Cannot be used in combination with `Entities` or `Remove Entities`."
         },
         "remove_entities": {
           "name": "Remove Entities",
-          "description": "List of members that will be removed from group listening."
+          "description": "List of members to be removed from a group. Cannot be used in combination with `Entities` or `Add Entities`."
         },
         "all": {
           "name": "All",
-          "description": "Enable this option if the group should only turn on when all entities are on."
+          "description": "Enable this option if the group should only be used when all entities are in state `on`."
         }
       }
     },
     "remove": {
       "name": "Remove",
-      "description": "Removes a user group.",
+      "description": "Removes a group.",
       "fields": {
         "object_id": {
           "name": "Object ID",
-          "description": "Group ID and part of entity ID."
+          "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: <domain>.<object_id>."
         }
       }
     }
