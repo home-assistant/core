@@ -86,7 +86,7 @@
       "fields": {
         "url": {
           "name": "URL",
-          "description": "URL of router to resume integration for; optional when only one is configured."
+          "description": "URL of router to suspend integration for; optional when only one is configured."
         }
       }
     }
