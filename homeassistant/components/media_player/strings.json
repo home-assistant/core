@@ -197,7 +197,7 @@
       "fields": {
         "volume_level": {
           "name": "Level",
-          "description": "Volume level to set as float."
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume."
         }
       }
     },
