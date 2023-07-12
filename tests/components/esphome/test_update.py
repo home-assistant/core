@@ -5,11 +5,16 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.esphome.dashboard import async_get_dashboard
+from homeassistant.components.esphome.dashboard import (
+    async_get_dashboard,
+    async_set_dashboard_info,
+)
 from homeassistant.components.update import UpdateEntityFeature
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +35,7 @@ def stub_reconnect():
                     "configuration": "test.yaml",
                 }
             ],
-            "on",
+            STATE_ON,
             {
                 "latest_version": "2023.2.0-dev",
                 "installed_version": "1.0.0",
@@ -44,7 +49,7 @@ def stub_reconnect():
                     "current_version": "1.0.0",
                 },
             ],
-            "off",
+            STATE_OFF,
             {
                 "latest_version": "1.0.0",
                 "installed_version": "1.0.0",
@@ -53,7 +58,7 @@ def stub_reconnect():
         ),
         (
             [],
-            "unavailable",
+            STATE_UNKNOWN,  # dashboard is available but device is unknown
             {"supported_features": 0},
         ),
     ],
@@ -247,3 +252,39 @@ async def test_update_entity_dashboard_not_available_startup(
     }
     for key, expected_value in expected_attributes.items():
         assert state.attributes.get(key) == expected_value
+
+
+async def test_update_entity_dashboard_discovered_after_startup_but_update_failed(
+    hass: HomeAssistant, mock_config_entry, mock_device_info
+) -> None:
+    """Test ESPHome update entity when dashboard is discovered after startup and the first update fails."""
+    state = hass.states.get("update.none_firmware")
+    assert state is None
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        side_effect=asyncio.TimeoutError,
+    ):
+        await async_set_dashboard_info(
+            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("update.none_firmware")
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_entity_not_present_without_dashboard(
+    hass: HomeAssistant, mock_config_entry, mock_device_info
+) -> None:
+    """Test ESPHome update entity does not get created if there is no dashboard."""
+    with patch(
+        "homeassistant.components.esphome.update.DomainData.get_entry_data",
+        return_value=Mock(available=True, device_info=mock_device_info),
+    ):
+        assert await hass.config_entries.async_forward_entry_setup(
+            mock_config_entry, "update"
+        )
+
+    state = hass.states.get("update.none_firmware")
+    assert state is None

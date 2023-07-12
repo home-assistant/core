@@ -44,7 +44,7 @@ async def async_setup_entry(
         nonlocal unsubs
         assert dashboard is not None
         # Keep listening until device is available
-        if not entry_data.available or not dashboard.last_update_success:
+        if not entry_data.available:
             return
 
         for unsub in unsubs:
@@ -53,7 +53,7 @@ async def async_setup_entry(
 
         async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
 
-    if entry_data.available and dashboard.last_update_success:
+    if entry_data.available:
         _async_setup_update_entity()
         return
 
@@ -109,14 +109,10 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         During deep sleep the ESP will not be connectable (by design)
         and thus, even when unavailable, we'll show it as available.
         """
-        return (
-            super().available
-            and (
-                self._entry_data.available
-                or self._entry_data.expected_disconnect
-                or self._device_info.has_deep_sleep
-            )
-            and self._device_info.name in self.coordinator.data
+        return super().available and (
+            self._entry_data.available
+            or self._entry_data.expected_disconnect
+            or self._device_info.has_deep_sleep
         )
 
     @property
@@ -137,33 +133,26 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         """URL to the full release notes of the latest version available."""
         return "https://esphome.io/changelog/"
 
+    @callback
+    def _async_static_info_updated(self, _: list[EntityInfo]) -> None:
+        """Handle static info update."""
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
-
-        @callback
-        def _static_info_updated(infos: list[EntityInfo]) -> None:
-            """Handle static info update."""
-            self.async_write_ha_state()
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 self._entry_data.signal_static_info_updated,
-                _static_info_updated,
+                self._async_static_info_updated,
             )
         )
-
-        @callback
-        def _on_device_update() -> None:
-            """Handle update of device state, like availability."""
-            self.async_write_ha_state()
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 self._entry_data.signal_device_updated,
-                _on_device_update,
+                self.async_write_ha_state,
             )
         )
 
