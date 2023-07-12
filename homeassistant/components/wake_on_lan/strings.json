@@ -5,7 +5,7 @@
       "description": "Sends a 'magic packet' to wake up a device with 'Wake-On-LAN' capabilities.",
       "fields": {
         "mac": {
-          "name": "[%key:component::device_tracker::services::see::fields::mac::name%]",
+          "name": "MAC address",
           "description": "MAC address of the device to wake up."
         },
         "broadcast_address": {

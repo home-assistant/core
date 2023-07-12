@@ -48,7 +48,7 @@
       "description": "Controls the effect settings of WLED.",
       "fields": {
         "effect": {
-          "name": "[%key:component::light::entity_component::_::state_attributes::effect::name%]",
+          "name": "Effect",
           "description": "Name or ID of the WLED light effect."
         },
         "intensity": {
