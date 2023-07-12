@@ -21,15 +21,15 @@
       "fields": {
         "tone": {
           "name": "Tone",
-          "description": "The tone to emit when turning the siren on. When `available_tones` property is a map, either the key or the value can be used. Must be supported by the integration."
+          "description": "The tone to emit. When `available_tones` property is a map, either the key or the value can be used. Must be supported by the integration."
         },
         "volume_level": {
           "name": "Volume",
-          "description": "The volume level of the noise to emit when turning the siren on. Must be supported by the integration."
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume. Must be supported by the integration."
         },
         "duration": {
           "name": "Duration",
-          "description": "The duration in seconds of the noise to emit when turning the siren on. Must be supported by the integration."
+          "description": "Number of seconds the sound is played. Must be supported by the integration."
         }
       }
     },
