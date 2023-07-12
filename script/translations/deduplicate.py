@@ -49,13 +49,16 @@ def run():
     questionable = set(secondary.values())
     suggest_new_common = set()
     update_keys = {}
-    # print(questionable)
 
     for key, value in flattened_translations.items():
         if merged[value] == key:
             continue
 
         key_to_reference = merged[value]
+
+        # Uncomment if we want to only add references to own integrations
+        # if key_to_reference.split("::")[1] != key.split("::")[1]:
+        #     continue
 
         if (
             # We don't want integrations to reference arbitrary other integrations
