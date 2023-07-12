@@ -107,7 +107,6 @@ class GardenaBluetoothNumber(GardenaBluetoothEntity, NumberEntity):
         """Initialize the number entity."""
         super().__init__(coordinator, {description.key})
         self._attr_unique_id = f"{coordinator.address}-{description.key}"
-        self._attr_native_value = None
         self.entity_description = description
 
     def _handle_coordinator_update(self) -> None:
@@ -140,7 +139,6 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
         """Initialize the remaining time entity."""
         super().__init__(coordinator, {Valve.remaining_open_time.uuid})
         self._attr_unique_id = f"{coordinator.address}-remaining_open_set"
-        self._attr_native_value = None
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
