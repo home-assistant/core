@@ -51,7 +51,6 @@ from .const import (
     DOMAIN,
     UNIT_CONVERSIONS,
     VALID_UNITS,
-    WeatherEntityFeature,
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
@@ -798,9 +797,7 @@ class WeatherEntity(Entity):
         converted_forecast_list: list[dict[str, Any]] = []
         precision = self.precision
 
-        from_temp_unit = (
-            self.native_temperature_unit or self._default_temperature_unit
-        )
+        from_temp_unit = self.native_temperature_unit or self._default_temperature_unit
         to_temp_unit = self._temperature_unit
 
         for _forecast_entry in native_forecast_list:
@@ -852,9 +849,7 @@ class WeatherEntity(Entity):
             ) is not None:
                 with suppress(TypeError, ValueError):
                     forecast_temp_low_f = float(forecast_temp_low)
-                    value_temp_low = UNIT_CONVERSIONS[
-                        ATTR_WEATHER_TEMPERATURE_UNIT
-                    ](
+                    value_temp_low = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                         forecast_temp_low_f,
                         from_temp_unit,
                         to_temp_unit,
@@ -872,9 +867,7 @@ class WeatherEntity(Entity):
             ) is not None:
                 with suppress(TypeError, ValueError):
                     forecast_dew_point_f = float(forecast_dew_point)
-                    value_dew_point = UNIT_CONVERSIONS[
-                        ATTR_WEATHER_TEMPERATURE_UNIT
-                    ](
+                    value_dew_point = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                         forecast_dew_point_f,
                         from_temp_unit,
                         to_temp_unit,
@@ -976,9 +969,7 @@ class WeatherEntity(Entity):
             ) is not None:
                 with suppress(TypeError, ValueError):
                     forecast_humidity_f = float(forecast_humidity)
-                    forecast_entry[ATTR_FORECAST_HUMIDITY] = round(
-                        forecast_humidity_f
-                    )
+                    forecast_entry[ATTR_FORECAST_HUMIDITY] = round(forecast_humidity_f)
 
             converted_forecast_list.append(forecast_entry)
 
