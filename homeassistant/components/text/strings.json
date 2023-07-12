@@ -35,7 +35,7 @@
       "fields": {
         "value": {
           "name": "Value",
-          "description": "Value to set."
+          "description": "Enter your text."
         }
       }
     }
