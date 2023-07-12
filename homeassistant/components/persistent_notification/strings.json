@@ -2,7 +2,7 @@
   "services": {
     "create": {
       "name": "Create",
-      "description": "Shows a notification in the frontend.",
+      "description": "Shows a notification on the **Notifications** panel.",
       "fields": {
         "message": {
           "name": "Message",
@@ -10,27 +10,27 @@
         },
         "title": {
           "name": "Title",
-          "description": "Optional title for your notification."
+          "description": "Optional title of the notification."
         },
         "notification_id": {
           "name": "Notification ID",
-          "description": "Target ID of the notification, will replace a notification with the same ID."
+          "description": "ID of the notification. This new notification will overwrite an existing notification with the same ID."
         }
       }
     },
     "dismiss": {
       "name": "Dismiss",
-      "description": "Removes a notification from the frontend.",
+      "description": "Removes a notification from the **Notifications** panel.",
       "fields": {
         "notification_id": {
           "name": "Notification ID",
-          "description": "Target ID of the notification, which should be removed."
+          "description": "ID of the notification to be removed."
         }
       }
     },
     "dismiss_all": {
       "name": "Dismiss all",
-      "description": "Removes all notifications."
+      "description": "Removes all notifications from the **Notifications** panel."
     }
   }
 }
