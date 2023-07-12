@@ -29,13 +29,30 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, LOGGER, OAUTH_SCOPES
 
 
+async def _get_twitch_client(
+    client_id: str, client_secret: str, access_token: str, refresh_token: str
+) -> Twitch:
+    client = await Twitch(
+        app_id=client_id,
+        app_secret=client_secret,
+        target_app_auth_scope=OAUTH_SCOPES,
+    )
+    client.auto_refresh_auth = False
+    await client.set_user_authentication(
+        token=access_token,
+        refresh_token=refresh_token,
+        scope=OAUTH_SCOPES,
+        validate=True,
+    )
+    return client
+
+
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
     """Config flow to handle Twitch OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    _client: Twitch | None = None
     _oauth_data: dict[str, Any] = {}
 
     reauth_entry: ConfigEntry | None = None
@@ -59,23 +76,11 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="already_configured")
 
         client_id = self.flow_impl.__dict__[CONF_CLIENT_ID]
-        app_secret = self.flow_impl.__dict__[CONF_CLIENT_SECRET]
+        client_secret = self.flow_impl.__dict__[CONF_CLIENT_SECRET]
         access_token = data[CONF_TOKEN][CONF_ACCESS_TOKEN]
         refresh_token = data[CONF_TOKEN][CONF_REFRESH_TOKEN]
 
-        client = await Twitch(
-            app_id=client_id,
-            app_secret=app_secret,
-            target_app_auth_scope=OAUTH_SCOPES,
-        )
-        client.auto_refresh_auth = False
-        await client.set_user_authentication(
-            token=access_token,
-            refresh_token=refresh_token,
-            scope=OAUTH_SCOPES,
-            validate=True,
-        )
-        self._client = client
+        await _get_twitch_client(client_id, client_secret, access_token, refresh_token)
         self._oauth_data = data
 
         return await self.async_step_channels()
@@ -84,18 +89,25 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select which channels to follow. The channels the user follow are prefilled."""
-        if not self._client:
-            return self.async_abort(reason="connection_error")
-        if not (user := await first(self._client.get_users())):
+        client_id = self.flow_impl.__dict__[CONF_CLIENT_ID]
+        client_secret = self.flow_impl.__dict__[CONF_CLIENT_SECRET]
+        access_token = self._oauth_data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+        refresh_token = self._oauth_data[CONF_TOKEN][CONF_REFRESH_TOKEN]
+
+        client = await _get_twitch_client(
+            client_id, client_secret, access_token, refresh_token
+        )
+
+        if not (user := await first(client.get_users())):
             return self.async_abort(reason="user_not_found")
 
         if user_input is not None:
-            self._client.get_users(logins=user_input[CONF_CHANNELS])
+            client.get_users(logins=user_input[CONF_CHANNELS])
             #     Need to check if it checks all channels if they are valid
             return self.async_create_entry(
                 title=user.display_name, data=self._oauth_data, options=user_input
             )
-        followed_channels = await self._client.get_followed_channels(user_id=user.id)
+        followed_channels = await client.get_followed_channels(user_id=user.id)
 
         followed_channel_list = [
             SelectOptionDict(
