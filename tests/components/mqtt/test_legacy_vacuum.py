@@ -324,6 +324,41 @@ async def test_commands_without_supported_features(
 @pytest.mark.parametrize(
     "hass_config",
     [
+        {
+            "mqtt": {
+                "vacuum": {
+                    "name": "test",
+                    "schema": "legacy",
+                    mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
+                        ALL_SERVICES, SERVICE_TO_STRING
+                    ),
+                }
+            }
+        }
+    ],
+)
+async def test_command_without_command_topic(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test commands which are not supported by the vacuum."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    await common.async_turn_on(hass, "vacuum.test")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_set_fan_speed(hass, "low", "vacuum.test")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_send_command(hass, "some command", "vacuum.test")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         help_custom_config(
             vacuum.DOMAIN,
             DEFAULT_CONFIG,

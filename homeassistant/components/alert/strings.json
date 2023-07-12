@@ -9,5 +9,19 @@
         "on": "[%key:common::state::active%]"
       }
     }
+  },
+  "services": {
+    "toggle": {
+      "name": "Toggle",
+      "description": "Toggles alert's notifications."
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Silences alert's notifications."
+    },
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Resets alert's notifications."
+    }
   }
 }

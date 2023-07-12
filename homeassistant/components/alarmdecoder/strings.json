@@ -20,7 +20,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "create_entry": { "default": "Successfully connected to AlarmDecoder." },
+    "create_entry": {
+      "default": "Successfully connected to AlarmDecoder."
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
@@ -67,6 +69,28 @@
       "int": "The field below must be an integer.",
       "loop_rfid": "RF Loop cannot be used without RF Serial.",
       "loop_range": "RF Loop must be an integer between 1 and 4."
+    }
+  },
+  "services": {
+    "alarm_keypress": {
+      "name": "Key press",
+      "description": "Sends custom keypresses to the alarm.",
+      "fields": {
+        "keypress": {
+          "name": "Key press",
+          "description": "String to send to the alarm panel."
+        }
+      }
+    },
+    "alarm_toggle_chime": {
+      "name": "Toggle chime",
+      "description": "Sends the alarm the toggle chime command.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to toggle the alarm control panel chime with."
+        }
+      }
     }
   }
 }

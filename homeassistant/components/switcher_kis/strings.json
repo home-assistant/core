@@ -9,5 +9,27 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "services": {
+    "set_auto_off": {
+      "name": "Set auto off",
+      "description": "Updates Switcher device auto off setting.",
+      "fields": {
+        "auto_off": {
+          "name": "Auto off",
+          "description": "Time period string containing hours and minutes."
+        }
+      }
+    },
+    "turn_on_with_timer": {
+      "name": "Turn on with timer",
+      "description": "Turns on the Switcher device with timer.",
+      "fields": {
+        "timer_minutes": {
+          "name": "Timer",
+          "description": "Time to turn on."
+        }
+      }
+    }
   }
 }
