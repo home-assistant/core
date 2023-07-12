@@ -1041,5 +1041,5 @@ def test_conversation_agent_selector_schema(
 def test_condition_selector_schema(
     schema, valid_selections, invalid_selections
 ) -> None:
-    """Test action sequence selector."""
+    """Test condition sequence selector."""
     _test_selector("condition", schema, valid_selections, invalid_selections)
