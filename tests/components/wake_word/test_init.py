@@ -212,9 +212,10 @@ async def test_ws_detect(
 
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["type"] == "result"
-    assert "handler_id" in msg["result"]
-    handler_id = bytes([msg["result"]["handler_id"]])
+
+    msg = await client.receive_json()
+    assert msg["event"]
+    handler_id = bytes([msg["event"]["handler_id"]])
 
     # Send 3 seconds of empty audio.
     # Should trigger around 2.
@@ -224,6 +225,7 @@ async def test_ws_detect(
         timestamp += _MS_PER_CHUNK
 
     msg = await client.receive_json()
+    assert msg["event"]
     assert msg == snapshot
 
 

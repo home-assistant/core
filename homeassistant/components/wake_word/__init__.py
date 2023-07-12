@@ -1,4 +1,4 @@
-"""Provide functionality to WWD."""
+"""Provide functionality to wake word."""
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -163,7 +163,7 @@ async def websocket_detect(
     try:
         result = await run_task
         _LOGGER.debug(result)
-        connection.send_message({} if result is None else asdict(result))
+        connection.send_event(msg["id"], {} if result is None else asdict(result))
     finally:
         if unregister_handler is not None:
             # Unregister binary handler

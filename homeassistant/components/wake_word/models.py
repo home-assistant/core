@@ -1,4 +1,4 @@
-"""WWD models."""
+"""Wake word models."""
 from dataclasses import dataclass
 
 
