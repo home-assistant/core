@@ -85,5 +85,63 @@
         }
       }
     }
+  },
+  "services": {
+    "add_doorbell_text": {
+      "name": "Add custom doorbell text",
+      "description": "Adds a new custom message for doorbells.",
+      "fields": {
+        "device_id": {
+          "name": "UniFi Protect NVR",
+          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances."
+        },
+        "message": {
+          "name": "Custom message",
+          "description": "New custom message to add for doorbells. Must be less than 30 characters."
+        }
+      }
+    },
+    "remove_doorbell_text": {
+      "name": "Remove custom doorbell text",
+      "description": "Removes an existing message for doorbells.",
+      "fields": {
+        "device_id": {
+          "name": "UniFi Protect NVR",
+          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances."
+        },
+        "message": {
+          "name": "Custom message",
+          "description": "Existing custom message to remove for doorbells."
+        }
+      }
+    },
+    "set_default_doorbell_text": {
+      "name": "Set default doorbell text",
+      "description": "Sets the default doorbell message. This will be the message that is automatically selected when a message \"expires\".",
+      "fields": {
+        "device_id": {
+          "name": "UniFi Protect NVR",
+          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances."
+        },
+        "message": {
+          "name": "Default message",
+          "description": "The default message for your doorbell. Must be less than 30 characters."
+        }
+      }
+    },
+    "set_chime_paired_doorbells": {
+      "name": "Set chime paired doorbells",
+      "description": "Use to set the paired doorbell(s) with a smart chime.",
+      "fields": {
+        "device_id": {
+          "name": "Chime",
+          "description": "The chimes to link to the doorbells to."
+        },
+        "doorbells": {
+          "name": "Doorbells",
+          "description": "The doorbells to link to the chime."
+        }
+      }
+    }
   }
 }
