@@ -18,16 +18,12 @@ from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import Coordinator
+from .coordinator import Coordinator, DeviceUnavailable
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 LOGGER = logging.getLogger(__name__)
 TIMEOUT = 20.0
 DISCONNECT_DELAY = 5
-
-
-class DeviceUnavailable(CommunicationFailure):
-    """Raised if device can't be found."""
 
 
 def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
@@ -58,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         uuids = await client.get_all_characteristics_uuid()
         await client.update_timestamp(dt_util.now())
-    except (asyncio.TimeoutError, CommunicationFailure) as exception:
+    except (asyncio.TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
         await client.disconnect()
         raise ConfigEntryNotReady(
             f"Unable to connect to device {address} due to {exception}"

@@ -5,9 +5,11 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from bleak.exc import BleakError
 from gardena_bluetooth.client import Client
-from gardena_bluetooth.exceptions import CharacteristicNoAccess, CommunicationFailure
+from gardena_bluetooth.exceptions import (
+    CharacteristicNoAccess,
+    GardenaBluetoothException,
+)
 from gardena_bluetooth.parse import Characteristic, CharacteristicType
 
 from homeassistant.components import bluetooth
@@ -22,6 +24,10 @@ from homeassistant.helpers.update_coordinator import (
 
 SCAN_INTERVAL = timedelta(seconds=60)
 LOGGER = logging.getLogger(__name__)
+
+
+class DeviceUnavailable(HomeAssistantError):
+    """Raised if device can't be found."""
 
 
 class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
@@ -68,7 +74,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
                 data[uuid] = await self.client.read_char_raw(uuid)
             except CharacteristicNoAccess as exception:
                 LOGGER.debug("Unable to get data for %s due to %s", uuid, exception)
-            except CommunicationFailure as exception:
+            except (GardenaBluetoothException, DeviceUnavailable) as exception:
                 raise UpdateFailed(
                     f"Unable to update data for {uuid} due to {exception}"
                 ) from exception
@@ -88,7 +94,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
         """Write characteristic to device."""
         try:
             await self.client.write_char(char, value)
-        except (CharacteristicNoAccess, BleakError) as exception:
+        except (GardenaBluetoothException, DeviceUnavailable) as exception:
             raise HomeAssistantError(
                 f"Unable to write characteristic {char} dur to {exception}"
             ) from exception
