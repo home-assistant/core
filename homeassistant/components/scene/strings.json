@@ -7,13 +7,13 @@
       "fields": {
         "transition": {
           "name": "Transition",
-          "description": "Transition duration it takes to bring devices to the state defined in the scene."
+          "description": "Time it takes the devices to transition into the states defined in the scene."
         }
       }
     },
     "reload": {
       "name": "Reload",
-      "description": "Reloads scenes from the YAML-configuration."
+      "description": "Reloads the scenes from the YAML-configuration."
     },
     "apply": {
       "name": "Apply",
@@ -21,11 +21,11 @@
       "fields": {
         "entities": {
           "name": "Entities state",
-          "description": "The entities and the state that they need to be."
+          "description": "List of entities and their target state."
         },
         "transition": {
           "name": "Transition",
-          "description": "Transition duration it takes to bring devices to the state defined in the scene."
+          "description": "Time it takes the devices to transition into the states defined in the scene."
         }
       }
     },
@@ -35,15 +35,15 @@
       "fields": {
         "scene_id": {
           "name": "Scene entity ID",
-          "description": "The entity_id of the new scene."
+          "description": "The entity ID of the new scene."
         },
         "entities": {
           "name": "Entities state",
-          "description": "The entities to control with the scene."
+          "description": "List of entities and their target state. If your entities are already in the target state right now, use `snapshot_entities` instead."
         },
         "snapshot_entities": {
           "name": "Snapshot entities",
-          "description": "The entities of which a snapshot is to be taken."
+          "description": "List of entities to be included in the snapshot. By taking a snapshot, you record the current state of those entities. If you do not want to use the current state of all your entities for this scene, you can combine the `snapshot_entities` with `entities`."
         }
       }
     }
