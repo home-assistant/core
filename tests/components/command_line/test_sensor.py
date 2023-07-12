@@ -543,16 +543,18 @@ async def test_updating_to_often(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test handling updating when command already running."""
+    wait_till_event = asyncio.Event()
+    wait_till_event.set()
     called = []
 
     class MockCommandSensor(CommandSensor):
-        """Mock entity that updates slow."""
+        """Mock entity that updates."""
 
         async def _async_update(self) -> None:
-            """Update slow."""
+            """Update entity."""
             called.append(1)
-            # Add waiting time
-            await asyncio.sleep(1)
+            # Wait till event is set
+            await wait_till_event.wait()
 
     with patch(
         "homeassistant.components.command_line.sensor.CommandSensor",
@@ -567,7 +569,7 @@ async def test_updating_to_often(
                         "sensor": {
                             "name": "Test",
                             "command": "echo 1",
-                            "scan_interval": 0.1,
+                            "scan_interval": 10,
                         }
                     }
                 ]
@@ -576,23 +578,26 @@ async def test_updating_to_often(
         await hass.async_block_till_done()
 
     assert called
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
+    wait_till_event.set()
+    asyncio.wait(0)
+
     assert (
         "Updating Command Line Sensor Test took longer than the scheduled update interval"
         not in caplog.text
     )
-    called.clear()
-    caplog.clear()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
-    await hass.async_block_till_done()
+    # Simulate update takes too long
+    wait_till_event.clear()
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    await asyncio.sleep(0)
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    wait_till_event.set()
 
-    assert called
     assert (
         "Updating Command Line Sensor Test took longer than the scheduled update interval"
         in caplog.text
     )
-
-    await asyncio.sleep(0.2)
 
 
 async def test_updating_manually(
