@@ -193,7 +193,7 @@
   },
   "services": {
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads group configuration, entities, and notify services from YAML-configuration."
     },
     "set": {

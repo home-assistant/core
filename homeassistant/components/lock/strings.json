@@ -47,7 +47,7 @@
       }
     },
     "open": {
-      "name": "Open",
+      "name": "[%key:common::action::open%]",
       "description": "Opens a lock.",
       "fields": {
         "code": {
