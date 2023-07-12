@@ -45,5 +45,57 @@
         "name": "Valve controller"
       }
     }
+  },
+  "services": {
+    "pair_sensor": {
+      "name": "Pair sensor",
+      "description": "Adds a new paired sensor to the valve controller.",
+      "fields": {
+        "device_id": {
+          "name": "Valve controller",
+          "description": "The valve controller to add the sensor to."
+        },
+        "uid": {
+          "name": "UID",
+          "description": "The UID of the paired sensor."
+        }
+      }
+    },
+    "unpair_sensor": {
+      "name": "Unpair sensor",
+      "description": "Removes a paired sensor from the valve controller.",
+      "fields": {
+        "device_id": {
+          "name": "Valve controller",
+          "description": "The valve controller to remove the sensor from."
+        },
+        "uid": {
+          "name": "UID",
+          "description": "The UID of the paired sensor."
+        }
+      }
+    },
+    "upgrade_firmware": {
+      "name": "Upgrade firmware",
+      "description": "Upgrades the device firmware.",
+      "fields": {
+        "device_id": {
+          "name": "Valve controller",
+          "description": "The valve controller whose firmware should be upgraded."
+        },
+        "url": {
+          "name": "URL",
+          "description": "The URL of the server hosting the firmware file."
+        },
+        "port": {
+          "name": "Port",
+          "description": "The port on which the firmware file is served."
+        },
+        "filename": {
+          "name": "Filename",
+          "description": "The firmware filename."
+        }
+      }
+    }
   }
 }
