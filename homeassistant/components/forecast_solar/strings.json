@@ -8,7 +8,7 @@
           "declination": "Declination (0 = Horizontal, 90 = Vertical)",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "modules power": "Total Watt peak power of your solar modules",
+          "modules_power": "Total Watt peak power of your solar modules",
           "name": "[%key:common::config_flow::data::name%]"
         }
       }
