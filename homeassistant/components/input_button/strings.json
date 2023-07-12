@@ -13,5 +13,11 @@
         }
       }
     }
+  },
+  "services": {
+    "press": {
+      "name": "Press",
+      "description": "Presses the button."
+    }
   }
 }

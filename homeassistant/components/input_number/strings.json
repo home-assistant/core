@@ -33,5 +33,29 @@
         }
       }
     }
+  },
+  "services": {
+    "decrement": {
+      "name": "Decrement",
+      "description": "Decrements the value by its stepping."
+    },
+    "increment": {
+      "name": "Increment",
+      "description": "Increments the value by its stepping."
+    },
+    "set_value": {
+      "name": "Set",
+      "description": "Sets the value.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The target value."
+        }
+      }
+    },
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads helpers from the YAML-configuration."
+    }
   }
 }
