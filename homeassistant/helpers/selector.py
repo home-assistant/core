@@ -471,7 +471,7 @@ class ConditionSelector(Selector[ConditionSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        return data
+        return vol.Schema(cv.CONDITIONS_SCHEMA)(data)
 
 
 class ConfigEntrySelectorConfig(TypedDict, total=False):
