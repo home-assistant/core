@@ -439,10 +439,10 @@ blinkpy==0.21.0
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.15.3
+bluetooth-adapters==0.16.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.2.0
+bluetooth-auto-recovery==1.2.1
 
 # homeassistant.components.bluetooth
 # homeassistant.components.esphome
@@ -640,6 +640,9 @@ fritzconnection[qr]==1.12.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
+
+# homeassistant.components.gardena_bluetooth
+gardena_bluetooth==1.0.1
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10

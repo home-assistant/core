@@ -677,6 +677,9 @@ async def test_async_get_all_descriptions_failing_integration(
     with patch(
         "homeassistant.helpers.service.async_get_integrations",
         return_value={"logger": ImportError},
+    ), patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={},
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 

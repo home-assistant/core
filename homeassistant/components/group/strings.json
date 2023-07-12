@@ -190,5 +190,55 @@
         "product": "Product"
       }
     }
+  },
+  "services": {
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads group configuration, entities, and notify services from YAML-configuration."
+    },
+    "set": {
+      "name": "Set",
+      "description": "Creates/Updates a user group.",
+      "fields": {
+        "object_id": {
+          "name": "Object ID",
+          "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id]."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name of the group."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Name of the icon for the group."
+        },
+        "entities": {
+          "name": "Entities",
+          "description": "List of all members in the group. Cannot be used in combination with `Add entities` or `Remove entities`."
+        },
+        "add_entities": {
+          "name": "Add entities",
+          "description": "List of members to be added to the group. Cannot be used in combination with `Entities` or `Remove entities`."
+        },
+        "remove_entities": {
+          "name": "Remove entities",
+          "description": "List of members to be removed from a group. Cannot be used in combination with `Entities` or `Add entities`."
+        },
+        "all": {
+          "name": "All",
+          "description": "Enable this option if the group should only be used when all entities are in state `on`."
+        }
+      }
+    },
+    "remove": {
+      "name": "Remove",
+      "description": "Removes a group.",
+      "fields": {
+        "object_id": {
+          "name": "Object ID",
+          "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id]."
+        }
+      }
+    }
   }
 }

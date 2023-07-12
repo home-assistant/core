@@ -6,5 +6,11 @@
       "resources": "Resources",
       "views": "Views"
     }
+  },
+  "services": {
+    "reload_resources": {
+      "name": "Reload resources",
+      "description": "Reloads dashboard resources from the YAML-configuration."
+    }
   }
 }
