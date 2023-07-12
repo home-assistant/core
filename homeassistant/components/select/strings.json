@@ -56,7 +56,7 @@
     },
     "select_previous": {
       "name": "Previous",
-      "description": "Selects the previous options.",
+      "description": "Selects the previous option.",
       "fields": {
         "cycle": {
           "name": "Cycle",
