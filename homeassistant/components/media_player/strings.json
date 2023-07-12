@@ -227,7 +227,7 @@
     },
     "media_seek": {
       "name": "Seek",
-      "description": "Allows you to go to a different part of the medium that is currently playing.",
+      "description": "Allows you to go to a different part of the media that is currently playing.",
       "fields": {
         "seek_position": {
           "name": "Position",
@@ -237,7 +237,7 @@
     },
     "play_media": {
       "name": "Play media",
-      "description": "Starts playing a specific medium.",
+      "description": "Starts playing specified media.",
       "fields": {
         "media_content_id": {
           "name": "Content ID",
