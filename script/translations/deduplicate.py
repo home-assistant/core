@@ -58,7 +58,7 @@ def run():
 
     for component in components:
         comp_strings_path = Path(STRINGS_PATH.format(component))
-        strings[component] = json.loads(comp_strings_path.read_text())
+        strings[component] = json.loads(comp_strings_path.read_text(encoding="utf-8"))
 
     for path, value in update_keys.items():
         parts = path.split("::")
@@ -76,6 +76,13 @@ def run():
 
     for component in components:
         comp_strings_path = Path(STRINGS_PATH.format(component))
-        comp_strings_path.write_text(json.dumps(strings[component], indent=2))
+        comp_strings_path.write_text(
+            json.dumps(
+                strings[component],
+                indent=2,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
 
     return 0
