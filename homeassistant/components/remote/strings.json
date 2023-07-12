@@ -88,7 +88,7 @@
         },
         "alternative": {
           "name": "Alternative",
-          "description": "If code must be stored as alternative (useful for discrete remotes)."
+          "description": "If code must be stored as an alternative. This is useful for discrete codes. Discrete codes are used for toggles that only perform one function. For example, a code to only turn a device on. If it is on already, sending the code won't change the state."
         },
         "timeout": {
           "name": "Timeout",
@@ -102,11 +102,11 @@
       "fields": {
         "device": {
           "name": "Device",
-          "description": "Name of the device from which commands will be deleted."
+          "description": "Device from which commands will be deleted."
         },
         "command": {
           "name": "Command",
-          "description": "A single command or a list of commands to delete."
+          "description": "The single command or the list of commands to be deleted."
         }
       }
     }
