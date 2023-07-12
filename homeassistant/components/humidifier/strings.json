@@ -81,6 +81,7 @@
       "description": "Sets the humidifier operation mode.",
       "fields": {
         "mode": {
+          "name": "Mode",
           "description": "Operation mode. For example, _normal_, _eco_, or _away_. For a list of possible values, refer to the integration documentation."
         }
       }
