@@ -154,8 +154,8 @@
   },
   "services": {
     "clear_lock_usercode": {
-      "name": "Clear lock usercode",
-      "description": "Clears an usercode from a lock.",
+      "name": "Clear lock user code",
+      "description": "Clears a user code from a lock.",
       "fields": {
         "code_slot": {
           "name": "Code slot",
@@ -164,8 +164,8 @@
       }
     },
     "set_lock_usercode": {
-      "name": "Set lock usercode",
-      "description": "Sets an usercode on a lock.",
+      "name": "Set lock user code",
+      "description": "Sets an user code on a lock.",
       "fields": {
         "code_slot": {
           "name": "[%key:component::zwave_js::services::clear_lock_usercode::fields::code_slot::name%]",
@@ -179,7 +179,7 @@
     },
     "set_config_parameter": {
       "name": "Set device configuration parameter",
-      "description": "Changes configuration parameters of your Z-Wave devices.",
+      "description": "Changes the configuration parameters of your Z-Wave devices.",
       "fields": {
         "endpoint": {
           "name": "Endpoint",
@@ -218,8 +218,8 @@
       }
     },
     "refresh_value": {
-      "name": "Refresh value(s)",
-      "description": "Forces the updating value(s) for a Z-Wave entity.",
+      "name": "Refresh values",
+      "description": "Forces the updating values for a Z-Wave entity.",
       "fields": {
         "entity_id": {
           "name": "Entities",
@@ -304,8 +304,8 @@
       "description": "Forces Z-Wave JS to try to reach a node. This can be used to update the status of the node in Z-Wave JS when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep."
     },
     "reset_meter": {
-      "name": "Reset meter(s) on a node",
-      "description": "Resets the meter(s) on a node.",
+      "name": "Reset meters on a node",
+      "description": "Resets the meters on a node.",
       "fields": {
         "meter_type": {
           "name": "Meter type",
@@ -313,7 +313,7 @@
         },
         "value": {
           "name": "Target value",
-          "description": "The value that meter(s) should be reset to. Not all meters support the ability to be reset to a specific value."
+          "description": "The value that meters should be reset to. Not all meters support the ability to be reset to a specific value."
         }
       }
     },
