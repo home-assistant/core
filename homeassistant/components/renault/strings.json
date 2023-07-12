@@ -151,5 +151,49 @@
         "name": "Remote engine start code"
       }
     }
+  },
+  "services": {
+    "ac_start": {
+      "name": "Start A/C",
+      "description": "Starts A/C on vehicle.",
+      "fields": {
+        "vehicle": {
+          "name": "Vehicle",
+          "description": "The vehicle to send the command to."
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "Target A/C temperature in \u00b0C."
+        },
+        "when": {
+          "name": "When",
+          "description": "Timestamp for the start of the A/C (optional - defaults to now)."
+        }
+      }
+    },
+    "ac_cancel": {
+      "name": "Cancel A/C",
+      "description": "Canceles A/C on vehicle.",
+      "fields": {
+        "vehicle": {
+          "name": "Vehicle",
+          "description": "The vehicle to send the command to."
+        }
+      }
+    },
+    "charge_set_schedules": {
+      "name": "Update charge schedule",
+      "description": "Updates charge schedule on vehicle.",
+      "fields": {
+        "vehicle": {
+          "name": "Vehicle",
+          "description": "The vehicle to send the command to."
+        },
+        "schedules": {
+          "name": "Schedules",
+          "description": "Schedule details."
+        }
+      }
+    }
   }
 }

@@ -30,7 +30,7 @@
       },
       "advanced_options": {
         "title": "Advanced Google Cast configuration",
-        "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don’t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
+        "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don\u2019t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
         "data": {
           "ignore_cec": "Ignore CEC",
           "uuid": "Allowed UUIDs"
@@ -39,6 +39,26 @@
     },
     "error": {
       "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
+    }
+  },
+  "services": {
+    "show_lovelace_view": {
+      "name": "Show dashboard view",
+      "description": "Shows a dashboard view on a Chromecast device.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Media player entity to show the dashboard view on."
+        },
+        "dashboard_path": {
+          "name": "Dashboard path",
+          "description": "The URL path of the dashboard to show."
+        },
+        "view_path": {
+          "name": "View path",
+          "description": "The path of the dashboard view to show."
+        }
+      }
     }
   }
 }

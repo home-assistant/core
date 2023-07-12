@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 @pytest.fixture(autouse=True)
 def stub_reconnect():
     """Stub reconnect."""
-    with patch("homeassistant.components.esphome.ReconnectLogic.start"):
+    with patch("homeassistant.components.esphome.manager.ReconnectLogic.start"):
         yield
 
 

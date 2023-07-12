@@ -219,14 +219,14 @@ def _async_register_bridge_device(
     """Register the bridge device in the device registry."""
     device_registry = dr.async_get(hass)
 
-    device_args: DeviceInfo = {
-        "name": bridge_device["name"],
-        "manufacturer": MANUFACTURER,
-        "identifiers": {(DOMAIN, bridge_device["serial"])},
-        "model": f"{bridge_device['model']} ({bridge_device['type']})",
-        "via_device": (DOMAIN, bridge_device["serial"]),
-        "configuration_url": "https://device-login.lutron.com",
-    }
+    device_args = DeviceInfo(
+        name=bridge_device["name"],
+        manufacturer=MANUFACTURER,
+        identifiers={(DOMAIN, bridge_device["serial"])},
+        model=f"{bridge_device['model']} ({bridge_device['type']})",
+        via_device=(DOMAIN, bridge_device["serial"]),
+        configuration_url="https://device-login.lutron.com",
+    )
 
     area = _area_name_from_id(bridge.areas, bridge_device["area"])
     if area != UNASSIGNED_AREA:

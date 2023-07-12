@@ -136,5 +136,17 @@
         "name": "UV index"
       }
     }
+  },
+  "services": {
+    "send": {
+      "name": "Send",
+      "description": "Sends a raw event on radio.",
+      "fields": {
+        "event": {
+          "name": "Event",
+          "description": "A hexadecimal string to send."
+        }
+      }
+    }
   }
 }

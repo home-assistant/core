@@ -30,9 +30,9 @@ janus==1.0.0
 Jinja2==3.1.2
 lru-dict==1.2.0
 mutagen==1.46.0
-orjson==3.9.1
+orjson==3.9.2
 paho-mqtt==1.6.1
-Pillow==9.5.0
+Pillow==10.0.0
 pip>=21.3.1,<23.2
 psutil-home-assistant==0.0.1
 PyJWT==2.7.0
@@ -52,7 +52,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
 yarl==1.9.2
-zeroconf==0.70.0
+zeroconf==0.71.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

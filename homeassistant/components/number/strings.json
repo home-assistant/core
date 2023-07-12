@@ -154,5 +154,17 @@
     "wind_speed": {
       "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
     }
+  },
+  "services": {
+    "set_value": {
+      "name": "Set",
+      "description": "Sets the value of a number.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The target value to set."
+        }
+      }
+    }
   }
 }

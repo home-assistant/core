@@ -50,6 +50,7 @@ from . import (
     device_registry,
     entity_registry,
     template,
+    translation,
 )
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
@@ -172,7 +173,7 @@ _SERVICE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: _SERVICE_SCHEMA})
+_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
 
 
 class ServiceParams(TypedDict):
@@ -607,6 +608,11 @@ async def async_get_all_descriptions(
         )
         loaded = dict(zip(missing, contents))
 
+    # Load translations for all service domains
+    translations = await translation.async_get_translations(
+        hass, "en", "services", list(services)
+    )
+
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
     for domain, services_map in services.items():
@@ -616,37 +622,62 @@ async def async_get_all_descriptions(
         for service_name in services_map:
             cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
+            if description is not None:
+                domain_descriptions[service_name] = description
+                continue
+
             # Cache missing descriptions
-            if description is None:
-                domain_yaml = loaded.get(domain) or {}
-                # The YAML may be empty for dynamically defined
-                # services (ie shell_command) that never call
-                # service.async_set_service_schema for the dynamic
-                # service
+            domain_yaml = loaded.get(domain) or {}
+            # The YAML may be empty for dynamically defined
+            # services (ie shell_command) that never call
+            # service.async_set_service_schema for the dynamic
+            # service
 
-                yaml_description = domain_yaml.get(  # type: ignore[union-attr]
-                    service_name, {}
-                )
+            yaml_description = (
+                domain_yaml.get(service_name) or {}  # type: ignore[union-attr]
+            )
 
-                # Don't warn for missing services, because it triggers false
-                # positives for things like scripts, that register as a service
-                description = {
-                    "name": yaml_description.get("name", ""),
-                    "description": yaml_description.get("description", ""),
-                    "fields": yaml_description.get("fields", {}),
+            # Don't warn for missing services, because it triggers false
+            # positives for things like scripts, that register as a service
+            #
+            # When name & description are in the translations use those;
+            # otherwise fallback to backwards compatible behavior from
+            # the time when we didn't have translations for descriptions yet.
+            # This mimics the behavior of the frontend.
+            description = {
+                "name": translations.get(
+                    f"component.{domain}.services.{service_name}.name",
+                    yaml_description.get("name", ""),
+                ),
+                "description": translations.get(
+                    f"component.{domain}.services.{service_name}.description",
+                    yaml_description.get("description", ""),
+                ),
+                "fields": dict(yaml_description.get("fields", {})),
+            }
+
+            # Translate fields names & descriptions as well
+            for field_name, field_schema in description["fields"].items():
+                if name := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.name"
+                ):
+                    field_schema["name"] = name
+                if desc := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.description"
+                ):
+                    field_schema["description"] = desc
+
+            if "target" in yaml_description:
+                description["target"] = yaml_description["target"]
+
+            if (
+                response := hass.services.supports_response(domain, service_name)
+            ) != SupportsResponse.NONE:
+                description["response"] = {
+                    "optional": response == SupportsResponse.OPTIONAL,
                 }
 
-                if "target" in yaml_description:
-                    description["target"] = yaml_description["target"]
-
-                if (
-                    response := hass.services.supports_response(domain, service_name)
-                ) != SupportsResponse.NONE:
-                    description["response"] = {
-                        "optional": response == SupportsResponse.OPTIONAL,
-                    }
-
-                descriptions_cache[cache_key] = description
+            descriptions_cache[cache_key] = description
 
             domain_descriptions[service_name] = description
 
