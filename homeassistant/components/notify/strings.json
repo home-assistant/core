@@ -1,1 +1,45 @@
-{ "title": "Notifications" }
+{
+  "title": "Notifications",
+  "services": {
+    "notify": {
+      "name": "Sends a notification",
+      "description": "Sends a notification message to selected notify platforms.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of targets to send the notification to. Optional depending on the platform."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information for notification. Optional depending on the platform."
+        }
+      }
+    },
+    "persistent_notification": {
+      "name": "Send a persistent notification",
+      "description": "Sends a notification that is visible in the front-end.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information for notification. Optional depending on the platform."
+        }
+      }
+    }
+  }
+}
