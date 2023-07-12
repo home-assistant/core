@@ -42,7 +42,7 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "Code to lock the lock with."
+          "description": "Code used to lock the lock."
         }
       }
     },
@@ -52,7 +52,7 @@
       "fields": {
         "code": {
           "name": "[%key:component::lock::services::lock::fields::code::name%]",
-          "description": "Code to open the lock with."
+          "description": "Code used to open the lock."
         }
       }
     },
@@ -62,7 +62,7 @@
       "fields": {
         "code": {
           "name": "[%key:component::lock::services::lock::fields::code::name%]",
-          "description": "Code to unlock the lock with."
+          "description": "Code used to unlock the lock."
         }
       }
     }
