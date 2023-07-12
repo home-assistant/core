@@ -264,11 +264,11 @@
         },
         "source_ieee": {
           "name": "Source IEEE",
-          "description": "IEEE address of the joining device (must be used with install code)."
+          "description": "IEEE address of the joining device (must be used with the install code)."
         },
         "install_code": {
           "name": "Install code",
-          "description": "Install code of the joining device (must be used with source_ieee)."
+          "description": "Install code of the joining device (must be used with the source_ieee)."
         },
         "qr_code": {
           "name": "QR code",
@@ -288,7 +288,7 @@
     },
     "reconfigure_device": {
       "name": "Reconfigure device",
-      "description": "Reconfigures a ZHA device (heal device). Use this if you are having issues with the device. If the device in question is a battery powered device please ensure it is awake and accepting commands when you use this service.",
+      "description": "Reconfigures a ZHA device (heal device). Use this if you are having issues with the device. If the device in question is a battery-powered device, ensure it is awake and accepting commands when you use this service.",
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
@@ -352,7 +352,7 @@
         },
         "command": {
           "name": "Command",
-          "description": "Id of the command to execute."
+          "description": "ID of the command to execute."
         },
         "command_type": {
           "name": "Command Type",
@@ -360,7 +360,7 @@
         },
         "args": {
           "name": "Args",
-          "description": "Args to pass to the command."
+          "description": "Arguments to pass to the command."
         },
         "params": {
           "name": "Params",
@@ -385,16 +385,16 @@
           "description": "ZCL cluster to send command to."
         },
         "cluster_type": {
-          "name": "Cluster Type",
+          "name": "Cluster type",
           "description": "Type of the cluster."
         },
         "command": {
           "name": "Command",
-          "description": "Id of the command to execute."
+          "description": "ID of the command to execute."
         },
         "args": {
           "name": "Args",
-          "description": "Args to pass to the command."
+          "description": "Arguments to pass to the command."
         },
         "manufacturer": {
           "name": "Manufacturer",
