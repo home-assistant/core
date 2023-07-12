@@ -93,7 +93,6 @@ class ESPHomeDashboardManager:
             hass, addon_slug, url, async_get_clientsession(hass)
         )
         await dashboard.async_request_refresh()
-            )
 
         self._current_dashboard = dashboard
 
