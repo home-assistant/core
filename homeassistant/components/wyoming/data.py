@@ -30,7 +30,7 @@ class WyomingService:
         if any(tts.installed for tts in info.tts):
             platforms.append(Platform.TTS)
         if any(wake.installed for wake in info.wake):
-            platforms.append(Platform.WAKE)
+            platforms.append(Platform.WAKE_WORD)
         self.platforms = platforms
 
     @classmethod

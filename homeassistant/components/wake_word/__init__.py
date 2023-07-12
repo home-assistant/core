@@ -116,6 +116,7 @@ async def websocket_detect(
     """
     timestamp_ms = msg.get("timestamp_start", 0)
     entity_id = msg.get("entity_id", async_default_engine(hass))
+    _LOGGER.debug("Getting engine for %s", entity_id)
     engine = async_get_wake_word_detection_entity(hass, entity_id)
 
     if engine is None:
@@ -149,15 +150,19 @@ async def websocket_detect(
     )
 
     # Confirm subscription
-    connection.send_result(msg["id"], {"handler_id": handler_id})
+    connection.send_result(msg["id"])
 
     run_task = hass.async_create_task(engine.async_process_audio_stream(wwd_stream()))
 
     # Cancel pipeline if user unsubscribes
     connection.subscriptions[msg["id"]] = run_task.cancel
 
+    # Send binary handler id
+    connection.send_event(msg["id"], {"handler_id": handler_id})
+
     try:
         result = await run_task
+        _LOGGER.debug(result)
         connection.send_message({} if result is None else asdict(result))
     finally:
         if unregister_handler is not None:
