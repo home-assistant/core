@@ -31,7 +31,7 @@
           "ein": "[%key:common::state::enabled%]",
           "deaktiviert": "Inactive",
           "aus": "[%key:common::state::disabled%]",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "auto": "Auto",
           "permanent": "Permanent",
           "initialisierung": "Initialization",
