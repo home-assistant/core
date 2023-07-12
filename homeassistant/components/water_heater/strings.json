@@ -18,5 +18,41 @@
         "performance": "Performance"
       }
     }
+  },
+  "services": {
+    "set_away_mode": {
+      "name": "Set away mode",
+      "description": "Turns away mode on/off.",
+      "fields": {
+        "away_mode": {
+          "name": "Away mode",
+          "description": "New value of away mode."
+        }
+      }
+    },
+    "set_temperature": {
+      "name": "Set temperature",
+      "description": "Sets target temperature.",
+      "fields": {
+        "temperature": {
+          "name": "Temperature",
+          "description": "New target temperature for water heater."
+        },
+        "operation_mode": {
+          "name": "Operation mode",
+          "description": "New value of operation mode."
+        }
+      }
+    },
+    "set_operation_mode": {
+      "name": "Set operation mode",
+      "description": "Sets operation mode.",
+      "fields": {
+        "operation_mode": {
+          "name": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::name%]",
+          "description": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::description%]"
+        }
+      }
+    }
   }
 }
