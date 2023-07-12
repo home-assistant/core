@@ -54,17 +54,25 @@ def run():
         if merged[value] == key:
             continue
 
+        key_integration = key.split("::")[1]
+
         key_to_reference = merged[value]
+        key_to_reference_integration = key_to_reference.split("::")[1]
 
         # Uncomment if we want to only add references to own integrations
-        # if key_to_reference.split("::")[1] != key.split("::")[1]:
+        # but not include entity integrations
+        # if (
+        #     key_integration != key_to_reference_integration
+        #     # Do not create self-references in entity integrations
+        #     or key_integration in Platform.__members__.values()
+        # ):
         #     continue
 
         if (
             # We don't want integrations to reference arbitrary other integrations
             key_to_reference in questionable
             # Allow reference own integration
-            and key_to_reference.split("::")[1] != key.split("::")[1]
+            and key_to_reference_integration != key_integration
         ):
             suggest_new_common.add(value)
             continue
@@ -76,7 +84,7 @@ def run():
         for key in sorted(suggest_new_common):
             print(key)
 
-    components = sorted({key.split("::")[1] for key in update_keys})
+    components = sorted({key_integration for key in update_keys})
 
     strings = {}
 
