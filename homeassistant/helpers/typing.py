@@ -1,9 +1,11 @@
 """Typing Helpers for Home Assistant."""
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 import homeassistant.core
+
+_DataT = TypeVar("_DataT")
 
 GPSType = tuple[float, float]
 ConfigType = dict[str, Any]
@@ -34,3 +36,9 @@ UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
 # In due time they will be removed.
 HomeAssistantType = homeassistant.core.HomeAssistant
 ServiceCallType = homeassistant.core.ServiceCall
+
+
+class HassType(homeassistant.core.HomeAssistant, Generic[_DataT]):
+    """Generic HomeAssistant class to better type data."""
+
+    data: dict[str, dict[str, _DataT]]
