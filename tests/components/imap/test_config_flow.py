@@ -412,6 +412,8 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
             {"custom_event_data_template": "{{ invalid_syntax"},
             data_entry_flow.FlowResultType.FORM,
         ),
+        ({"enforce_polling": False}, data_entry_flow.FlowResultType.CREATE_ENTRY),
+        ({"enforce_polling": True}, data_entry_flow.FlowResultType.CREATE_ENTRY),
     ],
     ids=[
         "valid_message_size",
@@ -419,6 +421,8 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
         "invalid_message_size_high",
         "valid_template",
         "invalid_template",
+        "enforce_polling_false",
+        "enforce_polling_true",
     ],
 )
 async def test_advanced_options_form(
@@ -459,7 +463,7 @@ async def test_advanced_options_form(
             else:
                 # Check if entry was updated
                 for key, value in new_config.items():
-                    assert str(entry.data[key]) == value
+                    assert str(entry.data[key]) == str(value)
     except vol.MultipleInvalid:
         # Check if form was expected with these options
         assert assert_result == data_entry_flow.FlowResultType.FORM

@@ -42,7 +42,8 @@
           "folder": "[%key:component::imap::config::step::user::data::folder%]",
           "search": "[%key:component::imap::config::step::user::data::search%]",
           "custom_event_data_template": "Template to create custom event data",
-          "max_message_size": "Max message size (2048 < size < 30000)"
+          "max_message_size": "Max message size (2048 < size < 30000)",
+          "enforce_polling": "Enforce polling even if the server supports Push-IMAP"
         }
       }
     },
