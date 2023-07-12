@@ -321,6 +321,7 @@ omit =
     homeassistant/components/ezviz/coordinator.py
     homeassistant/components/ezviz/number.py
     homeassistant/components/ezviz/entity.py
+    homeassistant/components/ezviz/select.py
     homeassistant/components/ezviz/sensor.py
     homeassistant/components/ezviz/switch.py
     homeassistant/components/ezviz/update.py

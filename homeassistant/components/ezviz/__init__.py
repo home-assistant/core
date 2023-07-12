@@ -37,6 +37,7 @@ PLATFORMS_BY_TYPE: dict[str, list] = {
         Platform.CAMERA,
         Platform.LIGHT,
         Platform.NUMBER,
+        Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
         Platform.UPDATE,
