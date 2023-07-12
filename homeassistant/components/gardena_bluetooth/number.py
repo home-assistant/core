@@ -104,7 +104,7 @@ class GardenaBluetoothNumber(GardenaBluetoothEntity, NumberEntity):
         coordinator: Coordinator,
         description: GardenaBluetoothNumberEntityDescription,
     ) -> None:
-        """Initialize the Switchbot sensor."""
+        """Initialize the number entity."""
         super().__init__(coordinator, {description.key})
         self._attr_unique_id = f"{coordinator.address}-{description.key}"
         self._attr_native_value = None
@@ -137,7 +137,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
         self,
         coordinator: Coordinator,
     ) -> None:
-        """Initialize the Switchbot sensor."""
+        """Initialize the remaining time entity."""
         super().__init__(coordinator, {Valve.remaining_open_time.uuid})
         self._attr_unique_id = f"{coordinator.address}-remaining_open_set"
         self._attr_native_value = None
