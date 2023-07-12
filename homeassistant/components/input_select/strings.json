@@ -24,7 +24,7 @@
       "fields": {
         "cycle": {
           "name": "Cycle",
-          "description": "If the option should cycle from the last to the first."
+          "description": "If the option should cycle from the last to the first option on the list."
         }
       }
     },
@@ -62,7 +62,7 @@
       "fields": {
         "options": {
           "name": "Options",
-          "description": "Options that are available for selecting."
+          "description": "List of options."
         }
       }
     },

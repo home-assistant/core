@@ -37,11 +37,11 @@
   "services": {
     "decrement": {
       "name": "Decrement",
-      "description": "Decrements the value by its stepping."
+      "description": "Decrements the current value by 1 step."
     },
     "increment": {
       "name": "Increment",
-      "description": "Increments the value by its stepping."
+      "description": "Increments the value by 1 step."
     },
     "set_value": {
       "name": "Set",
