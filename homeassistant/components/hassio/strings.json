@@ -291,11 +291,11 @@
         },
         "compressed": {
           "name": "Compressed",
-          "description": "Use compressed archives."
+          "description": "Compresses the backup files."
         },
         "location": {
           "name": "Location",
-          "description": "Name of a backup network storage to put backup (or /backup)."
+          "description": "Name of a backup network storage to host backups."
         }
       }
     },
@@ -305,15 +305,15 @@
       "fields": {
         "homeassistant": {
           "name": "Home Assistant settings",
-          "description": "Backup Home Assistant settings."
+          "description": "Includes Home Assistant settings in the backup."
         },
         "addons": {
           "name": "Add-ons",
-          "description": "List of add-on slugs."
+          "description": "List of add-ons to include in the backup. Use the name slug of the add-on."
         },
         "folders": {
           "name": "Folders",
-          "description": "List of directories."
+          "description": "List of directories to include in the backup."
         },
         "name": {
           "name": "[%key:component::hassio::services::backup_full::fields::name::name%]",
@@ -334,8 +334,8 @@
       }
     },
     "restore_full": {
-      "name": "Restores from full backup.",
-      "description": "Restore from full backup.",
+      "name": "Restore from full backup.",
+      "description": "Restores from full backup.",
       "fields": {
         "slug": {
           "name": "Slug",
@@ -349,7 +349,7 @@
     },
     "restore_partial": {
       "name": "Restore from partial backup.",
-      "description": "Restores from partial backup.",
+      "description": "Restores from a partial backup.",
       "fields": {
         "slug": {
           "name": "[%key:component::hassio::services::restore_full::fields::slug::name%]",
