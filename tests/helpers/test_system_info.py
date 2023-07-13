@@ -41,11 +41,10 @@ async def test_get_system_info_supervisor_not_available(
         assert info["user"] is not None
         assert json.dumps(info) is not None
         assert info["installation_type"] == "Home Assistant Supervised"
+        assert "No Home Assistant Supervisor info available" in caplog.text
 
 
-async def test_get_system_info_supervisor_not_loaded(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_get_system_info_supervisor_not_loaded(hass: HomeAssistant) -> None:
     """Test the get system info when supervisor is not loaded is in use."""
     with patch("platform.system", return_value="Linux"), patch(
         "homeassistant.helpers.system_info.is_docker_env", return_value=True
