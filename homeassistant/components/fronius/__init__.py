@@ -33,6 +33,7 @@ from .coordinator import (
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
+from .sensor import InverterSensor
 
 _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [Platform.SENSOR]
