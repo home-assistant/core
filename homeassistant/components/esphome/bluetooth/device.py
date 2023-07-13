@@ -1,4 +1,4 @@
-"""Bluetooth models for esphome."""
+"""Bluetooth device models for esphome."""
 from __future__ import annotations
 
 import asyncio

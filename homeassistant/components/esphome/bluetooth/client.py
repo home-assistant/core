@@ -143,9 +143,14 @@ class ESPHomeClient(BaseBleakClient):
         self._address_as_int = mac_to_int(self._ble_device.address)
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
-        self.domain_data = DomainData.get(self._hass)
-        self.entry_data = self.domain_data.get_entry_data(config_entry)
-        self._client = self.entry_data.client
+        domain_data = DomainData.get(self._hass)
+        self.cache = domain_data.get_bluetooth_cache()
+        entry_data = domain_data.get_entry_data(config_entry)
+        bluetooth_device = entry_data.bluetooth_device
+        assert bluetooth_device is not None
+        self._bluetooth_device = bluetooth_device
+        self.entry_data = entry_data
+        self._client = entry_data.client
         self._is_connected = False
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
@@ -153,11 +158,11 @@ class ESPHomeClient(BaseBleakClient):
             int, tuple[Callable[[], Coroutine[Any, Any, None]], Callable[[], None]]
         ] = {}
         self._disconnected_event: asyncio.Event | None = None
-        device_info = self.entry_data.device_info
+        device_info = entry_data.device_info
         assert device_info is not None
         self._device_info = device_info
         self._feature_flags = device_info.bluetooth_proxy_feature_flags_compat(
-            self.entry_data.api_version
+            entry_data.api_version
         )
         self._address_type = address_or_ble_device.details["address_type"]
         self._source_name = f"{config_entry.title} [{self._source}]"
@@ -241,14 +246,14 @@ class ESPHomeClient(BaseBleakClient):
             Boolean representing connection status.
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
-        domain_data = self.domain_data
+        cache = self.cache
         entry_data = self.entry_data
 
-        self._mtu = domain_data.get_gatt_mtu_cache(self._address_as_int)
+        self._mtu = cache.get_gatt_mtu_cache(self._address_as_int)
         has_cache = bool(
             dangerous_use_bleak_cache
             and self._feature_flags & BluetoothProxyFeature.REMOTE_CACHING
-            and domain_data.get_gatt_services_cache(self._address_as_int)
+            and cache.get_gatt_services_cache(self._address_as_int)
             and self._mtu
         )
         connected_future: asyncio.Future[bool] = asyncio.Future()
@@ -270,7 +275,7 @@ class ESPHomeClient(BaseBleakClient):
                 self._is_connected = True
                 if not self._mtu:
                     self._mtu = mtu
-                    domain_data.set_gatt_mtu_cache(self._address_as_int, mtu)
+                    self.cache.set_gatt_mtu_cache(self._address_as_int, mtu)
             else:
                 self._async_ble_device_disconnected()
 
@@ -372,7 +377,8 @@ class ESPHomeClient(BaseBleakClient):
 
     async def _wait_for_free_connection_slot(self, timeout: float) -> None:
         """Wait for a free connection slot."""
-        if self.entry_data.ble_connections_free:
+        bluetooth_device = self._bluetooth_device
+        if bluetooth_device.ble_connections_free:
             return
         _LOGGER.debug(
             "%s: %s - %s: Out of connection slots, waiting for a free one",
@@ -381,7 +387,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.address,
         )
         async with async_timeout.timeout(timeout):
-            await self.entry_data.wait_for_ble_connections_free()
+            await bluetooth_device.wait_for_ble_connections_free()
 
     @property
     def is_connected(self) -> bool:
@@ -438,14 +444,14 @@ class ESPHomeClient(BaseBleakClient):
            with this device's services tree.
         """
         address_as_int = self._address_as_int
-        domain_data = self.domain_data
+        cache = self.cache
         # If the connection version >= 3, we must use the cache
         # because the esp has already wiped the services list to
         # save memory.
         if (
             self._feature_flags & BluetoothProxyFeature.REMOTE_CACHING
             or dangerous_use_bleak_cache
-        ) and (cached_services := domain_data.get_gatt_services_cache(address_as_int)):
+        ) and (cached_services := cache.get_gatt_services_cache(address_as_int)):
             _LOGGER.debug(
                 "%s: %s - %s: Cached services hit",
                 self._source_name,
@@ -504,7 +510,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.name,
             self._ble_device.address,
         )
-        domain_data.set_gatt_services_cache(address_as_int, services)
+        cache.set_gatt_services_cache(address_as_int, services)
         return services
 
     def _resolve_characteristic(
@@ -524,8 +530,9 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def clear_cache(self) -> bool:
         """Clear the GATT cache."""
-        self.domain_data.clear_gatt_services_cache(self._address_as_int)
-        self.domain_data.clear_gatt_mtu_cache(self._address_as_int)
+        cache = self.cache
+        cache.clear_gatt_services_cache(self._address_as_int)
+        cache.clear_gatt_mtu_cache(self._address_as_int)
         if not self._feature_flags & BluetoothProxyFeature.CACHE_CLEARING:
             _LOGGER.warning(
                 "On device cache clear is not available with this ESPHome version; "
