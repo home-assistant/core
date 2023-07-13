@@ -15,6 +15,7 @@ from aioesphomeapi import (
     ReconnectLogic,
     UserService,
 )
+import async_timeout
 import pytest
 from zeroconf import Zeroconf
 
@@ -51,6 +52,11 @@ def esphome_mock_async_zeroconf(mock_async_zeroconf):
 async def load_homeassistant(hass) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture(autouse=True)
+def mock_tts(mock_tts_cache_dir):
+    """Auto mock the tts cache."""
 
 
 @pytest.fixture
@@ -248,10 +254,10 @@ async def _mock_generic_device_entry(
         "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await try_connect_done.wait()
+        async with async_timeout.timeout(2):
+            await try_connect_done.wait()
 
     await hass.async_block_till_done()
-
     return mock_device
 
 
