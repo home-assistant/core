@@ -454,16 +454,29 @@ class DeviceRegistry:
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
         # accept kwargs typed as a DeviceInfo dict (PEP 692)
-        _device_info = cast(
-            "DeviceInfo",
-            {
-                key: val
-                for key, val in locals().items()
-                if key in DEVICE_INFO_KEYS and val != UNDEFINED
-            },
-        )
+        device_info: DeviceInfo = {}
+        for key, val in (
+            ("configuration_url", configuration_url),
+            ("connections", connections),
+            ("default_manufacturer", default_manufacturer),
+            ("default_model", default_model),
+            ("default_name", default_name),
+            ("entry_type", entry_type),
+            ("hw_version", hw_version),
+            ("identifiers", identifiers),
+            ("manufacturer", manufacturer),
+            ("model", model),
+            ("name", name),
+            ("suggested_area", suggested_area),
+            ("sw_version", sw_version),
+            ("via_device", via_device),
+        ):
+            if val is UNDEFINED:
+                continue
+            device_info[key] = val  # type: ignore[literal-required]
+
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-        device_info_type = _validate_device_info(config_entry, _device_info)
+        device_info_type = _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
             identifiers = set()
