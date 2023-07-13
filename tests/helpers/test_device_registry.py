@@ -530,8 +530,10 @@ async def test_removing_config_entries(
     assert entry2.config_entries == {"123", "456"}
 
     device_registry.async_clear_config_entry("123")
-    entry = device_registry.async_get_device({("bridgeid", "0123")})
-    entry3_removed = device_registry.async_get_device({("bridgeid", "4567")})
+    entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
+    entry3_removed = device_registry.async_get_device(
+        identifiers={("bridgeid", "4567")}
+    )
 
     assert entry.config_entries == {"456"}
     assert entry3_removed is None
@@ -664,7 +666,7 @@ async def test_removing_area_id(device_registry: dr.DeviceRegistry) -> None:
     entry_w_area = device_registry.async_update_device(entry.id, area_id="12345A")
 
     device_registry.async_clear_area_id("12345A")
-    entry_wo_area = device_registry.async_get_device({("bridgeid", "0123")})
+    entry_wo_area = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
 
     assert not entry_wo_area.area_id
     assert entry_w_area != entry_wo_area
@@ -692,7 +694,7 @@ async def test_specifying_via_device_create(device_registry: dr.DeviceRegistry) 
     assert light.via_device_id == via.id
 
     device_registry.async_remove_device(via.id)
-    light = device_registry.async_get_device({("hue", "456")})
+    light = device_registry.async_get_device(identifiers={("hue", "456")})
     assert light.via_device_id is None
 
 
@@ -821,9 +823,9 @@ async def test_loading_saving_data(
     assert list(device_registry.devices) == list(registry2.devices)
     assert list(device_registry.deleted_devices) == list(registry2.deleted_devices)
 
-    new_via = registry2.async_get_device({("hue", "0123")})
-    new_light = registry2.async_get_device({("hue", "456")})
-    new_light4 = registry2.async_get_device({("hue", "abc")})
+    new_via = registry2.async_get_device(identifiers={("hue", "0123")})
+    new_light = registry2.async_get_device(identifiers={("hue", "456")})
+    new_light4 = registry2.async_get_device(identifiers={("hue", "abc")})
 
     assert orig_via == new_via
     assert orig_light == new_light
@@ -839,7 +841,7 @@ async def test_loading_saving_data(
         assert old.entry_type is new.entry_type
 
     # Ensure a save/load cycle does not keep suggested area
-    new_kitchen_light = registry2.async_get_device({("hue", "999")})
+    new_kitchen_light = registry2.async_get_device(identifiers={("hue", "999")})
     assert orig_kitchen_light.suggested_area == "Kitchen"
 
     orig_kitchen_light_witout_suggested_area = device_registry.async_update_device(
@@ -951,15 +953,19 @@ async def test_update(
         via_device_id="98765B",
     )
 
-    assert device_registry.async_get_device({("hue", "456")}) is None
-    assert device_registry.async_get_device({("bla", "123")}) is None
+    assert device_registry.async_get_device(identifiers={("hue", "456")}) is None
+    assert device_registry.async_get_device(identifiers={("bla", "123")}) is None
 
-    assert device_registry.async_get_device({("hue", "654")}) == updated_entry
-    assert device_registry.async_get_device({("bla", "321")}) == updated_entry
+    assert (
+        device_registry.async_get_device(identifiers={("hue", "654")}) == updated_entry
+    )
+    assert (
+        device_registry.async_get_device(identifiers={("bla", "321")}) == updated_entry
+    )
 
     assert (
         device_registry.async_get_device(
-            {}, {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
         )
         == updated_entry
     )
@@ -1032,7 +1038,7 @@ async def test_update_remove_config_entries(
     assert updated_entry.config_entries == {"456"}
     assert removed_entry is None
 
-    removed_entry = device_registry.async_get_device({("bridgeid", "4567")})
+    removed_entry = device_registry.async_get_device(identifiers={("bridgeid", "4567")})
 
     assert removed_entry is None
 
@@ -1137,10 +1143,10 @@ async def test_cleanup_device_registry(
 
     dr.async_cleanup(hass, device_registry, ent_reg)
 
-    assert device_registry.async_get_device({("hue", "d1")}) is not None
-    assert device_registry.async_get_device({("hue", "d2")}) is not None
-    assert device_registry.async_get_device({("hue", "d3")}) is not None
-    assert device_registry.async_get_device({("something", "d4")}) is None
+    assert device_registry.async_get_device(identifiers={("hue", "d1")}) is not None
+    assert device_registry.async_get_device(identifiers={("hue", "d2")}) is not None
+    assert device_registry.async_get_device(identifiers={("hue", "d3")}) is not None
+    assert device_registry.async_get_device(identifiers={("something", "d4")}) is None
 
 
 async def test_cleanup_device_registry_removes_expired_orphaned_devices(
