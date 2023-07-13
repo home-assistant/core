@@ -67,7 +67,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
             self._disconnected_futures  # pylint: disable=protected-access
         )
         disconnected_future = loop.create_future()
-        disconnected_futures.append(disconnected_future)
+        disconnected_futures.add(disconnected_future)
 
         task = asyncio.current_task(loop)
 
@@ -86,6 +86,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
                 "Disconnected during operation"
             ) from ex
         finally:
+            disconnected_futures.remove(disconnected_future)
             disconnected_future.remove_done_callback(_on_disconnected)
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
@@ -155,7 +156,7 @@ class ESPHomeClient(BaseBleakClient):
             int, tuple[Callable[[], Coroutine[Any, Any, None]], Callable[[], None]]
         ] = {}
         self._loop = asyncio.get_running_loop()
-        self._disconnected_futures: list[asyncio.Future[None]] = []
+        self._disconnected_futures: set[asyncio.Future[None]] = set()
         device_info = self.entry_data.device_info
         assert device_info is not None
         self._device_info = device_info
