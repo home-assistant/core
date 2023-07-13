@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntFlag
+from enum import Enum, IntFlag
 from functools import partial
 import logging
 from typing import Any, final
@@ -66,15 +66,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class LawnMowerActivity(IntFlag):
+class LawnMowerActivity(Enum):
     """Activity state of the lawn mower entity."""
 
-    ERROR = 1
-    PAUSED = 2
-    MOWING = 4
-    DOCKING = 8
-    DOCKED_SCHEDULE_DISABLED = 16
-    DOCKED_SCHEDULE_ENABLED = 32
+    ERROR = "error"
+    PAUSED = "paused"
+    MOWING = "mowing"
+    DOCKING = "docking"
+    DOCKED_SCHEDULE_DISABLED = "docked_schedule_disabled"
+    DOCKED_SCHEDULE_ENABLED = "docked_schedule_enabled"
 
 
 class LawnMowerEntityFeature(IntFlag):
@@ -108,14 +108,14 @@ class LawnMowerEntity(Entity):
     """Base class for lawn mower entities."""
 
     entity_description: LawnMowerEntityEntityDescription
-    _attr_activity: LawnMowerActivity | None = None
+    _activity: str | None = None
     _attr_supported_features: LawnMowerEntityFeature
 
     @final
     @property
-    def state(self) -> LawnMowerActivity | None:
+    def state(self) -> str | None:
         """Return the current state."""
-        return self._attr_activity
+        return self._activity
 
     @property
     def supported_features(self) -> LawnMowerEntityFeature:

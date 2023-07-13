@@ -4,19 +4,13 @@
     "_": {
       "name": "[%key:component::lawn_mower::title%]",
       "state": {
-        "mowing": "Mowing",
-        "docked": "Docked",
         "error": "Error",
-        "idle": "[%key:common::state::idle%]",
-        "paused": "[%key:common::state::paused%]",
-        "returning": "Returning to dock"
+        "paused": "Paused",
+        "mowing": "Mowing",
+        "docking": "Docking",
+        "docked_schedule_disabled": "Docked schedule disabled",
+        "docked_schedule_enabled": "Docked schedule enabled"
       }
-    }
-  },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }
