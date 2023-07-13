@@ -1162,7 +1162,9 @@ async def test_device_info_not_overrides(hass: HomeAssistant) -> None:
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
 
-    device2 = registry.async_get_device(set(), {(dr.CONNECTION_NETWORK_MAC, "abcd")})
+    device2 = registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "abcd")}
+    )
     assert device2 is not None
     assert device.id == device2.id
     assert device2.manufacturer == "test-manufacturer"
@@ -1836,7 +1838,7 @@ async def test_device_name_defaulting_config_entry(
     await hass.async_block_till_done()
 
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(set(), {(dr.CONNECTION_NETWORK_MAC, "1234")})
+    device = dev_reg.async_get_device(connections={(dr.CONNECTION_NETWORK_MAC, "1234")})
     assert device is not None
     assert device.name == expected_device_name
 
