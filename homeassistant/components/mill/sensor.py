@@ -176,10 +176,8 @@ class MillSensor(CoordinatorEntity, SensorEntity):
             name=self.name,
             manufacturer=MANUFACTURER,
         )
-        if isinstance(mill_device, mill.Heater):
-            self._attr_device_info["model"] = mill_device.model
-        elif isinstance(mill_device, mill.Sensor):
-            self._attr_device_info["model"] = "Mill Sense Air"
+
+        self._attr_device_info["model"] = mill_device.model
         self._update_attr(mill_device)
 
     @callback
