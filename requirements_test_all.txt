@@ -526,7 +526,7 @@ deluge-client==1.7.1
 demetriek==0.4.0
 
 # homeassistant.components.denonavr
-denonavr==0.11.2
+denonavr==0.11.3
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
@@ -1603,7 +1603,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.3
+pyunifiprotect==4.10.5
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
