@@ -11,21 +11,21 @@
         }
       },
       "two_factor": {
-        "title": "Subaru Starlink Configuration",
+        "title": "[%key:component::subaru::config::step::user::title%]",
         "description": "Two factor authentication required",
         "data": {
           "contact_method": "Please select a contact method:"
         }
       },
       "two_factor_validate": {
-        "title": "Subaru Starlink Configuration",
+        "title": "[%key:component::subaru::config::step::user::title%]",
         "description": "Please enter validation code received",
         "data": {
           "validation_code": "Validation code"
         }
       },
       "pin": {
-        "title": "Subaru Starlink Configuration",
+        "title": "[%key:component::subaru::config::step::user::title%]",
         "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
         "data": {
           "pin": "PIN"

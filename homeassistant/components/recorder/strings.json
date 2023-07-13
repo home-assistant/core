@@ -46,7 +46,7 @@
           "description": "List of glob patterns used to select the entities for which the data is to be removed from the recorder database."
         },
         "keep_days": {
-          "name": "Days to keep",
+          "name": "[%key:component::recorder::services::purge::fields::keep_days::name%]",
           "description": "Number of days to keep the data for rows matching the filter. Starting today, counting backward. A value of `7` means that everything older than a week will be purged. The default of 0 days will remove all matching rows immediately."
         }
       }

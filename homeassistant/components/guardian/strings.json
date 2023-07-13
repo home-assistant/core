@@ -52,7 +52,7 @@
       "description": "Adds a new paired sensor to the valve controller.",
       "fields": {
         "device_id": {
-          "name": "Valve controller",
+          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
           "description": "The valve controller to add the sensor to."
         },
         "uid": {
@@ -66,12 +66,12 @@
       "description": "Removes a paired sensor from the valve controller.",
       "fields": {
         "device_id": {
-          "name": "Valve controller",
+          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
           "description": "The valve controller to remove the sensor from."
         },
         "uid": {
-          "name": "UID",
-          "description": "The UID of the paired sensor."
+          "name": "[%key:component::guardian::services::pair_sensor::fields::uid::name%]",
+          "description": "[%key:component::guardian::services::pair_sensor::fields::uid::description%]"
         }
       }
     },
@@ -80,15 +80,15 @@
       "description": "Upgrades the device firmware.",
       "fields": {
         "device_id": {
-          "name": "Valve controller",
+          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
           "description": "The valve controller whose firmware should be upgraded."
         },
         "url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "The URL of the server hosting the firmware file."
         },
         "port": {
-          "name": "Port",
+          "name": "[%key:common::config_flow::data::port%]",
           "description": "The port on which the firmware file is served."
         },
         "filename": {
