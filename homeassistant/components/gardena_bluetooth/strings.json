@@ -19,6 +19,23 @@
     }
   },
   "entity": {
+    "number": {
+      "remaining_open_time": {
+        "name": "Remaining open time"
+      },
+      "remaining_open_set": {
+        "name": "Open for"
+      },
+      "manual_watering_time": {
+        "name": "Manual watering time"
+      },
+      "rain_pause": {
+        "name": "Rain pause"
+      },
+      "season_pause": {
+        "name": "Season pause"
+      }
+    },
     "switch": {
       "state": {
         "name": "Open"
