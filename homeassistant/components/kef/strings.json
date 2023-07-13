@@ -49,8 +49,8 @@
       "description": "Sets the \"Wall mode\" slider of the speaker in dB.",
       "fields": {
         "db_value": {
-          "name": "DB value",
-          "description": "Value of the slider."
+          "name": "[%key:component::kef::services::set_desk_db::fields::db_value::name%]",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
         }
       }
     },
@@ -59,8 +59,8 @@
       "description": "Sets desk the \"Treble trim\" slider of the speaker in dB.",
       "fields": {
         "db_value": {
-          "name": "DB value",
-          "description": "Value of the slider."
+          "name": "[%key:component::kef::services::set_desk_db::fields::db_value::name%]",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
         }
       }
     },
@@ -70,7 +70,7 @@
       "fields": {
         "hz_value": {
           "name": "Hertz value",
-          "description": "Value of the slider."
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
         }
       }
     },
@@ -79,8 +79,8 @@
       "description": "Set the \"Sub out low-pass frequency\" slider of the speaker in Hz.",
       "fields": {
         "hz_value": {
-          "name": "Hertz value",
-          "description": "Value of the slider."
+          "name": "[%key:component::kef::services::set_high_hz::fields::hz_value::name%]",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
         }
       }
     },
@@ -89,8 +89,8 @@
       "description": "Set the \"Sub gain\" slider of the speaker in dB.",
       "fields": {
         "db_value": {
-          "name": "DB value",
-          "description": "Value of the slider."
+          "name": "[%key:component::kef::services::set_desk_db::fields::db_value::name%]",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
         }
       }
     }

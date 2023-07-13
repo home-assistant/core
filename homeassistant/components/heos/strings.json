@@ -22,11 +22,11 @@
       "description": "Signs the controller in to a HEOS account.",
       "fields": {
         "username": {
-          "name": "Username",
+          "name": "[%key:common::config_flow::data::username%]",
           "description": "The username or email of the HEOS account."
         },
         "password": {
-          "name": "Password",
+          "name": "[%key:common::config_flow::data::password%]",
           "description": "The password of the HEOS account."
         }
       }

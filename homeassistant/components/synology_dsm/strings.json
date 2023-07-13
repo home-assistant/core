@@ -183,7 +183,7 @@
       "description": "Shutdowns the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
-          "name": "Serial",
+          "name": "[%key:component::synology_dsm::services::reboot::fields::serial::name%]",
           "description": "Serial of the NAS to shutdown; required when multiple NAS are configured."
         }
       }
