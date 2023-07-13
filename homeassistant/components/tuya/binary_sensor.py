@@ -329,7 +329,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.SMOKE_SENSOR_STATE,
             device_class=BinarySensorDeviceClass.SMOKE,
             on_value="alarm",
-        )
+        ),
         TAMPER_BINARY_SENSOR,
     ),
     # Vibration Sensor
