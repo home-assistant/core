@@ -8,6 +8,7 @@ import logging
 import re
 from typing import Any, Literal
 
+from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
 from homeassistant import core
@@ -353,6 +354,10 @@ async def websocket_hass_agent_debug(
                         }
                         for entity_key, entity in result.entities.items()
                     },
+                    "targets": {
+                        state.entity_id: {"matched": is_matched}
+                        for state, is_matched in _get_debug_targets(hass, result)
+                    },
                 }
                 if result is not None
                 else None
@@ -360,6 +365,49 @@ async def websocket_hass_agent_debug(
             ]
         },
     )
+
+
+def _get_debug_targets(
+    hass: HomeAssistant,
+    result: RecognizeResult,
+) -> Iterable[tuple[core.State, bool]]:
+    """Yield state/is_matched pairs for a hassil recognition."""
+    entities = result.entities
+
+    name: str | None = None
+    area_name: str | None = None
+    domains: set[str] | None = None
+    device_classes: set[str] | None = None
+    state_names: set[str] | None = None
+
+    if "name" in entities:
+        name = str(entities["name"].value)
+
+    if "area" in entities:
+        area_name = str(entities["area"].value)
+
+    if "domain" in entities:
+        domains = set(cv.ensure_list(entities["domain"].value))
+
+    if "device_class" in entities:
+        device_classes = set(cv.ensure_list(entities["device_class"].value))
+
+    if "state" in entities:
+        # HassGetState only
+        state_names = set(cv.ensure_list(entities["state"].value))
+
+    states = intent.async_match_states(
+        hass,
+        name=name,
+        area_name=area_name,
+        domains=domains,
+        device_classes=device_classes,
+    )
+
+    for state in states:
+        # For queries, a target is "matched" based on its state
+        is_matched = (state_names is None) or (state.state in state_names)
+        yield state, is_matched
 
 
 class ConversationProcessView(http.HomeAssistantView):

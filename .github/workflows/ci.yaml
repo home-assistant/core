@@ -32,7 +32,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.7
+  HA_SHORT_VERSION: 2023.8
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
   # 10.3 is the oldest supported version
@@ -1019,6 +1019,7 @@ jobs:
           with: |
             fail_ci_if_error: true
             flags: full-suite
+            token: ${{ env.CODECOV_TOKEN }}
           attempt_limit: 5
           attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
@@ -1028,5 +1029,6 @@ jobs:
           action: codecov/codecov-action@v3.1.3
           with: |
             fail_ci_if_error: true
+            token: ${{ env.CODECOV_TOKEN }}
           attempt_limit: 5
           attempt_delay: 30000

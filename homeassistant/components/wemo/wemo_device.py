@@ -34,13 +34,9 @@ from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 _LOGGER = logging.getLogger(__name__)
 
 # Literal values must match options.error keys from strings.json.
-ErrorStringKey = Literal[
-    "long_press_requires_subscription", "polling_interval_to_small"
-]
+ErrorStringKey = Literal["long_press_requires_subscription"]
 # Literal values must match options.step.init.data keys from strings.json.
-OptionsFieldKey = Literal[
-    "enable_subscription", "enable_long_press", "polling_interval_seconds"
-]
+OptionsFieldKey = Literal["enable_subscription", "enable_long_press"]
 
 
 class OptionsValidationError(Exception):
@@ -78,9 +74,6 @@ class Options:
     # Register for device long-press events.
     enable_long_press: bool = True
 
-    # Polling interval for when subscriptions are not enabled or broken.
-    polling_interval_seconds: int = 30
-
     def __post_init__(self) -> None:
         """Validate parameters."""
         if not self.enable_subscription and self.enable_long_press:
@@ -88,12 +81,6 @@ class Options:
                 "enable_subscription",
                 "long_press_requires_subscription",
                 "Local push update subscriptions must be enabled to use long-press events",
-            )
-        if self.polling_interval_seconds < 10:
-            raise OptionsValidationError(
-                "polling_interval_seconds",
-                "polling_interval_to_small",
-                "Polling more frequently than 10 seconds is not supported",
             )
 
 
@@ -108,6 +95,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name=wemo.name,
+            update_interval=timedelta(seconds=30),
         )
         self.hass = hass
         self.wemo = wemo
@@ -163,11 +151,6 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                 "Failed to enable long press support for device: %s", self.wemo.name
             )
             self.supports_long_press = False
-
-    async def _async_set_polling_interval_seconds(
-        self, polling_interval_seconds: int
-    ) -> None:
-        self.update_interval = timedelta(seconds=polling_interval_seconds)
 
     async def async_set_options(
         self, hass: HomeAssistant, config_entry: ConfigEntry

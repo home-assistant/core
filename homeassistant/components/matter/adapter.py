@@ -96,20 +96,24 @@ class MatterAdapter:
                 )
 
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(
+            self.matter_client.subscribe_events(
                 endpoint_added_callback, EventType.ENDPOINT_ADDED
             )
         )
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(
+            self.matter_client.subscribe_events(
                 endpoint_removed_callback, EventType.ENDPOINT_REMOVED
             )
         )
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(node_removed_callback, EventType.NODE_REMOVED)
+            self.matter_client.subscribe_events(
+                node_removed_callback, EventType.NODE_REMOVED
+            )
         )
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(node_added_callback, EventType.NODE_ADDED)
+            self.matter_client.subscribe_events(
+                node_added_callback, EventType.NODE_ADDED
+            )
         )
 
     def _setup_node(self, node: MatterNode) -> None:

@@ -64,7 +64,6 @@ EXPECTED_FEATURES = (
     | VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STATE
-    | VacuumEntityFeature.STATUS
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.LOCATE
 )

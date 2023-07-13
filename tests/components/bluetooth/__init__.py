@@ -1,9 +1,11 @@
 """Tests for the Bluetooth integration."""
 
 
+from contextlib import contextmanager
+import itertools
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -189,20 +191,46 @@ def inject_bluetooth_service_info(
     inject_advertisement(hass, device, advertisement_data)
 
 
+@contextmanager
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock all the discovered devices from all the scanners."""
-    return patch.object(
-        _get_manager(),
-        "_async_all_discovered_addresses",
-        return_value={ble_device.address for ble_device in mock_discovered},
+    manager = _get_manager()
+    original_history = {}
+    scanners = list(
+        itertools.chain(
+            manager._connectable_scanners, manager._non_connectable_scanners
+        )
     )
+    for scanner in scanners:
+        data = scanner.discovered_devices_and_advertisement_data
+        original_history[scanner] = data.copy()
+        data.clear()
+    if scanners:
+        data = scanners[0].discovered_devices_and_advertisement_data
+        data.clear()
+        data.update(
+            {device.address: (device, MagicMock()) for device in mock_discovered}
+        )
+    yield
+    for scanner in scanners:
+        data = scanner.discovered_devices_and_advertisement_data
+        data.clear()
+        data.update(original_history[scanner])
 
 
+@contextmanager
 def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock the combined best path to discovered devices from all the scanners."""
-    return patch.object(
-        _get_manager(), "async_discovered_devices", return_value=mock_discovered
-    )
+    manager = _get_manager()
+    original_all_history = manager._all_history
+    original_connectable_history = manager._connectable_history
+    manager._connectable_history = {}
+    manager._all_history = {
+        device.address: MagicMock(device=device) for device in mock_discovered
+    }
+    yield
+    manager._all_history = original_all_history
+    manager._connectable_history = original_connectable_history
 
 
 async def async_setup_with_default_adapter(hass: HomeAssistant) -> MockConfigEntry:

@@ -30,9 +30,6 @@ async def async_setup_entry(
         avm_wrapper.fritz_guest_wifi.get_info
     )
 
-    if not guest_wifi_info.get("NewEnable"):
-        return
-
     async_add_entities(
         [
             FritzGuestWifiQRImage(
@@ -48,6 +45,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
     _attr_content_type = "image/png"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
+    _attr_should_poll = True
 
     def __init__(
         self,
@@ -63,22 +61,24 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
         super().__init__(avm_wrapper, device_friendly_name)
         ImageEntity.__init__(self, hass)
 
-    async def async_added_to_hass(self) -> None:
-        """Set the update time."""
-        self._attr_image_last_updated = dt_util.utcnow()
-
-    async def async_image(self) -> bytes:
-        """Return bytes of image."""
+    async def _fetch_image(self) -> bytes:
+        """Fetch the QR code from the Fritz!Box."""
         qr_stream: BytesIO = await self.hass.async_add_executor_job(
             self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code, "png"
         )
         qr_bytes = qr_stream.getvalue()
-
         _LOGGER.debug("fetched %s bytes", len(qr_bytes))
 
-        if self._current_qr_bytes is None:
-            self._current_qr_bytes = qr_bytes
-            return qr_bytes
+        return qr_bytes
+
+    async def async_added_to_hass(self) -> None:
+        """Fetch and set initial data and state."""
+        self._current_qr_bytes = await self._fetch_image()
+        self._attr_image_last_updated = dt_util.utcnow()
+
+    async def async_update(self) -> None:
+        """Update the image entity data."""
+        qr_bytes = await self._fetch_image()
 
         if self._current_qr_bytes != qr_bytes:
             dt_now = dt_util.utcnow()
@@ -87,4 +87,6 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
             self._current_qr_bytes = qr_bytes
             self.async_write_ha_state()
 
-        return qr_bytes
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        return self._current_qr_bytes

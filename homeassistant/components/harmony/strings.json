@@ -41,5 +41,21 @@
         }
       }
     }
+  },
+  "services": {
+    "sync": {
+      "name": "Sync",
+      "description": "Syncs the remote's configuration."
+    },
+    "change_channel": {
+      "name": "Change channel",
+      "description": "Sends change channel command to the Harmony HUB.",
+      "fields": {
+        "channel": {
+          "name": "Channel",
+          "description": "Channel number to change to."
+        }
+      }
+    }
   }
 }
