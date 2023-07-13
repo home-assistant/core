@@ -1108,7 +1108,7 @@ async def test_device_info_called(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_entity_ids()) == 2
 
-    device = registry.async_get_device({("hue", "1234")})
+    device = registry.async_get_device(identifiers={("hue", "1234")})
     assert device is not None
     assert device.identifiers == {("hue", "1234")}
     assert device.configuration_url == "http://192.168.0.100/config"
@@ -1209,7 +1209,7 @@ async def test_device_info_homeassistant_url(
 
     assert len(hass.states.async_entity_ids()) == 1
 
-    device = registry.async_get_device({("mqtt", "1234")})
+    device = registry.async_get_device(identifiers={("mqtt", "1234")})
     assert device is not None
     assert device.identifiers == {("mqtt", "1234")}
     assert device.configuration_url == "homeassistant://config/mqtt"
@@ -1256,7 +1256,7 @@ async def test_device_info_change_to_no_url(
 
     assert len(hass.states.async_entity_ids()) == 1
 
-    device = registry.async_get_device({("mqtt", "1234")})
+    device = registry.async_get_device(identifiers={("mqtt", "1234")})
     assert device is not None
     assert device.identifiers == {("mqtt", "1234")}
     assert device.configuration_url is None
