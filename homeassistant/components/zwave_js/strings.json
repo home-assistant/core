@@ -165,7 +165,7 @@
     },
     "set_lock_usercode": {
       "name": "Set lock user code",
-      "description": "Sets an user code on a lock.",
+      "description": "Sets a user code on a lock.",
       "fields": {
         "code_slot": {
           "name": "[%key:component::zwave_js::services::clear_lock_usercode::fields::code_slot::name%]",
@@ -219,7 +219,7 @@
     },
     "refresh_value": {
       "name": "Refresh values",
-      "description": "Forces the updating values for a Z-Wave entity.",
+      "description": "Force updates the values of a Z-Wave entity.",
       "fields": {
         "entity_id": {
           "name": "Entities",
