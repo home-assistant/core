@@ -272,8 +272,8 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
 
     def get_entry(
         self,
-        connections: set[tuple[str, str]] | None,
         identifiers: set[tuple[str, str]] | None,
+        connections: set[tuple[str, str]] | None,
     ) -> _EntryTypeT | None:
         """Get entry from identifiers or connections."""
         if identifiers:
@@ -318,20 +318,19 @@ class DeviceRegistry:
     @callback
     def async_get_device(
         self,
-        *,
-        connections: set[tuple[str, str]] | None = None,
         identifiers: set[tuple[str, str]] | None = None,
+        connections: set[tuple[str, str]] | None = None,
     ) -> DeviceEntry | None:
         """Check if device is registered."""
-        return self.devices.get_entry(connections, identifiers)
+        return self.devices.get_entry(identifiers, connections)
 
     def _async_get_deleted_device(
         self,
-        connections: set[tuple[str, str]],
         identifiers: set[tuple[str, str]],
+        connections: set[tuple[str, str]],
     ) -> DeletedDeviceEntry | None:
         """Check if device is deleted."""
-        return self.deleted_devices.get_entry(connections, identifiers)
+        return self.deleted_devices.get_entry(identifiers, connections)
 
     @callback
     def async_get_or_create(
@@ -370,7 +369,7 @@ class DeviceRegistry:
         device = self.async_get_device(identifiers=identifiers, connections=connections)
 
         if device is None:
-            deleted_device = self._async_get_deleted_device(connections, identifiers)
+            deleted_device = self._async_get_deleted_device(identifiers, connections)
             if deleted_device is None:
                 device = DeviceEntry(is_new=True)
             else:
