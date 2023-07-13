@@ -101,19 +101,17 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         return self._voices.get(language)
 
     async def async_get_tts_audio(self, message, language, options):
-        """Load TTS from UNIX socket."""
+        """Load TTS from TCP socket."""
         voice_name: str | None = options.get(tts.ATTR_VOICE)
         voice_speaker: str | None = options.get(ATTR_SPEAKER)
 
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
-                synthesize = Synthesize(
-                    text=message,
-                    voice=SynthesizeVoice(name=voice_name, speaker=voice_speaker)
-                    if voice_name is not None
-                    else None,
-                )
+                voice: SynthesizeVoice | None = None
+                if voice_name is not None:
+                    voice = SynthesizeVoice(name=voice_name, speaker=voice_speaker)
 
+                synthesize = Synthesize(text=message, voice=voice)
                 await client.write_event(synthesize.event())
 
                 with io.BytesIO() as wav_io:
