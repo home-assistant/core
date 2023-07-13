@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.exceptions import RainbirdApiException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NUMBER
@@ -29,11 +31,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
         )
     )
+    try:
+        model_info = await controller.get_model_and_version()
+    except RainbirdApiException as err:
+        raise ConfigEntryNotReady from err
     coordinator = RainbirdUpdateCoordinator(
         hass,
         name=entry.title,
         controller=controller,
         serial_number=entry.data[CONF_SERIAL_NUMBER],
+        model_info=model_info,
     )
     await coordinator.async_config_entry_first_refresh()
 

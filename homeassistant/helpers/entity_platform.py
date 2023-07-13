@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     HomeAssistant,
     ServiceCall,
@@ -29,7 +30,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     HomeAssistantError,
     PlatformNotReady,
-    RequiredParameterMissing,
 )
 from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
@@ -42,14 +42,13 @@ from . import (
     service,
     translation,
 )
-from .device_registry import DeviceRegistry
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
-    from .entity import Entity
+    from .entity import DeviceInfo, Entity
 
 
 SLOW_SETUP_WARNING = 10
@@ -60,6 +59,37 @@ SLOW_ADD_MIN_TIMEOUT = 500
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
+
+DEVICE_INFO_TYPES = {
+    # Device info is categorized by finding the first device info type which has all
+    # the keys of the device info. The link device info type must be kept first
+    # to make it preferred over primary.
+    "link": {
+        "connections",
+        "identifiers",
+    },
+    "primary": {
+        "configuration_url",
+        "connections",
+        "entry_type",
+        "hw_version",
+        "identifiers",
+        "manufacturer",
+        "model",
+        "name",
+        "suggested_area",
+        "sw_version",
+        "via_device",
+    },
+    "secondary": {
+        "connections",
+        "default_manufacturer",
+        "default_model",
+        "default_name",
+        # Used by Fritz
+        "via_device",
+    },
+}
 
 _LOGGER = getLogger(__name__)
 
@@ -216,16 +246,27 @@ class EntityPlatform:
                 self.platform_name,
                 self.domain,
             )
+            learn_more_url = None
+            if self.platform and "custom_components" not in self.platform.__file__:  # type: ignore[attr-defined]
+                learn_more_url = (
+                    f"https://www.home-assistant.io/integrations/{self.platform_name}/"
+                )
+            platform_key = f"platform: {self.platform_name}"
+            yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
             async_create_issue(
                 self.hass,
-                self.domain,
+                HOMEASSISTANT_DOMAIN,
                 f"platform_integration_no_support_{self.domain}_{self.platform_name}",
                 is_fixable=False,
+                issue_domain=self.platform_name,
+                learn_more_url=learn_more_url,
                 severity=IssueSeverity.ERROR,
-                translation_key="platform_integration_no_support",
+                translation_key="no_platform_setup",
                 translation_placeholders={
                     "domain": self.domain,
                     "platform": self.platform_name,
+                    "platform_key": platform_key,
+                    "yaml_example": yaml_example,
                 },
             )
 
@@ -485,12 +526,9 @@ class EntityPlatform:
 
         hass = self.hass
 
-        device_registry = dev_reg.async_get(hass)
         entity_registry = ent_reg.async_get(hass)
         tasks = [
-            self._async_add_entity(
-                entity, update_before_add, entity_registry, device_registry
-            )
+            self._async_add_entity(entity, update_before_add, entity_registry)
             for entity in new_entities
         ]
 
@@ -552,7 +590,6 @@ class EntityPlatform:
         entity: Entity,
         update_before_add: bool,
         entity_registry: EntityRegistry,
-        device_registry: DeviceRegistry,
     ) -> None:
         """Add an entity to the platform."""
         if entity is None:
@@ -608,68 +645,10 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            device_info = entity.device_info
-            device_id = None
-            device = None
-
-            if self.config_entry and device_info is not None:
-                processed_dev_info: dict[str, str | None] = {}
-                for key in (
-                    "connections",
-                    "default_manufacturer",
-                    "default_model",
-                    "default_name",
-                    "entry_type",
-                    "identifiers",
-                    "manufacturer",
-                    "model",
-                    "name",
-                    "suggested_area",
-                    "sw_version",
-                    "hw_version",
-                    "via_device",
-                ):
-                    if key in device_info:
-                        processed_dev_info[key] = device_info[
-                            key  # type: ignore[literal-required]
-                        ]
-
-                if (
-                    # device info that is purely meant for linking doesn't need default name
-                    any(
-                        key not in {"identifiers", "connections"}
-                        for key in (processed_dev_info)
-                    )
-                    and "default_name" not in processed_dev_info
-                    and not processed_dev_info.get("name")
-                ):
-                    processed_dev_info["name"] = self.config_entry.title
-
-                if "configuration_url" in device_info:
-                    if device_info["configuration_url"] is None:
-                        processed_dev_info["configuration_url"] = None
-                    else:
-                        configuration_url = str(device_info["configuration_url"])
-                        if urlparse(configuration_url).scheme in [
-                            "http",
-                            "https",
-                            "homeassistant",
-                        ]:
-                            processed_dev_info["configuration_url"] = configuration_url
-                        else:
-                            _LOGGER.warning(
-                                "Ignoring invalid device configuration_url '%s'",
-                                configuration_url,
-                            )
-
-                try:
-                    device = device_registry.async_get_or_create(
-                        config_entry_id=self.config_entry.entry_id,
-                        **processed_dev_info,  # type: ignore[arg-type]
-                    )
-                    device_id = device.id
-                except RequiredParameterMissing:
-                    pass
+            if self.config_entry and (device_info := entity.device_info):
+                device = self._async_process_device_info(device_info)
+            else:
+                device = None
 
             # An entity may suggest the entity_id by setting entity_id itself
             suggested_entity_id: str | None = entity.entity_id
@@ -704,7 +683,7 @@ class EntityPlatform:
                 entity.unique_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
-                device_id=device_id,
+                device_id=device.id if device else None,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,
                 get_initial_options=entity.get_initial_entity_options,
@@ -726,6 +705,8 @@ class EntityPlatform:
                 )
 
             entity.registry_entry = entry
+            if device:
+                entity.device_entry = device
             entity.entity_id = entry.entity_id
 
         # We won't generate an entity ID if the platform has already set one
@@ -791,6 +772,62 @@ class EntityPlatform:
         entity.async_on_remove(remove_entity_cb)
 
         await entity.add_to_platform_finish()
+
+    @callback
+    def _async_process_device_info(
+        self, device_info: DeviceInfo
+    ) -> dev_reg.DeviceEntry | None:
+        """Process a device info."""
+        keys = set(device_info)
+
+        # If no keys or not enough info to match up, abort
+        if len(keys & {"connections", "identifiers"}) == 0:
+            self.logger.error(
+                "Ignoring device info without identifiers or connections: %s",
+                device_info,
+            )
+            return None
+
+        device_info_type: str | None = None
+
+        # Find the first device info type which has all keys in the device info
+        for possible_type, allowed_keys in DEVICE_INFO_TYPES.items():
+            if keys <= allowed_keys:
+                device_info_type = possible_type
+                break
+
+        if device_info_type is None:
+            self.logger.error(
+                "Device info for %s needs to either describe a device, "
+                "link to existing device or provide extra information.",
+                device_info,
+            )
+            return None
+
+        if (config_url := device_info.get("configuration_url")) is not None:
+            if type(config_url) is not str or urlparse(config_url).scheme not in [
+                "http",
+                "https",
+                "homeassistant",
+            ]:
+                self.logger.error(
+                    "Ignoring device info with invalid configuration_url '%s'",
+                    config_url,
+                )
+                return None
+
+        assert self.config_entry is not None
+
+        if device_info_type == "primary" and not device_info.get("name"):
+            device_info = {
+                **device_info,  # type: ignore[misc]
+                "name": self.config_entry.title,
+            }
+
+        return dev_reg.async_get(self.hass).async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            **device_info,
+        )
 
     async def async_reset(self) -> None:
         """Remove all entities and reset data.

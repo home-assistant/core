@@ -98,6 +98,7 @@ class TrainSensor(SensorEntity):
     _attr_icon = ICON
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,

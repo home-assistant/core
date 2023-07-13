@@ -1,4 +1,9 @@
-"""Support for Legacy MQTT vacuum."""
+"""Support for Legacy MQTT vacuum.
+
+The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
+and is will be removed with HA Core 2024.2.0
+"""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -414,9 +419,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         )
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
-        """Check for a missing feature or command topic."""
+        """Publish a command."""
 
-        if self._command_topic is None or self.supported_features & feature == 0:
+        if self._command_topic is None:
             return
 
         await self.async_publish(

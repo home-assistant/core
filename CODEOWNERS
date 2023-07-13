@@ -425,6 +425,8 @@ build.json @home-assistant/supervisor
 /tests/components/fully_kiosk/ @cgarwood
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
 /tests/components/garages_amsterdam/ @klaasnicolaas
+/homeassistant/components/gardena_bluetooth/ @elupus
+/tests/components/gardena_bluetooth/ @elupus
 /homeassistant/components/gdacs/ @exxamalte
 /tests/components/gdacs/ @exxamalte
 /homeassistant/components/generic/ @davet2001
@@ -1002,8 +1004,8 @@ build.json @home-assistant/supervisor
 /tests/components/rapt_ble/ @sairon
 /homeassistant/components/raspberry_pi/ @home-assistant/core
 /tests/components/raspberry_pi/ @home-assistant/core
-/homeassistant/components/rdw/ @frenck
-/tests/components/rdw/ @frenck
+/homeassistant/components/rdw/ @frenck @joostlek
+/tests/components/rdw/ @frenck @joostlek
 /homeassistant/components/recollect_waste/ @bachya
 /tests/components/recollect_waste/ @bachya
 /homeassistant/components/recorder/ @home-assistant/core
