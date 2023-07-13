@@ -455,7 +455,7 @@ class DeviceRegistry:
         # When we upgrade to Python 3.12, we can change this method to instead
         # accept kwargs typed as a DeviceInfo dict (PEP 692)
         _device_info = cast(
-            DeviceInfo,
+            "DeviceInfo",
             {
                 key: val
                 for key, val in locals().items()
