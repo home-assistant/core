@@ -177,7 +177,7 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
                     )
                 if not await api.upload(device["configuration"], "OTA"):
                     raise HomeAssistantError(
-                        f"Error updating via OTA: {device['configuration']}; "
+                        f"Error updating {device['configuration']} via OTA; "
                         "Try again in ESPHome dashboard for more information."
                     )
             finally:
