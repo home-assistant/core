@@ -272,13 +272,14 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
 
     def get_entry(
         self,
-        identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]] | None,
+        identifiers: set[tuple[str, str]] | None,
     ) -> _EntryTypeT | None:
         """Get entry from identifiers or connections."""
-        for identifier in identifiers:
-            if identifier in self._identifiers:
-                return self._identifiers[identifier]
+        if identifiers:
+            for identifier in identifiers:
+                if identifier in self._identifiers:
+                    return self._identifiers[identifier]
         if not connections:
             return None
         for connection in _normalize_connections(connections):
@@ -317,19 +318,20 @@ class DeviceRegistry:
     @callback
     def async_get_device(
         self,
-        identifiers: set[tuple[str, str]],
+        *,
         connections: set[tuple[str, str]] | None = None,
+        identifiers: set[tuple[str, str]] | None = None,
     ) -> DeviceEntry | None:
         """Check if device is registered."""
-        return self.devices.get_entry(identifiers, connections)
+        return self.devices.get_entry(connections, identifiers)
 
     def _async_get_deleted_device(
         self,
+        connections: set[tuple[str, str]],
         identifiers: set[tuple[str, str]],
-        connections: set[tuple[str, str]] | None,
     ) -> DeletedDeviceEntry | None:
         """Check if device is deleted."""
-        return self.deleted_devices.get_entry(identifiers, connections)
+        return self.deleted_devices.get_entry(connections, identifiers)
 
     @callback
     def async_get_or_create(
@@ -365,10 +367,10 @@ class DeviceRegistry:
         else:
             connections = _normalize_connections(connections)
 
-        device = self.async_get_device(identifiers, connections)
+        device = self.async_get_device(identifiers=identifiers, connections=connections)
 
         if device is None:
-            deleted_device = self._async_get_deleted_device(identifiers, connections)
+            deleted_device = self._async_get_deleted_device(connections, identifiers)
             if deleted_device is None:
                 device = DeviceEntry(is_new=True)
             else:
@@ -388,7 +390,7 @@ class DeviceRegistry:
             name = default_name
 
         if via_device is not None:
-            via = self.async_get_device({via_device})
+            via = self.async_get_device(identifiers={via_device})
             via_device_id: str | UndefinedType = via.id if via else UNDEFINED
         else:
             via_device_id = UNDEFINED
