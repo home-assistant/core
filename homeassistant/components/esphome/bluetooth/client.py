@@ -68,10 +68,14 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         )
         disconnected_future = loop.create_future()
         disconnected_futures.append(disconnected_future)
+
         task = asyncio.current_task(loop)
-        disconnected_future.add_done_callback(
-            lambda _: task.cancel() if not task.done() else None  # type: ignore[union-attr]
-        )
+
+        def _on_disconnected(fut: asyncio.Future[None]) -> None:
+            if task and not task.done():
+                task.cancel()
+
+        disconnected_future.add_done_callback(_on_disconnected)
         try:
             return await func(self, *args, **kwargs)
         except asyncio.CancelledError as ex:
@@ -81,6 +85,8 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
                 f"{source_name}: {ble_device.name} - {ble_device.address}: "
                 "Disconnected during operation"
             ) from ex
+        finally:
+            disconnected_future.remove_done_callback(_on_disconnected)
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
