@@ -67,10 +67,9 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     if is_hassio:
         if not (info := hass.components.hassio.get_info()):
             _LOGGER.warning("No Home Assistant Supervisor info available")
-            return info_object
+            info = {}
 
-        host = hass.components.hassio.get_host_info()
-
+        host = hass.components.hassio.get_host_info() or {}
         info_object["supervisor"] = info.get("supervisor")
         info_object["host_os"] = host.get("operating_system")
         info_object["docker_version"] = info.get("docker")
@@ -80,5 +79,9 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
             info_object["installation_type"] = "Home Assistant OS"
         else:
             info_object["installation_type"] = "Home Assistant Supervised"
+    elif "SUPERVISOR" in os.environ:
+        # hassio is not loaded, but we know we are running supervised
+        # because the SUPERVISOR env var is set
+        info_object["installation_type"] = "Home Assistant Supervised"
 
     return info_object

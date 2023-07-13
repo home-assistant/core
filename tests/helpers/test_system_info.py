@@ -1,5 +1,6 @@
 """Tests for the system info helper."""
 import json
+import os
 from unittest.mock import patch
 
 import pytest
@@ -23,14 +24,44 @@ async def test_get_system_info_supervisor_not_available(
 ) -> None:
     """Test the get system info when supervisor is not available."""
     hass.config.components.add("hassio")
-    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
+    with patch("platform.system", return_value="Linux"), patch(
+        "homeassistant.helpers.system_info.is_docker_env", return_value=True
+    ), patch(
+        "homeassistant.helpers.system_info.is_official_image", return_value=True
+    ), patch(
+        "homeassistant.components.hassio.is_hassio", return_value=True
+    ), patch(
         "homeassistant.components.hassio.get_info", return_value=None
+    ), patch(
+        "homeassistant.helpers.system_info.getuser", return_value="root"
     ):
         info = await async_get_system_info(hass)
         assert isinstance(info, dict)
         assert info["version"] == current_version
         assert info["user"] is not None
         assert json.dumps(info) is not None
+        assert info["installation_type"] == "Home Assistant Supervised"
+
+
+async def test_get_system_info_supervisor_not_loaded(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the get system info when supervisor is not loaded is in use."""
+    with patch("platform.system", return_value="Linux"), patch(
+        "homeassistant.helpers.system_info.is_docker_env", return_value=True
+    ), patch(
+        "homeassistant.helpers.system_info.is_official_image", return_value=True
+    ), patch(
+        "homeassistant.components.hassio.get_info", return_value=None
+    ), patch.dict(
+        os.environ, {"SUPERVISOR": "127.0.0.1"}
+    ):
+        info = await async_get_system_info(hass)
+        assert isinstance(info, dict)
+        assert info["version"] == current_version
+        assert info["user"] is not None
+        assert json.dumps(info) is not None
+        assert info["installation_type"] == "Home Assistant Supervised"
 
 
 async def test_container_installationtype(hass: HomeAssistant) -> None:
