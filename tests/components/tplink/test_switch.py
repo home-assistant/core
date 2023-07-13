@@ -146,22 +146,37 @@ async def test_strip(hass: HomeAssistant) -> None:
     # since this is what the previous version did
     assert hass.states.get("switch.my_strip") is None
 
-    for plug_id in range(2):
-        entity_id = f"switch.plug{plug_id}"
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
+    entity_id = "switch.plug0"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
-        await hass.services.async_call(
-            SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        strip.children[plug_id].turn_off.assert_called_once()
-        strip.children[plug_id].turn_off.reset_mock()
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    strip.children[0].turn_off.assert_called_once()
+    strip.children[0].turn_off.reset_mock()
 
-        await hass.services.async_call(
-            SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        strip.children[plug_id].turn_on.assert_called_once()
-        strip.children[plug_id].turn_on.reset_mock()
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    strip.children[0].turn_on.assert_called_once()
+    strip.children[0].turn_on.reset_mock()
+
+    entity_id = "switch.plug1_plug_1"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    strip.children[1].turn_off.assert_called_once()
+    strip.children[1].turn_off.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    strip.children[1].turn_on.assert_called_once()
+    strip.children[1].turn_on.reset_mock()
 
 
 async def test_strip_unique_ids(hass: HomeAssistant) -> None:
@@ -175,9 +190,9 @@ async def test_strip_unique_ids(hass: HomeAssistant) -> None:
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    for plug_id in range(2):
-        entity_id = f"switch.plug{plug_id}"
-        entity_registry = er.async_get(hass)
-        assert (
-            entity_registry.async_get(entity_id).unique_id == f"PLUG{plug_id}DEVICEID"
-        )
+    entity_id = "switch.plug0"
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(entity_id).unique_id == "PLUG0DEVICEID"
+    entity_id = "switch.plug1_plug_1"
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(entity_id).unique_id == "PLUG1DEVICEID"
