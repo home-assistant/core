@@ -17,6 +17,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_ca
 
 from ..entry_data import RuntimeEntryData
 from .client import ESPHomeClient
+from .device import ESPHomeBluetoothDevice
 from .scanner import ESPHomeScanner
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,14 +25,16 @@ _LOGGER = logging.getLogger(__name__)
 
 @hass_callback
 def _async_can_connect_factory(
-    entry_data: RuntimeEntryData, source: str
+    entry_data: RuntimeEntryData, bluetooth_device: ESPHomeBluetoothDevice, source: str
 ) -> Callable[[], bool]:
     """Create a can_connect function for a specific RuntimeEntryData instance."""
 
     @hass_callback
     def _async_can_connect() -> bool:
         """Check if a given source can make another connection."""
-        can_connect = bool(entry_data.available and entry_data.ble_connections_free)
+        can_connect = bool(
+            entry_data.available and bluetooth_device.ble_connections_free
+        )
         _LOGGER.debug(
             (
                 "%s [%s]: Checking can connect, available=%s, ble_connections_free=%s"
@@ -40,7 +43,7 @@ def _async_can_connect_factory(
             entry_data.name,
             source,
             entry_data.available,
-            entry_data.ble_connections_free,
+            bluetooth_device.ble_connections_free,
             can_connect,
         )
         return can_connect
@@ -63,6 +66,10 @@ async def async_connect_scanner(
         entry_data.api_version
     )
     connectable = bool(feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS)
+    bluetooth_device = ESPHomeBluetoothDevice(
+        entry_data.name, entry_data.device_info.mac_address
+    )
+    entry_data.bluetooth_device = bluetooth_device
     _LOGGER.debug(
         "%s [%s]: Connecting scanner feature_flags=%s, connectable=%s",
         entry.title,
@@ -75,7 +82,7 @@ async def async_connect_scanner(
         # https://github.com/python/mypy/issues/1484
         client=partial(ESPHomeClient, config_entry=entry),  # type: ignore[arg-type]
         source=source,
-        can_connect=_async_can_connect_factory(entry_data, source),
+        can_connect=_async_can_connect_factory(entry_data, bluetooth_device, source),
     )
     scanner = ESPHomeScanner(
         hass, source, entry.title, new_info_callback, connector, connectable
@@ -85,7 +92,7 @@ async def async_connect_scanner(
         # until we know the connection is fully setup since otherwise
         # there is a race condition where the connection can fail
         await cli.subscribe_bluetooth_connections_free(
-            entry_data.async_update_ble_connection_limits
+            bluetooth_device.async_update_ble_connection_limits
         )
     unload_callbacks = [
         async_register_scanner(hass, scanner, connectable),
