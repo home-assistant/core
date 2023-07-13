@@ -83,5 +83,11 @@
       "stream_io_error": "[%key:component::generic::config::error::stream_io_error%]",
       "stream_not_permitted": "[%key:component::generic::config::error::stream_not_permitted%]"
     }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads generic cameras from the YAML-configuration."
+    }
   }
 }
