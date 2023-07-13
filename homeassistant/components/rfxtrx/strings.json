@@ -25,13 +25,13 @@
         "data": {
           "device": "Select device"
         },
-        "title": "Device"
+        "title": "[%key:common::config_flow::data::device%]"
       },
       "setup_serial_manual_path": {
         "data": {
           "device": "[%key:common::config_flow::data::usb_path%]"
         },
-        "title": "Path"
+        "title": "[%key:common::config_flow::data::path%]"
       }
     }
   },

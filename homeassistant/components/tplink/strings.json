@@ -10,7 +10,7 @@
       },
       "pick_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "discovery_confirm": {
@@ -74,7 +74,7 @@
         },
         "backgrounds": {
           "name": "Backgrounds",
-          "description": "List of HSV sequences (Max 16)."
+          "description": "[%key:component::tplink::services::sequence_effect::fields::sequence::description%]"
         },
         "segments": {
           "name": "Segments",
@@ -82,15 +82,15 @@
         },
         "brightness": {
           "name": "Brightness",
-          "description": "Initial brightness."
+          "description": "[%key:component::tplink::services::sequence_effect::fields::brightness::description%]"
         },
         "duration": {
           "name": "Duration",
-          "description": "Duration."
+          "description": "[%key:component::tplink::services::sequence_effect::fields::duration::description%]"
         },
         "transition": {
           "name": "Transition",
-          "description": "Transition."
+          "description": "[%key:component::tplink::services::sequence_effect::fields::transition::description%]"
         },
         "fadeoff": {
           "name": "Fade off",

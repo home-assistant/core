@@ -21,7 +21,7 @@
     "select": {
       "basic_anti_flicker": {
         "state": {
-          "0": "Disabled",
+          "0": "[%key:common::state::disabled%]",
           "1": "50 Hz",
           "2": "60 Hz"
         }
@@ -61,9 +61,9 @@
       },
       "motion_sensitivity": {
         "state": {
-          "0": "Low sensitivity",
+          "0": "[%key:component::tuya::entity::select::decibel_sensitivity::state::0%]",
           "1": "Medium sensitivity",
-          "2": "High sensitivity"
+          "2": "[%key:component::tuya::entity::select::decibel_sensitivity::state::1%]"
         }
       },
       "record_mode": {
@@ -75,7 +75,7 @@
       "relay_status": {
         "state": {
           "last": "Remember last state",
-          "memory": "Remember last state",
+          "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
           "power_off": "[%key:common::state::off%]",
@@ -105,7 +105,7 @@
       },
       "vacuum_mode": {
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "random": "Random",
           "smart": "Smart",
           "wall_follow": "Follow Wall",
@@ -199,7 +199,7 @@
           "reserve_1": "Reserve 1",
           "reserve_2": "Reserve 2",
           "reserve_3": "Reserve 3",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "warm": "Heat preservation"
         }
       },

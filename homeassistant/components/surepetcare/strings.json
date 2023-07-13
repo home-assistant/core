@@ -41,7 +41,7 @@
           "description": "Name of pet."
         },
         "location": {
-          "name": "Location",
+          "name": "[%key:common::config_flow::data::location%]",
           "description": "Pet location (Inside or Outside)."
         }
       }

@@ -38,7 +38,7 @@
     },
     "switch": {
       "state": {
-        "name": "Open"
+        "name": "[%key:common::state::open%]"
       }
     }
   }

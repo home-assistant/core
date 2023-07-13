@@ -114,12 +114,12 @@
       "description": "Sets strip zones for Addressable v3 controllers (0xA3).",
       "fields": {
         "colors": {
-          "name": "Colors",
+          "name": "[%key:component::flux_led::services::set_custom_effect::fields::colors::name%]",
           "description": "List of colors for each zone (RGB). The length of each zone is the number of pixels per segment divided by the number of colors. (Max 2048 Colors)."
         },
         "speed_pct": {
           "name": "Speed",
-          "description": "Effect speed for the custom effect (0-100)."
+          "description": "[%key:component::flux_led::services::set_custom_effect::fields::speed_pct::description%]"
         },
         "effect": {
           "name": "Effect",
