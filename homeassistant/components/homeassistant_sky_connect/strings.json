@@ -21,7 +21,8 @@
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::title%]",
         "data": {
           "channel": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::data::channel%]"
-        }
+        },
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::description%]"
       },
       "install_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"

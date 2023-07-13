@@ -172,11 +172,13 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
             try:
                 if not await api.compile(device["configuration"]):
                     raise HomeAssistantError(
-                        f"Error compiling {device['configuration']}; Try again in ESPHome dashboard for more information."
+                        f"Error compiling {device['configuration']}; "
+                        "Try again in ESPHome dashboard for more information."
                     )
                 if not await api.upload(device["configuration"], "OTA"):
                     raise HomeAssistantError(
-                        f"Error updating via OTA: {device['configuration']}; Try again in ESPHome dashboard for more information."
+                        f"Error updating {device['configuration']} via OTA; "
+                        "Try again in ESPHome dashboard for more information."
                     )
             finally:
                 await self.coordinator.async_request_refresh()
