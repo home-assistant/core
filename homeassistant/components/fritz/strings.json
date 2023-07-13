@@ -161,7 +161,7 @@
       "fields": {
         "device_id": {
           "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
-          "description": "[%key:component::fritz::services::cleanup::fields::device_id::description%]"
+          "description": "Select the Fritz!Box to configure."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
