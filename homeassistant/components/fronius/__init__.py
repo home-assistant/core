@@ -15,6 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SOLAR_NET_ID_SYSTEM, FroniusDeviceInfo
 from .coordinator import (
@@ -67,6 +68,7 @@ class FroniusSolarNet:
         self.cleanup_callbacks: list[Callable[[], None]] = []
         self.config_entry = entry
         self.coordinator_lock = asyncio.Lock()
+        self.sensor_async_add_entities: AddEntitiesCallback = None
         self.fronius = fronius
         self.host: str = entry.data[CONF_HOST]
         # entry.unique_id is either logger uid or first inverter uid if no logger available
