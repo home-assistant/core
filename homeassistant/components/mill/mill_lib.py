@@ -120,12 +120,16 @@ class Mill:
             if retry < 1:
                 _LOGGER.error("Timed out sending command to Mill: %s", url)
                 return None
-            return await self.request(url, payload, retry - 1)
+            return await self.request(url, payload, retry - 1, patch=patch)
         except aiohttp.ClientError:
             _LOGGER.error("Error sending command to Mill: %s", url, exc_info=True)
             return None
 
         result = await resp.text()
+        if "InvalidAuthTokenError" in result:
+            _LOGGER.debug("InvalidAuthTokenError, %s", result)
+            await self.connect()
+            return await self.request(url, payload, retry - 1, patch=patch)
         if "error" in result:
             raise Exception(result)
         if "InvalidAuthTokenError" in result:
@@ -160,6 +164,8 @@ class Mill:
 
     async def _update_room(self, room):
         room_data = await self.request(f"rooms/{room.get('roomId')}/devices")
+        print("room data", room_data)
+        print("room", room)
 
         tasks = []
         for device in room.get("devices", []):
@@ -325,7 +331,6 @@ class _SensorAttr:
     tvoc: float
     eco2: float
     battery: float
-    report_time: int
 
 
 @dataclass
@@ -336,13 +341,12 @@ class Sensor(MillDevice, _SensorAttr):
     def init_from_response(cls, response):
         """Class method."""
         return cls(
-            name=response.get("deviceName"),
-            device_id=response.get("deviceId"),
+            name=response.get("name"),
+            device_id=response.get("id"),
             available=response.get("deviceStatus") == 0,
-            current_temp=response.get("currentTemp"),
-            humidity=response.get("humidity"),
-            tvoc=response.get("tvoc"),
-            eco2=response.get("eco2"),
+            current_temp=response.get("averageTemperature"),
+            humidity=response.get("roomHumidity"),
+            tvoc=response.get("roomTvoc"),
+            eco2=response.get("roomEco2"),
             battery=response.get("batteryPer"),
-            report_time=response.get("reportTime"),
         )
