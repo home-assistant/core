@@ -10,7 +10,7 @@ from typing import Any
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
-from homeassistant.util.package import is_virtual_env
+from homeassistant.util.package import is_docker_env, is_virtual_env
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     if platform.system() == "Darwin":
         info_object["os_version"] = platform.mac_ver()[0]
     elif platform.system() == "Linux":
-        info_object["docker"] = os.path.isfile("/.dockerenv")
+        info_object["docker"] = is_docker_env()
 
     # Determine installation type on current data
     if info_object["docker"]:
