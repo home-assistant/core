@@ -33,7 +33,7 @@ async def test_get_system_info_supervisor_not_available(
     ), patch(
         "homeassistant.components.hassio.get_info", return_value=None
     ), patch(
-        "homeassistant.helpers.system_info.getuser", return_value="root"
+        "homeassistant.helpers.system_info.cached_get_user", return_value="root"
     ):
         info = await async_get_system_info(hass)
         assert isinstance(info, dict)
@@ -71,7 +71,7 @@ async def test_container_installationtype(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.helpers.system_info.is_official_image", return_value=True
     ), patch(
-        "homeassistant.helpers.system_info.getuser", return_value="root"
+        "homeassistant.helpers.system_info.cached_get_user", return_value="root"
     ):
         info = await async_get_system_info(hass)
         assert info["installation_type"] == "Home Assistant Container"
@@ -81,7 +81,7 @@ async def test_container_installationtype(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.helpers.system_info.is_official_image", return_value=False
     ), patch(
-        "homeassistant.helpers.system_info.getuser", return_value="user"
+        "homeassistant.helpers.system_info.cached_get_user", return_value="user"
     ):
         info = await async_get_system_info(hass)
         assert info["installation_type"] == "Unsupported Third Party Container"
@@ -89,6 +89,8 @@ async def test_container_installationtype(hass: HomeAssistant) -> None:
 
 async def test_getuser_keyerror(hass: HomeAssistant) -> None:
     """Test getuser keyerror."""
-    with patch("homeassistant.helpers.system_info.getuser", side_effect=KeyError):
+    with patch(
+        "homeassistant.helpers.system_info.cached_get_user", side_effect=KeyError
+    ):
         info = await async_get_system_info(hass)
         assert info["user"] is None

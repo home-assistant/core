@@ -22,6 +22,11 @@ def is_official_image() -> bool:
     return os.path.isfile("/OFFICIAL_IMAGE")
 
 
+# Cache the result of getuser() because it can call getpwuid() which
+# can do blocking I/O to look up the username in /etc/passwd.
+cached_get_user = cache(getuser)
+
+
 @bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
@@ -44,7 +49,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     }
 
     try:
-        info_object["user"] = getuser()
+        info_object["user"] = cached_get_user()
     except KeyError:
         info_object["user"] = None
 
