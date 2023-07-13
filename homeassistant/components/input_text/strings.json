@@ -42,7 +42,7 @@
       }
     },
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads helpers from the YAML-configuration."
     }
   }

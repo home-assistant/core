@@ -91,7 +91,7 @@
       "description": "Start decreasing the brightness of the light. (deprecated)."
     },
     "stop": {
-      "name": "Stop",
+      "name": "[%key:common::action::stop%]",
       "description": "Stop any in-progress action and empty the queue. (deprecated)."
     }
   }

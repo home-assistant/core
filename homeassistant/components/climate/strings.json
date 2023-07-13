@@ -213,11 +213,11 @@
       }
     },
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Turns climate device on."
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Turns climate device off."
     }
   },

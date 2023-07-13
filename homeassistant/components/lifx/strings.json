@@ -52,7 +52,7 @@
       "description": "Controls the HEV LEDs on a LIFX Clean bulb.",
       "fields": {
         "power": {
-          "name": "Enable",
+          "name": "[%key:common::action::enable%]",
           "description": "Start or stop a Clean cycle."
         },
         "duration": {

@@ -1,7 +1,7 @@
 {
   "services": {
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads all modbus entities."
     },
     "write_coil": {
@@ -49,7 +49,7 @@
       }
     },
     "stop": {
-      "name": "Stop",
+      "name": "[%key:common::action::stop%]",
       "description": "Stops modbus hub.",
       "fields": {
         "hub": {
@@ -59,7 +59,7 @@
       }
     },
     "restart": {
-      "name": "Restart",
+      "name": "[%key:common::action::restart%]",
       "description": "Restarts modbus hub (if running stop then start).",
       "fields": {
         "hub": {

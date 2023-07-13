@@ -9,7 +9,7 @@
           "description": "Name of port to enable/disable."
         },
         "enabled": {
-          "name": "Enabled",
+          "name": "[%key:common::state::enabled%]",
           "description": "Indicate if port should be enabled or not."
         }
       }

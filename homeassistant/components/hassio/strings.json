@@ -24,7 +24,7 @@
           "fix_menu": {
             "description": "Could not connect to `{reference}`. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update `{reference}`, go to [storage]({storage_url}).",
             "menu_options": {
-              "mount_execute_reload": "Reload",
+              "mount_execute_reload": "[%key:common::action::reload%]",
               "mount_execute_remove": "Remove"
             }
           }

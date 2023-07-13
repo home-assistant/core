@@ -33,11 +33,11 @@
       }
     },
     "enable": {
-      "name": "Enable",
+      "name": "[%key:common::action::enable%]",
       "description": "Starts a charging process if charging station is authorized."
     },
     "disable": {
-      "name": "Disable",
+      "name": "[%key:common::action::disable%]",
       "description": "Stops the charging process if charging station is authorized."
     },
     "set_failsafe": {

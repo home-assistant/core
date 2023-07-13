@@ -1,7 +1,7 @@
 {
   "services": {
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Sets the light RGB to the predominant color found in the image provided by URL or file path.",
       "fields": {
         "color_extract_url": {
