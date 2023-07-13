@@ -235,8 +235,6 @@ class ClimavenetaIMXW(ClimateEntity):
                     else:
                         self._attr_fan_mode = FAN_AUTO  # should never arrive here...
 
-        # print something for debugging
-
         self._t1_alarm = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_HOLDING, 0x1028
         )
@@ -249,33 +247,9 @@ class ClimavenetaIMXW(ClimateEntity):
             CALL_TYPE_REGISTER_HOLDING, 0x102B
         )
 
-        #        _LOGGER.error(
-        #            "Climaveneta iMXW %s. Winter: %d. ActualT: %f SetpointT_winter: %f SetpointT_summer: %f",
-        #            self._attr_name,
-        #            self._summer_winter,
-        #            self._attr_current_temperature,
-        #            self._attr_winter_temperature,
-        #            self._attr_summer_temperature,
-        #        )
-        # _LOGGER.error(
-        #    "OnOff: %d. EV_Water: %d",
-        #    self._attr_on_off,
-        #    self._attr_ev_water,
-        # )
-
-        #        t2_temp = await self._async_read_temp_from_register(
-        #            CALL_TYPE_REGISTER_HOLDING, 0x1003
-        #        )
         self._exchanger_temperature = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_HOLDING, 0x1004
         )
-
-        # _LOGGER.error(
-        #   "Name: %s T1: %d. T3: %d",
-        #    self._attr_name,
-        #    self._attr_current_temperature,
-        #    self._exchanger_temperature,
-        # )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -339,12 +313,6 @@ class ClimavenetaIMXW(ClimateEntity):
         self, register_type: str, register: int
     ) -> int:
         """Read register using the Modbus hub slave."""
-
-        # _LOGGER.error(
-        #     "Climaveneta iMWX read from slave %s, register %s",
-        #     str(self._slave),
-        #     str(register),
-        # )
 
         result = await self._hub.async_pymodbus_call(
             self._slave, register, 1, register_type

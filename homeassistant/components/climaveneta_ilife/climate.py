@@ -267,12 +267,6 @@ class ClimavenetaILIFE(ClimateEntity):
     ) -> int:
         """Read register using the Modbus hub slave."""
 
-        # _LOGGER.error(
-        #     "Climaveneta iMWX read from slave %s, register %s",
-        #     str(self._slave),
-        #     str(register),
-        # )
-
         result = await self._hub.async_pymodbus_call(
             self._slave, register, 1, register_type
         )
