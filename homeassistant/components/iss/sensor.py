@@ -51,7 +51,6 @@ class IssSensor(CoordinatorEntity[DataUpdateCoordinator[IssData]], SensorEntity)
         super().__init__(coordinator)
         self._attr_unique_id = f"{DOMAIN}_people"
         self._show_on_map = show
-        self._attr_native_unit_of_measurement = "people in space"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=DEFAULT_NAME,
