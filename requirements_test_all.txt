@@ -451,7 +451,7 @@ bluetooth-auto-recovery==1.2.1
 bluetooth-data-tools==1.6.0
 
 # homeassistant.components.bond
-bond-async==0.1.23
+bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.57
