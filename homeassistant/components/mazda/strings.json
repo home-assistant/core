@@ -31,11 +31,11 @@
           "description": "The vehicle to send the GPS location to."
         },
         "latitude": {
-          "name": "Latitude",
+          "name": "[%key:common::config_flow::data::latitude%]",
           "description": "The latitude of the location to send."
         },
         "longitude": {
-          "name": "Longitude",
+          "name": "[%key:common::config_flow::data::longitude%]",
           "description": "The longitude of the location to send."
         },
         "poi_name": {

@@ -25,7 +25,7 @@
           "state": {
             "parallel": "Parallel",
             "queued": "Queued",
-            "restart": "Restart",
+            "restart": "[%key:common::action::restart%]",
             "single": "Single"
           }
         }

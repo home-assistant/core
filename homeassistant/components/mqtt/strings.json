@@ -178,7 +178,7 @@
       "description": "Writes all messages on a specific topic into the `mqtt_dump.txt` file in your configuration folder.",
       "fields": {
         "topic": {
-          "name": "Topic",
+          "name": "[%key:component::mqtt::services::publish::fields::topic::name%]",
           "description": "Topic to listen to."
         },
         "duration": {

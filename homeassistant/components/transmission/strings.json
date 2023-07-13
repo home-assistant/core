@@ -45,7 +45,7 @@
     "sensor": {
       "transmission_status": {
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "up_down": "Up/Down",
           "seeding": "Seeding",
           "downloading": "Downloading"
@@ -73,8 +73,8 @@
       "description": "Removes a torrent.",
       "fields": {
         "entry_id": {
-          "name": "Transmission entry",
-          "description": "Config entry id."
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
         },
         "id": {
           "name": "ID",
@@ -91,12 +91,12 @@
       "description": "Starts a torrent.",
       "fields": {
         "entry_id": {
-          "name": "Transmission entry",
-          "description": "Config entry id."
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
         },
         "id": {
           "name": "ID",
-          "description": "ID of a torrent."
+          "description": "[%key:component::transmission::services::remove_torrent::fields::id::description%]"
         }
       }
     },
@@ -105,12 +105,12 @@
       "description": "Stops a torrent.",
       "fields": {
         "entry_id": {
-          "name": "Transmission entry",
-          "description": "Config entry id."
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
         },
         "id": {
           "name": "ID",
-          "description": "ID of a torrent."
+          "description": "[%key:component::transmission::services::remove_torrent::fields::id::description%]"
         }
       }
     }

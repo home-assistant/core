@@ -64,11 +64,11 @@
       "description": "Updates the Home Assistant location.",
       "fields": {
         "latitude": {
-          "name": "Latitude",
+          "name": "[%key:common::config_flow::data::latitude%]",
           "description": "Latitude of your location."
         },
         "longitude": {
-          "name": "Longitude",
+          "name": "[%key:common::config_flow::data::longitude%]",
           "description": "Longitude of your location."
         }
       }

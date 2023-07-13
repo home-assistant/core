@@ -19,7 +19,7 @@
         "data": {
           "radio_type": "Radio Type"
         },
-        "title": "Radio Type",
+        "title": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]",
         "description": "Pick your Zigbee radio type"
       },
       "manual_port_config": {
@@ -94,7 +94,7 @@
         }
       },
       "intent_migrate": {
-        "title": "Migrate to a new radio",
+        "title": "[%key:component::zha::options::step::prompt_migrate_or_reconfigure::menu_options::intent_migrate%]",
         "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
@@ -367,8 +367,8 @@
           "description": "Parameters to pass to the command."
         },
         "manufacturer": {
-          "name": "Manufacturer",
-          "description": "Manufacturer code."
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::manufacturer::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::manufacturer::description%]"
         }
       }
     },
@@ -381,24 +381,24 @@
           "description": "Hexadecimal address of the group."
         },
         "cluster_id": {
-          "name": "Cluster ID",
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::cluster_id::name%]",
           "description": "ZCL cluster to send command to."
         },
         "cluster_type": {
           "name": "Cluster type",
-          "description": "Type of the cluster."
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::cluster_type::description%]"
         },
         "command": {
           "name": "Command",
-          "description": "ID of the command to execute."
+          "description": "[%key:component::zha::services::issue_zigbee_cluster_command::fields::command::description%]"
         },
         "args": {
           "name": "Args",
-          "description": "Arguments to pass to the command."
+          "description": "[%key:component::zha::services::issue_zigbee_cluster_command::fields::args::description%]"
         },
         "manufacturer": {
-          "name": "Manufacturer",
-          "description": "Manufacturer code."
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::manufacturer::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::manufacturer::description%]"
         }
       }
     },
@@ -408,11 +408,11 @@
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
-          "description": "IEEE address for the device."
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::ieee::description%]"
         },
         "mode": {
-          "name": "Mode",
-          "description": "The Squawk Mode field is used as a 4-bit enumeration, and can have one of the values shown in Table 8-24 of the ZCL spec - Squawk Mode Field. The exact operation of each mode (how the WD \u201csquawks\u201d) is implementation specific."
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "The Squawk Mode field is used as a 4-bit enumeration, and can have one of the values shown in Table 8-24 of the ZCL spec - Squawk Mode Field. The exact operation of each mode (how the WD “squawks”) is implementation specific."
         },
         "strobe": {
           "name": "Strobe",
@@ -430,15 +430,15 @@
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
-          "description": "IEEE address for the device."
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::ieee::description%]"
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "The Warning Mode field is used as an 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards."
         },
         "strobe": {
-          "name": "Strobe",
-          "description": "The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. \"0\" means no strobe, \"1\" means strobe. If the strobe field is \u201c1\u201d and the Warning Mode is \u201c0\u201d (\u201cStop\u201d) then only the strobe is activated."
+          "name": "[%key:component::zha::services::warning_device_squawk::fields::strobe::name%]",
+          "description": "The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. \"0\" means no strobe, \"1\" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated."
         },
         "level": {
           "name": "Level",
@@ -450,7 +450,7 @@
         },
         "duty_cycle": {
           "name": "Duty cycle",
-          "description": "Indicates the length of the flash cycle. This allows you to vary the flash duration for different alarm types (e.g., fire, police, burglar). The valid range is 0-100 in increments of 10. All other values must be rounded to the nearest valid value. Strobe calculates a duty cycle over a duration of one second. The ON state must precede the OFF state. For example, if Strobe Duty Cycle Field specifies \u201c40,\u201d, then the strobe flashes ON for 4/10ths of a second and then turns OFF for 6/10ths of a second."
+          "description": "Indicates the length of the flash cycle. This allows you to vary the flash duration for different alarm types (e.g., fire, police, burglar). The valid range is 0-100 in increments of 10. All other values must be rounded to the nearest valid value. Strobe calculates a duty cycle over a duration of one second. The ON state must precede the OFF state. For example, if Strobe Duty Cycle Field specifies “40,”, then the strobe flashes ON for 4/10ths of a second and then turns OFF for 6/10ths of a second."
         },
         "intensity": {
           "name": "Intensity",
