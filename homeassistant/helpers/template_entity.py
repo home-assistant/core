@@ -441,7 +441,7 @@ class TemplateEntity(Entity):
         """Run an action script."""
         if run_variables is None:
             run_variables = {}
-        return await script.async_run(
+        await script.async_run(
             run_variables={
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
                 **run_variables,

@@ -48,7 +48,14 @@ async def test_entity_and_device_attributes(
     device = device_factory(
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "on", Attribute.fan_speed: 2},
+        status={
+            Attribute.switch: "on",
+            Attribute.fan_speed: 2,
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
     )
     # Act
     await setup_platform(hass, FAN_DOMAIN, devices=[device])
@@ -64,8 +71,10 @@ async def test_entity_and_device_attributes(
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_turn_off(hass: HomeAssistant, device_factory) -> None:

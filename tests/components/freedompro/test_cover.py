@@ -66,7 +66,7 @@ async def test_cover_get_state(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -127,7 +127,7 @@ async def test_cover_set_position(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 33
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -164,7 +164,7 @@ async def test_cover_close(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         await async_update_entity(hass, entity_id)
@@ -191,7 +191,7 @@ async def test_cover_close(
 
     states_response[0]["state"]["position"] = 0
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -245,7 +245,7 @@ async def test_cover_open(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

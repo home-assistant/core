@@ -46,7 +46,7 @@ async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["lock"] = 1
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -73,7 +73,7 @@ async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["lock"] = 1
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         await async_update_entity(hass, entity_id)
@@ -101,7 +101,7 @@ async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["lock"] = 0
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -138,7 +138,7 @@ async def test_lock_set_lock(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["lock"] = 1
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

@@ -281,7 +281,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             display_name=cleanup_name_for_homekit(name),
             aid=aid,
             iid_manager=HomeIIDManager(driver.iid_storage),
-            *args,
+            *args,  # noqa: B026
             **kwargs,
         )
         self.config = config or {}

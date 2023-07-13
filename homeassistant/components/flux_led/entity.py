@@ -54,6 +54,7 @@ def _async_device_info(
 class FluxBaseEntity(Entity):
     """Representation of a Flux entity without a coordinator."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -70,18 +71,18 @@ class FluxBaseEntity(Entity):
 class FluxEntity(CoordinatorEntity[FluxLedUpdateCoordinator]):
     """Representation of a Flux entity with a coordinator."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
         base_unique_id: str,
-        name: str,
         key: str | None,
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
         self._device: AIOWifiLedBulb = coordinator.device
         self._responding = True
-        self._attr_name = name
         if key:
             self._attr_unique_id = f"{base_unique_id}_{key}"
         else:

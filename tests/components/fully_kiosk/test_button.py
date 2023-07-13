@@ -30,13 +30,13 @@ async def test_buttons(
     )
     assert len(mock_fully_kiosk.restartApp.mock_calls) == 1
 
-    entry = entity_registry.async_get("button.amazon_fire_reboot_device")
+    entry = entity_registry.async_get("button.amazon_fire_restart_device")
     assert entry
     assert entry.unique_id == "abcdef-123456-rebootDevice"
     await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_reboot_device"},
+        {ATTR_ENTITY_ID: "button.amazon_fire_restart_device"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.rebootDevice.mock_calls) == 1

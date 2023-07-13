@@ -70,6 +70,7 @@ class PhilipsTVMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,

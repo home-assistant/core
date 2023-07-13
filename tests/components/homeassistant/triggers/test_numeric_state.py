@@ -10,7 +10,12 @@ import homeassistant.components.automation as automation
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -1090,7 +1095,7 @@ async def test_if_fails_setup_bad_for(hass: HomeAssistant, calls, above, below) 
     hass.states.async_set("test.entity", 5)
     await hass.async_block_till_done()
 
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -1107,13 +1112,14 @@ async def test_if_fails_setup_bad_for(hass: HomeAssistant, calls, above, below) 
                 }
             },
         )
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
 
 async def test_if_fails_setup_for_without_above_below(
     hass: HomeAssistant, calls
 ) -> None:
     """Test for setup failures for missing above or below."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -1128,6 +1134,7 @@ async def test_if_fails_setup_for_without_above_below(
                 }
             },
         )
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

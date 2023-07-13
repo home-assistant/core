@@ -23,5 +23,29 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "services": {
+    "calibrate": {
+      "name": "Calibrate",
+      "description": "Calibration - Set depth, press & hold duration, and operation mode. Warning - this will send a push command to the device.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity to calibrate."
+        },
+        "depth": {
+          "name": "Depth",
+          "description": "Depth in percent."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Duration in seconds."
+        },
+        "mode": {
+          "name": "Mode",
+          "description": "Normal | invert | toggle."
+        }
+      }
+    }
   }
 }

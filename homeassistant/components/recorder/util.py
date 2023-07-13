@@ -530,11 +530,10 @@ def setup_connection_for_dialect(
                         version,
                     )
 
-            else:
-                if not version or version < MIN_VERSION_MYSQL:
-                    _fail_unsupported_version(
-                        version or version_string, "MySQL", MIN_VERSION_MYSQL
-                    )
+            elif not version or version < MIN_VERSION_MYSQL:
+                _fail_unsupported_version(
+                    version or version_string, "MySQL", MIN_VERSION_MYSQL
+                )
 
             slow_range_in_select = bool(
                 not version

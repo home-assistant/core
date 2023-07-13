@@ -42,11 +42,6 @@
         "name": "WAN status"
       }
     },
-    "button": {
-      "reboot": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      }
-    },
     "sensor": {
       "dsl_attenuation_down": {
         "name": "DSL attenuation down"
@@ -109,12 +104,6 @@
           "gprs": "GPRS",
           "unknown": "Unknown"
         }
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "wan_mode": {
         "name": "WAN mode",

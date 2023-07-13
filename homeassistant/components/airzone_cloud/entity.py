@@ -15,7 +15,6 @@ from aioairzone_cloud.const import (
     AZD_ZONES,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -43,7 +42,6 @@ class AirzoneAidooEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
         aidoo_id: str,
         aidoo_data: dict[str, Any],
     ) -> None:
@@ -73,7 +71,6 @@ class AirzoneWebServerEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
         ws_id: str,
         ws_data: dict[str, Any],
     ) -> None:
@@ -104,7 +101,6 @@ class AirzoneZoneEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
         zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:

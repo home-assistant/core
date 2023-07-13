@@ -237,7 +237,6 @@ class MinecraftServerEntity(Entity):
     ) -> None:
         """Initialize base entity."""
         self._server = server
-        self._attr_name = type_name
         self._attr_icon = icon
         self._attr_unique_id = f"{self._server.unique_id}-{type_name}"
         self._attr_device_info = DeviceInfo(
