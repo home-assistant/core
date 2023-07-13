@@ -371,7 +371,7 @@
       }
     },
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads the KNX integration."
     }
   }

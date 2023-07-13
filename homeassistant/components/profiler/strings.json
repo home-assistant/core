@@ -11,7 +11,7 @@
   },
   "services": {
     "start": {
-      "name": "Start",
+      "name": "[%key:common::action::stop%]",
       "description": "Starts the Profiler.",
       "fields": {
         "seconds": {
