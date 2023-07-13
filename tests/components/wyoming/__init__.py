@@ -14,11 +14,13 @@ STT_INFO = Info(
     asr=[
         AsrProgram(
             name="Test ASR",
+            description="Test ASR",
             installed=True,
             attribution=TEST_ATTR,
             models=[
                 AsrModel(
                     name="Test Model",
+                    description="Test Model",
                     installed=True,
                     attribution=TEST_ATTR,
                     languages=["en-US"],
@@ -31,11 +33,13 @@ TTS_INFO = Info(
     tts=[
         TtsProgram(
             name="Test TTS",
+            description="Test TTS",
             installed=True,
             attribution=TEST_ATTR,
             voices=[
                 TtsVoice(
                     name="Test Voice",
+                    description="Test Voice",
                     installed=True,
                     attribution=TEST_ATTR,
                     languages=["en-US"],
