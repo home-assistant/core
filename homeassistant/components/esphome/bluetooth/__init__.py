@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from ..entry_data import RuntimeEntryData
-from .client import ESPHomeClient
 from .device import ESPHomeBluetoothDevice
 from .scanner import ESPHomeScanner
 
@@ -77,6 +76,8 @@ async def async_connect_scanner(
         feature_flags,
         connectable,
     )
+    from .client import ESPHomeClient  # pylint: disable=import-outside-toplevel
+
     connector = HaBluetoothConnector(
         # MyPy doesn't like partials, but this is correct
         # https://github.com/python/mypy/issues/1484
