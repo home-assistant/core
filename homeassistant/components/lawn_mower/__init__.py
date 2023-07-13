@@ -66,14 +66,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Activity(IntFlag):
+class LawnMowerActivity(IntFlag):
     """Activity state of the lawn mower entity."""
 
     ERROR = 1
     PAUSED = 2
     MOWING = 4
-    DOCKED_SCHEDULE_DISABLED = 8
-    DOCKED_SCHEDULE_ENABLED = 16
+    DOCKING = 8
+    DOCKED_SCHEDULE_DISABLED = 16
+    DOCKED_SCHEDULE_ENABLED = 32
 
 
 class LawnMowerEntityFeature(IntFlag):
@@ -86,6 +87,18 @@ class LawnMowerEntityFeature(IntFlag):
     DISABLE_SCHEDULE = 16
 
 
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up lawn mower devices."""
+    component: EntityComponent[LawnMowerEntity] = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent[LawnMowerEntity] = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
 @dataclass
 class LawnMowerEntityEntityDescription(EntityDescription):
     """A class that describes lawn mower entities."""
@@ -95,12 +108,12 @@ class LawnMowerEntity(Entity):
     """Base class for lawn mower entities."""
 
     entity_description: LawnMowerEntityEntityDescription
-    _attr_activity: Activity | None = None
+    _attr_activity: LawnMowerActivity | None = None
     _attr_supported_features: LawnMowerEntityFeature
 
     @final
     @property
-    def state(self) -> Activity | None:
+    def state(self) -> LawnMowerActivity | None:
         """Return the current state."""
         return self._attr_activity
 
@@ -148,15 +161,3 @@ class LawnMowerEntity(Entity):
     async def async_disable_schedule(self) -> None:
         """Disable the schedule for the lawn mower."""
         await self.hass.async_add_executor_job(partial(self.disable_schedule))
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up lawn mower devices."""
-    component: EntityComponent[LawnMowerEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    component: EntityComponent[LawnMowerEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
