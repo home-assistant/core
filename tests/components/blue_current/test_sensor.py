@@ -39,6 +39,7 @@ data: dict[str, Any] = {
     "101": {
         "model_type": "hidden",
         "evse_id": "101",
+        "name": "",
         **charge_point,
     }
 }

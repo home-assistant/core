@@ -9,7 +9,7 @@ from bluecurrent_api.exceptions import (
     AlreadyConnected,
     InvalidApiToken,
     RequestLimitReached,
-    WebsocketException,
+    WebsocketError,
 )
 import voluptuous as vol
 
@@ -44,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.client.validate_api_token(api_token)
                 email = await self.client.get_email()
-            except WebsocketException:
+            except WebsocketError:
                 errors["base"] = "cannot_connect"
             except RequestLimitReached:
                 errors["base"] = "limit_reached"

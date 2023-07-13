@@ -7,7 +7,7 @@ from homeassistant.components.blue_current.config_flow import (
     AlreadyConnected,
     InvalidApiToken,
     RequestLimitReached,
-    WebsocketException,
+    WebsocketError,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_SOURCE
@@ -112,7 +112,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "bluecurrent_api.Client.validate_api_token",
-        side_effect=WebsocketException,
+        side_effect=WebsocketError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

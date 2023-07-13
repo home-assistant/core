@@ -1,4 +1,5 @@
 """Entity representing a Blue Current charge point."""
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -14,10 +15,12 @@ class BlueCurrentEntity(Entity):
         """Initialize the entity."""
         self.connector: Connector = connector
 
+        name = connector.charge_points[evse_id][ATTR_NAME]
+
         self.evse_id = evse_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, evse_id)},
-            name=evse_id,
+            name=name if name != "" else evse_id,
             manufacturer="Blue Current",
             model=connector.charge_points[evse_id][MODEL_TYPE],
         )

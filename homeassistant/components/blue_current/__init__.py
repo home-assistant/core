@@ -10,11 +10,16 @@ from bluecurrent_api.exceptions import (
     BlueCurrentException,
     InvalidApiToken,
     RequestLimitReached,
-    WebsocketException,
+    WebsocketError,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    ATTR_NAME,
+    CONF_API_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -108,7 +113,8 @@ class Connector:
             for entry in data:
                 evse_id = entry[EVSE_ID]
                 model = entry[MODEL_TYPE]
-                self.add_charge_point(evse_id, model)
+                name = entry[ATTR_NAME]
+                self.add_charge_point(evse_id, model, name)
                 await self.get_charge_point_data(evse_id)
             await self.client.get_grid_status(data[0][EVSE_ID])
 
@@ -135,9 +141,9 @@ class Connector:
         """Get all the data of a charge point."""
         await self.client.get_status(evse_id)
 
-    def add_charge_point(self, evse_id: str, model: str) -> None:
+    def add_charge_point(self, evse_id: str, model: str, name: str) -> None:
         """Add a charge point to charge_points."""
-        self.charge_points[evse_id] = {MODEL_TYPE: model}
+        self.charge_points[evse_id] = {MODEL_TYPE: model, ATTR_NAME: name}
 
     def update_charge_point(self, evse_id: str, data: dict) -> None:
         """Update the charge point data."""
@@ -176,11 +182,11 @@ class Connector:
             async_call_later(
                 self.hass, self.client.get_next_reset_delta(), self.reconnect
             )
-        except WebsocketException:
+        except WebsocketError:
             set_entities_unavalible(self.hass, self.config.entry_id)
             async_call_later(self.hass, LARGE_DELAY, self.reconnect)
 
     async def disconnect(self) -> None:
         """Disconnect from the websocket."""
-        with suppress(WebsocketException):
+        with suppress(WebsocketError):
             await self.client.disconnect()
