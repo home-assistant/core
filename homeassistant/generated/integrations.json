@@ -833,6 +833,18 @@
         }
       }
     },
+    "climaveneta_ilife": {
+      "name": "climaveneta_ilife",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "climaveneta_imxw": {
+      "name": "climaveneta_imxw",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "cloudflare": {
       "name": "Cloudflare",
       "integration_type": "hub",

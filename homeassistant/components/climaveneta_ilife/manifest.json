@@ -1,0 +1,9 @@
+{
+  "domain": "climaveneta_ilife",
+  "name": "climaveneta_ilife",
+  "codeowners": ["@tadiern"],
+  "dependencies": ["modbus"],
+  "documentation": "https://www.home-assistant.io/integrations/climaveneta_ilife",
+  "homekit": {},
+  "iot_class": "local_polling"
+}

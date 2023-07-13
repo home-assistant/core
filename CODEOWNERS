@@ -203,6 +203,9 @@ build.json @home-assistant/supervisor
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
 /homeassistant/components/climate/ @home-assistant/core
 /tests/components/climate/ @home-assistant/core
+/homeassistant/components/climaveneta_ilife/ @tadiern
+/homeassistant/components/climaveneta_imxw/ @tadiern
+/tests/components/climaveneta_imxw/ @tadiern
 /homeassistant/components/cloud/ @home-assistant/cloud
 /tests/components/cloud/ @home-assistant/cloud
 /homeassistant/components/cloudflare/ @ludeeus @ctalkington
