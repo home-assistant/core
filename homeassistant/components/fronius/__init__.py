@@ -102,19 +102,9 @@ class FroniusSolarNet:
 
         # _create_solar_net_device uses data from self.logger_coordinator when available
         self.system_device_info = await self._create_solar_net_device()
-
-        _inverter_infos = await self._get_inverter_infos()
-        for inverter_info in _inverter_infos:
-            coordinator = FroniusInverterUpdateCoordinator(
-                hass=self.hass,
-                solar_net=self,
-                logger=_LOGGER,
-                name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.host}",
-                inverter_info=inverter_info,
-            )
-            await coordinator.async_config_entry_first_refresh()
-            self.inverter_coordinators.append(coordinator)
-
+        
+        await self._init_devices_inverter()
+            
         self.meter_coordinator = await self._init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
                 hass=self.hass,
@@ -187,7 +177,18 @@ class FroniusSolarNet:
         
     async def _init_devices_inverter(self) -> None:
         """Retrieve inverter information from host"""    
-         
+        _inverter_infos = await self._get_inverter_infos()
+        for inverter_info in _inverter_infos:
+            coordinator = FroniusInverterUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.host}",
+                inverter_info=inverter_info,
+            )
+            await coordinator.async_config_entry_first_refresh()
+            self.inverter_coordinators.append(coordinator)
+            
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
         try:
