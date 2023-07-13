@@ -5,7 +5,7 @@ from collections import UserDict
 from collections.abc import Coroutine, ValuesView
 import logging
 import time
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from urllib.parse import urlparse
 
 import attr
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
+    from .entity import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,25 +94,6 @@ DEVICE_INFO_TYPES = {
 }
 
 DEVICE_INFO_KEYS = set.union(*(itm for itm in DEVICE_INFO_TYPES.values()))
-
-
-class DeviceInfo(TypedDict, total=False):
-    """Entity device information for device registry."""
-
-    configuration_url: str | None
-    connections: set[tuple[str, str]]
-    default_manufacturer: str
-    default_model: str
-    default_name: str
-    entry_type: DeviceEntryType | None
-    hw_version: str | None
-    identifiers: set[tuple[str, str]]
-    manufacturer: str | None
-    model: str | None
-    name: str | None
-    suggested_area: str | None
-    sw_version: str | None
-    via_device: tuple[str, str]
 
 
 class DeviceEntryType(StrEnum):
