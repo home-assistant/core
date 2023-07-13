@@ -124,7 +124,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.0.3
 
 # homeassistant.components.python_script
-RestrictedPython==6.0
+RestrictedPython==6.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -252,7 +252,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.5
+aiohomekit==2.6.7
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -330,7 +330,7 @@ aioqsw==0.3.2
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2023.01.0
+aioridwell==2023.07.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -565,7 +565,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==2.12.0
+bthome-ble==2.12.1
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -864,7 +864,7 @@ gitterpy==0.1.7
 glances-api==0.4.3
 
 # homeassistant.components.goalzero
-goalzero==0.2.1
+goalzero==0.2.2
 
 # homeassistant.components.goodwe
 goodwe==0.2.31
@@ -1615,7 +1615,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.9.0
+pydaikin==2.10.5
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2139,7 +2139,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.29.2
+python-roborock==0.30.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2213,7 +2213,7 @@ pyvolumio==0.1.5
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.9.1
+pywemo==1.1.0
 
 # homeassistant.components.wilight
 pywilight==0.0.74
@@ -2267,7 +2267,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.1
+reolink-aio==0.7.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2759,10 +2759,10 @@ zigpy-xbee==0.18.1
 zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.11.2
+zigpy-znp==0.11.3
 
 # homeassistant.components.zha
-zigpy==0.56.1
+zigpy==0.56.2
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

@@ -16,7 +16,6 @@ from collections.abc import (
 )
 import concurrent.futures
 from contextlib import suppress
-from contextvars import ContextVar
 import datetime
 import enum
 import functools
@@ -156,8 +155,6 @@ MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
 
-_cv_hass: ContextVar[HomeAssistant] = ContextVar("hass")
-
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
 def split_entity_id(entity_id: str) -> tuple[str, str]:
@@ -200,16 +197,27 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+class _Hass(threading.local):
+    """Container which makes a HomeAssistant instance available to the event loop."""
+
+    hass: HomeAssistant | None = None
+
+
+_hass = _Hass()
+
+
 @callback
 def async_get_hass() -> HomeAssistant:
     """Return the HomeAssistant instance.
 
-    Raises LookupError if no HomeAssistant instance is available.
+    Raises HomeAssistantError when called from the wrong thread.
 
     This should be used where it's very cumbersome or downright impossible to pass
     hass to the code which needs it.
     """
-    return _cv_hass.get()
+    if not _hass.hass:
+        raise HomeAssistantError("async_get_hass called from the wrong thread")
+    return _hass.hass
 
 
 @enum.unique
@@ -293,9 +301,9 @@ class HomeAssistant:
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
     def __new__(cls) -> HomeAssistant:
-        """Set the _cv_hass context variable."""
+        """Set the _hass thread local data."""
         hass = super().__new__(cls)
-        _cv_hass.set(hass)
+        _hass.hass = hass
         return hass
 
     def __init__(self) -> None:
@@ -1760,7 +1768,7 @@ class ServiceRegistry:
         the context. Will return NONE if the service does not exist as there is
         other error handling when calling the service if it does not exist.
         """
-        if not (handler := self._services[domain][service]):
+        if not (handler := self._services[domain.lower()][service.lower()]):
             return SupportsResponse.NONE
         return handler.supports_response
 
