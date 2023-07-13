@@ -86,7 +86,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
                 "Disconnected during operation"
             ) from ex
         finally:
-            disconnected_futures.remove(disconnected_future)
+            disconnected_futures.discard(disconnected_future)
             disconnected_future.remove_done_callback(_on_disconnected)
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
