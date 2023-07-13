@@ -62,23 +62,23 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     async def _async_wrap_bluetooth_connected_operation(
         self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
-        disconnected_future = (
-            self._loop.create_future()  # pylint: disable=protected-access
+        loop = self._loop  # pylint: disable=protected-access
+        disconnected_futures = (
+            self._disconnected_futures  # pylint: disable=protected-access
         )
-        self._disconnected_futures.append(  # pylint: disable=protected-access
-            disconnected_future
-        )
-        task = asyncio.current_task()
+        disconnected_future = loop.create_future()
+        disconnected_futures.append(disconnected_future)
+        task = asyncio.current_task(loop)
         disconnected_future.add_done_callback(
             lambda _: task.cancel() if not task.done() else None  # type: ignore[union-attr]
         )
         try:
             return await func(self, *args, **kwargs)
         except asyncio.CancelledError as ex:
+            source_name = self._source_name  # pylint: disable=protected-access
+            ble_device = self._ble_device  # pylint: disable=protected-access
             raise BleakError(
-                f"{self._source_name}: "  # pylint: disable=protected-access
-                f"{self._ble_device.name} - "  # pylint: disable=protected-access
-                f" {self._ble_device.address}: "  # pylint: disable=protected-access
+                f"{source_name}: {ble_device.name} - {ble_device.address}: "
                 "Disconnected during operation"
             ) from ex
 
