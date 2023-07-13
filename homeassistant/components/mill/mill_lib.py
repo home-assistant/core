@@ -164,8 +164,6 @@ class Mill:
 
     async def _update_room(self, room):
         room_data = await self.request(f"rooms/{room.get('roomId')}/devices")
-        print("room data", room_data)
-        print("room", room)
 
         tasks = []
         for device in room.get("devices", []):
