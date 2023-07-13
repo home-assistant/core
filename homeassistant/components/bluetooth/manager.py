@@ -9,7 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
-from bleak_retry_connector import NO_RSSI_VALUE, RSSI_SWITCH_THRESHOLD, BleakSlotManager
+from bleak_retry_connector import RSSI_SWITCH_THRESHOLD, BleakSlotManager
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
@@ -108,6 +108,7 @@ class BluetoothManager:
         "_cancel_unavailable_tracking",
         "_cancel_logging_listener",
         "_advertisement_tracker",
+        "_advertisement_tracker_intervals",
         "_unavailable_callbacks",
         "_connectable_unavailable_callbacks",
         "_callback_index",
@@ -138,7 +139,9 @@ class BluetoothManager:
         self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
 
-        self._advertisement_tracker = AdvertisementTracker()
+        tracker = AdvertisementTracker()
+        self._advertisement_tracker = tracker
+        self._advertisement_tracker_intervals = tracker.intervals
 
         self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
@@ -323,7 +326,7 @@ class BluetoothManager:
         connectable_history = self._connectable_history
         all_history = self._all_history
         tracker = self._advertisement_tracker
-        intervals = tracker.intervals
+        intervals = self._advertisement_tracker_intervals
 
         for connectable in (True, False):
             if connectable:
@@ -385,7 +388,7 @@ class BluetoothManager:
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
-            stale_seconds := self._advertisement_tracker.intervals.get(
+            stale_seconds := self._advertisement_tracker_intervals.get(
                 new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
             )
         ):
@@ -404,9 +407,7 @@ class BluetoothManager:
                     stale_seconds,
                 )
             return False
-        if (new.rssi or NO_RSSI_VALUE) - RSSI_SWITCH_THRESHOLD > (
-            old.rssi or NO_RSSI_VALUE
-        ):
+        if new.rssi - RSSI_SWITCH_THRESHOLD > old.rssi:
             # If new advertisement is RSSI_SWITCH_THRESHOLD more,
             # the new one is preferred.
             if self._debug:
