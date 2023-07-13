@@ -253,6 +253,12 @@ class FroniusSolarNet:
                     unique_id=unique_id,
                 )
             )
+            _LOGGER.debug(
+                "Inverter found at %s (Device ID: %s, UID: %s)",
+                self.host,
+                solar_net_id,
+                unique_id,
+            )
         return inverter_infos
         
     @callback
