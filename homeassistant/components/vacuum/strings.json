@@ -37,15 +37,15 @@
   },
   "services": {
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Starts a new cleaning task."
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Stops the current cleaning task and returns to its dock."
     },
     "stop": {
-      "name": "Stop",
+      "name": "[%key:common::action::stop%]",
       "description": "Stops the current cleaning task."
     },
     "locate": {
@@ -57,11 +57,11 @@
       "description": "Starts, pauses, or resumes the cleaning task."
     },
     "start": {
-      "name": "Start",
+      "name": "[%key:common::action::start%]",
       "description": "Starts or resumes the cleaning task."
     },
     "pause": {
-      "name": "Pause",
+      "name": "[%key:common::action::pause%]",
       "description": "Pauses the cleaning task."
     },
     "return_to_base": {

@@ -70,8 +70,8 @@
       "button_quintuple_press": "\"{subtype}\" quintuple clicked"
     },
     "trigger_subtype": {
-      "turn_on": "Turn on",
-      "turn_off": "Turn off",
+      "turn_on": "[%key:common::action::turn_on%]",
+      "turn_off": "[%key:common::action::turn_off%]",
       "button_1": "First button",
       "button_2": "Second button",
       "button_3": "Third button",
@@ -188,7 +188,7 @@
       }
     },
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads MQTT entities from the YAML-configuration."
     }
   }

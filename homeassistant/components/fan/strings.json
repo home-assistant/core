@@ -75,7 +75,7 @@
       }
     },
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Turns fan on.",
       "fields": {
         "percentage": {
@@ -89,7 +89,7 @@
       }
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Turns fan off."
     },
     "oscillate": {
@@ -103,7 +103,7 @@
       }
     },
     "toggle": {
-      "name": "Toggle",
+      "name": "[%key:common::action::toggle%]",
       "description": "Toggles the fan on/off."
     },
     "set_direction": {

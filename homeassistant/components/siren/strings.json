@@ -16,7 +16,7 @@
   },
   "services": {
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Turns the siren on.",
       "fields": {
         "tone": {
@@ -34,11 +34,11 @@
       }
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Turns the siren off."
     },
     "toggle": {
-      "name": "Toggle",
+      "name": "[%key:common::action::toggle%]",
       "description": "Toggles the siren on/off."
     }
   }

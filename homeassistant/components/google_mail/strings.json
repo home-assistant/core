@@ -44,7 +44,7 @@
       "description": "Sets vacation responder settings for Google Mail.",
       "fields": {
         "enabled": {
-          "name": "Enabled",
+          "name": "[%key:common::state::enabled%]",
           "description": "Turn this off to end vacation responses."
         },
         "title": {

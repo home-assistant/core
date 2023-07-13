@@ -52,11 +52,11 @@
       }
     },
     "disable": {
-      "name": "Disable",
+      "name": "[%key:common::action::disable%]",
       "description": "Stops the recording of events and state changes."
     },
     "enable": {
-      "name": "Enable",
+      "name": "[%key:common::action::enable%]",
       "description": "Starts the recording of events and state changes."
     }
   }

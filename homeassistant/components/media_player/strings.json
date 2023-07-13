@@ -162,15 +162,15 @@
   },
   "services": {
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Turns on the power of the media player."
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Turns off the power of the media player."
     },
     "toggle": {
-      "name": "Toggle",
+      "name": "[%key:common::action::toggle%]",
       "description": "Toggles a media player on/off."
     },
     "volume_up": {
@@ -210,11 +210,11 @@
       "description": "Starts playing."
     },
     "media_pause": {
-      "name": "Pause",
+      "name": "[%key:common::action::pause%]",
       "description": "Pauses."
     },
     "media_stop": {
-      "name": "Stop",
+      "name": "[%key:common::action::stop%]",
       "description": "Stops playing."
     },
     "media_next_track": {
