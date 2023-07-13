@@ -18,12 +18,5 @@
         }
       }
     }
-  },
-  "entity": {
-    "sensor": {
-      "people_in_space": {
-        "name": "People in space"
-      }
-    }
   }
 }

@@ -41,7 +41,7 @@ class IssSensor(CoordinatorEntity[DataUpdateCoordinator[IssData]], SensorEntity)
     """Implementation of the ISS sensor."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "people_in_space"
+    _attr_name = None
 
     def __init__(
         self,
@@ -51,7 +51,7 @@ class IssSensor(CoordinatorEntity[DataUpdateCoordinator[IssData]], SensorEntity)
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{DOMAIN}-people-in-space"
+        self._attr_unique_id = f"{DOMAIN}_people"
         self._show_on_map = show
         self._attr_native_unit_of_measurement = "people in space"
         self._attr_device_info = DeviceInfo(
