@@ -54,6 +54,11 @@ async def load_homeassistant(hass) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
 
 
+@pytest.fixture(autouse=True)
+def mock_tts(mock_tts_cache_dir):
+    """Auto mock the tts cache."""
+
+
 @pytest.fixture
 def mock_config_entry(hass) -> MockConfigEntry:
     """Return the default mocked config entry."""
