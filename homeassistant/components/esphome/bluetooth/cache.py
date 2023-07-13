@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from bleak.backends.service import BleakGATTServiceCollection
 from lru import LRU  # pylint: disable=no-name-in-module
 
-STORAGE_VERSION = 1
 MAX_CACHED_SERVICES = 128
 
 

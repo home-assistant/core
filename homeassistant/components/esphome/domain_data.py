@@ -15,7 +15,6 @@ from .const import DOMAIN
 from .entry_data import ESPHomeStorage, RuntimeEntryData
 
 STORAGE_VERSION = 1
-MAX_CACHED_SERVICES = 128
 
 
 @dataclass(slots=True)
