@@ -158,6 +158,7 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         self._available = heater.available
         self._attr_extra_state_attributes = {
             "open_window": heater.open_window,
+            "controlled_by_tibber": heater.tibber_control,
         }
         self._attr_extra_state_attributes["room"] = heater.room_name
         self._attr_extra_state_attributes["avg_room_temp"] = heater.room_avg_temp

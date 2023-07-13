@@ -178,15 +178,15 @@ class Mill:
 
         if device_type in ("Heaters", "Sockets"):
             _id = device.get("deviceId")
-            device_stats = await self.request(
-                f"devices/{_id}/statistics",
-                {"period": "monthly", "year": now.year, "month": 1, "day": 1},
-            )
             heater: Heater = self.heaters.get(_id, Heater() if device_type == "Heaters" else Socket())
             if heater.last_updated and (
                 now - heater.last_updated < dt.timedelta(seconds=15)
             ):
                 return
+            device_stats = await self.request(
+                f"devices/{_id}/statistics",
+                {"period": "monthly", "year": now.year, "month": 1, "day": 1},
+            )
             heater.name = device.get("customName")
             heater.room_name = device.get("roomName")
             heater.device_id = _id
@@ -201,6 +201,7 @@ class Mill:
             heater.open_window = window_states.get(
                 device.get("lastMetrics").get("openWindowsStatus")
             )
+            heater.tibber_control = room_data.get("controlSource", {}).get("tibber") == 1
             heater.day_consumption = device.get("energyUsageForCurrentDay", 0) / 1000.0
             heater.year_consumption = (
                 device_stats.get("deviceInfo", {}).get("totalPower", 0) / 1000.0
@@ -310,6 +311,7 @@ class Heater(MillDevice):
     independent_device: bool | None = True
     open_window: str | None = None
     is_heating: bool | None = None
+    tibber_control: bool | None = None
     day_consumption: float | None = None
     year_consumption: float | None = None
     room_name: str | None = None
@@ -341,7 +343,7 @@ class Sensor(MillDevice, _SensorAttr):
         return cls(
             name=response.get("name"),
             device_id=response.get("id"),
-            available=response.get("deviceStatus") == 0,
+            available=response.get("isRoomOnline"),
             current_temp=response.get("averageTemperature"),
             humidity=response.get("roomHumidity"),
             tvoc=response.get("roomTvoc"),
