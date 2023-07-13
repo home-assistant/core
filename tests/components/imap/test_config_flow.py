@@ -401,9 +401,9 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("advanced_options", "assert_result"),
     [
-        ({"max_message_size": "8192"}, data_entry_flow.FlowResultType.CREATE_ENTRY),
-        ({"max_message_size": "1024"}, data_entry_flow.FlowResultType.FORM),
-        ({"max_message_size": "65536"}, data_entry_flow.FlowResultType.FORM),
+        ({"max_message_size": 8192}, data_entry_flow.FlowResultType.CREATE_ENTRY),
+        ({"max_message_size": 1024}, data_entry_flow.FlowResultType.FORM),
+        ({"max_message_size": 65536}, data_entry_flow.FlowResultType.FORM),
         (
             {"custom_event_data_template": "{{ subject }}"},
             data_entry_flow.FlowResultType.CREATE_ENTRY,
@@ -463,7 +463,7 @@ async def test_advanced_options_form(
             else:
                 # Check if entry was updated
                 for key, value in new_config.items():
-                    assert str(entry.data[key]) == str(value)
+                    assert entry.data[key] == value
     except vol.MultipleInvalid:
         # Check if form was expected with these options
         assert assert_result == data_entry_flow.FlowResultType.FORM
