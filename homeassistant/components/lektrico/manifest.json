@@ -1,7 +1,7 @@
 {
   "domain": "lektrico",
   "name": "Lektrico Charging Station",
-  "codeowners": ["@mtarjoianu"],
+  "codeowners": ["@lektrico"],
   "config_flow": true,
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/lektrico",

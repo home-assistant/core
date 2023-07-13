@@ -675,8 +675,8 @@ build.json @home-assistant/supervisor
 /tests/components/ld2410_ble/ @930913
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
-/homeassistant/components/lektrico/ @mtarjoianu
-/tests/components/lektrico/ @mtarjoianu
+/homeassistant/components/lektrico/ @lektrico
+/tests/components/lektrico/ @lektrico
 /homeassistant/components/lg_netcast/ @Drafteed
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
