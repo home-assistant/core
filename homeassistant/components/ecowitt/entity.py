@@ -21,11 +21,12 @@ class EcowittEntity(Entity):
         self.ecowitt: EcoWittSensor = sensor
 
         self._attr_unique_id = f"{sensor.station.key}-{sensor.key}"
+        device_name = sensor.station.station.split("_")[0]
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, sensor.station.key),
             },
-            name=sensor.station.station,
+            name=device_name,
             model=sensor.station.model,
             sw_version=sensor.station.version,
         )
