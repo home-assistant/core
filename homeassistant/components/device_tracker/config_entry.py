@@ -365,7 +365,7 @@ class ScannerEntity(BaseTrackerEntity):
         assert self.mac_address is not None
 
         return dr.async_get(self.hass).async_get_device(
-            set(), {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
         )
 
     async def async_internal_added_to_hass(self) -> None:

@@ -16,5 +16,95 @@
       "title": "Networking error: subscriptions failed",
       "description": "Falling back to polling, functionality may be limited.\n\nSonos device at {device_ip} cannot reach Home Assistant at {listener_address}.\n\nSee our [documentation]({sub_fail_url}) for more information on how to solve this issue."
     }
+  },
+  "services": {
+    "snapshot": {
+      "name": "Snapshot",
+      "description": "Takes a snapshot of the media player.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will be snapshot."
+        },
+        "with_group": {
+          "name": "With group",
+          "description": "True or False. Also snapshot the group layout."
+        }
+      }
+    },
+    "restore": {
+      "name": "Restore",
+      "description": "Restores a snapshot of the media player.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will be restored."
+        },
+        "with_group": {
+          "name": "[%key:component::sonos::services::snapshot::fields::with_group::name%]",
+          "description": "True or False. Also restore the group layout."
+        }
+      }
+    },
+    "set_sleep_timer": {
+      "name": "Set timer",
+      "description": "Sets a Sonos timer.",
+      "fields": {
+        "sleep_time": {
+          "name": "Sleep Time",
+          "description": "Number of seconds to set the timer."
+        }
+      }
+    },
+    "clear_sleep_timer": {
+      "name": "Clear timer",
+      "description": "Clears a Sonos timer."
+    },
+    "play_queue": {
+      "name": "Play queue",
+      "description": "Start playing the queue from the first item.",
+      "fields": {
+        "queue_position": {
+          "name": "Queue position",
+          "description": "Position of the song in the queue to start playing from."
+        }
+      }
+    },
+    "remove_from_queue": {
+      "name": "Remove from queue",
+      "description": "Removes an item from the queue.",
+      "fields": {
+        "queue_position": {
+          "name": "[%key:component::sonos::services::play_queue::fields::queue_position::name%]",
+          "description": "Position in the queue to remove."
+        }
+      }
+    },
+    "update_alarm": {
+      "name": "Update alarm",
+      "description": "Updates an alarm with new time and volume settings.",
+      "fields": {
+        "alarm_id": {
+          "name": "Alarm ID",
+          "description": "ID for the alarm to be updated."
+        },
+        "time": {
+          "name": "Time",
+          "description": "Set time for the alarm."
+        },
+        "volume": {
+          "name": "Volume",
+          "description": "Set alarm volume level."
+        },
+        "enabled": {
+          "name": "Alarm enabled",
+          "description": "Enable or disable the alarm."
+        },
+        "include_linked_zones": {
+          "name": "Include linked zones",
+          "description": "Enable or disable including grouped rooms."
+        }
+      }
+    }
   }
 }
