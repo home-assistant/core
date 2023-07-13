@@ -60,7 +60,7 @@ def run():
     update_keys = {}
 
     for key, value in flattened_translations.items():
-        if merged[value] == key:
+        if merged[value] == key or key.startswith("common::"):
             continue
 
         key_integration = key.split("::")[1]
