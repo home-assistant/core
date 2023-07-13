@@ -666,6 +666,12 @@ async def test_brightness_from_rgb_controlling_scale(
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("rgb_color") == (255, 128, 64)
 
+    # Test zero rgb is ignored
+    async_fire_mqtt_message(hass, "test_scale_rgb/rgb/status", "0,0,0")
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+
     mqtt_mock.async_publish.reset_mock()
     await common.async_turn_on(hass, "light.test", brightness=191)
     await hass.async_block_till_done()
@@ -2416,9 +2422,7 @@ async def test_discovery_ignores_extra_keys(
     """Test discovery ignores extra keys that are not blocked."""
     await mqtt_mock_entry()
     # inserted `platform` key should be ignored
-    data = (
-        '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
-    )
+    data = '{ "name": "Beer",  "platform": "mqtt",  "command_topic": "test_topic"}'
     async_fire_mqtt_message(hass, "homeassistant/light/bla/config", data)
     await hass.async_block_till_done()
     state = hass.states.get("light.beer")

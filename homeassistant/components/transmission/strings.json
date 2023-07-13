@@ -52,5 +52,67 @@
         }
       }
     }
+  },
+  "services": {
+    "add_torrent": {
+      "name": "Add torrent",
+      "description": "Adds a new torrent to download (URL, magnet link or Base64 encoded).",
+      "fields": {
+        "entry_id": {
+          "name": "Transmission entry",
+          "description": "Config entry id."
+        },
+        "torrent": {
+          "name": "Torrent",
+          "description": "URL, magnet link or Base64 encoded file."
+        }
+      }
+    },
+    "remove_torrent": {
+      "name": "Remove torrent",
+      "description": "Removes a torrent.",
+      "fields": {
+        "entry_id": {
+          "name": "Transmission entry",
+          "description": "Config entry id."
+        },
+        "id": {
+          "name": "ID",
+          "description": "ID of a torrent."
+        },
+        "delete_data": {
+          "name": "Delete data",
+          "description": "Delete torrent data."
+        }
+      }
+    },
+    "start_torrent": {
+      "name": "Start torrent",
+      "description": "Starts a torrent.",
+      "fields": {
+        "entry_id": {
+          "name": "Transmission entry",
+          "description": "Config entry id."
+        },
+        "id": {
+          "name": "ID",
+          "description": "ID of a torrent."
+        }
+      }
+    },
+    "stop_torrent": {
+      "name": "Stop torrent",
+      "description": "Stops a torrent.",
+      "fields": {
+        "entry_id": {
+          "name": "Transmission entry",
+          "description": "Config entry id."
+        },
+        "id": {
+          "name": "ID",
+          "description": "ID of a torrent."
+        }
+      }
+    }
   }
 }

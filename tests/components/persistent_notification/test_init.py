@@ -1,5 +1,5 @@
 """The tests for the persistent notification component."""
-import pytest
+
 
 import homeassistant.components.persistent_notification as pn
 from homeassistant.components.websocket_api.const import TYPE_RESULT
@@ -7,12 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture(autouse=True)
-async def setup_integration(hass):
-    """Set up persistent notification integration."""
-    assert await async_setup_component(hass, pn.DOMAIN, {})
 
 
 async def test_create(hass: HomeAssistant) -> None:
@@ -60,7 +54,27 @@ async def test_dismiss_notification(hass: HomeAssistant) -> None:
     pn.async_create(hass, "test", notification_id="Beer 2")
 
     assert len(notifications) == 1
+    pn.async_dismiss(hass, notification_id="Does Not Exist")
+
+    assert len(notifications) == 1
+
     pn.async_dismiss(hass, notification_id="Beer 2")
+
+    assert len(notifications) == 0
+
+
+async def test_dismiss_all_notifications(hass: HomeAssistant) -> None:
+    """Ensure removal of all notifications."""
+    notifications = pn._async_get_or_create_notifications(hass)
+    assert len(notifications) == 0
+
+    pn.async_create(hass, "test", notification_id="Beer 2")
+    pn.async_create(hass, "test", notification_id="Beer 3")
+    pn.async_create(hass, "test", notification_id="Beer 4")
+    pn.async_create(hass, "test", notification_id="Beer 5")
+
+    assert len(notifications) == 4
+    pn.async_dismiss_all(hass)
 
     assert len(notifications) == 0
 
@@ -171,6 +185,37 @@ async def test_manual_notification_id_round_trip(hass: HomeAssistant) -> None:
         pn.DOMAIN,
         "dismiss",
         {"notification_id": "synology_diskstation_hub_notification"},
+        blocking=True,
+    )
+
+    assert len(notifications) == 0
+
+
+async def test_manual_dismiss_all(hass: HomeAssistant) -> None:
+    """Test the dismiss all service."""
+    notifications = pn._async_get_or_create_notifications(hass)
+    assert len(notifications) == 0
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "create",
+        {"notification_id": "Beer 1", "message": "test"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "create",
+        {"notification_id": "Beer 2", "message": "test 2"},
+        blocking=True,
+    )
+
+    assert len(notifications) == 2
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "dismiss_all",
+        None,
         blocking=True,
     )
 

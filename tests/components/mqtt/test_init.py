@@ -2096,7 +2096,6 @@ async def test_setup_manual_mqtt_with_platform_key(
 
 
 @pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {"light": {"name": "test"}}}])
-@pytest.mark.xfail(reason="Invalid config for [mqtt]: required key not provided")
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_invalid_config(
     hass: HomeAssistant,

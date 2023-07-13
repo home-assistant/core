@@ -2,6 +2,7 @@
 from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+from pytest_unordered import unordered
 import voluptuous_serialize
 
 from homeassistant.components import automation
@@ -15,7 +16,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import get_device
 
-from tests.common import assert_lists_same, async_get_device_automations
+from tests.common import async_get_device_automations
 
 
 async def test_get_triggers_module_device(
@@ -44,7 +45,7 @@ async def test_get_triggers_module_device(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_non_module_device(

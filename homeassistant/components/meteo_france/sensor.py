@@ -271,11 +271,10 @@ class MeteoFranceSensor(CoordinatorEntity[DataUpdateCoordinator[_DataT]], Sensor
                 value = data[0][path[1]]
 
         # General case
+        elif len(path) == 3:
+            value = data[path[1]][path[2]]
         else:
-            if len(path) == 3:
-                value = data[path[1]][path[2]]
-            else:
-                value = data[path[1]]
+            value = data[path[1]]
 
         if self.entity_description.key in ("wind_speed", "wind_gust"):
             # convert API wind speed from m/s to km/h

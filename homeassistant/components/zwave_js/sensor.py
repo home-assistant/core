@@ -48,7 +48,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import UNDEFINED, StateType
 
 from .const import (
     ATTR_METER_TYPE,
@@ -610,7 +610,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 
         # Entity class attributes
         self._attr_force_update = True
-        if not entity_description.name:
+        if not entity_description.name or entity_description.name is UNDEFINED:
             self._attr_name = self.generate_name(include_value_name=True)
 
     @property
@@ -769,8 +769,9 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
-        if (device_class := super(ZwaveSensor, self).device_class) is not None:
-            return device_class
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        if (device_class := ZwaveSensor.device_class.fget(self)) is not None:  # type: ignore[attr-defined]
+            return device_class  # type: ignore[no-any-return]
         if (
             self._primary_value.configuration_value_type
             == ConfigurationValueType.ENUMERATED

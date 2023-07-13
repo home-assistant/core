@@ -52,5 +52,21 @@
         "yearly": "Yearly"
       }
     }
+  },
+  "services": {
+    "reset": {
+      "name": "Reset",
+      "description": "Resets all counters of a utility meter."
+    },
+    "calibrate": {
+      "name": "Calibrate",
+      "description": "Calibrates a utility meter sensor.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "Value to which set the meter."
+        }
+      }
+    }
   }
 }

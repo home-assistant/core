@@ -53,7 +53,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
-        serial_number: str = self.wemo.serialnumber
+        serial_number: str = self.wemo.serial_number
         if suffix := self.unique_id_suffix:
             return f"{serial_number}_{suffix}"
         return serial_number

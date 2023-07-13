@@ -72,6 +72,10 @@ from .const import (
 class TomorrowioSensorEntityDescription(SensorEntityDescription):
     """Describes a Tomorrow.io sensor entity."""
 
+    # TomorrowioSensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     unit_imperial: str | None = None
     unit_metric: str | None = None
     multiplication_factor: Callable[[float], float] | float | None = None

@@ -29,7 +29,7 @@
       },
       "zone_sleep": {
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "30_min": "30 Minutes",
           "60_min": "60 Minutes",
           "90_min": "90 Minutes",

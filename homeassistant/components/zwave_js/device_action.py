@@ -101,7 +101,7 @@ RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_SET_CONFIG_PARAMETER,
-        vol.Required(ATTR_ENDPOINT): vol.Coerce(int),
+        vol.Required(ATTR_ENDPOINT, default=0): vol.Coerce(int),
         vol.Required(ATTR_CONFIG_PARAMETER): vol.Any(int, str),
         vol.Required(ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(None, int, str),
         vol.Required(ATTR_VALUE): vol.Coerce(int),

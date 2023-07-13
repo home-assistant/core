@@ -19,7 +19,10 @@ from homeassistant.components.assist_pipeline import (
     async_pipeline_from_audio_stream,
     select as pipeline_select,
 )
-from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
+from homeassistant.components.assist_pipeline.vad import (
+    VadSensitivity,
+    VoiceCommandSegmenter,
+)
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
 
@@ -251,9 +254,9 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 chunk = await self.queue.get()
 
     async def _iterate_packets_with_vad(
-        self, pipeline_timeout: float
+        self, pipeline_timeout: float, silence_seconds: float
     ) -> Callable[[], AsyncIterable[bytes]] | None:
-        segmenter = VoiceCommandSegmenter()
+        segmenter = VoiceCommandSegmenter(silence_seconds=silence_seconds)
         chunk_buffer: deque[bytes] = deque(maxlen=100)
         try:
             async with async_timeout.timeout(pipeline_timeout):
@@ -305,7 +308,16 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         )
 
         if use_vad:
-            stt_stream = await self._iterate_packets_with_vad(pipeline_timeout)
+            stt_stream = await self._iterate_packets_with_vad(
+                pipeline_timeout,
+                silence_seconds=VadSensitivity.to_seconds(
+                    pipeline_select.get_vad_sensitivity(
+                        self.hass,
+                        DOMAIN,
+                        self.device_info.mac_address,
+                    )
+                ),
+            )
             # Error or timeout occurred and was handled already
             if stt_stream is None:
                 return

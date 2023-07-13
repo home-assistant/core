@@ -180,7 +180,7 @@ async def test_discovery_removal_scene(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered scene."""
-    data = '{ "name": "test",' '  "command_topic": "test_topic" }'
+    data = '{ "name": "test",  "command_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, scene.DOMAIN, data)
 
 
@@ -213,7 +213,7 @@ async def test_discovery_update_unchanged_scene(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered scene."""
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer",  "command_topic": "test_topic" }'
     with patch(
         "homeassistant.components.mqtt.scene.MqttScene.discovery_update"
     ) as discovery_update:
@@ -235,7 +235,7 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk",  "command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, scene.DOMAIN, data1, data2
     )

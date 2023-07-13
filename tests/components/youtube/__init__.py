@@ -59,7 +59,13 @@ class MockSubscriptions:
         """Initialize mock subscriptions."""
         self._fixture = fixture
 
-    def list(self, part: str, mine: bool, maxResults: int | None = None) -> MockRequest:
+    def list(
+        self,
+        part: str,
+        mine: bool,
+        maxResults: int | None = None,
+        pageToken: str | None = None,
+    ) -> MockRequest:
         """Return a fixture."""
         return MockRequest(fixture=self._fixture)
 

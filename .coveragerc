@@ -90,6 +90,8 @@ omit =
     homeassistant/components/atome/*
     homeassistant/components/aurora/__init__.py
     homeassistant/components/aurora/binary_sensor.py
+    homeassistant/components/aurora/coordinator.py
+    homeassistant/components/aurora/entity.py
     homeassistant/components/aurora/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
@@ -122,7 +124,6 @@ omit =
     homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bmw_connected_drive/__init__.py
     homeassistant/components/bmw_connected_drive/binary_sensor.py
-    homeassistant/components/bmw_connected_drive/button.py
     homeassistant/components/bmw_connected_drive/coordinator.py
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
@@ -181,7 +182,6 @@ omit =
     homeassistant/components/crownstone/listeners.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
-    homeassistant/components/daikin/__init__.py
     homeassistant/components/daikin/climate.py
     homeassistant/components/daikin/sensor.py
     homeassistant/components/daikin/switch.py
@@ -304,23 +304,10 @@ omit =
     homeassistant/components/escea/__init__.py
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
-    homeassistant/components/esphome/__init__.py
-    homeassistant/components/esphome/binary_sensor.py
     homeassistant/components/esphome/bluetooth/*
-    homeassistant/components/esphome/button.py
-    homeassistant/components/esphome/camera.py
-    homeassistant/components/esphome/climate.py
-    homeassistant/components/esphome/cover.py
     homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
-    homeassistant/components/esphome/fan.py
-    homeassistant/components/esphome/light.py
-    homeassistant/components/esphome/lock.py
-    homeassistant/components/esphome/media_player.py
-    homeassistant/components/esphome/number.py
-    homeassistant/components/esphome/select.py
-    homeassistant/components/esphome/sensor.py
-    homeassistant/components/esphome/switch.py
+    homeassistant/components/esphome/manager.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/eufylife_ble/__init__.py
@@ -334,6 +321,7 @@ omit =
     homeassistant/components/ezviz/coordinator.py
     homeassistant/components/ezviz/number.py
     homeassistant/components/ezviz/entity.py
+    homeassistant/components/ezviz/select.py
     homeassistant/components/ezviz/sensor.py
     homeassistant/components/ezviz/switch.py
     homeassistant/components/ezviz/update.py
@@ -366,10 +354,13 @@ omit =
     homeassistant/components/fitbit/*
     homeassistant/components/fivem/__init__.py
     homeassistant/components/fivem/binary_sensor.py
+    homeassistant/components/fivem/coordinator.py
+    homeassistant/components/fivem/entity.py
     homeassistant/components/fivem/sensor.py
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fjaraskupan/__init__.py
     homeassistant/components/fjaraskupan/binary_sensor.py
+    homeassistant/components/fjaraskupan/coordinator.py
     homeassistant/components/fjaraskupan/fan.py
     homeassistant/components/fjaraskupan/light.py
     homeassistant/components/fjaraskupan/number.py
@@ -414,6 +405,10 @@ omit =
     homeassistant/components/garages_amsterdam/__init__.py
     homeassistant/components/garages_amsterdam/binary_sensor.py
     homeassistant/components/garages_amsterdam/sensor.py
+    homeassistant/components/gardena_bluetooth/__init__.py
+    homeassistant/components/gardena_bluetooth/const.py
+    homeassistant/components/gardena_bluetooth/coordinator.py
+    homeassistant/components/gardena_bluetooth/switch.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
     homeassistant/components/geocaching/__init__.py
@@ -660,6 +655,7 @@ omit =
     homeassistant/components/lookin/light.py
     homeassistant/components/lookin/media_player.py
     homeassistant/components/lookin/sensor.py
+    homeassistant/components/loqed/sensor.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/sensor.py
     homeassistant/components/lupusec/*
@@ -764,7 +760,6 @@ omit =
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
-    homeassistant/components/nest/legacy/*
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/button.py
@@ -867,6 +862,9 @@ omit =
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather_update_coordinator.py
     homeassistant/components/opnsense/__init__.py
+    homeassistant/components/opower/__init__.py
+    homeassistant/components/opower/coordinator.py
+    homeassistant/components/opower/sensor.py
     homeassistant/components/opnsense/device_tracker.py
     homeassistant/components/opple/light.py
     homeassistant/components/oru/*
@@ -949,6 +947,8 @@ omit =
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/__init__.py
     homeassistant/components/qbittorrent/sensor.py
+    homeassistant/components/qnap/__init__.py
+    homeassistant/components/qnap/coordinator.py
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
@@ -996,6 +996,7 @@ omit =
     homeassistant/components/reolink/light.py
     homeassistant/components/reolink/number.py
     homeassistant/components/reolink/select.py
+    homeassistant/components/reolink/sensor.py
     homeassistant/components/reolink/siren.py
     homeassistant/components/reolink/switch.py
     homeassistant/components/reolink/update.py
@@ -1053,12 +1054,6 @@ omit =
     homeassistant/components/sense/__init__.py
     homeassistant/components/sense/binary_sensor.py
     homeassistant/components/sense/sensor.py
-    homeassistant/components/senseme/__init__.py
-    homeassistant/components/senseme/discovery.py
-    homeassistant/components/senseme/entity.py
-    homeassistant/components/senseme/fan.py
-    homeassistant/components/senseme/light.py
-    homeassistant/components/senseme/switch.py
     homeassistant/components/senz/__init__.py
     homeassistant/components/senz/api.py
     homeassistant/components/senz/climate.py

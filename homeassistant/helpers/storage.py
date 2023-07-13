@@ -34,11 +34,11 @@ _T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 async def async_migrator(
     hass: HomeAssistant,
     old_path: str,
-    store: Store,
+    store: Store[_T],
     *,
     old_conf_load_func: Callable | None = None,
     old_conf_migrate_func: Callable | None = None,
-) -> Any:
+) -> _T | None:
     """Migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)

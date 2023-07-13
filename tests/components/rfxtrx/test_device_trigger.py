@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, NamedTuple
 
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -16,7 +17,6 @@ from .conftest import create_rfx_test_cfg
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -113,7 +113,7 @@ async def test_get_triggers(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
     triggers = [value for value in triggers if value["domain"] == "rfxtrx"]
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 @pytest.mark.parametrize(
