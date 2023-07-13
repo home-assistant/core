@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from getpass import getuser
+import logging
 import os
 import platform
 from typing import Any
@@ -11,15 +12,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_virtual_env
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
+    is_hassio = (
+        "hassio" in hass.config.components and hass.components.hassio.is_hassio()
+    )
+
     info_object = {
         "installation_type": "Unknown",
         "version": current_version,
         "dev": "dev" in current_version,
-        "hassio": hass.components.hassio.is_hassio(),
+        "hassio": is_hassio,
         "virtualenv": is_virtual_env(),
         "python_version": platform.python_version(),
         "docker": False,
@@ -50,8 +57,11 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         info_object["installation_type"] = "Home Assistant Core"
 
     # Enrich with Supervisor information
-    if hass.components.hassio.is_hassio():
-        info = hass.components.hassio.get_info()
+    if is_hassio:
+        if not (info := hass.components.hassio.get_info()):
+            _LOGGER.warning("No Home Assistant Supervisor info available")
+            return info_object
+
         host = hass.components.hassio.get_host_info()
 
         info_object["supervisor"] = info.get("supervisor")
