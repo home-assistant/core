@@ -28,15 +28,18 @@ async def test_get_info(
 ) -> None:
     """Test async_get_info."""
 
-    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text=DATASET_CH16.hex())
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset",
+        return_value=python_otbr_api.ActiveDataSet(channel=16),
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16):
+        await websocket_client.send_json_auto_id({"type": "otbr/info"})
+        msg = await websocket_client.receive_json()
 
-    await websocket_client.send_json_auto_id({"type": "otbr/info"})
-
-    msg = await websocket_client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
         "url": BASE_URL,
         "active_dataset_tlvs": DATASET_CH16.hex().lower(),
+        "channel": 16,
     }
 
 
@@ -63,7 +66,7 @@ async def test_get_info_fetch_fails(
 ) -> None:
     """Test async_get_info."""
     with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs",
+        "python_otbr_api.OTBR.get_active_dataset",
         side_effect=python_otbr_api.OTBRError,
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/info"})
