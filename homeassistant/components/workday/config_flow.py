@@ -3,8 +3,12 @@ from __future__ import annotations
 
 from typing import Any
 
-import holidays
-from holidays import HolidayBase, list_supported_countries
+from holidays import (
+    HolidayBase,
+    country_holidays,
+    list_localized_countries,
+    list_supported_countries,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -32,6 +36,7 @@ from .const import (
     CONF_ADD_HOLIDAYS,
     CONF_COUNTRY,
     CONF_EXCLUDES,
+    CONF_LANGUAGE,
     CONF_OFFSET,
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
@@ -67,7 +72,32 @@ def add_province_to_schema(
         ),
     }
 
-    return vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
+    return vol.Schema({**add_schema, **schema.schema})
+
+
+def add_language_to_schema(
+    schema: vol.Schema,
+    country: str,
+) -> vol.Schema:
+    """Update schema with a language (one of available localizations)."""
+    all_countries = list_localized_countries()
+    if not all_countries.get(country):
+        return schema
+
+    language_options = [NONE_SENTINEL, *all_countries[country]]
+    add_schema = {
+        vol.Optional(
+            CONF_LANGUAGE, default=country_holidays(country).default_language
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=language_options,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_LANGUAGE,
+            )
+        ),
+    }
+
+    return vol.Schema({**add_schema, **schema.schema})
 
 
 def validate_custom_dates(user_input: dict[str, Any]) -> None:
@@ -77,12 +107,14 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
-    cls: HolidayBase = getattr(holidays, user_input[CONF_COUNTRY])
     year: int = dt_util.now().year
 
-    obj_holidays = cls(
-        subdiv=user_input.get(CONF_PROVINCE), years=year, language=cls.default_language
-    )  # type: ignore[operator]
+    obj_holidays: HolidayBase = country_holidays(
+        country=user_input[CONF_COUNTRY],
+        subdiv=user_input.get(CONF_PROVINCE),
+        language=user_input.get(CONF_LANGUAGE),
+        years=year,
+    )
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
         if dt_util.parse_date(remove_date) is None:
@@ -209,6 +241,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             combined_input: dict[str, Any] = {**self.data, **user_input}
             if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
                 combined_input[CONF_PROVINCE] = None
+            if combined_input.get(CONF_LANGUAGE, NONE_SENTINEL) == NONE_SENTINEL:
+                combined_input[CONF_LANGUAGE] = None
 
             try:
                 await self.hass.async_add_executor_job(
@@ -242,13 +276,18 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=combined_input,
                 )
 
-        schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.data[CONF_COUNTRY]
+        country = self.data[CONF_COUNTRY]
+
+        # Stack language and province fields.
+        schema: vol.Schema = await self.hass.async_add_executor_job(
+            add_language_to_schema, DATA_SCHEMA_OPT, country
         )
-        new_schema = self.add_suggested_values_to_schema(schema, user_input)
+        schema = await self.hass.async_add_executor_job(
+            add_province_to_schema, schema, country
+        )
         return self.async_show_form(
             step_id="options",
-            data_schema=new_schema,
+            data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
             description_placeholders={
                 "name": self.data[CONF_NAME],
@@ -270,6 +309,8 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             combined_input: dict[str, Any] = {**self.options, **user_input}
             if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
                 combined_input[CONF_PROVINCE] = None
+            if combined_input.get(CONF_LANGUAGE, NONE_SENTINEL) == NONE_SENTINEL:
+                combined_input[CONF_LANGUAGE] = None
 
             try:
                 await self.hass.async_add_executor_job(
@@ -298,17 +339,22 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 else:
                     return self.async_create_entry(data=combined_input)
 
+        country = self.options[CONF_COUNTRY]
+
+        # Stack language and province fields.
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.options[CONF_COUNTRY]
+            add_language_to_schema, DATA_SCHEMA_OPT, country
+        )
+        schema = await self.hass.async_add_executor_job(
+            add_province_to_schema, schema, country
         )
 
-        new_schema = self.add_suggested_values_to_schema(
-            schema, user_input or self.options
-        )
         LOGGER.debug("Errors have occurred in options %s", errors)
         return self.async_show_form(
             step_id="init",
-            data_schema=new_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                schema, user_input or self.options
+            ),
             errors=errors,
             description_placeholders={
                 "name": self.options[CONF_NAME],

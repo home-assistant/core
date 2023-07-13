@@ -17,6 +17,7 @@ from . import (
     TEST_CONFIG_EXAMPLE_2,
     TEST_CONFIG_INCLUDE_HOLIDAY,
     TEST_CONFIG_INCORRECT_ADD_REMOVE,
+    TEST_CONFIG_INCORRECT_LANGUAGE,
     TEST_CONFIG_INCORRECT_PROVINCE,
     TEST_CONFIG_NO_PROVINCE,
     TEST_CONFIG_NO_STATE,
@@ -187,12 +188,12 @@ async def test_setup_day_after_tomorrow(
     assert state.state == "off"
 
 
-async def test_setup_faulty_province(
+async def test_setup_incorrect_province(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup with faulty province."""
+    """Test setup with incorrect province."""
     freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
     await init_integration(hass, TEST_CONFIG_INCORRECT_PROVINCE)
 
@@ -200,6 +201,19 @@ async def test_setup_faulty_province(
     assert state is None
 
     assert "There is no subdivision" in caplog.text
+
+
+async def test_setup_incorrect_language(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with incorrect language."""
+    freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
+    await init_integration(hass, TEST_CONFIG_INCORRECT_LANGUAGE)
+
+    hass.states.get("binary_sensor.workday_sensor")
+    assert "Language zz_ZZ is not supported" in caplog.text
 
 
 async def test_setup_incorrect_add_remove(
