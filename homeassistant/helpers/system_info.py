@@ -1,6 +1,7 @@
 """Helper to gather system info."""
 from __future__ import annotations
 
+from functools import cache
 from getpass import getuser
 import logging
 import os
@@ -13,6 +14,12 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@cache
+def is_official_image() -> bool:
+    """Return True if Home Assistant is running in an official container."""
+    return os.path.isfile("/OFFICIAL_IMAGE")
 
 
 @bind_hass
@@ -48,7 +55,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
 
     # Determine installation type on current data
     if info_object["docker"]:
-        if info_object["user"] == "root" and os.path.isfile("/OFFICIAL_IMAGE"):
+        if info_object["user"] == "root" and is_official_image():
             info_object["installation_type"] = "Home Assistant Container"
         else:
             info_object["installation_type"] = "Unsupported Third Party Container"
