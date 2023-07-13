@@ -39,11 +39,8 @@ async def test_get_or_create_returns_same_entry(
     update_events,
 ) -> None:
     """Make sure we do not duplicate entries."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         sw_version="sw-version",
@@ -53,7 +50,7 @@ async def test_get_or_create_returns_same_entry(
         suggested_area="Game Room",
     )
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:66:77:88")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -61,7 +58,7 @@ async def test_get_or_create_returns_same_entry(
         suggested_area="Game Room",
     )
     entry3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
@@ -99,22 +96,18 @@ async def test_get_or_create_returns_same_entry(
 
 
 async def test_requirement_for_identifier_or_connection(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Make sure we do require some descriptor of device."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers=set(),
         manufacturer="manufacturer",
         model="model",
     )
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections=set(),
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -127,7 +120,7 @@ async def test_requirement_for_identifier_or_connection(
 
     with pytest.raises(HomeAssistantError):
         device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
+            config_entry_id="1234",
             connections=set(),
             identifiers=set(),
             manufacturer="manufacturer",
@@ -135,31 +128,24 @@ async def test_requirement_for_identifier_or_connection(
         )
 
 
-async def test_multiple_config_entries(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
+async def test_multiple_config_entries(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we do not get duplicate entries."""
-    config_entry1 = MockConfigEntry(entry_id="123")
-    config_entry1.add_to_hass(hass)
-    config_entry2 = MockConfigEntry(entry_id="456")
-    config_entry2.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     entry3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -217,11 +203,8 @@ async def test_loading_from_storage(
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 1
 
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={("Zigbee", "01.23.45.67.89")},
         identifiers={("serial", "12:34:56:AB:CD:EF")},
         manufacturer="manufacturer",
@@ -250,7 +233,7 @@ async def test_loading_from_storage(
 
     # Restore a device, id should be reused from the deleted device entry
     entry = registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={("Zigbee", "23.45.67.89.01")},
         identifiers={("serial", "34:56:AB:CD:EF:12")},
         manufacturer="manufacturer",
@@ -263,7 +246,6 @@ async def test_loading_from_storage(
         identifiers={("serial", "34:56:AB:CD:EF:12")},
         manufacturer="manufacturer",
         model="model",
-        name="Mock Title",  # From config entry title
     )
     assert entry.id == "bcdefghijklmn"
     assert isinstance(entry.config_entries, set)
@@ -324,12 +306,9 @@ async def test_migration_1_1_to_1_3(
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     # Test data was loaded
     entry = registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={("Zigbee", "01.23.45.67.89")},
         identifiers={("serial", "12:34:56:AB:CD:EF")},
     )
@@ -337,7 +316,7 @@ async def test_migration_1_1_to_1_3(
 
     # Update to trigger a store
     entry = registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={("Zigbee", "01.23.45.67.89")},
         identifiers={("serial", "12:34:56:AB:CD:EF")},
         sw_version="new_version",
@@ -451,12 +430,9 @@ async def test_migration_1_2_to_1_3(
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     # Test data was loaded
     entry = registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={("Zigbee", "01.23.45.67.89")},
         identifiers={("serial", "12:34:56:AB:CD:EF")},
     )
@@ -464,7 +440,7 @@ async def test_migration_1_2_to_1_3(
 
     # Update to trigger a store
     entry = registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={("Zigbee", "01.23.45.67.89")},
         identifiers={("serial", "12:34:56:AB:CD:EF")},
         sw_version="new_version",
@@ -524,27 +500,22 @@ async def test_removing_config_entries(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
 ) -> None:
     """Make sure we do not get duplicate entries."""
-    config_entry1 = MockConfigEntry(entry_id="123")
-    config_entry1.add_to_hass(hass)
-    config_entry2 = MockConfigEntry(entry_id="456")
-    config_entry2.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     entry3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
         identifiers={("bridgeid", "4567")},
         manufacturer="manufacturer",
@@ -589,27 +560,22 @@ async def test_deleted_device_removing_config_entries(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
 ) -> None:
     """Make sure we do not get duplicate entries."""
-    config_entry1 = MockConfigEntry(entry_id="123")
-    config_entry1.add_to_hass(hass)
-    config_entry2 = MockConfigEntry(entry_id="456")
-    config_entry2.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     entry3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
         identifiers={("bridgeid", "4567")},
         manufacturer="manufacturer",
@@ -660,7 +626,7 @@ async def test_deleted_device_removing_config_entries(
 
     # Re-add, expect to keep the device id
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -676,7 +642,7 @@ async def test_deleted_device_removing_config_entries(
 
     # Re-add, expect to get a new device id after the purge
     entry4 = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -685,15 +651,10 @@ async def test_deleted_device_removing_config_entries(
     assert entry3.id != entry4.id
 
 
-async def test_removing_area_id(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
+async def test_removing_area_id(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we can clear area id."""
-    config_entry = MockConfigEntry(entry_id="123")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -709,17 +670,10 @@ async def test_removing_area_id(
     assert entry_w_area != entry_wo_area
 
 
-async def test_specifying_via_device_create(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
+async def test_specifying_via_device_create(device_registry: dr.DeviceRegistry) -> None:
     """Test specifying a via_device and removal of the hub device."""
-    config_entry1 = MockConfigEntry(entry_id="123")
-    config_entry1.add_to_hass(hass)
-    config_entry2 = MockConfigEntry(entry_id="456")
-    config_entry2.add_to_hass(hass)
-
     via = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("hue", "0123")},
         manufacturer="manufacturer",
@@ -727,7 +681,7 @@ async def test_specifying_via_device_create(
     )
 
     light = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections=set(),
         identifiers={("hue", "456")},
         manufacturer="manufacturer",
@@ -742,17 +696,10 @@ async def test_specifying_via_device_create(
     assert light.via_device_id is None
 
 
-async def test_specifying_via_device_update(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
+async def test_specifying_via_device_update(device_registry: dr.DeviceRegistry) -> None:
     """Test specifying a via_device and updating."""
-    config_entry1 = MockConfigEntry(entry_id="123")
-    config_entry1.add_to_hass(hass)
-    config_entry2 = MockConfigEntry(entry_id="456")
-    config_entry2.add_to_hass(hass)
-
     light = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections=set(),
         identifiers={("hue", "456")},
         manufacturer="manufacturer",
@@ -763,7 +710,7 @@ async def test_specifying_via_device_update(
     assert light.via_device_id is None
 
     via = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("hue", "0123")},
         manufacturer="manufacturer",
@@ -771,7 +718,7 @@ async def test_specifying_via_device_update(
     )
 
     light = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections=set(),
         identifiers={("hue", "456")},
         manufacturer="manufacturer",
@@ -786,19 +733,8 @@ async def test_loading_saving_data(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test that we load/save data correctly."""
-    config_entry1 = MockConfigEntry(entry_id="123")
-    config_entry1.add_to_hass(hass)
-    config_entry2 = MockConfigEntry(entry_id="456")
-    config_entry2.add_to_hass(hass)
-    config_entry3 = MockConfigEntry(entry_id="789")
-    config_entry3.add_to_hass(hass)
-    config_entry4 = MockConfigEntry(entry_id="abc")
-    config_entry4.add_to_hass(hass)
-    config_entry5 = MockConfigEntry(entry_id="999")
-    config_entry5.add_to_hass(hass)
-
     orig_via = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("hue", "0123")},
         manufacturer="manufacturer",
@@ -809,7 +745,7 @@ async def test_loading_saving_data(
     )
 
     orig_light = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections=set(),
         identifiers={("hue", "456")},
         manufacturer="manufacturer",
@@ -819,7 +755,7 @@ async def test_loading_saving_data(
     )
 
     orig_light2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections=set(),
         identifiers={("hue", "789")},
         manufacturer="manufacturer",
@@ -830,7 +766,7 @@ async def test_loading_saving_data(
     device_registry.async_remove_device(orig_light2.id)
 
     orig_light3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry3.entry_id,
+        config_entry_id="789",
         connections={(dr.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
         identifiers={("hue", "abc")},
         manufacturer="manufacturer",
@@ -838,7 +774,7 @@ async def test_loading_saving_data(
     )
 
     device_registry.async_get_or_create(
-        config_entry_id=config_entry4.entry_id,
+        config_entry_id="abc",
         connections={(dr.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
         identifiers={("abc", "123")},
         manufacturer="manufacturer",
@@ -848,7 +784,7 @@ async def test_loading_saving_data(
     device_registry.async_remove_device(orig_light3.id)
 
     orig_light4 = device_registry.async_get_or_create(
-        config_entry_id=config_entry3.entry_id,
+        config_entry_id="789",
         connections={(dr.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
         identifiers={("hue", "abc")},
         manufacturer="manufacturer",
@@ -859,7 +795,7 @@ async def test_loading_saving_data(
     assert orig_light4.id == orig_light3.id
 
     orig_kitchen_light = device_registry.async_get_or_create(
-        config_entry_id=config_entry5.entry_id,
+        config_entry_id="999",
         connections=set(),
         identifiers={("hue", "999")},
         manufacturer="manufacturer",
@@ -913,15 +849,10 @@ async def test_loading_saving_data(
     assert orig_kitchen_light_witout_suggested_area == new_kitchen_light
 
 
-async def test_no_unnecessary_changes(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
+async def test_no_unnecessary_changes(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we do not consider devices changes."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("hue", "456"), ("bla", "123")},
     )
@@ -929,27 +860,22 @@ async def test_no_unnecessary_changes(
         "homeassistant.helpers.device_registry.DeviceRegistry.async_schedule_save"
     ) as mock_save:
         entry2 = device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id, identifiers={("hue", "456")}
+            config_entry_id="1234", identifiers={("hue", "456")}
         )
 
     assert entry.id == entry2.id
     assert len(mock_save.mock_calls) == 0
 
 
-async def test_format_mac(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
+async def test_format_mac(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we normalize mac addresses."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     for mac in ["123456ABCDEF", "123456abcdef", "12:34:56:ab:cd:ef", "1234.56ab.cdef"]:
         test_entry = device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
+            config_entry_id="1234",
             connections={(dr.CONNECTION_NETWORK_MAC, mac)},
         )
         assert test_entry.id == entry.id, mac
@@ -967,7 +893,7 @@ async def test_format_mac(
         "123.456.abc.def",  # too many .
     ]:
         invalid_mac_entry = device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
+            config_entry_id="1234",
             connections={(dr.CONNECTION_NETWORK_MAC, invalid)},
         )
         assert list(invalid_mac_entry.connections)[0][1] == invalid
@@ -977,11 +903,8 @@ async def test_update(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
 ) -> None:
     """Verify that we can update some attributes of a device."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("hue", "456"), ("bla", "123")},
     )
@@ -1076,27 +999,22 @@ async def test_update_remove_config_entries(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
 ) -> None:
     """Make sure we do not get duplicate entries."""
-    config_entry1 = MockConfigEntry(entry_id="123")
-    config_entry1.add_to_hass(hass)
-    config_entry2 = MockConfigEntry(entry_id="456")
-    config_entry2.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="456",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     entry3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
         identifiers={("bridgeid", "4567")},
         manufacturer="manufacturer",
@@ -1149,11 +1067,8 @@ async def test_update_suggested_area(
     update_events,
 ) -> None:
     """Verify that we can update the suggested area version of a device."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bla", "123")},
     )
@@ -1215,12 +1130,9 @@ async def test_cleanup_device_registry(
     d3 = device_registry.async_get_or_create(
         identifiers={("hue", "d3")}, config_entry_id=config_entry.entry_id
     )
-    non_existing_config_entry = MockConfigEntry(entry_id="non_existing")
-    non_existing_config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         identifiers={("something", "d4")}, config_entry_id="non_existing"
     )
-    hass.config_entries._entries.pop(non_existing_config_entry.entry_id)
 
     ent_reg = er.async_get(hass)
     ent_reg.async_get_or_create("light", "hue", "e1", device_id=d1.id)
@@ -1322,11 +1234,8 @@ async def test_restore_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
 ) -> None:
     """Make sure device id is stable."""
-    config_entry = MockConfigEntry(entry_id="123")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -1342,14 +1251,14 @@ async def test_restore_device(
     assert len(device_registry.deleted_devices) == 1
 
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
         identifiers={("bridgeid", "4567")},
         manufacturer="manufacturer",
         model="model",
     )
     entry3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -1386,11 +1295,8 @@ async def test_restore_simple_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
 ) -> None:
     """Make sure device id is stable."""
-    config_entry = MockConfigEntry(entry_id="123")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
     )
@@ -1404,12 +1310,12 @@ async def test_restore_simple_device(
     assert len(device_registry.deleted_devices) == 1
 
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
         identifiers={("bridgeid", "4567")},
     )
     entry3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
     )
@@ -1440,13 +1346,8 @@ async def test_restore_shared_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
 ) -> None:
     """Make sure device id is stable for shared devices."""
-    config_entry1 = MockConfigEntry(entry_id="123")
-    config_entry1.add_to_hass(hass)
-    config_entry2 = MockConfigEntry(entry_id="234")
-    config_entry2.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("entry_123", "0123")},
         manufacturer="manufacturer",
@@ -1457,7 +1358,7 @@ async def test_restore_shared_device(
     assert len(device_registry.deleted_devices) == 0
 
     device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("entry_234", "2345")},
         manufacturer="manufacturer",
@@ -1473,7 +1374,7 @@ async def test_restore_shared_device(
     assert len(device_registry.deleted_devices) == 1
 
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("entry_123", "0123")},
         manufacturer="manufacturer",
@@ -1491,7 +1392,7 @@ async def test_restore_shared_device(
     device_registry.async_remove_device(entry.id)
 
     entry3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry2.entry_id,
+        config_entry_id="234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("entry_234", "2345")},
         manufacturer="manufacturer",
@@ -1507,7 +1408,7 @@ async def test_restore_shared_device(
     assert isinstance(entry3.identifiers, set)
 
     entry4 = device_registry.async_get_or_create(
-        config_entry_id=config_entry1.entry_id,
+        config_entry_id="123",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("entry_123", "0123")},
         manufacturer="manufacturer",
@@ -1555,23 +1456,19 @@ async def test_restore_shared_device(
 
 
 async def test_get_or_create_empty_then_set_default_values(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test creating an entry, then setting default name, model, manufacturer."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        config_entry_id=config_entry.entry_id,
     )
     assert entry.name is None
     assert entry.model is None
     assert entry.manufacturer is None
 
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
@@ -1582,7 +1479,7 @@ async def test_get_or_create_empty_then_set_default_values(
     assert entry.manufacturer == "default manufacturer 1"
 
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 2",
         default_model="default model 2",
@@ -1594,23 +1491,19 @@ async def test_get_or_create_empty_then_set_default_values(
 
 
 async def test_get_or_create_empty_then_update(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test creating an entry, then setting name, model, manufacturer."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        config_entry_id=config_entry.entry_id,
     )
     assert entry.name is None
     assert entry.model is None
     assert entry.manufacturer is None
 
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         name="name 1",
         model="model 1",
@@ -1621,7 +1514,7 @@ async def test_get_or_create_empty_then_update(
     assert entry.manufacturer == "manufacturer 1"
 
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
@@ -1633,15 +1526,11 @@ async def test_get_or_create_empty_then_update(
 
 
 async def test_get_or_create_sets_default_values(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test creating an entry, then setting default name, model, manufacturer."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
@@ -1652,7 +1541,7 @@ async def test_get_or_create_sets_default_values(
     assert entry.manufacturer == "default manufacturer 1"
 
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 2",
         default_model="default model 2",
@@ -1664,18 +1553,13 @@ async def test_get_or_create_sets_default_values(
 
 
 async def test_verify_suggested_area_does_not_overwrite_area_id(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry, area_registry: ar.AreaRegistry
 ) -> None:
     """Make sure suggested area does not override a set area id."""
-    config_entry = MockConfigEntry(entry_id="1234")
-    config_entry.add_to_hass(hass)
-
     game_room_area = area_registry.async_create("Game Room")
 
     original_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         sw_version="sw-version",
@@ -1690,7 +1574,7 @@ async def test_verify_suggested_area_does_not_overwrite_area_id(
     assert entry.area_id == game_room_area.id
 
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id="1234",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         sw_version="sw-version",
