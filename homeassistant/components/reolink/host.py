@@ -432,6 +432,15 @@ class ReolinkHost:
         webhook.async_unregister(self._hass, self.webhook_id)
         self.webhook_id = None
 
+    @property
+    def event_connection(self) -> str:
+        """Return the event connection type."""
+        if self._webhook_reachable:
+            return "onvif_push"
+        if self._long_poll_received:
+            return "onvif_long_poll"
+        return "fast_poll"
+
     async def _async_long_polling(self, *_) -> None:
         """Use ONVIF long polling to immediately receive events."""
         # This task will be cancelled once _async_stop_long_polling is called

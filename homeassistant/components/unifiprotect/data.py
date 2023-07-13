@@ -178,7 +178,7 @@ class ProtectData:
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
         registry = dr.async_get(self._hass)
         device_entry = registry.async_get_device(
-            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
         )
         if device_entry:
             _LOGGER.debug("Device removed: %s", device.id)
