@@ -16,7 +16,7 @@ from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
-from bleak_retry_connector import restore_discoveries
+from bleak_retry_connector import NO_RSSI_VALUE, restore_discoveries
 from bluetooth_adapters import DEFAULT_ADDRESS
 from dbus_fast import InvalidMessageError
 
@@ -193,7 +193,7 @@ class HaScanner(BaseHaScanner):
             BluetoothServiceInfoBleak(
                 name=advertisement_data.local_name or device.name or device.address,
                 address=device.address,
-                rssi=advertisement_data.rssi,
+                rssi=advertisement_data.rssi or NO_RSSI_VALUE,
                 manufacturer_data=advertisement_data.manufacturer_data,
                 service_data=advertisement_data.service_data,
                 service_uuids=advertisement_data.service_uuids,
