@@ -94,15 +94,16 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         super().__init__(device, coordinator)
         # For backwards compat with pyHS100
         self._attr_unique_id = legacy_device_id(child_device or device)
+        self._child_device = child_device
         if child_device:
             self._attr_name = child_device.alias
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.device.turn_on()
+        await (self._child_device or self.device).turn_on()
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.device.turn_off()
+        await (self._child_device or self.device).turn_off()

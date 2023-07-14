@@ -150,11 +150,13 @@ async def test_strip(hass: HomeAssistant) -> None:
         entity_id = f"switch.my_strip_plug{plug_id}"
         state = hass.states.get(entity_id)
         assert state.state == STATE_ON
+
         await hass.services.async_call(
             SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
         strip.children[plug_id].turn_off.assert_called_once()
         strip.children[plug_id].turn_off.reset_mock()
+
         await hass.services.async_call(
             SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
