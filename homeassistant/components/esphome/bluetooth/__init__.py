@@ -1,7 +1,6 @@
 """Bluetooth support for esphome."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from functools import partial
 import logging
 
@@ -28,31 +27,23 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @hass_callback
-def _async_can_connect_factory(
+def _async_can_connect(
     entry_data: RuntimeEntryData, bluetooth_device: ESPHomeBluetoothDevice, source: str
-) -> Callable[[], bool]:
-    """Create a can_connect function for a specific RuntimeEntryData instance."""
-
-    @hass_callback
-    def _async_can_connect() -> bool:
-        """Check if a given source can make another connection."""
-        can_connect = bool(
-            entry_data.available and bluetooth_device.ble_connections_free
-        )
-        _LOGGER.debug(
-            (
-                "%s [%s]: Checking can connect, available=%s, ble_connections_free=%s"
-                " result=%s"
-            ),
-            entry_data.name,
-            source,
-            entry_data.available,
-            bluetooth_device.ble_connections_free,
-            can_connect,
-        )
-        return can_connect
-
-    return _async_can_connect
+) -> bool:
+    """Check if a given source can make another connection."""
+    can_connect = bool(entry_data.available and bluetooth_device.ble_connections_free)
+    _LOGGER.debug(
+        (
+            "%s [%s]: Checking can connect, available=%s, ble_connections_free=%s"
+            " result=%s"
+        ),
+        entry_data.name,
+        source,
+        entry_data.available,
+        bluetooth_device.ble_connections_free,
+        can_connect,
+    )
+    return can_connect
 
 
 async def async_connect_scanner(
@@ -96,7 +87,7 @@ async def async_connect_scanner(
         # https://github.com/python/mypy/issues/1484
         client=partial(ESPHomeClient, client_data=client_data),  # type: ignore[arg-type]
         source=source,
-        can_connect=_async_can_connect_factory(entry_data, bluetooth_device, source),
+        can_connect=partial(_async_can_connect, entry_data, bluetooth_device, source),
     )
     scanner = ESPHomeScanner(
         hass, source, entry.title, new_info_callback, connector, connectable
