@@ -93,6 +93,11 @@
           "silent": "Silent"
         }
       }
+    },
+    "image": {
+      "last_motion_image": {
+        "name": "Last motion image"
+      }
     }
   },
   "services": {
