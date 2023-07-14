@@ -972,6 +972,7 @@ async def _test_friendly_name(
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
     entity_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )

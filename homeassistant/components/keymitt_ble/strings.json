@@ -6,7 +6,7 @@
         "title": "Set up MicroBot device",
         "data": {
           "address": "Device address",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "link": {
@@ -42,7 +42,7 @@
           "description": "Duration in seconds."
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Normal | invert | toggle."
         }
       }

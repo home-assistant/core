@@ -35,7 +35,7 @@
           "description": "Name(s) of entities to apply the operation mode to."
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Operation mode. Allowed values: LED, RECORDING_MODE."
         },
         "value": {
@@ -68,7 +68,7 @@
         },
         "filename": {
           "name": "File name",
-          "description": "Template of a Filename. Variable is entity_id."
+          "description": "[%key:component::logi_circle::services::livestream_snapshot::fields::filename::description%]"
         },
         "duration": {
           "name": "Duration",

@@ -15,7 +15,7 @@
       "description": "Un-Bypasses a zone.",
       "fields": {
         "zone": {
-          "name": "Zone",
+          "name": "[%key:component::nx584::services::bypass_zone::fields::zone::name%]",
           "description": "The number of the zone to be un-bypassed."
         }
       }

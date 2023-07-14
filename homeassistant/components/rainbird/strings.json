@@ -21,7 +21,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Rain Bird",
+        "title": "[%key:component::rainbird::config::step::user::title%]",
         "data": {
           "duration": "Default irrigation time in minutes"
         }
