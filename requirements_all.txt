@@ -534,10 +534,10 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.3.0
+bluetooth-data-tools==1.6.0
 
 # homeassistant.components.bond
-bond-async==0.1.23
+bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.57
@@ -1363,7 +1363,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.12
+opower==0.0.14
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2602,7 +2602,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==3.2.1
+vallox-websocket-api==3.3.0
 
 # homeassistant.components.rdw
 vehicle==1.0.1
