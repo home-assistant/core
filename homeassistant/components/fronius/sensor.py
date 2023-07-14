@@ -54,7 +54,7 @@ async def async_setup_entry(
     """Set up Fronius sensor entities based on a config entry."""
     solar_net: FroniusSolarNet = hass.data[DOMAIN][config_entry.entry_id]
     solar_net.sensor_async_add_entities = async_add_entities
-    
+
     for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(
             async_add_entities, InverterSensor

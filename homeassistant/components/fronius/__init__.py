@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime, timedelta
 import logging
 from typing import Final, TypeVar
-from datetime import datetime, timedelta
 
 from pyfronius import Fronius, FroniusError
 
@@ -16,8 +16,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     DOMAIN,
@@ -104,9 +104,9 @@ class FroniusSolarNet:
 
         # _create_solar_net_device uses data from self.logger_coordinator when available
         self.system_device_info = await self._create_solar_net_device()
-        
+
         await self._init_devices_inverter()
-            
+
         self.meter_coordinator = await self._init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
                 hass=self.hass,
@@ -142,7 +142,7 @@ class FroniusSolarNet:
                 name=f"{DOMAIN}_storages_{self.host}",
             )
         )
-        
+
         # Setup periodic re-scan
         self.cleanup_callbacks.append(
             async_track_time_interval(
@@ -151,7 +151,7 @@ class FroniusSolarNet:
                 timedelta(minutes=SOLAR_NET_RESCAN_TIMER),
             )
         )
-        
+
     async def _create_solar_net_device(self) -> DeviceInfo:
         """Create a device for the Fronius SolarNet system."""
         solar_net_device: DeviceInfo = DeviceInfo(
@@ -176,9 +176,9 @@ class FroniusSolarNet:
             **solar_net_device,
         )
         return solar_net_device
-        
+
     async def _init_devices_inverter(self) -> None:
-        """Retrieve inverter information from host"""
+        """Retrieve inverter information from host."""
         _inverter_infos: list[FroniusDeviceInfo] = []
         try:
             _inverter_infos = await self._get_inverter_infos()
@@ -226,7 +226,7 @@ class FroniusSolarNet:
                     "New inverter added (UID: %s)",
                     _inverter_info.unique_id,
                 )
-            
+
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
         try:
@@ -261,12 +261,12 @@ class FroniusSolarNet:
                 unique_id,
             )
         return inverter_infos
-        
+
     @callback
     def _rescan_inverter(self, now: datetime) -> None:
-        """Initiate a scheduled rescan of available inverters"""
+        """Initiate a scheduled rescan of available inverters."""
         self.hass.async_add_job(self._init_devices_inverter())
-        
+
     @staticmethod
     async def _init_optional_coordinator(
         coordinator: _FroniusCoordinatorT,
