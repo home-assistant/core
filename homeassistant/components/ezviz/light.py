@@ -107,8 +107,6 @@ class EzvizLight(EzvizEntity, LightEntity):
                 DeviceSwitchType.ALARM_LIGHT.value,
                 0,
             ):
-                if ATTR_BRIGHTNESS in kwargs:
-                    self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
                 self._attr_is_on = False
                 self.async_write_ha_state()
 
