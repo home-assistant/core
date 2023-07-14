@@ -23,9 +23,64 @@
         "name": "Microphone"
       }
     },
+    "number": {
+      "audio_delay": {
+        "name": "Audio delay"
+      },
+      "bass": {
+        "name": "Bass"
+      },
+      "balance": {
+        "name": "Balance"
+      },
+      "treble": {
+        "name": "Treble"
+      },
+      "sub_gain": {
+        "name": "Sub gain"
+      },
+      "surround_level": {
+        "name": "Surround level"
+      },
+      "music_surround_level": {
+        "name": "Music surround level"
+      }
+    },
     "sensor": {
       "audio_input_format": {
         "name": "Audio input format"
+      },
+      "sonos_favorites": {
+        "name": "Sonos favorites"
+      }
+    },
+    "switch": {
+      "cross_fade": {
+        "name": "Crossfade"
+      },
+      "loudness": {
+        "name": "Loudness"
+      },
+      "surround_mode": {
+        "name": "Surround music full volume"
+      },
+      "night_mode": {
+        "name": "Night sound"
+      },
+      "dialog_level": {
+        "name": "Speech enhancement"
+      },
+      "status_light": {
+        "name": "Status light"
+      },
+      "sub_enabled": {
+        "name": "Subwoofer enabled"
+      },
+      "surround_enabled": {
+        "name": "Surround enabled"
+      },
+      "buttons_enabled": {
+        "name": "Touch controls"
       }
     }
   },
