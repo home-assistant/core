@@ -36,6 +36,7 @@ class DomainData:
 
     def set_entry_data(self, entry: ConfigEntry, entry_data: RuntimeEntryData) -> None:
         """Set the runtime entry data associated with this config entry."""
+        assert entry.entry_id not in self._entry_datas, "Entry data already set!"
         self._entry_datas[entry.entry_id] = entry_data
 
     def pop_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
