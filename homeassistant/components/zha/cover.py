@@ -198,6 +198,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
+    _attr_translation_key = "shade"
     _attr_device_class = CoverDeviceClass.SHADE
 
     def __init__(

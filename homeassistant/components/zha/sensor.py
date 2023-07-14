@@ -373,6 +373,7 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_f
     """Frequency measurement."""
 
     SENSOR_ATTR = "power_factor"
+    _attr_translation_key = "power_factor"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _attr_native_unit_of_measurement = PERCENTAGE
 

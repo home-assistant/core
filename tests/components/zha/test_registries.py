@@ -589,6 +589,18 @@ def test_entity_names() -> None:
             if hasattr(entity, "_attr_name"):
                 # The entity has a name
                 assert isinstance(entity._attr_name, str) and entity._attr_name
+            elif hasattr(entity, "_attr_translation_key"):
+                # The entity has a name
+                assert (
+                    isinstance(entity._attr_translation_key, str)
+                    and entity._attr_translation_key
+                )
+            elif hasattr(entity, "_attr_device_class"):
+                # The entity has a name
+                assert (
+                    isinstance(entity._attr_device_class, str)
+                    and entity._attr_device_class
+                )
             else:
                 # The only exception (for now) is IASZone
                 assert entity is IASZone

@@ -558,6 +558,9 @@
       "cover": {
         "name": "[%key:component::cover::title%]"
       },
+      "shade": {
+        "name": "[%key:component::cover::entity_component::shade::name%]"
+      },
       "keen_vent": {
         "name": "Keen vent"
       }
@@ -702,7 +705,7 @@
       "default_strobe": {
         "name": "Default strobe"
       },
-      "start_up_behaviour": {
+      "start_up_behavior": {
         "name": "Start-up behavior"
       },
       "power_on_state": {
@@ -751,6 +754,9 @@
       },
       "active_power": {
         "name": "Active power"
+      },
+      "power_factor": {
+        "name": "Power factor"
       },
       "apparent_power": {
         "name": "Apparent power"

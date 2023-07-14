@@ -43,6 +43,15 @@ IAS_ZONE_CLASS_MAPPING = {
     IasZone.ZoneType.Vibration_Movement_Sensor: BinarySensorDeviceClass.VIBRATION,
 }
 
+IAS_ZONE_NAME_MAPPING = {
+    IasZone.ZoneType.Motion_Sensor: "Motion",
+    IasZone.ZoneType.Contact_Switch: "Opening",
+    IasZone.ZoneType.Fire_Sensor: "Smoke",
+    IasZone.ZoneType.Water_Sensor: "Moisture",
+    IasZone.ZoneType.Carbon_Monoxide_Sensor: "Gas",
+    IasZone.ZoneType.Vibration_Movement_Sensor: "Vibration",
+}
+
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SENSOR)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -174,6 +183,12 @@ class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
 
     SENSOR_ATTR = "zone_status"
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the sensor."""
+        zone_type = self._cluster_handler.cluster.get("zone_type")
+        return IAS_ZONE_NAME_MAPPING.get(zone_type, "iaszone")
 
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:
