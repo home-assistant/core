@@ -6,22 +6,18 @@ from dataclasses import dataclass
 import datetime as dt
 import json
 import logging
-import time
 
 import aiohttp
 import async_timeout
 
 API_ENDPOINT = "https://api.millnorwaycloud.com/"
 DEFAULT_TIMEOUT = 10
-MIN_TIME_BETWEEN_STATS_UPDATES = dt.timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class Mill:
     """Class to communicate with the Mill api."""
-
-    # pylint: disable=too-many-instance-attributes, too-many-public-methods
 
     def __init__(self, username, password, timeout=DEFAULT_TIMEOUT, websession=None):
         """Initialize the Mill connection."""
@@ -40,8 +36,6 @@ class Mill:
         self._user_id = None
         self._token = None
         self.devices = {}
-        self._throttle_time = None
-        self._throttle_all_time = None
 
     async def connect(self, retry=2):
         """Connect to Mill."""
@@ -60,8 +54,24 @@ class Mill:
 
         result = await resp.text()
         if "Incorrect login or password" in result:
-            _LOGGER.error("Incorrect login or password, %s", result)
-            return False
+            if retry < 1:
+                _LOGGER.error("Incorrect login or password, %s", result)
+                return False
+            payload = {
+                "login": {
+                    "type": "email",
+                    "value": self._username,
+                },
+                "password": self._password,
+            }
+            async with async_timeout.timeout(self._timeout):
+                resp = await self.websession.post(
+                    API_ENDPOINT + "cloud-migration/migrate-customer",
+                    json=payload,
+                )
+                _LOGGER.debug("Migrate customer %s", await resp.text())
+            await asyncio.sleep(10)
+            return await self.connect(retry - 1)
         data = json.loads(result)
         if (token := data.get("idToken")) is None:
             _LOGGER.error("No token")
@@ -140,16 +150,12 @@ class Mill:
         _LOGGER.debug("Result %s", result)
         return json.loads(result)
 
-    async def get_home_list(self):
+    async def update_devices(self):
         """Request data."""
         resp = await self.request("houses")
         if resp is None:
             return []
-        return resp.get("ownHouses", [])
-
-    async def update_devices(self):
-        """Request data."""
-        homes = await self.get_home_list()
+        homes = resp.get("ownHouses", [])
         tasks = []
         for home in homes:
             tasks.append(self._update_home(home))
@@ -159,10 +165,10 @@ class Mill:
         independent_devices_data = await self.request(
             f"/houses/{home.get('id')}/devices/independent"
         )
-        for device in independent_devices_data.get("items", []):
-            await self._update_device(device)
-
         tasks = []
+        for device in independent_devices_data.get("items", []):
+            tasks.append(self._update_device(device))
+
         for room in await self.request(f"houses/{home.get('id')}/devices"):
             tasks.append(self._update_room(room))
         await asyncio.gather(*tasks)
@@ -220,7 +226,12 @@ class Mill:
                 return
             device_stats = await self.request(
                 f"devices/{_id}/statistics",
-                {"period": "monthly", "year": now.year, "month": 1, "day": 1},
+                {
+                    "period": "monthly",
+                    "year": now.year,
+                    "month": 1,
+                    "day": 1,
+                },
             )
             device.room_name = device_data.get("roomName")
             device.set_temp = device_data.get("lastMetrics").get("temperature")
@@ -246,6 +257,9 @@ class Mill:
                 device.home_id = room_data.get("houseId")
                 device.room_id = room_data.get("id")
                 device.room_avg_temp = room_data.get("averageTemperature")
+                device.independent_device = False
+            else:
+                device.independent_device = True
 
         self.devices[_id] = device
 
@@ -258,13 +272,20 @@ class Mill:
         for heater in self.devices.values():
             if heater.room_name.lower().strip() == room_name.lower().strip():
                 await self.set_room_temperatures(
-                    heater.room_id, sleep_temp, comfort_temp, away_temp
+                    heater.room_id,
+                    sleep_temp,
+                    comfort_temp,
+                    away_temp,
                 )
                 return
         _LOGGER.error("Could not find a room with name %s", room_name)
 
     async def set_room_temperatures(
-        self, room_id, sleep_temp=None, comfort_temp=None, away_temp=None
+        self,
+        room_id,
+        sleep_temp=None,
+        comfort_temp=None,
+        away_temp=None,
     ):
         """Set room temps."""
         if sleep_temp is None and comfort_temp is None and away_temp is None:
@@ -284,7 +305,7 @@ class Mill:
         await self.update_devices()
         return {
             key: val
-            for key, val in self.heaters.items()
+            for key, val in self.devices.items()
             if isinstance(val, Heater) or isinstance(val, Socket)
         }
 
@@ -295,7 +316,7 @@ class Mill:
 
     async def heater_control(self, device_id, power_status):
         """Set heater temps."""
-        if device_id not in self.heaters:
+        if device_id not in self.devices:
             _LOGGER.error("Device id %s not found", device_id)
             return
         payload = {
@@ -307,11 +328,11 @@ class Mill:
         }
         if await self.request(f"devices/{device_id}/settings", payload, patch=True):
             if power_status > 0:
-                self.heaters[device_id].power_status = True
+                self.devices[device_id].power_status = True
             else:
-                self.heaters[device_id].power_status = False
-                self.heaters[device_id].is_heating = False
-            self.heaters[device_id].last_updated = dt.datetime.now()
+                self.devices[device_id].power_status = False
+                self.devices[device_id].is_heating = False
+            self.devices[device_id].last_updated = dt.datetime.now()
 
     async def set_heater_temp(self, device_id, set_temp):
         """Set heater temp."""
@@ -324,15 +345,21 @@ class Mill:
             },
         }
         if await self.request(f"devices/{device_id}/settings", payload, patch=True):
-            self.heaters[device_id].set_temp = set_temp
-            self.heaters[device_id].last_updated = dt.datetime.now()
+            self.devices[device_id].set_temp = set_temp
+            self.devices[device_id].last_updated = dt.datetime.now()
 
     def _find_device_type(self, device_id):
         """Find device type."""
         if device_id not in self.devices:
             _LOGGER.error("Device id %s not found", device_id)
             return
-        return "Sockets" if isinstance(self.devices[device_id], Socket) else "Heaters"
+        if isinstance(self.devices[device_id], Socket):
+            return "Sockets"
+        if isinstance(self.devices[device_id], Heater):
+            return "Heaters"
+        if isinstance(self.devices[device_id], Sensor):
+            return "Sensors"
+        _LOGGER.error("Unknown device type %s", self.devices[device_id])
 
 
 @dataclass
@@ -357,7 +384,7 @@ class Heater(MillDevice):
     current_temp: float | None = None
     set_temp: float | None = None
     power_status: bool | None = None
-    independent_device: bool | None = True
+    independent_device: bool | None = None
     open_window: str | None = None
     is_heating: bool | None = None
     tibber_control: bool | None = None
@@ -372,12 +399,13 @@ class Socket(Heater):
     pass
 
 
+@dataclass
 class Sensor(MillDevice):
     """Representation of sensor."""
 
-    current_temp: float
-    humidity: float
-    tvoc: float
-    eco2: float
-    battery: float
+    current_temp: float | None = None
+    humidity: float | None = None
+    tvoc: float | None = None
+    eco2: float | None = None
+    battery: float | None = None
     report_time: int | None = None
