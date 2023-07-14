@@ -263,7 +263,7 @@ class FroniusSolarNet:
         return inverter_infos
         
     @callback
-    def _rescan_inverter(self, now=None) -> None:
+    def _rescan_inverter(self, now: datetime) -> None:
         """Initiate a scheduled rescan of available inverters"""
         self.hass.async_add_job(self._init_devices_inverter())
         
