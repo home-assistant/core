@@ -30,9 +30,7 @@ cached_get_user = cache(getuser)
 @bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
-    is_hassio = (
-        "hassio" in hass.config.components and hass.components.hassio.is_hassio()
-    )
+    is_hassio = hass.components.hassio.is_hassio()
 
     info_object = {
         "installation_type": "Unknown",
