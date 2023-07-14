@@ -87,7 +87,9 @@ async def async_connect_scanner(
         # https://github.com/python/mypy/issues/1484
         client=partial(ESPHomeClient, client_data=client_data),  # type: ignore[arg-type]
         source=source,
-        can_connect=partial(_async_can_connect, entry_data, bluetooth_device, source),
+        can_connect=hass_callback(
+            partial(_async_can_connect, entry_data, bluetooth_device, source)
+        ),
     )
     scanner = ESPHomeScanner(
         hass, source, entry.title, new_info_callback, connector, connectable
