@@ -21,7 +21,6 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 _LOGGER = logging.getLogger(__name__)
-GET_IMAGE_TIMEOUT = 10
 
 IMAGE_TYPE = ImageEntityDescription(
     key="last_motion_image",
