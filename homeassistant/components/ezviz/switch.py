@@ -153,42 +153,35 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
-            update_ok = await self.hass.async_add_executor_job(
+            if await self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.switch_status,
                 self._serial,
                 self._switch_number,
                 1,
-            )
+            ):
+                self._attr_is_on = True
+                self.async_write_ha_state()
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(f"Failed to turn on switch {self.name}") from err
 
-        if update_ok:
-            self._attr_is_on = True
-            self.async_write_ha_state()
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
-            update_ok = await self.hass.async_add_executor_job(
+            if await self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.switch_status,
                 self._serial,
                 self._switch_number,
                 0,
-            )
+            ):
+                self._attr_is_on = False
+                self.async_write_ha_state()
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(f"Failed to turn off switch {self.name}") from err
 
-        if update_ok:
-            self._attr_is_on = False
-            self.async_write_ha_state()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.data["switches"].get(self._switch_number) is None:
-            return
-
-        self._attr_is_on = self.data["switches"][self._switch_number]
+        self._attr_is_on = self.data["switches"].get(self._switch_number)
         super()._handle_coordinator_update()
