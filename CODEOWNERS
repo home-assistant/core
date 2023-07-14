@@ -209,6 +209,7 @@ build.json @home-assistant/supervisor
 /tests/components/coinbase/ @tombrien
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
+/homeassistant/components/comelit/ @chemelli74
 /homeassistant/components/comfoconnect/ @michaelarnauts
 /tests/components/comfoconnect/ @michaelarnauts
 /homeassistant/components/command_line/ @gjohansson-ST

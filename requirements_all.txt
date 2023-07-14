@@ -211,6 +211,9 @@ aiobafi6==0.8.2
 # homeassistant.components.aws
 aiobotocore==2.1.0
 
+# homeassistant.components.comelit
+aiocomelit==0.0.4
+
 # homeassistant.components.dhcp
 aiodiscover==1.4.16
 
