@@ -77,7 +77,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
             self.data["last_alarm_pic"]
             and self.data["last_alarm_pic"] != self._attr_image_url
         ):
-            _LOGGER.warning("Image url changed to %s", self.data["last_alarm_pic"])
+            _LOGGER.debug("Image url changed to %s", self.data["last_alarm_pic"])
 
             self._attr_image_url = self.data["last_alarm_pic"]
             self._cached_image = None
