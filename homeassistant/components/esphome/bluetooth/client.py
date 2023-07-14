@@ -237,7 +237,7 @@ class ESPHomeClient(BaseBleakClient):
             self._async_call_bleak_disconnected_callback()
 
     def _async_esp_disconnected(self) -> None:
-        """Handle the esp32 client disconnecting from hass."""
+        """Handle the esp32 client disconnecting from us."""
         _LOGGER.debug(
             "%s: %s - %s: ESP device disconnected",
             self._source_name,
