@@ -8,7 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import RequiredParameterMissing
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -118,7 +118,7 @@ async def test_requirement_for_identifier_or_connection(
     assert entry
     assert entry2
 
-    with pytest.raises(RequiredParameterMissing) as exc_info:
+    with pytest.raises(HomeAssistantError):
         device_registry.async_get_or_create(
             config_entry_id="1234",
             connections=set(),
@@ -126,8 +126,6 @@ async def test_requirement_for_identifier_or_connection(
             manufacturer="manufacturer",
             model="model",
         )
-
-    assert exc_info.value.parameter_names == ["identifiers", "connections"]
 
 
 async def test_multiple_config_entries(device_registry: dr.DeviceRegistry) -> None:
@@ -1462,7 +1460,8 @@ async def test_get_or_create_empty_then_set_default_values(
 ) -> None:
     """Test creating an entry, then setting default name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
-        identifiers={("bridgeid", "0123")}, config_entry_id="1234"
+        config_entry_id="1234",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert entry.name is None
     assert entry.model is None
@@ -1470,7 +1469,7 @@ async def test_get_or_create_empty_then_set_default_values(
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
         default_manufacturer="default manufacturer 1",
@@ -1481,7 +1480,7 @@ async def test_get_or_create_empty_then_set_default_values(
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 2",
         default_model="default model 2",
         default_manufacturer="default manufacturer 2",
@@ -1496,7 +1495,8 @@ async def test_get_or_create_empty_then_update(
 ) -> None:
     """Test creating an entry, then setting name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
-        identifiers={("bridgeid", "0123")}, config_entry_id="1234"
+        config_entry_id="1234",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert entry.name is None
     assert entry.model is None
@@ -1504,7 +1504,7 @@ async def test_get_or_create_empty_then_update(
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         name="name 1",
         model="model 1",
         manufacturer="manufacturer 1",
@@ -1515,7 +1515,7 @@ async def test_get_or_create_empty_then_update(
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
         default_manufacturer="default manufacturer 1",
@@ -1531,7 +1531,7 @@ async def test_get_or_create_sets_default_values(
     """Test creating an entry, then setting default name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
         default_manufacturer="default manufacturer 1",
@@ -1542,7 +1542,7 @@ async def test_get_or_create_sets_default_values(
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 2",
         default_model="default model 2",
         default_manufacturer="default manufacturer 2",
