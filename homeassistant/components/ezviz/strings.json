@@ -77,7 +77,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::ezviz::issues::service_deprecation_alarm_sound_level::title%]",
-            "description": "Ezviz Alarm sound level service is deprecated and will be removed in Home Assistant 2024.2.\nTo set the Alarm sound level, you can instead use the `select.select_option` service targetting the Warning sound entity.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
+            "description": "Ezviz Alarm sound level service is deprecated and will be removed.\nTo set the Alarm sound level, you can instead use the `select.select_option` service targetting the Warning sound entity.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
           }
         }
       }
