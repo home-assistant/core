@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
+from functools import partial
 import logging
 import platform
 from typing import Any
@@ -140,6 +141,11 @@ class HaScanner(BaseHaScanner):
         self._start_stop_lock = asyncio.Lock()
         self._new_info_callback = new_info_callback
         self.scanning = False
+        self._create_bluetooth_service_info = partial(
+            BluetoothServiceInfoBleak,
+            source=self.source,
+            connectable=True,
+        )
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -179,28 +185,25 @@ class HaScanner(BaseHaScanner):
         central manager.
         """
         callback_time = MONOTONIC_TIME()
-        if (
-            advertisement_data.local_name
-            or advertisement_data.manufacturer_data
-            or advertisement_data.service_data
-            or advertisement_data.service_uuids
-        ):
+        local_name = advertisement_data.local_name
+        manufacturer_data = advertisement_data.manufacturer_data
+        service_data = advertisement_data.service_data
+        service_uuids = advertisement_data.service_uuids
+        if local_name or manufacturer_data or service_data or service_uuids:
             # Don't count empty advertisements
             # as the adapter is in a failure
             # state if all the data is empty.
             self._last_detection = callback_time
         self._new_info_callback(
-            BluetoothServiceInfoBleak(
-                name=advertisement_data.local_name or device.name or device.address,
+            self._create_bluetooth_service_info(
+                name=local_name or device.name or device.address,
                 address=device.address,
                 rssi=advertisement_data.rssi or NO_RSSI_VALUE,
-                manufacturer_data=advertisement_data.manufacturer_data,
-                service_data=advertisement_data.service_data,
-                service_uuids=advertisement_data.service_uuids,
-                source=self.source,
+                manufacturer_data=manufacturer_data,
+                service_data=service_data,
+                service_uuids=service_uuids,
                 device=device,
                 advertisement=advertisement_data,
-                connectable=True,
                 time=callback_time,
             )
         )

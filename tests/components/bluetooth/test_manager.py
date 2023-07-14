@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bleak_retry_connector import NO_RSSI_VALUE
 from bluetooth_adapters import AdvertisementHistory
 import pytest
 
@@ -183,19 +184,19 @@ async def test_switching_adapters_based_on_rssi(
     )
 
 
-async def test_switching_adapters_based_on_zero_rssi(
+async def test_switching_adapters_based_on_no_rssi(
     hass: HomeAssistant,
     enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
-    """Test switching adapters based on zero rssi."""
+    """Test switching adapters based on no rssi."""
 
     address = "44:44:33:11:23:45"
 
     switchbot_device_no_rssi = generate_ble_device(address, "wohand_poor_signal")
     switchbot_adv_no_rssi = generate_advertisement_data(
-        local_name="wohand_no_rssi", service_uuids=[], rssi=0
+        local_name="wohand_no_rssi", service_uuids=[], rssi=NO_RSSI_VALUE
     )
     inject_advertisement_with_source(
         hass, switchbot_device_no_rssi, switchbot_adv_no_rssi, "hci0"
