@@ -12,7 +12,6 @@ from motioneye_client.const import (
     DEFAULT_SURVEILLANCE_USERNAME,
     KEY_ACTION_SNAPSHOT,
     KEY_MOTION_DETECTION,
-    KEY_NAME,
     KEY_STREAMING_AUTH_MODE,
     KEY_TEXT_OVERLAY_CAMERA_NAME,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT,
@@ -203,7 +202,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
                 streaming_url = self._client.get_camera_stream_url(camera)
 
         return {
-            CONF_NAME: camera[KEY_NAME],
+            CONF_NAME: None,
             CONF_USERNAME: self._surveillance_username if auth is not None else None,
             CONF_PASSWORD: self._surveillance_password if auth is not None else "",
             CONF_MJPEG_URL: streaming_url or "",
