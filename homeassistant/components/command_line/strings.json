@@ -4,5 +4,11 @@
       "title": "Command Line YAML configuration has moved",
       "description": "Configuring Command Line `{platform}` using YAML has moved.\n\nConsult the documentation to move your YAML configuration to integration key and restart Home Assistant to fix this issue."
     }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads command line configuration from the YAML-configuration."
+    }
   }
 }

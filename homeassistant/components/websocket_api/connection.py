@@ -33,6 +33,20 @@ BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
+    __slots__ = (
+        "logger",
+        "hass",
+        "send_message",
+        "user",
+        "refresh_token_id",
+        "subscriptions",
+        "last_id",
+        "can_coalesce",
+        "supported_features",
+        "handlers",
+        "binary_handlers",
+    )
+
     def __init__(
         self,
         logger: WebSocketAdapter,

@@ -147,7 +147,9 @@ class HueBaseEntity(Entity):
             # regular devices are removed automatically by the logic in device.py.
             if resource.type in (ResourceTypes.ROOM, ResourceTypes.ZONE):
                 dev_reg = async_get_device_registry(self.hass)
-                if device := dev_reg.async_get_device({(DOMAIN, resource.id)}):
+                if device := dev_reg.async_get_device(
+                    identifiers={(DOMAIN, resource.id)}
+                ):
                     dev_reg.async_remove_device(device.id)
             # cleanup entities that are not strictly device-bound and have the bridge as parent
             if self.device is None:
