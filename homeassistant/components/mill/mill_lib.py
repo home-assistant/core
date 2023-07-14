@@ -329,10 +329,10 @@ class Mill:
 
     def _find_device_type(self, device_id):
         """Find device type."""
-        if device_id not in self.heaters:
+        if device_id not in self.devices:
             _LOGGER.error("Device id %s not found", device_id)
             return
-        return "Sockets" if isinstance(self.heaters[device_id], Socket) else "Heaters"
+        return "Sockets" if isinstance(self.devices[device_id], Socket) else "Heaters"
 
 
 @dataclass
