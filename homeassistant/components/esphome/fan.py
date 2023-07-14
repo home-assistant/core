@@ -119,9 +119,6 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
     @esphome_state_property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        if not self._static_info.supports_speed:
-            return None
-
         if not self._supports_speed_levels:
             return ordered_list_item_to_percentage(
                 ORDERED_NAMED_FAN_SPEEDS, self._state.speed  # type: ignore[misc]
