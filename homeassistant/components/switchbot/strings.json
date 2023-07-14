@@ -54,8 +54,18 @@
     "step": {
       "init": {
         "data": {
-          "retry_count": "Retry count"
+          "retry_count": "Retry count",
+          "close_direction": "Close Direction"
         }
+      }
+    }
+  },
+  "selector": {
+    "close_direction": {
+      "options": {
+        "closest": "Closest",
+        "up": "Up",
+        "down": "Down"
       }
     }
   },

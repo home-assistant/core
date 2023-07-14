@@ -28,6 +28,14 @@ class SupportedModels(StrEnum):
     BLIND_TILT = "blind_tilt"
 
 
+class CloseDirection(StrEnum):
+    """Close directions for Switchbot Blind Tilt."""
+
+    CLOSEST = "closest"
+    UP = "up"
+    DOWN = "down"
+
+
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.BOT: SupportedModels.BOT,
     SwitchbotModel.CURTAIN: SupportedModels.CURTAIN,
@@ -58,11 +66,13 @@ HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
+DEFAULT_CLOSE_DIRECTION = CloseDirection.CLOSEST.value
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
+CONF_CLOSE_DIRECTION = "close_direction"
 
 # Deprecated config Entry Options to be removed in 2023.4
 CONF_TIME_BETWEEN_UPDATE_COMMAND = "update_time"

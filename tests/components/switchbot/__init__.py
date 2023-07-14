@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -10,9 +10,7 @@ from tests.components.bluetooth import generate_advertisement_data, generate_ble
 
 DOMAIN = "switchbot"
 
-ENTRY_CONFIG = {
-    CONF_ADDRESS: "e7:89:43:99:99:99",
-}
+ENTRY_CONFIG = {CONF_ADDRESS: "e7:89:43:99:99:99", CONF_SENSOR_TYPE: "bot"}
 
 USER_INPUT = {
     CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",

@@ -27,16 +27,25 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
+    CONF_CLOSE_DIRECTION,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_CLOSE_DIRECTION,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SUPPORTED_MODEL_TYPES,
+    CloseDirection,
+    SupportedModels,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -341,13 +350,33 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             # Update common entity options for all other entities.
             return self.async_create_entry(title="", data=user_input)
 
-        options = {
-            vol.Optional(
-                CONF_RETRY_COUNT,
-                default=self.config_entry.options.get(
-                    CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
-                ),
-            ): int
-        }
+        options = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_RETRY_COUNT,
+                    default=self.config_entry.options.get(
+                        CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
+                    ),
+                ): int
+            }
+        )
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        if self.config_entry.data[CONF_SENSOR_TYPE] == SupportedModels.BLIND_TILT:
+            options = options.extend(
+                {
+                    vol.Optional(
+                        CONF_CLOSE_DIRECTION,
+                        default=self.config_entry.options.get(
+                            CONF_CLOSE_DIRECTION, DEFAULT_CLOSE_DIRECTION
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(CloseDirection),
+                            mode=SelectSelectorMode.LIST,
+                            translation_key=CONF_CLOSE_DIRECTION,
+                        )
+                    )
+                }
+            )
+
+        return self.async_show_form(step_id="init", data_schema=options)

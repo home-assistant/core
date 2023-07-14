@@ -4,6 +4,7 @@ from unittest.mock import patch
 from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
 from homeassistant.components.switchbot.const import (
+    CONF_CLOSE_DIRECTION,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
@@ -767,3 +768,41 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
     assert entry.options[CONF_RETRY_COUNT] == 6
+
+
+async def test_tilt_options_flow(hass: HomeAssistant) -> None:
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "bb:aa:cc:dd:ee:ff",
+            CONF_NAME: "test-tilt",
+            CONF_PASSWORD: "test-password",
+            CONF_SENSOR_TYPE: "blind_tilt",
+        },
+        options={CONF_RETRY_COUNT: 10, CONF_CLOSE_DIRECTION: "closest"},
+        unique_id="aabbccddeeff_tilt",
+    )
+    entry.add_to_hass(hass)
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_RETRY_COUNT: 3, CONF_CLOSE_DIRECTION: "up"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CLOSE_DIRECTION] == "up"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    assert entry.options[CONF_CLOSE_DIRECTION] == "up"

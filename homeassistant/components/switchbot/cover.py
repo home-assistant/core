@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN
+from .const import CONF_CLOSE_DIRECTION, DEFAULT_CLOSE_DIRECTION, DOMAIN, CloseDirection
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -35,7 +35,10 @@ async def async_setup_entry(
     """Set up Switchbot curtain based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     if isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
-        async_add_entities([SwitchBotBlindTiltEntity(coordinator)])
+        close_direction = entry.options.get(
+            CONF_CLOSE_DIRECTION, DEFAULT_CLOSE_DIRECTION
+        )
+        async_add_entities([SwitchBotBlindTiltEntity(coordinator, close_direction)])
     else:
         async_add_entities([SwitchBotCurtainEntity(coordinator)])
 
@@ -127,10 +130,15 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     CLOSED_UP_THRESHOLD = 80
     CLOSED_DOWN_THRESHOLD = 20
 
-    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: SwitchbotDataUpdateCoordinator,
+        close_direction: CloseDirection,
+    ) -> None:
         """Initialize the Switchbot."""
         super().__init__(coordinator)
         self._attr_is_closed = None
+        self._close_direction = close_direction
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -159,7 +167,14 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Close the tilt."""
 
         _LOGGER.debug("Switchbot to close the blind tilt %s", self._address)
-        self._last_run_success = bool(await self._device.close())
+        if self._close_direction == CloseDirection.CLOSEST:
+            result = await self._device.close()
+        elif self._close_direction == CloseDirection.UP:
+            result = await self._device.close_up()
+        elif self._close_direction == CloseDirection.DOWN:
+            result = await self._device.close_down()
+
+        self._last_run_success = bool(result)
         self.async_write_ha_state()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
