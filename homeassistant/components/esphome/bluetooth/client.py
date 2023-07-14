@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 import contextlib
+from dataclasses import dataclass, field
+from functools import partial
 import logging
 from typing import Any, TypeVar, cast
 import uuid
@@ -28,7 +30,6 @@ from bleak.exc import BleakError
 
 from homeassistant.core import CALLBACK_TYPE
 
-from ..entry_data import RuntimeEntryData
 from .cache import ESPHomeBluetoothCache
 from .characteristic import BleakGATTCharacteristicESPHome
 from .descriptor import BleakGATTDescriptorESPHome
@@ -132,6 +133,20 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
     return cast(_WrapFuncType, _async_wrap_bluetooth_operation)
 
 
+@dataclass(slots=True)
+class ESPHomeClientData:
+    """Define a class that stores client data for an esphome client."""
+
+    bluetooth_device: ESPHomeBluetoothDevice
+    cache: ESPHomeBluetoothCache
+    client: APIClient
+    device_info: DeviceInfo
+    api_version: APIVersion
+    title: str
+    scanner: ESPHomeScanner | None
+    disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+
+
 class ESPHomeClient(BaseBleakClient):
     """ESPHome Bleak Client."""
 
@@ -139,28 +154,22 @@ class ESPHomeClient(BaseBleakClient):
         self,
         address_or_ble_device: BLEDevice | str,
         *args: Any,
-        bluetooth_device: ESPHomeBluetoothDevice,
-        cache: ESPHomeBluetoothCache,
-        client: APIClient,
-        device_info: DeviceInfo,
-        api_version: APIVersion,
-        title: str,
-        scanner: ESPHomeScanner,
-        entry_data: RuntimeEntryData,
+        client_data: ESPHomeClientData,
         **kwargs: Any,
     ) -> None:
         """Initialize the ESPHomeClient."""
+        device_info = client_data.device_info
+        self._disconnect_callbacks = client_data.disconnect_callbacks
         assert isinstance(address_or_ble_device, BLEDevice)
         super().__init__(address_or_ble_device, *args, **kwargs)
-        self.entry_data = entry_data
         self._loop = asyncio.get_running_loop()
         self._ble_device = address_or_ble_device
         self._address_as_int = mac_to_int(self._ble_device.address)
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
-        self.cache = cache
-        self._bluetooth_device = bluetooth_device
-        self._client = client
+        self._cache = client_data.cache
+        self._bluetooth_device = client_data.bluetooth_device
+        self._client = client_data.client
         self._is_connected = False
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
@@ -168,12 +177,14 @@ class ESPHomeClient(BaseBleakClient):
             int, tuple[Callable[[], Coroutine[Any, Any, None]], Callable[[], None]]
         ] = {}
         self._disconnected_futures: set[asyncio.Future[None]] = set()
-        self._device_info = device_info
+        self._device_info = client_data.device_info
         self._feature_flags = device_info.bluetooth_proxy_feature_flags_compat(
-            api_version
+            client_data.api_version
         )
         self._address_type = address_or_ble_device.details["address_type"]
-        self._source_name = f"{title} [{self._source}]"
+        self._source_name = f"{client_data.title} [{self._source}]"
+        scanner = client_data.scanner
+        assert scanner is not None
         self._scanner = scanner
 
     def __str__(self) -> str:
@@ -233,7 +244,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.name,
             self._ble_device.address,
         )
-        self.entry_data.disconnect_callbacks.remove(self._async_esp_disconnected)
+        self._disconnect_callbacks.remove(self._async_esp_disconnected)
         self._async_ble_device_disconnected()
 
     def _async_call_bleak_disconnected_callback(self) -> None:
@@ -241,6 +252,65 @@ class ESPHomeClient(BaseBleakClient):
         if self._disconnected_callback:
             self._disconnected_callback()
             self._disconnected_callback = None
+
+    def _on_bluetooth_connection_state(
+        self,
+        connected_future: asyncio.Future[bool],
+        connected: bool,
+        mtu: int,
+        error: int,
+    ) -> None:
+        """Handle a connect or disconnect."""
+        _LOGGER.debug(
+            "%s: %s - %s: Connection state changed to connected=%s mtu=%s error=%s",
+            self._source_name,
+            self._ble_device.name,
+            self._ble_device.address,
+            connected,
+            mtu,
+            error,
+        )
+        if connected:
+            self._is_connected = True
+            if not self._mtu:
+                self._mtu = mtu
+                self._cache.set_gatt_mtu_cache(self._address_as_int, mtu)
+        else:
+            self._async_ble_device_disconnected()
+
+        if connected_future.done():
+            return
+
+        if error:
+            try:
+                ble_connection_error = BLEConnectionError(error)
+                ble_connection_error_name = ble_connection_error.name
+                human_error = ESP_CONNECTION_ERROR_DESCRIPTION[ble_connection_error]
+            except (KeyError, ValueError):
+                ble_connection_error_name = str(error)
+                human_error = ESPHOME_GATT_ERRORS.get(
+                    error, f"Unknown error code {error}"
+                )
+            connected_future.set_exception(
+                BleakError(
+                    f"Error {ble_connection_error_name} while connecting:"
+                    f" {human_error}"
+                )
+            )
+            return
+
+        if not connected:
+            connected_future.set_exception(BleakError("Disconnected"))
+            return
+
+        _LOGGER.debug(
+            "%s: %s - %s: connected, registering for disconnected callbacks",
+            self._source_name,
+            self._ble_device.name,
+            self._ble_device.address,
+        )
+        self._disconnect_callbacks.append(self._async_esp_disconnected)
+        connected_future.set_result(connected)
 
     @api_error_as_bleak_error
     async def connect(
@@ -256,8 +326,7 @@ class ESPHomeClient(BaseBleakClient):
             Boolean representing connection status.
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
-        cache = self.cache
-        entry_data = self.entry_data
+        cache = self._cache
 
         self._mtu = cache.get_gatt_mtu_cache(self._address_as_int)
         has_cache = bool(
@@ -266,62 +335,7 @@ class ESPHomeClient(BaseBleakClient):
             and cache.get_gatt_services_cache(self._address_as_int)
             and self._mtu
         )
-        connected_future: asyncio.Future[bool] = asyncio.Future()
-
-        def _on_bluetooth_connection_state(
-            connected: bool, mtu: int, error: int
-        ) -> None:
-            """Handle a connect or disconnect."""
-            _LOGGER.debug(
-                "%s: %s - %s: Connection state changed to connected=%s mtu=%s error=%s",
-                self._source_name,
-                self._ble_device.name,
-                self._ble_device.address,
-                connected,
-                mtu,
-                error,
-            )
-            if connected:
-                self._is_connected = True
-                if not self._mtu:
-                    self._mtu = mtu
-                    self.cache.set_gatt_mtu_cache(self._address_as_int, mtu)
-            else:
-                self._async_ble_device_disconnected()
-
-            if connected_future.done():
-                return
-
-            if error:
-                try:
-                    ble_connection_error = BLEConnectionError(error)
-                    ble_connection_error_name = ble_connection_error.name
-                    human_error = ESP_CONNECTION_ERROR_DESCRIPTION[ble_connection_error]
-                except (KeyError, ValueError):
-                    ble_connection_error_name = str(error)
-                    human_error = ESPHOME_GATT_ERRORS.get(
-                        error, f"Unknown error code {error}"
-                    )
-                connected_future.set_exception(
-                    BleakError(
-                        f"Error {ble_connection_error_name} while connecting:"
-                        f" {human_error}"
-                    )
-                )
-                return
-
-            if not connected:
-                connected_future.set_exception(BleakError("Disconnected"))
-                return
-
-            _LOGGER.debug(
-                "%s: %s - %s: connected, registering for disconnected callbacks",
-                self._source_name,
-                self._ble_device.name,
-                self._ble_device.address,
-            )
-            entry_data.disconnect_callbacks.append(self._async_esp_disconnected)
-            connected_future.set_result(connected)
+        connected_future: asyncio.Future[bool] = self._loop.create_future()
 
         timeout = kwargs.get("timeout", self._timeout)
         with self._scanner.connecting():
@@ -329,7 +343,7 @@ class ESPHomeClient(BaseBleakClient):
                 self._cancel_connection_state = (
                     await self._client.bluetooth_device_connect(
                         self._address_as_int,
-                        _on_bluetooth_connection_state,
+                        partial(self._on_bluetooth_connection_state, connected_future),
                         timeout=timeout,
                         has_cache=has_cache,
                         feature_flags=self._feature_flags,
@@ -451,7 +465,7 @@ class ESPHomeClient(BaseBleakClient):
            with this device's services tree.
         """
         address_as_int = self._address_as_int
-        cache = self.cache
+        cache = self._cache
         # If the connection version >= 3, we must use the cache
         # because the esp has already wiped the services list to
         # save memory.
@@ -537,7 +551,7 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def clear_cache(self) -> bool:
         """Clear the GATT cache."""
-        cache = self.cache
+        cache = self._cache
         cache.clear_gatt_services_cache(self._address_as_int)
         cache.clear_gatt_mtu_cache(self._address_as_int)
         if not self._feature_flags & BluetoothProxyFeature.CACHE_CLEARING:

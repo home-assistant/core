@@ -77,28 +77,32 @@ async def async_connect_scanner(
         feature_flags,
         connectable,
     )
-    from .client import ESPHomeClient  # pylint: disable=import-outside-toplevel
-
-    connector = HaBluetoothConnector(
-        client=None,  # type: ignore[arg-type]
-        source=source,
-        can_connect=_async_can_connect_factory(entry_data, bluetooth_device, source),
-    )
-    scanner = ESPHomeScanner(
-        hass, source, entry.title, new_info_callback, connector, connectable
-    )
-    bleak_client = partial(
+    from .client import (  # pylint: disable=import-outside-toplevel
         ESPHomeClient,
+        ESPHomeClientData,
+    )
+
+    client_data = ESPHomeClientData(
         bluetooth_device=bluetooth_device,
         cache=cache,
         client=cli,
         device_info=device_info,
         api_version=entry_data.api_version,
         title=entry.title,
-        scanner=scanner,
-        entry_data=entry_data,
+        scanner=None,
+        disconnect_callbacks=entry_data.disconnect_callbacks,
     )
-    connector.client = bleak_client  # type: ignore[assignment]
+    connector = HaBluetoothConnector(
+        # MyPy doesn't like partials, but this is correct
+        # https://github.com/python/mypy/issues/1484
+        client=partial(ESPHomeClient, client_data=client_data),  # type: ignore[arg-type]
+        source=source,
+        can_connect=_async_can_connect_factory(entry_data, bluetooth_device, source),
+    )
+    scanner = ESPHomeScanner(
+        hass, source, entry.title, new_info_callback, connector, connectable
+    )
+    client_data.scanner = scanner
     if connectable:
         # If its connectable be sure not to register the scanner
         # until we know the connection is fully setup since otherwise
