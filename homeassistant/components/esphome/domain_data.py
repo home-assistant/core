@@ -23,13 +23,9 @@ class DomainData:
 
     _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
     _stores: dict[str, ESPHomeStorage] = field(default_factory=dict)
-    _bluetooth_cache: ESPHomeBluetoothCache = field(
+    bluetooth_cache: ESPHomeBluetoothCache = field(
         default_factory=ESPHomeBluetoothCache
     )
-
-    def get_bluetooth_cache(self) -> ESPHomeBluetoothCache:
-        """Get the shared bluetooth instance."""
-        return self._bluetooth_cache
 
     def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
         """Return the runtime entry data associated with this config entry.
