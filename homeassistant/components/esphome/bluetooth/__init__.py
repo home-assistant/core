@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from ..entry_data import RuntimeEntryData
+from .cache import ESPHomeBluetoothCache
 from .device import ESPHomeBluetoothDevice
 from .scanner import ESPHomeScanner
 
@@ -55,19 +56,19 @@ async def async_connect_scanner(
     entry: ConfigEntry,
     cli: APIClient,
     entry_data: RuntimeEntryData,
+    cache: ESPHomeBluetoothCache,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
-    assert entry_data.device_info is not None
-    feature_flags = entry_data.device_info.bluetooth_proxy_feature_flags_compat(
+    device_info = entry_data.device_info
+    assert device_info is not None
+    feature_flags = device_info.bluetooth_proxy_feature_flags_compat(
         entry_data.api_version
     )
     connectable = bool(feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS)
-    bluetooth_device = ESPHomeBluetoothDevice(
-        entry_data.name, entry_data.device_info.mac_address
-    )
+    bluetooth_device = ESPHomeBluetoothDevice(entry_data.name, device_info.mac_address)
     entry_data.bluetooth_device = bluetooth_device
     _LOGGER.debug(
         "%s [%s]: Connecting scanner feature_flags=%s, connectable=%s",
@@ -79,15 +80,25 @@ async def async_connect_scanner(
     from .client import ESPHomeClient  # pylint: disable=import-outside-toplevel
 
     connector = HaBluetoothConnector(
-        # MyPy doesn't like partials, but this is correct
-        # https://github.com/python/mypy/issues/1484
-        client=partial(ESPHomeClient, config_entry=entry),  # type: ignore[arg-type]
+        client=None,  # type: ignore[arg-type]
         source=source,
         can_connect=_async_can_connect_factory(entry_data, bluetooth_device, source),
     )
     scanner = ESPHomeScanner(
         hass, source, entry.title, new_info_callback, connector, connectable
     )
+    bleak_client = partial(
+        ESPHomeClient,
+        bluetooth_device=bluetooth_device,
+        cache=cache,
+        client=cli,
+        device_info=device_info,
+        api_version=entry_data.api_version,
+        title=entry.title,
+        scanner=scanner,
+        entry_data=entry_data,
+    )
+    connector.client = bleak_client  # type: ignore[assignment]
     if connectable:
         # If its connectable be sure not to register the scanner
         # until we know the connection is fully setup since otherwise

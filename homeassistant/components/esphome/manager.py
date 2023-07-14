@@ -389,8 +389,9 @@ class ESPHomeManager:
                 reconnect_logic.name = entry_data.device_info.name
 
             if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
+                cache = DomainData.get(hass).get_bluetooth_cache()
                 entry_data.disconnect_callbacks.append(
-                    await async_connect_scanner(hass, entry, cli, entry_data)
+                    await async_connect_scanner(hass, entry, cli, entry_data, cache)
                 )
 
             self.device_id = _async_setup_device_registry(
