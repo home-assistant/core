@@ -152,7 +152,9 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = dr.async_get(self._hass)
-        device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
         if not device_entry:
             return
         for api_event_type, image_event in events.items():
