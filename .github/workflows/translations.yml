@@ -1,0 +1,32 @@
+name: Translations
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+    paths:
+      - "**strings.json"
+
+env:
+  DEFAULT_PYTHON: "3.11"
+
+jobs:
+  upload:
+    name: Upload
+    if: github.repository_owner == 'home-assistant'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3.5.3
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v4.7.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Upload Translations
+        run: |
+          export LOKALISE_TOKEN="${{ secrets.LOKALISE_TOKEN }}"
+          python3 -m script.translations upload

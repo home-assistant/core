@@ -9,10 +9,9 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, TEMP_CELSIUS
+from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
@@ -75,48 +74,8 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     """Hive Water Heater Device."""
 
     _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE
-
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device["device_id"])},
-            manufacturer=self.device["deviceData"]["manufacturer"],
-            model=self.device["deviceData"]["model"],
-            name=self.device["device_name"],
-            sw_version=self.device["deviceData"]["version"],
-            via_device=(DOMAIN, self.device["parentDevice"]),
-        )
-
-    @property
-    def name(self):
-        """Return the name of the water heater."""
-        return HOTWATER_NAME
-
-    @property
-    def available(self):
-        """Return if the device is available."""
-        return self.device["deviceData"]["online"]
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def current_operation(self):
-        """Return current operation."""
-        return HIVE_TO_HASS_STATE[self.device["status"]["current_operation"]]
-
-    @property
-    def operation_list(self):
-        """List of available operation modes."""
-        return SUPPORT_WATER_HEATER
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_operation_list = SUPPORT_WATER_HEATER
 
     @refresh_system
     async def async_turn_on(self, **kwargs):
@@ -129,7 +88,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
         await self.hive.hotwater.setMode(self.device, "OFF")
 
     @refresh_system
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set operation mode."""
         new_mode = HASS_TO_HIVE_STATE[operation_mode]
         await self.hive.hotwater.setMode(self.device, new_mode)
@@ -142,7 +101,12 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
         elif on_off == "off":
             await self.hive.hotwater.setBoostOff(self.device)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.hotwater.getWaterHeater(self.device)
+        self._attr_available = self.device["deviceData"].get("online")
+        if self._attr_available:
+            self._attr_current_operation = HIVE_TO_HASS_STATE[
+                self.device["status"]["current_operation"]
+            ]

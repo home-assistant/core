@@ -1,15 +1,15 @@
 {
   "domain": "rainforest_eagle",
   "name": "Rainforest Eagle",
-  "documentation": "https://www.home-assistant.io/integrations/rainforest_eagle",
-  "requirements": ["aioeagle==1.1.0", "uEagle==0.0.2"],
-  "codeowners": ["@gtdiehl", "@jcalbert"],
-  "iot_class": "local_polling",
+  "codeowners": ["@gtdiehl", "@jcalbert", "@hastarin"],
   "config_flow": true,
   "dhcp": [
     {
       "macaddress": "D8D5B9*"
     }
   ],
-  "loggers": ["aioeagle", "uEagle"]
+  "documentation": "https://www.home-assistant.io/integrations/rainforest_eagle",
+  "iot_class": "local_polling",
+  "loggers": ["aioeagle", "eagle100"],
+  "requirements": ["aioeagle==1.1.0", "eagle100==0.1.1"]
 }

@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
+from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -74,7 +74,7 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
             data = await self.hass.async_add_executor_job(
                 self.client.get_pool_measure_latest, self.flipr_id
             )
-        except (FliprError) as error:
+        except FliprError as error:
             raise UpdateFailed(error) from error
 
         return data
@@ -84,6 +84,7 @@ class FliprEntity(CoordinatorEntity):
     """Implements a common class elements representing the Flipr component."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, description: EntityDescription
@@ -98,7 +99,5 @@ class FliprEntity(CoordinatorEntity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, flipr_id)},
                 manufacturer=MANUFACTURER,
-                name=NAME,
+                name=f"Flipr {flipr_id}",
             )
-
-            self._attr_name = f"Flipr {flipr_id} {description.name}"

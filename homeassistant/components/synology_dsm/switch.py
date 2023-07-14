@@ -12,10 +12,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_SWITCHES, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+from . import SynoApi
+from .const import DOMAIN
+from .coordinator import SynologyDSMSwitchUpdateCoordinator
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
     SynologyDSMSwitchEntityDescription(
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
-        name="Home Mode",
+        translation_key="home_mode",
         icon="mdi:home-account",
     ),
 )
@@ -41,42 +43,29 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS switch."""
-
-    data = hass.data[DOMAIN][entry.unique_id]
-    api: SynoApi = data[SYNO_API]
-
-    entities = []
-
-    if SynoSurveillanceStation.INFO_API_KEY in api.dsm.apis:
-        info = await hass.async_add_executor_job(api.dsm.surveillance_station.get_info)
-        version = info["data"]["CMSMinVersion"]
-
-        # initial data fetch
-        coordinator: DataUpdateCoordinator = data[COORDINATOR_SWITCHES]
-        await coordinator.async_refresh()
-        entities.extend(
-            [
-                SynoDSMSurveillanceHomeModeToggle(
-                    api, version, coordinator, description
-                )
-                for description in SURVEILLANCE_SWITCH
-            ]
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    if coordinator := data.coordinator_switches:
+        assert coordinator.version is not None
+        async_add_entities(
+            SynoDSMSurveillanceHomeModeToggle(
+                data.api, coordinator.version, coordinator, description
+            )
+            for description in SURVEILLANCE_SWITCH
         )
 
-    async_add_entities(entities, True)
 
-
-class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
+class SynoDSMSurveillanceHomeModeToggle(
+    SynologyDSMBaseEntity[SynologyDSMSwitchUpdateCoordinator], SwitchEntity
+):
     """Representation a Synology Surveillance Station Home Mode toggle."""
 
-    coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]]
     entity_description: SynologyDSMSwitchEntityDescription
 
     def __init__(
         self,
         api: SynoApi,
         version: str,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]],
+        coordinator: SynologyDSMSwitchUpdateCoordinator,
         description: SynologyDSMSwitchEntityDescription,
     ) -> None:
         """Initialize a Synology Surveillance Station Home Mode."""
@@ -86,7 +75,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return self.coordinator.data["switches"][self.entity_description.key]
+        return self.coordinator.data["switches"][self.entity_description.key]  # type: ignore[no-any-return]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Home mode."""
@@ -94,9 +83,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
             "SynoDSMSurveillanceHomeModeToggle.turn_on(%s)",
             self._api.information.serial,
         )
-        await self.hass.async_add_executor_job(
-            self._api.dsm.surveillance_station.set_home_mode, True
-        )
+        await self._api.dsm.surveillance_station.set_home_mode(True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -105,9 +92,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
             "SynoDSMSurveillanceHomeModeToggle.turn_off(%s)",
             self._api.information.serial,
         )
-        await self.hass.async_add_executor_job(
-            self._api.dsm.surveillance_station.set_home_mode, False
-        )
+        await self._api.dsm.surveillance_station.set_home_mode(False)
         await self.coordinator.async_request_refresh()
 
     @property
@@ -125,7 +110,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
                     f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
                 )
             },
-            name="Surveillance Station",
+            name=f"{self._api.network.hostname} Surveillance Station",
             manufacturer="Synology",
             model=self._api.information.model,
             sw_version=self._version,

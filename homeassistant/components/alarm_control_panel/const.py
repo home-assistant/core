@@ -1,17 +1,29 @@
 """Provides the constants needed for component."""
-from enum import IntEnum
+from enum import IntFlag
 from typing import Final
+
+from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "alarm_control_panel"
 
 ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
 
+
+class CodeFormat(StrEnum):
+    """Code formats for the Alarm Control Panel."""
+
+    TEXT = "text"
+    NUMBER = "number"
+
+
+# These constants are deprecated as of Home Assistant 2022.5
+# Please use the CodeFormat enum instead.
 FORMAT_TEXT: Final = "text"
 FORMAT_NUMBER: Final = "number"
 
 
-class AlarmControlPanelEntityFeature(IntEnum):
+class AlarmControlPanelEntityFeature(IntFlag):
     """Supported features of the alarm control panel entity."""
 
     ARM_HOME = 1

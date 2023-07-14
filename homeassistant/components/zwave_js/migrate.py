@@ -1,356 +1,26 @@
 """Functions used to migrate unique IDs for Z-Wave JS entities."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
-from typing import TypedDict, cast
 
-from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LIGHT_LUX, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    DeviceEntry,
-    async_get as async_get_device_registry,
-)
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
     RegistryEntry,
     async_entries_for_device,
-    async_get as async_get_entity_registry,
 )
-from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
-from .helpers import get_device_id, get_unique_id
+from .helpers import get_unique_id
 
 _LOGGER = logging.getLogger(__name__)
-
-LEGACY_ZWAVE_MIGRATION = f"{DOMAIN}_legacy_zwave_migration"
-MIGRATED = "migrated"
-STORAGE_WRITE_DELAY = 30
-STORAGE_KEY = f"{DOMAIN}.legacy_zwave_migration"
-STORAGE_VERSION = 1
-
-NOTIFICATION_CC_LABEL_TO_PROPERTY_NAME = {
-    "Smoke": "Smoke Alarm",
-    "Carbon Monoxide": "CO Alarm",
-    "Carbon Dioxide": "CO2 Alarm",
-    "Heat": "Heat Alarm",
-    "Flood": "Water Alarm",
-    "Access Control": "Access Control",
-    "Burglar": "Home Security",
-    "Power Management": "Power Management",
-    "System": "System",
-    "Emergency": "Siren",
-    "Clock": "Clock",
-    "Appliance": "Appliance",
-    "HomeHealth": "Home Health",
-}
-
-SENSOR_MULTILEVEL_CC_LABEL_TO_PROPERTY_NAME = {
-    "Temperature": "Air temperature",
-    "General": "General purpose",
-    "Luminance": "Illuminance",
-    "Power": "Power",
-    "Relative Humidity": "Humidity",
-    "Velocity": "Velocity",
-    "Direction": "Direction",
-    "Atmospheric Pressure": "Atmospheric pressure",
-    "Barometric Pressure": "Barometric pressure",
-    "Solar Radiation": "Solar radiation",
-    "Dew Point": "Dew point",
-    "Rain Rate": "Rain rate",
-    "Tide Level": "Tide level",
-    "Weight": "Weight",
-    "Voltage": "Voltage",
-    "Current": "Current",
-    "CO2 Level": "Carbon dioxide (CO₂) level",
-    "Air Flow": "Air flow",
-    "Tank Capacity": "Tank capacity",
-    "Distance": "Distance",
-    "Angle Position": "Angle position",
-    "Rotation": "Rotation",
-    "Water Temperature": "Water temperature",
-    "Soil Temperature": "Soil temperature",
-    "Seismic Intensity": "Seismic Intensity",
-    "Seismic Magnitude": "Seismic magnitude",
-    "Ultraviolet": "Ultraviolet",
-    "Electrical Resistivity": "Electrical resistivity",
-    "Electrical Conductivity": "Electrical conductivity",
-    "Loudness": "Loudness",
-    "Moisture": "Moisture",
-}
-
-CC_ID_LABEL_TO_PROPERTY = {
-    49: SENSOR_MULTILEVEL_CC_LABEL_TO_PROPERTY_NAME,
-    113: NOTIFICATION_CC_LABEL_TO_PROPERTY_NAME,
-}
-
-UNIT_LEGACY_MIGRATION_MAP = {LIGHT_LUX: "Lux"}
-
-
-class ZWaveMigrationData(TypedDict):
-    """Represent the Z-Wave migration data dict."""
-
-    node_id: int
-    node_instance: int
-    command_class: int
-    command_class_label: str
-    value_index: int
-    device_id: str
-    domain: str
-    entity_id: str
-    unique_id: str
-    unit_of_measurement: str | None
-
-
-class ZWaveJSMigrationData(TypedDict):
-    """Represent the Z-Wave JS migration data dict."""
-
-    node_id: int
-    endpoint_index: int
-    command_class: int
-    value_property_name: str
-    value_property_key_name: str | None
-    value_id: str
-    device_id: str
-    domain: str
-    entity_id: str
-    unique_id: str
-    unit_of_measurement: str | None
-
-
-@dataclass
-class LegacyZWaveMappedData:
-    """Represent the mapped data between Z-Wave and Z-Wave JS."""
-
-    entity_entries: dict[str, ZWaveMigrationData] = field(default_factory=dict)
-    device_entries: dict[str, str] = field(default_factory=dict)
-
-
-async def async_add_migration_entity_value(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    entity_id: str,
-    discovery_info: ZwaveDiscoveryInfo,
-) -> None:
-    """Add Z-Wave JS entity value for legacy Z-Wave migration."""
-    migration_handler: LegacyZWaveMigration = await get_legacy_zwave_migration(hass)
-    migration_handler.add_entity_value(config_entry, entity_id, discovery_info)
-
-
-async def async_get_migration_data(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict[str, ZWaveJSMigrationData]:
-    """Return Z-Wave JS migration data."""
-    migration_handler: LegacyZWaveMigration = await get_legacy_zwave_migration(hass)
-    return await migration_handler.get_data(config_entry)
-
-
-@singleton(LEGACY_ZWAVE_MIGRATION)
-async def get_legacy_zwave_migration(hass: HomeAssistant) -> LegacyZWaveMigration:
-    """Return legacy Z-Wave migration handler."""
-    migration_handler = LegacyZWaveMigration(hass)
-    await migration_handler.load_data()
-    return migration_handler
-
-
-class LegacyZWaveMigration:
-    """Handle the migration from zwave to zwave_js."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Set up migration instance."""
-        self._hass = hass
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        self._data: dict[str, dict[str, ZWaveJSMigrationData]] = {}
-
-    async def load_data(self) -> None:
-        """Load Z-Wave JS migration data."""
-        stored = cast(dict, await self._store.async_load())
-        if stored:
-            self._data = stored
-
-    @callback
-    def save_data(
-        self, config_entry_id: str, entity_id: str, data: ZWaveJSMigrationData
-    ) -> None:
-        """Save Z-Wave JS migration data."""
-        if config_entry_id not in self._data:
-            self._data[config_entry_id] = {}
-        self._data[config_entry_id][entity_id] = data
-        self._store.async_delay_save(self._data_to_save, STORAGE_WRITE_DELAY)
-
-    @callback
-    def _data_to_save(self) -> dict[str, dict[str, ZWaveJSMigrationData]]:
-        """Return data to save."""
-        return self._data
-
-    @callback
-    def add_entity_value(
-        self,
-        config_entry: ConfigEntry,
-        entity_id: str,
-        discovery_info: ZwaveDiscoveryInfo,
-    ) -> None:
-        """Add info for one entity and Z-Wave JS value."""
-        ent_reg = async_get_entity_registry(self._hass)
-        dev_reg = async_get_device_registry(self._hass)
-
-        node = discovery_info.node
-        primary_value = discovery_info.primary_value
-        entity_entry = ent_reg.async_get(entity_id)
-        assert entity_entry
-        device_identifier = get_device_id(node.client, node)
-        device_entry = dev_reg.async_get_device({device_identifier}, set())
-        assert device_entry
-
-        # Normalize unit of measurement.
-        if unit := entity_entry.unit_of_measurement:
-            _unit = UNIT_LEGACY_MIGRATION_MAP.get(unit, unit)
-            unit = _unit.lower()
-        if unit == "":
-            unit = None
-
-        data: ZWaveJSMigrationData = {
-            "node_id": node.node_id,
-            "endpoint_index": node.index,
-            "command_class": primary_value.command_class,
-            "value_property_name": primary_value.property_name,
-            "value_property_key_name": primary_value.property_key_name,
-            "value_id": primary_value.value_id,
-            "device_id": device_entry.id,
-            "domain": entity_entry.domain,
-            "entity_id": entity_id,
-            "unique_id": entity_entry.unique_id,
-            "unit_of_measurement": unit,
-        }
-
-        self.save_data(config_entry.entry_id, entity_id, data)
-
-    async def get_data(
-        self, config_entry: ConfigEntry
-    ) -> dict[str, ZWaveJSMigrationData]:
-        """Return Z-Wave JS migration data for a config entry."""
-        await self.load_data()
-        data = self._data.get(config_entry.entry_id)
-        return data or {}
-
-
-@callback
-def async_map_legacy_zwave_values(
-    zwave_data: dict[str, ZWaveMigrationData],
-    zwave_js_data: dict[str, ZWaveJSMigrationData],
-) -> LegacyZWaveMappedData:
-    """Map Z-Wave node values onto Z-Wave JS node values."""
-    migration_map = LegacyZWaveMappedData()
-    zwave_proc_data: dict[
-        tuple[int, int, int, str, str | None, str | None],
-        ZWaveMigrationData | None,
-    ] = {}
-    zwave_js_proc_data: dict[
-        tuple[int, int, int, str, str | None, str | None],
-        ZWaveJSMigrationData | None,
-    ] = {}
-
-    for zwave_item in zwave_data.values():
-        zwave_js_property_name = CC_ID_LABEL_TO_PROPERTY.get(
-            zwave_item["command_class"], {}
-        ).get(zwave_item["command_class_label"])
-        item_id = (
-            zwave_item["node_id"],
-            zwave_item["command_class"],
-            zwave_item["node_instance"] - 1,
-            zwave_item["domain"],
-            zwave_item["unit_of_measurement"],
-            zwave_js_property_name,
-        )
-
-        # Filter out duplicates that are not resolvable.
-        if item_id in zwave_proc_data:
-            zwave_proc_data[item_id] = None
-            continue
-
-        zwave_proc_data[item_id] = zwave_item
-
-    for zwave_js_item in zwave_js_data.values():
-        # Only identify with property name if there is a command class label map.
-        if zwave_js_item["command_class"] in CC_ID_LABEL_TO_PROPERTY:
-            zwave_js_property_name = zwave_js_item["value_property_name"]
-        else:
-            zwave_js_property_name = None
-        item_id = (
-            zwave_js_item["node_id"],
-            zwave_js_item["command_class"],
-            zwave_js_item["endpoint_index"],
-            zwave_js_item["domain"],
-            zwave_js_item["unit_of_measurement"],
-            zwave_js_property_name,
-        )
-
-        # Filter out duplicates that are not resolvable.
-        if item_id in zwave_js_proc_data:
-            zwave_js_proc_data[item_id] = None
-            continue
-
-        zwave_js_proc_data[item_id] = zwave_js_item
-
-    for item_id, zwave_entry in zwave_proc_data.items():
-        zwave_js_entry = zwave_js_proc_data.pop(item_id, None)
-
-        if zwave_entry is None or zwave_js_entry is None:
-            continue
-
-        migration_map.entity_entries[zwave_js_entry["entity_id"]] = zwave_entry
-        migration_map.device_entries[zwave_js_entry["device_id"]] = zwave_entry[
-            "device_id"
-        ]
-
-    return migration_map
-
-
-async def async_migrate_legacy_zwave(
-    hass: HomeAssistant,
-    zwave_config_entry: ConfigEntry,
-    zwave_js_config_entry: ConfigEntry,
-    migration_map: LegacyZWaveMappedData,
-) -> None:
-    """Perform Z-Wave to Z-Wave JS migration."""
-    dev_reg = async_get_device_registry(hass)
-    for zwave_js_device_id, zwave_device_id in migration_map.device_entries.items():
-        zwave_device_entry = dev_reg.async_get(zwave_device_id)
-        if not zwave_device_entry:
-            continue
-        dev_reg.async_update_device(
-            zwave_js_device_id,
-            area_id=zwave_device_entry.area_id,
-            name_by_user=zwave_device_entry.name_by_user,
-        )
-
-    ent_reg = async_get_entity_registry(hass)
-    for zwave_js_entity_id, zwave_entry in migration_map.entity_entries.items():
-        zwave_entity_id = zwave_entry["entity_id"]
-        if not (entity_entry := ent_reg.async_get(zwave_entity_id)):
-            continue
-        ent_reg.async_remove(zwave_entity_id)
-        ent_reg.async_update_entity(
-            zwave_js_entity_id,
-            new_entity_id=entity_entry.entity_id,
-            name=entity_entry.name,
-            icon=entity_entry.icon,
-        )
-
-    await hass.config_entries.async_remove(zwave_config_entry.entry_id)
-
-    updates = {
-        **zwave_js_config_entry.data,
-        MIGRATED: True,
-    }
-    hass.config_entries.async_update_entry(zwave_js_config_entry, data=updates)
 
 
 @dataclass
@@ -364,11 +34,10 @@ class ValueID:
 
     @staticmethod
     def from_unique_id(unique_id: str) -> ValueID:
-        """
-        Get a ValueID from a unique ID.
+        """Get a ValueID from a unique ID.
 
-        This also works for Notification CC Binary Sensors which have their own unique ID
-        format.
+        This also works for Notification CC Binary Sensors which have their
+        own unique ID format.
         """
         return ValueID.from_string_id(unique_id.split(".")[1])
 
@@ -468,12 +137,12 @@ def async_migrate_discovered_value(
     ent_reg: EntityRegistry,
     registered_unique_ids: set[str],
     device: DeviceEntry,
-    client: ZwaveClient,
+    driver: Driver,
     disc_info: ZwaveDiscoveryInfo,
 ) -> None:
     """Migrate unique ID for entity/entities tied to discovered value."""
 
-    new_unique_id = get_unique_id(client, disc_info.primary_value.value_id)
+    new_unique_id = get_unique_id(driver, disc_info.primary_value.value_id)
 
     # On reinterviews, there is no point in going through this logic again for already
     # discovered values
@@ -485,7 +154,7 @@ def async_migrate_discovered_value(
 
     # 2021.2.*, 2021.3.0b0, and 2021.3.0 formats
     old_unique_ids = [
-        get_unique_id(client, value_id)
+        get_unique_id(driver, value_id)
         for value_id in get_old_value_ids(disc_info.primary_value)
     ]
 

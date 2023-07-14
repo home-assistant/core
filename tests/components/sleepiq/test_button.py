@@ -1,17 +1,13 @@
 """The tests for SleepIQ binary sensor platform."""
 from homeassistant.components.button import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.sleepiq.conftest import (
-    BED_ID,
-    BED_NAME,
-    BED_NAME_LOWER,
-    setup_platform,
-)
+from .conftest import BED_ID, BED_NAME, BED_NAME_LOWER, setup_platform
 
 
-async def test_button_calibrate(hass, mock_asyncsleepiq):
+async def test_button_calibrate(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ calibrate button."""
     await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
@@ -36,7 +32,7 @@ async def test_button_calibrate(hass, mock_asyncsleepiq):
     mock_asyncsleepiq.beds[BED_ID].calibrate.assert_called_once()
 
 
-async def test_button_stop_pump(hass, mock_asyncsleepiq):
+async def test_button_stop_pump(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ stop pump button."""
     await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)

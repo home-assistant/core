@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -65,10 +65,16 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def _async_update_data(self) -> dict[str, dict]:
+    async def _async_update_data(self) -> dict[str, dict[str, dict]]:
         """Fetch the latest data from the source."""
         await self.base.update_data()
-        return {ha["ID"]: ha for ha in self.base.heat_areas if ha.get("ID")}
+        return {
+            "heat_areas": {ha["ID"]: ha for ha in self.base.heat_areas if ha.get("ID")},
+            "heat_controls": {
+                hc["ID"]: hc for hc in self.base.heat_controls if hc.get("ID")
+            },
+            "io_devices": {io["ID"]: io for io in self.base.io_devices if io.get("ID")},
+        }
 
     def get_cooling(self) -> bool:
         """Return if cooling mode is enabled."""
@@ -77,8 +83,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     async def async_set_cooling(self, enabled: bool) -> None:
         """Enable or disable cooling mode."""
         await self.base.set_cooling(enabled)
-        for update_callback in self._listeners:
-            update_callback()
+        self.async_update_listeners()
 
     async def async_set_target_temperature(
         self, heat_area_id: str, target_temperature: float
@@ -92,7 +97,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         update_data = {"T_TARGET": target_temperature}
         is_cooling = self.get_cooling()
-        heat_area_mode = self.data[heat_area_id]["HEATAREA_MODE"]
+        heat_area_mode = self.data["heat_areas"][heat_area_id]["HEATAREA_MODE"]
         if heat_area_mode == 1:
             if is_cooling:
                 update_data["T_COOL_DAY"] = target_temperature
@@ -110,9 +115,8 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             raise HomeAssistantError(
                 "Failed to set target temperature, communication error with alpha2 base"
             ) from http_err
-        self.data[heat_area_id].update(update_data)
-        for update_callback in self._listeners:
-            update_callback()
+        self.data["heat_areas"][heat_area_id].update(update_data)
+        self.async_update_listeners()
 
     async def async_set_heat_area_mode(
         self, heat_area_id: str, heat_area_mode: int
@@ -120,7 +124,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         """Set the mode of the given heat area."""
         # HEATAREA_MODE: 0=Auto, 1=Tag, 2=Nacht
         if heat_area_mode not in (0, 1, 2):
-            ValueError(f"Invalid heat area mode: {heat_area_mode}")
+            raise ValueError(f"Invalid heat area mode: {heat_area_mode}")
         _LOGGER.debug(
             "Setting mode of heat area %s to %d",
             heat_area_id,
@@ -135,25 +139,25 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 "Failed to set heat area mode, communication error with alpha2 base"
             ) from http_err
 
-        self.data[heat_area_id]["HEATAREA_MODE"] = heat_area_mode
+        self.data["heat_areas"][heat_area_id]["HEATAREA_MODE"] = heat_area_mode
         is_cooling = self.get_cooling()
         if heat_area_mode == 1:
             if is_cooling:
-                self.data[heat_area_id]["T_TARGET"] = self.data[heat_area_id][
-                    "T_COOL_DAY"
-                ]
+                self.data["heat_areas"][heat_area_id]["T_TARGET"] = self.data[
+                    "heat_areas"
+                ][heat_area_id]["T_COOL_DAY"]
             else:
-                self.data[heat_area_id]["T_TARGET"] = self.data[heat_area_id][
-                    "T_HEAT_DAY"
-                ]
+                self.data["heat_areas"][heat_area_id]["T_TARGET"] = self.data[
+                    "heat_areas"
+                ][heat_area_id]["T_HEAT_DAY"]
         elif heat_area_mode == 2:
             if is_cooling:
-                self.data[heat_area_id]["T_TARGET"] = self.data[heat_area_id][
-                    "T_COOL_NIGHT"
-                ]
+                self.data["heat_areas"][heat_area_id]["T_TARGET"] = self.data[
+                    "heat_areas"
+                ][heat_area_id]["T_COOL_NIGHT"]
             else:
-                self.data[heat_area_id]["T_TARGET"] = self.data[heat_area_id][
-                    "T_HEAT_NIGHT"
-                ]
-        for update_callback in self._listeners:
-            update_callback()
+                self.data["heat_areas"][heat_area_id]["T_TARGET"] = self.data[
+                    "heat_areas"
+                ][heat_area_id]["T_HEAT_NIGHT"]
+
+        self.async_update_listeners()

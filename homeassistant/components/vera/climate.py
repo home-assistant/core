@@ -7,24 +7,14 @@ import pyvera as veraApi
 
 from homeassistant.components.climate import (
     ENTITY_ID_FORMAT,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
-from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_ON,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,7 +23,7 @@ from .common import ControllerData, get_controller_data
 
 FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
 
-SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF]
+SUPPORT_HVAC = [HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL, HVACMode.OFF]
 
 
 async def async_setup_entry(
@@ -55,6 +45,7 @@ async def async_setup_entry(
 class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     """Representation of a Vera Thermostat."""
 
+    _attr_hvac_modes = SUPPORT_HVAC
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
@@ -67,27 +58,19 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
         mode = self.vera_device.get_hvac_mode()
         if mode == "HeatOn":
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         if mode == "CoolOn":
-            return HVAC_MODE_COOL
+            return HVACMode.COOL
         if mode == "AutoChangeOver":
-            return HVAC_MODE_HEAT_COOL
-        return HVAC_MODE_OFF
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return SUPPORT_HVAC
+            return HVACMode.HEAT_COOL
+        return HVACMode.OFF
 
     @property
     def fan_mode(self) -> str | None:
@@ -101,7 +84,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         """Return a list of available fan modes."""
         return FAN_OPERATION_LIST
 
-    def set_fan_mode(self, fan_mode) -> None:
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""
         if fan_mode == FAN_ON:
             self.vera_device.fan_on()
@@ -116,9 +99,9 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         vera_temp_units = self.vera_device.vera_controller.temperature_units
 
         if vera_temp_units == "F":
-            return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
 
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float | None:
@@ -142,15 +125,15 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
 
         self.schedule_update_ha_state()
 
-    def set_hvac_mode(self, hvac_mode) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             self.vera_device.turn_off()
-        elif hvac_mode == HVAC_MODE_HEAT_COOL:
+        elif hvac_mode == HVACMode.HEAT_COOL:
             self.vera_device.turn_auto_on()
-        elif hvac_mode == HVAC_MODE_COOL:
+        elif hvac_mode == HVACMode.COOL:
             self.vera_device.turn_cool_on()
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             self.vera_device.turn_heat_on()
 
         self.schedule_update_ha_state()

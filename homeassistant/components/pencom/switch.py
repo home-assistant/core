@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pencompy.pencompy import Pencompy
 import voluptuous as vol
@@ -90,15 +91,15 @@ class PencomRelay(SwitchEntity):
         """Return a relay's state."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn a relay on."""
         self._hub.set(self._board, self._addr, True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn a relay off."""
         self._hub.set(self._board, self._addr, False)
 
-    def update(self):
+    def update(self) -> None:
         """Refresh a relay's state."""
         self._state = self._hub.get(self._board, self._addr)
 

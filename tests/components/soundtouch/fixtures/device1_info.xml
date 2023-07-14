@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<info deviceID="020000000001">
+    <name>My SoundTouch 1</name>
+    <type>SoundTouch 10</type>
+    <margeAccountUUID>0</margeAccountUUID>
+    <components>
+        <component>
+            <componentCategory>SCM</componentCategory>
+            <softwareVersion>27.0.3.46298.4608935 epdbuild.trunk.hepdswbld04.2021-10-06T16:35:02</softwareVersion>
+            <serialNumber>P0000000000000000000001</serialNumber>
+        </component>
+        <component>
+            <componentCategory>PackagedProduct</componentCategory>
+            <softwareVersion>27.0.3.46298.4608935 epdbuild.trunk.hepdswbld04.2021-10-06T16:35:02</softwareVersion>
+            <serialNumber>000000P00000001AE</serialNumber>
+        </component>
+    </components>
+    <margeURL>https://streaming.bose.com</margeURL>
+    <networkInfo type="SCM">
+        <macAddress>020000000001</macAddress>
+        <ipAddress>192.168.42.1</ipAddress>
+    </networkInfo>
+    <networkInfo type="SMSC">
+        <macAddress>060000000001</macAddress>
+        <ipAddress>192.168.42.1</ipAddress>
+    </networkInfo>
+    <moduleType>sm2</moduleType>
+    <variant>rhino</variant>
+    <variantMode>normal</variantMode>
+    <countryCode>US</countryCode>
+    <regionCode>US</regionCode>
+</info>

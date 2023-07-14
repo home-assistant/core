@@ -123,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         device_ids.add(device.id)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -134,7 +134,7 @@ async def cleanup_device_registry(
     device_registry = dr.async_get(hass)
     for dev_id, device_entry in list(device_registry.devices.items()):
         for item in device_entry.identifiers:
-            if DOMAIN == item[0] and item[1] not in device_manager.device_map:
+            if item[0] == DOMAIN and item[1] not in device_manager.device_map:
                 device_registry.async_remove_device(dev_id)
                 break
 

@@ -1,12 +1,16 @@
 """Support for LED numbers."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from functools import partial
+
+from wled import Segment
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_INTENSITY, ATTR_SPEED, DOMAIN
@@ -35,23 +39,37 @@ async def async_setup_entry(
     update_segments()
 
 
+@dataclass
+class WLEDNumberDescriptionMixin:
+    """Mixin for WLED number."""
+
+    value_fn: Callable[[Segment], float | None]
+
+
+@dataclass
+class WLEDNumberEntityDescription(NumberEntityDescription, WLEDNumberDescriptionMixin):
+    """Class describing WLED number entities."""
+
+
 NUMBERS = [
-    NumberEntityDescription(
+    WLEDNumberEntityDescription(
         key=ATTR_SPEED,
         name="Speed",
         icon="mdi:speedometer",
         entity_category=EntityCategory.CONFIG,
-        step=1,
-        min_value=0,
-        max_value=255,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=255,
+        value_fn=lambda segment: segment.speed,
     ),
-    NumberEntityDescription(
+    WLEDNumberEntityDescription(
         key=ATTR_INTENSITY,
         name="Intensity",
         entity_category=EntityCategory.CONFIG,
-        step=1,
-        min_value=0,
-        max_value=255,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=255,
+        value_fn=lambda segment: segment.intensity,
     ),
 ]
 
@@ -59,11 +77,13 @@ NUMBERS = [
 class WLEDNumber(WLEDEntity, NumberEntity):
     """Defines a WLED speed number."""
 
+    entity_description: WLEDNumberEntityDescription
+
     def __init__(
         self,
         coordinator: WLEDDataUpdateCoordinator,
         segment: int,
-        description: NumberEntityDescription,
+        description: WLEDNumberEntityDescription,
     ) -> None:
         """Initialize WLED ."""
         super().__init__(coordinator=coordinator)
@@ -71,11 +91,8 @@ class WLEDNumber(WLEDEntity, NumberEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        self._attr_name = (
-            f"{coordinator.data.info.name} Segment {segment} {description.name}"
-        )
-        if segment == 0:
-            self._attr_name = f"{coordinator.data.info.name} {description.name}"
+        if segment != 0:
+            self._attr_name = f"Segment {segment} {description.name}"
 
         self._attr_unique_id = (
             f"{coordinator.data.info.mac_address}_{description.key}_{segment}"
@@ -93,15 +110,14 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         return super().available
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current WLED segment number value."""
-        return getattr(
-            self.coordinator.data.state.segments[self._segment],
-            self.entity_description.key,
+        return self.entity_description.value_fn(
+            self.coordinator.data.state.segments[self._segment]
         )
 
     @wled_exception_handler
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the WLED segment value."""
         key = self.entity_description.key
         if key == ATTR_SPEED:
@@ -118,12 +134,12 @@ class WLEDNumber(WLEDEntity, NumberEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update segments."""
     segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
 
-    new_entities = []
+    new_entities: list[WLEDNumber] = []
 
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:
@@ -131,5 +147,4 @@ def async_update_segments(
         for desc in NUMBERS:
             new_entities.append(WLEDNumber(coordinator, segment_id, desc))
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)

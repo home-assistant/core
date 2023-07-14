@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Literal, Union
+from typing import Literal
 
 from pymata_express.pymata_express import PymataExpress
 from pymata_express.pymata_express_serial import serial
@@ -29,7 +29,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-FirmataPinType = Union[int, str]
+FirmataPinType = int | str
 
 
 class FirmataBoard:
@@ -92,8 +92,7 @@ class FirmataBoard:
                 )
             except RuntimeError as err:
                 _LOGGER.error(
-                    "Error setting sampling interval for PyMata \
-board %s: %s",
+                    "Error setting sampling interval for PyMata board %s: %s",
                     self.name,
                     err,
                 )

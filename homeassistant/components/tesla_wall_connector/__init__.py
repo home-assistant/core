@@ -62,7 +62,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from ex
         except WallConnectorConnectionError as ex:
             raise UpdateFailed(
-                f"Could not fetch data from Tesla WallConnector at {hostname}: Cannot connect"
+                f"Could not fetch data from Tesla WallConnector at {hostname}: Cannot"
+                " connect"
             ) from ex
         except WallConnectorError as ex:
             raise UpdateFailed(
@@ -93,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_coordinator=coordinator,
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -147,10 +148,10 @@ class WallConnectorEntity(CoordinatorEntity):
         """Return information about the device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.wall_connector_data.serial_number)},
-            default_name=WALLCONNECTOR_DEVICE_NAME,
+            name=WALLCONNECTOR_DEVICE_NAME,
             model=self.wall_connector_data.part_number,
             sw_version=self.wall_connector_data.firmware_version,
-            default_manufacturer="Tesla",
+            manufacturer="Tesla",
         )
 
 

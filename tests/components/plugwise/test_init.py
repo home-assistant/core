@@ -1,11 +1,12 @@
 """Tests for the Plugwise Climate integration."""
-import asyncio
 from unittest.mock import MagicMock
 
 from plugwise.exceptions import (
     ConnectionFailedError,
-    PlugwiseException,
-    XMLDataMissingError,
+    InvalidAuthentication,
+    InvalidXMLError,
+    ResponseError,
+    UnsupportedDeviceError,
 )
 import pytest
 
@@ -43,33 +44,35 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "entry_state"),
     [
-        (ConnectionFailedError),
-        (PlugwiseException),
-        (XMLDataMissingError),
-        (asyncio.TimeoutError),
+        (ConnectionFailedError, ConfigEntryState.SETUP_RETRY),
+        (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
+        (InvalidXMLError, ConfigEntryState.SETUP_RETRY),
+        (ResponseError, ConfigEntryState.SETUP_RETRY),
+        (UnsupportedDeviceError, ConfigEntryState.SETUP_ERROR),
     ],
 )
-async def test_config_entry_not_ready(
+async def test_gateway_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smile_anna: MagicMock,
     side_effect: Exception,
+    entry_state: ConfigEntryState,
 ) -> None:
     """Test the Plugwise configuration entry not ready."""
-    mock_smile_anna.connect.side_effect = side_effect
+    mock_smile_anna.async_update.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert len(mock_smile_anna.connect.mock_calls) == 1
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is entry_state
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -110,7 +113,7 @@ async def test_migrate_unique_id_temperature(
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {

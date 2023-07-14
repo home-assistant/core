@@ -1,0 +1,679 @@
+# serializer version: 1
+# name: test_whois_sensors[sensor.home_assistant_io_admin]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'home-assistant.io Admin',
+      'icon': 'mdi:account-star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_admin',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'admin@example.com',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_admin].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_admin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:account-star',
+    'original_name': 'Admin',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_admin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_admin].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_created]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'home-assistant.io Created',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_created',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2019-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_created].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_created',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Created',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_creation_date',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_created].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_days_until_expiration]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'expires': '2023-01-01T00:00:00',
+      'friendly_name': 'home-assistant.io Days until expiration',
+      'icon': 'mdi:calendar-clock',
+      'name_servers': 'ns1.example.com ns2.example.com',
+      'registrar': 'My Registrar',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      'updated': '2022-01-01T00:00:00+01:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_days_until_expiration',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '364',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_days_until_expiration].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_assistant_io_days_until_expiration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:calendar-clock',
+    'original_name': 'Days until expiration',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_days_until_expiration',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_days_until_expiration].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_expires]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'home-assistant.io Expires',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_expires',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_expires].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_expires',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Expires',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_expiration_date',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_expires].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_last_updated]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'home-assistant.io Last updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_last_updated',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-12-31T23:00:00+00:00',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_last_updated].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_last_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last updated',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_last_updated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_last_updated].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_owner]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'home-assistant.io Owner',
+      'icon': 'mdi:account',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_owner',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'owner@example.com',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_owner].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:account',
+    'original_name': 'Owner',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_owner].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_registrant]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'home-assistant.io Registrant',
+      'icon': 'mdi:account-edit',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_registrant',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'registrant@example.com',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_registrant].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_registrant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:account-edit',
+    'original_name': 'Registrant',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_registrant',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_registrant].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_registrar]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'home-assistant.io Registrar',
+      'icon': 'mdi:store',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_registrar',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'My Registrar',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_registrar].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_registrar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:store',
+    'original_name': 'Registrar',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_registrar',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_registrar].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_reseller]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'home-assistant.io Reseller',
+      'icon': 'mdi:store',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_reseller',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Top Domains, Low Prices',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_reseller].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_reseller',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:store',
+    'original_name': 'Reseller',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_reseller',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_reseller].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': None,
+    'model': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors_missing_some_attrs
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'home-assistant.io Last updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_last_updated',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-12-31T23:00:00+00:00',
+  })
+# ---
+# name: test_whois_sensors_missing_some_attrs.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_last_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last updated',
+    'platform': 'whois',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-assistant.io_last_updated',
+    'unit_of_measurement': None,
+  })
+# ---

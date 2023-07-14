@@ -8,6 +8,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ambiclimate import config_flow
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
 
@@ -29,17 +30,17 @@ async def init_config_flow(hass):
     return flow
 
 
-async def test_abort_if_no_implementation_registered(hass):
+async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> None:
     """Test we abort if no implementation is registered."""
     flow = config_flow.AmbiclimateFlowHandler()
     flow.hass = hass
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Ambiclimate is already setup."""
     flow = await init_config_flow(hass)
 
@@ -48,22 +49,22 @@ async def test_abort_if_already_setup(hass):
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     with pytest.raises(data_entry_flow.AbortFlow):
         result = await flow.async_step_code()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_full_flow_implementation(hass):
+async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(hass, None, None)
     flow = await init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert (
         result["description_placeholders"]["cb_url"]
@@ -78,7 +79,7 @@ async def test_full_flow_implementation(hass):
 
     with patch("ambiclimate.AmbiclimateOAuth.get_access_token", return_value="test"):
         result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Ambiclimate"
     assert result["data"]["callback_url"] == "https://example.com/api/ambiclimate"
     assert result["data"][CONF_CLIENT_SECRET] == "secret"
@@ -86,28 +87,28 @@ async def test_full_flow_implementation(hass):
 
     with patch("ambiclimate.AmbiclimateOAuth.get_access_token", return_value=None):
         result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
     with patch(
         "ambiclimate.AmbiclimateOAuth.get_access_token",
         side_effect=ambiclimate.AmbiclimateOauthError(),
     ):
         result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_abort_invalid_code(hass):
+async def test_abort_invalid_code(hass: HomeAssistant) -> None:
     """Test if no code is given to step_code."""
     config_flow.register_flow_implementation(hass, None, None)
     flow = await init_config_flow(hass)
 
     with patch("ambiclimate.AmbiclimateOAuth.get_access_token", return_value=None):
         result = await flow.async_step_code("invalid")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "access_token"
 
 
-async def test_already_setup(hass):
+async def test_already_setup(hass: HomeAssistant) -> None:
     """Test when already setup."""
     MockConfigEntry(domain=config_flow.DOMAIN).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -115,11 +116,11 @@ async def test_already_setup(hass):
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_view(hass):
+async def test_view(hass: HomeAssistant) -> None:
     """Test view."""
     hass.config_entries.flow.async_init = AsyncMock()
 

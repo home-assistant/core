@@ -37,6 +37,8 @@ async def async_setup_platform(
 class KaiterraAirQuality(AirQualityEntity):
     """Implementation of a Kaittera air quality sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, api, name, device_id):
         """Initialize the sensor."""
         self._api = api
@@ -49,11 +51,6 @@ class KaiterraAirQuality(AirQualityEntity):
     @property
     def _device(self):
         return self._api.data.get(self._device_id, {})
-
-    @property
-    def should_poll(self):
-        """Return that the sensor should not be polled."""
-        return False
 
     @property
     def available(self):

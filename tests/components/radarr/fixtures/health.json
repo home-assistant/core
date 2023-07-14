@@ -1,0 +1,8 @@
+[
+  {
+    "source": "DownloadClientStatusCheck",
+    "type": "error",
+    "message": "All download clients are unavailable due to failures",
+    "wikiUrl": "https://wiki.servarr.com/radarr/system#completed-failed-download-handling"
+  }
+]

@@ -5,7 +5,8 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.camera.const import StreamType
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE
+from homeassistant.components.stream import FORMAT_CONTENT_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -15,7 +16,7 @@ async def setup_media_source(hass):
     assert await async_setup_component(hass, "media_source", {})
 
 
-async def test_browsing_hls(hass, mock_camera_hls):
+async def test_browsing_hls(hass: HomeAssistant, mock_camera_hls) -> None:
     """Test browsing camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
@@ -32,7 +33,7 @@ async def test_browsing_hls(hass, mock_camera_hls):
     assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
 
 
-async def test_browsing_mjpeg(hass, mock_camera):
+async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
     """Test browsing camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
@@ -43,7 +44,9 @@ async def test_browsing_mjpeg(hass, mock_camera):
     assert item.children[1].media_content_type == "image/png"
 
 
-async def test_browsing_filter_web_rtc(hass, mock_camera_web_rtc):
+async def test_browsing_filter_web_rtc(
+    hass: HomeAssistant, mock_camera_web_rtc
+) -> None:
     """Test browsing camera media source hides non-HLS cameras."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
@@ -52,7 +55,7 @@ async def test_browsing_filter_web_rtc(hass, mock_camera_web_rtc):
     assert item.not_shown == 2
 
 
-async def test_resolving(hass, mock_camera_hls):
+async def test_resolving(hass: HomeAssistant, mock_camera_hls) -> None:
     """Test resolving."""
     # Adding stream enables HLS camera
     hass.config.components.add("stream")
@@ -62,19 +65,19 @@ async def test_resolving(hass, mock_camera_hls):
         return_value="http://example.com/stream",
     ):
         item = await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert item is not None
     assert item.url == "http://example.com/stream"
     assert item.mime_type == FORMAT_CONTENT_TYPE["hls"]
 
 
-async def test_resolving_errors(hass, mock_camera_hls):
+async def test_resolving_errors(hass: HomeAssistant, mock_camera_hls) -> None:
     """Test resolving."""
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert str(exc_info.value) == "Stream integration not loaded"
 
@@ -82,7 +85,7 @@ async def test_resolving_errors(hass, mock_camera_hls):
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.non_existing"
+            hass, "media-source://camera/camera.non_existing", None
         )
     assert str(exc_info.value) == "Could not resolve media item: camera.non_existing"
 
@@ -91,13 +94,13 @@ async def test_resolving_errors(hass, mock_camera_hls):
         new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
     ):
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert str(exc_info.value) == "Camera does not support MJPEG or HLS streaming."
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert (
         str(exc_info.value) == "camera.demo_camera does not support play stream service"

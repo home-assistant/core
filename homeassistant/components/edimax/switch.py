@@ -1,6 +1,8 @@
 """Support for Edimax switches."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyedimax.smartplug import SmartPlug
 import voluptuous as vol
 
@@ -67,15 +69,15 @@ class SmartPlugSwitch(SwitchEntity):
         """Return true if switch is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.smartplug.state = "ON"
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.smartplug.state = "OFF"
 
-    def update(self):
+    def update(self) -> None:
         """Update edimax switch."""
         if not self._info:
             self._info = self.smartplug.info

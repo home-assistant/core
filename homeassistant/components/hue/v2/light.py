@@ -16,15 +16,10 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_XY,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -40,6 +35,9 @@ from .helpers import (
 )
 
 EFFECT_NONE = "None"
+FALLBACK_MIN_MIREDS = 153  # 6500 K
+FALLBACK_MAX_MIREDS = 500  # 2000 K
+FALLBACK_MIREDS = 173  # halfway
 
 
 async def async_setup_entry(
@@ -77,20 +75,20 @@ class HueLight(HueBaseEntity, LightEntity):
         """Initialize the light."""
         super().__init__(bridge, controller, resource)
         if self.resource.alert and self.resource.alert.action_values:
-            self._attr_supported_features |= SUPPORT_FLASH
+            self._attr_supported_features |= LightEntityFeature.FLASH
         self.resource = resource
         self.controller = controller
-        self._supported_color_modes = set()
+        self._supported_color_modes: set[ColorMode | str] = set()
         if self.resource.supports_color:
-            self._supported_color_modes.add(COLOR_MODE_XY)
+            self._supported_color_modes.add(ColorMode.XY)
         if self.resource.supports_color_temperature:
-            self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if self.resource.supports_dimming:
             if len(self._supported_color_modes) == 0:
                 # only add color mode brightness if no color variants
-                self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
-            self._attr_supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
         # get list of supported effects (combine effects and timed_effects)
         self._attr_effect_list = []
         if effects := resource.effects:
@@ -105,7 +103,7 @@ class HueLight(HueBaseEntity, LightEntity):
             ]
         if len(self._attr_effect_list) > 0:
             self._attr_effect_list.insert(0, EFFECT_NONE)
-            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
     def brightness(self) -> int | None:
@@ -121,18 +119,18 @@ class HueLight(HueBaseEntity, LightEntity):
         return self.resource.on.on
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if color_temp := self.resource.color_temperature:
             # Hue lights return `mired_valid` to indicate CT is active
             if color_temp.mirek_valid and color_temp.mirek is not None:
-                return COLOR_MODE_COLOR_TEMP
+                return ColorMode.COLOR_TEMP
         if self.resource.supports_color:
-            return COLOR_MODE_XY
+            return ColorMode.XY
         if self.resource.supports_dimming:
-            return COLOR_MODE_BRIGHTNESS
+            return ColorMode.BRIGHTNESS
         # fallback to on_off
-        return COLOR_MODE_ONOFF
+        return ColorMode.ONOFF
 
     @property
     def xy_color(self) -> tuple[float, float] | None:
@@ -146,21 +144,24 @@ class HueLight(HueBaseEntity, LightEntity):
         """Return the color temperature."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek
-        return 0
+        # return a fallback value to prevent issues with mired->kelvin conversions
+        return FALLBACK_MIREDS
 
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek_schema.mirek_minimum
-        return 0
+        # return a fallback value to prevent issues with mired->kelvin conversions
+        return FALLBACK_MIN_MIREDS
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek_schema.mirek_maximum
-        return 0
+        # return a fallback value to prevent issues with mired->kelvin conversions
+        return FALLBACK_MAX_MIREDS
 
     @property
     def supported_color_modes(self) -> set | None:
@@ -207,7 +208,7 @@ class HueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash can not be sent with other commands at the same time or result will be flaky
+            # flash cannot be sent with other commands at the same time or result will be flaky
             # Hue's default behavior is that a light returns to its previous state for short
             # flash (identify) and the light is kept turned on for long flash (breathe effect)
             # Why is this flash alert/effect hidden in the turn_on/off commands ?
@@ -231,7 +232,7 @@ class HueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash can not be sent with other commands at the same time or result will be flaky
+            # flash cannot be sent with other commands at the same time or result will be flaky
             # Hue's default behavior is that a light returns to its previous state for short
             # flash (identify) and the light is kept turned on for long flash (breathe effect)
             return

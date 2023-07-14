@@ -10,7 +10,10 @@ from pycomfoconnect import (
     CMD_FAN_MODE_HIGH,
     CMD_FAN_MODE_LOW,
     CMD_FAN_MODE_MEDIUM,
+    CMD_MODE_AUTO,
+    CMD_MODE_MANUAL,
     SENSOR_FAN_SPEED_MODE,
+    SENSOR_OPERATING_MODE_BIS,
 )
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -37,6 +40,9 @@ CMD_MAPPING = {
 
 SPEED_RANGE = (1, 3)  # away is not included in speeds and instead mapped to off
 
+PRESET_MODE_AUTO = "auto"
+PRESET_MODES = [PRESET_MODE_AUTO]
+
 
 def setup_platform(
     hass: HomeAssistant,
@@ -53,12 +59,18 @@ def setup_platform(
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
-    current_speed = None
+    _attr_icon = "mdi:air-conditioner"
+    _attr_should_poll = False
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_preset_modes = PRESET_MODES
+    current_speed: float | None = None
 
     def __init__(self, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
         self._ccb = ccb
+        self._attr_name = ccb.name
+        self._attr_unique_id = ccb.unique_id
+        self._attr_preset_mode = None
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -67,14 +79,24 @@ class ComfoConnectFan(FanEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(SENSOR_FAN_SPEED_MODE),
-                self._handle_update,
+                self._handle_speed_update,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(SENSOR_OPERATING_MODE_BIS),
+                self._handle_mode_update,
             )
         )
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
+        await self.hass.async_add_executor_job(
+            self._ccb.comfoconnect.register_sensor, SENSOR_OPERATING_MODE_BIS
+        )
 
-    def _handle_update(self, value):
+    def _handle_speed_update(self, value: float) -> None:
         """Handle update callbacks."""
         _LOGGER.debug(
             "Handle update for fan speed (%d): %s", SENSOR_FAN_SPEED_MODE, value
@@ -82,25 +104,15 @@ class ComfoConnectFan(FanEntity):
         self.current_speed = value
         self.schedule_update_ha_state()
 
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._ccb.unique_id
-
-    @property
-    def name(self):
-        """Return the name of the fan."""
-        return self._ccb.name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:air-conditioner"
+    def _handle_mode_update(self, value: int) -> None:
+        """Handle update callbacks."""
+        _LOGGER.debug(
+            "Handle update for operating mode (%d): %s",
+            SENSOR_OPERATING_MODE_BIS,
+            value,
+        )
+        self._attr_preset_mode = PRESET_MODE_AUTO if value == -1 else None
+        self.schedule_update_ha_state()
 
     @property
     def percentage(self) -> int | None:
@@ -118,9 +130,13 @@ class ComfoConnectFan(FanEntity):
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
+        if preset_mode:
+            self.set_preset_mode(preset_mode)
+            return
+
         if percentage is None:
             self.set_percentage(1)  # Set fan speed to low
         else:
@@ -141,3 +157,15 @@ class ComfoConnectFan(FanEntity):
             cmd = CMD_MAPPING[speed]
 
         self._ccb.comfoconnect.cmd_rmi_request(cmd)
+
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if not self.preset_modes or preset_mode not in self.preset_modes:
+            raise ValueError(f"Invalid preset mode: {preset_mode}")
+
+        _LOGGER.debug("Changing preset mode to %s", preset_mode)
+        if preset_mode == PRESET_MODE_AUTO:
+            # force set it to manual first
+            self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_MANUAL)
+            # now set it to auto so any previous percentage set gets undone
+            self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_AUTO)

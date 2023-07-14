@@ -1,6 +1,8 @@
 """Support for switches which integrates with other components."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -90,6 +92,8 @@ async def async_setup_platform(
 class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
     """Representation of a Template switch."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -108,7 +112,7 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._on_script = Script(hass, config[ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[OFF_ACTION], friendly_name, DOMAIN)
-        self._state = False
+        self._state: bool | None = False
 
     @callback
     def _update_state(self, result):
@@ -127,10 +131,9 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
 
         self._state = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template is None:
-
             # restore state after startup
             await super().async_added_to_hass()
             if state := await self.async_get_last_state():
@@ -145,30 +148,25 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         await super().async_added_to_hass()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
-        await self._on_script.async_run(context=self._context)
+        await self.async_run_script(self._on_script, context=self._context)
         if self._template is None:
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
-        await self._off_script.async_run(context=self._context)
+        await self.async_run_script(self._off_script, context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """State is assumed, if no template given."""
         return self._template is None

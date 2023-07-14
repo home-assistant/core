@@ -66,12 +66,12 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
     """Representation of WiZ Occupancy sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+    _attr_name = "Occupancy"
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZ device."""
         super().__init__(wiz_data, name)
         self._attr_unique_id = OCCUPANCY_UNIQUE_ID.format(self._device.mac)
-        self._attr_name = f"{name} Occupancy"
         self._async_update_attrs()
 
     @callback

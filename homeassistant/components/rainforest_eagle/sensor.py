@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_KILO_WATT
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,23 +21,22 @@ from .data import EagleDataCoordinator
 SENSORS = (
     SensorEntityDescription(
         key="zigbee:InstantaneousDemand",
-        # We can drop the "Eagle-200" part of the name in HA 2021.12
-        name="Eagle-200 Meter Power Demand",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        translation_key="power_demand",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationDelivered",
-        name="Eagle-200 Total Meter Energy Delivered",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="total_energy_delivered",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationReceived",
-        name="Eagle-200 Total Meter Energy Received",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="total_energy_received",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -57,8 +56,8 @@ async def async_setup_entry(
                 coordinator,
                 SensorEntityDescription(
                     key="zigbee:Price",
-                    name="Meter Price",
-                    native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{ENERGY_KILO_WATT_HOUR}",
+                    translation_key="meter_price",
+                    native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{UnitOfEnergy.KILO_WATT_HOUR}",
                     state_class=SensorStateClass.MEASUREMENT,
                 ),
             )
@@ -69,6 +68,8 @@ async def async_setup_entry(
 
 class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
     """Implementation of the Rainforest Eagle sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator, entity_description):
         """Initialize the sensor."""

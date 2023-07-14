@@ -1,9 +1,15 @@
 """Adds config flow for Trafikverket Train integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleTrainStationsFound,
+    NoTrainStationFound,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,23 +17,30 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
 
-ERROR_INVALID_AUTH = "Source: Security, message: Invalid authentication"
-ERROR_INVALID_STATION = "Could not find a station with the specified name"
-ERROR_MULTIPLE_STATION = "Found multiple stations with the specified name"
-
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_TIME): cv.string,
-        vol.Required(CONF_WEEKDAY, default=WEEKDAYS): cv.multi_select(
-            {day: day for day in WEEKDAYS}
+        vol.Required(CONF_API_KEY): TextSelector(),
+        vol.Required(CONF_FROM): TextSelector(),
+        vol.Required(CONF_TO): TextSelector(),
+        vol.Optional(CONF_TIME): TextSelector(),
+        vol.Required(CONF_WEEKDAY, default=WEEKDAYS): SelectSelector(
+            SelectSelectorConfig(
+                options=WEEKDAYS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_WEEKDAY,
+            )
         ),
     }
 )
@@ -54,9 +67,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await train_api.async_get_train_station(train_from)
         await train_api.async_get_train_station(train_to)
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Trafikverket."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -76,15 +87,14 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.validate_input(
                     api_key, self.entry.data[CONF_FROM], self.entry.data[CONF_TO]
                 )
-            except ValueError as err:
-                if str(err) == ERROR_INVALID_AUTH:
-                    errors["base"] = "invalid_auth"
-                elif str(err) == ERROR_INVALID_STATION:
-                    errors["base"] = "invalid_station"
-                elif str(err) == ERROR_MULTIPLE_STATION:
-                    errors["base"] = "more_stations"
-                else:
-                    errors["base"] = "cannot_connect"
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoTrainStationFound:
+                errors["base"] = "invalid_station"
+            except MultipleTrainStationsFound:
+                errors["base"] = "more_stations"
+            except Exception:  # pylint: disable=broad-exception-caught
+                errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
@@ -101,11 +111,6 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA_REAUTH,
             errors=errors,
         )
-
-    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        return await self.async_step_user(user_input=config)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -126,15 +131,14 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.validate_input(api_key, train_from, train_to)
-            except ValueError as err:
-                if str(err) == ERROR_INVALID_AUTH:
-                    errors["base"] = "invalid_auth"
-                elif str(err) == ERROR_INVALID_STATION:
-                    errors["base"] = "invalid_station"
-                elif str(err) == ERROR_MULTIPLE_STATION:
-                    errors["base"] = "more_stations"
-                else:
-                    errors["base"] = "cannot_connect"
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoTrainStationFound:
+                errors["base"] = "invalid_station"
+            except MultipleTrainStationsFound:
+                errors["base"] = "more_stations"
+            except Exception:  # pylint: disable=broad-exception-caught
+                errors["base"] = "cannot_connect"
             else:
                 if train_time:
                     if bool(dt_util.parse_time(train_time) is None):

@@ -5,15 +5,19 @@ from __future__ import annotations
 from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
-from homeassistant.components.cast.const import DOMAIN as CAST_DOMAIN
+from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.cast.home_assistant_cast import (
     ATTR_URL_PATH,
     ATTR_VIEW_PATH,
     NO_URL_AVAILABLE_ERROR,
     SERVICE_SHOW_VIEW,
 )
-from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import MEDIA_CLASS_APP
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -34,7 +38,7 @@ async def async_get_media_browser_root_object(
     return [
         BrowseMedia(
             title="Dashboards",
-            media_class=MEDIA_CLASS_APP,
+            media_class=MediaClass.APP,
             media_content_id="",
             media_content_type=DOMAIN,
             thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
@@ -46,7 +50,7 @@ async def async_get_media_browser_root_object(
 
 async def async_browse_media(
     hass: HomeAssistant,
-    media_content_type: str,
+    media_content_type: MediaType | str,
     media_content_id: str,
     cast_type: str,
 ) -> BrowseMedia | None:
@@ -64,7 +68,7 @@ async def async_browse_media(
         children = [
             BrowseMedia(
                 title="Default",
-                media_class=MEDIA_CLASS_APP,
+                media_class=MediaClass.APP,
                 media_content_id=DEFAULT_DASHBOARD,
                 media_content_type=DOMAIN,
                 thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
@@ -96,7 +100,7 @@ async def async_browse_media(
         children.append(
             BrowseMedia(
                 title=view["title"],
-                media_class=MEDIA_CLASS_APP,
+                media_class=MediaClass.APP,
                 media_content_id=f'{info["url_path"]}/{view["path"]}',
                 media_content_type=DOMAIN,
                 thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
@@ -114,7 +118,7 @@ async def async_play_media(
     hass: HomeAssistant,
     cast_entity_id: str,
     chromecast: Chromecast,
-    media_type: str,
+    media_type: MediaType | str,
     media_id: str,
 ) -> bool:
     """Play media."""
@@ -195,7 +199,7 @@ def _item_from_info(info: dict) -> BrowseMedia:
     """Convert dashboard info to browse item."""
     return BrowseMedia(
         title=info["title"],
-        media_class=MEDIA_CLASS_APP,
+        media_class=MediaClass.APP,
         media_content_id=info["url_path"],
         media_content_type=DOMAIN,
         thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",

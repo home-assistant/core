@@ -71,7 +71,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
 class DiscoveryService(Listener):
     """Discovery event handler for gree devices."""
 
-    def __init__(self, hass) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize discovery service."""
         super().__init__()
         self.hass = hass

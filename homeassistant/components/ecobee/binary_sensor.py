@@ -35,18 +35,15 @@ async def async_setup_entry(
 class EcobeeBinarySensor(BinarySensorEntity):
     """Representation of an Ecobee sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+    _attr_has_entity_name = True
+
     def __init__(self, data, sensor_name, sensor_index):
         """Initialize the Ecobee sensor."""
         self.data = data
-        self._name = f"{sensor_name} Occupancy"
-        self.sensor_name = sensor_name
+        self.sensor_name = sensor_name.rstrip()
         self.index = sensor_index
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the Ecobee sensor."""
-        return self._name.rstrip()
 
     @property
     def unique_id(self):
@@ -91,7 +88,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         return None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)
         return thermostat["runtime"]["connected"]
@@ -101,12 +98,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         """Return the status of the sensor."""
         return self._state == "true"
 
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.OCCUPANCY
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest state of the sensor."""
         await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):

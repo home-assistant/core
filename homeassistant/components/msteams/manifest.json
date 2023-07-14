@@ -1,9 +1,9 @@
 {
   "domain": "msteams",
   "name": "Microsoft Teams",
-  "documentation": "https://www.home-assistant.io/integrations/msteams",
-  "requirements": ["pymsteams==0.1.12"],
   "codeowners": ["@peroyvind"],
+  "documentation": "https://www.home-assistant.io/integrations/msteams",
   "iot_class": "cloud_push",
-  "loggers": ["pymsteams"]
+  "loggers": ["pymsteams"],
+  "requirements": ["pymsteams==0.1.12"]
 }

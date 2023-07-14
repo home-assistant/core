@@ -1,21 +1,22 @@
 """Test homekit_controller diagnostics."""
-from aiohttp import ClientSession
+from unittest.mock import ANY
 
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .common import setup_accessories_from_file, setup_test_accessories
+
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
-from tests.components.homekit_controller.common import (
-    setup_accessories_from_file,
-    setup_test_accessories,
-)
+from tests.typing import ClientSessionGenerator
 
 
-async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utcnow):
+async def test_config_entry(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, utcnow
+) -> None:
     """Test generating diagnostics for a config entry."""
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     config_entry, _ = await setup_test_accessories(hass, accessories)
@@ -28,6 +29,7 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
             "version": 1,
             "data": {"AccessoryPairingID": "00:00:00:00:00:00"},
         },
+        "config-num": 0,
         "entity-map": [
             {
                 "aid": 1,
@@ -235,28 +237,6 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                 "hw_version": "",
                 "entities": [
                     {
-                        "original_name": "Koogeek-LS1-20833F",
-                        "disabled": False,
-                        "disabled_by": None,
-                        "entity_category": None,
-                        "device_class": None,
-                        "original_device_class": None,
-                        "icon": None,
-                        "original_icon": None,
-                        "unit_of_measurement": None,
-                        "state": {
-                            "entity_id": "light.koogeek_ls1_20833f",
-                            "state": "off",
-                            "attributes": {
-                                "supported_color_modes": ["hs"],
-                                "friendly_name": "Koogeek-LS1-20833F",
-                                "supported_features": 17,
-                            },
-                            "last_changed": "2023-01-01T00:00:00+00:00",
-                            "last_updated": "2023-01-01T00:00:00+00:00",
-                        },
-                    },
-                    {
                         "device_class": None,
                         "disabled": False,
                         "disabled_by": None,
@@ -270,9 +250,31 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                                 "friendly_name": "Koogeek-LS1-20833F Identify"
                             },
                             "entity_id": "button.koogeek_ls1_20833f_identify",
-                            "last_changed": "2023-01-01T00:00:00+00:00",
-                            "last_updated": "2023-01-01T00:00:00+00:00",
+                            "last_changed": ANY,
+                            "last_updated": ANY,
                             "state": "unknown",
+                        },
+                        "unit_of_measurement": None,
+                    },
+                    {
+                        "device_class": None,
+                        "disabled": False,
+                        "disabled_by": None,
+                        "entity_category": None,
+                        "icon": None,
+                        "original_device_class": None,
+                        "original_icon": None,
+                        "original_name": "Koogeek-LS1-20833F Light Strip",
+                        "state": {
+                            "attributes": {
+                                "friendly_name": "Koogeek-LS1-20833F Light Strip",
+                                "supported_color_modes": ["hs"],
+                                "supported_features": 0,
+                            },
+                            "entity_id": "light.koogeek_ls1_20833f_light_strip",
+                            "last_changed": ANY,
+                            "last_updated": ANY,
+                            "state": "off",
                         },
                         "unit_of_measurement": None,
                     },
@@ -282,7 +284,9 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
     }
 
 
-async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
+async def test_device(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, utcnow
+) -> None:
     """Test generating diagnostics for a device entry."""
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     config_entry, _ = await setup_test_accessories(hass, accessories)
@@ -299,6 +303,7 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
             "version": 1,
             "data": {"AccessoryPairingID": "00:00:00:00:00:00"},
         },
+        "config-num": 0,
         "entity-map": [
             {
                 "aid": 1,
@@ -505,28 +510,6 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
             "hw_version": "",
             "entities": [
                 {
-                    "original_name": "Koogeek-LS1-20833F",
-                    "disabled": False,
-                    "disabled_by": None,
-                    "entity_category": None,
-                    "device_class": None,
-                    "original_device_class": None,
-                    "icon": None,
-                    "original_icon": None,
-                    "unit_of_measurement": None,
-                    "state": {
-                        "entity_id": "light.koogeek_ls1_20833f",
-                        "state": "off",
-                        "attributes": {
-                            "supported_color_modes": ["hs"],
-                            "friendly_name": "Koogeek-LS1-20833F",
-                            "supported_features": 17,
-                        },
-                        "last_changed": "2023-01-01T00:00:00+00:00",
-                        "last_updated": "2023-01-01T00:00:00+00:00",
-                    },
-                },
-                {
                     "device_class": None,
                     "disabled": False,
                     "disabled_by": None,
@@ -538,9 +521,31 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
                     "state": {
                         "attributes": {"friendly_name": "Koogeek-LS1-20833F Identify"},
                         "entity_id": "button.koogeek_ls1_20833f_identify",
-                        "last_changed": "2023-01-01T00:00:00+00:00",
-                        "last_updated": "2023-01-01T00:00:00+00:00",
+                        "last_changed": ANY,
+                        "last_updated": ANY,
                         "state": "unknown",
+                    },
+                    "unit_of_measurement": None,
+                },
+                {
+                    "device_class": None,
+                    "disabled": False,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "icon": None,
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": "Koogeek-LS1-20833F Light Strip",
+                    "state": {
+                        "attributes": {
+                            "friendly_name": "Koogeek-LS1-20833F Light Strip",
+                            "supported_color_modes": ["hs"],
+                            "supported_features": 0,
+                        },
+                        "entity_id": "light.koogeek_ls1_20833f_light_strip",
+                        "last_changed": ANY,
+                        "last_updated": ANY,
+                        "state": "off",
                     },
                     "unit_of_measurement": None,
                 },

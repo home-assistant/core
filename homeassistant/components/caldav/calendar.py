@@ -1,8 +1,8 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
-import copy
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
+from functools import partial
 import logging
 import re
 
@@ -29,7 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,22 +136,22 @@ class WebDavCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
 
-    def update(self):
+    def update(self) -> None:
         """Update event data."""
         self.data.update()
-        event = copy.deepcopy(self.data.event)
-        if event is None:
-            self._event = event
-            return
-        (summary, offset) = extract_offset(event.summary, OFFSET)
-        event.summary = summary
-        self._event = event
+        self._event = self.data.event
         self._attr_extra_state_attributes = {
-            "offset_reached": is_offset_reached(event.start_datetime_local, offset)
+            "offset_reached": is_offset_reached(
+                self._event.start_datetime_local, self.data.offset
+            )
+            if self._event
+            else False
         }
 
 
@@ -165,6 +165,7 @@ class WebDavCalendarData:
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
+        self.offset = None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -172,7 +173,13 @@ class WebDavCalendarData:
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
         vevent_list = await hass.async_add_executor_job(
-            self.calendar.date_search, start_date, end_date
+            partial(
+                self.calendar.search,
+                start=start_date,
+                end=end_date,
+                event=True,
+                expand=True,
+            )
         )
         event_list = []
         for event in vevent_list:
@@ -184,9 +191,9 @@ class WebDavCalendarData:
                 continue
             event_list.append(
                 CalendarEvent(
-                    summary=vevent.summary.value,
-                    start=vevent.dtstart.value,
-                    end=self.get_end_date(vevent),
+                    summary=self.get_attr_value(vevent, "summary") or "",
+                    start=self.to_local(vevent.dtstart.value),
+                    end=self.to_local(self.get_end_date(vevent)),
                     location=self.get_attr_value(vevent, "location"),
                     description=self.get_attr_value(vevent, "description"),
                 )
@@ -197,12 +204,17 @@ class WebDavCalendarData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
-        start_of_today = dt.start_of_local_day()
-        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=self.days)
+        start_of_today = dt_util.start_of_local_day()
+        start_of_tomorrow = dt_util.start_of_local_day() + timedelta(days=self.days)
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = self.calendar.date_search(start_of_today, start_of_tomorrow)
+        results = self.calendar.search(
+            start=start_of_today,
+            end=start_of_tomorrow,
+            event=True,
+            expand=True,
+        )
 
         # Create new events for each recurrence of an event that happens today.
         # For recurring events, some servers return the original event with recurrence rules
@@ -264,13 +276,17 @@ class WebDavCalendarData:
             return
 
         # Populate the entity attributes with the event values
+        (summary, offset) = extract_offset(
+            self.get_attr_value(vevent, "summary") or "", OFFSET
+        )
         self.event = CalendarEvent(
-            summary=vevent.summary.value,
-            start=vevent.dtstart.value,
-            end=self.get_end_date(vevent),
+            summary=summary,
+            start=self.to_local(vevent.dtstart.value),
+            end=self.to_local(self.get_end_date(vevent)),
             location=self.get_attr_value(vevent, "location"),
             description=self.get_attr_value(vevent, "description"),
         )
+        self.offset = offset
 
     @staticmethod
     def is_matching(vevent, search):
@@ -296,7 +312,7 @@ class WebDavCalendarData:
     @staticmethod
     def is_over(vevent):
         """Return if the event is over."""
-        return dt.now() >= WebDavCalendarData.to_datetime(
+        return dt_util.now() >= WebDavCalendarData.to_datetime(
             WebDavCalendarData.get_end_date(vevent)
         )
 
@@ -304,14 +320,20 @@ class WebDavCalendarData:
     def to_datetime(obj):
         """Return a datetime."""
         if isinstance(obj, datetime):
-            if obj.tzinfo is None:
-                # floating value, not bound to any time zone in particular
-                # represent same time regardless of which time zone is currently being observed
-                return obj.replace(tzinfo=dt.DEFAULT_TIME_ZONE)
-            return obj
-        return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
-            tzinfo=dt.DEFAULT_TIME_ZONE
-        )
+            return WebDavCalendarData.to_local(obj)
+        return datetime.combine(obj, time.min).replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
+    @staticmethod
+    def to_local(obj: datetime | date) -> datetime | date:
+        """Return a datetime as a local datetime, leaving dates unchanged.
+
+        This handles giving floating times a timezone for comparison
+        with all day events and dropping the custom timezone object
+        used by the caldav client and dateutil so the datetime can be copied.
+        """
+        if isinstance(obj, datetime):
+            return dt_util.as_local(obj)
+        return obj
 
     @staticmethod
     def get_attr_value(obj, attribute):
@@ -331,5 +353,11 @@ class WebDavCalendarData:
 
         else:
             enddate = obj.dtstart.value + timedelta(days=1)
+
+        # End date for an all day event is exclusive. This fixes the case where
+        # an all day event has a start and end values are the same, or the event
+        # has a zero duration.
+        if not isinstance(enddate, datetime) and obj.dtstart.value == enddate:
+            enddate += timedelta(days=1)
 
         return enddate

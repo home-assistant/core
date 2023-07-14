@@ -2,30 +2,35 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import aiohttp
 from async_upnp_client.client import UpnpError
-from openhomedevice.device import Device
 import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_PIN_INDEX, DATA_OPENHOME, SERVICE_INVOKE_PIN
+from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
+
+_OpenhomeDeviceT = TypeVar("_OpenhomeDeviceT", bound="OpenhomeDevice")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -36,34 +41,20 @@ SUPPORT_OPENHOME = (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Openhome platform."""
+    """Set up the Openhome config entry."""
 
-    if not discovery_info:
-        return
+    _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    openhome_data = hass.data.setdefault(DATA_OPENHOME, set())
-
-    name = discovery_info.get("name")
-    description = discovery_info.get("ssdp_description")
-
-    _LOGGER.info("Openhome device found: %s", name)
-    device = await hass.async_add_executor_job(Device, description)
-    await device.init()
-
-    # if device has already been discovered
-    if device.uuid() in openhome_data:
-        return
+    device = hass.data[DOMAIN][config_entry.entry_id]
 
     entity = OpenhomeDevice(hass, device)
 
     async_add_entities([entity])
-    openhome_data.add(device.uuid())
 
     platform = entity_platform.async_get_current_platform()
 
@@ -74,19 +65,34 @@ async def async_setup_platform(
     )
 
 
-def catch_request_errors():
+_FuncType = Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
+_ReturnFuncType = Callable[
+    Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]
+]
+
+
+def catch_request_errors() -> (
+    Callable[
+        [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
+    ]
+):
     """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
-    def call_wrapper(func):
+    def call_wrapper(
+        func: _FuncType[_OpenhomeDeviceT, _P, _R]
+    ) -> _ReturnFuncType[_OpenhomeDeviceT, _P, _R]:
         """Call wrapper for decorator."""
 
         @functools.wraps(func)
-        async def wrapper(self, *args, **kwargs):
+        async def wrapper(
+            self: _OpenhomeDeviceT, *args: _P.args, **kwargs: _P.kwargs
+        ) -> _R | None:
             """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
             try:
                 return await func(self, *args, **kwargs)
             except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
                 _LOGGER.error("Error during call %s", func.__name__)
+            return None
 
         return wrapper
 
@@ -110,15 +116,27 @@ class OpenhomeDevice(MediaPlayerEntity):
         self._source_index = {}
         self._source = {}
         self._name = None
-        self._state = STATE_PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self._available = True
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self._device.uuid()),
+            },
+            manufacturer=self._device.manufacturer(),
+            model=self._device.model_name(),
+            name=self._device.friendly_name(),
+        )
 
     @property
     def available(self):
         """Device is available."""
         return self._available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state of device."""
         try:
             self._in_standby = await self._device.is_in_standby()
@@ -164,44 +182,48 @@ class OpenhomeDevice(MediaPlayerEntity):
                 )
 
             if self._in_standby:
-                self._state = STATE_OFF
+                self._attr_state = MediaPlayerState.OFF
             elif self._transport_state == "Paused":
-                self._state = STATE_PAUSED
+                self._attr_state = MediaPlayerState.PAUSED
             elif self._transport_state in ("Playing", "Buffering"):
-                self._state = STATE_PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
             elif self._transport_state == "Stopped":
-                self._state = STATE_IDLE
+                self._attr_state = MediaPlayerState.IDLE
             else:
                 # Device is playing an external source with no transport controls
-                self._state = STATE_PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
 
             self._available = True
         except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
             self._available = False
 
     @catch_request_errors()
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Bring device out of standby."""
         await self._device.set_standby(False)
 
     @catch_request_errors()
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Put device in standby."""
         await self._device.set_standby(True)
 
     @catch_request_errors()
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_MUSIC
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_type = MediaType.MUSIC
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
-        if media_type != MEDIA_TYPE_MUSIC:
+        if media_type != MediaType.MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
-                MEDIA_TYPE_MUSIC,
+                MediaType.MUSIC,
             )
             return
 
@@ -211,32 +233,32 @@ class OpenhomeDevice(MediaPlayerEntity):
         await self._device.play_media(track_details)
 
     @catch_request_errors()
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._device.pause()
 
     @catch_request_errors()
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._device.stop()
 
     @catch_request_errors()
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._device.play()
 
     @catch_request_errors()
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._device.skip(1)
 
     @catch_request_errors()
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._device.skip(-1)
 
     @catch_request_errors()
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._device.set_source(self._source_index[source])
 
@@ -248,7 +270,7 @@ class OpenhomeDevice(MediaPlayerEntity):
                 await self._device.invoke_pin(pin)
             else:
                 _LOGGER.error("Pins service not supported")
-        except (UpnpError):
+        except UpnpError:
             _LOGGER.error("Error invoking pin %s", pin)
 
     @property
@@ -260,11 +282,6 @@ class OpenhomeDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._device.uuid()
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def source_list(self):
@@ -308,26 +325,30 @@ class OpenhomeDevice(MediaPlayerEntity):
         return self._volume_muted
 
     @catch_request_errors()
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self._device.increase_volume()
 
     @catch_request_errors()
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._device.decrease_volume()
 
     @catch_request_errors()
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
 
     @catch_request_errors()
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._device.set_mute(mute)
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
             self.hass,

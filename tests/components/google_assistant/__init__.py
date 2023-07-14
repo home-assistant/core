@@ -221,7 +221,7 @@ DEMO_DEVICES = [
             "action.devices.traits.TransportControl",
             "action.devices.traits.MediaState",
         ],
-        "type": "action.devices.types.SETTOP",
+        "type": "action.devices.types.TV",
         "willReportState": False,
     },
     {

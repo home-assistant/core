@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
-) -> DeviceScanner | None:
+) -> UPCDeviceScanner | None:
     """Return the UPC device scanner."""
     conf = config[DOMAIN]
     session = async_get_clientsession(hass)
@@ -57,7 +57,7 @@ async def async_get_scanner(
 
 
 class UPCDeviceScanner(DeviceScanner):
-    """This class queries a router running UPC ConnectBox firmware."""
+    """Class which queries a router running UPC ConnectBox firmware."""
 
     def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""

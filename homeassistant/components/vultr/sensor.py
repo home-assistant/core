@@ -7,10 +7,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, DATA_GIGABYTES
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, UnitOfInformation
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,7 +31,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_CURRENT_BANDWIDTH_USED,
         name="Current Bandwidth Used",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-histogram",
     ),
     SensorEntityDescription(
@@ -82,7 +84,9 @@ def setup_platform(
 class VultrSensor(SensorEntity):
     """Representation of a Vultr subscription sensor."""
 
-    def __init__(self, vultr, subscription, name, description: SensorEntityDescription):
+    def __init__(
+        self, vultr, subscription, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize a new Vultr sensor."""
         self.entity_description = description
         self._vultr = vultr
@@ -112,7 +116,7 @@ class VultrSensor(SensorEntity):
         except (TypeError, ValueError):
             return self.data.get(self.entity_description.key)
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         self._vultr.update()
         self.data = self._vultr.data[self.subscription]

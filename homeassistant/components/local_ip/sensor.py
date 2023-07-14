@@ -7,7 +7,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SENSOR
+from .const import SENSOR
 
 
 async def async_setup_entry(
@@ -16,7 +16,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
-    name = entry.data.get(CONF_NAME) or DOMAIN
+    name = entry.data.get(CONF_NAME) or "Local IP"
     async_add_entities([IPSensor(name)], True)
 
 

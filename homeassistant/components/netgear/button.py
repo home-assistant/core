@@ -9,13 +9,13 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import NetgearRouter, NetgearRouterEntity
+from .router import NetgearRouter, NetgearRouterCoordinatorEntity
 
 
 @dataclass
@@ -55,7 +55,7 @@ async def async_setup_entry(
     )
 
 
-class NetgearRouterButtonEntity(NetgearRouterEntity, ButtonEntity):
+class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
     """Netgear Router button entity."""
 
     entity_description: NetgearButtonEntityDescription

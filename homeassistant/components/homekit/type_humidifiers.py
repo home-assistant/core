@@ -3,8 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_HUMIDIFIER
 
-from homeassistant.components.humidifier import HumidifierDeviceClass
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -12,6 +11,7 @@ from homeassistant.components.humidifier.const import (
     DEFAULT_MIN_HUMIDITY,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
+    HumidifierDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -115,20 +115,12 @@ class HumidifierDehumidifier(HomeAccessory):
             CHAR_CURRENT_HUMIDITY, value=0
         )
 
-        max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
-        max_humidity = round(max_humidity)
-        max_humidity = min(max_humidity, 100)
-
-        min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
-        min_humidity = round(min_humidity)
-        min_humidity = max(min_humidity, 0)
-
         self.char_target_humidity = serv_humidifier_dehumidifier.configure_char(
             self._target_humidity_char_name,
             value=45,
             properties={
-                PROP_MIN_VALUE: min_humidity,
-                PROP_MAX_VALUE: max_humidity,
+                PROP_MIN_VALUE: DEFAULT_MIN_HUMIDITY,
+                PROP_MAX_VALUE: DEFAULT_MAX_HUMIDITY,
                 PROP_MIN_STEP: 1,
             },
         )
@@ -174,7 +166,10 @@ class HumidifierDehumidifier(HomeAccessory):
         """Handle linked humidity sensor state change to update HomeKit value."""
         if new_state is None:
             _LOGGER.error(
-                "%s: Unable to update from linked humidity sensor %s: the entity state is None",
+                (
+                    "%s: Unable to update from linked humidity sensor %s: the entity"
+                    " state is None"
+                ),
                 self.entity_id,
                 self.linked_humidity_sensor,
             )
@@ -216,13 +211,31 @@ class HumidifierDehumidifier(HomeAccessory):
             )
 
         if self._target_humidity_char_name in char_values:
+            state = self.hass.states.get(self.entity_id)
+            max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
+            max_humidity = round(max_humidity)
+            max_humidity = min(max_humidity, 100)
+
+            min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
+            min_humidity = round(min_humidity)
+            min_humidity = max(min_humidity, 0)
+
             humidity = round(char_values[self._target_humidity_char_name])
+
+            if (humidity < min_humidity) or (humidity > max_humidity):
+                humidity = min(max_humidity, max(min_humidity, humidity))
+                # Update the HomeKit value to the clamped humidity, so the user will get a visual feedback that they
+                # cannot not set to a value below/above the min/max.
+                self.char_target_humidity.set_value(humidity)
+
             self.async_call_service(
                 DOMAIN,
                 SERVICE_SET_HUMIDITY,
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
-                f"{self._target_humidity_char_name} to "
-                f"{char_values[self._target_humidity_char_name]}{PERCENTAGE}",
+                (
+                    f"{self._target_humidity_char_name} to "
+                    f"{char_values[self._target_humidity_char_name]}{PERCENTAGE}"
+                ),
             )
 
     @callback

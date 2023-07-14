@@ -45,7 +45,7 @@ async def async_resolve_media(
 ) -> DidlPlayMedia:
     """Call media_source.async_resolve_media with the test source's ID."""
     result = await media_source.async_resolve_media(
-        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/{media_content_id}"
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/{media_content_id}", None
     )
     assert isinstance(result, DidlPlayMedia)
     return result

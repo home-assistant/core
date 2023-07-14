@@ -1,10 +1,12 @@
 {
   "config": {
     "step": {
-      "user": {
-        "description": "Could not discover Roon server, please enter your the Hostname or IP.",
+      "user": {},
+      "fallback": {
+        "description": "Could not discover Roon server, please enter your Hostname and Port.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "link": {
@@ -18,6 +20,18 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "transfer": {
+      "name": "Transfer",
+      "description": "Transfers playback from one player to another.",
+      "fields": {
+        "transfer_id": {
+          "name": "Transfer ID",
+          "description": "ID of the destination player."
+        }
+      }
     }
   }
 }

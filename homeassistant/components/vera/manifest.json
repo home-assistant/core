@@ -1,10 +1,10 @@
 {
   "domain": "vera",
   "name": "Vera",
+  "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vera",
-  "requirements": ["pyvera==0.3.13"],
-  "codeowners": ["@pavoni"],
   "iot_class": "local_polling",
-  "loggers": ["pyvera"]
+  "loggers": ["pyvera"],
+  "requirements": ["pyvera==0.3.13"]
 }

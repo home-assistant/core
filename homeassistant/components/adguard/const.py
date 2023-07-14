@@ -1,6 +1,9 @@
 """Constants for the AdGuard Home integration."""
+import logging
 
 DOMAIN = "adguard"
+
+LOGGER = logging.getLogger(__package__)
 
 DATA_ADGUARD_CLIENT = "adguard_client"
 DATA_ADGUARD_VERSION = "adguard_version"

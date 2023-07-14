@@ -11,6 +11,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "jewish_calendar"
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"
@@ -67,6 +68,9 @@ def get_unique_prefix(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jewish Calendar component."""
+    if DOMAIN not in config:
+        return True
+
     name = config[DOMAIN][CONF_NAME]
     language = config[DOMAIN][CONF_LANGUAGE]
 
@@ -97,12 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "prefix": prefix,
     }
 
-    hass.async_create_task(
-        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
-    )
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     return True

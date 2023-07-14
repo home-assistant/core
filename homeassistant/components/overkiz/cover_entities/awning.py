@@ -11,7 +11,12 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 
-from .generic_cover import COMMANDS_STOP, OverkizGenericCover
+from .generic_cover import (
+    COMMANDS_CLOSE,
+    COMMANDS_OPEN,
+    COMMANDS_STOP,
+    OverkizGenericCover,
+)
 
 
 class Awning(OverkizGenericCover):
@@ -20,9 +25,9 @@ class Awning(OverkizGenericCover):
     _attr_device_class = CoverDeviceClass.AWNING
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features: int = super().supported_features
+        supported_features = super().supported_features
 
         if self.executor.has_command(OverkizCommand.SET_DEPLOYMENT):
             supported_features |= CoverEntityFeature.SET_POSITION
@@ -40,8 +45,7 @@ class Awning(OverkizGenericCover):
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
@@ -64,3 +68,35 @@ class Awning(OverkizGenericCover):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.executor.async_execute_command(OverkizCommand.UNDEPLOY)
+
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is opening or not."""
+        if self.is_running(COMMANDS_OPEN):
+            return True
+
+        # Check if cover is moving based on current state
+        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
+        current_closure = self.device.states.get(OverkizState.CORE_DEPLOYMENT)
+        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
+
+        if not is_moving or not current_closure or not target_closure:
+            return None
+
+        return cast(int, current_closure.value) < cast(int, target_closure.value)
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is closing or not."""
+        if self.is_running(COMMANDS_CLOSE):
+            return True
+
+        # Check if cover is moving based on current state
+        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
+        current_closure = self.device.states.get(OverkizState.CORE_DEPLOYMENT)
+        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
+
+        if not is_moving or not current_closure or not target_closure:
+            return None
+
+        return cast(int, current_closure.value) > cast(int, target_closure.value)

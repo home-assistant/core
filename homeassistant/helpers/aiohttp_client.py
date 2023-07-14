@@ -7,7 +7,7 @@ from contextlib import suppress
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from aiohttp import web
@@ -16,22 +16,61 @@ from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
+from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+from homeassistant.util.json import json_loads
 
 from .frame import warn_use
+from .json import json_dumps
+
+if TYPE_CHECKING:
+    from aiohttp.typedefs import JSONDecoder
+
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
 DATA_CLIENTSESSION = "aiohttp_clientsession"
 DATA_CLIENTSESSION_NOTVERIFY = "aiohttp_clientsession_notverify"
-SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
-    __version__, aiohttp.__version__, sys.version_info
+SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
+    APPLICATION_NAME, __version__, aiohttp.__version__, sys.version_info
 )
 
+ENABLE_CLEANUP_CLOSED = not (3, 11, 1) <= sys.version_info < (3, 11, 4)
+# Enabling cleanup closed on python 3.11.1+ leaks memory relatively quickly
+# see https://github.com/aio-libs/aiohttp/issues/7252
+# aiohttp interacts poorly with https://github.com/python/cpython/pull/98540
+# The issue was fixed in 3.11.4 via https://github.com/python/cpython/pull/104485
+
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
+
+#
+# The default connection limit of 100 meant that you could only have
+# 100 concurrent connections.
+#
+# This was effectively a limit of 100 devices and than
+# the supervisor API would fail as soon as it was hit.
+#
+# We now apply the 100 limit per host, so that we can have 100 connections
+# to a single host, but can have more than 4096 connections in total to
+# prevent a single host from using all available connections.
+#
+MAXIMUM_CONNECTIONS = 4096
+MAXIMUM_CONNECTIONS_PER_HOST = 100
+
+
+class HassClientResponse(aiohttp.ClientResponse):
+    """aiohttp.ClientResponse with a json method that uses json_loads by default."""
+
+    async def json(
+        self,
+        *args: Any,
+        loads: JSONDecoder = json_loads,
+        **kwargs: Any,
+    ) -> Any:
+        """Send a json request and parse the json response."""
+        return await super().json(*args, loads=loads, **kwargs)
 
 
 @callback
@@ -97,16 +136,23 @@ def _async_create_clientsession(
     """Create a new ClientSession with kwargs, i.e. for cookies."""
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl),
+        json_serialize=json_dumps,
+        response_class=HassClientResponse,
         **kwargs,
     )
     # Prevent packages accidentally overriding our default headers
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
-    # pylint: disable=protected-access
-    clientsession._default_headers = MappingProxyType({USER_AGENT: SERVER_SOFTWARE})  # type: ignore[assignment]
+    # pylint: disable-next=protected-access
+    clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]
+        {USER_AGENT: SERVER_SOFTWARE},
+    )
 
-    clientsession.close = warn_use(clientsession.close, WARN_CLOSE_MSG)  # type: ignore[assignment]
+    clientsession.close = warn_use(  # type: ignore[method-assign]
+        clientsession.close,
+        WARN_CLOSE_MSG,
+    )
 
     if auto_cleanup_method:
         auto_cleanup_method(hass, clientsession)
@@ -231,11 +277,16 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: bool | SSLContext = ssl_util.client_context()
+        ssl_context: bool | SSLContext = ssl_util.get_default_context()
     else:
-        ssl_context = False
+        ssl_context = ssl_util.get_default_no_verify_context()
 
-    connector = aiohttp.TCPConnector(enable_cleanup_closed=True, ssl=ssl_context)
+    connector = aiohttp.TCPConnector(
+        enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
+        ssl=ssl_context,
+        limit=MAXIMUM_CONNECTIONS,
+        limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
+    )
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:

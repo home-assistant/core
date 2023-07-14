@@ -8,8 +8,8 @@
         }
       },
       "confirm": {
-        "title": "Setup SiteSage Emonitor",
-        "description": "Do you want to setup {name} ({host})?"
+        "title": "Set up SiteSage Emonitor",
+        "description": "Do you want to set up {name} ({host})?"
       }
     },
     "error": {

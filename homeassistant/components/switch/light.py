@@ -5,11 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    COLOR_MODE_ONOFF,
-    PLATFORM_SCHEMA,
-    LightEntity,
-)
+from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -63,9 +59,9 @@ async def async_setup_platform(
 class LightSwitch(LightEntity):
     """Represents a Switch as a Light."""
 
-    _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_color_mode = ColorMode.ONOFF
     _attr_should_poll = False
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(self, name: str, switch_entity_id: str, unique_id: str | None) -> None:
         """Initialize Light Switch."""

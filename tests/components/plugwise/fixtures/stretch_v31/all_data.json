@@ -6,26 +6,24 @@
   },
   {
     "0000aaaa0000aaaa0000aaaa0000aa00": {
-      "class": "gateway",
-      "fw": "3.1.11",
-      "hw": null,
-      "mac_address": "01:23:45:67:89:AB",
+      "dev_class": "gateway",
+      "firmware": "3.1.11",
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
-      "vendor": "Plugwise B.V.",
-      "model": "Stretch",
+      "mac_address": "01:23:45:67:89:AB",
+      "model": "Gateway",
       "name": "Stretch",
-      "zigbee_mac_address": "ABCD012345670101"
+      "zigbee_mac_address": "ABCD012345670101",
+      "vendor": "Plugwise"
     },
     "5871317346d045bc9f6b987ef25ee638": {
-      "class": "water_heater_vessel",
-      "fw": "2011-06-27T10:52:18+02:00",
-      "hw": "6539-0701-4028",
+      "dev_class": "water_heater_vessel",
+      "firmware": "2011-06-27T10:52:18+02:00",
+      "hardware": "6539-0701-4028",
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
-      "mac_address": null,
       "model": "Circle type F",
       "name": "Boiler (1EB31)",
-      "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A07",
+      "vendor": "Plugwise",
       "sensors": {
         "electricity_consumed": 1.19,
         "electricity_consumed_interval": 0.0,
@@ -37,13 +35,13 @@
       }
     },
     "e1c884e7dede431dadee09506ec4f859": {
-      "class": "refrigerator",
-      "fw": "2011-06-27T10:47:37+02:00",
-      "hw": "6539-0700-7330",
+      "dev_class": "refrigerator",
+      "firmware": "2011-06-27T10:47:37+02:00",
+      "hardware": "6539-0700-7330",
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
-      "mac_address": null,
       "model": "Circle+ type F",
       "name": "Koelkast (92C4A)",
+      "zigbee_mac_address": "0123456789AB",
       "vendor": "Plugwise",
       "sensors": {
         "electricity_consumed": 50.5,
@@ -56,15 +54,14 @@
       }
     },
     "aac7b735042c4832ac9ff33aae4f453b": {
-      "class": "dishwasher",
-      "fw": "2011-06-27T10:52:18+02:00",
-      "hw": "6539-0701-4022",
+      "dev_class": "dishwasher",
+      "firmware": "2011-06-27T10:52:18+02:00",
+      "hardware": "6539-0701-4022",
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
-      "mac_address": null,
       "model": "Circle type F",
       "name": "Vaatwasser (2a1ab)",
-      "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A02",
+      "vendor": "Plugwise",
       "sensors": {
         "electricity_consumed": 0.0,
         "electricity_consumed_interval": 0.71,
@@ -76,15 +73,14 @@
       }
     },
     "cfe95cf3de1948c0b8955125bf754614": {
-      "class": "dryer",
-      "fw": "2011-06-27T10:52:18+02:00",
-      "hw": "0000-0440-0107",
+      "dev_class": "dryer",
+      "firmware": "2011-06-27T10:52:18+02:00",
+      "hardware": "0000-0440-0107",
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
-      "mac_address": null,
       "model": "Circle type F",
       "name": "Droger (52559)",
-      "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A04",
+      "vendor": "Plugwise",
       "sensors": {
         "electricity_consumed": 0.0,
         "electricity_consumed_interval": 0.0,
@@ -96,15 +92,14 @@
       }
     },
     "059e4d03c7a34d278add5c7a4a781d19": {
-      "class": "washingmachine",
-      "fw": "2011-06-27T10:52:18+02:00",
-      "hw": "0000-0440-0107",
+      "dev_class": "washingmachine",
+      "firmware": "2011-06-27T10:52:18+02:00",
+      "hardware": "0000-0440-0107",
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
-      "mac_address": null,
       "model": "Circle type F",
       "name": "Wasmachine (52AC1)",
-      "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A01",
+      "vendor": "Plugwise",
       "sensors": {
         "electricity_consumed": 0.0,
         "electricity_consumed_interval": 0.0,
@@ -116,22 +111,16 @@
       }
     },
     "71e1944f2a944b26ad73323e399efef0": {
-      "class": "switching",
-      "fw": null,
-      "location": null,
+      "dev_class": "switching",
       "model": "Switchgroup",
       "name": "Test",
       "members": ["5ca521ac179d468e91d772eeeb8a2117"],
-      "types": ["switch_group"],
-      "vendor": null,
       "switches": {
         "relay": true
       }
     },
     "d950b314e9d8499f968e6db8d82ef78c": {
-      "class": "report",
-      "fw": null,
-      "location": null,
+      "dev_class": "report",
       "model": "Switchgroup",
       "name": "Stroomvreters",
       "members": [
@@ -141,24 +130,18 @@
         "cfe95cf3de1948c0b8955125bf754614",
         "e1c884e7dede431dadee09506ec4f859"
       ],
-      "types": ["switch_group"],
-      "vendor": null,
       "switches": {
         "relay": true
       }
     },
     "d03738edfcc947f7b8f4573571d90d2d": {
-      "class": "switching",
-      "fw": null,
-      "location": null,
+      "dev_class": "switching",
       "model": "Switchgroup",
       "name": "Schakel",
       "members": [
         "059e4d03c7a34d278add5c7a4a781d19",
         "cfe95cf3de1948c0b8955125bf754614"
       ],
-      "types": ["switch_group"],
-      "vendor": null,
       "switches": {
         "relay": true
       }

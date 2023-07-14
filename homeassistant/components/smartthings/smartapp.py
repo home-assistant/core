@@ -3,6 +3,7 @@ import asyncio
 import functools
 import logging
 import secrets
+from typing import Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -32,6 +33,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.storage import Store
 
 from .const import (
     APP_NAME_PREFIX,
@@ -74,8 +76,7 @@ async def find_app(hass: HomeAssistant, api):
 
 
 async def validate_installed_app(api, installed_app_id: str):
-    """
-    Ensure the specified installed SmartApp is valid and functioning.
+    """Ensure the specified installed SmartApp is valid and functioning.
 
     Query the API for the installed SmartApp and validate that it is tied to
     the specified app_id and is in an authorized state.
@@ -102,8 +103,7 @@ def validate_webhook_requirements(hass: HomeAssistant) -> bool:
 
 
 def get_webhook_url(hass: HomeAssistant) -> str:
-    """
-    Get the URL of the webhook.
+    """Get the URL of the webhook.
 
     Return the cloudhook if available, otherwise local webhook.
     """
@@ -180,8 +180,7 @@ async def update_app(hass: HomeAssistant, app):
 
 
 def setup_smartapp(hass, app):
-    """
-    Configure an individual SmartApp in hass.
+    """Configure an individual SmartApp in hass.
 
     Register the SmartApp with the SmartAppManager so that hass will service
     lifecycle events (install, event, etc...).  A unique SmartApp is created
@@ -199,8 +198,7 @@ def setup_smartapp(hass, app):
 
 
 async def setup_smartapp_endpoint(hass: HomeAssistant):
-    """
-    Configure the SmartApp webhook in hass.
+    """Configure the SmartApp webhook in hass.
 
     SmartApps are an extension point within the SmartThings ecosystem and
     is used to receive push updates (i.e. device updates) from the cloud.
@@ -210,7 +208,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
         return
 
     # Get/create config to store a unique id for this hass instance.
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if not (config := await store.async_load()):
         # Create config
         config = {
@@ -282,7 +280,7 @@ async def unload_smartapp_endpoint(hass: HomeAssistant):
     if cloudhook_url and cloud.async_is_logged_in(hass):
         await cloud.async_delete_cloudhook(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
         # Remove cloudhook from storage
-        store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(
             {
                 CONF_INSTANCE_ID: hass.data[DOMAIN][CONF_INSTANCE_ID],
@@ -336,7 +334,10 @@ async def smartapp_sync_subscriptions(
         try:
             await api.delete_subscription(installed_app_id, sub.subscription_id)
             _LOGGER.debug(
-                "Removed subscription for '%s' under app '%s' because it was no longer needed",
+                (
+                    "Removed subscription for '%s' under app '%s' because it was no"
+                    " longer needed"
+                ),
                 sub.capability,
                 installed_app_id,
             )
@@ -359,9 +360,11 @@ async def smartapp_sync_subscriptions(
     capability_count = len(capabilities)
     if capability_count > SUBSCRIPTION_WARNING_LIMIT:
         _LOGGER.warning(
-            "Some device attributes may not receive push updates and there may be subscription "
-            "creation failures under app '%s' because %s subscriptions are required but "
-            "there is a limit of %s per app",
+            (
+                "Some device attributes may not receive push updates and there may be"
+                " subscription creation failures under app '%s' because %s"
+                " subscriptions are required but there is a limit of %s per app"
+            ),
             installed_app_id,
             capability_count,
             SUBSCRIPTION_WARNING_LIMIT,
@@ -404,7 +407,7 @@ async def _continue_flow(
         (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-            if flow["context"]["unique_id"] == unique_id
+            if flow["context"].get("unique_id") == unique_id
         ),
         None,
     )
@@ -466,8 +469,7 @@ async def smartapp_update(hass: HomeAssistant, req, resp, app):
 
 
 async def smartapp_uninstall(hass: HomeAssistant, req, resp, app):
-    """
-    Handle when a SmartApp is removed from a location by the user.
+    """Handle when a SmartApp is removed from a location by the user.
 
     Find and delete the config entry representing the integration.
     """
@@ -492,8 +494,7 @@ async def smartapp_uninstall(hass: HomeAssistant, req, resp, app):
 
 
 async def smartapp_webhook(hass: HomeAssistant, webhook_id: str, request):
-    """
-    Handle a smartapp lifecycle event callback from SmartThings.
+    """Handle a smartapp lifecycle event callback from SmartThings.
 
     Requests from SmartThings are digitally signed and the SmartAppManager
     validates the signature for authenticity.

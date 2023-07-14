@@ -2,7 +2,7 @@
 
 import requests_mock
 
-from homeassistant.components.climate.const import DOMAIN
+from homeassistant.components.climate import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

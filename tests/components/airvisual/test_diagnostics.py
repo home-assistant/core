@@ -1,27 +1,42 @@
 """Test AirVisual diagnostics."""
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisual):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_config_entry,
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
-            "title": "Mock Title",
+            "entry_id": config_entry.entry_id,
+            "version": 3,
+            "domain": "airvisual",
+            "title": REDACTED,
             "data": {
-                "api_key": REDACTED,
                 "integration_type": "Geographical Location by Latitude/Longitude",
+                "api_key": REDACTED,
                 "latitude": REDACTED,
                 "longitude": REDACTED,
             },
-            "options": {
-                "show_on_map": True,
-            },
+            "options": {"show_on_map": True},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "data": {
             "city": REDACTED,
+            "state": REDACTED,
             "country": REDACTED,
+            "location": {"type": "Point", "coordinates": REDACTED},
             "current": {
                 "weather": {
                     "ts": "2021-09-03T21:00:00.000Z",
@@ -40,10 +55,5 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisua
                     "maincn": "p2",
                 },
             },
-            "location": {
-                "coordinates": REDACTED,
-                "type": "Point",
-            },
-            "state": REDACTED,
         },
     }

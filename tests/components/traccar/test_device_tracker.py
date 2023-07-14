@@ -2,7 +2,9 @@
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.device_tracker.const import DOMAIN
+from pytraccar import ReportsEventeModel
+
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.traccar.device_tracker import (
     PLATFORM_SCHEMA as TRACCAR_PLATFORM_SCHEMA,
 )
@@ -13,12 +15,13 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
 
 
-async def test_import_events_catch_all(hass):
+async def test_import_events_catch_all(hass: HomeAssistant) -> None:
     """Test importing all events and firing them in HA using their event types."""
     conf_dict = {
         DOMAIN: TRACCAR_PLATFORM_SCHEMA(
@@ -35,26 +38,39 @@ async def test_import_events_catch_all(hass):
     device = {"id": 1, "name": "abc123"}
     api_mock = AsyncMock()
     api_mock.devices = [device]
-    api_mock.get_events.return_value = [
-        {
-            "deviceId": device["id"],
-            "type": "ignitionOn",
-            "serverTime": datetime.utcnow(),
-            "attributes": {},
-        },
-        {
-            "deviceId": device["id"],
-            "type": "ignitionOff",
-            "serverTime": datetime.utcnow(),
-            "attributes": {},
-        },
+    api_mock.get_reports_events.return_value = [
+        ReportsEventeModel(
+            **{
+                "id": 1,
+                "positionId": 1,
+                "geofenceId": 1,
+                "maintenanceId": 1,
+                "deviceId": device["id"],
+                "type": "ignitionOn",
+                "eventTime": datetime.utcnow().isoformat(),
+                "attributes": {},
+            }
+        ),
+        ReportsEventeModel(
+            **{
+                "id": 2,
+                "positionId": 2,
+                "geofenceId": 1,
+                "maintenanceId": 1,
+                "deviceId": device["id"],
+                "type": "ignitionOff",
+                "eventTime": datetime.utcnow().isoformat(),
+                "attributes": {},
+            }
+        ),
     ]
 
     events_ignition_on = async_capture_events(hass, "traccar_ignition_on")
     events_ignition_off = async_capture_events(hass, "traccar_ignition_off")
 
     with patch(
-        "homeassistant.components.traccar.device_tracker.API", return_value=api_mock
+        "homeassistant.components.traccar.device_tracker.ApiClient",
+        return_value=api_mock,
     ):
         assert await async_setup_component(hass, DOMAIN, conf_dict)
 

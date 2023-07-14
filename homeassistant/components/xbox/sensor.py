@@ -6,10 +6,8 @@ from functools import partial
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    async_get_registry as async_get_entity_registry,
-)
 
 from . import XboxUpdateCoordinator
 from .base_sensor import XboxBaseSensorEntity
@@ -58,7 +56,7 @@ def async_update_friends(
     current_ids = set(current)
 
     # Process new favorites, add them to Home Assistant
-    new_entities = []
+    new_entities: list[XboxSensorEntity] = []
     for xuid in new_ids - current_ids:
         current[xuid] = [
             XboxSensorEntity(coordinator, xuid, attribute)
@@ -66,8 +64,7 @@ def async_update_friends(
         ]
         new_entities = new_entities + current[xuid]
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
     # Process deleted favorites, remove them from Home Assistant
     for xuid in current_ids - new_ids:
@@ -79,10 +76,10 @@ def async_update_friends(
 async def async_remove_entities(
     xuid: str,
     coordinator: XboxUpdateCoordinator,
-    current: dict[str, XboxSensorEntity],
+    current: dict[str, list[XboxSensorEntity]],
 ) -> None:
     """Remove friend sensors from Home Assistant."""
-    registry = await async_get_entity_registry(coordinator.hass)
+    registry = er.async_get(coordinator.hass)
     entities = current[xuid]
     for entity in entities:
         if entity.entity_id in registry.entities:

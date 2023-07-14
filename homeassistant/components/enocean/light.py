@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
     PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_ID, CONF_NAME
@@ -39,9 +41,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean light platform."""
-    sender_id = config.get(CONF_SENDER_ID)
-    dev_name = config.get(CONF_NAME)
-    dev_id = config.get(CONF_ID)
+    sender_id: list[int] = config[CONF_SENDER_ID]
+    dev_name: str = config[CONF_NAME]
+    dev_id: list[int] = config[CONF_ID]
 
     add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
 
@@ -49,15 +51,16 @@ def setup_platform(
 class EnOceanLight(EnOceanEntity, LightEntity):
     """Representation of an EnOcean light source."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, sender_id, dev_id, dev_name):
+    def __init__(self, sender_id: list[int], dev_id: list[int], dev_name: str) -> None:
         """Initialize the EnOcean light source."""
         super().__init__(dev_id, dev_name)
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
+        self._attr_unique_id = f"{combine_hex(dev_id)}"
 
     @property
     def name(self):
@@ -78,7 +81,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         """If light is on."""
         return self._on_state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light source on or sets a specific dimmer value."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             self._brightness = brightness
@@ -92,7 +95,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self.send_command(command, [], 0x01)
         self._on_state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light source off."""
         command = [0xA5, 0x02, 0x00, 0x01, 0x09]
         command.extend(self._sender_id)

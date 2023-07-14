@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import tikteck
 import voluptuous as vol
@@ -10,8 +11,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PASSWORD
@@ -22,8 +22,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_TIKTECK_LED = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 DEVICE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
@@ -57,84 +55,51 @@ def setup_platform(
 class TikteckLight(LightEntity):
     """Representation of a Tikteck light."""
 
+    _attr_assumed_state = True
+    _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
+    _attr_supported_color_modes = {ColorMode.HS}
+    hs_color: tuple[float, float]
+    brightness: int
+
     def __init__(self, device):
         """Initialize the light."""
 
-        self._name = device["name"]
-        self._address = device["address"]
-        self._password = device["password"]
-        self._brightness = 255
-        self._hs = [0, 0]
-        self._state = False
+        address = device["address"]
+        self._attr_unique_id = address
+        self._attr_name = device["name"]
+        self._attr_brightness = 255
+        self._attr_hs_color = [0, 0]
+        self._attr_is_on = False
         self.is_valid = True
-        self._bulb = tikteck.tikteck(self._address, "Smart Light", self._password)
+        self._bulb = tikteck.tikteck(address, "Smart Light", device["password"])
         if self._bulb.connect() is False:
             self.is_valid = False
-            _LOGGER.error("Failed to connect to bulb %s, %s", self._address, self._name)
+            _LOGGER.error("Failed to connect to bulb %s, %s", address, self.name)
 
-    @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._address
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
-
-    @property
-    def hs_color(self):
-        """Return the color property."""
-        return self._hs
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_TIKTECK_LED
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def assumed_state(self):
-        """Return the assumed state."""
-        return True
-
-    def set_state(self, red, green, blue, brightness):
+    def set_state(self, red: int, green: int, blue: int, brightness: int) -> bool:
         """Set the bulb state."""
         return self._bulb.set_state(red, green, blue, brightness)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified light on."""
-        self._state = True
+        self._attr_is_on = True
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if hs_color is not None:
-            self._hs = hs_color
+            self._attr_hs_color = hs_color
         if brightness is not None:
-            self._brightness = brightness
+            self._attr_brightness = brightness
 
-        rgb = color_util.color_hs_to_RGB(*self._hs)
+        rgb = color_util.color_hs_to_RGB(self.hs_color[0], self.hs_color[1])
 
         self.set_state(rgb[0], rgb[1], rgb[2], self.brightness)
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified light off."""
-        self._state = False
+        self._attr_is_on = False
         self.set_state(0, 0, 0, 0)
         self.schedule_update_ha_state()

@@ -2,7 +2,7 @@
 import asyncio
 from logging import getLogger
 
-from aiohttp.client_exceptions import ClientResponseError
+from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
 import async_timeout
 from kaiterra_async_client import AQIStandard, KaiterraAPIClient, Units
 
@@ -55,8 +55,8 @@ class KaiterraApiData:
         try:
             async with async_timeout.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
-        except (ClientResponseError, asyncio.TimeoutError):
-            _LOGGER.debug("Couldn't fetch data from Kaiterra API")
+        except (ClientResponseError, ClientConnectorError, asyncio.TimeoutError) as err:
+            _LOGGER.debug("Couldn't fetch data from Kaiterra API: %s", err)
             self.data = {}
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
             return

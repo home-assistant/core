@@ -1,7 +1,7 @@
 """Starts a service to scan in intervals for new devices."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 import logging
 from typing import NamedTuple
@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -58,13 +59,8 @@ class ServiceDetails(NamedTuple):
 # These have no config flows
 SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
-    SERVICE_SABNZBD: ServiceDetails("sabnzbd", None),
     "yamaha": ServiceDetails("media_player", "yamaha"),
-    "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
-    "openhome": ServiceDetails("media_player", "openhome"),
-    "bose_soundtouch": ServiceDetails("media_player", "soundtouch"),
     "bluesound": ServiceDetails("media_player", "bluesound"),
-    "lg_smart_device": ServiceDetails("media_player", "lg_soundbar"),
 }
 
 OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
@@ -72,6 +68,7 @@ OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
 MIGRATED_SERVICE_HANDLERS = [
     SERVICE_APPLE_TV,
     "axis",
+    "bose_soundtouch",
     "deconz",
     SERVICE_DAIKIN,
     "denonavr",
@@ -89,6 +86,7 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_MOBILE_APP,
     SERVICE_NETGEAR,
     SERVICE_OCTOPRINT,
+    "openhome",
     "philips_hue",
     SERVICE_SAMSUNG_PRINTER,
     "sonos",
@@ -97,7 +95,9 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
+    SERVICE_SABNZBD,
     "nanoleaf_aurora",
+    "lg_smart_device",
 ]
 
 DEFAULT_ENABLED = (
@@ -145,8 +145,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for platform in enabled_platforms:
         if platform in DEFAULT_ENABLED:
             logger.warning(
-                "Please remove %s from your discovery.enable configuration "
-                "as it is now enabled by default",
+                (
+                    "Please remove %s from your discovery.enable configuration "
+                    "as it is now enabled by default"
+                ),
                 platform,
             )
 
@@ -173,7 +175,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         already_discovered.add(discovery_hash)
 
         if service in CONFIG_ENTRY_HANDLERS:
-            await hass.config_entries.flow.async_init(
+            discovery_flow.async_create_flow(
+                hass,
                 CONFIG_ENTRY_HANDLERS[service],
                 context={"source": config_entries.SOURCE_DISCOVERY},
                 data=info,
@@ -199,7 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass, service_details.component, service_details.platform, info, config
             )
 
-    async def scan_devices(now):
+    async def scan_devices(now: datetime) -> None:
         """Scan for devices."""
         try:
             results = await hass.async_add_executor_job(
@@ -212,13 +215,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             logger.error("Network is unreachable")
 
         async_track_point_in_utc_time(
-            hass, scan_devices, dt_util.utcnow() + SCAN_INTERVAL
+            hass, scan_devices_job, dt_util.utcnow() + SCAN_INTERVAL
         )
 
     @callback
-    def schedule_first(event):
+    def schedule_first(event: Event) -> None:
         """Schedule the first discovery when Home Assistant starts up."""
-        async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
+        async_track_point_in_utc_time(hass, scan_devices_job, dt_util.utcnow())
+
+    scan_devices_job = HassJob(scan_devices, cancel_on_shutdown=True)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, schedule_first)
 

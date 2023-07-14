@@ -1,15 +1,11 @@
 ac_start:
-  description: Start A/C on vehicle.
   fields:
     vehicle:
-      name: Vehicle
-      description: The vehicle to send the command to.
       required: true
       selector:
         device:
           integration: renault
     temperature:
-      description: Target A/C temperature in °C.
       example: "21"
       required: true
       selector:
@@ -19,34 +15,26 @@ ac_start:
           step: 0.5
           unit_of_measurement: °C
     when:
-      description: Timestamp for the start of the A/C (optional - defaults to now).
       example: "2020-05-01T17:45:00"
       selector:
         text:
 
 ac_cancel:
-  description: Cancel A/C on vehicle.
   fields:
     vehicle:
-      name: Vehicle
-      description: The vehicle to send the command to.
       required: true
       selector:
         device:
           integration: renault
 
 charge_set_schedules:
-  description: Update charge schedule on vehicle.
   fields:
     vehicle:
-      name: Vehicle
-      description: The vehicle to send the command to.
       required: true
       selector:
         device:
           integration: renault
     schedules:
-      description: Schedule details.
       example: >-
         [
           {
@@ -75,14 +63,3 @@ charge_set_schedules:
       required: true
       selector:
         object:
-
-charge_start:
-  description: Start charge on vehicle.
-  fields:
-    vehicle:
-      name: Vehicle
-      description: The vehicle to send the command to.
-      required: true
-      selector:
-        device:
-          integration: renault

@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, FEED
 
@@ -40,7 +40,9 @@ async def async_setup_entry(
 
 
 class GeonetnzQuakesSensor(SensorEntity):
-    """This is a status sensor for the GeoNet NZ Quakes integration."""
+    """Status sensor for the GeoNet NZ Quakes integration."""
+
+    _attr_should_poll = False
 
     def __init__(self, config_entry_id, config_unique_id, config_title, manager):
         """Initialize entity."""
@@ -58,7 +60,7 @@ class GeonetnzQuakesSensor(SensorEntity):
         self._removed = None
         self._remove_signal_status = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_status = async_dispatcher_connect(
             self.hass,
@@ -80,12 +82,7 @@ class GeonetnzQuakesSensor(SensorEntity):
         _LOGGER.debug("Received status update for %s", self._config_entry_id)
         self.async_schedule_update_ha_state(True)
 
-    @property
-    def should_poll(self):
-        """No polling needed for GeoNet NZ Quakes status sensor."""
-        return False
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._config_entry_id)
         if self._manager:
@@ -97,10 +94,12 @@ class GeonetnzQuakesSensor(SensorEntity):
         """Update the internal state from the provided information."""
         self._status = status_info.status
         self._last_update = (
-            dt.as_utc(status_info.last_update) if status_info.last_update else None
+            dt_util.as_utc(status_info.last_update) if status_info.last_update else None
         )
         if status_info.last_update_successful:
-            self._last_update_successful = dt.as_utc(status_info.last_update_successful)
+            self._last_update_successful = dt_util.as_utc(
+                status_info.last_update_successful
+            )
         else:
             self._last_update_successful = None
         self._last_timestamp = status_info.last_timestamp

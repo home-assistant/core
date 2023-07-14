@@ -9,9 +9,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_BATTERY, SONOS_CREATE_MIC_SENSOR
@@ -58,12 +58,12 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+    _attr_name = "Power"
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the power entity binary sensor."""
         super().__init__(speaker)
         self._attr_unique_id = f"{self.soco.uid}-power"
-        self._attr_name = f"{self.speaker.zone_name} Power"
 
     async def _async_fallback_poll(self) -> None:
         """Poll the device for the current state."""
@@ -92,12 +92,12 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:microphone"
+    _attr_name = "Microphone"
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the microphone binary sensor entity."""
         super().__init__(speaker)
         self._attr_unique_id = f"{self.soco.uid}-microphone"
-        self._attr_name = f"{self.speaker.zone_name} Microphone"
 
     async def _async_fallback_poll(self) -> None:
         """Handle polling when subscription fails."""
@@ -109,6 +109,6 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
         self.speaker.mic_enabled = self.soco.mic_enabled
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.speaker.mic_enabled

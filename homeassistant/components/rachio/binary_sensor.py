@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -21,6 +22,7 @@ from .const import (
     SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
     STATUS_ONLINE,
 )
+from .device import RachioPerson
 from .entity import RachioDevice
 from .webhooks import (
     SUBTYPE_COLD_REBOOT,
@@ -41,12 +43,13 @@ async def async_setup_entry(
     """Set up the Rachio binary sensors."""
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
     async_add_entities(entities)
-    _LOGGER.info("%d Rachio binary sensor(s) added", len(entities))
+    _LOGGER.debug("%d Rachio binary sensor(s) added", len(entities))
 
 
-def _create_entities(hass, config_entry):
-    entities = []
-    for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
+def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Entity]:
+    entities: list[Entity] = []
+    person: RachioPerson = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    for controller in person.controllers:
         entities.append(RachioControllerOnlineBinarySensor(controller))
         entities.append(RachioRainSensor(controller))
     return entities
@@ -116,7 +119,7 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
 
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._state = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
 
@@ -162,7 +165,7 @@ class RachioRainSensor(RachioControllerBinarySensor):
 
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._state = self._controller.init_data[KEY_RAIN_SENSOR_TRIPPED]
 

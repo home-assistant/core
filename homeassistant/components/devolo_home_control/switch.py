@@ -41,6 +41,8 @@ async def async_setup_entry(
 class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
     """Representation of a switch."""
 
+    _attr_name = None
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
@@ -50,9 +52,9 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             device_instance=device_instance,
             element_uid=element_uid,
         )
-        self._binary_switch_property = self._device_instance.binary_switch_property.get(
-            self._attr_unique_id
-        )
+        self._binary_switch_property = self._device_instance.binary_switch_property[
+            self._attr_unique_id  # type: ignore[index]
+        ]
         self._attr_is_on = self._binary_switch_property.state
 
     def turn_on(self, **kwargs: Any) -> None:

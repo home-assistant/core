@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import importlib
 import time
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
     PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import (
@@ -73,8 +74,8 @@ def setup_platform(
 class AvionLight(LightEntity):
     """Representation of an Avion light."""
 
-    _attr_support_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_support_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_support_color_mode = ColorMode.BRIGHTNESS
+    _attr_support_color_modes = {ColorMode.BRIGHTNESS}
     _attr_should_poll = False
     _attr_assumed_state = True
     _attr_is_on = True
@@ -103,7 +104,7 @@ class AvionLight(LightEntity):
                 self._switch.connect()
         return True
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             self._attr_brightness = brightness
@@ -111,7 +112,7 @@ class AvionLight(LightEntity):
         self.set_state(self.brightness)
         self._attr_is_on = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified or all lights off."""
         self.set_state(0)
         self._attr_is_on = False

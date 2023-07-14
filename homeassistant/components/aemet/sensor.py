@@ -1,16 +1,54 @@
 """Support for the AEMET OpenData service."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import (
+    DEGREE,
+    PERCENTAGE,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_FORECAST_TIME,
+    ATTR_API_CONDITION,
+    ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_TEMP,
+    ATTR_API_FORECAST_TEMP_LOW,
+    ATTR_API_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_SPEED,
+    ATTR_API_HUMIDITY,
+    ATTR_API_PRESSURE,
+    ATTR_API_RAIN,
+    ATTR_API_RAIN_PROB,
+    ATTR_API_SNOW,
+    ATTR_API_SNOW_PROB,
+    ATTR_API_STATION_ID,
+    ATTR_API_STATION_NAME,
+    ATTR_API_STATION_TIMESTAMP,
+    ATTR_API_STORM_PROB,
+    ATTR_API_TEMPERATURE,
+    ATTR_API_TEMPERATURE_FEELING,
+    ATTR_API_TOWN_ID,
+    ATTR_API_TOWN_NAME,
+    ATTR_API_TOWN_TIMESTAMP,
+    ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_MAX_SPEED,
+    ATTR_API_WIND_SPEED,
     ATTRIBUTION,
     DOMAIN,
     ENTRY_NAME,
@@ -19,11 +57,164 @@ from .const import (
     FORECAST_MODE_DAILY,
     FORECAST_MODES,
     FORECAST_MONITORED_CONDITIONS,
-    FORECAST_SENSOR_TYPES,
     MONITORED_CONDITIONS,
-    WEATHER_SENSOR_TYPES,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
+
+FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_CONDITION,
+        name="Condition",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_PRECIPITATION,
+        name="Precipitation",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+        name="Precipitation probability",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_TEMP,
+        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_TEMP_LOW,
+        name="Temperature Low",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_TIME,
+        name="Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_WIND_BEARING,
+        name="Wind bearing",
+        native_unit_of_measurement=DEGREE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_WIND_SPEED,
+        name="Wind speed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+)
+WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_API_CONDITION,
+        name="Condition",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_HUMIDITY,
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_PRESSURE,
+        name="Pressure",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_RAIN,
+        name="Rain",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_RAIN_PROB,
+        name="Rain probability",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_SNOW,
+        name="Snow",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_SNOW_PROB,
+        name="Snow probability",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_STATION_ID,
+        name="Station ID",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_STATION_NAME,
+        name="Station name",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_STATION_TIMESTAMP,
+        name="Station timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_STORM_PROB,
+        name="Storm probability",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TEMPERATURE,
+        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TEMPERATURE_FEELING,
+        name="Temperature feeling",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TOWN_ID,
+        name="Town ID",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TOWN_NAME,
+        name="Town name",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TOWN_TIMESTAMP,
+        name="Town timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WIND_BEARING,
+        name="Wind bearing",
+        native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WIND_MAX_SPEED,
+        name="Wind max speed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WIND_SPEED,
+        name="Wind speed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -45,17 +236,13 @@ async def async_setup_entry(
     entities.extend(
         [
             AemetForecastSensor(
-                name_prefix,
-                unique_id_prefix,
+                f"{domain_data[ENTRY_NAME]} {mode} Forecast",
+                f"{unique_id}-forecast-{mode}",
                 weather_coordinator,
                 mode,
                 description,
             )
             for mode in FORECAST_MODES
-            if (
-                (name_prefix := f"{domain_data[ENTRY_NAME]} {mode} Forecast")
-                and (unique_id_prefix := f"{unique_id}-forecast-{mode}")
-            )
             for description in FORECAST_SENSOR_TYPES
             if description.key in FORECAST_MONITORED_CONDITIONS
         ]
@@ -67,7 +254,7 @@ async def async_setup_entry(
 class AbstractAemetSensor(CoordinatorEntity[WeatherUpdateCoordinator], SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -75,7 +262,7 @@ class AbstractAemetSensor(CoordinatorEntity[WeatherUpdateCoordinator], SensorEnt
         unique_id,
         coordinator: WeatherUpdateCoordinator,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
@@ -89,14 +276,14 @@ class AemetSensor(AbstractAemetSensor):
     def __init__(
         self,
         name,
-        unique_id,
+        unique_id_prefix,
         weather_coordinator: WeatherUpdateCoordinator,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             name=name,
-            unique_id=f"{unique_id}-{description.key}",
+            unique_id=f"{unique_id_prefix}-{description.key}",
             coordinator=weather_coordinator,
             description=description,
         )
@@ -113,15 +300,15 @@ class AemetForecastSensor(AbstractAemetSensor):
     def __init__(
         self,
         name,
-        unique_id,
+        unique_id_prefix,
         weather_coordinator: WeatherUpdateCoordinator,
         forecast_mode,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             name=name,
-            unique_id=f"{unique_id}-{description.key}",
+            unique_id=f"{unique_id_prefix}-{description.key}",
             coordinator=weather_coordinator,
             description=description,
         )
@@ -139,6 +326,6 @@ class AemetForecastSensor(AbstractAemetSensor):
         )
         if forecasts:
             forecast = forecasts[0].get(self.entity_description.key)
-            if self.entity_description.key == ATTR_FORECAST_TIME:
+            if self.entity_description.key == ATTR_API_FORECAST_TIME:
                 forecast = dt_util.parse_datetime(forecast)
         return forecast

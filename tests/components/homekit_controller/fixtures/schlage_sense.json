@@ -1,0 +1,356 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Schlage ",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "BE479CAM619",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "SENSE  ",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "AAAAAAA000",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "004.027.000",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "iid": 51,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.3.0",
+            "description": "Hardware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000054-0000-1000-8000-0026BB765291",
+            "iid": 50,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "002.001.000",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 10,
+        "type": "7F0DEE73-4A3F-4103-98E6-A46CD301BDFB",
+        "characteristics": [
+          {
+            "type": "44FF6853-58DB-4956-B298-5F6650DD61F6",
+            "iid": 25,
+            "perms": ["pw"],
+            "format": "data"
+          },
+          {
+            "type": "CF68C40F-DC6F-4F7E-918C-4C536B643A2B",
+            "iid": 26,
+            "perms": ["pr", "pw"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "4058C2B8-4545-4E77-B6B7-157C38F9718B",
+            "iid": 27,
+            "perms": ["pr", "pw"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 1,
+            "maxValue": 5,
+            "minStep": 1
+          },
+          {
+            "type": "B498F4B5-6364-4F79-B5CC-1563ADE070DF",
+            "iid": 28,
+            "perms": ["pr", "pw"],
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "AFAE7AD2-8DD3-4B20-BAE0-C0B18B79EDB5",
+            "iid": 29,
+            "perms": ["pw"],
+            "format": "data"
+          },
+          {
+            "type": "87D91EC6-C508-4CAD-89F1-A21B0BF179A0",
+            "iid": 30,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "000a00000000000000000000"
+          },
+          {
+            "type": "4C3E2641-F57F-11E3-A3AC-0800200C9A66",
+            "iid": 31,
+            "perms": ["pr"],
+            "format": "uint64",
+            "value": 3468600224
+          },
+          {
+            "type": "EEC26990-F628-11E3-A3AC-0800200C9A66",
+            "iid": 32,
+            "perms": ["pr", "pw"],
+            "format": "uint8",
+            "value": 4,
+            "minValue": 4,
+            "maxValue": 8,
+            "minStep": 1
+          },
+          {
+            "type": "BCDE3B9E-3963-4123-B24D-42ECCBB3A9C4",
+            "iid": 33,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "4e6f6e65"
+          },
+          {
+            "type": "A9464D14-6806-4375-BA53-E14F7E0A6BEE",
+            "iid": 34,
+            "perms": ["pr", "pw"],
+            "format": null,
+            "value": "ff"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 35,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Additional Settings",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "63D23C2F-2FBB-45E8-8540-47CC26C517D0",
+            "iid": 36,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 100
+          }
+        ]
+      },
+      {
+        "iid": 23,
+        "type": "00000044-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000019-0000-1000-8000-0026BB765291",
+            "iid": 16,
+            "perms": ["pw"],
+            "format": "data",
+            "description": "Lock Control Point"
+          },
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 17,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "02.00.00",
+            "description": "Version",
+            "maxLen": 64
+          },
+          {
+            "type": "0000001F-0000-1000-8000-0026BB765291",
+            "iid": 18,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "012431443133423434392d423941312d334135392d463042412d3245393030304233453430450208000000000000000003010404030001ff",
+            "description": "Logs"
+          },
+          {
+            "type": "00000005-0000-1000-8000-0026BB765291",
+            "iid": 19,
+            "perms": ["pr", "pw"],
+            "format": "bool",
+            "value": true,
+            "description": "Audio Feedback"
+          },
+          {
+            "type": "0000001A-0000-1000-8000-0026BB765291",
+            "iid": 20,
+            "perms": ["pr", "pw"],
+            "format": "uint32",
+            "value": 0,
+            "description": "Lock Management Auto Security Timeout",
+            "unit": "seconds"
+          },
+          {
+            "type": "00000001-0000-1000-8000-0026BB765291",
+            "iid": 21,
+            "perms": ["pr", "pw"],
+            "format": "bool",
+            "value": false,
+            "description": "Administrator Only Access"
+          }
+        ]
+      },
+      {
+        "iid": 30,
+        "type": "00000045-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000001D-0000-1000-8000-0026BB765291",
+            "iid": 11,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 3,
+            "description": "Lock Current State",
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "0000001E-0000-1000-8000-0026BB765291",
+            "iid": 12,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Lock Target State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 13,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Lock Mechanism",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 34,
+        "type": "1F6B43AA-94DE-4BA9-981C-DA38823117BD",
+        "characteristics": [
+          {
+            "type": "048D8799-695B-4A7F-A7F7-A4A1301587FE",
+            "iid": 39,
+            "perms": ["pw"],
+            "format": "data"
+          },
+          {
+            "type": "66B7C7FD-95A7-4F89-B0AD-38073A67C46C",
+            "iid": 40,
+            "perms": ["pw"],
+            "format": "data"
+          },
+          {
+            "type": "507EFC3F-9231-438C-976A-FA04427F1F8F",
+            "iid": 41,
+            "perms": ["pw"],
+            "format": "data"
+          },
+          {
+            "type": "1DC15719-0882-4BAD-AB0F-9AEAB0600C90",
+            "iid": 42,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "03"
+          }
+        ]
+      },
+      {
+        "iid": 39,
+        "type": "00000055-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000004C-0000-1000-8000-0026BB765291",
+            "iid": 45,
+            "perms": [],
+            "format": "data",
+            "description": "Pair Setup"
+          },
+          {
+            "type": "0000004E-0000-1000-8000-0026BB765291",
+            "iid": 46,
+            "perms": [],
+            "format": "data",
+            "description": "Pair Verify"
+          },
+          {
+            "type": "0000004F-0000-1000-8000-0026BB765291",
+            "iid": 47,
+            "perms": [],
+            "format": "uint8",
+            "description": "Pairing Features"
+          },
+          {
+            "type": "00000050-0000-1000-8000-0026BB765291",
+            "iid": 48,
+            "perms": ["pr", "pw"],
+            "format": "data",
+            "value": null,
+            "description": "Pairing Pairings"
+          }
+        ]
+      },
+      {
+        "iid": 44,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 62,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "02.00.00",
+            "description": "Version",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  }
+]

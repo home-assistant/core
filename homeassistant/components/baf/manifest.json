@@ -1,0 +1,23 @@
+{
+  "domain": "baf",
+  "name": "Big Ass Fans",
+  "codeowners": ["@bdraco", "@jfroy"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/baf",
+  "iot_class": "local_push",
+  "requirements": ["aiobafi6==0.8.2"],
+  "zeroconf": [
+    {
+      "type": "_api._tcp.local.",
+      "properties": {
+        "model": "haiku*"
+      }
+    },
+    {
+      "type": "_api._tcp.local.",
+      "properties": {
+        "model": "i6*"
+      }
+    }
+  ]
+}

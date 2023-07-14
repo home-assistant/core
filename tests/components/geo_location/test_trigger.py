@@ -4,12 +4,21 @@ import logging
 import pytest
 
 from homeassistant.components import automation, zone
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.core import Context
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_component
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -38,7 +47,7 @@ def setup_comp(hass):
     )
 
 
-async def test_if_fires_on_zone_enter(hass, calls):
+async def test_if_fires_on_zone_enter(hass: HomeAssistant, calls) -> None:
     """Test for firing on zone enter."""
     context = Context()
     hass.states.async_set(
@@ -119,7 +128,7 @@ async def test_if_fires_on_zone_enter(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_not_fires_for_enter_on_zone_leave(hass, calls):
+async def test_if_not_fires_for_enter_on_zone_leave(hass: HomeAssistant, calls) -> None:
     """Test for not firing on zone leave."""
     hass.states.async_set(
         "geo_location.entity",
@@ -154,7 +163,7 @@ async def test_if_not_fires_for_enter_on_zone_leave(hass, calls):
     assert len(calls) == 0
 
 
-async def test_if_fires_on_zone_leave(hass, calls):
+async def test_if_fires_on_zone_leave(hass: HomeAssistant, calls) -> None:
     """Test for firing on zone leave."""
     hass.states.async_set(
         "geo_location.entity",
@@ -189,7 +198,42 @@ async def test_if_fires_on_zone_leave(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_not_fires_for_leave_on_zone_enter(hass, calls):
+async def test_if_fires_on_zone_leave_2(hass: HomeAssistant, calls) -> None:
+    """Test for firing on zone leave for unavailable entity."""
+    hass.states.async_set(
+        "geo_location.entity",
+        "hello",
+        {"latitude": 32.880586, "longitude": -117.237564, "source": "test_source"},
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "geo_location",
+                    "source": "test_source",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "geo_location.entity",
+        STATE_UNAVAILABLE,
+        {"source": "test_source"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+
+async def test_if_not_fires_for_leave_on_zone_enter(hass: HomeAssistant, calls) -> None:
     """Test for not firing on zone enter."""
     hass.states.async_set(
         "geo_location.entity",
@@ -224,7 +268,7 @@ async def test_if_not_fires_for_leave_on_zone_enter(hass, calls):
     assert len(calls) == 0
 
 
-async def test_if_fires_on_zone_appear(hass, calls):
+async def test_if_fires_on_zone_appear(hass: HomeAssistant, calls) -> None:
     """Test for firing if entity appears in zone."""
     assert await async_setup_component(
         hass,
@@ -273,7 +317,7 @@ async def test_if_fires_on_zone_appear(hass, calls):
     )
 
 
-async def test_if_fires_on_zone_appear_2(hass, calls):
+async def test_if_fires_on_zone_appear_2(hass: HomeAssistant, calls) -> None:
     """Test for firing if entity appears in zone."""
     assert await async_setup_component(
         hass,
@@ -331,7 +375,7 @@ async def test_if_fires_on_zone_appear_2(hass, calls):
     )
 
 
-async def test_if_fires_on_zone_disappear(hass, calls):
+async def test_if_fires_on_zone_disappear(hass: HomeAssistant, calls) -> None:
     """Test for firing if entity disappears from zone."""
     hass.states.async_set(
         "geo_location.entity",
@@ -380,7 +424,9 @@ async def test_if_fires_on_zone_disappear(hass, calls):
     )
 
 
-async def test_zone_undefined(hass, calls, caplog):
+async def test_zone_undefined(
+    hass: HomeAssistant, calls, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test for undefined zone."""
     hass.states.async_set(
         "geo_location.entity",

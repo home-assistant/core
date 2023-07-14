@@ -58,7 +58,7 @@ class BloomSkySensor(BinarySensorEntity):
         self._attr_unique_id = f"{self._device_id}-{sensor_name}"
         self._attr_device_class = SENSOR_TYPES.get(sensor_name)
 
-    def update(self):
+    def update(self) -> None:
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
 

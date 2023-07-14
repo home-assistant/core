@@ -10,6 +10,7 @@ from homeassistant.components.growatt_server.const import (
     LOGIN_INVALID_AUTH_CODE,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -44,17 +45,17 @@ GROWATT_PLANT_LIST_RESPONSE = {
 GROWATT_LOGIN_RESPONSE = {"user": {"id": 123456}, "userLevel": 1, "success": True}
 
 
-async def test_show_authenticate_form(hass):
+async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
-async def test_incorrect_login(hass):
+async def test_incorrect_login(hass: HomeAssistant) -> None:
     """Test that it shows the appropriate error when an incorrect username/password/server is entered."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -68,12 +69,12 @@ async def test_incorrect_login(hass):
             result["flow_id"], FIXTURE_USER_INPUT
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_no_plants_on_account(hass):
+async def test_no_plants_on_account(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow with an entered plant_id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -93,7 +94,7 @@ async def test_no_plants_on_account(hass):
     assert result["reason"] == "no_plants"
 
 
-async def test_multiple_plant_ids(hass):
+async def test_multiple_plant_ids(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow with an entered plant_id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -110,7 +111,7 @@ async def test_multiple_plant_ids(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "plant"
 
         user_input = {CONF_PLANT_ID: "123456"}
@@ -119,13 +120,13 @@ async def test_multiple_plant_ids(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
     assert result["data"][CONF_PLANT_ID] == "123456"
 
 
-async def test_one_plant_on_account(hass):
+async def test_one_plant_on_account(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow with an entered plant_id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -144,13 +145,13 @@ async def test_one_plant_on_account(hass):
             result["flow_id"], user_input
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
     assert result["data"][CONF_PLANT_ID] == "123456"
 
 
-async def test_existing_plant_configured(hass):
+async def test_existing_plant_configured(hass: HomeAssistant) -> None:
     """Test entering an existing plant_id."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="123456")
     entry.add_to_hass(hass)

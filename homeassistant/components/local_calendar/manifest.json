@@ -1,0 +1,10 @@
+{
+  "domain": "local_calendar",
+  "name": "Local Calendar",
+  "codeowners": ["@allenporter"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/local_calendar",
+  "iot_class": "local_polling",
+  "loggers": ["ical"],
+  "requirements": ["ical==4.5.4"]
+}

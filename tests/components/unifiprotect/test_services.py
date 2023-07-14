@@ -1,65 +1,57 @@
 """Test the UniFi Protect global services."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Light
+from pyunifiprotect.data import Camera, Chime, Light, ModelType
 from pyunifiprotect.exceptions import BadRequest
 
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
 from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
+    SERVICE_SET_CHIME_PAIRED,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockEntityFixture
+from .utils import MockUFPFixture, init_entry
 
 
 @pytest.fixture(name="device")
-async def device_fixture(hass: HomeAssistant, mock_entry: MockEntityFixture):
+async def device_fixture(hass: HomeAssistant, ufp: MockUFPFixture):
     """Fixture with entry setup to call services with."""
 
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-    await hass.async_block_till_done()
+    await init_entry(hass, ufp, [])
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     return list(device_registry.devices.values())[0]
 
 
 @pytest.fixture(name="subdevice")
-async def subdevice_fixture(
-    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light
-):
+async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
     """Fixture with entry setup to call services with."""
 
-    mock_light._api = mock_entry.api
-    mock_entry.api.bootstrap.lights = {
-        mock_light.id: mock_light,
-    }
+    await init_entry(hass, ufp, [light])
 
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-    await hass.async_block_till_done()
-
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
 
 
 async def test_global_service_bad_device(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
-):
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
     """Test global service, invalid device ID."""
 
-    nvr = mock_entry.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock()
+    nvr = ufp.api.bootstrap.nvr
+    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
     nvr.add_custom_doorbell_message = AsyncMock()
 
     with pytest.raises(HomeAssistantError):
@@ -73,12 +65,12 @@ async def test_global_service_bad_device(
 
 
 async def test_global_service_exception(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
-):
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
     """Test global service, unexpected error."""
 
-    nvr = mock_entry.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock()
+    nvr = ufp.api.bootstrap.nvr
+    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
     nvr.add_custom_doorbell_message = AsyncMock(side_effect=BadRequest)
 
     with pytest.raises(HomeAssistantError):
@@ -92,12 +84,12 @@ async def test_global_service_exception(
 
 
 async def test_add_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
-):
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
     """Test add_doorbell_text service."""
 
-    nvr = mock_entry.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock()
+    nvr = ufp.api.bootstrap.nvr
+    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
     nvr.add_custom_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -110,12 +102,12 @@ async def test_add_doorbell_text(
 
 
 async def test_remove_doorbell_text(
-    hass: HomeAssistant, subdevice: dr.DeviceEntry, mock_entry: MockEntityFixture
-):
+    hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
     """Test remove_doorbell_text service."""
 
-    nvr = mock_entry.api.bootstrap.nvr
-    nvr.__fields__["remove_custom_doorbell_message"] = Mock()
+    nvr = ufp.api.bootstrap.nvr
+    nvr.__fields__["remove_custom_doorbell_message"] = Mock(final=False)
     nvr.remove_custom_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -128,12 +120,12 @@ async def test_remove_doorbell_text(
 
 
 async def test_set_default_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
-):
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
     """Test set_default_doorbell_text service."""
 
-    nvr = mock_entry.api.bootstrap.nvr
-    nvr.__fields__["set_default_doorbell_message"] = Mock()
+    nvr = ufp.api.bootstrap.nvr
+    nvr.__fields__["set_default_doorbell_message"] = Mock(final=False)
     nvr.set_default_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -143,3 +135,45 @@ async def test_set_default_doorbell_text(
         blocking=True,
     )
     nvr.set_default_doorbell_message.assert_called_once_with("Test Message")
+
+
+async def test_set_chime_paired_doorbells(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """Test set_chime_paired_doorbells."""
+
+    ufp.api.update_device = AsyncMock()
+
+    camera1 = doorbell.copy()
+    camera1.name = "Test Camera 1"
+
+    camera2 = doorbell.copy()
+    camera2.name = "Test Camera 2"
+
+    await init_entry(hass, ufp, [camera1, camera2, chime])
+
+    registry = er.async_get(hass)
+    chime_entry = registry.async_get("button.test_chime_play_chime")
+    camera_entry = registry.async_get("binary_sensor.test_camera_2_doorbell")
+    assert chime_entry is not None
+    assert camera_entry is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CHIME_PAIRED,
+        {
+            ATTR_DEVICE_ID: chime_entry.device_id,
+            "doorbells": {
+                ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
+                ATTR_DEVICE_ID: [camera_entry.device_id],
+            },
+        },
+        blocking=True,
+    )
+
+    ufp.api.update_device.assert_called_once_with(
+        ModelType.CHIME, chime.id, {"cameraIds": sorted([camera1.id, camera2.id])}
+    )

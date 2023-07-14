@@ -1,7 +1,8 @@
 {
   "domain": "scene",
   "name": "Scenes",
-  "documentation": "https://www.home-assistant.io/integrations/scene",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/scene",
+  "integration_type": "entity",
   "quality_scale": "internal"
 }

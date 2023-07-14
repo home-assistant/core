@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
+from homeassistant.components.stream import CONF_USE_WALLCLOCK_AS_TIMESTAMPS
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_INTEGRATION_DISCOVERY,
@@ -16,7 +17,15 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    issue_registry as ir,
+)
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from .const import (
     ATTR_DIRECTION,
@@ -29,7 +38,6 @@ from .const import (
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_RTSP_PORT,
     DIR_DOWN,
     DIR_LEFT,
     DIR_RIGHT,
@@ -48,11 +56,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Ezviz cameras based on a config entry."""
+    """Set up EZVIZ cameras based on a config entry."""
 
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
@@ -61,50 +67,42 @@ async def async_setup_entry(
     camera_entities = []
 
     for camera, value in coordinator.data.items():
-
         camera_rtsp_entry = [
             item
             for item in hass.config_entries.async_entries(DOMAIN)
             if item.unique_id == camera and item.source != SOURCE_IGNORE
         ]
 
-        # There seem to be a bug related to localRtspPort in Ezviz API.
-        local_rtsp_port = (
-            value["local_rtsp_port"]
-            if value["local_rtsp_port"] != 0
-            else DEFAULT_RTSP_PORT
-        )
-
         if camera_rtsp_entry:
-
             ffmpeg_arguments = camera_rtsp_entry[0].options[CONF_FFMPEG_ARGUMENTS]
             camera_username = camera_rtsp_entry[0].data[CONF_USERNAME]
             camera_password = camera_rtsp_entry[0].data[CONF_PASSWORD]
 
-            camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
+            camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{value['local_rtsp_port']}{ffmpeg_arguments}"
             _LOGGER.debug(
                 "Configuring Camera %s with ip: %s rtsp port: %s ffmpeg arguments: %s",
                 camera,
                 value["local_ip"],
-                local_rtsp_port,
+                value["local_rtsp_port"],
                 ffmpeg_arguments,
             )
 
         else:
-
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
-                    data={
-                        ATTR_SERIAL: camera,
-                        CONF_IP_ADDRESS: value["local_ip"],
-                    },
-                )
+            discovery_flow.async_create_flow(
+                hass,
+                DOMAIN,
+                context={"source": SOURCE_INTEGRATION_DISCOVERY},
+                data={
+                    ATTR_SERIAL: camera,
+                    CONF_IP_ADDRESS: value["local_ip"],
+                },
             )
 
             _LOGGER.warning(
-                "Found camera with serial %s without configuration. Please go to integration to complete setup",
+                (
+                    "Found camera with serial %s without configuration. Please go to"
+                    " integration to complete setup"
+                ),
                 camera,
             )
 
@@ -121,14 +119,14 @@ async def async_setup_entry(
                 camera_username,
                 camera_password,
                 camera_rtsp_stream,
-                local_rtsp_port,
+                value["local_rtsp_port"],
                 ffmpeg_arguments,
             )
         )
 
     async_add_entities(camera_entities)
 
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_PTZ,
@@ -170,7 +168,7 @@ async def async_setup_entry(
 
 
 class EzvizCamera(EzvizEntity, Camera):
-    """An implementation of a Ezviz security camera."""
+    """An implementation of a EZVIZ security camera."""
 
     def __init__(
         self,
@@ -183,9 +181,10 @@ class EzvizCamera(EzvizEntity, Camera):
         local_rtsp_port: int,
         ffmpeg_arguments: str | None,
     ) -> None:
-        """Initialize a Ezviz security camera."""
+        """Initialize a EZVIZ security camera."""
         super().__init__(coordinator, serial)
         Camera.__init__(self)
+        self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
         self._username = camera_username
         self._password = camera_password
         self._rtsp_stream = camera_rtsp_stream
@@ -291,6 +290,16 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_alarm_sound(self, level: int) -> None:
         """Enable/Disable movement sound alarm."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation_alarm_sound_level",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation_alarm_sound_level",
+        )
         try:
             self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
         except HTTPError as err:
@@ -308,3 +317,14 @@ class EzvizCamera(EzvizEntity, Camera):
             )
         except (HTTPError, PyEzvizError) as err:
             raise PyEzvizError("Cannot set detection sensitivity level") from err
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_detection_sensibility",
+            breaks_in_ha_version="2023.12.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_detection_sensibility",
+        )

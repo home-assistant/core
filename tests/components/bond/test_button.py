@@ -1,12 +1,10 @@
 """Tests for the Bond button device."""
+from bond_async import Action, DeviceType
 
-from bond_api import Action, DeviceType
-
-from homeassistant import core
 from homeassistant.components.bond.button import STEP_SIZE
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -30,6 +28,7 @@ def light_brightness_increase_decrease_only(name: str):
         "actions": [
             Action.TURN_LIGHT_ON,
             Action.TURN_LIGHT_OFF,
+            Action.START_DIMMER,
             Action.START_INCREASING_BRIGHTNESS,
             Action.START_DECREASING_BRIGHTNESS,
             Action.STOP,
@@ -58,7 +57,7 @@ def light(name: str):
     }
 
 
-async def test_entity_registry(hass: core.HomeAssistant):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -75,9 +74,11 @@ async def test_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id_startincreasingbrightness"
     entity = registry.entities["button.name_1_start_decreasing_brightness"]
     assert entity.unique_id == "test-hub-id_test-device-id_startdecreasingbrightness"
+    entity = registry.entities["button.name_1_start_dimmer"]
+    assert entity.unique_id == "test-hub-id_test-device-id_startdimmer"
 
 
-async def test_mutually_exclusive_actions(hass: core.HomeAssistant):
+async def test_mutually_exclusive_actions(hass: HomeAssistant) -> None:
     """Tests we do not create the button when there is a mutually exclusive action."""
     await setup_platform(
         hass,
@@ -89,7 +90,7 @@ async def test_mutually_exclusive_actions(hass: core.HomeAssistant):
     assert not hass.states.async_all("button")
 
 
-async def test_stop_not_created_no_other_buttons(hass: core.HomeAssistant):
+async def test_stop_not_created_no_other_buttons(hass: HomeAssistant) -> None:
     """Tests we do not create the stop button when there are no other buttons."""
     await setup_platform(
         hass,
@@ -101,7 +102,7 @@ async def test_stop_not_created_no_other_buttons(hass: core.HomeAssistant):
     assert not hass.states.async_all("button")
 
 
-async def test_press_button_with_argument(hass: core.HomeAssistant):
+async def test_press_button_with_argument(hass: HomeAssistant) -> None:
     """Tests we can press a button with an argument."""
     await setup_platform(
         hass,
@@ -140,7 +141,7 @@ async def test_press_button_with_argument(hass: core.HomeAssistant):
     )
 
 
-async def test_press_button(hass: core.HomeAssistant):
+async def test_press_button(hass: HomeAssistant) -> None:
     """Tests we can press a button."""
     await setup_platform(
         hass,

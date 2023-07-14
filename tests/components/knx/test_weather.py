@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import KNXTestKit
 
 
-async def test_weather(hass: HomeAssistant, knx: KNXTestKit):
+async def test_weather(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX weather."""
 
     await knx.setup_integration(
@@ -35,7 +35,6 @@ async def test_weather(hass: HomeAssistant, knx: KNXTestKit):
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
     state = hass.states.get("weather.test")
     assert state.state is ATTR_CONDITION_EXCEPTIONAL
 
@@ -85,8 +84,8 @@ async def test_weather(hass: HomeAssistant, knx: KNXTestKit):
     state = hass.states.get("weather.test")
     assert state.attributes["temperature"] == 0.4
     assert state.attributes["wind_bearing"] == 270
-    assert state.attributes["wind_speed"] == 1.4400000000000002
-    assert state.attributes["pressure"] == 980.5824
+    assert state.attributes["wind_speed"] == 1.44
+    assert state.attributes["pressure"] == 980.58
     assert state.state is ATTR_CONDITION_SUNNY
 
     # update from KNX - set rain alarm

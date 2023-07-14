@@ -14,7 +14,7 @@ class SonosStatistics:
 
     def __init__(self, zone_name: str, kind: str) -> None:
         """Initialize SonosStatistics."""
-        self._stats = {}
+        self._stats: dict[str, dict[str, int | float]] = {}
         self._stat_type = kind
         self.zone_name = zone_name
 

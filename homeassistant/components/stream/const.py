@@ -31,7 +31,7 @@ EXT_X_START_LL_HLS = 2
 
 
 PACKETS_TO_WAIT_FOR_AUDIO = 20  # Some streams have an audio stream with no audio
-MAX_TIMESTAMP_GAP = 10000  # seconds - anything from 10 to 50000 is probably reasonable
+MAX_TIMESTAMP_GAP = 30  # seconds - anything from 10 to 50000 is probably reasonable
 
 MAX_MISSING_DTS = 6  # Number of packets missing DTS to allow
 SOURCE_TIMEOUT = 30  # Timeout for reading stream source
@@ -42,3 +42,15 @@ STREAM_RESTART_RESET_TIME = 300  # Reset wait_timeout after this many seconds
 CONF_LL_HLS = "ll_hls"
 CONF_PART_DURATION = "part_duration"
 CONF_SEGMENT_DURATION = "segment_duration"
+
+CONF_PREFER_TCP = "prefer_tcp"
+CONF_RTSP_TRANSPORT = "rtsp_transport"
+# The first dict entry below may be used as the default when populating options
+RTSP_TRANSPORTS = {
+    "tcp": "TCP",
+    "udp": "UDP",
+    "udp_multicast": "UDP Multicast",
+    "http": "HTTP",
+}
+CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
+CONF_EXTRA_PART_WAIT_TIME = "extra_part_wait_time"

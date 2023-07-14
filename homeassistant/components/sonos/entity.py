@@ -5,25 +5,15 @@ from abc import abstractmethod
 import datetime
 import logging
 
-import soco.config as soco_config
 from soco.core import SoCo
 
-from homeassistant.components import persistent_notification
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    DATA_SONOS,
-    DOMAIN,
-    SONOS_FALLBACK_POLL,
-    SONOS_FAVORITES_UPDATED,
-    SONOS_STATE_UPDATED,
-)
+from .const import DATA_SONOS, DOMAIN, SONOS_FALLBACK_POLL, SONOS_STATE_UPDATED
 from .exception import SonosUpdateError
 from .speaker import SonosSpeaker
-
-SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +22,7 @@ class SonosEntity(Entity):
     """Representation of a Sonos entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize a SonosEntity."""
@@ -54,13 +45,6 @@ class SonosEntity(Entity):
                 self.async_write_ha_state,
             )
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SONOS_FAVORITES_UPDATED}-{self.soco.household_id}",
-                self.async_write_ha_state,
-            )
-        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up when entity is removed."""
@@ -69,20 +53,6 @@ class SonosEntity(Entity):
     async def async_fallback_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
-            if soco_config.EVENT_ADVERTISE_IP:
-                listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
-            else:
-                listener_msg = self.speaker.subscription_address
-            message = f"{self.speaker.zone_name} cannot reach {listener_msg}, falling back to polling, functionality may be limited"
-            log_link_msg = f", see {SUB_FAIL_URL} for more details"
-            notification_link_msg = f'.\n\nSee <a href="{SUB_FAIL_URL}">Sonos documentation</a> for more details.'
-            _LOGGER.warning(message + log_link_msg)
-            persistent_notification.async_create(
-                self.hass,
-                message + notification_link_msg,
-                "Sonos networking issue",
-                "sonos_subscriptions_failed",
-            )
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()
         try:

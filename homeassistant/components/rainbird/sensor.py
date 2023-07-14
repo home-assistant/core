@@ -1,60 +1,61 @@
-"""Support for Rain Bird Irrigation system LNK WiFi Module."""
+"""Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
 from __future__ import annotations
 
 import logging
 
-from pyrainbird import RainbirdController
-
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (
-    DATA_RAINBIRD,
-    RAINBIRD_CONTROLLER,
-    SENSOR_TYPE_RAINDELAY,
-    SENSOR_TYPE_RAINSENSOR,
-    SENSOR_TYPES,
-)
+from .const import DOMAIN
+from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
+RAIN_DELAY_ENTITY_DESCRIPTION = SensorEntityDescription(
+    key="raindelay",
+    translation_key="raindelay",
+    icon="mdi:water-off",
+)
+
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a Rain Bird sensor."""
-
-    if discovery_info is None:
-        return
-
-    controller = hass.data[DATA_RAINBIRD][discovery_info[RAINBIRD_CONTROLLER]]
-    add_entities(
-        [RainBirdSensor(controller, description) for description in SENSOR_TYPES],
-        True,
+    """Set up entry for a Rain Bird sensor."""
+    async_add_entities(
+        [
+            RainBirdSensor(
+                hass.data[DOMAIN][config_entry.entry_id],
+                RAIN_DELAY_ENTITY_DESCRIPTION,
+            )
+        ]
     )
 
 
-class RainBirdSensor(SensorEntity):
+class RainBirdSensor(CoordinatorEntity[RainbirdUpdateCoordinator], SensorEntity):
     """A sensor implementation for Rain Bird device."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        controller: RainbirdController,
+        coordinator: RainbirdUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Rain Bird sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self._controller = controller
+        self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
+        self._attr_device_info = coordinator.device_info
 
-    def update(self) -> None:
-        """Get the latest data and updates the states."""
-        _LOGGER.debug("Updating sensor: %s", self.name)
-        if self.entity_description.key == SENSOR_TYPE_RAINSENSOR:
-            self._attr_native_value = self._controller.get_rain_sensor_state()
-        elif self.entity_description.key == SENSOR_TYPE_RAINDELAY:
-            self._attr_native_value = self._controller.get_rain_delay()
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.coordinator.data.rain_delay

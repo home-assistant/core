@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -86,11 +87,11 @@ class VActuator(SwitchEntity):
         """Return if the actuator is available."""
         return self._available
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the actuator."""
         await self.update_state(0)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the actuator."""
         await self.update_state(1)
 
@@ -102,7 +103,7 @@ class VActuator(SwitchEntity):
             None, self._identifier, self._parent_mac, payload
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state data from the actuator."""
         samples = await self.consumer.fetchPeripheralSample(
             None, self._identifier, self._parent_mac

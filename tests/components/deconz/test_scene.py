@@ -1,14 +1,12 @@
 """deCONZ scene platform tests."""
-
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -16,8 +14,12 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_scenes(hass, aioclient_mock):
+
+async def test_no_scenes(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that scenes can be loaded without scenes being available."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
@@ -53,8 +55,10 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("raw_data, expected", TEST_DATA)
-async def test_scenes(hass, aioclient_mock, raw_data, expected):
+@pytest.mark.parametrize(("raw_data", "expected"), TEST_DATA)
+async def test_scenes(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, raw_data, expected
+) -> None:
     """Test successful creation of scene entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -106,7 +110,9 @@ async def test_scenes(hass, aioclient_mock, raw_data, expected):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_only_new_scenes_are_created(hass, aioclient_mock):
+async def test_only_new_scenes_are_created(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that scenes works."""
     data = {
         "groups": {
@@ -122,12 +128,18 @@ async def test_only_new_scenes_are_created(hass, aioclient_mock):
         }
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+        await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 2
 
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    async_dispatcher_send(hass, gateway.signal_new_scene)
+    event_changed_group = {
+        "t": "event",
+        "e": "changed",
+        "r": "groups",
+        "id": "1",
+        "scenes": [{"id": "1", "name": "Scene"}],
+    }
+    await mock_deconz_websocket(data=event_changed_group)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2

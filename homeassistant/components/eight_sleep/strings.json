@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Eight Sleep cloud: {error}"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:component::eight_sleep::config::error::cannot_connect%]"
+    }
+  },
+  "services": {
+    "heat_set": {
+      "name": "Heat set",
+      "description": "Sets heating/cooling level for eight sleep.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration to heat/cool at the target level in seconds."
+        },
+        "target": {
+          "name": "Target",
+          "description": "Target cooling/heating level from -100 to 100."
+        }
+      }
+    }
+  }
+}

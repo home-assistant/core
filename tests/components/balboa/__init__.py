@@ -1,25 +1,21 @@
 """Test the Balboa Spa Client integration."""
-from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN
+from __future__ import annotations
+
+from homeassistant.components.balboa import CONF_SYNC_TIME, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-BALBOA_DEFAULT_PORT = 4257
 TEST_HOST = "balboatest.localdomain"
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock integration setup."""
-    config_entry = MockConfigEntry(
-        domain=BALBOA_DOMAIN,
-        data={
-            CONF_HOST: TEST_HOST,
-        },
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: TEST_HOST}, options={CONF_SYNC_TIME: True}
     )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-
-    return config_entry
+    return entry

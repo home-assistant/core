@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Generator
 import contextlib
 import logging
-from typing import cast
 
 from pywemo.exceptions import ActionException
 
@@ -54,7 +53,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
-        serial_number: str = self.wemo.serialnumber
+        serial_number: str = self.wemo.serial_number
         if suffix := self.unique_id_suffix:
             return f"{serial_number}_{suffix}"
         return serial_number
@@ -89,4 +88,4 @@ class WemoBinaryStateEntity(WemoEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the state is on."""
-        return cast(int, self.wemo.get_state()) != 0
+        return self.wemo.get_state() != 0

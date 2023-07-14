@@ -4,9 +4,10 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kostal.plenticore import MeData, SettingsData, VersionData
+from pykoplenti import MeData, VersionData
 import pytest
 
+from homeassistant.components.kostal_plenticore.helper import Plenticore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -14,10 +15,19 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-) -> Generator[None, MockConfigEntry, None]:
-    """Set up Kostal Plenticore integration for testing."""
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mocked ConfigEntry for testing."""
+    return MockConfigEntry(
+        entry_id="2ab8dd92a62787ddfe213a67e09406bd",
+        title="scb",
+        domain="kostal_plenticore",
+        data={"host": "192.168.1.2", "password": "SecretPassword"},
+    )
+
+
+@pytest.fixture
+def mock_plenticore() -> Generator[Plenticore, None, None]:
+    """Set up a Plenticore mock with some default values."""
     with patch(
         "homeassistant.components.kostal_plenticore.Plenticore", autospec=True
     ) as mock_api_class:
@@ -60,37 +70,20 @@ async def init_integration(
         )
 
         plenticore.client.get_process_data = AsyncMock()
-        plenticore.client.get_process_data.return_value = {
-            "devices:local": ["HomeGrid_P", "HomePv_P"]
-        }
-
         plenticore.client.get_settings = AsyncMock()
-        plenticore.client.get_settings.return_value = {
-            "devices:local": [
-                SettingsData(
-                    {
-                        "id": "Battery:MinSoc",
-                        "unit": "%",
-                        "default": "None",
-                        "min": 5,
-                        "max": 100,
-                        "type": "byte",
-                        "access": "readwrite",
-                    }
-                )
-            ]
-        }
 
-        mock_config_entry = MockConfigEntry(
-            entry_id="2ab8dd92a62787ddfe213a67e09406bd",
-            title="scb",
-            domain="kostal_plenticore",
-            data={"host": "192.168.1.2", "password": "SecretPassword"},
-        )
+        yield plenticore
 
-        mock_config_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Set up Kostal Plenticore integration for testing."""
 
-        yield mock_config_entry
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry

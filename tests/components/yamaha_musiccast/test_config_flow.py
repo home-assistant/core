@@ -1,5 +1,4 @@
 """Test config flow."""
-
 from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException
@@ -10,6 +9,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.yamaha_musiccast.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -21,6 +21,10 @@ async def silent_ssdp_scanner(hass):
         "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
     ):
         yield
 
@@ -121,44 +125,44 @@ def mock_empty_discovery_information():
 
 
 async def test_user_input_device_not_found(
-    hass, mock_get_device_info_mc_exception, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_device_info_mc_exception, mock_get_source_ip
+) -> None:
     """Test when user specifies a non-existing device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "none"},
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_input_non_yamaha_device_found(
-    hass, mock_get_device_info_invalid, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_device_info_invalid, mock_get_source_ip
+) -> None:
     """Test when user specifies an existing device, which does not provide the musiccast API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "no_musiccast_device"}
 
 
 async def test_user_input_device_already_existing(
-    hass, mock_get_device_info_valid, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_device_info_valid, mock_get_source_ip
+) -> None:
     """Test when user specifies an existing device."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -176,46 +180,46 @@ async def test_user_input_device_already_existing(
         {"host": "192.168.188.18"},
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
 async def test_user_input_unknown_error(
-    hass, mock_get_device_info_exception, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_device_info_exception, mock_get_source_ip
+) -> None:
     """Test when user specifies an existing device, which does not provide the musiccast API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_user_input_device_found(
-    hass,
+    hass: HomeAssistant,
     mock_get_device_info_valid,
     mock_valid_discovery_information,
     mock_get_source_ip,
-):
+) -> None:
     """Test when user specifies an existing device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
@@ -225,23 +229,23 @@ async def test_user_input_device_found(
 
 
 async def test_user_input_device_found_no_ssdp(
-    hass,
+    hass: HomeAssistant,
     mock_get_device_info_valid,
     mock_empty_discovery_information,
     mock_get_source_ip,
-):
+) -> None:
     """Test when user specifies an existing device, which no discovery data are present for."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
@@ -253,7 +257,9 @@ async def test_user_input_device_found_no_ssdp(
 # SSDP Flows
 
 
-async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha, mock_get_source_ip):
+async def test_ssdp_discovery_failed(
+    hass: HomeAssistant, mock_ssdp_no_yamaha, mock_get_source_ip
+) -> None:
     """Test when an SSDP discovered device is not a musiccast device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -269,13 +275,13 @@ async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha, mock_get_source_
         ),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "yxc_control_url_missing"
 
 
 async def test_ssdp_discovery_successful_add_device(
-    hass, mock_ssdp_yamaha, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_ssdp_yamaha, mock_get_source_ip
+) -> None:
     """Test when the SSDP discovered device is a musiccast device and the user confirms it."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -291,7 +297,7 @@ async def test_ssdp_discovery_successful_add_device(
         ),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "confirm"
 
@@ -300,7 +306,7 @@ async def test_ssdp_discovery_successful_add_device(
         {},
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
@@ -310,8 +316,8 @@ async def test_ssdp_discovery_successful_add_device(
 
 
 async def test_ssdp_discovery_existing_device_update(
-    hass, mock_ssdp_yamaha, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_ssdp_yamaha, mock_get_source_ip
+) -> None:
     """Test when the SSDP discovered device is a musiccast device, but it already exists with another IP."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -332,7 +338,7 @@ async def test_ssdp_discovery_existing_device_update(
             },
         ),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_entry.data[CONF_HOST] == "127.0.0.1"
     assert mock_entry.data["upnp_description"] == "http://127.0.0.1/desc.xml"

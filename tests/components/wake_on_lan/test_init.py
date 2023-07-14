@@ -1,14 +1,17 @@
 """Tests for Wake On LAN component."""
+from __future__ import annotations
+
 from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.wake_on_lan import DOMAIN, SERVICE_SEND_MAGIC_PACKET
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_send_magic_packet(hass):
+async def test_send_magic_packet(hass: HomeAssistant) -> None:
     """Test of send magic packet service call."""
     with patch("homeassistant.components.wake_on_lan.wakeonlan") as mocked_wakeonlan:
         mac = "aa:bb:cc:dd:ee:ff"

@@ -1,4 +1,6 @@
 """Config flow for Yeelight integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 from urllib.parse import urlparse
@@ -9,8 +11,8 @@ from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components import dhcp, ssdp, zeroconf
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -46,7 +48,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
 
@@ -96,7 +98,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     entry, data={**entry.data, CONF_HOST: self._discovered_ip}
                 )
-                reload = True
+                reload = entry.state in (
+                    ConfigEntryState.SETUP_RETRY,
+                    ConfigEntryState.LOADED,
+                )
             if reload:
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
@@ -129,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(self, user_input=None):
         """Confirm discovery."""
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(
                 title=async_format_model_id(self._discovered_model, self.unique_id),
                 data={
@@ -264,7 +269,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_get_properties()
             await bulb.async_stop_listening()
         except (asyncio.TimeoutError, yeelight.BulbException) as err:
-            _LOGGER.error("Failed to get properties from %s: %s", host, err)
+            _LOGGER.debug("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
         _LOGGER.debug("Get properties: %s", bulb.last_properties)
         return MODEL_UNKNOWN
@@ -273,7 +278,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Yeelight."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the option flow."""
         self._config_entry = config_entry
 

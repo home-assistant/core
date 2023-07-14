@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.met_eireann.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture(name="met_eireann_setup", autouse=True)
@@ -17,7 +18,7 @@ def met_setup_fixture():
         yield
 
 
-async def test_show_config_form(hass):
+async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -27,7 +28,7 @@ async def test_show_config_form(hass):
     assert result["step_id"] == config_entries.SOURCE_USER
 
 
-async def test_flow_with_home_location(hass):
+async def test_flow_with_home_location(hass: HomeAssistant) -> None:
     """Test config flow.
 
     Test the flow when a default location is configured.
@@ -51,7 +52,7 @@ async def test_flow_with_home_location(hass):
     assert default_data["elevation"] == 3
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     test_data = {
         "name": "test",
@@ -64,12 +65,12 @@ async def test_create_entry(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == test_data.get("name")
     assert result["data"] == test_data
 
 
-async def test_flow_entry_already_exists(hass):
+async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists.
 
     Test to ensure the config form does not allow duplicate entries.
@@ -85,11 +86,11 @@ async def test_flow_entry_already_exists(hass):
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
-    assert result1["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result1["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     # Create the second entry and assert that it is aborted
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

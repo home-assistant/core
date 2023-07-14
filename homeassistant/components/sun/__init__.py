@@ -1,29 +1,33 @@
 """Support for functionality to keep track of the sun."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 import logging
+from typing import Any
+
+from astral.location import Elevation, Location
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_ELEVATION,
-    EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
+    Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,13 +80,11 @@ _PHASE_UPDATES = {
 }
 
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track the state of the sun."""
-    if config.get(CONF_ELEVATION) is not None:
-        _LOGGER.warning(
-            "Elevation is now configured in Home Assistant core. "
-            "See https://www.home-assistant.io/docs/configuration/basic/"
-        )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -95,60 +97,65 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
     hass.data[DOMAIN] = Sun(hass)
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    sun = hass.data.pop(DOMAIN)
-    sun.remove_listeners()
-    hass.states.async_remove(sun.entity_id)
-    return True
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, [Platform.SENSOR]
+    ):
+        sun: Sun = hass.data.pop(DOMAIN)
+        sun.remove_listeners()
+        hass.states.async_remove(sun.entity_id)
+    return unload_ok
 
 
 class Sun(Entity):
     """Representation of the Sun."""
 
+    _attr_name = "Sun"
     entity_id = ENTITY_ID
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
 
-    def __init__(self, hass):
+    location: Location
+    elevation: Elevation
+    next_rising: datetime
+    next_setting: datetime
+    next_dawn: datetime
+    next_dusk: datetime
+    next_midnight: datetime
+    next_noon: datetime
+    solar_elevation: float
+    solar_azimuth: float
+    rising: bool
+    _next_change: datetime
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the sun."""
         self.hass = hass
-        self.location = None
-        self.elevation = 0.0
-        self._state = self.next_rising = self.next_setting = None
-        self.next_dawn = self.next_dusk = None
-        self.next_midnight = self.next_noon = None
-        self.solar_elevation = self.solar_azimuth = None
-        self.rising = self.phase = None
-        self._next_change = None
-        self._config_listener = None
-        self._update_events_listener = None
-        self._update_sun_position_listener = None
-        self._loaded_listener = None
+        self.phase: str | None = None
+
+        self._config_listener: CALLBACK_TYPE | None = None
+        self._update_events_listener: CALLBACK_TYPE | None = None
+        self._update_sun_position_listener: CALLBACK_TYPE | None = None
         self._config_listener = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, self.update_location
         )
-        if DOMAIN in hass.config.components:
-            self.update_location()
-        else:
-            self._loaded_listener = self.hass.bus.async_listen(
-                EVENT_COMPONENT_LOADED, self.loading_complete
-            )
+        self.update_location(initial=True)
 
     @callback
-    def loading_complete(self, event_: Event) -> None:
-        """Update location when loading is complete."""
-        if event_.data[ATTR_COMPONENT] == DOMAIN:
-            self.update_location()
-            self._remove_loaded_listener()
-
-    @callback
-    def update_location(self, *_):
+    def update_location(self, _: Event | None = None, initial: bool = False) -> None:
         """Update location."""
         location, elevation = get_astral_location(self.hass)
-        if location == self.location:
+        if not initial and location == self.location:
             return
         self.location = location
         self.elevation = elevation
@@ -157,16 +164,8 @@ class Sun(Entity):
         self.update_events()
 
     @callback
-    def _remove_loaded_listener(self):
-        """Remove the loaded listener."""
-        if self._loaded_listener:
-            self._loaded_listener()
-            self._loaded_listener = None
-
-    @callback
-    def remove_listeners(self):
+    def remove_listeners(self) -> None:
         """Remove listeners."""
-        self._remove_loaded_listener()
         if self._config_listener:
             self._config_listener()
         if self._update_events_listener:
@@ -175,12 +174,7 @@ class Sun(Entity):
             self._update_sun_position_listener()
 
     @property
-    def name(self):
-        """Return the name."""
-        return "Sun"
-
-    @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the sun."""
         # 0.8333 is the same value as astral uses
         if self.solar_elevation > -0.833:
@@ -189,7 +183,7 @@ class Sun(Entity):
         return STATE_BELOW_HORIZON
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sun."""
         return {
             STATE_ATTR_NEXT_DAWN: self.next_dawn.isoformat(),
@@ -203,7 +197,9 @@ class Sun(Entity):
             STATE_ATTR_RISING: self.rising,
         }
 
-    def _check_event(self, utc_point_in_time, sun_event, before):
+    def _check_event(
+        self, utc_point_in_time: datetime, sun_event: str, before: str | None
+    ) -> datetime:
         next_utc = get_location_astral_event_next(
             self.location, self.elevation, sun_event, utc_point_in_time
         )
@@ -213,7 +209,7 @@ class Sun(Entity):
         return next_utc
 
     @callback
-    def update_events(self, now=None):
+    def update_events(self, now: datetime | None = None) -> None:
         """Update the attributes containing solar events."""
         # Grab current time in case system clock changed since last time we ran.
         utc_point_in_time = dt_util.utcnow()
@@ -283,7 +279,7 @@ class Sun(Entity):
         _LOGGER.debug("next time: %s", self._next_change.isoformat())
 
     @callback
-    def update_sun_position(self, now=None):
+    def update_sun_position(self, now: datetime | None = None) -> None:
         """Calculate the position of the sun."""
         # Grab current time in case system clock changed since last time we ran.
         utc_point_in_time = dt_util.utcnow()
@@ -303,6 +299,7 @@ class Sun(Entity):
         self.async_write_ha_state()
 
         # Next update as per the current phase
+        assert self.phase
         delta = _PHASE_UPDATES[self.phase]
         # if the next update is within 1.25 of the next
         # position update just drop it

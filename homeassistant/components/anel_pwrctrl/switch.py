@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from anel_pwrctrl import DeviceMaster
 import voluptuous as vol
@@ -78,16 +79,16 @@ class PwrCtrlSwitch(SwitchEntity):
         self._attr_unique_id = f"{port.device.host}-{port.get_index()}"
         self._attr_name = port.label
 
-    def update(self):
+    def update(self) -> None:
         """Trigger update for all switches on the parent device."""
         self._parent_device.update()
         self._attr_is_on = self._port.get_state()
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.off()
 

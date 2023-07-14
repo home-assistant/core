@@ -1,22 +1,26 @@
 """Support to interface with the Plex API."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
 import logging
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import plexapi.exceptions
 import requests.exceptions
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -24,36 +28,43 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
     COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
-    DOMAIN as PLEX_DOMAIN,
+    DOMAIN,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
-    SERVERS,
     TRANSIENT_DEVICE_MODELS,
 )
+from .helpers import get_plex_data, get_plex_server
 from .media_browser import browse_media
 from .services import process_plex_payload
+
+_PlexMediaPlayerT = TypeVar("_PlexMediaPlayerT", bound="PlexMediaPlayer")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def needs_session(func):
+def needs_session(
+    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R]
+) -> Callable[Concatenate[_PlexMediaPlayerT, _P], _R | None]:
     """Ensure session is available for certain attributes."""
 
     @wraps(func)
-    def get_session_attribute(self, *args):
+    def get_session_attribute(
+        self: _PlexMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         if self.session is None:
             return None
-        return func(self, *args)
+        return func(self, *args, **kwargs)
 
     return get_session_attribute
 
@@ -65,7 +76,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
 
     @callback
     def async_new_media_players(new_entities):
@@ -74,7 +85,7 @@ async def async_setup_entry(
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
-    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    get_plex_data(hass)[DISPATCHERS][server_id].append(unsub)
     _LOGGER.debug("New entity listener created")
 
 
@@ -83,14 +94,14 @@ def _async_add_entities(hass, registry, async_add_entities, server_id, new_entit
     """Set up Plex media_player entities."""
     _LOGGER.debug("New entities: %s", new_entities)
     entities = []
-    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    plexserver = get_plex_server(hass, server_id)
     for entity_params in new_entities:
         plex_mp = PlexMediaPlayer(plexserver, **entity_params)
         entities.append(plex_mp)
 
         # Migration to per-server unique_ids
         old_entity_id = registry.async_get_entity_id(
-            MP_DOMAIN, PLEX_DOMAIN, plex_mp.machine_identifier
+            MP_DOMAIN, DOMAIN, plex_mp.machine_identifier
         )
         if old_entity_id is not None:
             new_unique_id = f"{server_id}:{plex_mp.machine_identifier}"
@@ -128,7 +139,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         self._attr_available = False
         self._attr_should_poll = False
-        self._attr_state = STATE_IDLE
+        self._attr_state = MediaPlayerState.IDLE
         self._attr_unique_id = (
             f"{self.plex_server.machine_identifier}:{self.machine_identifier}"
         )
@@ -136,7 +147,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         # Initializes other attributes
         self.session = session
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         _LOGGER.debug("Added %s [%s]", self.entity_id, self.unique_id)
         self.async_on_remove(
@@ -217,7 +228,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     def force_idle(self):
         """Force client to idle."""
-        self._attr_state = STATE_IDLE
+        self._attr_state = MediaPlayerState.IDLE
         if self.player_source == "session":
             self.device = None
             self.session_device = None
@@ -235,7 +246,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.session_device = self.session.player
             self.update_state(self.session.state)
         else:
-            self._attr_state = STATE_IDLE
+            self._attr_state = MediaPlayerState.IDLE
 
     @property
     @needs_session
@@ -246,24 +257,24 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def update_state(self, state):
         """Set the state of the device, handle session termination."""
         if state == "playing":
-            self._attr_state = STATE_PLAYING
+            self._attr_state = MediaPlayerState.PLAYING
         elif state == "paused":
-            self._attr_state = STATE_PAUSED
+            self._attr_state = MediaPlayerState.PAUSED
         elif state == "stopped":
             self.session = None
             self.force_idle()
         else:
-            self._attr_state = STATE_IDLE
+            self._attr_state = MediaPlayerState.IDLE
 
     @property
     def _is_player_active(self):
         """Report if the client is playing media."""
-        return self.state in (STATE_PLAYING, STATE_PAUSED)
+        return self.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}
 
     @property
     def _active_media_plexapi_type(self):
         """Get the active media type required by PlexAPI commands."""
-        if self.media_content_type is MEDIA_TYPE_MUSIC:
+        if self.media_content_type == MediaType.MUSIC:
             return "music"
 
         return "video"
@@ -377,7 +388,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         return self.session.media_episode
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
@@ -397,7 +408,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             MediaPlayerEntityFeature.BROWSE_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
         )
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.setVolume(int(volume * 100), self._active_media_plexapi_type)
@@ -421,7 +432,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             return self._volume_muted
         return None
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute the volume.
 
         Since we can't actually mute, we'll:
@@ -438,37 +449,39 @@ class PlexMediaPlayer(MediaPlayerEntity):
         else:
             self.set_volume_level(self._previous_volume_level)
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.play(self._active_media_plexapi_type)
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.pause(self._active_media_plexapi_type)
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
 
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Send the seek command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.seekTo(position * 1000, self._active_media_plexapi_type)
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipNext(self._active_media_plexapi_type)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send previous track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         if not (self.device and "playback" in self._device_protocol_capabilities):
             raise HomeAssistantError(
@@ -504,14 +517,14 @@ class PlexMediaPlayer(MediaPlayerEntity):
         return attributes
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.machine_identifier is None:
             return None
 
         if self.device_product in TRANSIENT_DEVICE_MODELS:
             return DeviceInfo(
-                identifiers={(PLEX_DOMAIN, "plex.tv-clients")},
+                identifiers={(DOMAIN, "plex.tv-clients")},
                 name="Plex Client Service",
                 manufacturer="Plex",
                 model="Plex Clients",
@@ -519,15 +532,22 @@ class PlexMediaPlayer(MediaPlayerEntity):
             )
 
         return DeviceInfo(
-            identifiers={(PLEX_DOMAIN, self.machine_identifier)},
+            identifiers={(DOMAIN, self.machine_identifier)},
             manufacturer=self.device_platform or "Plex",
             model=self.device_product or self.device_make,
-            name=self.name,
+            # Instead of setting the device name to the entity name, plex
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
             sw_version=self.device_version,
-            via_device=(PLEX_DOMAIN, self.plex_server.machine_identifier),
+            via_device=(DOMAIN, self.plex_server.machine_identifier),
         )
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         is_internal = is_internal_request(self.hass)
         return await self.hass.async_add_executor_job(

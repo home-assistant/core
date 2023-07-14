@@ -112,14 +112,16 @@ def _resize_image(image, opts):
     scale = new_width / float(old_width)
     new_height = int(float(old_height) * float(scale))
 
-    img = img.resize((new_width, new_height), Image.ANTIALIAS)
+    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
     imgbuf = io.BytesIO()
     img.save(imgbuf, "JPEG", optimize=True, quality=quality)
     newimage = imgbuf.getvalue()
     if not opts.force_resize and len(newimage) >= old_size:
         _LOGGER.debug(
-            "Using original image (%d bytes) "
-            "because resized image (%d bytes) is not smaller",
+            (
+                "Using original image (%d bytes) "
+                "because resized image (%d bytes) is not smaller"
+            ),
             old_size,
             len(newimage),
         )

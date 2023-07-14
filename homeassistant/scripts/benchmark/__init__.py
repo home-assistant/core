@@ -12,11 +12,13 @@ from timeit import default_timer as timer
 from typing import TypeVar
 
 from homeassistant import core
-from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.event import (
+    async_track_state_change,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.json import JSON_DUMP, JSONEncoder
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
@@ -31,7 +33,7 @@ def run(args):
     # Disable logging
     logging.getLogger("homeassistant.core").setLevel(logging.CRITICAL)
 
-    parser = argparse.ArgumentParser(description=("Run a Home Assistant benchmark."))
+    parser = argparse.ArgumentParser(description="Run a Home Assistant benchmark.")
     parser.add_argument("name", choices=BENCHMARKS)
     parser.add_argument("--script", choices=["benchmark"])
 
@@ -135,9 +137,7 @@ async def state_changed_helper(hass):
             event.set()
 
     for idx in range(1000):
-        hass.helpers.event.async_track_state_change(
-            f"{entity_id}{idx}", listener, "off", "on"
-        )
+        async_track_state_change(hass, f"{entity_id}{idx}", listener, "off", "on")
     event_data = {
         "entity_id": f"{entity_id}0",
         "old_state": core.State(entity_id, "off"),
@@ -167,8 +167,8 @@ async def state_changed_event_helper(hass):
         nonlocal count
         count += 1
 
-    hass.helpers.event.async_track_state_change_event(
-        [f"{entity_id}{idx}" for idx in range(1000)], listener
+    async_track_state_change_event(
+        hass, [f"{entity_id}{idx}" for idx in range(1000)], listener
     )
 
     event_data = {
@@ -191,7 +191,10 @@ async def state_changed_event_helper(hass):
 
 @benchmark
 async def state_changed_event_filter_helper(hass):
-    """Run a million events through state changed event helper with 1000 entities that all get filtered."""
+    """Run a million events through state changed event helper.
+
+    With 1000 entities that all get filtered.
+    """
     count = 0
     entity_id = "light.kitchen"
     events_to_fire = 10**6
@@ -202,8 +205,8 @@ async def state_changed_event_filter_helper(hass):
         nonlocal count
         count += 1
 
-    hass.helpers.event.async_track_state_change_event(
-        [f"{entity_id}{idx}" for idx in range(1000)], listener
+    async_track_state_change_event(
+        hass, [f"{entity_id}{idx}" for idx in range(1000)], listener
     )
 
     event_data = {
@@ -220,57 +223,6 @@ async def state_changed_event_filter_helper(hass):
     await hass.async_block_till_done()
 
     assert count == 0
-
-    return timer() - start
-
-
-@benchmark
-async def logbook_filtering_state(hass):
-    """Filter state changes."""
-    return await _logbook_filtering(hass, 1, 1)
-
-
-@benchmark
-async def logbook_filtering_attributes(hass):
-    """Filter attribute changes."""
-    return await _logbook_filtering(hass, 1, 2)
-
-
-@benchmark
-async def _logbook_filtering(hass, last_changed, last_updated):
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components import logbook
-
-    entity_id = "test.entity"
-
-    old_state = {"entity_id": entity_id, "state": "off"}
-
-    new_state = {
-        "entity_id": entity_id,
-        "state": "on",
-        "last_updated": last_updated,
-        "last_changed": last_changed,
-    }
-
-    event = _create_state_changed_event_from_old_new(
-        entity_id, dt_util.utcnow(), old_state, new_state
-    )
-
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
-
-    entities_filter = convert_include_exclude_filter(
-        logbook.INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA({})
-    )
-
-    def yield_events(event):
-        for _ in range(10**5):
-            # pylint: disable=protected-access
-            if logbook._keep_event(hass, event, entities_filter):
-                yield event
-
-    start = timer()
-
-    list(logbook.humanify(hass, yield_events(event), entity_attr_cache, {}))
 
     return timer() - start
 
@@ -401,7 +353,7 @@ def _create_state_changed_event_from_old_new(
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
 
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import logbook
 
-    return logbook.LazyEventPartialState(row)
+    return logbook.LazyEventPartialState(row, {})

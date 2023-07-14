@@ -4,13 +4,14 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "incomplete_info": "Incomplete information to setup device, no host or token supplied.",
-      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio."
+      "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
+      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_token": "Checksum error, wrong token",
-      "unknown_device": "The device model is not known, not able to setup the device using config flow.",
+      "unknown_device": "The device model is not known, not able to set up the device using config flow.",
       "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
       "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
       "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials."
@@ -34,14 +35,14 @@
         "data": {
           "select_device": "Miio device"
         },
-        "description": "Select the Xiaomi Miio device to setup."
+        "description": "Select the Xiaomi Miio device to set up."
       },
       "manual": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "You will need the 32 character [%key:common::config_flow::data::api_token%], see https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token for instructions. Please note, that this [%key:common::config_flow::data::api_token%] is different from the key used by the Xiaomi Aqara integration."
+        "description": "You will need the 32 character API token, see https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token for instructions. Please note, that this API token is different from the key used by the Xiaomi Aqara integration."
       },
       "connect": {
         "data": {
@@ -52,12 +53,310 @@
   },
   "options": {
     "error": {
-      "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country"
+      "cloud_credentials_incomplete": "[%key:component::xiaomi_miio::config::error::cloud_credentials_incomplete%]"
     },
     "step": {
       "init": {
         "data": {
           "cloud_subdevices": "Use cloud to get connected subdevices"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "led_brightness": {
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "display_orientation": {
+        "state": {
+          "forward": "Forward",
+          "left": "Left",
+          "right": "Right"
+        }
+      },
+      "airpurifier_mode": {
+        "state": {
+          "silent": "Silent",
+          "auto": "Auto",
+          "favorite": "Favorite"
+        }
+      },
+      "ptc_level": {
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
+    }
+  },
+  "services": {
+    "fan_reset_filter": {
+      "name": "Fan reset filter",
+      "description": "Resets the filter lifetime and usage.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Name of the xiaomi miio entity."
+        }
+      }
+    },
+    "fan_set_extra_features": {
+      "name": "Fan set extra features",
+      "description": "Manipulates a storage register which advertises extra features. The Mi Home app evaluates the value. A feature called \"turbo mode\" is unlocked in the app on value 1.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
+        },
+        "features": {
+          "name": "Features",
+          "description": "Integer, known values are 0 (default) and 1 (turbo mode)."
+        }
+      }
+    },
+    "light_set_scene": {
+      "name": "Light set scene",
+      "description": "Sets a fixed scene.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Name of the light entity."
+        },
+        "scene": {
+          "name": "Scene",
+          "description": "Number of the fixed scene."
+        }
+      }
+    },
+    "light_set_delayed_turn_off": {
+      "name": "Light set delayed turn off",
+      "description": "Delayed turn off.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::light_set_scene::fields::entity_id::description%]"
+        },
+        "time_period": {
+          "name": "Time period",
+          "description": "Time period for the delayed turn off."
+        }
+      }
+    },
+    "light_reminder_on": {
+      "name": "Light reminder on",
+      "description": "Enables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Name of the entity to act on."
+        }
+      }
+    },
+    "light_reminder_off": {
+      "name": "Light reminder off",
+      "description": "Disables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
+        }
+      }
+    },
+    "light_night_light_mode_on": {
+      "name": "Night light mode on",
+      "description": "Turns the eyecare mode on (EYECARE SMART LAMP 2 ONLY).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
+        }
+      }
+    },
+    "light_night_light_mode_off": {
+      "name": "Night light mode off",
+      "description": "Turns the eyecare mode fan_set_dry_off (EYECARE SMART LAMP 2 ONLY).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
+        }
+      }
+    },
+    "light_eyecare_mode_on": {
+      "name": "Light eyecare mode on",
+      "description": "[%key:component::xiaomi_miio::services::light_reminder_on::description%]",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
+        }
+      }
+    },
+    "light_eyecare_mode_off": {
+      "name": "Light eyecare mode off",
+      "description": "[%key:component::xiaomi_miio::services::light_reminder_off::description%]",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]"
+        }
+      }
+    },
+    "remote_learn_command": {
+      "name": "Remote learn command",
+      "description": "Learns an IR command, press \"Call Service\", point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
+      "fields": {
+        "slot": {
+          "name": "Slot",
+          "description": "Define the slot used to save the IR command."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Define the timeout, before which the command must be learned."
+        }
+      }
+    },
+    "remote_set_led_on": {
+      "name": "Remote set LED on",
+      "description": "Turns on blue LED."
+    },
+    "remote_set_led_off": {
+      "name": "Remote set LED off",
+      "description": "Turns off blue LED."
+    },
+    "switch_set_wifi_led_on": {
+      "name": "Switch set Wi-Fi LED on",
+      "description": "Turns the wifi led on.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
+        }
+      }
+    },
+    "switch_set_wifi_led_off": {
+      "name": "Switch set Wi-Fi LED off",
+      "description": "Turn the Wi-Fi led off.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
+        }
+      }
+    },
+    "switch_set_power_price": {
+      "name": "Switch set power price",
+      "description": "Sets the power price.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "Power price."
+        }
+      }
+    },
+    "switch_set_power_mode": {
+      "name": "Switch set power mode",
+      "description": "Sets the power mode.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]"
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "Power mode."
+        }
+      }
+    },
+    "vacuum_remote_control_start": {
+      "name": "Vacuum remote control start",
+      "description": "Starts remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`."
+    },
+    "vacuum_remote_control_stop": {
+      "name": "Vacuum remote control stop",
+      "description": "Stops remote control mode of the vacuum cleaner."
+    },
+    "vacuum_remote_control_move": {
+      "name": "Vacuum remote control move",
+      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.",
+      "fields": {
+        "velocity": {
+          "name": "Velocity",
+          "description": "Speed."
+        },
+        "rotation": {
+          "name": "Rotation",
+          "description": "Rotation, between -179 degrees and 179 degrees."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Duration of the movement."
+        }
+      }
+    },
+    "vacuum_remote_control_move_step": {
+      "name": "Vacuum remote control move step",
+      "description": "Remote controls the vacuum cleaner, only makes one move and then stops.",
+      "fields": {
+        "velocity": {
+          "name": "[%key:component::xiaomi_miio::services::vacuum_remote_control_move::fields::velocity::name%]",
+          "description": "[%key:component::xiaomi_miio::services::vacuum_remote_control_move::fields::velocity::description%]"
+        },
+        "rotation": {
+          "name": "[%key:component::xiaomi_miio::services::vacuum_remote_control_move::fields::rotation::name%]",
+          "description": "Rotation."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "[%key:component::xiaomi_miio::services::vacuum_remote_control_move::fields::duration::description%]"
+        }
+      }
+    },
+    "vacuum_clean_zone": {
+      "name": "Vacuum clean zone",
+      "description": "Starts the cleaning operation in the selected areas for the number of repeats indicated.",
+      "fields": {
+        "zone": {
+          "name": "Zone",
+          "description": "Array of zones. Each zone is an array of 4 integer values."
+        },
+        "repeats": {
+          "name": "Repeats",
+          "description": "Number of cleaning repeats for each zone."
+        }
+      }
+    },
+    "vacuum_goto": {
+      "name": "Vacuum go to",
+      "description": "Go to the specified coordinates.",
+      "fields": {
+        "x_coord": {
+          "name": "X coordinate",
+          "description": "X-coordinate."
+        },
+        "y_coord": {
+          "name": "Y coordinate",
+          "description": "Y-coordinate."
+        }
+      }
+    },
+    "vacuum_clean_segment": {
+      "name": "Vacuum clean segment",
+      "description": "Starts cleaning of the specified segment(s).",
+      "fields": {
+        "segments": {
+          "name": "Segments",
+          "description": "Segments."
         }
       }
     }

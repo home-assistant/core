@@ -1,5 +1,4 @@
 """The sensor tests for the griddy platform."""
-
 from unittest.mock import patch
 
 from pydexcom import SessionError
@@ -10,12 +9,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
-from tests.components.dexcom import GLUCOSE_READING, init_integration
+from . import GLUCOSE_READING, init_integration
 
 
-async def test_sensors(hass):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test we get sensor data."""
     await init_integration(hass)
 
@@ -29,7 +29,7 @@ async def test_sensors(hass):
     assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description
 
 
-async def test_sensors_unknown(hass):
+async def test_sensors_unknown(hass: HomeAssistant) -> None:
     """Test we handle sensor state unknown."""
     await init_integration(hass)
 
@@ -50,7 +50,7 @@ async def test_sensors_unknown(hass):
     assert test_username_glucose_trend.state == STATE_UNKNOWN
 
 
-async def test_sensors_update_failed(hass):
+async def test_sensors_update_failed(hass: HomeAssistant) -> None:
     """Test we handle sensor update failed."""
     await init_integration(hass)
 
@@ -71,7 +71,7 @@ async def test_sensors_update_failed(hass):
     assert test_username_glucose_trend.state == STATE_UNAVAILABLE
 
 
-async def test_sensors_options_changed(hass):
+async def test_sensors_options_changed(hass: HomeAssistant) -> None:
     """Test we handle sensor unavailable."""
     entry = await init_integration(hass)
 

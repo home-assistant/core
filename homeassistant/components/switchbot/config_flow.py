@@ -1,67 +1,67 @@
 """Config flow for Switchbot."""
 from __future__ import annotations
 
-from asyncio import Lock
 import logging
 from typing import Any
 
-from switchbot import GetSwitchbotDevices  # pylint: disable=import-error
+from switchbot import (
+    SwitchbotAccountConnectionError,
+    SwitchBotAdvertisement,
+    SwitchbotAuthenticationError,
+    SwitchbotLock,
+    SwitchbotModel,
+    parse_advertisement_data,
+)
 import voluptuous as vol
 
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_PASSWORD,
+    CONF_SENSOR_TYPE,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import (
-    BTLE_LOCK,
+    CONF_ENCRYPTION_KEY,
+    CONF_KEY_ID,
     CONF_RETRY_COUNT,
-    CONF_RETRY_TIMEOUT,
-    CONF_SCAN_TIMEOUT,
-    CONF_TIME_BETWEEN_UPDATE_COMMAND,
+    CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
-    DEFAULT_RETRY_TIMEOUT,
-    DEFAULT_SCAN_TIMEOUT,
-    DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
     DOMAIN,
+    NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SUPPORTED_MODEL_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _btle_connect() -> dict:
-    """Scan for BTLE advertisement data."""
+def format_unique_id(address: str) -> str:
+    """Format the unique ID for a switchbot."""
+    return address.replace(":", "").lower()
 
-    switchbot_devices = GetSwitchbotDevices().discover()
 
-    if not switchbot_devices:
-        raise NotConnectedError("Failed to discover switchbot")
+def short_address(address: str) -> str:
+    """Convert a Bluetooth address to a short address."""
+    results = address.replace("-", ":").split(":")
+    return f"{results[-2].upper()}{results[-1].upper()}"[-4:]
 
-    return switchbot_devices
+
+def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
+    """Get the name from a discovery."""
+    return f'{discovery.data["modelFriendlyName"]} {short_address(discovery.address)}'
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
     VERSION = 1
-
-    async def _get_switchbots(self) -> dict:
-        """Try to discover nearby Switchbot devices."""
-        # asyncio.lock prevents btle adapter exceptions if there are multiple calls to this method.
-        # store asyncio.lock in hass data if not present.
-        if DOMAIN not in self.hass.data:
-            self.hass.data.setdefault(DOMAIN, {})
-        if BTLE_LOCK not in self.hass.data[DOMAIN]:
-            self.hass.data[DOMAIN][BTLE_LOCK] = Lock()
-
-        connect_lock = self.hass.data[DOMAIN][BTLE_LOCK]
-
-        # Discover switchbots nearby.
-        async with connect_lock:
-            _btle_adv_data = await self.hass.async_add_executor_job(_btle_connect)
-
-        return _btle_adv_data
 
     @staticmethod
     @callback
@@ -71,64 +71,258 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SwitchbotOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_devices = {}
+        self._discovered_adv: SwitchBotAdvertisement | None = None
+        self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> FlowResult:
+        """Handle the bluetooth discovery step."""
+        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info.as_dict())
+        await self.async_set_unique_id(format_unique_id(discovery_info.address))
+        self._abort_if_unique_id_configured()
+        parsed = parse_advertisement_data(
+            discovery_info.device, discovery_info.advertisement
+        )
+        if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
+            return self.async_abort(reason="not_supported")
+        model_name = parsed.data.get("modelName")
+        if (
+            not discovery_info.connectable
+            and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
+        ):
+            # Source is not connectable but the model is connectable
+            return self.async_abort(reason="not_supported")
+        self._discovered_adv = parsed
+        data = parsed.data
+        self.context["title_placeholders"] = {
+            "name": data["modelFriendlyName"],
+            "address": short_address(discovery_info.address),
+        }
+        if model_name == SwitchbotModel.LOCK:
+            return await self.async_step_lock_choose_method()
+        if self._discovered_adv.data["isEncrypted"]:
+            return await self.async_step_password()
+        return await self.async_step_confirm()
+
+    async def _async_create_entry_from_discovery(
+        self, user_input: dict[str, Any]
+    ) -> FlowResult:
+        """Create an entry from a discovery."""
+        assert self._discovered_adv is not None
+        discovery = self._discovered_adv
+        name = name_from_discovery(discovery)
+        model_name = discovery.data["modelName"]
+        return self.async_create_entry(
+            title=name,
+            data={
+                **user_input,
+                CONF_ADDRESS: discovery.address,
+                CONF_SENSOR_TYPE: str(SUPPORTED_MODEL_TYPES[model_name]),
+            },
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm a single device."""
+        assert self._discovered_adv is not None
+        if user_input is not None:
+            return await self._async_create_entry_from_discovery(user_input)
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv)
+            },
+        )
+
+    async def async_step_password(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the password step."""
+        assert self._discovered_adv is not None
+        if user_input is not None:
+            # There is currently no api to validate the password
+            # that does not operate the device so we have
+            # to accept it as-is
+            return await self._async_create_entry_from_discovery(user_input)
+
+        return self.async_show_form(
+            step_id="password",
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv)
+            },
+        )
+
+    async def async_step_lock_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the SwitchBot API auth step."""
+        errors = {}
+        assert self._discovered_adv is not None
+        description_placeholders = {}
+        if user_input is not None:
+            try:
+                key_details = await self.hass.async_add_executor_job(
+                    SwitchbotLock.retrieve_encryption_key,
+                    self._discovered_adv.address,
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+            except SwitchbotAccountConnectionError as ex:
+                raise AbortFlow("cannot_connect") from ex
+            except SwitchbotAuthenticationError as ex:
+                _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
+                errors = {"base": "auth_failed"}
+                description_placeholders = {"error_detail": str(ex)}
+            else:
+                return await self.async_step_lock_key(key_details)
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="lock_auth",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv),
+                **description_placeholders,
+            },
+        )
+
+    async def async_step_lock_choose_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the SwitchBot API chose method step."""
+        assert self._discovered_adv is not None
+
+        return self.async_show_menu(
+            step_id="lock_choose_method",
+            menu_options=["lock_auth", "lock_key"],
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv),
+            },
+        )
+
+    async def async_step_lock_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the encryption key step."""
+        errors = {}
+        assert self._discovered_adv is not None
+        if user_input is not None:
+            if not await SwitchbotLock.verify_encryption_key(
+                self._discovered_adv.device,
+                user_input[CONF_KEY_ID],
+                user_input[CONF_ENCRYPTION_KEY],
+            ):
+                errors = {
+                    "base": "encryption_key_invalid",
+                }
+            else:
+                return await self._async_create_entry_from_discovery(user_input)
+
+        return self.async_show_form(
+            step_id="lock_key",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_KEY_ID): str,
+                    vol.Required(CONF_ENCRYPTION_KEY): str,
+                }
+            ),
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv),
+            },
+        )
+
+    @callback
+    def _async_discover_devices(self) -> None:
+        current_addresses = self._async_current_ids()
+        for connectable in (True, False):
+            for discovery_info in async_discovered_service_info(self.hass, connectable):
+                address = discovery_info.address
+                if (
+                    format_unique_id(address) in current_addresses
+                    or address in self._discovered_advs
+                ):
+                    continue
+                parsed = parse_advertisement_data(
+                    discovery_info.device, discovery_info.advertisement
+                )
+                if not parsed:
+                    continue
+                model_name = parsed.data.get("modelName")
+                if (
+                    discovery_info.connectable
+                    and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
+                ) or model_name in NON_CONNECTABLE_SUPPORTED_MODEL_TYPES:
+                    self._discovered_advs[address] = parsed
+
+        if not self._discovered_advs:
+            raise AbortFlow("no_devices_found")
+
+    async def _async_set_device(self, discovery: SwitchBotAdvertisement) -> None:
+        """Set the device to work with."""
+        self._discovered_adv = discovery
+        address = discovery.address
+        await self.async_set_unique_id(
+            format_unique_id(address), raise_on_progress=False
+        )
+        self._abort_if_unique_id_configured()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a flow initiated by the user."""
-
+        """Handle the user step to pick discovered device."""
         errors: dict[str, str] = {}
-
+        device_adv: SwitchBotAdvertisement | None = None
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_MAC].replace(":", ""))
-            self._abort_if_unique_id_configured()
+            device_adv = self._discovered_advs[user_input[CONF_ADDRESS]]
+            await self._async_set_device(device_adv)
+            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+                return await self.async_step_lock_choose_method()
+            if device_adv.data["isEncrypted"]:
+                return await self.async_step_password()
+            return await self._async_create_entry_from_discovery(user_input)
 
-            user_input[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[
-                self._discovered_devices[self.unique_id]["modelName"]
-            ]
-
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
-
-        try:
-            self._discovered_devices = await self._get_switchbots()
-
-        except NotConnectedError:
-            return self.async_abort(reason="cannot_connect")
-
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        # Get devices already configured.
-        configured_devices = {
-            item.data[CONF_MAC]
-            for item in self._async_current_entries(include_ignore=False)
-        }
-
-        # Get supported devices not yet configured.
-        unconfigured_devices = {
-            device["mac_address"]: f"{device['mac_address']} {device['modelName']}"
-            for device in self._discovered_devices.values()
-            if device.get("modelName") in SUPPORTED_MODEL_TYPES
-            and device["mac_address"] not in configured_devices
-        }
-
-        if not unconfigured_devices:
-            return self.async_abort(reason="no_unconfigured_devices")
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_MAC): vol.In(unconfigured_devices),
-                vol.Required(CONF_NAME): str,
-                vol.Optional(CONF_PASSWORD): str,
-            }
-        )
+        self._async_discover_devices()
+        if len(self._discovered_advs) == 1:
+            # If there is only one device we can ask for a password
+            # or simply confirm it
+            device_adv = list(self._discovered_advs.values())[0]
+            await self._async_set_device(device_adv)
+            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+                return await self.async_step_lock_choose_method()
+            if device_adv.data["isEncrypted"]:
+                return await self.async_step_password()
+            return await self.async_step_confirm()
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ADDRESS): vol.In(
+                        {
+                            address: name_from_discovery(parsed)
+                            for address, parsed in self._discovered_advs.items()
+                        }
+                    ),
+                }
+            ),
+            errors=errors,
         )
 
 
@@ -145,43 +339,15 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
         """Manage Switchbot options."""
         if user_input is not None:
             # Update common entity options for all other entities.
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.unique_id != self.config_entry.unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        entry, options=user_input
-                    )
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
-                CONF_TIME_BETWEEN_UPDATE_COMMAND,
-                default=self.config_entry.options.get(
-                    CONF_TIME_BETWEEN_UPDATE_COMMAND,
-                    DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
-                ),
-            ): int,
             vol.Optional(
                 CONF_RETRY_COUNT,
                 default=self.config_entry.options.get(
                     CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
                 ),
-            ): int,
-            vol.Optional(
-                CONF_RETRY_TIMEOUT,
-                default=self.config_entry.options.get(
-                    CONF_RETRY_TIMEOUT, DEFAULT_RETRY_TIMEOUT
-                ),
-            ): int,
-            vol.Optional(
-                CONF_SCAN_TIMEOUT,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_TIMEOUT, DEFAULT_SCAN_TIMEOUT
-                ),
-            ): int,
+            ): int
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
-
-
-class NotConnectedError(Exception):
-    """Exception for unable to find device."""

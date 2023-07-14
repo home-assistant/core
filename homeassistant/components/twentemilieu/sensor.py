@@ -93,7 +93,7 @@ class TwenteMilieuSensor(TwenteMilieuEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[WasteType, list[date]]],
         description: TwenteMilieuSensorDescription,
         entry: ConfigEntry,
     ) -> None:

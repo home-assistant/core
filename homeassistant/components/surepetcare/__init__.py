@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     lock_state_service_schema = vol.Schema(
         {
@@ -159,7 +159,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class SurePetcareDataCoordinator(DataUpdateCoordinator):
+class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):
     """Handle Surepetcare data."""
 
     def __init__(self, entry: ConfigEntry, hass: HomeAssistant) -> None:

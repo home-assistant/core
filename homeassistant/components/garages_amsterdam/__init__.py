@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from garages_amsterdam import GaragesAmsterdam
+from odp_amsterdam import ODPAmsterdam
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -19,7 +19,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Garages Amsterdam from a config entry."""
     await get_coordinator(hass)
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -43,7 +43,7 @@ async def get_coordinator(
         async with async_timeout.timeout(10):
             return {
                 garage.garage_name: garage
-                for garage in await GaragesAmsterdam(
+                for garage in await ODPAmsterdam(
                     session=aiohttp_client.async_get_clientsession(hass)
                 ).all_garages()
             }

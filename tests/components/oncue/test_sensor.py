@@ -1,19 +1,34 @@
 """Tests for the oncue sensor."""
 from __future__ import annotations
 
+import pytest
+
 from homeassistant.components import oncue
 from homeassistant.components.oncue.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import _patch_login_and_data
+from . import (
+    _patch_login_and_data,
+    _patch_login_and_data_offline_device,
+    _patch_login_and_data_unavailable,
+    _patch_login_and_data_unavailable_device,
+)
 
 from tests.common import MockConfigEntry
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("patcher", "connections"),
+    [
+        [_patch_login_and_data, {("mac", "c9:24:22:6f:14:00")}],
+        [_patch_login_and_data_offline_device, set()],
+    ],
+)
+async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
     """Test that the sensors are setup with the expected values."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -21,10 +36,16 @@ async def test_sensors(hass: HomeAssistant) -> None:
         unique_id="any",
     )
     config_entry.add_to_hass(hass)
-    with _patch_login_and_data():
+    with patcher():
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
+
+    entity_registry = er.async_get(hass)
+    ent = entity_registry.async_get("sensor.my_generator_latest_firmware")
+    device_registry = dr.async_get(hass)
+    dev = device_registry.async_get(ent.device_id)
+    assert dev.connections == connections
 
     assert len(hass.states.async_all("sensor")) == 25
     assert hass.states.get("sensor.my_generator_latest_firmware").state == "2.0.6"
@@ -124,4 +145,160 @@ async def test_sensors(hass: HomeAssistant) -> None:
     )
     assert (
         hass.states.get("sensor.my_generator_generator_current_average").state == "0.0"
+    )
+
+
+@pytest.mark.parametrize(
+    ("patcher", "connections"),
+    [
+        [_patch_login_and_data_unavailable_device, set()],
+        [_patch_login_and_data_unavailable, {("mac", "c9:24:22:6f:14:00")}],
+    ],
+)
+async def test_sensors_unavailable(hass: HomeAssistant, patcher, connections) -> None:
+    """Test that the sensors are unavailable."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "any", CONF_PASSWORD: "any"},
+        unique_id="any",
+    )
+    config_entry.add_to_hass(hass)
+    with patcher():
+        await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
+        await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert len(hass.states.async_all("sensor")) == 25
+    assert (
+        hass.states.get("sensor.my_generator_latest_firmware").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_speed").state == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_oil_pressure").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_coolant_temperature").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_battery_voltage").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_lube_oil_temperature").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_generator_controller_temperature").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_compartment_temperature").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_generator_true_total_power").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_generator_true_percent_of_rated_power"
+        ).state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_generator_voltage_average_line_to_line"
+        ).state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_generator_frequency").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_generator_state").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_generator_controller_total_operation_time"
+        ).state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_total_run_time").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_ats_contactor_position").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert hass.states.get("sensor.my_generator_ip_address").state == STATE_UNAVAILABLE
+
+    assert (
+        hass.states.get("sensor.my_generator_connected_server_ip_address").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_target_speed").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_total_run_time_loaded").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_source1_voltage_average_line_to_line"
+        ).state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_source2_voltage_average_line_to_line"
+        ).state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_genset_total_energy").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.my_generator_engine_total_number_of_starts").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.my_generator_generator_current_average").state
+        == STATE_UNAVAILABLE
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_battery_voltage").state
+        == STATE_UNAVAILABLE
     )

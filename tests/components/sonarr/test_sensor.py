@@ -1,6 +1,6 @@
 """Tests for the Sonarr sensor platform."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from aiopyarr import ArrException
 import pytest
@@ -9,8 +9,8 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DATA_GIGABYTES,
     STATE_UNAVAILABLE,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -25,7 +25,7 @@ async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_sonarr: MagicMock,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test the creation and values of the sensors."""
     registry = er.async_get(hass)
@@ -42,7 +42,7 @@ async def test_sensors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for (unique, oid) in sensors.items():
+    for unique, oid in sensors.items():
         entity = registry.async_get(f"sensor.{oid}")
         assert entity
         assert entity.unique_id == f"{mock_config_entry.entry_id}_{unique}"
@@ -56,7 +56,7 @@ async def test_sensors(
     state = hass.states.get("sensor.sonarr_disk_space")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:harddisk"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_GIGABYTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.attributes.get("C:\\") == "263.10/465.42GB (56.53%)"
     assert state.state == "263.10"
 

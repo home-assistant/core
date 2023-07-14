@@ -2,10 +2,14 @@
 import logging
 
 import aiohttp
-from pybotvac import Account, Neato
+from pybotvac import Account
 from pybotvac.exceptions import NeatoException
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -13,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import api, config_flow
+from . import api
 from .const import NEATO_CONFIG, NEATO_DOMAIN, NEATO_LOGIN
 from .hub import NeatoHub
 
@@ -21,14 +25,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        NEATO_DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(NEATO_DOMAIN),
+        {
+            NEATO_DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CLIENT_ID): cv.string,
+                    vol.Required(CONF_CLIENT_SECRET): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -43,17 +50,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     hass.data[NEATO_CONFIG] = config[NEATO_DOMAIN]
-    vendor = Neato()
-    config_flow.OAuth2FlowHandler.async_register_implementation(
+    await async_import_client_credential(
         hass,
-        api.NeatoImplementation(
-            hass,
-            NEATO_DOMAIN,
+        NEATO_DOMAIN,
+        ClientCredential(
             config[NEATO_DOMAIN][CONF_CLIENT_ID],
             config[NEATO_DOMAIN][CONF_CLIENT_SECRET],
-            vendor.auth_endpoint,
-            vendor.token_endpoint,
         ),
+    )
+    _LOGGER.warning(
+        "Configuration of Neato integration in YAML is deprecated and "
+        "will be removed in a future release; Your existing OAuth "
+        "Application Credentials have been imported into the UI "
+        "automatically and can be safely removed from your "
+        "configuration.yaml file"
     )
 
     return True
@@ -93,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[NEATO_LOGIN] = hub
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

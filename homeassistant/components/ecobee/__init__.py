@@ -5,13 +5,21 @@ from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenE
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
-from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN, PLATFORMS
+from .const import (
+    _LOGGER,
+    ATTR_CONFIG_ENTRY_ID,
+    CONF_REFRESH_TOKEN,
+    DATA_ECOBEE_CONFIG,
+    DATA_HASS_CONFIG,
+    DOMAIN,
+    PLATFORMS,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
@@ -21,8 +29,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """
-    Ecobee uses config flow for configuration.
+    """Ecobee uses config flow for configuration.
 
     But, an "ecobee:" entry in configuration.yaml will trigger an import flow
     if a config entry doesn't already exist. If ecobee.conf exists, the import
@@ -30,7 +37,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     migrating from the old ecobee integration. Otherwise, the user will have to
     continue setting up the integration via the config flow.
     """
+
     hass.data[DATA_ECOBEE_CONFIG] = config.get(DOMAIN, {})
+    hass.data[DATA_HASS_CONFIG] = config
 
     if not hass.config_entries.async_entries(DOMAIN) and hass.data[DATA_ECOBEE_CONFIG]:
         # No config entry exists and configuration.yaml config exists, trigger the import flow.
@@ -61,19 +70,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN] = data
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_NAME: entry.title, ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+            hass.data[DATA_HASS_CONFIG],
+        )
+    )
 
     return True
 
 
 class EcobeeData:
-    """
-    Handle getting the latest data from ecobee.com so platforms can use it.
+    """Handle getting the latest data from ecobee.com so platforms can use it.
 
     Also handle refreshing tokens and updating config entry with refreshed tokens.
     """
 
-    def __init__(self, hass, entry, api_key, refresh_token):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, api_key: str, refresh_token: str
+    ) -> None:
         """Initialize the Ecobee data object."""
         self._hass = hass
         self._entry = entry

@@ -7,20 +7,24 @@ from pyecobee.const import ECOBEE_STATE_UNKNOWN
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
-from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
     DOMAIN,
@@ -49,12 +53,20 @@ async def async_setup_entry(
 class EcobeeWeather(WeatherEntity):
     """Representation of Ecobee weather data."""
 
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_visibility_unit = UnitOfLength.METERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, data, name, index):
         """Initialize the Ecobee weather platform."""
         self.data = data
         self._name = name
         self._index = index
         self.weather = None
+        self._attr_unique_id = data.ecobee.get_thermostat(self._index)["identifier"]
 
     def get_forecast(self, index, param):
         """Retrieve forecast parameter."""
@@ -63,16 +75,6 @@ class EcobeeWeather(WeatherEntity):
             return forecast[param]
         except (IndexError, KeyError) as err:
             raise ValueError from err
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for the weather platform."""
-        return self.data.ecobee.get_thermostat(self._index)["identifier"]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -89,7 +91,7 @@ class EcobeeWeather(WeatherEntity):
             identifiers={(DOMAIN, thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=model,
-            name=self.name,
+            name=self._name,
         )
 
     @property
@@ -101,7 +103,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the temperature."""
         try:
             return float(self.get_forecast(0, "temperature")) / 10
@@ -109,18 +111,10 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
         try:
             pressure = self.get_forecast(0, "pressure")
-            if not self.hass.config.units.is_metric:
-                pressure = pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
-                return round(pressure, 2)
             return round(pressure)
         except ValueError:
             return None
@@ -134,15 +128,15 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def visibility(self):
+    def native_visibility(self):
         """Return the visibility."""
         try:
-            return int(self.get_forecast(0, "visibility")) / 1000
+            return int(self.get_forecast(0, "visibility"))
         except ValueError:
             return None
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the wind speed."""
         try:
             return int(self.get_forecast(0, "windSpeed"))
@@ -187,7 +181,7 @@ class EcobeeWeather(WeatherEntity):
             return forecasts
         return None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest weather data."""
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
@@ -202,13 +196,13 @@ def _process_forecast(json):
             json["weatherSymbol"]
         ]
         if json["tempHigh"] != ECOBEE_STATE_UNKNOWN:
-            forecast[ATTR_FORECAST_TEMP] = float(json["tempHigh"]) / 10
+            forecast[ATTR_FORECAST_NATIVE_TEMP] = float(json["tempHigh"]) / 10
         if json["tempLow"] != ECOBEE_STATE_UNKNOWN:
-            forecast[ATTR_FORECAST_TEMP_LOW] = float(json["tempLow"]) / 10
+            forecast[ATTR_FORECAST_NATIVE_TEMP_LOW] = float(json["tempLow"]) / 10
         if json["windBearing"] != ECOBEE_STATE_UNKNOWN:
             forecast[ATTR_FORECAST_WIND_BEARING] = int(json["windBearing"])
         if json["windSpeed"] != ECOBEE_STATE_UNKNOWN:
-            forecast[ATTR_FORECAST_WIND_SPEED] = int(json["windSpeed"])
+            forecast[ATTR_FORECAST_NATIVE_WIND_SPEED] = int(json["windSpeed"])
 
     except (ValueError, IndexError, KeyError):
         return None

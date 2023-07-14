@@ -2,14 +2,18 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import fake_post_request
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, hass_client, config_entry):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, config_entry
+) -> None:
     """Test config entry diagnostics."""
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
@@ -18,7 +22,7 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
     ), patch(
         "homeassistant.components.netatmo.webhook_generate_url"
     ):
-        mock_auth.return_value.async_post_request.side_effect = fake_post_request
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         assert await async_setup_component(hass, "netatmo", {})
@@ -39,16 +43,27 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
                 "expires_in": 60,
                 "refresh_token": REDACTED,
                 "scope": [
-                    "read_station",
-                    "read_camera",
                     "access_camera",
-                    "write_camera",
-                    "read_presence",
+                    "access_doorbell",
                     "access_presence",
-                    "write_presence",
+                    "read_bubendorff",
+                    "read_camera",
+                    "read_carbonmonoxidedetector",
+                    "read_doorbell",
                     "read_homecoach",
+                    "read_magellan",
+                    "read_mx",
+                    "read_presence",
+                    "read_smarther",
                     "read_smokedetector",
+                    "read_station",
                     "read_thermostat",
+                    "write_bubendorff",
+                    "write_camera",
+                    "write_magellan",
+                    "write_mx",
+                    "write_presence",
+                    "write_smarther",
                     "write_thermostat",
                 ],
                 "type": "Bearer",
@@ -88,5 +103,5 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
         "webhook_registered": False,
     }
 
-    for home in result["data"]["AsyncClimateTopology"]["homes"]:
+    for home in result["data"]["account"]["homes"]:
         assert home["coordinates"] == REDACTED

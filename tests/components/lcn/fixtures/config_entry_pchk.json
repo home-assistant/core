@@ -120,6 +120,73 @@
         "motor": "MOTOR1",
         "reverse_time": "RT1200"
       }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Sensor_LockRegulator1",
+      "resource": "r1varsetpoint",
+      "domain": "binary_sensor",
+      "domain_data": {
+        "source": "R1VARSETPOINT"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Binary_Sensor1",
+      "resource": "binsensor1",
+      "domain": "binary_sensor",
+      "domain_data": {
+        "source": "BINSENSOR1"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Sensor_KeyLock",
+      "resource": "a5",
+      "domain": "binary_sensor",
+      "domain_data": {
+        "source": "A5"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Sensor_Var1",
+      "resource": "var1",
+      "domain": "sensor",
+      "domain_data": {
+        "source": "VAR1",
+        "unit_of_measurement": "°C"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Sensor_Setpoint1",
+      "resource": "r1varsetpoint",
+      "domain": "sensor",
+      "domain_data": {
+        "source": "R1VARSETPOINT",
+        "unit_of_measurement": "°C"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Sensor_Led6",
+      "resource": "led6",
+      "domain": "sensor",
+      "domain_data": {
+        "source": "LED6",
+        "unit_of_measurement": "NATIVE"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Sensor_LogicOp1",
+      "resource": "logicop1",
+      "domain": "sensor",
+      "domain_data": {
+        "source": "LOGICOP1",
+        "unit_of_measurement": "NATIVE"
+      }
     }
   ]
 }

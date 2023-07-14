@@ -29,13 +29,6 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_whois_config_flow() -> Generator[MagicMock, None, None]:
-    """Return a mocked whois."""
-    with patch("homeassistant.components.whois.config_flow.whois.query") as whois_mock:
-        yield whois_mock
-
-
-@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(
@@ -47,10 +40,11 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_whois() -> Generator[MagicMock, None, None]:
     """Return a mocked query."""
-
     with patch(
         "homeassistant.components.whois.whois_query",
-    ) as whois_mock:
+    ) as whois_mock, patch(
+        "homeassistant.components.whois.config_flow.whois.query", new=whois_mock
+    ):
         domain = whois_mock.return_value
         domain.abuse_contact = "abuse@example.com"
         domain.admin = "admin@example.com"

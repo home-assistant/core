@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_form_dhcp
+  dict({
+    'client_id': '5678',
+    'heating_type': 'auto',
+    'password': '1234',
+    'username': 'foo@bar.com',
+  })
+# ---
+# name: test_user_create_entry
+  dict({
+    'client_id': '5678',
+    'heating_type': 'auto',
+    'password': '1234',
+    'username': 'foo@bar.com',
+  })
+# ---

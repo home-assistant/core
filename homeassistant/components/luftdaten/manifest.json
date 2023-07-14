@@ -1,11 +1,12 @@
 {
   "domain": "luftdaten",
   "name": "Sensor.Community",
+  "codeowners": ["@fabaff", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/luftdaten",
-  "requirements": ["luftdaten==0.7.2"],
-  "codeowners": ["@fabaff", "@frenck"],
-  "quality_scale": "gold",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
-  "loggers": ["luftdaten"]
+  "loggers": ["luftdaten"],
+  "quality_scale": "gold",
+  "requirements": ["luftdaten==0.7.4"]
 }

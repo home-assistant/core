@@ -1,8 +1,14 @@
 """The tests for frontend storage."""
+from typing import Any
+
 import pytest
 
 from homeassistant.components.frontend import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockUser
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -11,7 +17,11 @@ def setup_frontend(hass):
     hass.loop.run_until_complete(async_setup_component(hass, "frontend", {}))
 
 
-async def test_get_user_data_empty(hass, hass_ws_client, hass_storage):
+async def test_get_user_data_empty(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test get_user_data command."""
     client = await hass_ws_client(hass)
 
@@ -24,7 +34,12 @@ async def test_get_user_data_empty(hass, hass_ws_client, hass_storage):
     assert res["result"]["value"] is None
 
 
-async def test_get_user_data(hass, hass_ws_client, hass_admin_user, hass_storage):
+async def test_get_user_data(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test get_user_data command."""
     storage_key = f"{DOMAIN}.user_data_{hass_admin_user.id}"
     hass_storage[storage_key] = {
@@ -65,7 +80,11 @@ async def test_get_user_data(hass, hass_ws_client, hass_admin_user, hass_storage
     assert res["result"]["value"]["test-complex"][0]["foo"] == "bar"
 
 
-async def test_set_user_data_empty(hass, hass_ws_client, hass_storage):
+async def test_set_user_data_empty(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test set_user_data command."""
     client = await hass_ws_client(hass)
 
@@ -100,7 +119,12 @@ async def test_set_user_data_empty(hass, hass_ws_client, hass_storage):
     assert res["result"]["value"] == "test-value"
 
 
-async def test_set_user_data(hass, hass_ws_client, hass_storage, hass_admin_user):
+async def test_set_user_data(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
     """Test set_user_data command with initial data."""
     storage_key = f"{DOMAIN}.user_data_{hass_admin_user.id}"
     hass_storage[storage_key] = {

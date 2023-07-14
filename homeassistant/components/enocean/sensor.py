@@ -1,6 +1,10 @@
 """Support for EnOcean sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -15,10 +19,10 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     PERCENTAGE,
-    POWER_WATT,
     STATE_CLOSED,
     STATE_OPEN,
-    TEMP_CELSIUS,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -40,37 +44,56 @@ SENSOR_TYPE_POWER = "powersensor"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 
-SENSOR_DESC_TEMPERATURE = SensorEntityDescription(
+
+@dataclass
+class EnOceanSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    unique_id: Callable[[list[int]], str | None]
+
+
+@dataclass
+class EnOceanSensorEntityDescription(
+    SensorEntityDescription, EnOceanSensorEntityDescriptionMixin
+):
+    """Describes EnOcean sensor entity."""
+
+
+SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     name="Temperature",
-    native_unit_of_measurement=TEMP_CELSIUS,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     icon="mdi:thermometer",
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
+    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_TEMPERATURE}",
 )
 
-SENSOR_DESC_HUMIDITY = SensorEntityDescription(
+SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_HUMIDITY,
     name="Humidity",
     native_unit_of_measurement=PERCENTAGE,
     icon="mdi:water-percent",
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
+    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_HUMIDITY}",
 )
 
-SENSOR_DESC_POWER = SensorEntityDescription(
+SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     name="Power",
-    native_unit_of_measurement=POWER_WATT,
+    native_unit_of_measurement=UnitOfPower.WATT,
     icon="mdi:power-plug",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
+    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_POWER}",
 )
 
-SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
+SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_WINDOWHANDLE,
     name="WindowHandle",
-    icon="mdi:window",
+    icon="mdi:window-open-variant",
+    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
 )
 
 
@@ -94,16 +117,16 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an EnOcean sensor device."""
-    dev_id = config[CONF_ID]
-    dev_name = config[CONF_NAME]
-    sensor_type = config[CONF_DEVICE_CLASS]
+    dev_id: list[int] = config[CONF_ID]
+    dev_name: str = config[CONF_NAME]
+    sensor_type: str = config[CONF_DEVICE_CLASS]
 
     entities: list[EnOceanSensor] = []
     if sensor_type == SENSOR_TYPE_TEMPERATURE:
-        temp_min = config[CONF_MIN_TEMP]
-        temp_max = config[CONF_MAX_TEMP]
-        range_from = config[CONF_RANGE_FROM]
-        range_to = config[CONF_RANGE_TO]
+        temp_min: int = config[CONF_MIN_TEMP]
+        temp_max: int = config[CONF_MAX_TEMP]
+        range_from: int = config[CONF_RANGE_FROM]
+        range_to: int = config[CONF_RANGE_TO]
         entities = [
             EnOceanTemperatureSensor(
                 dev_id,
@@ -125,20 +148,26 @@ def setup_platform(
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
 
-    if entities:
-        add_entities(entities)
+    add_entities(entities)
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
-    def __init__(self, dev_id, dev_name, description: SensorEntityDescription):
+    def __init__(
+        self,
+        dev_id: list[int],
+        dev_name: str,
+        description: EnOceanSensorEntityDescription,
+    ) -> None:
         """Initialize the EnOcean sensor device."""
         super().__init__(dev_id, dev_name)
         self.entity_description = description
         self._attr_name = f"{description.name} {dev_name}"
+        self._attr_unique_id = description.unique_id(dev_id)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         # If not None, we got an initial value.
         await super().async_added_to_hass()
@@ -152,6 +181,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         """Update the internal state of the sensor."""
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanPowerSensor(EnOceanSensor):
     """Representation of an EnOcean power sensor.
 
@@ -172,6 +202,7 @@ class EnOceanPowerSensor(EnOceanSensor):
             self.schedule_update_ha_state()
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanTemperatureSensor(EnOceanSensor):
     """Representation of an EnOcean temperature sensor device.
 
@@ -192,15 +223,15 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
     def __init__(
         self,
-        dev_id,
-        dev_name,
-        description: SensorEntityDescription,
+        dev_id: list[int],
+        dev_name: str,
+        description: EnOceanSensorEntityDescription,
         *,
-        scale_min,
-        scale_max,
-        range_from,
-        range_to,
-    ):
+        scale_min: int,
+        scale_max: int,
+        range_from: int,
+        range_to: int,
+    ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(dev_id, dev_name, description)
         self._scale_min = scale_min
@@ -221,6 +252,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanHumiditySensor(EnOceanSensor):
     """Representation of an EnOcean humidity sensor device.
 
@@ -239,6 +271,7 @@ class EnOceanHumiditySensor(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanWindowHandle(EnOceanSensor):
     """Representation of an EnOcean window handle device.
 
@@ -248,7 +281,6 @@ class EnOceanWindowHandle(EnOceanSensor):
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
-
         action = (packet.data[1] & 0x70) >> 4
 
         if action == 0x07:

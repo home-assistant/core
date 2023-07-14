@@ -1,7 +1,6 @@
 """Fixtures for WLED integration tests."""
 from collections.abc import Generator
-import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wled import Device as WLEDDevice
@@ -10,7 +9,7 @@ from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -25,38 +24,42 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.wled.async_setup_entry", return_value=True):
-        yield
-
-
-@pytest.fixture
-def mock_wled_config_flow(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
-    """Return a mocked WLED client."""
     with patch(
-        "homeassistant.components.wled.config_flow.WLED", autospec=True
-    ) as wled_mock:
-        wled = wled_mock.return_value
-        wled.update.return_value = WLEDDevice(json.loads(load_fixture("wled/rgb.json")))
-        yield wled
+        "homeassistant.components.wled.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture
-def mock_wled(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
-    """Return a mocked WLED client."""
-    fixture: str = "wled/rgb.json"
-    if hasattr(request, "param") and request.param:
-        fixture = request.param
+def mock_onboarding() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        yield mock_onboarding
 
-    device = WLEDDevice(json.loads(load_fixture(fixture)))
+
+@pytest.fixture
+def device_fixture() -> str:
+    """Return the device fixture for a specific device."""
+    return "rgb"
+
+
+@pytest.fixture
+def mock_wled(device_fixture: str) -> Generator[MagicMock, None, None]:
+    """Return a mocked WLED client."""
     with patch(
         "homeassistant.components.wled.coordinator.WLED", autospec=True
-    ) as wled_mock:
+    ) as wled_mock, patch(
+        "homeassistant.components.wled.config_flow.WLED", new=wled_mock
+    ):
         wled = wled_mock.return_value
-        wled.update.return_value = device
+        wled.update.return_value = WLEDDevice(
+            load_json_object_fixture(f"{device_fixture}.json", DOMAIN)
+        )
         wled.connected = False
         wled.host = "127.0.0.1"
         yield wled

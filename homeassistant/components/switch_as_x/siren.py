@@ -1,7 +1,11 @@
 """Siren support for switch entities."""
 from __future__ import annotations
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SirenEntity,
+    SirenEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -21,16 +25,15 @@ async def async_setup_entry(
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
-    wrapped_switch = registry.async_get(entity_id)
-    device_id = wrapped_switch.device_id if wrapped_switch else None
 
     async_add_entities(
         [
             SirenSwitch(
+                hass,
                 config_entry.title,
+                SIREN_DOMAIN,
                 entity_id,
                 config_entry.entry_id,
-                device_id,
             )
         ]
     )

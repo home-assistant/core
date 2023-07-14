@@ -14,7 +14,7 @@ from pyhap.const import CATEGORY_CAMERA
 from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import Event, callback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
@@ -40,6 +40,7 @@ from .const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    CONF_VIDEO_PROFILE_NAMES,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -51,12 +52,13 @@ from .const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
+    DEFAULT_VIDEO_PROFILE_NAMES,
     SERV_DOORBELL,
     SERV_MOTION_SENSOR,
     SERV_SPEAKER,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,
 )
-from .util import pid_is_alive
+from .util import pid_is_alive, state_changed_event_is_same_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,8 +113,6 @@ RESOLUTIONS = [
     (1600, 1200),
 ]
 
-VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
-
 FFMPEG_WATCH_INTERVAL = timedelta(seconds=5)
 FFMPEG_LOGGER = "ffmpeg_logger"
 FFMPEG_WATCHER = "ffmpeg_watcher"
@@ -128,6 +128,7 @@ CONFIG_DEFAULTS = {
     CONF_AUDIO_MAP: DEFAULT_AUDIO_MAP,
     CONF_VIDEO_MAP: DEFAULT_VIDEO_MAP,
     CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
+    CONF_VIDEO_PROFILE_NAMES: DEFAULT_VIDEO_PROFILE_NAMES,
     CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
     CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
     CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
@@ -265,9 +266,10 @@ class Camera(HomeAccessory, PyhapCamera):
         await super().run()
 
     @callback
-    def _async_update_motion_state_event(self, event):
+    def _async_update_motion_state_event(self, event: Event) -> None:
         """Handle state change event listener callback."""
-        self._async_update_motion_state(event.data.get("new_state"))
+        if not state_changed_event_is_same_state(event):
+            self._async_update_motion_state(event.data.get("new_state"))
 
     @callback
     def _async_update_motion_state(self, new_state):
@@ -288,9 +290,10 @@ class Camera(HomeAccessory, PyhapCamera):
         )
 
     @callback
-    def _async_update_doorbell_state_event(self, event):
+    def _async_update_doorbell_state_event(self, event: Event) -> None:
         """Handle state change event listener callback."""
-        self._async_update_doorbell_state(event.data.get("new_state"))
+        if not state_changed_event_is_same_state(event):
+            self._async_update_doorbell_state(event.data.get("new_state"))
 
     @callback
     def _async_update_doorbell_state(self, new_state):
@@ -323,7 +326,8 @@ class Camera(HomeAccessory, PyhapCamera):
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"
+                "Failed to get stream source - this could be a transient error or your"
+                " camera might not be compatible with HomeKit yet"
             )
         return stream_source
 
@@ -343,7 +347,7 @@ class Camera(HomeAccessory, PyhapCamera):
         if self.config[CONF_VIDEO_CODEC] != "copy":
             video_profile = (
                 "-profile:v "
-                + VIDEO_PROFILE_NAMES[
+                + self.config[CONF_VIDEO_PROFILE_NAMES][
                     int.from_bytes(stream_config["v_profile_id"], byteorder="big")
                 ]
                 + " "
@@ -440,7 +444,9 @@ class Camera(HomeAccessory, PyhapCamera):
     async def stop(self):
         """Stop any streams when the accessory is stopped."""
         for session_info in self.sessions.values():
-            asyncio.create_task(self.stop_stream(session_info))
+            self.hass.async_create_background_task(
+                self.stop_stream(session_info), "homekit.camera-stop-stream"
+            )
         await super().stop()
 
     async def stop_stream(self, session_info):

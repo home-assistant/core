@@ -6,6 +6,7 @@ import logging
 from typing import cast
 
 from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
+from pyoctoprintapi.exceptions import UnauthorizedException
 import voluptuous as vol
 from yarl import URL
 
@@ -24,6 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -54,7 +56,7 @@ def ensure_valid_path(value):
     return value
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
 DEFAULT_NAME = "OctoPrint"
 CONF_NUMBER_OF_TOOLS = "number_of_tools"
 CONF_BED = "bed"
@@ -104,8 +106,8 @@ CONFIG_SCHEMA = vol.Schema(
                             vol.Optional(CONF_SSL, default=False): cv.boolean,
                             vol.Optional(CONF_PORT, default=80): cv.port,
                             vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
-                            # Following values are not longer used in the configuration of the integration
-                            # and are here for historical purposes
+                            # Following values are not longer used in the configuration
+                            # of the integration and are here for historical purposes
                             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                             vol.Optional(
                                 CONF_NUMBER_OF_TOOLS, default=0
@@ -182,7 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "client": client,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -226,6 +228,8 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         printer = None
         try:
             job = await self._octoprint.get_job_info()
+        except UnauthorizedException as err:
+            raise ConfigEntryAuthFailed from err
         except ApiError as err:
             raise UpdateFailed(err) from err
 
@@ -238,6 +242,8 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             if not self._printer_offline:
                 _LOGGER.debug("Unable to retrieve printer information: Printer offline")
                 self._printer_offline = True
+        except UnauthorizedException as err:
+            raise ConfigEntryAuthFailed from err
         except ApiError as err:
             raise UpdateFailed(err) from err
         else:

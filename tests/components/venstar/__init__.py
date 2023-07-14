@@ -43,6 +43,7 @@ class VenstarColorTouchMock:
 
     def update_info(self):
         """Mock update_info."""
+        self.name = "username"
         return True
 
     def broken_update_info(self):

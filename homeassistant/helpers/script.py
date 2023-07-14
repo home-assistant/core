@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
+from copy import copy
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict, Union, cast
+from typing import Any, TypedDict, TypeVar, cast
 
 import async_timeout
 import voluptuous as vol
@@ -27,23 +28,33 @@ from homeassistant.const import (
     CONF_CHOOSE,
     CONF_CONDITION,
     CONF_CONDITIONS,
+    CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
     CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ELSE,
+    CONF_ENABLED,
     CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_FOR_EACH,
+    CONF_IF,
     CONF_MODE,
+    CONF_PARALLEL,
     CONF_REPEAT,
+    CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_STOP,
     CONF_TARGET,
+    CONF_THEN,
     CONF_TIMEOUT,
     CONF_UNTIL,
     CONF_VARIABLES,
@@ -54,10 +65,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
-    SERVICE_CALL_LIMIT,
     Context,
+    Event,
     HassJob,
     HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.util import slugify
@@ -76,6 +89,7 @@ from .trace import (
     trace_id_get,
     trace_path,
     trace_path_get,
+    trace_path_stack_cv,
     trace_set_result,
     trace_stack_cv,
     trace_stack_pop,
@@ -87,6 +101,8 @@ from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import ConfigType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+
+_T = TypeVar("_T")
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -196,6 +212,10 @@ async def trace_action(hass, script_run, stop, variables):
     except _AbortScript as ex:
         trace_element.set_error(ex.__cause__ or ex)
         raise ex
+    except _ConditionFail as ex:
+        # Clear errors which may have been set when evaluating the condition
+        trace_element.set_error(None)
+        raise ex
     except _StopScript as ex:
         raise ex
     except Exception as ex:
@@ -205,7 +225,9 @@ async def trace_action(hass, script_run, stop, variables):
         trace_stack_pop(trace_stack_cv)
 
 
-def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
+def make_script_schema(
+    schema: Mapping[Any, Any], default_script_mode: str, extra: int = vol.PREVENT_EXTRA
+) -> vol.Schema:
     """Make a schema for a component that uses the script helper."""
     return vol.Schema(
         {
@@ -231,7 +253,6 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_FIRE_EVENT,
     cv.SCRIPT_ACTION_ACTIVATE_SCENE,
     cv.SCRIPT_ACTION_VARIABLES,
-    cv.SCRIPT_ACTION_ERROR,
     cv.SCRIPT_ACTION_STOP,
 )
 
@@ -295,18 +316,47 @@ async def async_validate_action_config(
                 hass, choose_conf[CONF_SEQUENCE]
             )
 
+    elif action_type == cv.SCRIPT_ACTION_IF:
+        config[CONF_IF] = await condition.async_validate_conditions_config(
+            hass, config[CONF_IF]
+        )
+        config[CONF_THEN] = await async_validate_actions_config(hass, config[CONF_THEN])
+        if CONF_ELSE in config:
+            config[CONF_ELSE] = await async_validate_actions_config(
+                hass, config[CONF_ELSE]
+            )
+
+    elif action_type == cv.SCRIPT_ACTION_PARALLEL:
+        for parallel_conf in config[CONF_PARALLEL]:
+            parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
+                hass, parallel_conf[CONF_SEQUENCE]
+            )
+
     else:
         raise ValueError(f"No validation for {action_type}")
 
     return config
 
 
-class _AbortScript(Exception):
+class _HaltScript(Exception):
+    """Throw if script needs to stop executing."""
+
+
+class _AbortScript(_HaltScript):
     """Throw if script needs to abort because of an unexpected error."""
 
 
-class _StopScript(Exception):
+class _ConditionFail(_HaltScript):
+    """Throw if script needs to stop because a condition evaluated to False."""
+
+
+class _StopScript(_HaltScript):
     """Throw if script needs to stop."""
+
+    def __init__(self, message: str, response: Any) -> None:
+        """Initialize a halt exception."""
+        super().__init__(message)
+        self.response = response
 
 
 class _ScriptRun:
@@ -335,7 +385,7 @@ class _ScriptRun:
             self._script._changed()  # pylint: disable=protected-access
 
     async def _async_get_condition(self, config):
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         return await self._script._async_get_condition(config)
 
     def _log(
@@ -352,13 +402,14 @@ class _ScriptRun:
         )
         self._log("Executing step %s%s", self._script.last_action, _timeout)
 
-    async def async_run(self) -> None:
+    async def async_run(self) -> ServiceResponse:
         """Run script."""
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
             script_stack = []
             script_stack_cv.set(script_stack)
         script_stack.append(id(self._script))
+        response = None
 
         try:
             self._log("Running %s", self._script.running_description)
@@ -369,10 +420,22 @@ class _ScriptRun:
                 await self._async_step(log_exceptions=False)
             else:
                 script_execution_set("finished")
-        except _StopScript:
-            script_execution_set("finished")
         except _AbortScript:
             script_execution_set("aborted")
+            # Let the _AbortScript bubble up if this is a sub-script
+            if not self._script.top_level:
+                raise
+        except _ConditionFail:
+            script_execution_set("aborted")
+        except _StopScript as err:
+            script_execution_set("finished", err.response)
+            response = err.response
+
+            # Let the _StopScript bubble up if this is a sub-script
+            if not self._script.top_level:
+                # We already consumed the response, do not pass it on
+                err.response = None
+                raise err
         except Exception:
             script_execution_set("error")
             raise
@@ -381,20 +444,32 @@ class _ScriptRun:
             script_stack.pop()
             self._finish()
 
+        return response
+
     async def _async_step(self, log_exceptions):
+        continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
+
         with trace_path(str(self._step)):
             async with trace_action(self._hass, self, self._stop, self._variables):
                 if self._stop.is_set():
                     return
+
+                action = cv.determine_script_action(self._action)
+
+                if not self._action.get(CONF_ENABLED, True):
+                    self._log(
+                        "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
+                    )
+                    trace_set_result(enabled=False)
+                    return
+
                 try:
-                    handler = f"_async_{cv.determine_script_action(self._action)}_step"
+                    handler = f"_async_{action}_step"
                     await getattr(self, handler)()
-                except Exception as ex:
-                    if not isinstance(ex, (_AbortScript, _StopScript)) and (
-                        self._log_exceptions or log_exceptions
-                    ):
-                        self._log_exception(ex)
-                    raise
+                except Exception as ex:  # pylint: disable=broad-except
+                    self._handle_exception(
+                        ex, continue_on_error, self._log_exceptions or log_exceptions
+                    )
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
@@ -407,6 +482,38 @@ class _ScriptRun:
         """Stop script run."""
         self._stop.set()
         await self._stopped.wait()
+
+    def _handle_exception(
+        self, exception: Exception, continue_on_error: bool, log_exceptions: bool
+    ) -> None:
+        if not isinstance(exception, _HaltScript) and log_exceptions:
+            self._log_exception(exception)
+
+        if not continue_on_error:
+            raise exception
+
+        # An explicit request to stop the script has been raised.
+        if isinstance(exception, _StopScript):
+            raise exception
+
+        # These are incorrect scripts, and not runtime errors that need to
+        # be handled and thus cannot be stopped by `continue_on_error`.
+        if isinstance(
+            exception,
+            (
+                vol.Invalid,
+                exceptions.TemplateError,
+                exceptions.ServiceNotFound,
+                exceptions.InvalidEntityFormatError,
+                exceptions.NoEntitySpecifiedError,
+                exceptions.ConditionError,
+            ),
+        ):
+            raise exception
+
+        # Only Home Assistant errors can be ignored.
+        if not isinstance(exception, exceptions.HomeAssistantError):
+            raise exception
 
     def _log_exception(self, exception):
         action_type = cv.determine_script_action(self._action)
@@ -527,7 +634,7 @@ class _ScriptRun:
                 task.cancel()
             unsub()
 
-    async def _async_run_long_action(self, long_task: asyncio.Task) -> None:
+    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
         """Run a long task while monitoring for stop request."""
 
         async def async_cancel_long_task() -> None:
@@ -555,10 +662,10 @@ class _ScriptRun:
             raise asyncio.CancelledError
         if long_task.done():
             # Propagate any exceptions that occurred.
-            long_task.result()
-        else:
-            # Stopped before long task completed, so cancel it.
-            await async_cancel_long_task()
+            return long_task.result()
+        # Stopped before long task completed, so cancel it.
+        await async_cancel_long_task()
+        return None
 
     async def _async_call_service_step(self):
         """Call the service specified in the action."""
@@ -568,33 +675,43 @@ class _ScriptRun:
             self._hass, self._action, self._variables
         )
 
+        # Validate response data parameters. This check ignores services that do
+        # not exist which will raise an appropriate error in the service call below.
+        response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
+        return_response = response_variable is not None
+        if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
+            supports_response = self._hass.services.supports_response(
+                params[CONF_DOMAIN], params[CONF_SERVICE]
+            )
+            if supports_response == SupportsResponse.ONLY and not return_response:
+                raise vol.Invalid(
+                    f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
+                    f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
+                )
+            if supports_response == SupportsResponse.NONE and return_response:
+                raise vol.Invalid(
+                    f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
+                    f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
+                )
+
         running_script = (
             params[CONF_DOMAIN] == "automation"
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
-        # If this might start a script then disable the call timeout.
-        # Otherwise use the normal service call limit.
-        if running_script:
-            limit = None
-        else:
-            limit = SERVICE_CALL_LIMIT
-
-        trace_set_result(params=params, running_script=running_script, limit=limit)
-        service_task = self._hass.async_create_task(
-            self._hass.services.async_call(
-                **params,
-                blocking=True,
-                context=self._context,
-                limit=limit,
-            )
+        trace_set_result(params=params, running_script=running_script)
+        response_data = await self._async_run_long_action(
+            self._hass.async_create_task(
+                self._hass.services.async_call(
+                    **params,
+                    blocking=True,
+                    context=self._context,
+                    return_response=return_response,
+                )
+            ),
         )
-        if limit is not None:
-            # There is a call limit, so just wait for it to finish.
-            await service_task
-            return
-
-        await self._async_run_long_action(service_task)
+        if response_variable:
+            self._variables[response_variable] = response_data
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
@@ -655,7 +772,7 @@ class _ScriptRun:
         self._log("Test condition %s: %s", self._script.last_action, check)
         trace_update_result(result=check)
         if not check:
-            raise _AbortScript
+            raise _ConditionFail
 
     def _test_conditions(self, conditions, name, condition_path=None):
         if condition_path is None:
@@ -667,7 +784,7 @@ class _ScriptRun:
                 with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
-                            if not cond(hass, variables):
+                            if cond(hass, variables) is False:
                                 return False
             except exceptions.ConditionError as ex:
                 _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
@@ -679,20 +796,24 @@ class _ScriptRun:
         return result
 
     @async_trace_path("repeat")
-    async def _async_repeat_step(self):
+    async def _async_repeat_step(self):  # noqa: C901
         """Repeat a sequence."""
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
 
         saved_repeat_vars = self._variables.get("repeat")
 
-        def set_repeat_var(iteration, count=None):
+        def set_repeat_var(
+            iteration: int, count: int | None = None, item: Any = None
+        ) -> None:
             repeat_vars = {"first": iteration == 1, "index": iteration}
             if count:
                 repeat_vars["last"] = iteration == count
+            if item is not None:
+                repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         script = self._script._get_repeat_script(self._step)
 
         async def async_run_sequence(iteration, extra_msg=""):
@@ -719,6 +840,35 @@ class _ScriptRun:
                 await async_run_sequence(iteration, extra_msg)
                 if self._stop.is_set():
                     break
+
+        elif CONF_FOR_EACH in repeat:
+            try:
+                items = template.render_complex(repeat[CONF_FOR_EACH], self._variables)
+            except (exceptions.TemplateError, ValueError) as ex:
+                self._log(
+                    "Error rendering %s repeat for each items template: %s",
+                    self._script.name,
+                    ex,
+                    level=logging.ERROR,
+                )
+                raise _AbortScript from ex
+
+            if not isinstance(items, list):
+                self._log(
+                    "Repeat 'for_each' must be a list of items in %s, got: %s",
+                    self._script.name,
+                    items,
+                    level=logging.ERROR,
+                )
+                raise _AbortScript("Repeat 'for_each' must be a list of items")
+
+            count = len(items)
+            for iteration, item in enumerate(items, 1):
+                set_repeat_var(iteration, count, item)
+                extra_msg = f" of {count} with item: {repr(item)}"
+                if self._stop.is_set():
+                    break
+                await async_run_sequence(iteration, extra_msg)
 
         elif CONF_WHILE in repeat:
             conditions = [
@@ -779,6 +929,31 @@ class _ScriptRun:
             trace_set_result(choice="default")
             with trace_path(["default"]):
                 await self._async_run_script(choose_data["default"])
+
+    async def _async_if_step(self) -> None:
+        """If sequence."""
+        # pylint: disable=protected-access
+        if_data = await self._script._async_get_if_data(self._step)
+
+        test_conditions = False
+        try:
+            with trace_path("if"):
+                test_conditions = self._test_conditions(
+                    if_data["if_conditions"], "if", "condition"
+                )
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning("Error in 'if' evaluation:\n%s", ex)
+
+        if test_conditions:
+            trace_set_result(choice="then")
+            with trace_path("then"):
+                await self._async_run_script(if_data["if_then"])
+                return
+
+        if if_data["if_else"] is not None:
+            trace_set_result(choice="else")
+            with trace_path("else"):
+                await self._async_run_script(if_data["if_else"])
 
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""
@@ -848,16 +1023,44 @@ class _ScriptRun:
     async def _async_stop_step(self):
         """Stop script execution."""
         stop = self._action[CONF_STOP]
-        self._log("Stop script sequence: %s", stop)
-        trace_set_result(stop=stop)
-        raise _StopScript(stop)
+        error = self._action.get(CONF_ERROR, False)
+        trace_set_result(stop=stop, error=error)
+        if error:
+            self._log("Error script sequence: %s", stop)
+            raise _AbortScript(stop)
 
-    async def _async_error_step(self):
-        """Abort and error script execution."""
-        error = self._action[CONF_ERROR]
-        self._log("Error script sequence: %s", error)
-        trace_set_result(error=error)
-        raise _AbortScript(error)
+        self._log("Stop script sequence: %s", stop)
+        if CONF_RESPONSE_VARIABLE in self._action:
+            try:
+                response = self._variables[self._action[CONF_RESPONSE_VARIABLE]]
+            except KeyError as ex:
+                raise _AbortScript(
+                    f"Response variable '{self._action[CONF_RESPONSE_VARIABLE]}' "
+                    "is not defined"
+                ) from ex
+        else:
+            response = None
+        raise _StopScript(stop, response)
+
+    @async_trace_path("parallel")
+    async def _async_parallel_step(self) -> None:
+        """Run a sequence in parallel."""
+        # pylint: disable=protected-access
+        scripts = await self._script._async_get_parallel_scripts(self._step)
+
+        async def async_run_with_trace(idx: int, script: Script) -> None:
+            """Run a script with a trace path."""
+            trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
+            with trace_path([str(idx), "sequence"]):
+                await self._async_run_script(script)
+
+        results = await asyncio.gather(
+            *(async_run_with_trace(idx, script) for idx, script in enumerate(scripts)),
+            return_exceptions=True,
+        )
+        for result in results:
+            if isinstance(result, Exception):
+                raise result
 
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
@@ -909,7 +1112,17 @@ class _QueuedScriptRun(_ScriptRun):
         super()._finish()
 
 
-async def _async_stop_scripts_after_shutdown(hass, point_in_time):
+@callback
+def _schedule_stop_scripts_after_shutdown(hass: HomeAssistant) -> None:
+    """Stop running Script objects started after shutdown."""
+    async_call_later(
+        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
+    )
+
+
+async def _async_stop_scripts_after_shutdown(
+    hass: HomeAssistant, point_in_time: datetime
+) -> None:
     """Stop running Script objects started after shutdown."""
     hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
@@ -926,11 +1139,9 @@ async def _async_stop_scripts_after_shutdown(hass, point_in_time):
         )
 
 
-async def _async_stop_scripts_at_shutdown(hass, event):
+async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> None:
     """Stop running Script objects started before shutdown."""
-    async_call_later(
-        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
-    )
+    _schedule_stop_scripts_after_shutdown(hass)
 
     running_scripts = [
         script
@@ -945,12 +1156,13 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         )
 
 
-_VarsType = Union[dict[str, Any], MappingProxyType]
+_VarsType = dict[str, Any] | MappingProxyType
 
 
-def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> None:
+def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
     """Extract referenced IDs."""
-    if not data:
+    # Data may not exist, or be a template
+    if not isinstance(data, dict):
         return
 
     item_ids = data.get(key)
@@ -970,6 +1182,12 @@ class _ChooseData(TypedDict):
     default: Script | None
 
 
+class _IfData(TypedDict):
+    if_conditions: list[ConditionCheckerType]
+    if_then: Script
+    if_else: Script | None
+
+
 class Script:
     """Representation of a script."""
 
@@ -981,13 +1199,14 @@ class Script:
         domain: str,
         *,
         # Used in "Running <running_description>" log message
-        running_description: str | None = None,
         change_listener: Callable[..., Any] | None = None,
-        script_mode: str = DEFAULT_SCRIPT_MODE,
-        max_runs: int = DEFAULT_MAX,
-        max_exceeded: str = DEFAULT_MAX_EXCEEDED,
-        logger: logging.Logger | None = None,
+        copy_variables: bool = False,
         log_exceptions: bool = True,
+        logger: logging.Logger | None = None,
+        max_exceeded: str = DEFAULT_MAX_EXCEEDED,
+        max_runs: int = DEFAULT_MAX,
+        running_description: str | None = None,
+        script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
         variables: ScriptVariables | None = None,
     ) -> None:
@@ -997,7 +1216,7 @@ class Script:
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
             )
-        self._top_level = top_level
+        self.top_level = top_level
         if top_level:
             all_scripts.append(
                 {"instance": self, "started_before_shutdown": not hass.is_stopping}
@@ -1031,6 +1250,8 @@ class Script:
         self._config_cache: dict[set[tuple], Callable[..., bool]] = {}
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
+        self._if_data: dict[int, _IfData] = {}
+        self._parallel_scripts: dict[int, list[Script]] = {}
         self._referenced_entities: set[str] | None = None
         self._referenced_devices: set[str] | None = None
         self._referenced_areas: set[str] | None = None
@@ -1038,6 +1259,7 @@ class Script:
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
             template.attach(hass, variables)
+        self._copy_variables_on_run = copy_variables
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1065,11 +1287,18 @@ class Script:
         self._set_logger(logger)
         for script in self._repeat_script.values():
             script.update_logger(self._logger)
+        for parallel_scripts in self._parallel_scripts.values():
+            for parallel_script in parallel_scripts:
+                parallel_script.update_logger(self._logger)
         for choose_data in self._choose_data.values():
             for _, script in choose_data["choices"]:
                 script.update_logger(self._logger)
             if choose_data["default"] is not None:
                 choose_data["default"].update_logger(self._logger)
+        for if_data in self._if_data.values():
+            if_data["if_then"].update_logger(self._logger)
+            if if_data["if_else"] is not None:
+                if_data["if_else"].update_logger(self._logger)
 
     def _changed(self) -> None:
         if self._change_listener_job:
@@ -1097,25 +1326,27 @@ class Script:
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @property
-    def referenced_areas(self):
+    def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         if self._referenced_areas is not None:
             return self._referenced_areas
 
-        self._referenced_areas: set[str] = set()
+        self._referenced_areas = set()
         Script._find_referenced_areas(self._referenced_areas, self.sequence)
         return self._referenced_areas
 
     @staticmethod
-    def _find_referenced_areas(referenced, sequence):
+    def _find_referenced_areas(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
 
@@ -1125,26 +1356,37 @@ class Script:
                 if CONF_DEFAULT in step:
                     Script._find_referenced_areas(referenced, step[CONF_DEFAULT])
 
+            elif action == cv.SCRIPT_ACTION_IF:
+                Script._find_referenced_areas(referenced, step[CONF_THEN])
+                if CONF_ELSE in step:
+                    Script._find_referenced_areas(referenced, step[CONF_ELSE])
+
+            elif action == cv.SCRIPT_ACTION_PARALLEL:
+                for script in step[CONF_PARALLEL]:
+                    Script._find_referenced_areas(referenced, script[CONF_SEQUENCE])
+
     @property
-    def referenced_devices(self):
+    def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         if self._referenced_devices is not None:
             return self._referenced_devices
 
-        self._referenced_devices: set[str] = set()
+        self._referenced_devices = set()
         Script._find_referenced_devices(self._referenced_devices, self.sequence)
         return self._referenced_devices
 
     @staticmethod
-    def _find_referenced_devices(referenced, sequence):
+    def _find_referenced_devices(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_DEVICE_ID, referenced)
 
@@ -1162,18 +1404,31 @@ class Script:
                 if CONF_DEFAULT in step:
                     Script._find_referenced_devices(referenced, step[CONF_DEFAULT])
 
+            elif action == cv.SCRIPT_ACTION_IF:
+                for cond in step[CONF_IF]:
+                    referenced |= condition.async_extract_devices(cond)
+                Script._find_referenced_devices(referenced, step[CONF_THEN])
+                if CONF_ELSE in step:
+                    Script._find_referenced_devices(referenced, step[CONF_ELSE])
+
+            elif action == cv.SCRIPT_ACTION_PARALLEL:
+                for script in step[CONF_PARALLEL]:
+                    Script._find_referenced_devices(referenced, script[CONF_SEQUENCE])
+
     @property
-    def referenced_entities(self):
+    def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         if self._referenced_entities is not None:
             return self._referenced_entities
 
-        self._referenced_entities: set[str] = set()
+        self._referenced_entities = set()
         Script._find_referenced_entities(self._referenced_entities, self.sequence)
         return self._referenced_entities
 
     @staticmethod
-    def _find_referenced_entities(referenced, sequence):
+    def _find_referenced_entities(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
@@ -1181,8 +1436,8 @@ class Script:
                 for data in (
                     step,
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_ENTITY_ID, referenced)
 
@@ -1200,6 +1455,17 @@ class Script:
                 if CONF_DEFAULT in step:
                     Script._find_referenced_entities(referenced, step[CONF_DEFAULT])
 
+            elif action == cv.SCRIPT_ACTION_IF:
+                for cond in step[CONF_IF]:
+                    referenced |= condition.async_extract_entities(cond)
+                Script._find_referenced_entities(referenced, step[CONF_THEN])
+                if CONF_ELSE in step:
+                    Script._find_referenced_entities(referenced, step[CONF_ELSE])
+
+            elif action == cv.SCRIPT_ACTION_PARALLEL:
+                for script in step[CONF_PARALLEL]:
+                    Script._find_referenced_entities(referenced, script[CONF_SEQUENCE])
+
     def run(
         self, variables: _VarsType | None = None, context: Context | None = None
     ) -> None:
@@ -1213,7 +1479,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
-    ) -> None:
+    ) -> ServiceResponse:
         """Run script."""
         if context is None:
             self._log(
@@ -1224,7 +1490,7 @@ class Script:
         # Prevent spawning new script runs when Home Assistant is shutting down
         if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
             self._log("Home Assistant is shutting down, starting script blocked")
-            return
+            return None
 
         # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
@@ -1232,7 +1498,7 @@ class Script:
                 if self._max_exceeded != "SILENT":
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
                 script_execution_set("failed_single")
-                return
+                return None
             if self.script_mode != SCRIPT_MODE_RESTART and self.runs == self.max_runs:
                 if self._max_exceeded != "SILENT":
                     self._log(
@@ -1240,12 +1506,12 @@ class Script:
                         level=LOGSEVERITY[self._max_exceeded],
                     )
                 script_execution_set("failed_max_runs")
-                return
+                return None
 
         # If this is a top level Script then make a copy of the variables in case they
         # are read-only, but more importantly, so as not to leak any variables created
         # during the run back to the caller.
-        if self._top_level:
+        if self.top_level:
             if self.variables:
                 try:
                     variables = self.variables.async_render(
@@ -1261,6 +1527,8 @@ class Script:
                 variables = {}
 
             variables["context"] = context
+        elif self._copy_variables_on_run:
+            variables = cast(dict, copy(run_variables))
         else:
             variables = cast(dict, run_variables)
 
@@ -1274,7 +1542,7 @@ class Script:
         ):
             script_execution_set("disallowed_recursion_detected")
             self._log("Disallowed recursion detected", level=logging.WARNING)
-            return
+            return None
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun
@@ -1298,7 +1566,7 @@ class Script:
         self._changed()
 
         try:
-            await asyncio.shield(run.async_run())
+            return await asyncio.shield(run.async_run())
         except asyncio.CancelledError:
             await run.async_stop()
             self._changed()
@@ -1315,7 +1583,7 @@ class Script:
         self, update_state: bool = True, spare: _ScriptRun | None = None
     ) -> None:
         """Stop running script."""
-        # Collect a a list of script runs to stop. This must be done before calling
+        # Collect a list of script runs to stop. This must be done before calling
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [
@@ -1410,6 +1678,89 @@ class Script:
             choose_data = await self._async_prep_choose_data(step)
             self._choose_data[step] = choose_data
         return choose_data
+
+    async def _async_prep_if_data(self, step: int) -> _IfData:
+        """Prepare data for an if statement."""
+        action = self.sequence[step]
+        step_name = action.get(CONF_ALIAS, f"If at step {step+1}")
+
+        conditions = [
+            await self._async_get_condition(config) for config in action[CONF_IF]
+        ]
+
+        then_script = Script(
+            self._hass,
+            action[CONF_THEN],
+            f"{self.name}: {step_name}",
+            self.domain,
+            running_description=self.running_description,
+            script_mode=SCRIPT_MODE_PARALLEL,
+            max_runs=self.max_runs,
+            logger=self._logger,
+            top_level=False,
+        )
+        then_script.change_listener = partial(self._chain_change_listener, then_script)
+
+        if CONF_ELSE in action:
+            else_script = Script(
+                self._hass,
+                action[CONF_ELSE],
+                f"{self.name}: {step_name}",
+                self.domain,
+                running_description=self.running_description,
+                script_mode=SCRIPT_MODE_PARALLEL,
+                max_runs=self.max_runs,
+                logger=self._logger,
+                top_level=False,
+            )
+            else_script.change_listener = partial(
+                self._chain_change_listener, else_script
+            )
+        else:
+            else_script = None
+
+        return _IfData(
+            if_conditions=conditions,
+            if_then=then_script,
+            if_else=else_script,
+        )
+
+    async def _async_get_if_data(self, step: int) -> _IfData:
+        if not (if_data := self._if_data.get(step)):
+            if_data = await self._async_prep_if_data(step)
+            self._if_data[step] = if_data
+        return if_data
+
+    async def _async_prep_parallel_scripts(self, step: int) -> list[Script]:
+        action = self.sequence[step]
+        step_name = action.get(CONF_ALIAS, f"Parallel action at step {step+1}")
+        parallel_scripts: list[Script] = []
+        for idx, parallel_script in enumerate(action[CONF_PARALLEL], start=1):
+            parallel_name = parallel_script.get(CONF_ALIAS, f"parallel {idx}")
+            parallel_script = Script(
+                self._hass,
+                parallel_script[CONF_SEQUENCE],
+                f"{self.name}: {step_name}: {parallel_name}",
+                self.domain,
+                running_description=self.running_description,
+                script_mode=SCRIPT_MODE_PARALLEL,
+                max_runs=self.max_runs,
+                logger=self._logger,
+                top_level=False,
+                copy_variables=True,
+            )
+            parallel_script.change_listener = partial(
+                self._chain_change_listener, parallel_script
+            )
+            parallel_scripts.append(parallel_script)
+
+        return parallel_scripts
+
+    async def _async_get_parallel_scripts(self, step: int) -> list[Script]:
+        if not (parallel_scripts := self._parallel_scripts.get(step)):
+            parallel_scripts = await self._async_prep_parallel_scripts(step)
+            self._parallel_scripts[step] = parallel_scripts
+        return parallel_scripts
 
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any

@@ -50,10 +50,8 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -156,7 +154,7 @@ async def test_light_mac_address_not_found(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "protocol,sw_version,model_num,model",
+    ("protocol", "sw_version", "model_num", "model"),
     [
         ("LEDENET_ORIGINAL", 1, 0x01, "Original LEDEDNET (0x35)"),
         ("LEDENET", 8, 0x33, "Magic Home Branded RGB Controller (0x33)"),
@@ -184,7 +182,7 @@ async def test_light_device_registry(
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
     )
     assert device.sw_version == str(sw_version)
     assert device.model == model
@@ -318,9 +316,9 @@ async def test_rgb_light_auto_on(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_RGB
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.RGB
     assert attributes[ATTR_EFFECT_LIST] == bulb.effect_list
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_RGB]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
@@ -451,9 +449,9 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_RGBW
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
     assert attributes[ATTR_EFFECT_LIST] == bulb.effect_list
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_RGBW]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBW]
     assert attributes[ATTR_HS_COLOR] == (0.0, 83.529)
 
     await hass.services.async_call(
@@ -586,9 +584,9 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_RGBWW
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
     assert attributes[ATTR_EFFECT_LIST] == bulb.effect_list
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_RGBWW]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
     assert attributes[ATTR_HS_COLOR] == (3.237, 94.51)
 
     await hass.services.async_call(
@@ -1304,7 +1302,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     await async_mock_device_turn_on(hass, bulb)
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_COLOR_MODE] == COLOR_MODE_RGBWW
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
     assert state.attributes[ATTR_BRIGHTNESS] == 1
 
     await hass.services.async_call(

@@ -4,13 +4,14 @@ from unittest.mock import patch
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 
 from .util import _get_mock_pynutclient
 
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry(hass):
+async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -44,7 +45,7 @@ async def test_async_setup_entry(hass):
         assert not hass.data.get(DOMAIN)
 
 
-async def test_config_not_ready(hass):
+async def test_config_not_ready(hass: HomeAssistant) -> None:
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,

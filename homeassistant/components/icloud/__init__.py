@@ -1,10 +1,15 @@
 """The iCloud component."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
 from .account import IcloudAccount
@@ -81,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=username)
 
-    icloud_dir = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    icloud_dir = Store[Any](hass, STORAGE_VERSION, STORAGE_KEY)
 
     account = IcloudAccount(
         hass,
@@ -97,12 +102,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.unique_id] = account
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     def play_sound(service: ServiceCall) -> None:
         """Play sound on the device."""
         account = service.data[ATTR_ACCOUNT]
-        device_name = service.data.get(ATTR_DEVICE_NAME)
+        device_name: str = service.data[ATTR_DEVICE_NAME]
         device_name = slugify(device_name.replace(" ", "", 99))
 
         for device in _get_account(account).get_devices_with_name(device_name):
@@ -111,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def display_message(service: ServiceCall) -> None:
         """Display a message on the device."""
         account = service.data[ATTR_ACCOUNT]
-        device_name = service.data.get(ATTR_DEVICE_NAME)
+        device_name: str = service.data[ATTR_DEVICE_NAME]
         device_name = slugify(device_name.replace(" ", "", 99))
         message = service.data.get(ATTR_LOST_DEVICE_MESSAGE)
         sound = service.data.get(ATTR_LOST_DEVICE_SOUND, False)
@@ -122,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def lost_device(service: ServiceCall) -> None:
         """Make the device in lost state."""
         account = service.data[ATTR_ACCOUNT]
-        device_name = service.data.get(ATTR_DEVICE_NAME)
+        device_name: str = service.data[ATTR_DEVICE_NAME]
         device_name = slugify(device_name.replace(" ", "", 99))
         number = service.data.get(ATTR_LOST_DEVICE_NUMBER)
         message = service.data.get(ATTR_LOST_DEVICE_MESSAGE)
@@ -138,18 +143,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else:
             _get_account(account).keep_alive()
 
-    def _get_account(account_identifier: str) -> any:
+    def _get_account(account_identifier: str) -> IcloudAccount:
         if account_identifier is None:
             return None
 
-        icloud_account = hass.data[DOMAIN].get(account_identifier)
+        icloud_account: IcloudAccount | None = hass.data[DOMAIN].get(account_identifier)
         if icloud_account is None:
             for account in hass.data[DOMAIN].values():
                 if account.username == account_identifier:
                     icloud_account = account
 
         if icloud_account is None:
-            raise Exception(
+            raise ValueError(
                 f"No iCloud account with username or name {account_identifier}"
             )
         return icloud_account

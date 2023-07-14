@@ -17,7 +17,7 @@ from homeassistant.components.homekit.type_switches import (
     Vacuum,
     Valve,
 )
-from homeassistant.components.select.const import ATTR_OPTIONS
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
@@ -26,8 +26,7 @@ from homeassistant.components.vacuum import (
     SERVICE_TURN_ON,
     STATE_CLEANING,
     STATE_DOCKED,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
+    VacuumEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -37,13 +36,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
 
 
-async def test_outlet_set_state(hass, hk_driver, events):
+async def test_outlet_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if Outlet accessory and HA are updated accordingly."""
     entity_id = "switch.outlet_test"
 
@@ -87,7 +86,7 @@ async def test_outlet_set_state(hass, hk_driver, events):
 
 
 @pytest.mark.parametrize(
-    "entity_id, attrs",
+    ("entity_id", "attrs"),
     [
         ("automation.test", {}),
         ("input_boolean.test", {}),
@@ -95,7 +94,9 @@ async def test_outlet_set_state(hass, hk_driver, events):
         ("switch.test", {}),
     ],
 )
-async def test_switch_set_state(hass, hk_driver, entity_id, attrs, events):
+async def test_switch_set_state(
+    hass: HomeAssistant, hk_driver, entity_id, attrs, events
+) -> None:
     """Test if accessory and HA are updated accordingly."""
     domain = split_entity_id(entity_id)[0]
 
@@ -138,7 +139,7 @@ async def test_switch_set_state(hass, hk_driver, entity_id, attrs, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_valve_set_state(hass, hk_driver, events):
+async def test_valve_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if Valve accessory and HA are updated accordingly."""
     entity_id = "switch.valve_test"
 
@@ -151,23 +152,23 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert acc.category == 29  # Faucet
     assert acc.char_valve_type.value == 3  # Water faucet
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SHOWER})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 3, {CONF_TYPE: TYPE_SHOWER})
     await acc.run()
     await hass.async_block_till_done()
     assert acc.category == 30  # Shower
     assert acc.char_valve_type.value == 2  # Shower head
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SPRINKLER})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 4, {CONF_TYPE: TYPE_SPRINKLER})
     await acc.run()
     await hass.async_block_till_done()
     assert acc.category == 28  # Sprinkler
     assert acc.char_valve_type.value == 1  # Irrigation
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_VALVE})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE})
     await acc.run()
     await hass.async_block_till_done()
 
-    assert acc.aid == 2
+    assert acc.aid == 5
     assert acc.category == 29  # Faucet
 
     assert acc.char_active.value == 0
@@ -206,13 +207,18 @@ async def test_valve_set_state(hass, hk_driver, events):
 
 
 async def test_vacuum_set_state_with_returnhome_and_start_support(
-    hass, hk_driver, events
-):
+    hass: HomeAssistant, hk_driver, events
+) -> None:
     """Test if Vacuum accessory and HA are updated accordingly."""
     entity_id = "vacuum.roomba"
 
     hass.states.async_set(
-        entity_id, None, {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START}
+        entity_id,
+        None,
+        {
+            ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.START
+        },
     )
     await hass.async_block_till_done()
 
@@ -227,7 +233,10 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     hass.states.async_set(
         entity_id,
         STATE_CLEANING,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START},
+        {
+            ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.START
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
@@ -235,7 +244,10 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     hass.states.async_set(
         entity_id,
         STATE_DOCKED,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START},
+        {
+            ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.START
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
@@ -264,8 +276,8 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
 
 
 async def test_vacuum_set_state_without_returnhome_and_start_support(
-    hass, hk_driver, events
-):
+    hass: HomeAssistant, hk_driver, events
+) -> None:
     """Test if Vacuum accessory and HA are updated accordingly."""
     entity_id = "vacuum.roomba"
 
@@ -309,7 +321,7 @@ async def test_vacuum_set_state_without_returnhome_and_start_support(
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_reset_switch(hass, hk_driver, events):
+async def test_reset_switch(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if switch accessory is reset correctly."""
     domain = "scene"
     entity_id = "scene.test"
@@ -353,7 +365,7 @@ async def test_reset_switch(hass, hk_driver, events):
     assert len(events) == 1
 
 
-async def test_script_switch(hass, hk_driver, events):
+async def test_script_switch(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if script switch accessory is reset correctly."""
     domain = "script"
     entity_id = "script.test"
@@ -401,7 +413,9 @@ async def test_script_switch(hass, hk_driver, events):
     "domain",
     ["input_select", "select"],
 )
-async def test_input_select_switch(hass, hk_driver, events, domain):
+async def test_input_select_switch(
+    hass: HomeAssistant, hk_driver, events, domain
+) -> None:
     """Test if select switch accessory is handled correctly."""
     entity_id = f"{domain}.test"
 
@@ -455,7 +469,7 @@ async def test_input_select_switch(hass, hk_driver, events, domain):
     "domain",
     ["button", "input_button"],
 )
-async def test_button_switch(hass, hk_driver, events, domain):
+async def test_button_switch(hass: HomeAssistant, hk_driver, events, domain) -> None:
     """Test switch accessory from a (input) button entity."""
     entity_id = f"{domain}.test"
 

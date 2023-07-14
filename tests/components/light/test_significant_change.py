@@ -4,14 +4,13 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE,
 )
 from homeassistant.components.light.significant_change import (
     async_check_significant_change,
 )
 
 
-async def test_significant_change():
+async def test_significant_change() -> None:
     """Detect Light significant changes."""
     assert not async_check_significant_change(None, "on", {}, "on", {})
     assert async_check_significant_change(None, "on", {}, "off", {})
@@ -30,14 +29,6 @@ async def test_significant_change():
     )
     assert async_check_significant_change(
         None, "on", {ATTR_COLOR_TEMP: 60}, "on", {ATTR_COLOR_TEMP: 65}
-    )
-
-    # White value
-    assert not async_check_significant_change(
-        None, "on", {ATTR_WHITE_VALUE: 60}, "on", {ATTR_WHITE_VALUE: 64}
-    )
-    assert async_check_significant_change(
-        None, "on", {ATTR_WHITE_VALUE: 60}, "on", {ATTR_WHITE_VALUE: 65}
     )
 
     # Effect

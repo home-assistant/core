@@ -15,9 +15,8 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -98,7 +97,7 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
     ),
     OverkizSwitchDescription(
         key=UIWidget.MY_FOX_SECURITY_CAMERA,
-        name="Camera Shutter",
+        name="Camera shutter",
         turn_on=OverkizCommand.OPEN,
         turn_off=OverkizCommand.CLOSE,
         icon="mdi:camera-lock",

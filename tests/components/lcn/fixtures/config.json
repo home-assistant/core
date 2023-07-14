@@ -90,6 +90,47 @@
         "address": "s0.m7",
         "motor": "motor1"
       }
+    ],
+    "binary_sensors": [
+      {
+        "name": "Sensor_LockRegulator1",
+        "address": "s0.m7",
+        "source": "r1varsetpoint"
+      },
+      {
+        "name": "Binary_Sensor1",
+        "address": "s0.m7",
+        "source": "binsensor1"
+      },
+      {
+        "name": "Sensor_KeyLock",
+        "address": "s0.m7",
+        "source": "a5"
+      }
+    ],
+    "sensors": [
+      {
+        "name": "Sensor_Var1",
+        "address": "s0.m7",
+        "source": "var1",
+        "unit_of_measurement": "°C"
+      },
+      {
+        "name": "Sensor_Setpoint1",
+        "address": "s0.m7",
+        "source": "r1varsetpoint",
+        "unit_of_measurement": "°C"
+      },
+      {
+        "name": "Sensor_Led6",
+        "address": "s0.m7",
+        "source": "led6"
+      },
+      {
+        "name": "Sensor_LogicOp1",
+        "address": "s0.m7",
+        "source": "logicop1"
+      }
     ]
   }
 }

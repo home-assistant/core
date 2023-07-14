@@ -1,0 +1,5 @@
+{
+  "domain": "ikea",
+  "name": "IKEA",
+  "integrations": ["symfonisk", "tradfri"]
+}

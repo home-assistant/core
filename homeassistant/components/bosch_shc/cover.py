@@ -1,4 +1,6 @@
 """Platform for cover integration."""
+from typing import Any
+
 from boschshcpy import SHCSession, SHCShutterControl
 
 from homeassistant.components.cover import (
@@ -34,8 +36,7 @@ async def async_setup_entry(
             )
         )
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class ShutterControlCover(SHCEntity, CoverEntity):
@@ -50,21 +51,21 @@ class ShutterControlCover(SHCEntity, CoverEntity):
     )
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current cover position."""
         return round(self._device.level * 100.0)
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._device.stop()
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed or not."""
         return self.current_cover_position == 0
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return (
             self._device.operation_state
@@ -72,22 +73,22 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         )
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return (
             self._device.operation_state
             == SHCShutterControl.ShutterControlService.State.CLOSING
         )
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._device.level = 1.0
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self._device.level = 0.0
 
-    def set_cover_position(self, **kwargs):
+    def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         self._device.level = position / 100.0

@@ -191,7 +191,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._attr_supported_features = 0
+        self._attr_supported_features = CoverEntityFeature(0)
 
         # Check if this cover is based on a switch or has controls
         if self.find_dpcode(description.key, prefer_function=True):
@@ -360,7 +360,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             ]
         )
 
-    def set_cover_tilt_position(self, **kwargs):
+    def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         if self._tilt is None:
             raise RuntimeError(

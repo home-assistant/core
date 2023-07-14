@@ -1,0 +1,54 @@
+{
+  "response": {
+    "result": "success",
+    "message": null,
+    "data": [
+      {
+        "row_id": 1,
+        "user_id": 11111111,
+        "username": "user1",
+        "friendly_name": "user1",
+        "thumb": "https://plex.tv/users/1234567890abcdef/avatar?c=1111111111",
+        "email": "test@email.com",
+        "is_active": 1,
+        "is_admin": 1,
+        "is_home_user": 1,
+        "is_allow_sync": 1,
+        "is_restricted": 0,
+        "do_notify": 1,
+        "keep_history": 1,
+        "allow_guest": 0,
+        "server_token": "1234-67890abcdef-234",
+        "shared_libraries": "2;1;3;4;5;6;7;2;1;2;3;1;2;3",
+        "filter_all": "",
+        "filter_movies": "",
+        "filter_tv": "",
+        "filter_music": "",
+        "filter_photos": ""
+      },
+      {
+        "row_id": 2,
+        "user_id": 22222222,
+        "username": "user2",
+        "friendly_name": "user2",
+        "thumb": "https://plex.tv/users/fedcba0987654321/avatar?c=2222222222",
+        "email": "",
+        "is_active": 1,
+        "is_admin": 0,
+        "is_home_user": 1,
+        "is_allow_sync": 1,
+        "is_restricted": 1,
+        "do_notify": 1,
+        "keep_history": 1,
+        "allow_guest": 0,
+        "server_token": "1234567890abcdef1234",
+        "shared_libraries": "1;3;2",
+        "filter_all": "",
+        "filter_movies": "",
+        "filter_tv": "",
+        "filter_music": "",
+        "filter_photos": ""
+      }
+    ]
+  }
+}

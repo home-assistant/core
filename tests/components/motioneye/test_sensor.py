@@ -88,10 +88,10 @@ async def test_sensor_device_info(hass: HomeAssistant) -> None:
     )
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({device_identifer})
+    device = device_registry.async_get_device(identifiers={device_identifer})
     assert device
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)

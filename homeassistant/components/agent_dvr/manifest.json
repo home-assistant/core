@@ -1,10 +1,10 @@
 {
   "domain": "agent_dvr",
   "name": "Agent DVR",
-  "documentation": "https://www.home-assistant.io/integrations/agent_dvr/",
-  "requirements": ["agent-py==0.0.23"],
-  "config_flow": true,
   "codeowners": ["@ispysoftware"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/agent_dvr/",
   "iot_class": "local_polling",
-  "loggers": ["agent"]
+  "loggers": ["agent"],
+  "requirements": ["agent-py==0.0.23"]
 }

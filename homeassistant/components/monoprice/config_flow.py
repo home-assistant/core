@@ -1,7 +1,9 @@
 """Config flow for Monoprice 6-Zone Amplifier integration."""
+from __future__ import annotations
+
 import logging
 
-from pymonoprice import get_async_monoprice
+from pymonoprice import get_monoprice
 from serial import SerialException
 import voluptuous as vol
 
@@ -54,7 +56,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     try:
-        await get_async_monoprice(data[CONF_PORT], hass.loop)
+        await hass.async_add_executor_job(get_monoprice, data[CONF_PORT])
     except SerialException as err:
         _LOGGER.error("Error connecting to Monoprice controller")
         raise CannotConnect from err
@@ -90,7 +92,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @core.callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> MonopriceOptionsFlowHandler:
         """Define the config flow to handle options."""
         return MonopriceOptionsFlowHandler(config_entry)
 
@@ -110,7 +114,7 @@ def _key_for_source(index, source, previous_sources):
 class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a Monoprice options flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
 

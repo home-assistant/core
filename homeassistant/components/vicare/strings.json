@@ -3,7 +3,6 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "{name}",
         "description": "Set up ViCare integration. To generate API key go to https://developer.viessmann.com",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
@@ -19,6 +18,18 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "services": {
+    "set_vicare_mode": {
+      "name": "Set ViCare mode",
+      "description": "Set a ViCare mode.",
+      "fields": {
+        "vicare_mode": {
+          "name": "ViCare mode",
+          "description": "ViCare mode."
+        }
+      }
     }
   }
 }

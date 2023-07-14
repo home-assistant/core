@@ -1,8 +1,11 @@
 """Config helpers for Alexa."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+import asyncio
 import logging
 
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -16,14 +19,15 @@ _LOGGER = logging.getLogger(__name__)
 class AbstractConfig(ABC):
     """Hold the configuration for Alexa."""
 
-    _unsub_proactive_report = None
+    _store: AlexaConfigStore
+    _unsub_proactive_report: CALLBACK_TYPE | None = None
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize abstract config."""
         self.hass = hass
-        self._store = None
+        self._enable_proactive_mode_lock = asyncio.Lock()
 
-    async def async_initialize(self):
+    async def async_initialize(self) -> None:
         """Perform async initialization of config."""
         self._store = AlexaConfigStore(self.hass)
         await self._store.async_load()
@@ -63,28 +67,26 @@ class AbstractConfig(ABC):
     def user_identifier(self):
         """Return an identifier for the user that represents this config."""
 
-    async def async_enable_proactive_mode(self):
+    async def async_enable_proactive_mode(self) -> None:
         """Enable proactive mode."""
-        if self._unsub_proactive_report is None:
-            self._unsub_proactive_report = self.hass.async_create_task(
-                async_enable_proactive_mode(self.hass, self)
+        _LOGGER.debug("Enable proactive mode")
+        async with self._enable_proactive_mode_lock:
+            if self._unsub_proactive_report is not None:
+                return
+            self._unsub_proactive_report = await async_enable_proactive_mode(
+                self.hass, self
             )
-        try:
-            await self._unsub_proactive_report
-        except Exception:
-            self._unsub_proactive_report = None
-            raise
 
-    async def async_disable_proactive_mode(self):
+    async def async_disable_proactive_mode(self) -> None:
         """Disable proactive mode."""
-        if unsub_func := await self._unsub_proactive_report:
+        _LOGGER.debug("Disable proactive mode")
+        if unsub_func := self._unsub_proactive_report:
             unsub_func()
         self._unsub_proactive_report = None
 
     @callback
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
-        # pylint: disable=no-self-use
         return False
 
     @callback
@@ -105,7 +107,7 @@ class AbstractConfig(ABC):
         """Return authorization status."""
         return self._store.authorized
 
-    async def set_authorized(self, authorized):
+    async def set_authorized(self, authorized) -> None:
         """Set authorization status.
 
         - Set when an incoming message is received from Alexa.
@@ -114,7 +116,6 @@ class AbstractConfig(ABC):
         self._store.set_authorized(authorized)
         if self.should_report_state != self.is_reporting_states:
             if self.should_report_state:
-                _LOGGER.debug("Enable proactive mode")
                 try:
                     await self.async_enable_proactive_mode()
                 except Exception:
@@ -122,7 +123,6 @@ class AbstractConfig(ABC):
                     self._store.set_authorized(False)
                     raise
             else:
-                _LOGGER.debug("Disable proactive mode")
                 await self.async_disable_proactive_mode()
 
 

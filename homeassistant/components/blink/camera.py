@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from requests.exceptions import ChunkedEncodingError
+
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -36,11 +38,13 @@ async def async_setup_entry(
 class BlinkCamera(Camera):
     """An implementation of a Blink Camera."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, data, name, camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
         self._attr_device_info = DeviceInfo(
@@ -56,18 +60,18 @@ class BlinkCamera(Camera):
         """Return the camera attributes."""
         return self._camera.attributes
 
-    def enable_motion_detection(self):
+    def enable_motion_detection(self) -> None:
         """Enable motion detection for the camera."""
         self._camera.arm = True
         self.data.refresh()
 
-    def disable_motion_detection(self):
+    def disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
         self._camera.arm = False
         self.data.refresh()
 
     @property
-    def motion_detection_enabled(self):
+    def motion_detection_enabled(self) -> bool:
         """Return the state of the camera."""
         return self._camera.arm
 
@@ -85,4 +89,11 @@ class BlinkCamera(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        return self._camera.image_from_cache.content
+        try:
+            return self._camera.image_from_cache.content
+        except ChunkedEncodingError:
+            _LOGGER.debug("Could not retrieve image for %s", self._camera.name)
+            return None
+        except TypeError:
+            _LOGGER.debug("No cached image for %s", self._camera.name)
+            return None

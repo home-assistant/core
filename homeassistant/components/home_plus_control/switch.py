@@ -1,5 +1,6 @@
 """Legrand Home+ Control Switch Entity Module that uses the HomeAssistant DataUpdateCoordinator."""
 from functools import partial
+from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -118,14 +119,14 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
         """Return entity state."""
         return self.module.status == "on"
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # Do the turning on.
         await self.module.turn_on()
         # Update the data
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.module.turn_off()
         # Update the data

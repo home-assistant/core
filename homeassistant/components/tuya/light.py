@@ -1,7 +1,7 @@
 """Support for the Tuya lights."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from typing import Any, cast
 
@@ -11,17 +11,14 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
+    ColorMode,
     LightEntity,
     LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -62,7 +59,9 @@ class TuyaLightEntityDescription(LightEntityDescription):
     color_data: DPCode | tuple[DPCode, ...] | None = None
     color_mode: DPCode | None = None
     color_temp: DPCode | tuple[DPCode, ...] | None = None
-    default_color_type: ColorTypeData = DEFAULT_COLOR_TYPE_DATA
+    default_color_type: ColorTypeData = field(
+        default_factory=lambda: DEFAULT_COLOR_TYPE_DATA
+    )
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
@@ -80,6 +79,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "dc": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -91,6 +91,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "dd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -103,6 +104,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "dj": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
@@ -121,10 +123,16 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "fsd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
             color_data=DPCode.COLOUR_DATA,
+        ),
+        # Some ceiling fan lights use LIGHT for DPCode instead of SWITCH_LED
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            name=None,
         ),
     ),
     # Ambient Light
@@ -132,6 +140,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "fwd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -143,6 +152,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "gyd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -154,6 +164,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "jsq": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_data=DPCode.COLOUR_DATA_HSV,
@@ -164,6 +175,15 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "kg": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
+            name="Backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
             name="Backlight",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -183,6 +203,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "mbd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_data=DPCode.COLOUR_DATA,
@@ -194,6 +215,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "qjdcz": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_data=DPCode.COLOUR_DATA,
@@ -218,7 +240,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
         TuyaLightEntityDescription(
             key=DPCode.BASIC_INDICATOR,
-            name="Indicator Light",
+            name="Indicator light",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -268,11 +290,23 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_2,
         ),
     ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name="Light",
+            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
+        ),
+    ),
     # Solar Light
     # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
     "tyndj": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -284,6 +318,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "xdd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -291,7 +326,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_NIGHT_LIGHT,
-            name="Night Light",
+            name="Night light",
         ),
     ),
     # Remote Control
@@ -299,6 +334,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "ykq": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_CONTROLLER,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_CONTROLLER,
             color_temp=DPCode.TEMP_CONTROLLER,
@@ -309,6 +345,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "fs": (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -401,7 +438,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._attr_supported_color_modes = {COLOR_MODE_ONOFF}
+        self._attr_supported_color_modes: set[ColorMode] = set()
 
         # Determine DPCodes
         self._color_mode_dpcode = self.find_dpcode(
@@ -412,7 +449,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             description.brightness, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._brightness = int_type
-            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
             self._brightness_max = self.find_dpcode(
                 description.brightness_max, dptype=DPType.INTEGER
             )
@@ -424,13 +461,13 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             description.color_temp, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._color_temp = int_type
-            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
 
         if (
             dpcode := self.find_dpcode(description.color_data, prefer_function=True)
         ) and self.get_dptype(dpcode) == DPType.JSON:
             self._color_data_dpcode = dpcode
-            self._attr_supported_color_modes.add(COLOR_MODE_HS)
+            self._attr_supported_color_modes.add(ColorMode.HS)
             if dpcode in self.device.function:
                 values = cast(str, self.device.function[dpcode].values)
             else:
@@ -450,6 +487,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._brightness and self._brightness.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
+
+        if not self._attr_supported_color_modes:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def is_on(self) -> bool:
@@ -482,9 +522,14 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     ),
                 },
             ]
-        elif self._color_data_type and (
+
+        if self._color_data_type and (
             ATTR_HS_COLOR in kwargs
-            or (ATTR_BRIGHTNESS in kwargs and self.color_mode == COLOR_MODE_HS)
+            or (
+                ATTR_BRIGHTNESS in kwargs
+                and self.color_mode == ColorMode.HS
+                and ATTR_COLOR_TEMP not in kwargs
+            )
         ):
             if self._color_mode_dpcode:
                 commands += [
@@ -525,11 +570,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        if (
-            ATTR_BRIGHTNESS in kwargs
-            and self.color_mode != COLOR_MODE_HS
-            and self._brightness
-        ):
+        elif ATTR_BRIGHTNESS in kwargs and self._brightness:
             brightness = kwargs[ATTR_BRIGHTNESS]
 
             # If there is a min/max value, the brightness is actually limited.
@@ -578,7 +619,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         # If the light is currently in color mode, extract the brightness from the color data
-        if self.color_mode == COLOR_MODE_HS and (color_data := self._get_color_data()):
+        if self.color_mode == ColorMode.HS and (color_data := self._get_color_data()):
             return color_data.brightness
 
         if not self._brightness:
@@ -640,7 +681,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         return color_data.hs_color
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color_mode of the light."""
         # We consider it to be in HS color mode, when work mode is anything
         # else than "white".
@@ -648,12 +689,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             self._color_mode_dpcode
             and self.device.status.get(self._color_mode_dpcode) != WorkMode.WHITE
         ):
-            return COLOR_MODE_HS
+            return ColorMode.HS
         if self._color_temp:
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
         if self._brightness:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     def _get_color_data(self) -> ColorData | None:
         """Get current color data from device."""

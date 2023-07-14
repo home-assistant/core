@@ -10,21 +10,14 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_ERROR,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.const import STATE_IDLE, STATE_PAUSED
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import roomba_reported_state
 from .const import DOMAIN
@@ -40,15 +33,14 @@ ATTR_SOFTWARE_VERSION = "software_version"
 
 # Commonly supported features
 SUPPORT_IROBOT = (
-    SUPPORT_BATTERY
-    | SUPPORT_PAUSE
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_SEND_COMMAND
-    | SUPPORT_START
-    | SUPPORT_STATE
-    | SUPPORT_STATUS
-    | SUPPORT_STOP
-    | SUPPORT_LOCATE
+    VacuumEntityFeature.BATTERY
+    | VacuumEntityFeature.PAUSE
+    | VacuumEntityFeature.RETURN_HOME
+    | VacuumEntityFeature.SEND_COMMAND
+    | VacuumEntityFeature.START
+    | VacuumEntityFeature.STATE
+    | VacuumEntityFeature.STOP
+    | VacuumEntityFeature.LOCATE
 )
 
 STATE_MAP = {
@@ -68,6 +60,9 @@ STATE_MAP = {
 class IRobotEntity(Entity):
     """Base class for iRobot Entities."""
 
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
         self.vacuum = roomba
@@ -76,11 +71,6 @@ class IRobotEntity(Entity):
         self._name = self.vacuum_state.get("name")
         self._version = self.vacuum_state.get("softwareVer")
         self._sku = self.vacuum_state.get("sku")
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
 
     @property
     def robot_unique_id(self):
@@ -132,7 +122,7 @@ class IRobotEntity(Entity):
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 
-    def new_state_filter(self, new_state):  # pylint: disable=no-self-use
+    def new_state_filter(self, new_state):
         """Filter out wifi state messages."""
         return len(new_state) > 1 or "signal" not in new_state
 
@@ -145,6 +135,8 @@ class IRobotEntity(Entity):
 
 class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     """Base class for iRobot robots."""
+
+    _attr_name = None
 
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
@@ -170,11 +162,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return True  # Always available, otherwise setup will fail
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def extra_state_attributes(self):
@@ -232,7 +219,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         if cleaned_area := mission_state.get("sqft", 0):  # Imperial
             # Convert to m2 if the unit_system is set to metric
-            if self.hass.config.units.is_metric:
+            if self.hass.config.units is METRIC_SYSTEM:
                 cleaned_area = round(cleaned_area * 0.0929)
 
         return (cleaning_time, cleaned_area)

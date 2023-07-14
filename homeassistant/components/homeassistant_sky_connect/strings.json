@@ -1,0 +1,68 @@
+{
+  "options": {
+    "step": {
+      "addon_not_installed": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_not_installed::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_not_installed::description%]",
+        "data": {
+          "enable_multi_pan": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_not_installed::data::enable_multi_pan%]"
+        }
+      },
+      "addon_installed_other_device": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_installed_other_device::title%]"
+      },
+      "addon_menu": {
+        "menu_options": {
+          "reconfigure_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_menu::menu_options::reconfigure_addon%]",
+          "uninstall_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_menu::menu_options::uninstall_addon%]"
+        }
+      },
+      "change_channel": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::title%]",
+        "data": {
+          "channel": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::data::channel%]"
+        },
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::description%]"
+      },
+      "install_addon": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"
+      },
+      "notify_channel_change": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::description%]"
+      },
+      "notify_unknown_multipan_user": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::description%]"
+      },
+      "reconfigure_addon": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]"
+      },
+      "show_revert_guide": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::show_revert_guide::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::show_revert_guide::description%]"
+      },
+      "start_addon": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_addon::title%]"
+      },
+      "uninstall_addon": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
+      }
+    },
+    "error": {
+      "unknown": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::error::unknown%]"
+    },
+    "abort": {
+      "addon_info_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_info_failed%]",
+      "addon_install_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_install_failed%]",
+      "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
+      "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
+      "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
+      "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]"
+    },
+    "progress": {
+      "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
+      "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]"
+    }
+  }
+}

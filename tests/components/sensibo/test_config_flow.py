@@ -12,11 +12,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +26,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -51,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["version"] == 2
     assert result2["data"] == {
         "api_key": "1234567890",
@@ -61,7 +57,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error_message, p_error",
+    ("error_message", "p_error"),
     [
         (aiohttp.ClientConnectionError, "cannot_connect"),
         (asyncio.TimeoutError, "cannot_connect"),
@@ -78,7 +74,7 @@ async def test_flow_fails(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch(
@@ -111,7 +107,7 @@ async def test_flow_fails(
             },
         )
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Sensibo"
     assert result3["data"] == {
         "api_key": "1234567891",
@@ -125,7 +121,7 @@ async def test_flow_get_no_devices(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch(
@@ -152,7 +148,7 @@ async def test_flow_get_no_username(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch(
@@ -192,7 +188,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         data=entry.data,
     )
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -211,7 +207,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {"api_key": "1234567891"}
 
@@ -220,7 +216,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error",
+    ("sideeffect", "p_error"),
     [
         (aiohttp.ClientConnectionError, "cannot_connect"),
         (asyncio.TimeoutError, "cannot_connect"),
@@ -261,7 +257,7 @@ async def test_reauth_flow_error(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}
 
     with patch(
@@ -280,13 +276,13 @@ async def test_reauth_flow_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {"api_key": "1234567891"}
 
 
 @pytest.mark.parametrize(
-    "get_devices,get_me,p_error",
+    ("get_devices", "get_me", "p_error"),
     [
         (
             {"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
@@ -330,7 +326,7 @@ async def test_flow_reauth_no_username_or_device(
         data=entry.data,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -349,5 +345,5 @@ async def test_flow_reauth_no_username_or_device(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}

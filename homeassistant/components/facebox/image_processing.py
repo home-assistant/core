@@ -68,7 +68,7 @@ def check_box_health(url, username, password):
     if username:
         kwargs["auth"] = requests.auth.HTTPBasicAuth(username, password)
     try:
-        response = requests.get(url, **kwargs)
+        response = requests.get(url, **kwargs, timeout=10)
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
@@ -116,7 +116,9 @@ def post_image(url, image, username, password):
     if username:
         kwargs["auth"] = requests.auth.HTTPBasicAuth(username, password)
     try:
-        response = requests.post(url, json={"base64": encode_image(image)}, **kwargs)
+        response = requests.post(
+            url, json={"base64": encode_image(image)}, timeout=10, **kwargs
+        )
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
@@ -137,6 +139,7 @@ def teach_file(url, name, file_path, username, password):
                 url,
                 data={FACEBOX_NAME: name, ATTR_ID: file_path},
                 files={"file": open_file},
+                timeout=10,
                 **kwargs,
             )
         if response.status_code == HTTPStatus.UNAUTHORIZED:

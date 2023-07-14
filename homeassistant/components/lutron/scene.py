@@ -43,6 +43,6 @@ class LutronScene(LutronDevice, Scene):
         self._lutron_device.press()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"{self._area_name} {self._keypad_name}: {self._lutron_device.name}"

@@ -43,11 +43,11 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_name = None
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.entry.data[CONF_NAME]
         self._attr_unique_id = coordinator.entry.entry_id
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
@@ -82,7 +82,8 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
                 )
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not set alarm for {self._attr_name}: {error}"
+                f"Could not set alarm for {self.coordinator.entry.data[CONF_NAME]}:"
+                f" {error}"
             ) from error
 
         if alarm_state:

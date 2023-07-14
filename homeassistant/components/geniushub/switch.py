@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 import voluptuous as vol
 
@@ -41,7 +42,7 @@ async def async_setup_platform(
         [
             GeniusSwitch(broker, z)
             for z in broker.client.zone_objs
-            if z.data["type"] == GH_ON_OFF_ZONE
+            if z.data.get("type") == GH_ON_OFF_ZONE
         ]
     )
 
@@ -71,13 +72,13 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
         """
         return self._zone.data["mode"] == "override" and self._zone.data["setpoint"]
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the zone to Timer mode.
 
         The zone is deemed 'off' in this mode, although the plugs may actually be on.
         """
         await self._zone.set_mode("timer")
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Set the zone to override/on ({'setpoint': true}) for x seconds."""
         await self._zone.set_override(1, kwargs.get(ATTR_DURATION, 3600))

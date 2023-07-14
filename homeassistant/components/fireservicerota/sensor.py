@@ -23,21 +23,21 @@ async def async_setup_entry(
     async_add_entities([IncidentsSensor(client)])
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class IncidentsSensor(RestoreEntity, SensorEntity):
     """Representation of FireServiceRota incidents sensor."""
+
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "incidents"
 
     def __init__(self, client):
         """Initialize."""
         self._client = client
         self._entry_id = self._client.entry_id
-        self._unique_id = f"{self._client.unique_id}_Incidents"
+        self._attr_unique_id = f"{self._client.unique_id}_Incidents"
         self._state = None
         self._state_attributes = {}
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "Incidents"
 
     @property
     def icon(self) -> str:
@@ -56,16 +56,6 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         return self._state
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for sensor."""
         attr: dict[str, Any] = {}
@@ -82,6 +72,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
             "type",
             "responder_mode",
             "can_respond_until",
+            "task_ids",
         ):
             if data.get(value):
                 attr[value] = data[value]

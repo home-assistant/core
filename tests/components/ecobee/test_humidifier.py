@@ -4,19 +4,19 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.ecobee.humidifier import MODE_MANUAL, MODE_OFF
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_HUMIDIFIER,
+    DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AUTO,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
-    SUPPORT_MODES,
+    HumidifierDeviceClass,
+    HumidifierEntityFeature,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -29,13 +29,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
 
 DEVICE_ID = "humidifier.ecobee"
 
 
-async def test_attributes(hass):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the humidifier attributes are correct."""
     await setup_platform(hass, HUMIDIFIER_DOMAIN)
 
@@ -50,11 +51,13 @@ async def test_attributes(hass):
         MODE_MANUAL,
     ]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ecobee"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDIFIER
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_MODES
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == HumidifierDeviceClass.HUMIDIFIER
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES) == HumidifierEntityFeature.MODES
+    )
 
 
-async def test_turn_on(hass):
+async def test_turn_on(hass: HomeAssistant) -> None:
     """Test the humidifier can be turned on."""
     with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_turn_on:
         await setup_platform(hass, HUMIDIFIER_DOMAIN)
@@ -69,7 +72,7 @@ async def test_turn_on(hass):
         mock_turn_on.assert_called_once_with(0, "manual")
 
 
-async def test_turn_off(hass):
+async def test_turn_off(hass: HomeAssistant) -> None:
     """Test the humidifier can be turned off."""
     with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_turn_off:
         await setup_platform(hass, HUMIDIFIER_DOMAIN)
@@ -84,7 +87,7 @@ async def test_turn_off(hass):
         mock_turn_off.assert_called_once_with(0, STATE_OFF)
 
 
-async def test_set_mode(hass):
+async def test_set_mode(hass: HomeAssistant) -> None:
     """Test the humidifier can change modes."""
     with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_set_mode:
         await setup_platform(hass, HUMIDIFIER_DOMAIN)
@@ -116,7 +119,7 @@ async def test_set_mode(hass):
             )
 
 
-async def test_set_humidity(hass):
+async def test_set_humidity(hass: HomeAssistant) -> None:
     """Test the humidifier can set humidity level."""
     with patch("pyecobee.Ecobee.set_humidity") as mock_set_humidity:
         await setup_platform(hass, HUMIDIFIER_DOMAIN)

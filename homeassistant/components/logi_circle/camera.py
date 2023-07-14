@@ -8,7 +8,6 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
@@ -62,6 +61,8 @@ async def async_setup_entry(
 class LogiCam(Camera):
     """An implementation of a Logi Circle camera."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF
 
     def __init__(self, camera, device_info, ffmpeg):
@@ -74,7 +75,7 @@ class LogiCam(Camera):
         self._ffmpeg = ffmpeg
         self._listeners = []
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect camera methods to signals."""
 
         def _dispatch_proxy(method):
@@ -110,7 +111,7 @@ class LogiCam(Camera):
             ]
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listeners when removed."""
         for detach in self._listeners:
             detach()
@@ -140,7 +141,6 @@ class LogiCam(Camera):
     def extra_state_attributes(self):
         """Return the state attributes."""
         state = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "battery_saving_mode": (
                 STATE_ON if self._camera.battery_saving else STATE_OFF
             ),
@@ -160,18 +160,13 @@ class LogiCam(Camera):
         """Return a still image from the camera."""
         return await self._camera.live_stream.download_jpeg()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Disable streaming mode for this camera."""
         await self._camera.set_config("streaming", False)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Enable streaming mode for this camera."""
         await self._camera.set_config("streaming", True)
-
-    @property
-    def should_poll(self):
-        """Update the image periodically."""
-        return True
 
     async def set_config(self, mode, value):
         """Set an configuration property for the target camera."""
@@ -214,6 +209,6 @@ class LogiCam(Camera):
             filename=snapshot_file, refresh=True
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
         await self._camera.update()

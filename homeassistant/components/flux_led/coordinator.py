@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUEST_REFRESH_DELAY: Final = 2.0
 
 
-class FluxLedUpdateCoordinator(DataUpdateCoordinator):
+class FluxLedUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific flux_led device."""
 
     def __init__(
@@ -30,6 +30,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
         self.device = device
         self.title = entry.title
         self.entry = entry
+        self.force_next_update = False
         super().__init__(
             hass,
             _LOGGER,
@@ -45,6 +46,8 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
         try:
-            await self.device.async_update()
+            await self.device.async_update(force=self.force_next_update)
         except FLUX_LED_EXCEPTIONS as ex:
             raise UpdateFailed(ex) from ex
+        finally:
+            self.force_next_update = False

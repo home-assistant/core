@@ -7,15 +7,12 @@ from homeassistant.components.home_plus_control.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 
-from tests.components.home_plus_control.conftest import (
-    CLIENT_ID,
-    CLIENT_SECRET,
-    SUBSCRIPTION_KEY,
-)
+from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
 
 
-async def test_loading(hass, mock_config_entry):
+async def test_loading(hass: HomeAssistant, mock_config_entry) -> None:
     """Test component loading."""
     mock_config_entry.add_to_hass(hass)
     with patch(
@@ -39,7 +36,7 @@ async def test_loading(hass, mock_config_entry):
     assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_loading_with_no_config(hass, mock_config_entry):
+async def test_loading_with_no_config(hass: HomeAssistant, mock_config_entry) -> None:
     """Test component loading failure when it has not configuration."""
     mock_config_entry.add_to_hass(hass)
     await setup.async_setup_component(hass, DOMAIN, {})
@@ -47,7 +44,7 @@ async def test_loading_with_no_config(hass, mock_config_entry):
     assert mock_config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
-async def test_unloading(hass, mock_config_entry):
+async def test_unloading(hass: HomeAssistant, mock_config_entry) -> None:
     """Test component unloading."""
     mock_config_entry.add_to_hass(hass)
     with patch(

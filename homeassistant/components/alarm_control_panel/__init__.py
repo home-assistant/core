@@ -40,6 +40,7 @@ from .const import (  # noqa: F401
     SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -54,10 +55,12 @@ ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
 PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[AlarmControlPanelEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -108,13 +111,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AlarmControlPanelEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AlarmControlPanelEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -129,12 +132,14 @@ class AlarmControlPanelEntity(Entity):
     entity_description: AlarmControlPanelEntityDescription
     _attr_changed_by: str | None = None
     _attr_code_arm_required: bool = True
-    _attr_code_format: str | None = None
-    _attr_supported_features: int
+    _attr_code_format: CodeFormat | None = None
+    _attr_supported_features: AlarmControlPanelEntityFeature = (
+        AlarmControlPanelEntityFeature(0)
+    )
 
     @property
-    def code_format(self) -> str | None:
-        """Regex for code format or None if no code is required."""
+    def code_format(self) -> CodeFormat | None:
+        """Code format or None if no code is required."""
         return self._attr_code_format
 
     @property
@@ -204,7 +209,7 @@ class AlarmControlPanelEntity(Entity):
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 

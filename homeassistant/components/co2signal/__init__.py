@@ -1,9 +1,10 @@
 """The CO2 Signal integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import CO2Signal
 
@@ -14,7 +15,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_COUNTRY_CODE, DOMAIN
-from .util import get_extra_name
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -71,10 +71,6 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CO2SignalResponse]):
     def entry_id(self) -> str:
         """Return entry ID."""
         return self._entry.entry_id
-
-    def get_extra_name(self) -> str | None:
-        """Return the extra name describing the location if not home."""
-        return get_extra_name(self._entry.data)
 
     async def _async_update_data(self) -> CO2SignalResponse:
         """Fetch the latest data from the source."""
@@ -106,7 +102,7 @@ class UnknownError(CO2Error):
     """Raised when an unknown error occurs."""
 
 
-def get_data(hass: HomeAssistant, config: dict) -> CO2SignalResponse:
+def get_data(hass: HomeAssistant, config: Mapping[str, Any]) -> CO2SignalResponse:
     """Get data from the API."""
     if CONF_COUNTRY_CODE in config:
         latitude = None
@@ -135,12 +131,11 @@ def get_data(hass: HomeAssistant, config: dict) -> CO2SignalResponse:
         _LOGGER.exception("Unexpected exception")
         raise UnknownError from err
 
-    else:
-        if "error" in data:
-            raise UnknownError(data["error"])
+    if "error" in data:
+        raise UnknownError(data["error"])
 
-        if data.get("status") != "ok":
-            _LOGGER.exception("Unexpected response: %s", data)
-            raise UnknownError
+    if data.get("status") != "ok":
+        _LOGGER.exception("Unexpected response: %s", data)
+        raise UnknownError
 
     return cast(CO2SignalResponse, data)

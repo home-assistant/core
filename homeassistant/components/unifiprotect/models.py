@@ -3,18 +3,29 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from datetime import timedelta
+from enum import Enum
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, cast
 
-from pyunifiprotect.data import ProtectDeviceModel
+from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.util import dt as dt_util
 
 from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=ProtectDeviceModel)
+T = TypeVar("T", bound=ProtectAdoptableDeviceModel | NVR)
+
+
+class PermRequired(int, Enum):
+    """Type of permission level required for entity."""
+
+    NO_WRITE = 1
+    WRITE = 2
+    DELETE = 3
 
 
 @dataclass
@@ -25,6 +36,7 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     ufp_value: str | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
     ufp_enabled: str | None = None
+    ufp_perm: PermRequired | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
@@ -44,9 +56,54 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
             return bool(get_nested_attr(obj, self.ufp_enabled))
         return True
 
+    def has_required(self, obj: T) -> bool:
+        """Return if has required field."""
+
+        if self.ufp_required_field is None:
+            return True
+        return bool(get_nested_attr(obj, self.ufp_required_field))
+
 
 @dataclass
-class ProtectSetableKeysMixin(ProtectRequiredKeysMixin, Generic[T]):
+class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
+    """Mixin for events."""
+
+    ufp_event_obj: str | None = None
+
+    def get_event_obj(self, obj: T) -> Event | None:
+        """Return value from UniFi Protect device."""
+
+        if self.ufp_event_obj is not None:
+            return cast(Event, get_nested_attr(obj, self.ufp_event_obj))
+        return None
+
+    def get_is_on(self, obj: T) -> bool:
+        """Return value if event is active."""
+
+        event = self.get_event_obj(obj)
+        if event is None:
+            return False
+
+        now = dt_util.utcnow()
+        value = now > event.start
+        if value and event.end is not None and now > event.end:
+            value = False
+            # only log if the recent ended recently
+            if event.end + timedelta(seconds=10) < now:
+                _LOGGER.debug(
+                    "%s (%s): end ended at %s",
+                    self.name,
+                    obj.mac,
+                    event.end.isoformat(),
+                )
+
+        if value:
+            _LOGGER.debug("%s (%s): value is on", self.name, obj.mac)
+        return value
+
+
+@dataclass
+class ProtectSetableKeysMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for settable values."""
 
     ufp_set_method: str | None = None
@@ -54,7 +111,7 @@ class ProtectSetableKeysMixin(ProtectRequiredKeysMixin, Generic[T]):
 
     async def ufp_set(self, obj: T, value: Any) -> None:
         """Set value for UniFi Protect device."""
-        _LOGGER.debug("Setting %s to %s for %s", self.name, value, obj.name)
+        _LOGGER.debug("Setting %s to %s for %s", self.name, value, obj.display_name)
         if self.ufp_set_method is not None:
             await getattr(obj, self.ufp_set_method)(value)
         elif self.ufp_set_method_fn is not None:

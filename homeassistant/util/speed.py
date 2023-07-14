@@ -1,56 +1,44 @@
 """Distance util functions."""
 from __future__ import annotations
 
-from numbers import Number
-
-from homeassistant.const import (
+# pylint: disable-next=unused-import,hass-deprecated-import
+from homeassistant.const import (  # noqa: F401
     SPEED,
+    SPEED_FEET_PER_SECOND,
     SPEED_INCHES_PER_DAY,
     SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
+from homeassistant.helpers.frame import report
 
-VALID_UNITS: tuple[str, ...] = (
-    SPEED_METERS_PER_SECOND,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    SPEED_MILLIMETERS_PER_DAY,
-    SPEED_INCHES_PER_DAY,
-    SPEED_INCHES_PER_HOUR,
+from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
+    _FOOT_TO_M as FOOT_TO_M,
+    _HRS_TO_SECS as HRS_TO_SECS,
+    _IN_TO_M as IN_TO_M,
+    _KM_TO_M as KM_TO_M,
+    _MILE_TO_M as MILE_TO_M,
+    _NAUTICAL_MILE_TO_M as NAUTICAL_MILE_TO_M,
+    SpeedConverter,
 )
 
-HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
-KM_TO_M = 1000  # 1 km = 1000 m
-KM_TO_MILE = 0.62137119  # 1 km = 0.62137119 mi
-M_TO_IN = 39.3700787  # 1 m = 39.3700787 in
-
-# Units in terms of m/s
-UNIT_CONVERSION: dict[str, float] = {
-    SPEED_METERS_PER_SECOND: 1,
-    SPEED_KILOMETERS_PER_HOUR: HRS_TO_SECS / KM_TO_M,
-    SPEED_MILES_PER_HOUR: HRS_TO_SECS * KM_TO_MILE / KM_TO_M,
-    SPEED_MILLIMETERS_PER_DAY: (24 * HRS_TO_SECS) * 1000,
-    SPEED_INCHES_PER_DAY: (24 * HRS_TO_SECS) * M_TO_IN,
-    SPEED_INCHES_PER_HOUR: HRS_TO_SECS * M_TO_IN,
-}
+# pylint: disable-next=protected-access
+UNIT_CONVERSION: dict[str | None, float] = SpeedConverter._UNIT_CONVERSION
+VALID_UNITS = SpeedConverter.VALID_UNITS
 
 
-def convert(value: float, unit_1: str, unit_2: str) -> float:
+def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
-    if unit_1 not in VALID_UNITS:
-        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, SPEED))
-    if unit_2 not in VALID_UNITS:
-        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, SPEED))
-
-    if not isinstance(value, Number):
-        raise TypeError(f"{value} is not of numeric type")
-
-    if unit_1 == unit_2:
-        return value
-
-    meters_per_second = value / UNIT_CONVERSION[unit_1]
-    return meters_per_second * UNIT_CONVERSION[unit_2]
+    report(
+        (
+            "uses speed utility. This is deprecated since 2022.10 and will "
+            "stop working in Home Assistant 2023.4, it should be updated to use "
+            "unit_conversion.SpeedConverter instead"
+        ),
+        error_if_core=False,
+    )
+    return SpeedConverter.convert(value, from_unit, to_unit)

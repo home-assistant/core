@@ -20,13 +20,10 @@ from homeassistant.components.light import (
     EFFECT_RANDOM,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
@@ -60,10 +57,24 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 LOGGER = logging.getLogger(__name__)
 
-SUPPORT_HUE_ON_OFF = SUPPORT_FLASH | SUPPORT_TRANSITION
-SUPPORT_HUE_DIMMABLE = SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS
-SUPPORT_HUE_COLOR_TEMP = SUPPORT_HUE_DIMMABLE | SUPPORT_COLOR_TEMP
-SUPPORT_HUE_COLOR = SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT | SUPPORT_COLOR
+COLOR_MODES_HUE_ON_OFF = {ColorMode.ONOFF}
+COLOR_MODES_HUE_DIMMABLE = {ColorMode.BRIGHTNESS}
+COLOR_MODES_HUE_COLOR_TEMP = {ColorMode.COLOR_TEMP}
+COLOR_MODES_HUE_COLOR = {ColorMode.HS}
+COLOR_MODES_HUE_EXTENDED = {ColorMode.COLOR_TEMP, ColorMode.HS}
+
+COLOR_MODES_HUE = {
+    "Extended color light": COLOR_MODES_HUE_EXTENDED,
+    "Color light": COLOR_MODES_HUE_COLOR,
+    "Dimmable light": COLOR_MODES_HUE_DIMMABLE,
+    "On/Off plug-in unit": COLOR_MODES_HUE_ON_OFF,
+    "Color temperature light": COLOR_MODES_HUE_COLOR_TEMP,
+}
+
+SUPPORT_HUE_ON_OFF = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
+SUPPORT_HUE_DIMMABLE = SUPPORT_HUE_ON_OFF
+SUPPORT_HUE_COLOR_TEMP = SUPPORT_HUE_DIMMABLE
+SUPPORT_HUE_COLOR = SUPPORT_HUE_DIMMABLE | LightEntityFeature.EFFECT
 SUPPORT_HUE_EXTENDED = SUPPORT_HUE_COLOR_TEMP | SUPPORT_HUE_COLOR
 
 SUPPORT_HUE = {
@@ -96,17 +107,32 @@ def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id)
     api_item = api[item_id]
 
     if is_group:
-        supported_features = 0
+        supported_color_modes = set()
+        supported_features = LightEntityFeature(0)
         for light_id in api_item.lights:
             if light_id not in bridge.api.lights:
                 continue
             light = bridge.api.lights[light_id]
             supported_features |= SUPPORT_HUE.get(light.type, SUPPORT_HUE_EXTENDED)
+            supported_color_modes.update(
+                COLOR_MODES_HUE.get(light.type, COLOR_MODES_HUE_EXTENDED)
+            )
         supported_features = supported_features or SUPPORT_HUE_EXTENDED
+        supported_color_modes = supported_color_modes or COLOR_MODES_HUE_EXTENDED
+        supported_color_modes = filter_supported_color_modes(supported_color_modes)
     else:
+        supported_color_modes = COLOR_MODES_HUE.get(
+            api_item.type, COLOR_MODES_HUE_EXTENDED
+        )
         supported_features = SUPPORT_HUE.get(api_item.type, SUPPORT_HUE_EXTENDED)
     return item_class(
-        coordinator, bridge, is_group, api_item, supported_features, rooms
+        coordinator,
+        bridge,
+        is_group,
+        api_item,
+        supported_color_modes,
+        supported_features,
+        rooms,
     )
 
 
@@ -236,7 +262,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_safe_fetch(bridge, fetch_method):
     """Safely fetch data."""
     try:
-        with async_timeout.timeout(4):
+        async with async_timeout.timeout(4):
             return await bridge.async_request_call(fetch_method)
     except aiohue.Unauthorized as err:
         await bridge.handle_unauthorized_error()
@@ -281,17 +307,33 @@ def hass_to_hue_brightness(value):
 class HueLight(CoordinatorEntity, LightEntity):
     """Representation of a Hue light."""
 
-    def __init__(self, coordinator, bridge, is_group, light, supported_features, rooms):
+    def __init__(
+        self,
+        coordinator,
+        bridge,
+        is_group,
+        light,
+        supported_color_modes,
+        supported_features,
+        rooms,
+    ):
         """Initialize the light."""
         super().__init__(coordinator)
+        self._attr_supported_color_modes = supported_color_modes
+        self._attr_supported_features = supported_features
         self.light = light
         self.bridge = bridge
         self.is_group = is_group
-        self._supported_features = supported_features
         self._rooms = rooms
         self.allow_unreachable = self.bridge.config_entry.options.get(
             CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
         )
+
+        self._fixed_color_mode = None
+        if len(supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(supported_color_modes))
+        else:
+            assert supported_color_modes == {ColorMode.COLOR_TEMP, ColorMode.HS}
 
         if is_group:
             self.is_osram = False
@@ -299,6 +341,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_innr = False
             self.is_ewelink = False
             self.is_livarno = False
+            self.is_s31litezb = False
             self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
@@ -307,6 +350,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_innr = light.manufacturername == "innr"
             self.is_ewelink = light.manufacturername == "eWeLink"
             self.is_livarno = light.manufacturername.startswith("_TZ3000_")
+            self.is_s31litezb = light.modelid == "S31 Lite zb"
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
@@ -353,6 +397,19 @@ class HueLight(CoordinatorEntity, LightEntity):
             return bri
 
         return hue_brightness_to_hass(bri)
+
+    @property
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
+        if self._fixed_color_mode:
+            return self._fixed_color_mode
+
+        # The light supports both hs/xy and white with adjustabe color_temperature
+        mode = self._color_mode
+        if mode in ("xy", "hs"):
+            return ColorMode.HS
+
+        return ColorMode.COLOR_TEMP
 
     @property
     def _color_mode(self):
@@ -427,11 +484,6 @@ class HueLight(CoordinatorEntity, LightEntity):
         )
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
-
-    @property
     def effect(self):
         """Return the current effect."""
         return self.light.state.get("effect", None)
@@ -504,7 +556,12 @@ class HueLight(CoordinatorEntity, LightEntity):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        elif not self.is_innr and not self.is_ewelink and not self.is_livarno:
+        elif (
+            not self.is_innr
+            and not self.is_ewelink
+            and not self.is_livarno
+            and not self.is_s31litezb
+        ):
             command["alert"] = "none"
 
         if ATTR_EFFECT in kwargs:

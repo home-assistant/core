@@ -8,35 +8,51 @@ import httpx
 import pytest
 import respx
 
-from homeassistant.components.camera import async_get_mjpeg_stream
+from homeassistant.components.camera import (
+    async_get_mjpeg_stream,
+    async_get_stream_source,
+)
+from homeassistant.components.generic.const import (
+    CONF_CONTENT_TYPE,
+    CONF_FRAMERATE,
+    CONF_LIMIT_REFETCH_TO_URL_CHANGE,
+    CONF_STILL_IMAGE_URL,
+    CONF_STREAM_SOURCE,
+    DOMAIN,
+)
+from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import AsyncMock, Mock
+from tests.common import AsyncMock, Mock, MockConfigEntry
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @respx.mock
-async def test_fetching_url(hass, hass_client, fakeimgbytes_png, mock_av_open):
+async def test_fetching_url(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png
+) -> None:
     """Test that it fetches the given url."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
-    with mock_av_open:
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "http://example.com",
-                    "username": "user",
-                    "password": "pass",
-                    "authentication": "basic",
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "http://example.com",
+                "username": "user",
+                "password": "pass",
+                "authentication": "basic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -52,7 +68,9 @@ async def test_fetching_url(hass, hass_client, fakeimgbytes_png, mock_av_open):
 
 
 @respx.mock
-async def test_fetching_without_verify_ssl(hass, hass_client, fakeimgbytes_png):
+async def test_fetching_without_verify_ssl(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png
+) -> None:
     """Test that it fetches the given url when ssl verify is off."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
@@ -80,7 +98,9 @@ async def test_fetching_without_verify_ssl(hass, hass_client, fakeimgbytes_png):
 
 
 @respx.mock
-async def test_fetching_url_with_verify_ssl(hass, hass_client, fakeimgbytes_png):
+async def test_fetching_url_with_verify_ssl(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png
+) -> None:
     """Test that it fetches the given url when ssl verify is explicitly on."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
@@ -108,7 +128,12 @@ async def test_fetching_url_with_verify_ssl(hass, hass_client, fakeimgbytes_png)
 
 
 @respx.mock
-async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg):
+async def test_limit_refetch(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fakeimgbytes_png,
+    fakeimgbytes_jpg,
+) -> None:
     """Test that it fetches the given url."""
     respx.get("http://example.com/0a").respond(stream=fakeimgbytes_png)
     respx.get("http://example.com/5a").respond(stream=fakeimgbytes_png)
@@ -180,31 +205,40 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
 
 @respx.mock
 async def test_stream_source(
-    hass, hass_client, hass_ws_client, fakeimgbytes_png, mock_av_open
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    fakeimgbytes_png,
+) -> None:
     """Test that the stream source is rendered."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
     respx.get("http://example.com/0a").respond(stream=fakeimgbytes_png)
 
     hass.states.async_set("sensor.temp", "0")
-    with mock_av_open:
-        assert await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "http://example.com",
-                    "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                    "limit_refetch_to_url_change": True,
-                },
-            },
-        )
-        assert await async_setup_component(hass, "stream", {})
-        await hass.async_block_till_done()
+    mock_entry = MockConfigEntry(
+        title="config_test",
+        domain=DOMAIN,
+        data={},
+        options={
+            CONF_STILL_IMAGE_URL: "http://example.com",
+            CONF_STREAM_SOURCE: 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+            CONF_LIMIT_REFETCH_TO_URL_CHANGE: True,
+            CONF_FRAMERATE: 2,
+            CONF_CONTENT_TYPE: "image/png",
+            CONF_VERIFY_SSL: False,
+            CONF_USERNAME: "barney",
+            CONF_PASSWORD: "betty",
+            CONF_RTSP_TRANSPORT: "http",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    assert await async_setup_component(hass, "stream", {})
+    await hass.async_block_till_done()
 
     hass.states.async_set("sensor.temp", "5")
+    stream_source = await async_get_stream_source(hass, "camera.config_test")
+    assert stream_source == "http://barney:betty@example.com/5a"
 
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
@@ -228,28 +262,30 @@ async def test_stream_source(
 
 @respx.mock
 async def test_stream_source_error(
-    hass, hass_client, hass_ws_client, fakeimgbytes_png, mock_av_open
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    fakeimgbytes_png,
+) -> None:
     """Test that the stream source has an error."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
-    with mock_av_open:
-        assert await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "http://example.com",
-                    # Does not exist
-                    "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                    "limit_refetch_to_url_change": True,
-                },
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "http://example.com",
+                # Does not exist
+                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                "limit_refetch_to_url_change": True,
             },
-        )
-        assert await async_setup_component(hass, "stream", {})
-        await hass.async_block_till_done()
+        },
+    )
+    assert await async_setup_component(hass, "stream", {})
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
@@ -276,34 +312,38 @@ async def test_stream_source_error(
 
 @respx.mock
 async def test_setup_alternative_options(
-    hass, hass_ws_client, fakeimgbytes_png, mock_av_open
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, fakeimgbytes_png
+) -> None:
     """Test that the stream source is setup with different config options."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
-    with mock_av_open:
-        assert await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "https://example.com",
-                    "authentication": "digest",
-                    "username": "user",
-                    "password": "pass",
-                    "stream_source": "rtsp://example.com:554/rtsp/",
-                    "rtsp_transport": "udp",
-                },
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                "authentication": "digest",
+                "username": "user",
+                "password": "pass",
+                "stream_source": "rtsp://example.com:554/rtsp/",
+                "rtsp_transport": "udp",
             },
-        )
-        await hass.async_block_till_done()
+        },
+    )
+    await hass.async_block_till_done()
     assert hass.states.get("camera.config_test")
 
 
 @respx.mock
-async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):
+async def test_no_stream_source(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    fakeimgbytes_png,
+) -> None:
     """Test a stream request without stream source option set."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
@@ -346,8 +386,11 @@ async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_
 
 @respx.mock
 async def test_camera_content_type(
-    hass, hass_client, fakeimgbytes_svg, fakeimgbytes_jpg, mock_av_open
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fakeimgbytes_svg,
+    fakeimgbytes_jpg,
+) -> None:
     """Test generic camera with custom content_type."""
     urlsvg = "https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg"
     respx.get(urlsvg).respond(stream=fakeimgbytes_svg)
@@ -372,20 +415,18 @@ async def test_camera_content_type(
         "verify_ssl": True,
     }
 
-    with mock_av_open:
-        result1 = await hass.config_entries.flow.async_init(
-            "generic",
-            data=cam_config_jpg,
-            context={"source": SOURCE_IMPORT, "unique_id": 12345},
-        )
-        await hass.async_block_till_done()
-    with mock_av_open:
-        result2 = await hass.config_entries.flow.async_init(
-            "generic",
-            data=cam_config_svg,
-            context={"source": SOURCE_IMPORT, "unique_id": 54321},
-        )
-        await hass.async_block_till_done()
+    result1 = await hass.config_entries.flow.async_init(
+        "generic",
+        data=cam_config_jpg,
+        context={"source": SOURCE_IMPORT, "unique_id": 12345},
+    )
+    await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_init(
+        "generic",
+        data=cam_config_svg,
+        context={"source": SOURCE_IMPORT, "unique_id": 54321},
+    )
+    await hass.async_block_till_done()
 
     assert result1["type"] == "create_entry"
     assert result2["type"] == "create_entry"
@@ -407,7 +448,12 @@ async def test_camera_content_type(
 
 
 @respx.mock
-async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg):
+async def test_timeout_cancelled(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fakeimgbytes_png,
+    fakeimgbytes_jpg,
+) -> None:
     """Test that timeouts and cancellations return last image."""
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
@@ -457,21 +503,22 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
         assert await resp.read() == fakeimgbytes_png
 
 
-async def test_no_still_image_url(hass, hass_client, mock_av_open):
+async def test_no_still_image_url(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the component can grab images from stream with no still_image_url."""
-    with mock_av_open:
-        assert await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "stream_source": "rtsp://example.com:554/rtsp/",
-                },
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "stream_source": "rtsp://example.com:554/rtsp/",
             },
-        )
-        await hass.async_block_till_done()
+        },
+    )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -479,7 +526,6 @@ async def test_no_still_image_url(hass, hass_client, mock_av_open):
         "homeassistant.components.generic.camera.GenericCamera.stream_source",
         return_value=None,
     ) as mock_stream_source:
-
         # First test when there is no stream_source should fail
         resp = await client.get("/api/camera_proxy/camera.config_test")
         await hass.async_block_till_done()
@@ -487,7 +533,6 @@ async def test_no_still_image_url(hass, hass_client, mock_av_open):
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     with patch("homeassistant.components.camera.create_stream") as mock_create_stream:
-
         # Now test when creating the stream succeeds
         mock_stream = Mock()
         mock_stream.async_get_image = AsyncMock()
@@ -503,23 +548,22 @@ async def test_no_still_image_url(hass, hass_client, mock_av_open):
         assert await resp.read() == b"stream_keyframe_image"
 
 
-async def test_frame_interval_property(hass, mock_av_open):
+async def test_frame_interval_property(hass: HomeAssistant) -> None:
     """Test that the frame interval is calculated and returned correctly."""
 
-    with mock_av_open:
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "stream_source": "rtsp://example.com:554/rtsp/",
-                    "framerate": 5,
-                },
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "stream_source": "rtsp://example.com:554/rtsp/",
+                "framerate": 5,
             },
-        )
-        await hass.async_block_till_done()
+        },
+    )
+    await hass.async_block_till_done()
 
     request = Mock()
     with patch(

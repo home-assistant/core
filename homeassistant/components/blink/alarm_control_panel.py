@@ -1,4 +1,6 @@
 """Support for Blink Alarm Control Panel."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.alarm_control_panel import (
@@ -39,6 +41,8 @@ class BlinkSyncModule(AlarmControlPanelEntity):
 
     _attr_icon = ICON
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _attr_name = None
+    _attr_has_entity_name = True
 
     def __init__(self, data, name, sync):
         """Initialize the alarm control panel."""
@@ -46,15 +50,23 @@ class BlinkSyncModule(AlarmControlPanelEntity):
         self.sync = sync
         self._name = name
         self._attr_unique_id = sync.serial
-        self._attr_name = f"{DOMAIN} {name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, sync.serial)}, name=name, manufacturer=DEFAULT_BRAND
+            identifiers={(DOMAIN, sync.serial)},
+            name=f"{DOMAIN} {name}",
+            manufacturer=DEFAULT_BRAND,
         )
 
-    def update(self):
+    def update(self) -> None:
         """Update the state of the device."""
-        _LOGGER.debug("Updating Blink Alarm Control Panel %s", self._name)
-        self.data.refresh()
+        if self.data.check_if_ok_to_update():
+            _LOGGER.debug(
+                "Initiating a blink.refresh() from BlinkSyncModule('%s') (%s)",
+                self._name,
+                self.data,
+            )
+            self.data.refresh()
+            _LOGGER.info("Updating State of Blink Alarm Control Panel '%s'", self._name)
+
         self._attr_state = (
             STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
         )
@@ -63,12 +75,12 @@ class BlinkSyncModule(AlarmControlPanelEntity):
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self.sync.arm = False
         self.sync.refresh()
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
         self.sync.arm = True
         self.sync.refresh()

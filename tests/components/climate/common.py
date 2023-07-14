@@ -3,8 +3,8 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.climate import _LOGGER
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    _LOGGER,
     ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,

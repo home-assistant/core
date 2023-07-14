@@ -5,12 +5,13 @@ from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.renault import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import mock_device_registry
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -164,8 +165,8 @@ VEHICLE_DATA = {
 @pytest.mark.usefixtures("fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, hass_client
-):
+    hass: HomeAssistant, config_entry: ConfigEntry, hass_client: ClientSessionGenerator
+) -> None:
     """Test config entry diagnostics."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -187,15 +188,18 @@ async def test_entry_diagnostics(
 @pytest.mark.usefixtures("fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, hass_client
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test config entry diagnostics."""
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, "VF1AAAAA555777999")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "VF1AAAAA555777999")}
+    )
     assert device is not None
 
     assert await get_diagnostics_for_device(

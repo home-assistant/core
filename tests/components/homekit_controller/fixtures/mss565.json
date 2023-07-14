@@ -1,0 +1,132 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Meross",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "MSS565",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "MSS565-28da",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "BB1121",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "4.1.9",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "4.0.0",
+            "description": "Hardware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "iid": 9,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "2.0.1;16A75",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 10,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 11,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.1.0",
+            "description": "Version",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 12,
+        "type": "00000043-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "iid": 13,
+            "perms": ["pr", "pw", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "On"
+          },
+          {
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "iid": 14,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 67,
+            "description": "Brightness",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 15,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Dimmer Switch",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  }
+]

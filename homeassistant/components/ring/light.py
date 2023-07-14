@@ -1,10 +1,11 @@
-"""This component provides HA switch support for Ring Door Bell/Chimes."""
+"""Component providing HA switch support for Ring Door Bell/Chimes."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import requests
 
-from homeassistant.components.light import LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -47,6 +48,10 @@ async def async_setup_entry(
 class RingLight(RingEntityMixin, LightEntity):
     """Creates a switch to turn the ring cameras light on and off."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_translation_key = "light"
+
     def __init__(self, config_entry_id, device):
         """Initialize the light."""
         super().__init__(config_entry_id, device)
@@ -62,11 +67,6 @@ class RingLight(RingEntityMixin, LightEntity):
 
         self._light_on = self._device.lights == ON_STATE
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Name of the light."""
-        return f"{self._device.name} light"
 
     @property
     def unique_id(self):
@@ -90,10 +90,10 @@ class RingLight(RingEntityMixin, LightEntity):
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
         self.async_write_ha_state()
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on for 30 seconds."""
         self._set_light(ON_STATE)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._set_light(OFF_STATE)

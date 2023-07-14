@@ -15,7 +15,7 @@ from homeassistant.components.adax.const import (
 )
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -39,9 +39,12 @@ async def test_form(hass: HomeAssistant) -> None:
             CONNECTION_TYPE: CLOUD,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
-    with patch("adax.get_adax_token", return_value="test_token",), patch(
+    with patch(
+        "adax.get_adax_token",
+        return_value="test_token",
+    ), patch(
         "homeassistant.components.adax.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -73,7 +76,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             CONNECTION_TYPE: CLOUD,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
     with patch(
         "adax.get_adax_token",
@@ -83,7 +86,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result2["flow_id"],
             TEST_DATA,
         )
-    assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["type"] == FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
@@ -108,7 +111,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
             CONNECTION_TYPE: CLOUD,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
     with patch("adax.get_adax_token", return_value="token"):
         result3 = await hass.config_entries.flow.async_configure(
@@ -124,12 +127,12 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
 # local API:
 
 
-async def test_local_create_entry(hass):
+async def test_local_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -138,7 +141,7 @@ async def test_local_create_entry(hass):
             CONNECTION_TYPE: LOCAL,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
     test_data = {
         WIFI_SSID: "ssid",
@@ -172,7 +175,7 @@ async def test_local_create_entry(hass):
     }
 
 
-async def test_local_flow_entry_already_exists(hass):
+async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
 
     test_data = {
@@ -190,7 +193,7 @@ async def test_local_flow_entry_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -199,7 +202,7 @@ async def test_local_flow_entry_already_exists(hass):
             CONNECTION_TYPE: LOCAL,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
     test_data = {
         WIFI_SSID: "ssid",
@@ -222,13 +225,13 @@ async def test_local_flow_entry_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_local_connection_error(hass):
+async def test_local_connection_error(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -237,7 +240,7 @@ async def test_local_connection_error(hass):
             CONNECTION_TYPE: LOCAL,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
     test_data = {
         WIFI_SSID: "ssid",
@@ -253,17 +256,17 @@ async def test_local_connection_error(hass):
             test_data,
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_local_heater_not_available(hass):
+async def test_local_heater_not_available(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -272,7 +275,7 @@ async def test_local_heater_not_available(hass):
             CONNECTION_TYPE: LOCAL,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
     test_data = {
         WIFI_SSID: "ssid",
@@ -288,17 +291,17 @@ async def test_local_heater_not_available(hass):
             test_data,
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "heater_not_available"
 
 
-async def test_local_heater_not_found(hass):
+async def test_local_heater_not_found(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -307,7 +310,7 @@ async def test_local_heater_not_found(hass):
             CONNECTION_TYPE: LOCAL,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
     test_data = {
         WIFI_SSID: "ssid",
@@ -323,17 +326,17 @@ async def test_local_heater_not_found(hass):
             test_data,
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "heater_not_found"
 
 
-async def test_local_invalid_wifi_cred(hass):
+async def test_local_invalid_wifi_cred(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -342,7 +345,7 @@ async def test_local_invalid_wifi_cred(hass):
             CONNECTION_TYPE: LOCAL,
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
     test_data = {
         WIFI_SSID: "ssid",
@@ -358,5 +361,5 @@ async def test_local_invalid_wifi_cred(hass):
             test_data,
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"

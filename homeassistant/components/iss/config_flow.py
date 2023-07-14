@@ -3,12 +3,13 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .binary_sensor import DEFAULT_NAME
 from .const import DOMAIN
+
+DEFAULT_NAME = "ISS"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -30,27 +31,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        # Check if location have been defined.
-        if not self.hass.config.latitude and not self.hass.config.longitude:
-            return self.async_abort(reason="latitude_longitude_not_defined")
-
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                title=DEFAULT_NAME,
                 data={},
                 options={CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False)},
             )
 
         return self.async_show_form(step_id="user")
-
-    async def async_step_import(self, conf: dict) -> FlowResult:
-        """Import a configuration from configuration.yaml."""
-        return await self.async_step_user(
-            user_input={
-                CONF_NAME: conf[CONF_NAME],
-                CONF_SHOW_ON_MAP: conf[CONF_SHOW_ON_MAP],
-            }
-        )
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

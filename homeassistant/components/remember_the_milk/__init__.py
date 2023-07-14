@@ -52,7 +52,7 @@ SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Remember the milk component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[RememberTheMilk](_LOGGER, DOMAIN, hass)
 
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
@@ -110,7 +110,7 @@ def _register_new_account(
     url, frob = api.authenticate_desktop()
     _LOGGER.debug("Sent authentication request to server")
 
-    def register_account_callback(_):
+    def register_account_callback(fields: list[dict[str, str]]) -> None:
         """Call for register the configurator."""
         api.retrieve_token(frob)
         token = api.token
@@ -328,8 +328,10 @@ class RememberTheMilk(Entity):
         rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
         if rtm_id is None:
             _LOGGER.error(
-                "Could not find task with ID %s in account %s. "
-                "So task could not be closed",
+                (
+                    "Could not find task with ID %s in account %s. "
+                    "So task could not be closed"
+                ),
                 hass_id,
                 self._name,
             )

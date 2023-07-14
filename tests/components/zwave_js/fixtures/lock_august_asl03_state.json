@@ -58,10 +58,10 @@
       "nodeId": 6,
       "index": 0,
       "installerIcon": 768,
-      "userIcon": 768
+      "userIcon": 768,
+      "commandClasses": []
     }
   ],
-  "commandClasses": [],
   "values": [
     {
       "commandClassName": "Door Lock",

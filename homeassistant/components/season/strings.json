@@ -1,4 +1,5 @@
 {
+  "title": "Season",
   "config": {
     "step": {
       "user": {
@@ -9,6 +10,18 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "season": {
+        "state": {
+          "spring": "Spring",
+          "summer": "Summer",
+          "autumn": "Autumn",
+          "winter": "Winter"
+        }
+      }
     }
   }
 }

@@ -39,8 +39,14 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
         agreement_id = self.coordinator.data.agreement.agreement_id
         return DeviceInfo(
             name="Electricity Meter",
-            identifiers={(DOMAIN, agreement_id, "electricity")},
-            via_device=(DOMAIN, agreement_id, "meter_adapter"),
+            identifiers={
+                (DOMAIN, agreement_id, "electricity"),  # type: ignore[arg-type]
+            },
+            via_device=(
+                DOMAIN,
+                agreement_id,  # type: ignore[typeddict-item]
+                "meter_adapter",
+            ),
         )
 
 
@@ -53,8 +59,14 @@ class ToonGasMeterDeviceEntity(ToonEntity):
         agreement_id = self.coordinator.data.agreement.agreement_id
         return DeviceInfo(
             name="Gas Meter",
-            identifiers={(DOMAIN, agreement_id, "gas")},
-            via_device=(DOMAIN, agreement_id, "electricity"),
+            identifiers={
+                (DOMAIN, agreement_id, "gas"),  # type: ignore[arg-type]
+            },
+            via_device=(
+                DOMAIN,
+                agreement_id,  # type: ignore[typeddict-item]
+                "electricity",
+            ),
         )
 
 
@@ -67,8 +79,14 @@ class ToonWaterMeterDeviceEntity(ToonEntity):
         agreement_id = self.coordinator.data.agreement.agreement_id
         return DeviceInfo(
             name="Water Meter",
-            identifiers={(DOMAIN, agreement_id, "water")},
-            via_device=(DOMAIN, agreement_id, "electricity"),
+            identifiers={
+                (DOMAIN, agreement_id, "water"),  # type: ignore[arg-type]
+            },
+            via_device=(
+                DOMAIN,
+                agreement_id,  # type: ignore[typeddict-item]
+                "electricity",
+            ),
         )
 
 
@@ -81,8 +99,14 @@ class ToonSolarDeviceEntity(ToonEntity):
         agreement_id = self.coordinator.data.agreement.agreement_id
         return DeviceInfo(
             name="Solar Panels",
-            identifiers={(DOMAIN, agreement_id, "solar")},
-            via_device=(DOMAIN, agreement_id, "meter_adapter"),
+            identifiers={
+                (DOMAIN, agreement_id, "solar"),  # type: ignore[arg-type]
+            },
+            via_device=(
+                DOMAIN,
+                agreement_id,  # type: ignore[typeddict-item]
+                "meter_adapter",
+            ),
         )
 
 
@@ -96,7 +120,13 @@ class ToonBoilerModuleDeviceEntity(ToonEntity):
         return DeviceInfo(
             name="Boiler Module",
             manufacturer="Eneco",
-            identifiers={(DOMAIN, agreement_id, "boiler_module")},
+            identifiers={
+                (
+                    DOMAIN,
+                    agreement_id,  # type: ignore[arg-type]
+                    "boiler_module",
+                )
+            },
             via_device=(DOMAIN, agreement_id),
         )
 
@@ -110,8 +140,14 @@ class ToonBoilerDeviceEntity(ToonEntity):
         agreement_id = self.coordinator.data.agreement.agreement_id
         return DeviceInfo(
             name="Boiler",
-            identifiers={(DOMAIN, agreement_id, "boiler")},
-            via_device=(DOMAIN, agreement_id, "boiler_module"),
+            identifiers={
+                (DOMAIN, agreement_id, "boiler"),  # type: ignore[arg-type]
+            },
+            via_device=(
+                DOMAIN,
+                agreement_id,  # type: ignore[typeddict-item]
+                "boiler_module",
+            ),
         )
 
 

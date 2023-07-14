@@ -22,7 +22,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialise growatt server flow."""
-        self.api = growattServer.GrowattApi()
+        self.api = None
         self.user_id = None
         self.data = {}
 
@@ -46,6 +46,10 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self._async_show_user_form()
 
+        # Initialise the library with the username & a random id each time it is started
+        self.api = growattServer.GrowattApi(
+            add_random_user_id=True, agent_identifier=user_input[CONF_USERNAME]
+        )
         self.api.server_url = user_input[CONF_URL]
         login_response = await self.hass.async_add_executor_job(
             self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]

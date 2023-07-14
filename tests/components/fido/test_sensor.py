@@ -3,9 +3,11 @@ import logging
 from unittest.mock import MagicMock, patch
 
 from pyfido.client import PyFidoError
+import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.fido import sensor as fido
+from homeassistant.core import HomeAssistant
 
 from tests.common import assert_setup_component
 
@@ -17,7 +19,6 @@ class FidoClientMock:
 
     def __init__(self, username, password, timeout=None, httpsession=None):
         """Fake Fido client init."""
-        pass
 
     def get_phone_numbers(self):
         """Return Phone numbers."""
@@ -29,7 +30,6 @@ class FidoClientMock:
 
     async def fetch_data(self):
         """Return fake fetching data."""
-        pass
 
 
 class FidoClientMockError(FidoClientMock):
@@ -40,7 +40,7 @@ class FidoClientMockError(FidoClientMock):
         raise PyFidoError("Fake Error")
 
 
-async def test_fido_sensor(loop, hass):
+async def test_fido_sensor(event_loop, hass: HomeAssistant) -> None:
     """Test the Fido number sensor."""
     with patch("homeassistant.components.fido.sensor.FidoClient", new=FidoClientMock):
         config = {
@@ -62,7 +62,7 @@ async def test_fido_sensor(loop, hass):
         assert state.state == "100.33"
 
 
-async def test_error(hass, caplog):
+async def test_error(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test the Fido sensor errors."""
     caplog.set_level(logging.ERROR)
 

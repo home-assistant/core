@@ -1,10 +1,32 @@
 """Test Ridwell diagnostics."""
+from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_ridwell):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_config_entry,
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+        "entry": {
+            "entry_id": config_entry.entry_id,
+            "version": 2,
+            "domain": "ridwell",
+            "title": REDACTED,
+            "data": {"username": REDACTED, "password": REDACTED},
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
+        },
         "data": [
             {
                 "_async_request": None,
@@ -31,5 +53,5 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_ridwell)
                     "repr": "<EventState.INITIALIZED: 'initialized'>",
                 },
             }
-        ]
+        ],
     }

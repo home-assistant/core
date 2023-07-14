@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from omnilogic import OmniLogic, OmniLogicException
 
@@ -19,7 +20,7 @@ from .const import ALL_ITEM_KINDS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
+class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):
     """Class to manage fetching update data from single endpoint."""
 
     def __init__(
@@ -122,7 +123,7 @@ class OmniLogicEntity(CoordinatorEntity[OmniLogicUpdateCoordinator]):
         self._unique_id = unique_id
         self._item_id = item_id
         self._icon = icon
-        self._attrs = {}
+        self._attrs: dict[str, Any] = {}
         self._msp_system_id = msp_system_id
         self._backyard_name = coordinator.data[backyard_id]["BackyardName"]
 

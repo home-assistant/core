@@ -5,13 +5,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 CONF_EVENT_TYPE = "event_type"
@@ -37,14 +34,14 @@ def _schema_value(value: Any) -> Any:
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = "event",
 ) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
-    trigger_data = automation_info["trigger_data"]
-    variables = automation_info["variables"]
+    trigger_data = trigger_info["trigger_data"]
+    variables = trigger_info["variables"]
 
     template.attach(hass, config[CONF_EVENT_TYPE])
     event_types = template.render_complex(
@@ -83,22 +80,26 @@ async def async_attach_trigger(
             extra=vol.ALLOW_EXTRA,
         )
 
-    job = HassJob(action)
+    job = HassJob(action, f"event trigger {trigger_info}")
 
     @callback
-    def handle_event(event: Event) -> None:
-        """Listen for events and calls the action when data matches."""
+    def filter_event(event: Event) -> bool:
+        """Filter events."""
         try:
             # Check that the event data and context match the configured
             # schema if one was provided
             if event_data_schema:
                 event_data_schema(event.data)
             if event_context_schema:
-                event_context_schema(event.context.as_dict())
+                event_context_schema(dict(event.context.as_dict()))
         except vol.Invalid:
             # If event doesn't match, skip event
-            return
+            return False
+        return True
 
+    @callback
+    def handle_event(event: Event) -> None:
+        """Listen for events and calls the action when data matches."""
         hass.async_run_hass_job(
             job,
             {
@@ -113,7 +114,8 @@ async def async_attach_trigger(
         )
 
     removes = [
-        hass.bus.async_listen(event_type, handle_event) for event_type in event_types
+        hass.bus.async_listen(event_type, handle_event, event_filter=filter_event)
+        for event_type in event_types
     ]
 
     @callback

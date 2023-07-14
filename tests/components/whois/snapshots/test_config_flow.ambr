@@ -1,0 +1,181 @@
+# serializer version: 1
+# name: test_full_flow_with_error[FailedParsingWhoisOutput-unexpected_response]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'example.com',
+    }),
+    'data': dict({
+      'domain': 'example.com',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'whois',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'domain': 'example.com',
+      }),
+      'disabled_by': None,
+      'domain': 'whois',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Example.com',
+      'unique_id': 'example.com',
+      'version': 1,
+    }),
+    'title': 'Example.com',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_full_flow_with_error[UnknownDateFormat-unknown_date_format]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'example.com',
+    }),
+    'data': dict({
+      'domain': 'example.com',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'whois',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'domain': 'example.com',
+      }),
+      'disabled_by': None,
+      'domain': 'whois',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Example.com',
+      'unique_id': 'example.com',
+      'version': 1,
+    }),
+    'title': 'Example.com',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_full_flow_with_error[UnknownTld-unknown_tld]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'example.com',
+    }),
+    'data': dict({
+      'domain': 'example.com',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'whois',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'domain': 'example.com',
+      }),
+      'disabled_by': None,
+      'domain': 'whois',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Example.com',
+      'unique_id': 'example.com',
+      'version': 1,
+    }),
+    'title': 'Example.com',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_full_flow_with_error[WhoisCommandFailed-whois_command_failed]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'example.com',
+    }),
+    'data': dict({
+      'domain': 'example.com',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'whois',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'domain': 'example.com',
+      }),
+      'disabled_by': None,
+      'domain': 'whois',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Example.com',
+      'unique_id': 'example.com',
+      'version': 1,
+    }),
+    'title': 'Example.com',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_full_user_flow
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'example.com',
+    }),
+    'data': dict({
+      'domain': 'example.com',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'whois',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'domain': 'example.com',
+      }),
+      'disabled_by': None,
+      'domain': 'whois',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Example.com',
+      'unique_id': 'example.com',
+      'version': 1,
+    }),
+    'title': 'Example.com',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---

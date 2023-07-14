@@ -6,6 +6,7 @@ from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.components.notify import NOTIFY_SERVICE_SCHEMA
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockUser, async_mock_service
 
@@ -13,7 +14,7 @@ MOCK_CODE = "123456"
 MOCK_CODE_2 = "654321"
 
 
-async def test_validating_mfa(hass):
+async def test_validating_mfa(hass: HomeAssistant) -> None:
     """Test validating mfa code."""
     notify_auth_module = await auth_mfa_module_from_config(hass, {"type": "notify"})
     await notify_auth_module.async_setup_user("test-user", {"notify_service": "dummy"})
@@ -22,7 +23,7 @@ async def test_validating_mfa(hass):
         assert await notify_auth_module.async_validate("test-user", {"code": MOCK_CODE})
 
 
-async def test_validating_mfa_invalid_code(hass):
+async def test_validating_mfa_invalid_code(hass: HomeAssistant) -> None:
     """Test validating an invalid mfa code."""
     notify_auth_module = await auth_mfa_module_from_config(hass, {"type": "notify"})
     await notify_auth_module.async_setup_user("test-user", {"notify_service": "dummy"})
@@ -34,7 +35,7 @@ async def test_validating_mfa_invalid_code(hass):
         )
 
 
-async def test_validating_mfa_invalid_user(hass):
+async def test_validating_mfa_invalid_user(hass: HomeAssistant) -> None:
     """Test validating an mfa code with invalid user."""
     notify_auth_module = await auth_mfa_module_from_config(hass, {"type": "notify"})
     await notify_auth_module.async_setup_user("test-user", {"notify_service": "dummy"})
@@ -45,7 +46,7 @@ async def test_validating_mfa_invalid_user(hass):
     )
 
 
-async def test_validating_mfa_counter(hass):
+async def test_validating_mfa_counter(hass: HomeAssistant) -> None:
     """Test counter will move only after generate code."""
     notify_auth_module = await auth_mfa_module_from_config(hass, {"type": "notify"})
     await notify_auth_module.async_setup_user(
@@ -81,7 +82,7 @@ async def test_validating_mfa_counter(hass):
     assert after_generate_count == notify_setting.counter
 
 
-async def test_setup_depose_user(hass):
+async def test_setup_depose_user(hass: HomeAssistant) -> None:
     """Test set up and despose user."""
     notify_auth_module = await auth_mfa_module_from_config(hass, {"type": "notify"})
     await notify_auth_module.async_setup_user("test-user", {})
@@ -96,7 +97,7 @@ async def test_setup_depose_user(hass):
     assert len(notify_auth_module._user_settings) == 1
 
 
-async def test_login_flow_validates_mfa(hass):
+async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     """Test login flow with mfa enabled."""
     hass.auth = await auth_manager_from_config(
         hass,
@@ -133,25 +134,25 @@ async def test_login_flow_validates_mfa(hass):
     provider = hass.auth.auth_providers[0]
 
     result = await hass.auth.login_flow.async_init((provider.type, provider.id))
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"username": "incorrect-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"username": "test-user", "password": "incorrect-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"username": "test-user", "password": "test-pass"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["data_schema"].schema.get("code") == str
 
@@ -170,7 +171,7 @@ async def test_login_flow_validates_mfa(hass):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["errors"]["base"] == "invalid_code"
 
@@ -187,7 +188,7 @@ async def test_login_flow_validates_mfa(hass):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["errors"]["base"] == "invalid_code"
 
@@ -195,7 +196,7 @@ async def test_login_flow_validates_mfa(hass):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "too_many_retry"
 
     # wait service call finished
@@ -203,13 +204,13 @@ async def test_login_flow_validates_mfa(hass):
 
     # restart login
     result = await hass.auth.login_flow.async_init((provider.type, provider.id))
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"username": "test-user", "password": "test-pass"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["data_schema"].schema.get("code") == str
 
@@ -228,11 +229,11 @@ async def test_login_flow_validates_mfa(hass):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": MOCK_CODE}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"].id == "mock-id"
 
 
-async def test_setup_user_notify_service(hass):
+async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     """Test allow select notify service during mfa setup."""
     notify_calls = async_mock_service(hass, "notify", "test1", NOTIFY_SERVICE_SCHEMA)
     async_mock_service(hass, "notify", "test2", NOTIFY_SERVICE_SCHEMA)
@@ -243,14 +244,14 @@ async def test_setup_user_notify_service(hass):
 
     flow = await notify_auth_module.async_setup_flow("test-user")
     step = await flow.async_step_init()
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "init"
     schema = step["data_schema"]
     schema({"notify_service": "test2"})
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         step = await flow.async_step_init({"notify_service": "test1"})
-        assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert step["type"] == data_entry_flow.FlowResultType.FORM
         assert step["step_id"] == "setup"
 
     # wait service call finished
@@ -266,7 +267,7 @@ async def test_setup_user_notify_service(hass):
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE_2):
         step = await flow.async_step_setup({"code": "invalid"})
-        assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert step["type"] == data_entry_flow.FlowResultType.FORM
         assert step["step_id"] == "setup"
         assert step["errors"]["base"] == "invalid_code"
 
@@ -283,10 +284,10 @@ async def test_setup_user_notify_service(hass):
 
     with patch("pyotp.HOTP.verify", return_value=True):
         step = await flow.async_step_setup({"code": MOCK_CODE_2})
-        assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_include_exclude_config(hass):
+async def test_include_exclude_config(hass: HomeAssistant) -> None:
     """Test allow include exclude config."""
     async_mock_service(hass, "notify", "include1", NOTIFY_SERVICE_SCHEMA)
     async_mock_service(hass, "notify", "include2", NOTIFY_SERVICE_SCHEMA)
@@ -320,7 +321,7 @@ async def test_include_exclude_config(hass):
     assert services == ["include1"]
 
 
-async def test_setup_user_no_notify_service(hass):
+async def test_setup_user_no_notify_service(hass: HomeAssistant) -> None:
     """Test setup flow abort if there is no available notify service."""
     async_mock_service(hass, "notify", "test1", NOTIFY_SERVICE_SCHEMA)
     notify_auth_module = await auth_mfa_module_from_config(
@@ -332,11 +333,11 @@ async def test_setup_user_no_notify_service(hass):
 
     flow = await notify_auth_module.async_setup_flow("test-user")
     step = await flow.async_step_init()
-    assert step["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert step["type"] == data_entry_flow.FlowResultType.ABORT
     assert step["reason"] == "no_available_service"
 
 
-async def test_not_raise_exception_when_service_not_exist(hass):
+async def test_not_raise_exception_when_service_not_exist(hass: HomeAssistant) -> None:
     """Test login flow will not raise exception when notify service error."""
     hass.auth = await auth_manager_from_config(
         hass,
@@ -369,20 +370,20 @@ async def test_not_raise_exception_when_service_not_exist(hass):
     provider = hass.auth.auth_providers[0]
 
     result = await hass.auth.login_flow.async_init((provider.type, provider.id))
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"username": "test-user", "password": "test-pass"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "unknown_error"
 
     # wait service call finished
     await hass.async_block_till_done()
 
 
-async def test_race_condition_in_data_loading(hass):
+async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
     """Test race condition in the data loading."""
     counter = 0
 

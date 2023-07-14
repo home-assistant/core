@@ -1,4 +1,6 @@
 """Support for Prosegur alarm control panels."""
+from __future__ import annotations
+
 import logging
 
 from pyprosegur.auth import Auth
@@ -13,6 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -44,23 +47,32 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
     )
+    _installation: Installation
 
     def __init__(self, contract: str, auth: Auth) -> None:
         """Initialize the Prosegur alarm panel."""
         self._changed_by = None
 
-        self._installation = None
         self.contract = contract
         self._auth = auth
 
+        self._attr_code_arm_required = False
         self._attr_name = f"contract {self.contract}"
         self._attr_unique_id = self.contract
 
-    async def async_update(self):
+        self._attr_device_info = DeviceInfo(
+            name="Prosegur Alarm",
+            manufacturer="Prosegur",
+            model="smart",
+            identifiers={(DOMAIN, self.contract)},
+            configuration_url="https://smart.prosegur.com",
+        )
+
+    async def async_update(self) -> None:
         """Update alarm status."""
 
         try:
-            self._installation = await Installation.retrieve(self._auth)
+            self._installation = await Installation.retrieve(self._auth, self.contract)
         except ConnectionError as err:
             _LOGGER.error(err)
             self._attr_available = False
@@ -69,14 +81,14 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self._attr_state = STATE_MAPPING.get(self._installation.status)
         self._attr_available = True
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._installation.disarm(self._auth)
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._installation.arm_partially(self._auth)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._installation.arm(self._auth)

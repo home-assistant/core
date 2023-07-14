@@ -63,7 +63,7 @@ class RandomSensor(BinarySensorEntity):
         """Return the sensor class of the sensor."""
         return self._device_class
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get new state and update the sensor's state."""
 
         self._state = bool(getrandbits(1))

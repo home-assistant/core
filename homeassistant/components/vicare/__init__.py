@@ -7,19 +7,14 @@ import logging
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CIRCUIT,
     CONF_HEATING_TYPE,
-    DEFAULT_HEATING_TYPE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
@@ -39,48 +34,12 @@ class ViCareRequiredKeysMixin:
     value_getter: Callable[[Device], bool]
 
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.All(
-                cv.deprecated(CONF_CIRCUIT),
-                cv.deprecated(DOMAIN),
-                vol.Schema(
-                    {
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Required(CONF_CLIENT_ID): cv.string,
-                        vol.Optional(
-                            CONF_CIRCUIT
-                        ): int,  # Ignored: All circuits are now supported. Will be removed when switching to Setup via UI.
-                        vol.Optional(
-                            CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value
-                        ): vol.In([e.value for e in HeatingType]),
-                    }
-                ),
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+@dataclass()
+class ViCareRequiredKeysMixinWithSet:
+    """Mixin for required keys with setter."""
 
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the ViCare component from yaml."""
-    if DOMAIN not in config:
-        # Setup via UI. No need to continue yaml-based setup
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-
-    return True
+    value_getter: Callable[[Device], bool]
+    value_setter: Callable[[Device], bool]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -92,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.async_add_executor_job(setup_vicare_api, hass, entry)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

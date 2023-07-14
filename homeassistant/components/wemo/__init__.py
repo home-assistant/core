@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime
 import logging
-from typing import Optional
 
 import pywemo
 import voluptuous as vol
@@ -32,7 +31,7 @@ WEMO_MODEL_DISPATCH = {
     "CoffeeMaker": [Platform.SWITCH],
     "Dimmer": [Platform.LIGHT],
     "Humidifier": [Platform.FAN],
-    "Insight": [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH],
+    "Insight": [Platform.BINARY_SENSOR, Platform.SWITCH],
     "LightSwitch": [Platform.SWITCH],
     "Maker": [Platform.BINARY_SENSOR, Platform.SWITCH],
     "Motion": [Platform.BINARY_SENSOR],
@@ -43,7 +42,7 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-HostPortTuple = tuple[str, Optional[int]]
+HostPortTuple = tuple[str, int | None]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:
@@ -114,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     wemo_dispatcher = WemoDispatcher(entry)
     wemo_discovery = WemoDiscovery(hass, wemo_dispatcher, static_conf)
 
-    async def async_stop_wemo(event: Event) -> None:
+    async def async_stop_wemo(_: Event | None = None) -> None:
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
         await hass.async_add_executor_job(registry.stop)
@@ -124,6 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
     )
+    entry.async_on_unload(async_stop_wemo)
 
     # Need to do this at least once in case statistics are defined and discovery is disabled
     await wemo_discovery.discover_statics()
@@ -134,6 +134,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a wemo config entry."""
+    # This makes sure that `entry.async_on_unload` routines run correctly on unload
+    return True
+
+
 class WemoDispatcher:
     """Dispatch WeMo devices to the correct platform."""
 
@@ -141,42 +147,55 @@ class WemoDispatcher:
         """Initialize the WemoDispatcher."""
         self._config_entry = config_entry
         self._added_serial_numbers: set[str] = set()
-        self._loaded_components: set[str] = set()
+        self._failed_serial_numbers: set[str] = set()
+        self._loaded_platforms: set[Platform] = set()
 
     async def async_add_unique_device(
         self, hass: HomeAssistant, wemo: pywemo.WeMoDevice
     ) -> None:
         """Add a WeMo device to hass if it has not already been added."""
-        if wemo.serialnumber in self._added_serial_numbers:
+        if wemo.serial_number in self._added_serial_numbers:
             return
 
-        coordinator = await async_register_device(hass, self._config_entry, wemo)
-        for component in WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]):
-            # Three cases:
-            # - First time we see component, we need to load it and initialize the backlog
-            # - Component is being loaded, add to backlog
-            # - Component is loaded, backlog is gone, dispatch discovery
+        try:
+            coordinator = await async_register_device(hass, self._config_entry, wemo)
+        except pywemo.PyWeMoException as err:
+            if wemo.serial_number not in self._failed_serial_numbers:
+                self._failed_serial_numbers.add(wemo.serial_number)
+                _LOGGER.error(
+                    "Unable to add WeMo %s %s: %s", repr(wemo), wemo.host, err
+                )
+            return
 
-            if component not in self._loaded_components:
-                hass.data[DOMAIN]["pending"][component] = [coordinator]
-                self._loaded_components.add(component)
+        platforms = set(WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]))
+        platforms.add(Platform.SENSOR)
+        for platform in platforms:
+            # Three cases:
+            # - First time we see platform, we need to load it and initialize the backlog
+            # - Platform is being loaded, add to backlog
+            # - Platform is loaded, backlog is gone, dispatch discovery
+
+            if platform not in self._loaded_platforms:
+                hass.data[DOMAIN]["pending"][platform] = [coordinator]
+                self._loaded_platforms.add(platform)
                 hass.async_create_task(
                     hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, component
+                        self._config_entry, platform
                     )
                 )
 
-            elif component in hass.data[DOMAIN]["pending"]:
-                hass.data[DOMAIN]["pending"][component].append(coordinator)
+            elif platform in hass.data[DOMAIN]["pending"]:
+                hass.data[DOMAIN]["pending"][platform].append(coordinator)
 
             else:
                 async_dispatcher_send(
                     hass,
-                    f"{DOMAIN}.{component}",
+                    f"{DOMAIN}.{platform}",
                     coordinator,
                 )
 
-        self._added_serial_numbers.add(wemo.serialnumber)
+        self._added_serial_numbers.add(wemo.serial_number)
+        self._failed_serial_numbers.discard(wemo.serial_number)
 
 
 class WemoDiscovery:

@@ -7,7 +7,7 @@
         "description": "Create a sensor that calculates a Riemann sum to estimate the integral of a sensor.",
         "data": {
           "method": "Integration method",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "round": "Precision",
           "source": "Input sensor",
           "unit_prefix": "Metric prefix",
@@ -30,6 +30,23 @@
         "data_description": {
           "round": "[%key:component::integration::config::step::user::data_description::round%]"
         }
+      }
+    }
+  },
+  "selector": {
+    "method": {
+      "options": {
+        "trapezoidal": "Trapezoidal rule",
+        "left": "Left Riemann sum",
+        "right": "Right Riemann sum"
+      }
+    },
+    "unit_time": {
+      "options": {
+        "s": "Seconds",
+        "min": "Minutes",
+        "h": "Hours",
+        "d": "Days"
       }
     }
   }

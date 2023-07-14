@@ -1,9 +1,10 @@
 """The Huisbaasje integration."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
-from huisbaasje import Huisbaasje, HuisbaasjeException
+from energyflip import EnergyFlip, EnergyFlipException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -31,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huisbaasje from a config entry."""
     # Create the Huisbaasje client
-    huisbaasje = Huisbaasje(
+    energyflip = EnergyFlip(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         source_types=SOURCE_TYPES,
@@ -40,13 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Attempt authentication. If this fails, an exception is thrown
     try:
-        await huisbaasje.authenticate()
-    except HuisbaasjeException as exception:
+        await energyflip.authenticate()
+    except EnergyFlipException as exception:
         _LOGGER.error("Authentication failed: %s", str(exception))
         return False
 
-    async def async_update_data():
-        return await async_update_huisbaasje(huisbaasje)
+    async def async_update_data() -> dict[str, dict[str, Any]]:
+        return await async_update_huisbaasje(energyflip)
 
     # Create a coordinator for polling updates
     coordinator = DataUpdateCoordinator(
@@ -63,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_COORDINATOR: coordinator}
 
     # Offload the loading of entities to the platform
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -80,17 +81,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_update_huisbaasje(huisbaasje):
+async def async_update_huisbaasje(energyflip: EnergyFlip) -> dict[str, dict[str, Any]]:
     """Update the data by performing a request to Huisbaasje."""
     try:
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
         async with async_timeout.timeout(FETCH_TIMEOUT):
-            if not huisbaasje.is_authenticated():
+            if not energyflip.is_authenticated():
                 _LOGGER.warning("Huisbaasje is unauthenticated. Reauthenticating")
-                await huisbaasje.authenticate()
+                await energyflip.authenticate()
 
-            current_measurements = await huisbaasje.current_measurements()
+            current_measurements = await energyflip.current_measurements()
 
             return {
                 source_type: {
@@ -112,7 +113,7 @@ async def async_update_huisbaasje(huisbaasje):
                 }
                 for source_type in SOURCE_TYPES
             }
-    except HuisbaasjeException as exception:
+    except EnergyFlipException as exception:
         raise UpdateFailed(f"Error communicating with API: {exception}") from exception
 
 
@@ -121,8 +122,7 @@ def _get_cumulative_value(
     source_type: str,
     period_type: str,
 ):
-    """
-    Get the cumulative energy consumption for a certain period.
+    """Get the cumulative energy consumption for a certain period.
 
     :param current_measurements: The result from the Huisbaasje client
     :param source_type: The source of energy (electricity or gas)

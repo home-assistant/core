@@ -8,15 +8,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,7 +39,8 @@ CONF_MAX_VOLUME = "max_volume"
 CONF_VOLUME_STEP = "volume_step"  # for NADReceiverTCP
 CONF_SOURCE_DICT = "sources"  # for NADReceiver
 
-SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=10): cv.string})
+# Max value based on a C658 with an MDC HDM-2 card installed
+SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=12): cv.string})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -86,18 +81,18 @@ def setup_platform(
 class NAD(MediaPlayerEntity):
     """Representation of a NAD Receiver."""
 
+    _attr_icon = "mdi:speaker-multiple"
     _attr_supported_features = SUPPORT_NAD
 
     def __init__(self, config):
         """Initialize the NAD Receiver device."""
         self.config = config
         self._instantiate_nad_receiver()
+        self._attr_name = self.config[CONF_NAME]
         self._min_volume = config[CONF_MIN_VOLUME]
         self._max_volume = config[CONF_MAX_VOLUME]
         self._source_dict = config[CONF_SOURCE_DICT]
         self._reverse_mapping = {value: key for key, value in self._source_dict.items()}
-
-        self._volume = self._state = self._mute = self._source = None
 
     def _instantiate_nad_receiver(self) -> NADReceiver:
         if self.config[CONF_TYPE] == "RS232":
@@ -107,66 +102,36 @@ class NAD(MediaPlayerEntity):
             port = self.config[CONF_PORT]
             self._nad_receiver = NADReceiverTelnet(host, port)
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self.config[CONF_NAME]
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon for the device."""
-        return "mdi:speaker-multiple"
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._mute
-
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self._nad_receiver.main_power("=", "Off")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._nad_receiver.main_power("=", "On")
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         self._nad_receiver.main_volume("+")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down the media player."""
         self._nad_receiver.main_volume("-")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._nad_receiver.main_volume("=", self.calc_db(volume))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         if mute:
             self._nad_receiver.main_mute("=", "On")
         else:
             self._nad_receiver.main_mute("=", "Off")
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._nad_receiver.main_source("=", self._reverse_mapping.get(source))
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        return self._source
 
     @property
     def source_list(self):
@@ -174,31 +139,36 @@ class NAD(MediaPlayerEntity):
         return sorted(self._reverse_mapping)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if device is available."""
-        return self._state is not None
+        return self.state is not None
 
     def update(self) -> None:
         """Retrieve latest state."""
         power_state = self._nad_receiver.main_power("?")
         if not power_state:
-            self._state = None
+            self._attr_state = None
             return
-        self._state = (
-            STATE_ON if self._nad_receiver.main_power("?") == "On" else STATE_OFF
+        self._attr_state = (
+            MediaPlayerState.ON
+            if self._nad_receiver.main_power("?") == "On"
+            else MediaPlayerState.OFF
         )
 
-        if self._state == STATE_ON:
-            self._mute = self._nad_receiver.main_mute("?") == "On"
+        if self.state == MediaPlayerState.ON:
+            self._attr_is_volume_muted = self._nad_receiver.main_mute("?") == "On"
             volume = self._nad_receiver.main_volume("?")
             # Some receivers cannot report the volume, e.g. C 356BEE,
             # instead they only support stepping the volume up or down
-            self._volume = self.calc_volume(volume) if volume is not None else None
-            self._source = self._source_dict.get(self._nad_receiver.main_source("?"))
+            self._attr_volume_level = (
+                self.calc_volume(volume) if volume is not None else None
+            )
+            self._attr_source = self._source_dict.get(
+                self._nad_receiver.main_source("?")
+            )
 
     def calc_volume(self, decibel):
-        """
-        Calculate the volume given the decibel.
+        """Calculate the volume given the decibel.
 
         Return the volume (0..1).
         """
@@ -207,8 +177,7 @@ class NAD(MediaPlayerEntity):
         )
 
     def calc_db(self, volume):
-        """
-        Calculate the decibel given the volume.
+        """Calculate the decibel given the volume.
 
         Return the dB.
         """
@@ -224,83 +193,54 @@ class NADtcp(MediaPlayerEntity):
 
     def __init__(self, config):
         """Initialize the amplifier."""
-        self._name = config[CONF_NAME]
+        self._attr_name = config[CONF_NAME]
         self._nad_receiver = NADReceiverTCP(config.get(CONF_HOST))
         self._min_vol = (config[CONF_MIN_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
         self._max_vol = (config[CONF_MAX_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
         self._volume_step = config[CONF_VOLUME_STEP]
-        self._state = None
-        self._mute = None
         self._nad_volume = None
-        self._volume = None
-        self._source = None
         self._source_list = self._nad_receiver.available_sources()
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._mute
-
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self._nad_receiver.power_off()
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._nad_receiver.power_on()
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Step volume up in the configured increments."""
         self._nad_receiver.set_volume(self._nad_volume + 2 * self._volume_step)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Step volume down in the configured increments."""
         self._nad_receiver.set_volume(self._nad_volume - 2 * self._volume_step)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         nad_volume_to_set = int(
             round(volume * (self._max_vol - self._min_vol) + self._min_vol)
         )
         self._nad_receiver.set_volume(nad_volume_to_set)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         if mute:
             self._nad_receiver.mute()
         else:
             self._nad_receiver.unmute()
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._nad_receiver.select_source(source)
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        return self._source
 
     @property
     def source_list(self):
         """List of available input sources."""
         return self._nad_receiver.available_sources()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
         try:
             nad_status = self._nad_receiver.status()
@@ -311,19 +251,19 @@ class NADtcp(MediaPlayerEntity):
 
         # Update on/off state
         if nad_status["power"]:
-            self._state = STATE_ON
+            self._attr_state = MediaPlayerState.ON
         else:
-            self._state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
 
         # Update current volume
-        self._volume = self.nad_vol_to_internal_vol(nad_status["volume"])
+        self._attr_volume_level = self.nad_vol_to_internal_vol(nad_status["volume"])
         self._nad_volume = nad_status["volume"]
 
         # Update muted state
-        self._mute = nad_status["muted"]
+        self._attr_is_volume_muted = nad_status["muted"]
 
         # Update current source
-        self._source = nad_status["source"]
+        self._attr_source = nad_status["source"]
 
     def nad_vol_to_internal_vol(self, nad_volume):
         """Convert nad volume range (0-200) to internal volume range.
