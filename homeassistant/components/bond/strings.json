@@ -60,11 +60,11 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Name(s) of entities to set the tracked power state of."
+          "description": "[%key:component::bond::services::set_switch_power_tracked_state::fields::entity_id::description%]"
         },
         "power_state": {
-          "name": "Power state",
-          "description": "Power state."
+          "name": "[%key:component::bond::services::set_switch_power_tracked_state::fields::power_state::name%]",
+          "description": "[%key:component::bond::services::set_switch_power_tracked_state::fields::power_state::description%]"
         }
       }
     },
@@ -91,7 +91,7 @@
       "description": "Start decreasing the brightness of the light. (deprecated)."
     },
     "stop": {
-      "name": "Stop",
+      "name": "[%key:common::action::stop%]",
       "description": "Stop any in-progress action and empty the queue. (deprecated)."
     }
   }

@@ -12,15 +12,15 @@
   },
   "services": {
     "toggle": {
-      "name": "Toggle",
+      "name": "[%key:common::action::toggle%]",
       "description": "Toggles alert's notifications."
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Silences alert's notifications."
     },
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Resets alert's notifications."
     }
   }
