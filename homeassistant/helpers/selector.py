@@ -122,11 +122,8 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     }
 
 
-def _validate_supported_feature(supported_feature: int | str) -> int:
+def _validate_supported_feature(supported_feature: str) -> int:
     """Validate a supported feature and resolve an enum string to its value."""
-
-    if isinstance(supported_feature, int):
-        return supported_feature
 
     known_entity_features = _entity_features()
 
@@ -144,6 +141,20 @@ def _validate_supported_feature(supported_feature: int | str) -> int:
         raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
 
 
+def _validate_supported_features(supported_features: int | list[str]) -> int:
+    """Validate a supported feature and resolve an enum string to its value."""
+
+    if isinstance(supported_features, int):
+        return supported_features
+
+    feature_mask = 0
+
+    for supported_feature in supported_features:
+        feature_mask |= _validate_supported_feature(supported_feature)
+
+    return feature_mask
+
+
 ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration that provided the entity
@@ -153,7 +164,9 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Device class of the entity
         vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
         # Features supported by the entity
-        vol.Optional("supported_features"): [vol.All(str, _validate_supported_feature)],
+        vol.Optional("supported_features"): [
+            vol.All(cv.ensure_list, [str], _validate_supported_features)
+        ],
     }
 )
 
@@ -438,6 +451,27 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
             ),
         )(data)
         return value
+
+
+class ConditionSelectorConfig(TypedDict):
+    """Class to represent an action selector config."""
+
+
+@SELECTORS.register("condition")
+class ConditionSelector(Selector[ConditionSelectorConfig]):
+    """Selector of an condition sequence (script syntax)."""
+
+    selector_type = "condition"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: ConditionSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.CONDITIONS_SCHEMA)(data)
 
 
 class ConfigEntrySelectorConfig(TypedDict, total=False):

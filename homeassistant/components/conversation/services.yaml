@@ -1,23 +1,16 @@
 # Describes the format for available component services
 process:
-  name: Process
-  description: Launch a conversation from a transcribed text.
   fields:
     text:
-      name: Text
-      description: Transcribed text
       example: Turn all lights on
+      required: true
       selector:
         text:
     language:
-      name: Language
-      description: Language of text. Defaults to server language
       example: NL
       selector:
         text:
     agent_id:
-      name: Agent
-      description: Assist engine to process your request
       example: homeassistant
       selector:
         conversation_agent:
