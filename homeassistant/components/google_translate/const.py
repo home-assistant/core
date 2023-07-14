@@ -40,7 +40,6 @@ SUPPORT_LANGUAGES = [
     "ko",
     "la",
     "lv",
-    "lt",
     "mk",
     "ml",
     "mr",
