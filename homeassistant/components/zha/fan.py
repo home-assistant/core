@@ -136,7 +136,7 @@ class BaseFan(FanEntity):
 class ZhaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
-    _attr_name: str = "Fan"
+    _attr_translation_key = "fan"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
@@ -265,7 +265,7 @@ IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
 class IkeaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
-    _attr_name: str = "IKEA fan"
+    _attr_translation_key = "ikea_fan"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""

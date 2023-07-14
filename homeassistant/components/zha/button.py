@@ -107,7 +107,6 @@ class ZHAIdentifyButton(ZHAButton):
 
     _attr_device_class = ButtonDeviceClass.IDENTIFY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Identify"
     _command_name = "identify"
 
     def get_args(self) -> list[Any]:
@@ -158,7 +157,7 @@ class FrostLockResetButton(ZHAAttributeButton, id_suffix="reset_frost_lock"):
     """Defines a ZHA frost lock reset button."""
 
     _attribute_name = "frost_lock_reset"
-    _attr_name = "Frost lock reset"
+    _attr_translation_key = "frost_lock_reset"
     _attribute_value = 0
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
@@ -173,7 +172,7 @@ class NoPresenceStatusResetButton(
     """Defines a ZHA no presence status reset button."""
 
     _attribute_name = "reset_no_presence_status"
-    _attr_name = "Presence status reset"
+    _attr_translation_key = "reset_no_presence_status"
     _attribute_value = 1
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
@@ -184,7 +183,7 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
     """Defines a feed button for the aqara c1 pet feeder."""
 
     _attribute_name = "feeding"
-    _attr_name = "Feed"
+    _attr_translation_key = "feed"
     _attribute_value = 1
 
 
@@ -195,6 +194,6 @@ class AqaraSelfTestButton(ZHAAttributeButton, id_suffix="self_test"):
     """Defines a ZHA self-test button for Aqara smoke sensors."""
 
     _attribute_name = "self_test"
-    _attr_name = "Self-test"
+    _attr_translation_key = "self_test"
     _attribute_value = 1
     _attr_entity_category = EntityCategory.CONFIG

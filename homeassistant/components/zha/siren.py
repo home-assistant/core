@@ -74,7 +74,7 @@ async def async_setup_entry(
 class ZHASiren(ZhaEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
-    _attr_name: str = "Siren"
+    _attr_translation_key = "siren"
 
     def __init__(
         self,

@@ -196,7 +196,7 @@ class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
     SENSOR_ATTR = "present_value"
-    _attr_name: str = "Analog input"
+    _attr_translation_key = "analog_input"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_POWER_CONFIGURATION)
@@ -208,7 +208,6 @@ class Battery(Sensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.BATTERY
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name: str = "Battery"
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @classmethod
@@ -266,7 +265,7 @@ class ElectricalMeasurement(Sensor):
     SENSOR_ATTR = "active_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Active power"
+    _attr_translation_key = "active_power"
     _attr_native_unit_of_measurement: str = UnitOfPower.WATT
     _div_mul_prefix = "ac_power"
 
@@ -327,7 +326,7 @@ class ElectricalMeasurementApparentPower(
 
     SENSOR_ATTR = "apparent_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
-    _attr_name: str = "Apparent power"
+    _attr_translation_key = "apparent_power"
     _attr_native_unit_of_measurement = UnitOfApparentPower.VOLT_AMPERE
     _div_mul_prefix = "ac_power"
 
@@ -339,7 +338,7 @@ class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_curr
 
     SENSOR_ATTR = "rms_current"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
-    _attr_name: str = "RMS current"
+    _attr_translation_key = "rms_current"
     _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
     _div_mul_prefix = "ac_current"
 
@@ -351,7 +350,7 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
 
     SENSOR_ATTR = "rms_voltage"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
-    _attr_name: str = "RMS voltage"
+    _attr_translation_key = "rms_voltage"
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _div_mul_prefix = "ac_voltage"
 
@@ -363,7 +362,7 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_freque
 
     SENSOR_ATTR = "ac_frequency"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
-    _attr_name: str = "AC frequency"
+    _attr_translation_key = "ac_frequency"
     _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
     _div_mul_prefix = "ac_frequency"
 
@@ -375,7 +374,6 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_f
 
     SENSOR_ATTR = "power_factor"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
-    _attr_name: str = "Power factor"
     _attr_native_unit_of_measurement = PERCENTAGE
 
 
@@ -394,7 +392,6 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.HUMIDITY
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Humidity"
     _divisor = 100
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -407,7 +404,7 @@ class SoilMoisture(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.HUMIDITY
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Soil moisture"
+    _attr_translation_key = "soil_moisture"
     _divisor = 100
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -420,7 +417,7 @@ class LeafWetness(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.HUMIDITY
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Leaf wetness"
+    _attr_translation_key = "leaf_wetness"
     _divisor = 100
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -433,7 +430,6 @@ class Illuminance(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ILLUMINANCE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Illuminance"
     _attr_native_unit_of_measurement = LIGHT_LUX
 
     def formatter(self, value: int) -> int:
@@ -452,7 +448,7 @@ class SmartEnergyMetering(Sensor):
     SENSOR_ATTR: int | str = "instantaneous_demand"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Instantaneous demand"
+    _attr_translation_key = "instantaneous_demand"
 
     unit_of_measure_map = {
         0x00: UnitOfPower.WATT,
@@ -506,7 +502,7 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
     SENSOR_ATTR: int | str = "current_summ_delivered"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENERGY
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
-    _attr_name: str = "Summation delivered"
+    _attr_translation_key = "summation_delivered"
 
     unit_of_measure_map = {
         0x00: UnitOfEnergy.KILO_WATT_HOUR,
@@ -565,7 +561,7 @@ class Tier1SmartEnergySummation(
     """Tier 1 Smart Energy Metering summation sensor."""
 
     SENSOR_ATTR: int | str = "current_tier1_summ_delivered"
-    _attr_name: str = "Tier 1 summation delivered"
+    _attr_translation_key = "tier_1_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -579,7 +575,7 @@ class Tier2SmartEnergySummation(
     """Tier 2 Smart Energy Metering summation sensor."""
 
     SENSOR_ATTR: int | str = "current_tier2_summ_delivered"
-    _attr_name: str = "Tier 2 summation delivered"
+    _attr_translation_key = "tier_2_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -593,7 +589,7 @@ class Tier3SmartEnergySummation(
     """Tier 3 Smart Energy Metering summation sensor."""
 
     SENSOR_ATTR: int | str = "current_tier3_summ_delivered"
-    _attr_name: str = "Tier 3 summation delivered"
+    _attr_translation_key = "tier_3_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -607,7 +603,7 @@ class Tier4SmartEnergySummation(
     """Tier 4 Smart Energy Metering summation sensor."""
 
     SENSOR_ATTR: int | str = "current_tier4_summ_delivered"
-    _attr_name: str = "Tier 4 summation delivered"
+    _attr_translation_key = "tier_4_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -621,7 +617,7 @@ class Tier5SmartEnergySummation(
     """Tier 5 Smart Energy Metering summation sensor."""
 
     SENSOR_ATTR: int | str = "current_tier5_summ_delivered"
-    _attr_name: str = "Tier 5 summation delivered"
+    _attr_translation_key = "tier_5_summation_delivered"
 
 
 @MULTI_MATCH(
@@ -635,7 +631,7 @@ class Tier6SmartEnergySummation(
     """Tier 6 Smart Energy Metering summation sensor."""
 
     SENSOR_ATTR: int | str = "current_tier6_summ_delivered"
-    _attr_name: str = "Tier 6 summation delivered"
+    _attr_translation_key = "tier_6_summation_delivered"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_PRESSURE)
@@ -646,7 +642,6 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.PRESSURE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Pressure"
     _decimals = 0
     _attr_native_unit_of_measurement = UnitOfPressure.HPA
 
@@ -659,7 +654,6 @@ class Temperature(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Temperature"
     _divisor = 100
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
@@ -672,7 +666,7 @@ class DeviceTemperature(Sensor):
     SENSOR_ATTR = "current_temperature"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Device temperature"
+    _attr_translation_key = "device_temperature"
     _divisor = 100
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -686,7 +680,6 @@ class CarbonDioxideConcentration(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CO2
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Carbon dioxide concentration"
     _decimals = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
@@ -700,7 +693,6 @@ class CarbonMonoxideConcentration(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CO
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Carbon monoxide concentration"
     _decimals = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
@@ -715,7 +707,6 @@ class VOCLevel(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "VOC level"
     _decimals = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -735,7 +726,6 @@ class PPBVOCLevel(Sensor):
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
     )
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "VOC level"
     _decimals = 0
     _multiplier = 1
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_BILLION
@@ -749,7 +739,6 @@ class PM25(Sensor):
     SENSOR_ATTR = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.PM25
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Particulate matter"
     _decimals = 0
     _multiplier = 1
     _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -762,7 +751,7 @@ class FormaldehydeConcentration(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_name: str = "Formaldehyde concentration"
+    _attr_translation_key = "formaldehyde"
     _decimals = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
@@ -776,7 +765,7 @@ class FormaldehydeConcentration(Sensor):
 class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     """Thermostat HVAC action sensor."""
 
-    _attr_name: str = "HVAC action"
+    _attr_translation_key = "hvac_action"
 
     @classmethod
     def create_entity(
@@ -906,7 +895,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = True  # BaseZhaEntity defaults to False
-    _attr_name: str = "RSSI"
+    _attr_translation_key = "rssi"
     unique_id_suffix: str
 
     @classmethod
@@ -937,7 +926,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
 
-    _attr_name: str = "LQI"
+    _attr_translation_key = "lqi"
     _attr_device_class = None
     _attr_native_unit_of_measurement = None
 
@@ -955,7 +944,7 @@ class TimeLeft(Sensor, id_suffix="time_left"):
     SENSOR_ATTR = "timer_time_left"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
     _attr_icon = "mdi:timer"
-    _attr_name: str = "Time left"
+    _attr_translation_key = "timer_time_left"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
 
@@ -967,7 +956,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     SENSOR_ATTR = "device_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
     _attr_icon = "mdi:timer"
-    _attr_name: str = "Device run time"
+    _attr_translation_key = "device_run_time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
 
@@ -979,7 +968,7 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     SENSOR_ATTR = "filter_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
     _attr_icon = "mdi:timer"
-    _attr_name: str = "Filter run time"
+    _attr_translation_key = "filter_run_time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
 
@@ -996,7 +985,7 @@ class AqaraPetFeederLastFeedingSource(Sensor, id_suffix="last_feeding_source"):
     """Sensor that displays the last feeding source of pet feeder."""
 
     SENSOR_ATTR = "last_feeding_source"
-    _attr_name: str = "Last feeding source"
+    _attr_translation_key = "last_feeding_source"
     _attr_icon = "mdi:devices"
 
     def formatter(self, value: int) -> int | float | None:
@@ -1010,7 +999,7 @@ class AqaraPetFeederLastFeedingSize(Sensor, id_suffix="last_feeding_size"):
     """Sensor that displays the last feeding size of the pet feeder."""
 
     SENSOR_ATTR = "last_feeding_size"
-    _attr_name: str = "Last feeding size"
+    _attr_translation_key = "last_feeding_size"
     _attr_icon: str = "mdi:counter"
 
 
@@ -1020,7 +1009,7 @@ class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
     """Sensor that displays the number of portions dispensed by the pet feeder."""
 
     SENSOR_ATTR = "portions_dispensed"
-    _attr_name: str = "Portions dispensed today"
+    _attr_translation_key = "portions_dispensed"
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_icon: str = "mdi:counter"
 
@@ -1031,7 +1020,7 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     """Sensor that displays the weight dispensed by the pet feeder."""
 
     SENSOR_ATTR = "weight_dispensed"
-    _attr_name: str = "Weight dispensed today"
+    _attr_translation_key = "weight_dispensed"
     _attr_native_unit_of_measurement = UnitOfMass.GRAMS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_icon: str = "mdi:weight-gram"
@@ -1043,7 +1032,7 @@ class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
     """Sensor that displays the smoke density of an Aqara smoke sensor in dB/m."""
 
     SENSOR_ATTR = "smoke_density_dbm"
-    _attr_name: str = "Smoke density"
+    _attr_translation_key = "smoke_density"
     _attr_native_unit_of_measurement = "dB/m"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_icon: str = "mdi:google-circles-communities"

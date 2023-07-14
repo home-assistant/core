@@ -139,7 +139,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_name: str = "Thermostat"
+    _attr_translation_key = "thermostat"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
