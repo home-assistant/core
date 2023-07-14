@@ -55,7 +55,7 @@
       "init": {
         "data": {
           "retry_count": "Retry count",
-          "close_direction": "Close Direction"
+          "close_direction": "Close direction"
         }
       }
     }
