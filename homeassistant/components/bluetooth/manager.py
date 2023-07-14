@@ -384,11 +384,11 @@ class BluetoothManager:
         new: BluetoothServiceInfoBleak,
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
-        if new.time - old.time > (
-            stale_seconds := self._advertisement_tracker.intervals.get(
-                new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
-            )
-        ):
+        if stale_seconds := self._advertisement_tracker.intervals.get(new.address):
+            stale_seconds += TRACKER_BUFFERING_WOBBLE_SECONDS
+        else:
+            stale_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        if new.time - old.time > stale_seconds:
             # If the old advertisement is stale, any new advertisement is preferred
             if self._debug:
                 _LOGGER.debug(
