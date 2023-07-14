@@ -135,7 +135,7 @@ class SonosFavoritesEntity(SensorEntity):
 
     _attr_entity_registry_enabled_default = False
     _attr_icon = "mdi:star"
-    _attr_translation_key = "sonos_favorites"
+    _attr_name = "Sonos favorites"
     _attr_native_unit_of_measurement = "items"
     _attr_should_poll = False
 
