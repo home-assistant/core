@@ -98,6 +98,14 @@
       "last_motion_image": {
         "name": "Last motion image"
       }
+    },
+    "binary_sensor": {
+      "alarm_schedules_enabled": {
+        "name": "Alarm schedules enabled"
+      },
+      "encrypted": {
+        "name": "Encryption"
+      }
     }
   },
   "services": {
@@ -152,16 +160,6 @@
     "wake_device": {
       "name": "Wake camera",
       "description": "This can be used to wake the camera/device from hibernation."
-    }
-  },
-  "entity": {
-    "binary_sensor": {
-      "alarm_schedules_enabled": {
-        "name": "Alarm schedules"
-      },
-      "encrypted": {
-        "name": "Encryption"
-      }
     }
   }
 }
