@@ -17,6 +17,10 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_ca
 
 from ..entry_data import RuntimeEntryData
 from .cache import ESPHomeBluetoothCache
+from .client import (
+    ESPHomeClient,
+    ESPHomeClientData,
+)
 from .device import ESPHomeBluetoothDevice
 from .scanner import ESPHomeScanner
 
@@ -77,11 +81,6 @@ async def async_connect_scanner(
         feature_flags,
         connectable,
     )
-    from .client import (  # pylint: disable=import-outside-toplevel
-        ESPHomeClient,
-        ESPHomeClientData,
-    )
-
     client_data = ESPHomeClientData(
         bluetooth_device=bluetooth_device,
         cache=cache,
