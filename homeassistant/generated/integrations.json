@@ -846,7 +846,7 @@
       "iot_class": "local_polling"
     },
     "co2signal": {
-      "name": "CO2 Signal",
+      "name": "Electricity Maps",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1883,6 +1883,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "gardena_bluetooth": {
+      "name": "Gardena Bluetooth",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "gaviota": {
       "name": "Gaviota",
@@ -6541,7 +6547,6 @@
       "iot_class": "local_polling"
     },
     "zodiac": {
-      "name": "Zodiac",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated"
@@ -6695,6 +6700,7 @@
     "uptime",
     "utility_meter",
     "waze_travel_time",
-    "workday"
+    "workday",
+    "zodiac"
   ]
 }

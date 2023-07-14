@@ -20,5 +20,29 @@
         "description": "Please enter the email address and password you use to log into the MyMazda mobile app."
       }
     }
+  },
+  "services": {
+    "send_poi": {
+      "name": "Send POI",
+      "description": "Sends a GPS location to the vehicle's navigation system as a POI (Point of Interest). Requires a navigation SD card installed in the vehicle.",
+      "fields": {
+        "device_id": {
+          "name": "Vehicle",
+          "description": "The vehicle to send the GPS location to."
+        },
+        "latitude": {
+          "name": "[%key:common::config_flow::data::latitude%]",
+          "description": "The latitude of the location to send."
+        },
+        "longitude": {
+          "name": "[%key:common::config_flow::data::longitude%]",
+          "description": "The longitude of the location to send."
+        },
+        "poi_name": {
+          "name": "POI name",
+          "description": "A friendly name for the location."
+        }
+      }
+    }
   }
 }
