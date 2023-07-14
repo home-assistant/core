@@ -39,6 +39,7 @@ from .test_common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
+    help_test_entity_force_update,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_reload_with_config,
@@ -1039,6 +1040,22 @@ async def test_entity_device_info_remove(
     await help_test_entity_device_info_remove(
         hass,
         mqtt_mock_entry,
+        binary_sensor.DOMAIN,
+        DEFAULT_CONFIG,
+    )
+
+
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_entity_force_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test force_update attribute."""
+    await help_test_entity_force_update(
+        hass,
+        mqtt_mock_entry,
+        caplog,
         binary_sensor.DOMAIN,
         DEFAULT_CONFIG,
     )

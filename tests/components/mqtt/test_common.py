@@ -1889,3 +1889,53 @@ async def help_test_discovery_setup(
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{name}")
     assert state and state.state is not None
+
+
+async def help_test_entity_force_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    domain: str,
+    config: ConfigType,
+) -> None:
+    """Test setting/updates to force_update attr."""
+    await mqtt_mock_entry()
+    ent_registry = er.async_get(hass)
+
+    # Set entity with default config
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+
+    # Register device
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    # Get entity
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
+    entity = hass.data[domain].get_entity(entity_id)
+
+    # Assert initial setting
+    assert entity
+    assert entity.force_update is False
+
+    # Update config with force_update and re-register
+    config["force_update"] = "True"
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    # Assert updated setting
+    assert entity
+    assert entity.force_update is True
+
+    # Update config to original and re-register
+    del config["force_update"]
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    # Assert removed setting
+    assert entity
+    assert entity.force_update is False

@@ -22,6 +22,7 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
+    CONF_FORCE_UPDATE,
     CONF_ICON,
     CONF_MODEL,
     CONF_NAME,
@@ -221,6 +222,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
         vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        vol.Optional(CONF_FORCE_UPDATE, default=False): cv.boolean,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
@@ -1119,6 +1121,7 @@ class MqttEntity(
         self._attr_entity_registry_enabled_default = bool(
             config.get(CONF_ENABLED_BY_DEFAULT)
         )
+        self._attr_force_update = bool(config.get(CONF_FORCE_UPDATE))
         self._attr_icon = config.get(CONF_ICON)
         self._attr_name = config.get(CONF_NAME)
 
