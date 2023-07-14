@@ -88,7 +88,7 @@ OPTIONS_SCHEMA_ADVANCED = {
         cv.positive_int,
         vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
     ),
-    vol.Optional(CONF_ENABLE_PUSH, default=False): BOOLEAN_SELECTOR,
+    vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
 }
 
 
