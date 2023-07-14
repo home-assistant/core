@@ -93,6 +93,11 @@
           "silent": "Silent"
         }
       }
+    },
+    "image": {
+      "last_motion_image": {
+        "name": "Last motion image"
+      }
     }
   },
   "services": {
@@ -147,13 +152,6 @@
     "wake_device": {
       "name": "Wake camera",
       "description": "This can be used to wake the camera/device from hibernation."
-    }
-  },
-  "entity": {
-    "image": {
-      "last_motion_image": {
-        "name": "Last motion image"
-      }
     }
   }
 }
