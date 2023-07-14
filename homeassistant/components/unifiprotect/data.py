@@ -227,7 +227,7 @@ class ProtectData:
                 self._async_update_device(obj, message.changed_data)
 
         # trigger updates for camera that the event references
-        elif isinstance(obj, Event):
+        elif isinstance(obj, Event):  # type: ignore[unreachable]
             if obj.type in SMART_EVENTS:
                 if obj.camera is not None:
                     if obj.end is None:
