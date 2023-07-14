@@ -143,7 +143,6 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers=set(),
             connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
@@ -227,7 +226,6 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers=set(),
             connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
