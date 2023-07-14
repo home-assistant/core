@@ -37,5 +37,31 @@
       "error_auth_user": "Incorrect username or password",
       "error_auth_mfa": "Incorrect code"
     }
+  },
+  "services": {
+    "update_state": {
+      "name": "Update state",
+      "description": "Fetches the last state of the devices from the StarLine server.\n."
+    },
+    "set_scan_interval": {
+      "name": "Set scan interval",
+      "description": "Sets update frequency.",
+      "fields": {
+        "scan_interval": {
+          "name": "Scan interval",
+          "description": "Update frequency."
+        }
+      }
+    },
+    "set_scan_obd_interval": {
+      "name": "Set scan OBD interval",
+      "description": "Sets OBD info update frequency.",
+      "fields": {
+        "scan_interval": {
+          "name": "Scan interval",
+          "description": "[%key:component::starline::services::set_scan_interval::fields::scan_interval::description%]"
+        }
+      }
+    }
   }
 }

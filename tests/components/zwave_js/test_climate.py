@@ -18,6 +18,7 @@ from homeassistant.components.climate import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
@@ -41,6 +42,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .common import (
+    CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
     CLIMATE_DANFOSS_LC13_ENTITY,
     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_FLOOR_THERMOSTAT_ENTITY,
@@ -694,3 +696,81 @@ async def test_thermostat_unknown_values(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
     assert ATTR_HVAC_ACTION not in state.attributes
+
+
+async def test_thermostat_dry_and_fan_both_hvac_mode_and_preset(
+    hass: HomeAssistant,
+    client,
+    climate_airzone_aidoo_control_hvac_unit,
+    integration,
+) -> None:
+    """Test that dry and fan modes are both available as hvac mode and preset."""
+    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.FAN_ONLY,
+        HVACMode.DRY,
+        HVACMode.HEAT_COOL,
+    ]
+    assert state.attributes[ATTR_PRESET_MODES] == [
+        PRESET_NONE,
+        "Fan",
+        "Dry",
+    ]
+
+
+async def test_thermostat_warning_when_setting_dry_preset(
+    hass: HomeAssistant,
+    client,
+    climate_airzone_aidoo_control_hvac_unit,
+    integration,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test warning when setting Dry preset."""
+    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
+    assert state
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
+            ATTR_PRESET_MODE: "Dry",
+        },
+        blocking=True,
+    )
+
+    assert (
+        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        in caplog.text
+    )
+
+
+async def test_thermostat_warning_when_setting_fan_preset(
+    hass: HomeAssistant,
+    client,
+    climate_airzone_aidoo_control_hvac_unit,
+    integration,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test warning when setting Fan preset."""
+    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
+    assert state
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
+            ATTR_PRESET_MODE: "Fan",
+        },
+        blocking=True,
+    )
+
+    assert (
+        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        in caplog.text
+    )
