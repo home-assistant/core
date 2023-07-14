@@ -26,6 +26,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "alarm_sound_mod": SensorEntityDescription(
         key="alarm_sound_mod",
         translation_key="alarm_sound_mod",
+        entity_registry_enabled_default=False,
     ),
     "last_alarm_time": SensorEntityDescription(
         key="last_alarm_time",
