@@ -41,8 +41,8 @@
       "description": "Sets a sleep timer on a Modern Forms fan.",
       "fields": {
         "sleep_time": {
-          "name": "Sleep time",
-          "description": "Number of minutes to set the timer."
+          "name": "[%key:component::modern_forms::services::set_light_sleep_timer::fields::sleep_time::name%]",
+          "description": "[%key:component::modern_forms::services::set_light_sleep_timer::fields::sleep_time::description%]"
         }
       }
     },

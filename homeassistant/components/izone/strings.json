@@ -26,8 +26,8 @@
       "description": "Sets the airflow maximum percent for a zone.",
       "fields": {
         "airflow": {
-          "name": "Percent",
-          "description": "Airflow percent."
+          "name": "[%key:component::izone::services::airflow_min::fields::airflow::name%]",
+          "description": "[%key:component::izone::services::airflow_min::fields::airflow::description%]"
         }
       }
     }
