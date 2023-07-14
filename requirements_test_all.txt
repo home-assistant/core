@@ -1963,7 +1963,7 @@ wled==0.16.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==0.0.1
+wyoming==1.0.0
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
