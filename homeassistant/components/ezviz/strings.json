@@ -153,12 +153,5 @@
       "name": "Wake camera",
       "description": "This can be used to wake the camera/device from hibernation."
     }
-  },
-  "entity": {
-    "light": {
-      "light": {
-        "name": "Light"
-      }
-    }
   }
 }
