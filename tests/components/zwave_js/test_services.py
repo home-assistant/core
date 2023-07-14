@@ -410,7 +410,9 @@ async def test_bulk_set_config_parameters(
 ) -> None:
     """Test the bulk_set_partial_config_parameters service."""
     dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, multisensor_6)}
+    )
     assert device
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
@@ -757,7 +759,7 @@ async def test_set_value(
     """Test set_value service."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, climate_danfoss_lc_13)}
+        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device
 
@@ -1103,11 +1105,11 @@ async def test_multicast_set_value(
     # Test using area ID
     dev_reg = async_get_dev_reg(hass)
     device_eurotronic = dev_reg.async_get_device(
-        {get_device_id(client.driver, climate_eurotronic_spirit_z)}
+        identifiers={get_device_id(client.driver, climate_eurotronic_spirit_z)}
     )
     assert device_eurotronic
     device_danfoss = dev_reg.async_get_device(
-        {get_device_id(client.driver, climate_danfoss_lc_13)}
+        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device_danfoss
     area_reg = async_get_area_reg(hass)
@@ -1416,7 +1418,7 @@ async def test_ping(
     """Test ping service."""
     dev_reg = async_get_dev_reg(hass)
     device_radio_thermostat = dev_reg.async_get_device(
-        {
+        identifiers={
             get_device_id(
                 client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
             )
@@ -1424,7 +1426,7 @@ async def test_ping(
     )
     assert device_radio_thermostat
     device_danfoss = dev_reg.async_get_device(
-        {get_device_id(client.driver, climate_danfoss_lc_13)}
+        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device_danfoss
 
@@ -1566,7 +1568,7 @@ async def test_invoke_cc_api(
     """Test invoke_cc_api service."""
     dev_reg = async_get_dev_reg(hass)
     device_radio_thermostat = dev_reg.async_get_device(
-        {
+        identifiers={
             get_device_id(
                 client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
             )
@@ -1574,7 +1576,7 @@ async def test_invoke_cc_api(
     )
     assert device_radio_thermostat
     device_danfoss = dev_reg.async_get_device(
-        {get_device_id(client.driver, climate_danfoss_lc_13)}
+        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device_danfoss
 

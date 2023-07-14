@@ -319,6 +319,7 @@ omit =
     homeassistant/components/ezviz/__init__.py
     homeassistant/components/ezviz/binary_sensor.py
     homeassistant/components/ezviz/camera.py
+    homeassistant/components/ezviz/image.py
     homeassistant/components/ezviz/light.py
     homeassistant/components/ezviz/coordinator.py
     homeassistant/components/ezviz/number.py
@@ -410,6 +411,7 @@ omit =
     homeassistant/components/gardena_bluetooth/__init__.py
     homeassistant/components/gardena_bluetooth/const.py
     homeassistant/components/gardena_bluetooth/coordinator.py
+    homeassistant/components/gardena_bluetooth/number.py
     homeassistant/components/gardena_bluetooth/switch.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*

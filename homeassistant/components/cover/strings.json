@@ -79,15 +79,15 @@
   },
   "services": {
     "open_cover": {
-      "name": "Open",
+      "name": "[%key:common::action::open%]",
       "description": "Opens a cover."
     },
     "close_cover": {
-      "name": "Close",
+      "name": "[%key:common::action::close%]",
       "description": "Closes a cover."
     },
     "toggle": {
-      "name": "Toggle",
+      "name": "[%key:common::action::toggle%]",
       "description": "Toggles a cover open/closed."
     },
     "set_cover_position": {
@@ -101,7 +101,7 @@
       }
     },
     "stop_cover": {
-      "name": "Stop",
+      "name": "[%key:common::action::stop%]",
       "description": "Stops the cover movement."
     },
     "open_cover_tilt": {

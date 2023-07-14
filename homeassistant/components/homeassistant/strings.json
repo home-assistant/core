@@ -56,7 +56,7 @@
       "description": "Reloads the core configuration from the YAML-configuration."
     },
     "restart": {
-      "name": "Restart",
+      "name": "[%key:common::action::restart%]",
       "description": "Restarts Home Assistant."
     },
     "set_location": {
@@ -64,17 +64,17 @@
       "description": "Updates the Home Assistant location.",
       "fields": {
         "latitude": {
-          "name": "Latitude",
+          "name": "[%key:common::config_flow::data::latitude%]",
           "description": "Latitude of your location."
         },
         "longitude": {
-          "name": "Longitude",
+          "name": "[%key:common::config_flow::data::longitude%]",
           "description": "Longitude of your location."
         }
       }
     },
     "stop": {
-      "name": "Stop",
+      "name": "[%key:common::action::stop%]",
       "description": "Stops Home Assistant."
     },
     "toggle": {

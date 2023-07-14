@@ -701,6 +701,9 @@ def async_set_service_schema(
     hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
     """Register a description for a service."""
+    domain = domain.lower()
+    service = service.lower()
+
     descriptions_cache: dict[
         tuple[str, str], dict[str, Any] | None
     ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})

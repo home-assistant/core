@@ -54,8 +54,8 @@
       "description": "Plays a specific ringtone. The version of the gateway firmware must be 1.4.1_145 at least.",
       "fields": {
         "gw_mac": {
-          "name": "Gateway MAC",
-          "description": "MAC address of the Xiaomi Aqara Gateway."
+          "name": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::name%]",
+          "description": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::description%]"
         },
         "ringtone_id": {
           "name": "Ringtone ID",
@@ -76,8 +76,8 @@
           "description": "Hardware address of the device to remove."
         },
         "gw_mac": {
-          "name": "Gateway MAC",
-          "description": "MAC address of the Xiaomi Aqara Gateway."
+          "name": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::name%]",
+          "description": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::description%]"
         }
       }
     },
@@ -86,8 +86,8 @@
       "description": "Stops a playing ringtone immediately.",
       "fields": {
         "gw_mac": {
-          "name": "Gateway MAC",
-          "description": "MAC address of the Xiaomi Aqara Gateway."
+          "name": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::name%]",
+          "description": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::description%]"
         }
       }
     }

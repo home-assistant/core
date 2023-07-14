@@ -43,7 +43,6 @@ class AirVisualProMeasurementDescription(
 SENSOR_DESCRIPTIONS = (
     AirVisualProMeasurementDescription(
         key="air_quality_index",
-        name="Air quality index",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements: measurements[
@@ -52,7 +51,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     AirVisualProMeasurementDescription(
         key="battery_level",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
@@ -60,7 +58,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     AirVisualProMeasurementDescription(
         key="carbon_dioxide",
-        name="C02",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -68,7 +65,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     AirVisualProMeasurementDescription(
         key="humidity",
-        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda settings, status, measurements: measurements["humidity"],
@@ -91,7 +87,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     AirVisualProMeasurementDescription(
         key="particulate_matter_2_5",
-        name="PM 2.5",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -99,7 +94,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     AirVisualProMeasurementDescription(
         key="temperature",
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -107,7 +101,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     AirVisualProMeasurementDescription(
         key="voc",
-        name="VOC",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,

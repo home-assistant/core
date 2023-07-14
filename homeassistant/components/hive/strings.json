@@ -25,7 +25,7 @@
         "title": "Hive Configuration."
       },
       "reauth": {
-        "title": "Hive Login",
+        "title": "[%key:component::hive::config::step::user::title%]",
         "description": "Re-enter your Hive login information.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -82,7 +82,7 @@
         },
         "temperature": {
           "name": "Temperature",
-          "description": "Set the target temperature for the boost period."
+          "description": "[%key:component::hive::services::boost_heating::fields::temperature::description%]"
         }
       }
     },
@@ -109,7 +109,7 @@
           "description": "Set the time period for the boost."
         },
         "on_off": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Set the boost function on or off."
         }
       }

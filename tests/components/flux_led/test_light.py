@@ -182,7 +182,7 @@ async def test_light_device_registry(
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
     )
     assert device.sw_version == str(sw_version)
     assert device.model == model

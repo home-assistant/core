@@ -272,7 +272,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
     """Base class for unifi protect entities."""
 
     # separate subclass on purpose
-    device: NVR  # type: ignore[assignment]
+    device: NVR
 
     def __init__(
         self,
@@ -281,7 +281,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(entry, device, description)  # type: ignore[arg-type]
+        super().__init__(entry, device, description)
 
     @callback
     def _async_set_device_info(self) -> None:

@@ -15,8 +15,8 @@
       "description": "Fetches the last state of the vehicle of all your accounts, requesting an update from of the state from the car if possible.\n.",
       "fields": {
         "vin": {
-          "name": "VIN",
-          "description": "The vehicle identification number (VIN) of the vehicle, 17 characters\n."
+          "name": "[%key:component::nissan_leaf::services::start_charge::fields::vin::name%]",
+          "description": "[%key:component::nissan_leaf::services::start_charge::fields::vin::description%]"
         }
       }
     }

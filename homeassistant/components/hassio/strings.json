@@ -24,7 +24,7 @@
           "fix_menu": {
             "description": "Could not connect to `{reference}`. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update `{reference}`, go to [storage]({storage_url}).",
             "menu_options": {
-              "mount_execute_reload": "Reload",
+              "mount_execute_reload": "[%key:common::action::reload%]",
               "mount_execute_remove": "Remove"
             }
           }
@@ -282,11 +282,11 @@
       "description": "Creates a full backup.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Optional (default = current date and time)."
         },
         "password": {
-          "name": "Password",
+          "name": "[%key:common::config_flow::data::password%]",
           "description": "Password to protect the backup with."
         },
         "compressed": {
@@ -294,7 +294,7 @@
           "description": "Compresses the backup files."
         },
         "location": {
-          "name": "Location",
+          "name": "[%key:common::config_flow::data::location%]",
           "description": "Name of a backup network storage to host backups."
         }
       }

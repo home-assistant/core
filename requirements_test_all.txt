@@ -448,10 +448,10 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.3.0
+bluetooth-data-tools==1.6.0
 
 # homeassistant.components.bond
-bond-async==0.1.23
+bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.57
@@ -526,13 +526,13 @@ deluge-client==1.7.1
 demetriek==0.4.0
 
 # homeassistant.components.denonavr
-denonavr==0.11.2
+denonavr==0.11.3
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.3.1
+devolo-plc-api==1.3.2
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1032,7 +1032,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.12
+opower==0.0.14
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1603,7 +1603,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.3
+pyunifiprotect==4.10.5
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1902,7 +1902,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==3.2.1
+vallox-websocket-api==3.3.0
 
 # homeassistant.components.rdw
 vehicle==1.0.1
@@ -1963,7 +1963,7 @@ wled==0.16.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==0.0.1
+wyoming==1.0.0
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
@@ -1991,7 +1991,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.18
+yalexs-ble==2.2.0
 
 # homeassistant.components.august
 yalexs==1.5.1
