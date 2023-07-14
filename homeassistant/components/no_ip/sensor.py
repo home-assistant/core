@@ -38,7 +38,7 @@ class NoIPBaseEntity(CoordinatorEntity[NoIPDataUpdateCoordinator], RestoreSensor
         """Run when the entity is added to Home Assistant."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_sensor_data():
-            self._attr_native_value = cast(float, state.native_value)
+            self._attr_native_value = cast(str, state.native_value)
         self._unsub_dispatchers.append(
             async_dispatcher_connect(
                 self.hass, TRACKER_UPDATE_STR, self.async_write_ha_state

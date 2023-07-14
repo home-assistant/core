@@ -1,4 +1,5 @@
 """Test the No-IP.com config flow."""
+from __future__ import annotations
 
 import pytest
 
