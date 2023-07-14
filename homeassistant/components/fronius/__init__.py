@@ -76,7 +76,7 @@ class FroniusSolarNet:
         self.cleanup_callbacks: list[Callable[[], None]] = []
         self.config_entry = entry
         self.coordinator_lock = asyncio.Lock()
-        self.sensor_async_add_entities: AddEntitiesCallback = None
+        self.sensor_async_add_entities: AddEntitiesCallback | None = None
         self.fronius = fronius
         self.host: str = entry.data[CONF_HOST]
         # entry.unique_id is either logger uid or first inverter uid if no logger available
