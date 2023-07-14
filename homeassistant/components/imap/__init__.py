@@ -14,7 +14,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 
-from .const import CONF_ENFORCE_POLLING, DOMAIN
+from .const import CONF_ENABLE_PUSH, DOMAIN
 from .coordinator import (
     ImapPollingDataUpdateCoordinator,
     ImapPushDataUpdateCoordinator,
@@ -39,8 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator_class: type[
         ImapPushDataUpdateCoordinator | ImapPollingDataUpdateCoordinator
     ]
-    enforce_polling: bool = entry.data.get(CONF_ENFORCE_POLLING, False)
-    if not enforce_polling and imap_client.has_capability("IDLE"):
+    enable_push: bool = entry.data.get(CONF_ENABLE_PUSH, True)
+    if enable_push and imap_client.has_capability("IDLE"):
         coordinator_class = ImapPushDataUpdateCoordinator
     else:
         coordinator_class = ImapPollingDataUpdateCoordinator

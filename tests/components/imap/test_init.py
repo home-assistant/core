@@ -36,7 +36,7 @@ from tests.common import MockConfigEntry, async_capture_events, async_fire_time_
 
 
 @pytest.mark.parametrize(
-    ("cipher_list", "verify_ssl", "enforce_polling"),
+    ("cipher_list", "verify_ssl", "enable_push"),
     [
         (None, None, None),
         ("python_default", True, None),
@@ -55,7 +55,7 @@ async def test_entry_startup_and_unload(
     mock_imap_protocol: MagicMock,
     cipher_list: str | None,
     verify_ssl: bool | None,
-    enforce_polling: bool | None,
+    enable_push: bool | None,
 ) -> None:
     """Test imap entry startup and unload with push and polling coordinator and alternate ciphers."""
     config = MOCK_CONFIG.copy()
@@ -63,8 +63,8 @@ async def test_entry_startup_and_unload(
         config["ssl_cipher_list"] = cipher_list
     if verify_ssl is not None:
         config["verify_ssl"] = verify_ssl
-    if enforce_polling is not None:
-        config["enforce_polling"] = enforce_polling
+    if enable_push is not None:
+        config["enable_push"] = enable_push
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)
@@ -632,25 +632,25 @@ async def test_custom_template(
     [(TEST_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN)],
 )
 @pytest.mark.parametrize(
-    ("imap_has_capability", "enforce_polling", "should_poll"),
+    ("imap_has_capability", "enable_push", "should_poll"),
     [
-        (True, True, True),
-        (False, True, True),
-        (True, False, False),
+        (True, False, True),
         (False, False, True),
+        (True, True, False),
+        (False, True, True),
     ],
     ids=["enforce_poll", "poll", "auto_push", "auto_poll"],
 )
 async def test_enforce_polling(
     hass: HomeAssistant,
     mock_imap_protocol: MagicMock,
-    enforce_polling: bool,
+    enable_push: bool,
     should_poll: True,
 ) -> None:
     """Test enforce polling."""
     event_called = async_capture_events(hass, "imap_content")
     config = MOCK_CONFIG.copy()
-    config["enforce_polling"] = enforce_polling
+    config["enable_push"] = enable_push
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)
