@@ -244,6 +244,7 @@ class Mill:
                     room_data.get("controlSource", {}).get("tibber") == 1
                 )
                 device.home_id = room_data.get("houseId")
+                device.room_id = room_data.get("id")
                 device.room_avg_temp = room_data.get("averageTemperature")
 
         self.devices[_id] = device
@@ -257,7 +258,7 @@ class Mill:
         for heater in self.devices.values():
             if heater.room_name.lower().strip() == room_name.lower().strip():
                 await self.set_room_temperatures(
-                    room_id, sleep_temp, comfort_temp, away_temp
+                    heater.room_id, sleep_temp, comfort_temp, away_temp
                 )
                 return
         _LOGGER.error("Could not find a room with name %s", room_name)
@@ -298,9 +299,7 @@ class Mill:
             _LOGGER.error("Device id %s not found", device_id)
             return
         payload = {
-            "deviceType": "Sockets"
-            if isinstance(self.heaters[device_id], Socket)
-            else "Heaters",
+            "deviceType": self._find_device_type(device_id),
             "enabled": power_status > 0,
             "settings": {
                 "operation_mode": "control_individually" if power_status > 0 else "off"
@@ -317,7 +316,7 @@ class Mill:
     async def set_heater_temp(self, device_id, set_temp):
         """Set heater temp."""
         payload = {
-            "deviceType": "Heaters",
+            "deviceType": self._find_device_type(device_id),
             "enabled": True,
             "settings": {
                 "operation_mode": "control_individually",
@@ -327,6 +326,13 @@ class Mill:
         if await self.request(f"devices/{device_id}/settings", payload, patch=True):
             self.heaters[device_id].set_temp = set_temp
             self.heaters[device_id].last_updated = dt.datetime.now()
+
+    def _find_device_type(self, device_id):
+        """Find device type."""
+        if device_id not in self.heaters:
+            _LOGGER.error("Device id %s not found", device_id)
+            return
+        return "Sockets" if isinstance(self.heaters[device_id], Socket) else "Heaters"
 
 
 @dataclass
@@ -347,6 +353,7 @@ class Heater(MillDevice):
 
     last_updated: dt.datetime | None = None
     home_id: str | None = None
+    room_id: str | None = None
     current_temp: float | None = None
     set_temp: float | None = None
     power_status: bool | None = None
