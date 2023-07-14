@@ -179,7 +179,7 @@ class FroniusSolarNet:
         
     async def _init_devices_inverter(self) -> None:
         """Retrieve inverter information from host"""
-        _inverter_info: list[FroniusDeviceInfo] = []
+        _inverter_infos: list[FroniusDeviceInfo] = []
         try:
             _inverter_infos = await self._get_inverter_infos()
         except ConfigEntryNotReady as err:
