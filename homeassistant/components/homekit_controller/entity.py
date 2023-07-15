@@ -11,6 +11,7 @@ from aiohomekit.model.characteristics import (
 )
 from aiohomekit.model.services import Service, ServicesTypes
 
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
@@ -30,6 +31,7 @@ class HomeKitEntity(Entity):
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._char_name: str | None = None
+        self.all_characteristics: set[tuple[int, int]] = set()
         self.setup()
 
         super().__init__()
@@ -51,13 +53,23 @@ class HomeKitEntity(Entity):
         """Return a Service model that this entity is attached to."""
         return self.accessory.services.iid(self._iid)
 
+    @callback
+    def _async_state_changed(
+        self, new_values_dict: dict[tuple[int, int], dict[str, Any]] | None = None
+    ) -> None:
+        """Handle when characteristics change value."""
+        if new_values_dict is None or self.all_characteristics.intersection(
+            new_values_dict
+        ):
+            self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 self._accessory.signal_state_updated,
-                self.async_write_ha_state,
+                self._async_state_changed,
             )
         )
 
@@ -104,6 +116,9 @@ class HomeKitEntity(Entity):
         for service in self.accessory.services.filter(parent_service=self.service):
             for char in service.characteristics.filter(char_types=char_types):
                 self._setup_characteristic(char)
+
+        self.all_characteristics.update(self.pollable_characteristics)
+        self.all_characteristics.update(self.watchable_characteristics)
 
     def _setup_characteristic(self, char: Characteristic) -> None:
         """Configure an entity based on a HomeKit characteristics metadata."""
