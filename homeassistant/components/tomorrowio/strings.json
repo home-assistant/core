@@ -61,6 +61,15 @@
           "freezing_rain": "Freezing Rain",
           "ice_pellets": "Ice Pellets"
         }
+      },
+      "uv_index": {
+        "state": {
+          "low": "Low",
+          "moderate": "Moderate",
+          "high": "High",
+          "very_high": "Very high",
+          "extreme": "Extreme"
+        }
       }
     }
   }
