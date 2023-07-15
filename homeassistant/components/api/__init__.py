@@ -161,9 +161,7 @@ class APIConfigView(HomeAssistantView):
     def get(self, request):
         """Get current configuration."""
         hass: HomeAssistant = request.app["hass"]
-        as_dict = hass.config.as_dict()
-        _LOGGER.warning("config as_dict: %s", as_dict)
-        return self.json(as_dict)
+        return self.json(hass.config.as_dict())
 
 
 class APIStatesView(HomeAssistantView):
