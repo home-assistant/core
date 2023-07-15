@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.const import CONF_DISCOVERY, Platform
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -79,13 +79,20 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up for WeMo devices."""
-    hass.data[DOMAIN] = {
-        "config": config.get(DOMAIN, {}),
+def _domain_data(config: ConfigType) -> ConfigType:
+    """Initialize the data for the wemo domain."""
+    return {
+        "config": config,
         "registry": None,
         "pending": {},
+        "platforms": set(),
+        "stop": None,
     }
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up for WeMo devices."""
+    hass.data[DOMAIN] = _domain_data(config.get(DOMAIN, {}))
 
     if DOMAIN in config:
         hass.async_create_task(
@@ -99,7 +106,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a wemo config entry."""
-    config = hass.data[DOMAIN].pop("config")
+    config = hass.data[DOMAIN]["config"]
 
     # Keep track of WeMo device subscriptions for push updates
     registry = hass.data[DOMAIN]["registry"] = pywemo.SubscriptionRegistry()
@@ -113,17 +120,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     wemo_dispatcher = WemoDispatcher(entry)
     wemo_discovery = WemoDiscovery(hass, wemo_dispatcher, static_conf)
 
-    async def async_stop_wemo(_: Event | None = None) -> None:
-        """Shutdown Wemo subscriptions and subscription thread on exit."""
+    async def async_stop_wemo() -> None:
+        """Shutdown Wemo subscriptions and background threads on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
         await hass.async_add_executor_job(registry.stop)
         await hass.async_add_executor_job(discovery_responder.stop)
         wemo_discovery.async_stop_discovery()
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
-    )
-    entry.async_on_unload(async_stop_wemo)
+    hass.data[DOMAIN]["stop"] = async_stop_wemo
 
     # Need to do this at least once in case statistics are defined and discovery is disabled
     await wemo_discovery.discover_statics()
@@ -136,8 +140,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a wemo config entry."""
-    # This makes sure that `entry.async_on_unload` routines run correctly on unload
-    return True
+    await hass.data[DOMAIN]["stop"]()
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, hass.data[DOMAIN]["platforms"]
+    )
+    hass.data[DOMAIN] = _domain_data(hass.data[DOMAIN].pop("config"))
+    return unload_ok
 
 
 class WemoDispatcher:
@@ -148,7 +156,6 @@ class WemoDispatcher:
         self._config_entry = config_entry
         self._added_serial_numbers: set[str] = set()
         self._failed_serial_numbers: set[str] = set()
-        self._loaded_platforms: set[Platform] = set()
 
     async def async_add_unique_device(
         self, hass: HomeAssistant, wemo: pywemo.WeMoDevice
@@ -175,14 +182,14 @@ class WemoDispatcher:
             # - Platform is being loaded, add to backlog
             # - Platform is loaded, backlog is gone, dispatch discovery
 
-            if platform not in self._loaded_platforms:
+            if platform not in hass.data[DOMAIN]["platforms"]:
                 hass.data[DOMAIN]["pending"][platform] = [coordinator]
-                self._loaded_platforms.add(platform)
                 hass.async_create_task(
                     hass.config_entries.async_forward_entry_setup(
                         self._config_entry, platform
                     )
                 )
+                hass.data[DOMAIN]["platforms"].add(platform)
 
             elif platform in hass.data[DOMAIN]["pending"]:
                 hass.data[DOMAIN]["pending"][platform].append(coordinator)

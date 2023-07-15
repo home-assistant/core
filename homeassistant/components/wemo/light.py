@@ -45,7 +45,9 @@ async def async_setup_entry(
         else:
             async_add_entities([WemoDimmer(coordinator)])
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
+    )
 
     await asyncio.gather(
         *(

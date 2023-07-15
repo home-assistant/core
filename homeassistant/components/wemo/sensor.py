@@ -72,7 +72,9 @@ async def async_setup_entry(
             if hasattr(coordinator.wemo, description.key)
         )
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
+    )
 
     await asyncio.gather(
         *(

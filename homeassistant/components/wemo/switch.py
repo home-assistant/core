@@ -45,7 +45,9 @@ async def async_setup_entry(
         """Handle a discovered Wemo device."""
         async_add_entities([WemoSwitch(coordinator)])
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.switch", _discovered_wemo)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.switch", _discovered_wemo)
+    )
 
     await asyncio.gather(
         *(
