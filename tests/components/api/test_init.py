@@ -246,7 +246,11 @@ async def test_api_get_config(hass: HomeAssistant, mock_api_client: TestClient) 
     if "allowlist_external_urls" in result:
         result["allowlist_external_urls"] = set(result["allowlist_external_urls"])
 
-    assert hass.config.as_dict() == result
+    as_dict = hass.config.as_dict()
+    assert isinstance(as_dict["components"], list)
+    # Convert lists to set since we do not care about order
+    as_dict["components"] = set(as_dict["components"])
+    assert as_dict == result
 
 
 async def test_api_get_components(
