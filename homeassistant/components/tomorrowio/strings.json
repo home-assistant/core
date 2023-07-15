@@ -62,6 +62,16 @@
           "ice_pellets": "Ice Pellets"
         }
       },
+      "primary_pollutant": {
+        "state": {
+          "pm25": "Particulate Matter < 2.5 μm",
+          "pm10": "Particulate Matter < 10 μm",
+          "o3": "Ozone",
+          "no2": "Nitrogen Dioxide",
+          "co": "Carbon Monoxide",
+          "so2": "Sulphur Dioxide"
+        }
+      },
       "uv_index": {
         "state": {
           "low": "Low",
