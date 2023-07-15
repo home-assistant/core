@@ -11,7 +11,7 @@ from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -147,7 +147,7 @@ class FroniusSolarNet:
         self.cleanup_callbacks.append(
             async_track_time_interval(
                 self.hass,
-                self._rescan_inverter,
+                self._init_devices_inverter,
                 timedelta(minutes=SOLAR_NET_RESCAN_TIMER),
             )
         )
@@ -177,7 +177,7 @@ class FroniusSolarNet:
         )
         return solar_net_device
 
-    async def _init_devices_inverter(self) -> None:
+    async def _init_devices_inverter(self, now: datetime | None = None) -> None:
         """Retrieve inverter information from host."""
         _inverter_infos: list[FroniusDeviceInfo] = []
 
@@ -256,11 +256,6 @@ class FroniusSolarNet:
                 unique_id,
             )
         return inverter_infos
-
-    @callback
-    async def _rescan_inverter(self, now: datetime) -> None:
-        """Initiate a scheduled rescan of available inverters."""
-        await self._init_devices_inverter()
 
     @staticmethod
     async def _init_optional_coordinator(
