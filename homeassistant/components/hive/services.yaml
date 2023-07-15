@@ -1,21 +1,15 @@
 boost_heating:
-  name: Boost Heating (To be deprecated)
-  description: To be deprecated please use boost_heating_on.
   target:
     entity:
       integration: hive
       domain: climate
   fields:
     time_period:
-      name: Time Period
-      description: Set the time period for the boost.
       required: true
       example: 01:30:00
       selector:
         time:
     temperature:
-      name: Temperature
-      description: Set the target temperature for the boost period.
       default: 25.0
       selector:
         number:
@@ -24,23 +18,17 @@ boost_heating:
           step: 0.5
           unit_of_measurement: °
 boost_heating_on:
-  name: Boost Heating On
-  description: Set the boost mode ON defining the period of time and the desired target temperature for the boost.
   target:
     entity:
       integration: hive
       domain: climate
   fields:
     time_period:
-      name: Time Period
-      description: Set the time period for the boost.
       required: true
       example: 01:30:00
       selector:
         time:
     temperature:
-      name: Temperature
-      description: Set the target temperature for the boost period.
       default: 25.0
       selector:
         number:
@@ -49,39 +37,27 @@ boost_heating_on:
           step: 0.5
           unit_of_measurement: °
 boost_heating_off:
-  name: Boost Heating Off
-  description: Set the boost mode OFF.
   fields:
     entity_id:
-      name: Entity ID
-      description: Select entity_id to turn boost off.
       required: true
       selector:
         entity:
           integration: hive
           domain: climate
 boost_hot_water:
-  name: Boost Hotwater
-  description: Set the boost mode ON or OFF defining the period of time for the boost.
   fields:
     entity_id:
-      name: Entity ID
-      description: Select entity_id to boost.
       required: true
       selector:
         entity:
           integration: hive
           domain: water_heater
     time_period:
-      name: Time Period
-      description: Set the time period for the boost.
       required: true
       example: 01:30:00
       selector:
         time:
     on_off:
-      name: Mode
-      description: Set the boost function on or off.
       required: true
       selector:
         select:

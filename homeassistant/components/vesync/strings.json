@@ -15,5 +15,11 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "services": {
+    "update_devices": {
+      "name": "Update devices",
+      "description": "Adds new VeSync devices to Home Assistant."
+    }
   }
 }
