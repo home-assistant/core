@@ -10,13 +10,16 @@ from typing import Any
 import requests
 from yarl import URL
 
-from homeassistant.components.media_player import (ATTR_MEDIA_ENQUEUE,
-                                                   BrowseMedia,
-                                                   MediaPlayerEnqueue,
-                                                   MediaPlayerEntity,
-                                                   MediaPlayerEntityFeature,
-                                                   MediaPlayerState, MediaType,
-                                                   RepeatMode)
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
+    BrowseMedia,
+    MediaPlayerEnqueue,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
@@ -29,8 +32,7 @@ from spotipy import SpotifyException
 
 from . import HomeAssistantSpotifyData
 from .browse_media import async_browse_media_internal
-from .const import (DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES,
-                    SPOTIFY_SCOPES)
+from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
 from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
