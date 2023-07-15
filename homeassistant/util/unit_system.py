@@ -183,13 +183,13 @@ class UnitSystem:
     def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""
         return {
-            LENGTH: self.length_unit,
-            ACCUMULATED_PRECIPITATION: self.accumulated_precipitation_unit,
-            MASS: self.mass_unit,
-            PRESSURE: self.pressure_unit,
-            TEMPERATURE: self.temperature_unit,
-            VOLUME: self.volume_unit,
-            WIND_SPEED: self.wind_speed_unit,
+            LENGTH: self.length_unit.value,
+            ACCUMULATED_PRECIPITATION: self.accumulated_precipitation_unit.value,
+            MASS: self.mass_unit.value,
+            PRESSURE: self.pressure_unit.value,
+            TEMPERATURE: self.temperature_unit.value,
+            VOLUME: self.volume_unit.value,
+            WIND_SPEED: self.wind_speed_unit.value,
         }
 
     def get_converted_unit(

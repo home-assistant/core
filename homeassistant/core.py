@@ -2142,7 +2142,7 @@ class Config:
             "unit_system": self.units.as_dict(),
             "location_name": self.location_name,
             "time_zone": self.time_zone,
-            "components": self.components,
+            "components": [str(comp) for comp in self.components],
             "config_dir": self.config_dir,
             # legacy, backwards compat
             "whitelist_external_dirs": self.allowlist_external_dirs,
