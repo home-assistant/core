@@ -9,7 +9,7 @@ from typing import Final, TypeVar
 
 from pyfronius import Fronius, FroniusError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -180,13 +180,8 @@ class FroniusSolarNet:
     async def _init_devices_inverter(self) -> None:
         """Retrieve inverter information from host."""
         _inverter_infos: list[FroniusDeviceInfo] = []
-        try:
-            _inverter_infos = await self._get_inverter_infos()
-        except ConfigEntryNotReady as err:
-            raise err
-        except ConnectionError as err:
-            # Might occur during a re-scan. Attempt again on next scheduled scan
-            _LOGGER.error("Scan of %s failed. %s", self.host, err)
+
+        _inverter_infos = await self._get_inverter_infos()
 
         _LOGGER.debug("Processing inverters for: %s", _inverter_infos)
         for _inverter_info in _inverter_infos:
@@ -226,7 +221,11 @@ class FroniusSolarNet:
         try:
             _inverter_info = await self.fronius.inverter_info()
         except FroniusError as err:
-            raise ConfigEntryNotReady from err
+            if self.config_entry.state == ConfigEntryState.LOADED:
+                # During a re-scan we will attempt again as per schedule.
+                _LOGGER.warning("Re-scan failed for %s", self.host)
+            else:
+                raise ConfigEntryNotReady from err
 
         inverter_infos: list[FroniusDeviceInfo] = []
         for inverter in _inverter_info["inverters"]:
