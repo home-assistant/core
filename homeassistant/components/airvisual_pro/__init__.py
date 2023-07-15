@@ -60,6 +60,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Get data from the device."""
         try:
             data = await node.async_get_latest_measurements()
+            # If an outdoor sensor use the history to get its values.
+            # Without an outdoor sensor there's no point in pulling history.
+            data['history'] = {}
+            if data['settings'].get("follow_mode") == "device":
+                history = await node.async_get_history(include_trends=False)
+                data['history'] = history.get('measurements', [])[-1]
         except InvalidAuthenticationError as err:
             raise ConfigEntryAuthFailed("Invalid Samba password") from err
         except NodeConnectionError as err:
