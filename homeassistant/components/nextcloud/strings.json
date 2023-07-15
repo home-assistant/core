@@ -76,7 +76,7 @@
         "name": "Total swap memory"
       },
       "nextcloud_system_swap_free": {
-        "name": "Total free swap memory"
+        "name": "Free swap memory"
       },
       "nextcloud_system_apps_num_installed": {
         "name": "Apps installed"
