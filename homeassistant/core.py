@@ -2149,7 +2149,7 @@ class Config:
             "allowlist_external_dirs": self.allowlist_external_dirs,
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
-            "config_source": self.config_source,
+            "config_source": self.config_source.value,
             "safe_mode": self.safe_mode,
             "state": self.hass.state.value,
             "external_url": self.external_url,
