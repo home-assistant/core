@@ -98,6 +98,16 @@
       "last_motion_image": {
         "name": "Last motion image"
       }
+    },
+    "alarm_control_panel": {
+      "ezviz_alarm": {
+        "name": "EZVIZ Alarm",
+        "state": {
+          "armed_away": "Armed Away",
+          "armed_home": "Armed Home",
+          "disarmed": "Disarmed"
+        }
+      }
     }
   },
   "services": {
