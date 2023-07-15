@@ -1127,7 +1127,11 @@ def _no_yaml_config_schema(
 
 
 def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if attempted to setup from YAML."""
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from yaml is not supported.
+    """
 
     return _no_yaml_config_schema(
         domain,
@@ -1138,7 +1142,11 @@ def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
 
 
 def platform_only_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if attempted to setup from YAML."""
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from the integration key is not supported.
+    """
 
     return _no_yaml_config_schema(
         domain,

@@ -48,11 +48,12 @@ async def async_setup_entry(
 class RingCam(RingEntityMixin, Camera):
     """An implementation of a Ring Door Bell camera."""
 
+    _attr_name = None
+
     def __init__(self, config_entry_id, ffmpeg_manager, device):
         """Initialize a Ring Door Bell camera."""
         super().__init__(config_entry_id, device)
 
-        self._name = self._device.name
         self._ffmpeg_manager = ffmpeg_manager
         self._last_event = None
         self._last_video_id = None
@@ -89,11 +90,6 @@ class RingCam(RingEntityMixin, Camera):
             self._image = None
             self._expires_at = dt_util.utcnow()
             self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
 
     @property
     def unique_id(self):

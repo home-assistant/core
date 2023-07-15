@@ -26,7 +26,7 @@ async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
     registry = er.async_get(hass)
     registry_device = dr.async_get(hass)
 
-    device = registry_device.async_get_device({("freedompro", uid)})
+    device = registry_device.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"

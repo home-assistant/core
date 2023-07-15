@@ -88,7 +88,7 @@ def get_wanted_attr(wanted: SonarrWantedMissing) -> dict[str, str]:
 SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     "commands": SonarrSensorEntityDescription[list[Command]](
         key="commands",
-        name="Commands",
+        translation_key="commands",
         icon="mdi:code-braces",
         native_unit_of_measurement="Commands",
         entity_registry_enabled_default=False,
@@ -97,7 +97,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "diskspace": SonarrSensorEntityDescription[list[Diskspace]](
         key="diskspace",
-        name="Disk space",
+        translation_key="diskspace",
         icon="mdi:harddisk",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -107,7 +107,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "queue": SonarrSensorEntityDescription[SonarrQueue](
         key="queue",
-        name="Queue",
+        translation_key="queue",
         icon="mdi:download",
         native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
@@ -116,7 +116,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "series": SonarrSensorEntityDescription[list[SonarrSeries]](
         key="series",
-        name="Shows",
+        translation_key="series",
         icon="mdi:television",
         native_unit_of_measurement="Series",
         entity_registry_enabled_default=False,
@@ -130,7 +130,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "upcoming": SonarrSensorEntityDescription[list[SonarrCalendar]](
         key="upcoming",
-        name="Upcoming",
+        translation_key="upcoming",
         icon="mdi:television",
         native_unit_of_measurement="Episodes",
         value_fn=len,
@@ -140,7 +140,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "wanted": SonarrSensorEntityDescription[SonarrWantedMissing](
         key="wanted",
-        name="Wanted",
+        translation_key="wanted",
         icon="mdi:television",
         native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,

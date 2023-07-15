@@ -199,6 +199,7 @@ class MediaPlayerEntityFeature(IntFlag):
     BROWSE_MEDIA = 131072
     REPEAT_SET = 262144
     GROUPING = 524288
+    MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
 
 
