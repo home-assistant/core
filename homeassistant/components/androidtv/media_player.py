@@ -95,8 +95,8 @@ async def async_setup_entry(
         PREFIX_ANDROIDTV if device_class == DEVICE_ANDROIDTV else PREFIX_FIRETV
     )
     # CONF_NAME may be present in entry.data for configuration imported from YAML
-    device_name: str = (
-        entry.data.get(CONF_NAME) or f"{device_type} {entry.data[CONF_HOST]}"
+    device_name: str = entry.data.get(
+        CONF_NAME, f"{device_type} {entry.data[CONF_HOST]}"
     )
 
     device_args = [
