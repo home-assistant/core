@@ -1,7 +1,7 @@
 """The Android TV Remote integration."""
 from __future__ import annotations
 
-from asyncio import timeout, TimeoutError
+from asyncio import TimeoutError, timeout
 import logging
 
 from androidtvremote2 import (
