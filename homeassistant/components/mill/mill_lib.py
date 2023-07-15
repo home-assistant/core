@@ -1,4 +1,4 @@
-"""Library to handle connection with mill."""
+""" Library to handle connection with mill."""
 from __future__ import annotations
 
 import asyncio
@@ -10,8 +10,10 @@ import logging
 import aiohttp
 import async_timeout
 
+
 API_ENDPOINT = "https://api.millnorwaycloud.com/"
 DEFAULT_TIMEOUT = 10
+WINDOW_STATES = {0: "disabled", 3: "enabled_not_active", 2: "enabled_active"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,8 +21,17 @@ _LOGGER = logging.getLogger(__name__)
 class Mill:
     """Class to communicate with the Mill api."""
 
-    def __init__(self, username, password, timeout=DEFAULT_TIMEOUT, websession=None):
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(
+        self,
+        username,
+        password,
+        timeout=DEFAULT_TIMEOUT,
+        websession=None,
+    ) -> None:
         """Initialize the Mill connection."""
+        self.devices = {}
         if websession is None:
 
             async def _create_session():
@@ -30,15 +41,17 @@ class Mill:
             self.websession = loop.run_until_complete(_create_session())
         else:
             self.websession = websession
+
         self._timeout = timeout
         self._username = username
         self._password = password
         self._user_id = None
         self._token = None
-        self.devices = {}
+        self._migrated = False
 
     async def connect(self, retry=2):
         """Connect to Mill."""
+        # pylint: disable=too-many-return-statements
         payload = {"login": self._username, "password": self._password}
         try:
             async with async_timeout.timeout(self._timeout):
@@ -54,7 +67,7 @@ class Mill:
 
         result = await resp.text()
         if "Incorrect login or password" in result:
-            if retry < 1:
+            if retry < 1 or self._migrated:
                 _LOGGER.error("Incorrect login or password, %s", result)
                 return False
             payload = {
@@ -64,6 +77,7 @@ class Mill:
                 },
                 "password": self._password,
             }
+            self._migrated = True
             async with async_timeout.timeout(self._timeout):
                 resp = await self.websession.post(
                     API_ENDPOINT + "cloud-migration/migrate-customer",
@@ -105,6 +119,7 @@ class Mill:
 
     async def request(self, command, payload=None, retry=3, patch=False):
         """Request data."""
+        # pylint: disable=too-many-return-statements
         if self._token is None:
             _LOGGER.error("No token")
             return None
@@ -140,7 +155,7 @@ class Mill:
             await self.connect()
             return await self.request(url, payload, retry - 1, patch=patch)
         if "error" in result:
-            raise Exception(result)
+            raise Exception(result)  # pylint: disable=broad-exception-raised
         if "InvalidAuthTokenError" in result:
             _LOGGER.error("Invalid auth token, %s", result)
             if await self.connect():
@@ -182,46 +197,17 @@ class Mill:
         await asyncio.gather(*tasks)
 
     async def _update_device(self, device_data, room_data=None):
-        window_states = {0: "disabled", 3: "enabled_not_active", 2: "enabled_active"}
         device_type = (
             device_data.get("deviceType", {}).get("parentType", {}).get("name")
         )
-
-        now = dt.datetime.now()
-
         _id = device_data.get("deviceId")
 
-        if _id in self.devices:
-            device = self.devices[_id]
-        else:
-            if device_type in ("Heaters",):
-                device = Heater()
-            elif device_type in ("Sensors",):
-                device = Sensor()
-            elif device_type in ("Sockets",):
-                device = Socket()
-            else:
-                _LOGGER.error("Unsupported device, %s %s", device_type, device_data)
-                return
-
-        device.name = device_data.get("customName")
-        device.available = device_data.get("isConnected")
-        device.device_id = _id
-        device.model = (
-            device_data.get("deviceType", {}).get("childType", {}).get("name")
-        )
-
-        if device_type in ("Sensors",):
-            device.current_temp = device_data.get("lastMetrics", {}).get("temperature")
-            device.humidity = device_data.get("lastMetrics", {}).get("humidity")
-            device.tvoc = device_data.get("lastMetrics", {}).get("tvoc")
-            device.eco2 = device_data.get("lastMetrics", {}).get("eco2")
-            device.battery = device_data.get("lastMetrics", {}).get("batteryPercentage")
-            device.report_time = device_data.get("lastMetrics", {}).get("time")
-
-        elif device_type in ("Heaters", "Sockets"):
-            if device.last_updated and (
-                now - device.last_updated < dt.timedelta(seconds=15)
+        if device_type in ("Heaters", "Sockets"):
+            now = dt.datetime.now()
+            if (
+                _id in self.devices
+                and self.devices[_id].last_updated
+                and (now - self.devices[_id].last_updated < dt.timedelta(seconds=15))
             ):
                 return
             device_stats = await self.request(
@@ -233,35 +219,19 @@ class Mill:
                     "day": 1,
                 },
             )
-            device.room_name = device_data.get("roomName")
-            device.set_temp = device_data.get("lastMetrics").get("temperature")
-            device.current_temp = device_data.get("lastMetrics").get(
-                "temperatureAmbient"
-            )
-            device.power_status = (
-                device_data.get("lastMetrics").get("powerStatus", 0) > 0
-            )
-            device.open_window = window_states.get(
-                device_data.get("lastMetrics").get("openWindowsStatus")
-            )
-            device.day_consumption = (
-                device_data.get("energyUsageForCurrentDay", 0) / 1000.0
-            )
-            device.year_consumption = (
-                device_stats.get("deviceInfo", {}).get("totalPower", 0) / 1000.0
-            )
-            if room_data:
-                device.tibber_control = (
-                    room_data.get("controlSource", {}).get("tibber") == 1
+            if device_type == "Heaters":
+                self.devices[_id] = Heater.init_from_response(
+                    device_data, room_data, device_stats
                 )
-                device.home_id = room_data.get("houseId")
-                device.room_id = room_data.get("id")
-                device.room_avg_temp = room_data.get("averageTemperature")
-                device.independent_device = False
             else:
-                device.independent_device = True
-
-        self.devices[_id] = device
+                self.devices[_id] = Socket.init_from_response(
+                    device_data, room_data, device_stats
+                )
+        elif device_type in ("Sensors",):
+            self.devices[_id] = Sensor.init_from_response(device_data)
+        else:
+            _LOGGER.error("Unsupported device, %s %s", device_type, device_data)
+            return
 
     async def set_room_temperatures_by_name(
         self, room_name, sleep_temp=None, comfort_temp=None, away_temp=None
@@ -306,7 +276,7 @@ class Mill:
         return {
             key: val
             for key, val in self.devices.items()
-            if isinstance(val, Heater) or isinstance(val, Socket)
+            if isinstance(val, (Heater, Socket))
         }
 
     async def fetch_heater_and_sensor_data(self):
@@ -314,30 +284,28 @@ class Mill:
         await self.update_devices()
         return self.devices
 
-    async def heater_control(self, device_id, power_status):
+    async def heater_control(self, device_id: str, power_status: bool):
         """Set heater temps."""
         if device_id not in self.devices:
             _LOGGER.error("Device id %s not found", device_id)
             return
         payload = {
-            "deviceType": self._find_device_type(device_id),
-            "enabled": power_status > 0,
+            "deviceType": self.devices[device_id].device_type,
+            "enabled": power_status,
             "settings": {
                 "operation_mode": "control_individually" if power_status > 0 else "off"
             },
         }
         if await self.request(f"devices/{device_id}/settings", payload, patch=True):
-            if power_status > 0:
-                self.devices[device_id].power_status = True
-            else:
-                self.devices[device_id].power_status = False
+            self.devices[device_id].power_status = power_status
+            if not power_status:
                 self.devices[device_id].is_heating = False
             self.devices[device_id].last_updated = dt.datetime.now()
 
     async def set_heater_temp(self, device_id, set_temp):
         """Set heater temp."""
         payload = {
-            "deviceType": self._find_device_type(device_id),
+            "deviceType": self.devices[device_id].device_type,
             "enabled": True,
             "settings": {
                 "operation_mode": "control_individually",
@@ -348,64 +316,140 @@ class Mill:
             self.devices[device_id].set_temp = set_temp
             self.devices[device_id].last_updated = dt.datetime.now()
 
-    def _find_device_type(self, device_id):
-        """Find device type."""
-        if device_id not in self.devices:
-            _LOGGER.error("Device id %s not found", device_id)
-            return
-        if isinstance(self.devices[device_id], Socket):
-            return "Sockets"
-        if isinstance(self.devices[device_id], Heater):
-            return "Heaters"
-        if isinstance(self.devices[device_id], Sensor):
-            return "Sensors"
-        _LOGGER.error("Unknown device type %s", self.devices[device_id])
 
-
-@dataclass
+@dataclass(kw_only=True)
 class MillDevice:
     """Mill Device."""
+
+    # pylint: disable=too-many-instance-attributes
 
     name: str | None = None
     device_id: int | None = None
     available: bool | None = None
     model: str | None = None
+    report_time: int | None = None
+    data: dict | None = None
+    room_data: dict | None = None
+    stats: dict | None = None
+
+    @classmethod
+    def init_from_response(
+        cls,
+        device_data: dict,
+        room_data: dict | None = None,
+        device_stats: dict | None = None,
+    ) -> MillDevice:
+        """Class method."""
+        return cls(
+            name=device_data.get("customName"),
+            device_id=device_data.get("deviceId"),
+            available=device_data.get("isConnected"),
+            model=device_data.get("deviceType", {}).get("childType", {}).get("name"),
+            report_time=device_data.get("lastMetrics", {}).get("time"),
+            data=device_data,
+            room_data=room_data,
+            stats=device_stats,
+        )
+
+    @property
+    def device_type(self) -> str:
+        """Return device type."""
+        return "unknown"
+
+    @property
+    def last_updated(self) -> dt.datetime:
+        """Last updated."""
+        return dt.datetime.fromtimestamp(self.report_time / 1000).astimezone(
+            dt.timezone.utc
+        )
 
 
-@dataclass
+@dataclass()
 class Heater(MillDevice):
     """Representation of heater."""
 
     # pylint: disable=too-many-instance-attributes
 
-    last_updated: dt.datetime | None = None
-    home_id: str | None = None
-    room_id: str | None = None
     current_temp: float | None = None
-    set_temp: float | None = None
-    power_status: bool | None = None
-    independent_device: bool | None = None
-    open_window: str | None = None
-    is_heating: bool | None = None
-    tibber_control: bool | None = None
     day_consumption: float | None = None
-    year_consumption: float | None = None
-    room_name: str | None = None
+    home_id: str | None = None
+    independent_device: bool | None = None
+    is_heating: bool | None = None
+    last_updated: dt.datetime | None = None
+    open_window: str | None = None
+    power_status: bool | None = None
     room_avg_temp: float | None = None
+    room_id: str | None = None
+    room_name: str | None = None
+    set_temp: float | None = None
+    tibber_control: bool | None = None
+    year_consumption: float | None = None
+
+    def __post_init__(self) -> None:
+        """Post init."""
+        if self.data:
+            last_metrics = self.data.get("lastMetrics", {})
+            self.current_temp = last_metrics.get("temperatureAmbient")
+            self.day_consumption = self.data.get("energyUsageForCurrentDay", 0) / 1000.0
+            self.is_heating = last_metrics.get("heaterFlag", 0) > 0
+            self.open_window = WINDOW_STATES.get(last_metrics.get("openWindowsStatus"))
+            self.power_status = last_metrics.get("powerStatus", 0) > 0
+            self.set_temp = last_metrics.get("temperature")
+        if self.stats:
+            self.year_consumption = (
+                self.stats.get("deviceInfo", {}).get("totalPower", 0) / 1000.0
+            )
+        if self.room_data:
+            self.tibber_control = (
+                self.room_data.get("controlSource", {}).get("tibber") == 1
+            )
+            self.home_id = self.room_data.get("houseId")
+            self.room_id = self.room_data.get("id")
+            self.room_name = self.room_data.get("name")
+            self.room_avg_temp = self.room_data.get("averageTemperature")
+            self.independent_device = False
+        else:
+            self.independent_device = True
+
+    @property
+    def device_type(self) -> str:
+        """Return device type."""
+        return "Heaters"
 
 
-@dataclass
+@dataclass()
 class Socket(Heater):
-    pass
+    """Representation of socket."""
+
+    @property
+    def device_type(self) -> str:
+        """Return device type."""
+        return "Sockets"
 
 
-@dataclass
+@dataclass()
 class Sensor(MillDevice):
     """Representation of sensor."""
+
+    # pylint: disable=too-many-instance-attributes
 
     current_temp: float | None = None
     humidity: float | None = None
     tvoc: float | None = None
     eco2: float | None = None
     battery: float | None = None
-    report_time: int | None = None
+
+    def __post_init__(self) -> None:
+        """Post init."""
+        if self.data:
+            last_metrics = self.data.get("lastMetrics", {})
+            self.current_temp = last_metrics.get("temperature")
+            self.humidity = last_metrics.get("humidity")
+            self.tvoc = last_metrics.get("tvoc")
+            self.eco2 = last_metrics.get("eco2")
+            self.battery = last_metrics.get("batteryPercentage")
+
+    @property
+    def device_type(self) -> str:
+        """Return device type."""
+        return "Sensors"
