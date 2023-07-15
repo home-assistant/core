@@ -105,7 +105,7 @@ class FroniusSolarNet:
         # _create_solar_net_device uses data from self.logger_coordinator when available
         self.system_device_info = await self._create_solar_net_device()
 
-        # await self._init_devices_inverter()
+        await self._init_devices_inverter()
 
         self.meter_coordinator = await self._init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
@@ -225,7 +225,7 @@ class FroniusSolarNet:
                 # During a re-scan we will attempt again as per schedule.
                 _LOGGER.warning("Re-scan failed for %s", self.host)
             else:
-                raise
+                raise ConfigEntryNotReady from err
 
         inverter_infos: list[FroniusDeviceInfo] = []
         for inverter in _inverter_info["inverters"]:

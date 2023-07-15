@@ -59,19 +59,6 @@ async def test_inverter_error(
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_inverter_error_connection(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup when _get_inverter_infos causes a connection error."""
-    with patch(
-        "homeassistant.components.fronius.FroniusSolarNet._get_inverter_infos",
-        side_effect=ConnectionError,
-    ):
-        mock_responses(aioclient_mock, fixture_set="igplus_v2", night=False)
-        config_entry = await setup_fronius_integration(hass)
-        assert config_entry.state is ConfigEntryState.LOADED
-
-
 async def test_inverter_night_restart(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
