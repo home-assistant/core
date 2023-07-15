@@ -222,8 +222,6 @@ def should_compress(content_type: str) -> bool:
         if "svg" in content_type:
             return True
         return False
-    if content_type.startswith(("video/", "audio/", "application/", "font/")):
-        if "json" in content_type:
-            return True
+    if content_type.startswith(("video/", "audio/", "font/")):
         return False
     return True
