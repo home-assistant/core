@@ -27,7 +27,7 @@
           "delay_countdown": "Delay Countdown",
           "delay_paused": "Delay Paused",
           "smart_delay": "Smart Delay",
-          "smart_grid_pause": "Smart Delay",
+          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::whirlpool_machine::state::smart_delay%]",
           "pause": "[%key:common::state::paused%]",
           "running_maincycle": "Running Maincycle",
           "running_postcycle": "Running Postcycle",

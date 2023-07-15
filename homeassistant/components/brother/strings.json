@@ -12,7 +12,7 @@
         "description": "Do you want to add the printer {model} with serial number `{serial_number}` to Home Assistant?",
         "title": "Discovered Brother Printer",
         "data": {
-          "type": "Type of the printer"
+          "type": "[%key:component::brother::config::step::user::data::type%]"
         }
       }
     },
