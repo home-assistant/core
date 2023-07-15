@@ -56,7 +56,7 @@ NUMBER_TYPE = EzvizNumberEntityDescription(
     supported_ext_value=["1", "3"],
 )
 
-####
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -66,14 +66,11 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        [
-            EzvizSensor(coordinator, camera, value, entry.entry_id)
-            for camera in coordinator.data
-            for capibility, value in coordinator.data[camera]["supportExt"].items()
-            if capibility == NUMBER_TYPE.supported_ext
-            if value in NUMBER_TYPE.supported_ext_value
-        ],
-        update_before_add=True,
+        EzvizSensor(coordinator, camera, value, entry.entry_id)
+        for camera in coordinator.data
+        for capibility, value in coordinator.data[camera]["supportExt"].items()
+        if capibility == NUMBER_TYPE.supported_ext
+        if value in NUMBER_TYPE.supported_ext_value
     )
 
 
@@ -100,9 +97,8 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
-        await super().async_added_to_hass()
-        await hass.async_add_executor_job(self.update)
-    
+        await self.hass.async_add_executor_job(self.update)
+
     @property
     def native_value(self) -> float | None:
         """Return the state of the entity."""
