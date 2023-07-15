@@ -50,6 +50,7 @@ class RingLight(RingEntityMixin, LightEntity):
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_translation_key = "light"
 
     def __init__(self, config_entry_id, device):
         """Initialize the light."""
@@ -66,11 +67,6 @@ class RingLight(RingEntityMixin, LightEntity):
 
         self._light_on = self._device.lights == ON_STATE
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Name of the light."""
-        return f"{self._device.name} light"
 
     @property
     def unique_id(self):

@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 from math import ceil, floor, log10
 import re
+import sys
 from typing import Any, Final, cast, final
 
 from typing_extensions import Self
@@ -91,6 +92,8 @@ _LOGGER: Final = logging.getLogger(__name__)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
+
+PY_311 = sys.version_info >= (3, 11, 0)
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
@@ -638,10 +641,12 @@ class SensorEntity(Entity):
                 )
                 precision = precision + floor(ratio_log)
 
-                value = f"{converted_numerical_value:.{precision}f}"
-                # This can be replaced with adding the z option when we drop support for
-                # Python 3.10
-                value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+                if PY_311:
+                    value = f"{converted_numerical_value:z.{precision}f}"
+                else:
+                    value = f"{converted_numerical_value:.{precision}f}"
+                    if value.startswith("-0") and NEGATIVE_ZERO_PATTERN.match(value):
+                        value = value[1:]
             else:
                 value = converted_numerical_value
 
@@ -883,29 +888,31 @@ def async_update_suggested_units(hass: HomeAssistant) -> None:
         )
 
 
+def _display_precision(hass: HomeAssistant, entity_id: str) -> int | None:
+    """Return the display precision."""
+    if not (entry := er.async_get(hass).async_get(entity_id)) or not (
+        sensor_options := entry.options.get(DOMAIN)
+    ):
+        return None
+    if (display_precision := sensor_options.get("display_precision")) is not None:
+        return cast(int, display_precision)
+    return sensor_options.get("suggested_display_precision")
+
+
 @callback
 def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> str:
     """Return the state rounded for presentation."""
-
-    def display_precision() -> int | None:
-        """Return the display precision."""
-        if not (entry := er.async_get(hass).async_get(entity_id)) or not (
-            sensor_options := entry.options.get(DOMAIN)
-        ):
-            return None
-        if (display_precision := sensor_options.get("display_precision")) is not None:
-            return cast(int, display_precision)
-        return sensor_options.get("suggested_display_precision")
-
     value = state.state
-    if (precision := display_precision()) is None:
+    if (precision := _display_precision(hass, entity_id)) is None:
         return value
 
     with suppress(TypeError, ValueError):
         numerical_value = float(value)
-        value = f"{numerical_value:.{precision}f}"
-        # This can be replaced with adding the z option when we drop support for
-        # Python 3.10
-        value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+        if PY_311:
+            value = f"{numerical_value:z.{precision}f}"
+        else:
+            value = f"{numerical_value:.{precision}f}"
+            if value.startswith("-0") and NEGATIVE_ZERO_PATTERN.match(value):
+                value = value[1:]
 
     return value

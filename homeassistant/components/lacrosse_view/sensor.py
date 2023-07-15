@@ -67,7 +67,6 @@ SENSOR_DESCRIPTIONS = {
     "Temperature": LaCrosseSensorEntityDescription(
         key="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -75,22 +74,20 @@ SENSOR_DESCRIPTIONS = {
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        name="Humidity",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=PERCENTAGE,
     ),
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
+        translation_key="heat_index",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Heat index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
-        name="Wind speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -98,7 +95,6 @@ SENSOR_DESCRIPTIONS = {
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
-        name="Rain",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -106,23 +102,23 @@ SENSOR_DESCRIPTIONS = {
     ),
     "WindHeading": LaCrosseSensorEntityDescription(
         key="WindHeading",
-        name="Wind heading",
+        translation_key="wind_heading",
         value_fn=get_value,
         native_unit_of_measurement=DEGREE,
     ),
     "WetDry": LaCrosseSensorEntityDescription(
         key="WetDry",
-        name="Wet/Dry",
+        translation_key="wet_dry",
         value_fn=get_value,
     ),
     "Flex": LaCrosseSensorEntityDescription(
         key="Flex",
-        name="Flex",
+        translation_key="flex",
         value_fn=get_value,
     ),
     "BarometricPressure": LaCrosseSensorEntityDescription(
         key="BarometricPressure",
-        name="Barometric pressure",
+        translation_key="barometric_pressure",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -130,7 +126,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     "FeelsLike": LaCrosseSensorEntityDescription(
         key="FeelsLike",
-        name="Feels like",
+        translation_key="feels_like",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -138,7 +134,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     "WindChill": LaCrosseSensorEntityDescription(
         key="WindChill",
-        name="Wind chill",
+        translation_key="wind_chill",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -193,7 +189,7 @@ class LaCrosseViewSensor(
     """LaCrosse View sensor."""
 
     entity_description: LaCrosseSensorEntityDescription
-    _attr_has_entity_name: bool = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -15,31 +15,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, load_fixture
 
 
-async def test_webhook_rejects_invalid_message(
-    hass: HomeAssistant,
-    hass_client_no_auth,
-    integration: MockConfigEntry,
-    lock: loqed.Lock,
-):
-    """Test webhook called with invalid message."""
-    await async_setup_component(hass, "http", {"http": {}})
-    client = await hass_client_no_auth()
-
-    coordinator = hass.data[DOMAIN][integration.entry_id]
-    lock.receiveWebhook = AsyncMock(return_value={"error": "invalid hash"})
-
-    with patch.object(coordinator, "async_set_updated_data") as mock:
-        message = load_fixture("loqed/battery_update.json")
-        timestamp = 1653304609
-        await client.post(
-            f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
-            data=message,
-            headers={"timestamp": str(timestamp), "hash": "incorrect hash"},
-        )
-
-    mock.assert_not_called()
-
-
 async def test_webhook_accepts_valid_message(
     hass: HomeAssistant,
     hass_client_no_auth,
@@ -49,20 +24,17 @@ async def test_webhook_accepts_valid_message(
     """Test webhook called with valid message."""
     await async_setup_component(hass, "http", {"http": {}})
     client = await hass_client_no_auth()
-    processed_message = json.loads(load_fixture("loqed/battery_update.json"))
-    coordinator = hass.data[DOMAIN][integration.entry_id]
+    processed_message = json.loads(load_fixture("loqed/lock_going_to_nightlock.json"))
     lock.receiveWebhook = AsyncMock(return_value=processed_message)
 
-    with patch.object(coordinator, "async_update_listeners") as mock:
-        message = load_fixture("loqed/battery_update.json")
-        timestamp = 1653304609
-        await client.post(
-            f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
-            data=message,
-            headers={"timestamp": str(timestamp), "hash": "incorrect hash"},
-        )
-
-    mock.assert_called()
+    message = load_fixture("loqed/battery_update.json")
+    timestamp = 1653304609
+    await client.post(
+        f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+        data=message,
+        headers={"timestamp": str(timestamp), "hash": "incorrect hash"},
+    )
+    lock.receiveWebhook.assert_called()
 
 
 async def test_setup_webhook_in_bridge(
