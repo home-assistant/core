@@ -17,17 +17,20 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LawnMowerActivity, LawnMowerEntityFeature
+from .const import (
+    DOMAIN,
+    SERVICE_DISABLE_SCHEDULE,
+    SERVICE_DOCK,
+    SERVICE_ENABLE_SCHEDULE,
+    SERVICE_PAUSE,
+    SERVICE_START_MOWING,
+    LawnMowerActivity,
+    LawnMowerEntityFeature,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_START_MOWING = "start_mowing"
-SERVICE_PAUSE = "pause"
-SERVICE_ENABLE_SCHEDULE = "enable_schedule"
-SERVICE_DISABLE_SCHEDULE = "disable_schedule"
-SERVICE_DOCK = "dock"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -37,3 +37,9 @@ class LawnMowerEntityFeature(IntFlag):
 
 
 DOMAIN = "lawn_mower"
+
+SERVICE_START_MOWING = "start_mowing"
+SERVICE_PAUSE = "pause"
+SERVICE_ENABLE_SCHEDULE = "enable_schedule"
+SERVICE_DISABLE_SCHEDULE = "disable_schedule"
+SERVICE_DOCK = "dock"
