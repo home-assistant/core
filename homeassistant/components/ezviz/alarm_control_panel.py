@@ -71,14 +71,13 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    async_add_entities([EzvizAlarm(coordinator, entry.entry_id)])
+    async_add_entities([EzvizAlarm(coordinator, entry.entry_id, ALARM_TYPE)])
 
 
 class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of a Ezviz alarm control panel."""
 
     coordinator: EzvizDataUpdateCoordinator
-    entity_description: EzvizAlarmControlPanelEntityDescription
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
@@ -87,11 +86,16 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     )
     _attr_code_arm_required = False
 
-    def __init__(self, coordinator: EzvizDataUpdateCoordinator, entry_id: str) -> None:
+    def __init__(
+        self,
+        coordinator: EzvizDataUpdateCoordinator,
+        entry_id: str,
+        entity_description: EzvizAlarmControlPanelEntityDescription,
+    ) -> None:
         """Initialize alarm control panel entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry_id}_{ALARM_TYPE.key}"
-        self.entity_description = ALARM_TYPE
+        self._attr_unique_id = f"{entry_id}_{entity_description.key}"
+        self.entity_description = entity_description
         self._attr_device_info: DeviceInfo = {
             "identifiers": {(DOMAIN, "EZVIZ Alarm")},
             "name": "EZVIZ Alarm",
