@@ -195,17 +195,11 @@ class FroniusSolarNet:
             )
 
             # Add found inverter only not already existing
-            if (
-                next(
-                    (
-                        inv
-                        for inv in self.inverter_coordinators
-                        if inv.name == _inverter_name
-                    ),
-                    None,
-                )
-                is None
-            ):
+            if _inverter_info.solar_net_id in [
+                inv.inverter_info.solar_net_id for inv in self.inverter_coordinators
+            ]:
+                continue
+                
                 _coordinator = FroniusInverterUpdateCoordinator(
                     hass=self.hass,
                     solar_net=self,
