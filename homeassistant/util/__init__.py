@@ -44,13 +44,13 @@ def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
     if text == "" or text is None:
         return ""
-    GERMAN_UMLAUT = [
+    GERMAN_TRANSLATIONS = [
     ['ä', 'ae'],
     ['ö', 'oe'],
     ['ü', 'ue'],
     ['ß', 'ss'],
     ]
-    slug = unicode_slug.slugify(text, separator=separator, replacements=GERMAN_UMLAUT)
+    slug = unicode_slug.slugify(text, separator=separator, replacements=GERMAN_TRANSLATIONS)
     return "unknown" if slug == "" else slug
 
 
