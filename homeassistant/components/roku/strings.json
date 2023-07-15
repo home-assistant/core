@@ -52,5 +52,17 @@
         "name": "Active app ID"
       }
     }
+  },
+  "services": {
+    "search": {
+      "name": "Search",
+      "description": "Emulates opening the search screen and entering the search keyword.",
+      "fields": {
+        "keyword": {
+          "name": "Keyword",
+          "description": "The keyword to search for."
+        }
+      }
+    }
   }
 }
