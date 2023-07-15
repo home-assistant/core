@@ -59,7 +59,7 @@ async def test_inverter_error(
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_inverter_night_restart(
+async def test_inverter_night_rescan(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test dynamic adding of an inverter discovered automatically after a Home Assistant reboot during the night."""
@@ -82,3 +82,29 @@ async def test_inverter_night_restart(
     device_registry = dr.async_get(hass)
     inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "203200")})
     assert inverter_1.manufacturer == "Fronius"
+
+    # After another re-scan we still only expect this inverter
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(minutes=SOLAR_NET_RESCAN_TIMER * 2)
+    )
+    await hass.async_block_till_done()
+    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "203200")})
+    assert inverter_1.manufacturer == "Fronius"
+
+
+async def test_inverter_rescan_interruption(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test test interruption of re-scan during runtime to only cause a warning."""
+    mock_responses(aioclient_mock, fixture_set="igplus_v2", night=False)
+    config_entry = await setup_fronius_integration(hass, is_logger=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "pyfronius.Fronius.inverter_info",
+        side_effect=FroniusError,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(minutes=SOLAR_NET_RESCAN_TIMER)
+        )
+        await hass.async_block_till_done()
