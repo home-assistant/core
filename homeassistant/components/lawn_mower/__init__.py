@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import Enum, IntFlag
 from functools import partial
 import logging
 from typing import Any, final
@@ -18,7 +17,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, LawnMowerActivity, LawnMowerEntityFeature
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -66,27 +65,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class LawnMowerActivity(Enum):
-    """Activity state of the lawn mower entity."""
-
-    ERROR = "error"
-    PAUSED = "paused"
-    MOWING = "mowing"
-    DOCKING = "docking"
-    DOCKED_SCHEDULE_DISABLED = "docked_schedule_disabled"
-    DOCKED_SCHEDULE_ENABLED = "docked_schedule_enabled"
-
-
-class LawnMowerEntityFeature(IntFlag):
-    """Supported features of the lawn mower entity."""
-
-    START_MOWING = 1
-    PAUSE = 2
-    DOCK = 4
-    ENABLE_SCHEDULE = 8
-    DISABLE_SCHEDULE = 16
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up lawn mower devices."""
     component: EntityComponent[LawnMowerEntity] = hass.data[DOMAIN]
@@ -108,14 +86,21 @@ class LawnMowerEntity(Entity):
     """Base class for lawn mower entities."""
 
     entity_description: LawnMowerEntityEntityDescription
-    _activity: str | None = None
-    _attr_supported_features: LawnMowerEntityFeature
+    _attr_activity: LawnMowerActivity | None = None
+    _attr_supported_features: LawnMowerEntityFeature = LawnMowerEntityFeature(0)
 
     @final
     @property
     def state(self) -> str | None:
         """Return the current state."""
-        return self._activity
+        if self.activity is None:
+            return None
+        return self.activity
+
+    @property
+    def activity(self) -> LawnMowerActivity | None:
+        """Return the current lawn mower activity."""
+        return self._attr_activity
 
     @property
     def supported_features(self) -> LawnMowerEntityFeature:

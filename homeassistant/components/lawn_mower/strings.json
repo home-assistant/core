@@ -12,5 +12,27 @@
         "docked_schedule_enabled": "Docked schedule enabled"
       }
     }
+  },
+  "services": {
+    "start_mowing": {
+      "name": "Start mowing",
+      "description": "Starts the mowing task."
+    },
+    "dock": {
+      "name": "Return to dock",
+      "description": "Stops the mowing task and returns to the dock."
+    },
+    "pause": {
+      "name": "Pause",
+      "description": "Pauses the mowing task."
+    },
+    "enable_schedule": {
+      "name": "Enable schedule",
+      "description": "Enables mowing schedule."
+    },
+    "disable_schedule": {
+      "name": "Disable schedule",
+      "description": "Disables mowing schedule."
+    }
   }
 }

@@ -1,36 +1,36 @@
 # Describes the format for available lawn_mower services
 
 start_mowing:
-  name: Start mowing
-  description: Start the mowing task.
   target:
     entity:
       domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.START_MOWING
 
 dock:
-  name: Dock
-  description: Stop the mowing task and return to its dock.
   target:
     entity:
       domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.DOCK
 
 pause:
-  name: Pause
-  description: Pause the mowing task.
   target:
     entity:
       domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.PAUSE
 
 enable_schedule:
-  name: Enable schedule
-  description: Enable scheduled mowing.
   target:
     entity:
       domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.ENABLE_SCHEDULE
 
 disable_schedule:
-  name: Disable schedule
-  description: disable scheduled mowing.
   target:
     entity:
       domain: lawn_mower
+      supported_features:
+        - lawn_mower.LawnMowerEntityFeature.DISABLE_SCHEDULE

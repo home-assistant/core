@@ -20,6 +20,7 @@ async def test_sync_start_mowing(hass: HomeAssistant) -> None:
     lawn_mower.hass = hass
 
     lawn_mower.start_mowing = MagicMock()
+
     await lawn_mower.async_start_mowing()
 
     assert lawn_mower.start_mowing.called

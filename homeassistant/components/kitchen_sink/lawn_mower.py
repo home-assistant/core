@@ -26,32 +26,32 @@ async def async_setup_platform(
             DemoLawnMower(
                 "kitchen_sink_mower_001",
                 "Mower can mow",
-                LawnMowerActivity.MOWING.value,
+                LawnMowerActivity.MOWING,
                 LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_002",
                 "Mower can dock",
-                LawnMowerActivity.DOCKING.value,
+                LawnMowerActivity.DOCKING,
                 LawnMowerEntityFeature.DOCK,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_003",
                 "Mower can pause",
-                LawnMowerActivity.DOCKING.value,
+                LawnMowerActivity.DOCKING,
                 LawnMowerEntityFeature.PAUSE,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_004",
-                "Mower can enable schedule",
-                LawnMowerActivity.DOCKED_SCHEDULE_DISABLED.value,
-                LawnMowerEntityFeature.ENABLE_SCHEDULE,
+                "Mower can disable schedule",
+                LawnMowerActivity.DOCKED_SCHEDULE_DISABLED,
+                LawnMowerEntityFeature.DISABLE_SCHEDULE,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_005",
-                "Mower can disable schedule",
-                LawnMowerActivity.DOCKED_SCHEDULE_ENABLED.value,
-                LawnMowerEntityFeature.DISABLE_SCHEDULE,
+                "Mower can enable schedule",
+                LawnMowerActivity.DOCKED_SCHEDULE_ENABLED,
+                LawnMowerEntityFeature.ENABLE_SCHEDULE,
             ),
         ]
     )
@@ -73,36 +73,36 @@ class DemoLawnMower(LawnMowerEntity):
         self,
         unique_id: str,
         name: str,
-        state: str,
+        activity: LawnMowerActivity,
         features: LawnMowerEntityFeature = LawnMowerEntityFeature(0),
     ) -> None:
         """Initialize the lawn mower."""
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
-        self._activity = state
+        self._attr_activity = activity
 
     async def async_start_mowing(self) -> None:
         """Start mowing."""
-        self._activity = LawnMowerActivity.MOWING.value
+        self._attr_activity = LawnMowerActivity.MOWING
         self.async_write_ha_state()
 
     async def async_dock(self) -> None:
         """Start docking."""
-        self._activity = LawnMowerActivity.DOCKING.value
+        self._attr_activity = LawnMowerActivity.DOCKING
         self.async_write_ha_state()
 
     async def async_pause(self) -> None:
         """Pause mower."""
-        self._activity = LawnMowerActivity.PAUSED.value
+        self._attr_activity = LawnMowerActivity.PAUSED
         self.async_write_ha_state()
 
     async def async_enable_schedule(self, **kwargs: Any) -> None:
         """Set docked schedule enabled."""
-        self._activity = LawnMowerActivity.DOCKED_SCHEDULE_ENABLED.value
+        self._attr_activity = LawnMowerActivity.DOCKED_SCHEDULE_ENABLED
         self.async_write_ha_state()
 
     async def async_disable_schedule(self) -> None:
         """Set docked schedule disabled."""
-        self._activity = LawnMowerActivity.DOCKED_SCHEDULE_DISABLED.value
+        self._attr_activity = LawnMowerActivity.DOCKED_SCHEDULE_DISABLED
         self.async_write_ha_state()
