@@ -218,10 +218,8 @@ def _get_timeout(path: str) -> ClientTimeout:
 
 def should_compress(content_type: str) -> bool:
     """Return if we should compress a response."""
-    if content_type.startswith("image/"):
-        if "svg" in content_type:
-            return True
-        return False
-    if content_type.startswith(("video/", "audio/", "font/")):
-        return False
-    return True
+    return (
+        content_type.startswith("image/")
+        and "svg" in content_type
+        or not content_type.startswith(("video/", "audio/", "font/"))
+    )
