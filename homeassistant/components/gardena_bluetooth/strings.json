@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+        }
+      },
+      "confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: {error}"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "number": {
+      "remaining_open_time": {
+        "name": "Remaining open time"
+      },
+      "remaining_open_set": {
+        "name": "Open for"
+      },
+      "manual_watering_time": {
+        "name": "Manual watering time"
+      },
+      "rain_pause": {
+        "name": "Rain pause"
+      },
+      "season_pause": {
+        "name": "Season pause"
+      }
+    },
+    "switch": {
+      "state": {
+        "name": "[%key:common::state::open%]"
+      }
+    }
+  }
+}

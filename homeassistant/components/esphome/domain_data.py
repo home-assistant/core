@@ -78,10 +78,6 @@ class DomainData:
         """Pop the runtime entry data instance associated with this config entry."""
         return self._entry_datas.pop(entry.entry_id)
 
-    def is_entry_loaded(self, entry: ConfigEntry) -> bool:
-        """Check whether the given entry is loaded."""
-        return entry.entry_id in self._entry_datas
-
     def get_or_create_store(
         self, hass: HomeAssistant, entry: ConfigEntry
     ) -> ESPHomeStorage:
