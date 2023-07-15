@@ -56,7 +56,7 @@ NUMBER_TYPE = EzvizNumberEntityDescription(
     supported_ext_value=["1", "3"],
 )
 
-
+####
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -98,6 +98,11 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         self.config_entry_id = config_entry_id
         self.sensor_value: int | None = None
 
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        await hass.async_add_executor_job(self.update)
+    
     @property
     def native_value(self) -> float | None:
         """Return the state of the entity."""
