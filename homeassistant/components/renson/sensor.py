@@ -45,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 
 from . import RensonCoordinator, RensonData
 from .const import DOMAIN
@@ -105,7 +106,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=CURRENT_LEVEL_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze", "Holiday"],
+        options=["off", "level1", "level2", "level3", "level4", "breeze", "holiday"],
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_EXTRACT_FIELD",
@@ -164,7 +165,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=MANUAL_LEVEL_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze", "Holiday"],
+        options=["off", "level1", "level2", "level3", "level4", "breeze", "holiday"],
     ),
     RensonSensorEntityDescription(
         key="BREEZE_TEMPERATURE_FIELD",
@@ -182,7 +183,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze"],
+        options=["off", "level1", "level2", "level3", "level4", "breeze"],
     ),
     RensonSensorEntityDescription(
         key="DAYTIME_FIELD",
@@ -205,12 +206,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "Level1",
-            "Level2",
-            "Level3",
-            "Level4",
-        ],
+        options=["level1", "level2", "level3", "level4"],
     ),
     RensonSensorEntityDescription(
         key="NIGHT_POLLUTION_FIELD",
@@ -219,12 +215,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "Level1",
-            "Level2",
-            "Level3",
-            "Level4",
-        ],
+        options=["level1", "level2", "level3", "level4"],
     ),
     RensonSensorEntityDescription(
         key="CO2_THRESHOLD_FIELD",
@@ -290,6 +281,10 @@ class RensonSensor(RensonEntity, SensorEntity):
 
         if self.raw_format:
             self._attr_native_value = value
+        elif self.entity_description.device_class == SensorDeviceClass.ENUM:
+            self._attr_native_value = slugify(
+                self.api.parse_value(value, self.data_type)
+            )
         else:
             self._attr_native_value = self.api.parse_value(value, self.data_type)
 
