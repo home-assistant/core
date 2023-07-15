@@ -218,16 +218,18 @@ class FroniusSolarNet:
 
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
+        inverter_infos: list[FroniusDeviceInfo] = []
+
         try:
             _inverter_info = await self.fronius.inverter_info()
         except FroniusError as err:
             if self.config_entry.state == ConfigEntryState.LOADED:
                 # During a re-scan we will attempt again as per schedule.
                 _LOGGER.warning("Re-scan failed for %s", self.host)
-            else:
-                raise ConfigEntryNotReady from err
+                return inverter_infos
 
-        inverter_infos: list[FroniusDeviceInfo] = []
+            raise ConfigEntryNotReady from err
+
         for inverter in _inverter_info["inverters"]:
             solar_net_id = inverter["device_id"]["value"]
             unique_id = inverter["unique_id"]["value"]
