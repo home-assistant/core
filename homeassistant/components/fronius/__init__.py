@@ -105,7 +105,7 @@ class FroniusSolarNet:
         # _create_solar_net_device uses data from self.logger_coordinator when available
         self.system_device_info = await self._create_solar_net_device()
 
-        await self._init_devices_inverter()
+        # await self._init_devices_inverter()
 
         self.meter_coordinator = await self._init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
@@ -256,9 +256,9 @@ class FroniusSolarNet:
         return inverter_infos
 
     @callback
-    def _rescan_inverter(self, now: datetime) -> None:
+    async def _rescan_inverter(self, now: datetime) -> None:
         """Initiate a scheduled rescan of available inverters."""
-        self.hass.async_add_job(self._init_devices_inverter())
+        await self._init_devices_inverter()
 
     @staticmethod
     async def _init_optional_coordinator(
