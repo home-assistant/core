@@ -101,7 +101,6 @@
     },
     "alarm_control_panel": {
       "ezviz_alarm": {
-        "name": "EZVIZ Alarm",
         "state": {
           "armed_away": "Armed Away",
           "armed_home": "Armed Home",

@@ -81,6 +81,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     coordinator: EzvizDataUpdateCoordinator
     entity_description: EzvizAlarmControlPanelEntityDescription
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
@@ -88,7 +89,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     _attr_code_arm_required = False
 
     def __init__(self, coordinator: EzvizDataUpdateCoordinator, entry_id) -> None:
-        """Initialize the sensor."""
+        """Initialize alarm control panel entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry_id}_{ALARM_TYPE.key}"
         self.entity_description = ALARM_TYPE
