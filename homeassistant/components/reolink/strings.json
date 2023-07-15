@@ -62,7 +62,9 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "auto": "Auto",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "adaptive": "Adaptive",
+          "autoadaptive": "Auto adaptive"
         }
       },
       "day_night_mode": {
@@ -90,6 +92,19 @@
           "auto": "Auto",
           "alwaysonatnight": "Auto & always on at night"
         }
+      }
+    },
+    "sensor": {
+      "event_connection": {
+        "name": "Event connection",
+        "state": {
+          "onvif_push": "ONVIF push",
+          "onvif_long_poll": "ONVIF long poll",
+          "fast_poll": "Fast poll"
+        }
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
       }
     }
   }

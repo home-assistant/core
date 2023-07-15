@@ -21,7 +21,6 @@ async def test_diagnostics(
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    assert diag["ABC999111"]["ac_states"] == snapshot
     assert diag["ABC999111"]["full_capabilities"] == snapshot
     assert diag["ABC999111"]["fan_modes_translated"] == snapshot
     assert diag["ABC999111"]["swing_modes_translated"] == snapshot

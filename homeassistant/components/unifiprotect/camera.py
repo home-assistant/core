@@ -115,7 +115,7 @@ async def async_setup_entry(
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if not isinstance(device, UFPCamera):
-            return
+            return  # type: ignore[unreachable]
 
         entities = _async_camera_entities(data, ufp_device=device)
         async_add_entities(entities)
