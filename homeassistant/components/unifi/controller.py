@@ -345,7 +345,6 @@ class UniFiController:
 
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            configuration_url=self.api.url,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             default_manufacturer=ATTR_MANUFACTURER,
             default_model="UniFi Network",

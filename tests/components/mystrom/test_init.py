@@ -44,7 +44,7 @@ async def test_init_switch_and_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test the initialization of a myStrom switch."""
-    await init_integration(hass, config_entry, 101)
+    await init_integration(hass, config_entry, 106)
     state = hass.states.get("switch.mystrom_device")
     assert state is not None
     assert config_entry.state is ConfigEntryState.LOADED
@@ -58,7 +58,7 @@ async def test_init_switch_and_unload(
 @pytest.mark.parametrize(
     ("device_type", "platform", "entry_state", "entity_state_none"),
     [
-        (101, "switch", ConfigEntryState.LOADED, False),
+        (None, "switch", ConfigEntryState.LOADED, False),
         (102, "light", ConfigEntryState.LOADED, False),
         (103, "button", ConfigEntryState.SETUP_ERROR, True),
         (104, "button", ConfigEntryState.SETUP_ERROR, True),
@@ -68,7 +68,7 @@ async def test_init_switch_and_unload(
         (110, "sensor", ConfigEntryState.SETUP_ERROR, True),
         (113, "switch", ConfigEntryState.SETUP_ERROR, True),
         (118, "button", ConfigEntryState.SETUP_ERROR, True),
-        (120, "switch", ConfigEntryState.SETUP_ERROR, True),
+        (120, "switch", ConfigEntryState.LOADED, False),
     ],
 )
 async def test_init_bulb(

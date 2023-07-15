@@ -600,7 +600,7 @@ class FastUrlDispatcher(UrlDispatcher):
         resource_index = self._resource_index
 
         # Walk the url parts looking for candidates
-        for i in range(len(url_parts), 1, -1):
+        for i in range(len(url_parts), 0, -1):
             url_part = "/" + "/".join(url_parts[1:i])
             if (resource_candidates := resource_index.get(url_part)) is not None:
                 for candidate in resource_candidates:
@@ -608,11 +608,6 @@ class FastUrlDispatcher(UrlDispatcher):
                         match_dict := (await candidate.resolve(request))[0]
                     ) is not None:
                         return match_dict
-        # Next try the index view if we don't have a match
-        if (index_view_candidates := resource_index.get("/")) is not None:
-            for candidate in index_view_candidates:
-                if (match_dict := (await candidate.resolve(request))[0]) is not None:
-                    return match_dict
 
         # Finally, fallback to the linear search
         return await super().resolve(request)

@@ -580,7 +580,9 @@ async def test_entity_and_device_attributes(hass: HomeAssistant, thermostat) -> 
     assert entry
     assert entry.unique_id == thermostat.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, thermostat.device_id)})
+    entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, thermostat.device_id)}
+    )
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, thermostat.device_id)}
