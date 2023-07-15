@@ -49,7 +49,8 @@
             "top": "Top",
             "middle": "Middle",
             "focus": "Focus",
-            "diffuse": "Diffuse"
+            "diffuse": "Diffuse",
+            "quiet": "Quiet"
           }
         },
         "fan_modes": {
