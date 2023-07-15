@@ -16,7 +16,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
@@ -54,12 +54,11 @@ class EzvizAlarmControlPanelEntityDescription(
 
 ALARM_TYPE = EzvizAlarmControlPanelEntityDescription(
     key="ezviz_alarm",
-    translation_key="ezviz_alarm",
     ezviz_alarm_states=[
         None,
         STATE_ALARM_DISARMED,
         STATE_ALARM_ARMED_AWAY,
-        STATE_ALARM_ARMED_NIGHT,
+        STATE_ALARM_ARMED_HOME,
     ],
 )
 
@@ -84,7 +83,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     _attr_name = None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_HOME
     )
     _attr_code_arm_required = False
 
@@ -130,13 +129,13 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot arm EZVIZ alarm") from err
 
-    def alarm_arm_night(self, code: str | None = None) -> None:
-        """Send arm night command."""
+    def alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command."""
         try:
             if self.coordinator.ezviz_client.api_set_defence_mode(
                 DefenseModeType.SLEEP_MODE.value
             ):
-                self._attr_state = STATE_ALARM_ARMED_NIGHT
+                self._attr_state = STATE_ALARM_ARMED_HOME
                 self.async_write_ha_state()
 
         except PyEzvizError as err:
