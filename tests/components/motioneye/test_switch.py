@@ -193,7 +193,7 @@ async def test_switch_device_info(hass: HomeAssistant) -> None:
     )
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({device_identifer})
+    device = device_registry.async_get_device(identifiers={device_identifer})
     assert device
 
     entity_registry = er.async_get(hass)
