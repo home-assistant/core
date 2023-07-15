@@ -7,7 +7,7 @@
         "title": "Device selection",
         "description": "HomeKit Device communicates over the local area network using a secure encrypted connection without a separate HomeKit Controller or iCloud. Select the device you want to pair with:",
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "pair": {
@@ -74,8 +74,8 @@
     "select": {
       "ecobee_mode": {
         "state": {
-          "away": "Away",
-          "home": "Home",
+          "away": "[%key:common::state::not_home%]",
+          "home": "[%key:common::state::home%]",
           "sleep": "Sleep"
         }
       }
@@ -96,7 +96,7 @@
           "border_router": "Border Router",
           "child": "Child",
           "detached": "Detached",
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "joining": "Joining",
           "leader": "Leader",
           "router": "Router"
