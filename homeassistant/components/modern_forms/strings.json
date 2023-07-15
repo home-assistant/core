@@ -56,5 +56,35 @@
         "name": "Adaptive learning"
       }
     }
+  },
+  "services": {
+    "set_light_sleep_timer": {
+      "name": "Set light sleep timer",
+      "description": "Sets a sleep timer on a Modern Forms light.",
+      "fields": {
+        "sleep_time": {
+          "name": "Sleep time",
+          "description": "Number of minutes to set the timer."
+        }
+      }
+    },
+    "clear_light_sleep_timer": {
+      "name": "Clear light sleep timer",
+      "description": "Clears the sleep timer on a Modern Forms light."
+    },
+    "set_fan_sleep_timer": {
+      "name": "Set fan sleep timer",
+      "description": "Sets a sleep timer on a Modern Forms fan.",
+      "fields": {
+        "sleep_time": {
+          "name": "[%key:component::modern_forms::services::set_light_sleep_timer::fields::sleep_time::name%]",
+          "description": "[%key:component::modern_forms::services::set_light_sleep_timer::fields::sleep_time::description%]"
+        }
+      }
+    },
+    "clear_fan_sleep_timer": {
+      "name": "Clear fan sleep timer",
+      "description": "Clears the sleep timer on a Modern Forms fan."
+    }
   }
 }
