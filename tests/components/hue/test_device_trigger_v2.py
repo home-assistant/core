@@ -60,7 +60,7 @@ async def test_get_triggers(
 
     # Get triggers for `Wall switch with 2 controls`
     hue_wall_switch_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
+        identifiers={(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
     )
     hue_bat_sensor = entity_registry.async_get(
         "sensor.wall_switch_with_2_controls_battery"
