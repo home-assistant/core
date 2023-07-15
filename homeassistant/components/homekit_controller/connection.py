@@ -768,7 +768,7 @@ class HKDevice:
 
         self.entity_map.process_changes(new_values_dict)
 
-        async_dispatcher_send(self.hass, self.signal_state_updated)
+        async_dispatcher_send(self.hass, self.signal_state_updated, new_values_dict)
 
     async def get_characteristics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Read latest state from homekit accessory."""
