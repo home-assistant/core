@@ -225,7 +225,7 @@ class FroniusSolarNet:
         except FroniusError as err:
             if self.config_entry.state == ConfigEntryState.LOADED:
                 # During a re-scan we will attempt again as per schedule.
-                _LOGGER.warning("Re-scan failed for %s", self.host)
+                _LOGGER.debug("Re-scan failed for %s", self.host)
                 return inverter_infos
 
             raise ConfigEntryNotReady from err
