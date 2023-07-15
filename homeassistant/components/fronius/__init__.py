@@ -199,27 +199,27 @@ class FroniusSolarNet:
                 inv.inverter_info.solar_net_id for inv in self.inverter_coordinators
             ]:
                 continue
-                
-                _coordinator = FroniusInverterUpdateCoordinator(
-                    hass=self.hass,
-                    solar_net=self,
-                    logger=_LOGGER,
-                    name=_inverter_name,
-                    inverter_info=_inverter_info,
-                )
-                await _coordinator.async_config_entry_first_refresh()
-                self.inverter_coordinators.append(_coordinator)
 
-                # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry
-                if self.sensor_async_add_entities is not None:
-                    _coordinator.add_entities_for_seen_keys(
-                        self.sensor_async_add_entities, InverterSensor
-                    )
+            _coordinator = FroniusInverterUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=_inverter_name,
+                inverter_info=_inverter_info,
+            )
+            await _coordinator.async_config_entry_first_refresh()
+            self.inverter_coordinators.append(_coordinator)
 
-                _LOGGER.info(
-                    "New inverter added (UID: %s)",
-                    _inverter_info.unique_id,
+            # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry
+            if self.sensor_async_add_entities is not None:
+                _coordinator.add_entities_for_seen_keys(
+                    self.sensor_async_add_entities, InverterSensor
                 )
+
+            _LOGGER.info(
+                "New inverter added (UID: %s)",
+                _inverter_info.unique_id,
+            )
 
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
