@@ -54,7 +54,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: history.get(
-            f'Outdoor {"AQI(US)" if settings["is_aqi_usa"] else "AQI(CN)"}', None
+            f'Outdoor {"AQI(US)" if settings["is_aqi_usa"] else "AQI(CN)"}'
         ),
     ),
     AirVisualProMeasurementDescription(
