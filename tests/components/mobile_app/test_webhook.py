@@ -311,6 +311,10 @@ async def test_webhook_handle_get_config(
 
     hass_config = hass.config.as_dict()
 
+    # JSON does not support sets, so we need to test
+    # the unordered values
+    json["components"] = set(json["components"])
+
     expected_dict = {
         "latitude": hass_config["latitude"],
         "longitude": hass_config["longitude"],
@@ -318,7 +322,7 @@ async def test_webhook_handle_get_config(
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],
-        "components": hass_config["components"],
+        "components": set(hass_config["components"]),
         "version": hass_config["version"],
         "theme_color": "#03A9F4",  # Default frontend theme color
         "entities": {

@@ -1481,7 +1481,7 @@ async def test_config_as_dict() -> None:
         CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
         "location_name": "Home",
         "time_zone": "UTC",
-        "components": set(),
+        "components": [],
         "config_dir": "/test/ha-config",
         "whitelist_external_dirs": set(),
         "allowlist_external_dirs": set(),

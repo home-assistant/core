@@ -565,7 +565,7 @@ async def test_get_config(hass: HomeAssistant, websocket_client) -> None:
     assert msg["success"]
 
     if "components" in msg["result"]:
-        msg["result"]["components"] = set(msg["result"]["components"])
+        msg["result"]["components"] = msg["result"]["components"]
     if "whitelist_external_dirs" in msg["result"]:
         msg["result"]["whitelist_external_dirs"] = set(
             msg["result"]["whitelist_external_dirs"]
