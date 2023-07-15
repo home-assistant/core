@@ -166,7 +166,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
     @callback
     def _async_receive_data(self, device, location, battery, accuracy, attributes):
         """Mark the device as seen."""
-        if device != self.name:
+        if device != self._name:
             return
 
         self._location = location
