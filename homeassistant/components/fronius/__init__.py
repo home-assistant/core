@@ -225,7 +225,7 @@ class FroniusSolarNet:
                 # During a re-scan we will attempt again as per schedule.
                 _LOGGER.warning("Re-scan failed for %s", self.host)
             else:
-                raise ConfigEntryNotReady from err
+                raise
 
         inverter_infos: list[FroniusDeviceInfo] = []
         for inverter in _inverter_info["inverters"]:
