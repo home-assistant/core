@@ -126,7 +126,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
     @callback
     def _async_receive_data(self, device, gps, location_name, attributes):
         """Mark the device as seen."""
-        if device != self.name:
+        if device != self._name:
             return
 
         self._attributes.update(attributes)
