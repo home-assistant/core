@@ -92,6 +92,24 @@ async def test_static_config_without_port(hass: HomeAssistant, pywemo_device) ->
     assert len(entity_entries) == 1
 
 
+async def test_reload_config_entry(hass: HomeAssistant, pywemo_device) -> None:
+    """Config entry can be reloaded without errors."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_STATIC: [MOCK_HOST],
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert await hass.config_entries.async_reload(entries[0].entry_id)
+
+
 async def test_static_config_with_invalid_host(hass: HomeAssistant) -> None:
     """Component setup fails if a static host is invalid."""
     setup_success = await async_setup_component(
