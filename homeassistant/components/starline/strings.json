@@ -59,7 +59,7 @@
       "fields": {
         "scan_interval": {
           "name": "Scan interval",
-          "description": "Update frequency."
+          "description": "[%key:component::starline::services::set_scan_interval::fields::scan_interval::description%]"
         }
       }
     }

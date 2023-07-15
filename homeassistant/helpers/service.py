@@ -173,7 +173,7 @@ _SERVICE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: _SERVICE_SCHEMA})
+_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
 
 
 class ServiceParams(TypedDict):
@@ -701,6 +701,9 @@ def async_set_service_schema(
     hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
     """Register a description for a service."""
+    domain = domain.lower()
+    service = service.lower()
+
     descriptions_cache: dict[
         tuple[str, str], dict[str, Any] | None
     ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})

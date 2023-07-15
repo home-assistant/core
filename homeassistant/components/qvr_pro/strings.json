@@ -15,7 +15,7 @@
       "description": "Stops QVR Pro recording on specified channel.",
       "fields": {
         "guid": {
-          "name": "GUID",
+          "name": "[%key:component::qvr_pro::services::start_record::fields::guid::name%]",
           "description": "GUID of the channel to stop recording."
         }
       }

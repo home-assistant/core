@@ -1,15 +1,15 @@
 {
   "services": {
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Sets the light RGB to the predominant color found in the image provided by URL or file path.",
       "fields": {
         "color_extract_url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "The URL of the image we want to extract RGB values from. Must be allowed in allowlist_external_urls."
         },
         "color_extract_path": {
-          "name": "Path",
+          "name": "[%key:common::config_flow::data::path%]",
           "description": "The full system path to the image we want to extract RGB values from. Must be allowed in allowlist_external_dirs."
         }
       }

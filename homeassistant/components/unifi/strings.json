@@ -75,7 +75,7 @@
       "description": "Tries to get wireless client to reconnect to UniFi Network.",
       "fields": {
         "device_id": {
-          "name": "Device",
+          "name": "[%key:common::config_flow::data::device%]",
           "description": "Try reconnect client to wireless network."
         }
       }

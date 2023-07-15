@@ -224,7 +224,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
             authenticated = True
             auth_type = "signed request"
 
-        if authenticated:
+        if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
                 request.remote,
