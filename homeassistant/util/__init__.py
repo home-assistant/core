@@ -12,7 +12,6 @@ import threading
 from typing import Any, TypeVar
 
 import slugify as unicode_slug
-from slugify import PRE_TRANSLATIONS
 
 from .dt import as_local, utcnow
 
@@ -45,7 +44,13 @@ def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
     if text == "" or text is None:
         return ""
-    slug = unicode_slug.slugify(text, separator=separator, replacements=PRE_TRANSLATIONS)
+    GERMAN_UMLAUT = [
+    ['ä', 'ae'],
+    ['ö', 'oe'],
+    ['ü', 'ue'],
+    ['ß', 'ss'],
+    ]
+    slug = unicode_slug.slugify(text, separator=separator, replacements=GERMAN_UMLAUT)
     return "unknown" if slug == "" else slug
 
 
