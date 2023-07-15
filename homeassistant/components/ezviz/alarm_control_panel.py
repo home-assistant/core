@@ -88,7 +88,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     )
     _attr_code_arm_required = False
 
-    def __init__(self, coordinator: EzvizDataUpdateCoordinator, entry_id) -> None:
+    def __init__(self, coordinator: EzvizDataUpdateCoordinator, entry_id: str) -> None:
         """Initialize alarm control panel entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry_id}_{ALARM_TYPE.key}"
