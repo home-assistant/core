@@ -6,15 +6,17 @@ from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
 import inspect
-from json import JSONEncoder
+from json import JSONDecodeError, JSONEncoder
 import logging
 import os
 from typing import Any, Generic, TypeVar
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
+import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
 
 from . import json as json_helper
@@ -132,6 +134,23 @@ class Store(Generic[_T]):
         finally:
             self._load_task = None
 
+    def _handle_unrecoverable_corruption(self, err: JSONDecodeError) -> None:
+        """Handle an unrecoverable corruption error."""
+        isotime = dt_util.utcnow().isoformat()
+        corrupt_postfix = f".corrupt.{isotime}"
+        corrupt_path = f"{self.path}{corrupt_postfix}"
+        _LOGGER.error(
+            "Unrecoverable error decoding storage %s; "
+            "This may indicate an unclean shutdown or disk corruption; "
+            "The corrupt file will be saved as %s; "
+            "It is recommended to restore from backup: %s",
+            self.key,
+            corrupt_path,
+            err,
+        )
+        if os.path.exists(self.path):
+            os.rename(self.path, corrupt_path)
+
     async def _async_load_data(self):
         """Load the data."""
         # Check if we have a pending write
@@ -146,9 +165,21 @@ class Store(Generic[_T]):
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
         else:
-            data = await self.hass.async_add_executor_job(
-                json_util.load_json, self.path
-            )
+            try:
+                data = await self.hass.async_add_executor_job(
+                    json_util.load_json, self.path
+                )
+            except HomeAssistantError as err:
+                if isinstance(err.__cause__, JSONDecodeError):
+                    # If we have a JSONDecodeError, it means the file is corrupt.
+                    # We can't recover from this, so we'll log an error, rename the file and
+                    # return None so that we can start with a clean slate which will
+                    # allow startup to continue so they can restore from a backup.
+                    await self.hass.async_add_executor_job(
+                        self._handle_unrecoverable_corruption, err.__cause__
+                    )
+                    return None
+                raise
 
             if data == {}:
                 return None
