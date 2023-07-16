@@ -78,7 +78,7 @@
       }
     },
     "climate": {
-      "climate_entity": {
+      "climate": {
         "state_attributes": {
           "fan_mode": {
             "state": {
