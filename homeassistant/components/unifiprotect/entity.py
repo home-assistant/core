@@ -297,10 +297,12 @@ class ProtectNVREntity(ProtectDeviceEntity):
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        if self.data.last_update_success:
-            self.device = self.data.api.bootstrap.nvr
+        data = self.data
+        last_update_success = data.last_update_success
+        if last_update_success:
+            self.device = data.api.bootstrap.nvr
 
-        self._attr_available = self.data.last_update_success
+        self._attr_available = last_update_success
 
 
 class EventEntityMixin(ProtectDeviceEntity):
