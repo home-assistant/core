@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Shopping List",
+        "title": "[%key:component::shopping_list::title%]",
         "description": "Do you want to configure the shopping list?"
       }
     },
@@ -17,7 +17,7 @@
       "description": "Adds an item to the shopping list.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "The name of the item to add."
         }
       }
@@ -27,7 +27,7 @@
       "description": "Removes the first item with matching name from the shopping list.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "The name of the item to remove."
         }
       }
@@ -37,7 +37,7 @@
       "description": "Marks the first item with matching name as completed in the shopping list.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "The name of the item to mark as completed (without removing)."
         }
       }
@@ -47,7 +47,7 @@
       "description": "Marks the first item with matching name as incomplete in the shopping list.",
       "fields": {
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "The name of the item to mark as incomplete."
         }
       }

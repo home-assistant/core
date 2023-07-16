@@ -44,7 +44,7 @@
       "description": "Sets vacation responder settings for Google Mail.",
       "fields": {
         "enabled": {
-          "name": "Enabled",
+          "name": "[%key:common::state::enabled%]",
           "description": "Turn this off to end vacation responses."
         },
         "title": {
@@ -68,7 +68,7 @@
           "description": "Restrict automatic reply to domain. This only affects GSuite accounts."
         },
         "start": {
-          "name": "Start",
+          "name": "[%key:common::action::start%]",
           "description": "First day of the vacation."
         },
         "end": {

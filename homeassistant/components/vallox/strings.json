@@ -36,7 +36,7 @@
       "fields": {
         "fan_speed": {
           "name": "Fan speed",
-          "description": "Fan speed."
+          "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
         }
       }
     },
@@ -46,7 +46,7 @@
       "fields": {
         "fan_speed": {
           "name": "Fan speed",
-          "description": "Fan speed."
+          "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
         }
       }
     }

@@ -34,19 +34,19 @@
   },
   "services": {
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads all the available scripts."
     },
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Runs the sequence of actions defined in a script."
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Stops a running script."
     },
     "toggle": {
-      "name": "Toggle",
+      "name": "[%key:common::action::toggle%]",
       "description": "Toggle a script. Starts it, if isn't running, stops it otherwise."
     }
   }

@@ -31,7 +31,7 @@
           "description": "Name(s) of homematic central to set value."
         },
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Name of the variable to set."
         },
         "value": {
@@ -46,23 +46,23 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Address of homematic device or BidCoS-RF for virtual remote."
+          "description": "[%key:component::homematic::services::virtualkey::fields::address::description%]"
         },
         "channel": {
           "name": "Channel",
-          "description": "Channel for calling a keypress."
+          "description": "[%key:component::homematic::services::virtualkey::fields::channel::description%]"
         },
         "param": {
-          "name": "Param",
-          "description": "Event to send i.e. PRESS_LONG, PRESS_SHORT."
+          "name": "[%key:component::homematic::services::virtualkey::fields::param::name%]",
+          "description": "[%key:component::homematic::services::virtualkey::fields::param::description%]"
         },
         "interface": {
           "name": "Interface",
-          "description": "Set an interface value."
+          "description": "[%key:component::homematic::services::virtualkey::fields::interface::description%]"
         },
         "value": {
           "name": "Value",
-          "description": "New value."
+          "description": "[%key:component::homematic::services::set_variable_value::fields::value::description%]"
         },
         "value_type": {
           "name": "Value type",
@@ -83,7 +83,7 @@
           "description": "Select the given interface into install mode."
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "1= Normal mode / 2= Remove exists old links."
         },
         "time": {

@@ -1,7 +1,7 @@
 {
   "services": {
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads template entities from the YAML-configuration."
     }
   }

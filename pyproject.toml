@@ -46,7 +46,7 @@ dependencies    = [
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
     "orjson==3.9.2",
-    "pip>=21.3.1,<23.2",
+    "pip>=21.3.1,<23.3",
     "python-slugify==4.0.1",
     "PyYAML==6.0",
     "requests==2.31.0",
