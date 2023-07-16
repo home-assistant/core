@@ -78,6 +78,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of an Ezviz alarm control panel."""
 
     coordinator: EzvizDataUpdateCoordinator
+    entity_description: EzvizAlarmControlPanelEntityDescription
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
@@ -102,7 +103,6 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
             "model": "EZVIZ Alarm",
             "manufacturer": MANUFACTURER,
         }
-        self._ezviz_alarm_state_number: str = "0"
         self._attr_state = None
 
     async def async_added_to_hass(self) -> None:
@@ -148,13 +148,14 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     def update(self) -> None:
         """Fetch data from EZVIZ."""
         _LOGGER.debug("Updating %s", self.name)
+        ezviz_alarm_state_number: str = "0"
         try:
-            self._ezviz_alarm_state_number = (
+            ezviz_alarm_state_number = (
                 self.coordinator.ezviz_client.get_group_defence_mode()
             )
-            _LOGGER.debug(self._ezviz_alarm_state_number)
+            _LOGGER.debug(ezviz_alarm_state_number)
             self._attr_state = self.entity_description.ezviz_alarm_states[
-                int(self._ezviz_alarm_state_number)
+                int(ezviz_alarm_state_number)
             ]
 
             self.async_write_ha_state()
