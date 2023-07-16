@@ -38,7 +38,7 @@ async def async_setup_platform(
             DemoLawnMower(
                 "kitchen_sink_mower_003",
                 "Mower can pause",
-                LawnMowerActivity.DOCKING,
+                LawnMowerActivity.PAUSED,
                 LawnMowerEntityFeature.PAUSE,
             ),
             DemoLawnMower(
