@@ -45,7 +45,7 @@ class SyncButton(ButtonEntity):
         self._attr_unique_id = f"{project_id}_sync"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, project_id)},
-            name="Google assistant",
+            name="Google Assistant",
         )
 
     async def async_press(self) -> None:
