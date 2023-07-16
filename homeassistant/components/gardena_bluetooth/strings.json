@@ -40,12 +40,6 @@
       "activation_reason": {
         "name": "Activation reason"
       },
-      "battery_level": {
-        "name": "Battery level"
-      },
-      "unix_timestamp": {
-        "name": "Time"
-      },
       "remaining_open_timestamp": {
         "name": "Valve closing"
       }

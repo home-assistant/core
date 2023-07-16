@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
-from gardena_bluetooth.const import Battery, DeviceConfiguration, Valve
+from gardena_bluetooth.const import Battery, Valve
 from gardena_bluetooth.parse import Characteristic
 
 from homeassistant.components.sensor import (
@@ -41,20 +41,11 @@ DESCRIPTIONS = (
     ),
     GardenaBluetoothSensorEntityDescription(
         key=Battery.battery_level.uuid,
-        translation_key="battery_level",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         char=Battery.battery_level,
-    ),
-    GardenaBluetoothSensorEntityDescription(
-        key=DeviceConfiguration.unix_timestamp.uuid,
-        translation_key="unix_timestamp",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        char=DeviceConfiguration.unix_timestamp,
     ),
 )
 
@@ -102,7 +93,9 @@ class GardenaBluetoothSensor(GardenaBluetoothEntity, SensorEntity):
 class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
     """Representation of a sensor."""
 
-    _attr_native_value: datetime | None
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_native_value: datetime | None = None
+    _attr_translation_key = "remaining_open_timestamp"
 
     def __init__(
         self,
@@ -110,9 +103,6 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, {Valve.remaining_open_time.uuid})
-        self._attr_device_class = SensorDeviceClass.TIMESTAMP
-        self._attr_native_value = None
-        self._attr_translation_key = "remaining_open_timestamp"
         self._attr_unique_id = f"{coordinator.address}-remaining_open_timestamp"
 
     def _handle_coordinator_update(self) -> None:
