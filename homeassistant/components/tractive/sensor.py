@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -183,6 +184,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveActivitySensor,
+        state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_REST,
@@ -190,6 +192,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveWellnessSensor,
+        state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_CALORIES,
@@ -197,6 +200,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:fire",
         native_unit_of_measurement="kcal",
         entity_class=TractiveWellnessSensor,
+        state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
@@ -211,6 +215,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveWellnessSensor,
+        state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_NIGHT_SLEEP,
@@ -218,6 +223,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveWellnessSensor,
+        state_class=SensorStateClass.TOTAL,
     ),
 )
 
