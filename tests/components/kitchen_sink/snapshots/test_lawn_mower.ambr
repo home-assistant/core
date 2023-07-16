@@ -1,0 +1,71 @@
+# serializer version: 1
+# name: test_states
+  set({
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can disable schedule',
+        'supported_features': <LawnMowerEntityFeature: 24>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_disable_schedule',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'docked_schedule_disabled',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can do all',
+        'supported_features': <LawnMowerEntityFeature: 31>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_do_all',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'docked_schedule_disabled',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can dock',
+        'supported_features': <LawnMowerEntityFeature: 5>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_dock',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'docking',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can enable schedule',
+        'supported_features': <LawnMowerEntityFeature: 24>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_enable_schedule',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'docked_schedule_enabled',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can mow',
+        'supported_features': <LawnMowerEntityFeature: 7>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_mow',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'mowing',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can pause',
+        'supported_features': <LawnMowerEntityFeature: 3>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_pause',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'paused',
+    }),
+  })
+# ---

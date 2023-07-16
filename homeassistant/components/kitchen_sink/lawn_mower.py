@@ -27,31 +27,45 @@ async def async_setup_platform(
                 "kitchen_sink_mower_001",
                 "Mower can mow",
                 LawnMowerActivity.MOWING,
-                LawnMowerEntityFeature.START_MOWING,
+                LawnMowerEntityFeature.START_MOWING
+                | LawnMowerEntityFeature.PAUSE
+                | LawnMowerEntityFeature.DOCK,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_002",
                 "Mower can dock",
                 LawnMowerActivity.DOCKING,
-                LawnMowerEntityFeature.DOCK,
+                LawnMowerEntityFeature.DOCK | LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_003",
                 "Mower can pause",
                 LawnMowerActivity.PAUSED,
-                LawnMowerEntityFeature.PAUSE,
+                LawnMowerEntityFeature.PAUSE | LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_004",
                 "Mower can disable schedule",
                 LawnMowerActivity.DOCKED_SCHEDULE_DISABLED,
-                LawnMowerEntityFeature.DISABLE_SCHEDULE,
+                LawnMowerEntityFeature.DISABLE_SCHEDULE
+                | LawnMowerEntityFeature.ENABLE_SCHEDULE,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_005",
                 "Mower can enable schedule",
                 LawnMowerActivity.DOCKED_SCHEDULE_ENABLED,
-                LawnMowerEntityFeature.ENABLE_SCHEDULE,
+                LawnMowerEntityFeature.ENABLE_SCHEDULE
+                | LawnMowerEntityFeature.DISABLE_SCHEDULE,
+            ),
+            DemoLawnMower(
+                "kitchen_sink_mower_006",
+                "Mower can do all",
+                LawnMowerActivity.DOCKED_SCHEDULE_DISABLED,
+                LawnMowerEntityFeature.ENABLE_SCHEDULE
+                | LawnMowerEntityFeature.DISABLE_SCHEDULE
+                | LawnMowerEntityFeature.DOCK
+                | LawnMowerEntityFeature.PAUSE
+                | LawnMowerEntityFeature.START_MOWING,
             ),
         ]
     )

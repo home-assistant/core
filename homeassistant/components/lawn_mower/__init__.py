@@ -43,26 +43,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_START_MOWING,
         {},
-        "async_service_start_mowing",
+        "async_start_mowing",
         [LawnMowerEntityFeature.START_MOWING],
     )
     component.async_register_entity_service(
-        SERVICE_PAUSE, {}, "async_service_pause", [LawnMowerEntityFeature.PAUSE]
+        SERVICE_PAUSE, {}, "async_pause", [LawnMowerEntityFeature.PAUSE]
     )
     component.async_register_entity_service(
         SERVICE_ENABLE_SCHEDULE,
         {},
-        "async_service_enable_schedule",
+        "async_enable_schedule",
         [LawnMowerEntityFeature.ENABLE_SCHEDULE],
     )
     component.async_register_entity_service(
         SERVICE_DISABLE_SCHEDULE,
         {},
-        "async_service_disable_schedule",
+        "async_disable_schedule",
         [LawnMowerEntityFeature.DISABLE_SCHEDULE],
     )
     component.async_register_entity_service(
-        SERVICE_DOCK, {}, "async_service_dock", [LawnMowerEntityFeature.DOCK]
+        SERVICE_DOCK, {}, "async_dock", [LawnMowerEntityFeature.DOCK]
     )
 
     return True

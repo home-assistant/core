@@ -68,3 +68,11 @@ async def test_sync_disable_schedule(hass: HomeAssistant) -> None:
     await lawn_mower.async_disable_schedule()
 
     assert lawn_mower.disable_schedule.called
+
+
+async def test_lock_default(hass: HomeAssistant) -> None:
+    """Test lawn mower entity with defaults."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    assert lawn_mower.state is None
