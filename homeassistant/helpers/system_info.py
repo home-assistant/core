@@ -82,9 +82,5 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
             info_object["installation_type"] = "Home Assistant OS"
         else:
             info_object["installation_type"] = "Home Assistant Supervised"
-    elif "SUPERVISOR" in os.environ:
-        # hassio is not loaded, but we know we are running supervised
-        # because the SUPERVISOR env var is set
-        info_object["installation_type"] = "Home Assistant Supervised"
 
     return info_object
