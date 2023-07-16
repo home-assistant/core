@@ -32,10 +32,10 @@ class PermRequired(int, Enum):
 class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     """Mixin for required keys."""
 
-    ufp_required_field: str | None = None
-    ufp_value: str | None = None
+    ufp_required_field: tuple[str, ...] | None = None
+    ufp_value: tuple[str, ...] | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
-    ufp_enabled: str | None = None
+    ufp_enabled: tuple[str, ...] | None = None
     ufp_perm: PermRequired | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
@@ -68,7 +68,7 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
 class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for events."""
 
-    ufp_event_obj: str | None = None
+    ufp_event_obj: tuple[str, ...] | None = None
 
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""

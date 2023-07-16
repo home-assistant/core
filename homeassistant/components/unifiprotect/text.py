@@ -46,7 +46,7 @@ CAMERA: tuple[ProtectTextEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value_fn=_get_doorbell_current,
         ufp_set_method_fn=_set_doorbell_message,
-        ufp_required_field="feature_flags.has_lcd_screen",
+        ufp_required_field=("feature_flags", "has_lcd_screen"),
         ufp_perm=PermRequired.WRITE,
     ),
 )
