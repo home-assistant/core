@@ -22,7 +22,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -73,6 +78,29 @@ async def async_setup_entry(
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
+
+    source_entity = registry.async_get(entity_id)
+    dev_reg = dr.async_get(hass)
+    # Resolve source entity device
+    if (
+        (source_entity is not None)
+        and (source_entity.device_id is not None)
+        and (
+            (
+                device := dev_reg.async_get(
+                    device_id=source_entity.device_id,
+                )
+            )
+            is not None
+        )
+    ):
+        device_info = DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+    else:
+        device_info = None
+
     hysteresis = config_entry.options[CONF_HYSTERESIS]
     lower = config_entry.options[CONF_LOWER]
     name = config_entry.title
@@ -82,7 +110,15 @@ async def async_setup_entry(
     async_add_entities(
         [
             ThresholdSensor(
-                hass, entity_id, name, lower, upper, hysteresis, device_class, unique_id
+                hass,
+                entity_id,
+                name,
+                lower,
+                upper,
+                hysteresis,
+                device_class,
+                unique_id,
+                device_info=device_info,
             )
         ]
     )
@@ -138,9 +174,11 @@ class ThresholdSensor(BinarySensorEntity):
         hysteresis: float,
         device_class: BinarySensorDeviceClass | None,
         unique_id: str | None,
+        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the Threshold sensor."""
         self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
         self._entity_id = entity_id
         self._name = name
         if lower is not None:

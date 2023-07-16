@@ -182,7 +182,7 @@ class KodiConnectionManager:
         version = (await self.kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
         dev_reg = dr.async_get(self._hass)
-        device = dev_reg.async_get_device({(DOMAIN, self._uid)})
+        device = dev_reg.async_get_device(identifiers={(DOMAIN, self._uid)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
 
         # Calling websocket connected callbacks

@@ -1,8 +1,10 @@
 """Unit tests for the Todoist calendar platform."""
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
 import urllib
+import zoneinfo
 
 import pytest
 from todoist_api_python.models import Collaborator, Due, Label, Project, Task
@@ -20,25 +22,29 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.typing import ClientSessionGenerator
 
 SUMMARY = "A task"
+# Set our timezone to CST/Regina so we can check calculations
+# This keeps UTC-6 all year round
+TZ_NAME = "America/Regina"
+TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
 
 
 @pytest.fixture(autouse=True)
 def set_time_zone(hass: HomeAssistant):
     """Set the time zone for the tests."""
-    # Set our timezone to CST/Regina so we can check calculations
-    # This keeps UTC-6 all year round
-    hass.config.set_time_zone("America/Regina")
+    hass.config.set_time_zone(TZ_NAME)
 
 
 @pytest.fixture(name="due")
 def mock_due() -> Due:
     """Mock a todoist Task Due date/time."""
-    return Due(is_recurring=False, date=dt.now().strftime("%Y-%m-%d"), string="today")
+    return Due(
+        is_recurring=False, date=dt_util.now().strftime("%Y-%m-%d"), string="today"
+    )
 
 
 @pytest.fixture(name="task")
@@ -182,6 +188,33 @@ async def test_update_entity_for_custom_project_no_due_date_on(
     assert state.state == "on"
 
 
+@pytest.mark.parametrize(
+    "due",
+    [
+        Due(
+            # Note: This runs before the test fixture that sets the timezone
+            date=(dt_util.now(TIMEZONE) + timedelta(days=3)).strftime("%Y-%m-%d"),
+            is_recurring=False,
+            string="3 days from today",
+        )
+    ],
+)
+async def test_update_entity_for_calendar_with_due_date_in_the_future(
+    hass: HomeAssistant,
+    api: AsyncMock,
+) -> None:
+    """Test that a task with a due date in the future has on state and correct end_time."""
+    await async_update_entity(hass, "calendar.name")
+    state = hass.states.get("calendar.name")
+    assert state.state == "on"
+
+    # The end time should be in the user's timezone
+    expected_end_time = (dt_util.now() + timedelta(days=3)).strftime(
+        "%Y-%m-%d 00:00:00"
+    )
+    assert state.attributes["end_time"] == expected_end_time
+
+
 @pytest.mark.parametrize("setup_integration", [None])
 async def test_failed_coordinator_update(hass: HomeAssistant, api: AsyncMock) -> None:
     """Test a failed data coordinator update is handled correctly."""
@@ -216,9 +249,6 @@ async def test_calendar_custom_project_unique_id(
     entity = entity_registry.async_get("calendar.all_projects")
     assert entity is None
 
-    state = hass.states.get("calendar.all_projects")
-    assert state.state == "off"
-
 
 @pytest.mark.parametrize(
     ("due", "start", "end", "expected_response"),
@@ -228,8 +258,39 @@ async def test_calendar_custom_project_unique_id(
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
-        )
+        ),
+        (
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-30T06:00:00.000Z",
+            "2023-03-31T06:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-29T08:00:00.000Z",
+            "2023-03-30T08:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-30T08:00:00.000Z",
+            "2023-03-31T08:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-31T08:00:00.000Z",
+            "2023-04-01T08:00:00.000Z",
+            [],
+        ),
+        (
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-29T06:00:00.000Z",
+            "2023-03-30T06:00:00.000Z",
+            [],
+        ),
     ],
+    ids=("included", "exact", "overlap_start", "overlap_end", "after", "before"),
 )
 async def test_all_day_event(
     hass: HomeAssistant,
@@ -259,3 +320,100 @@ async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> 
     api.add_task.assert_called_with(
         "task", project_id="12345", labels=["Label1"], assignee_id="1"
     )
+
+
+@pytest.mark.parametrize(
+    ("due"),
+    [
+        # These are all equivalent due dates for the same time in different
+        # timezone formats.
+        Due(
+            date="2023-03-30",
+            is_recurring=False,
+            string="Mar 30 6:00 PM",
+            datetime="2023-03-31T00:00:00Z",
+            timezone="America/Regina",
+        ),
+        Due(
+            date="2023-03-30",
+            is_recurring=False,
+            string="Mar 30 7:00 PM",
+            datetime="2023-03-31T00:00:00Z",
+            timezone="America/Los_Angeles",
+        ),
+        Due(
+            date="2023-03-30",
+            is_recurring=False,
+            string="Mar 30 6:00 PM",
+            datetime="2023-03-30T18:00:00",
+        ),
+    ],
+    ids=("in_local_timezone", "in_other_timezone", "floating"),
+)
+async def test_task_due_datetime(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test for task due at a specific time, using different time formats."""
+    client = await hass_client()
+
+    has_task_response = [
+        get_events_response(
+            {"dateTime": "2023-03-30T18:00:00-06:00"},
+            {"dateTime": "2023-03-31T18:00:00-06:00"},
+        )
+    ]
+
+    # Completely includes the start/end of the task
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-03-30T08:00:00.000Z", "2023-03-31T08:00:00.000Z"
+        ),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == has_task_response
+
+    # Overlap with the start of the event
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-03-29T20:00:00.000Z", "2023-03-31T02:00:00.000Z"
+        ),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == has_task_response
+
+    # Overlap with the end of the event
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-03-31T20:00:00.000Z", "2023-04-01T02:00:00.000Z"
+        ),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == has_task_response
+
+    # Task is active, but range does not include start/end
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-03-31T10:00:00.000Z", "2023-03-31T11:00:00.000Z"
+        ),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == has_task_response
+
+    # Query is before the task starts (no results)
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-03-28T00:00:00.000Z", "2023-03-29T00:00:00.000Z"
+        ),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == []
+
+    # Query is after the task ends (no results)
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-04-01T07:00:00.000Z", "2023-04-02T07:00:00.000Z"
+        ),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == []

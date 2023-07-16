@@ -39,6 +39,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -243,7 +244,9 @@ class TraccarScanner:
             return False
 
         await self._async_update()
-        async_track_time_interval(self._hass, self._async_update, self._scan_interval)
+        async_track_time_interval(
+            self._hass, self._async_update, self._scan_interval, cancel_on_shutdown=True
+        )
         return True
 
     async def _async_update(self, now=None):
@@ -409,9 +412,12 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(DOMAIN, self._unique_id)}}
+        return DeviceInfo(
+            name=self._name,
+            identifiers={(DOMAIN, self._unique_id)},
+        )
 
     @property
     def source_type(self) -> SourceType:

@@ -32,7 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import (
     LOCATION_ID,
@@ -107,7 +107,7 @@ async def test_arm_home_success(hass: HomeAssistant) -> None:
         )
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_HOME
@@ -163,7 +163,7 @@ async def test_arm_home_instant_success(hass: HomeAssistant) -> None:
         )
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_HOME
@@ -220,7 +220,7 @@ async def test_arm_away_instant_success(hass: HomeAssistant) -> None:
         )
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
@@ -276,7 +276,7 @@ async def test_arm_away_success(hass: HomeAssistant) -> None:
         )
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
@@ -329,7 +329,7 @@ async def test_disarm_success(hass: HomeAssistant) -> None:
         )
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
@@ -386,7 +386,7 @@ async def test_arm_night_success(hass: HomeAssistant) -> None:
         )
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_NIGHT
@@ -439,7 +439,7 @@ async def test_arming(hass: HomeAssistant) -> None:
         )
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMING
@@ -460,7 +460,7 @@ async def test_disarming(hass: HomeAssistant) -> None:
         )
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt.utcnow() + DELAY)
+        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMING
@@ -546,31 +546,31 @@ async def test_other_update_failures(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 1
 
         # then an error: ServiceUnavailable --> UpdateFailed
-        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
         assert mock_request.call_count == 2
 
         # works again
-        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL * 2)
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 3
 
         # then an error: TotalConnectError --> UpdateFailed
-        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL * 3)
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 3)
         await hass.async_block_till_done()
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
         assert mock_request.call_count == 4
 
         # works again
-        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL * 4)
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 4)
         await hass.async_block_till_done()
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 5
 
         # unknown TotalConnect status via ValueError
-        async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL * 5)
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 5)
         await hass.async_block_till_done()
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
         assert mock_request.call_count == 6

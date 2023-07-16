@@ -115,7 +115,7 @@ async def async_setup_entry(
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if not isinstance(device, UFPCamera):
-            return
+            return  # type: ignore[unreachable]
 
         entities = _async_camera_entities(data, ufp_device=device)
         async_add_entities(entities)
@@ -167,9 +167,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         if not self.channel.is_rtsp_enabled:
             disable_stream = False
 
-        rtsp_url = self.channel.rtsp_url
-        if self._secure:
-            rtsp_url = self.channel.rtsps_url
+        channel = self.channel
+        rtsp_url = channel.rtsps_url if self._secure else channel.rtsp_url
 
         # _async_set_stream_source called by __init__
         self._stream_source = (  # pylint: disable=attribute-defined-outside-init

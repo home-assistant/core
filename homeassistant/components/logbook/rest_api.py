@@ -1,6 +1,7 @@
 """Event parser and human readable log generator."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any, cast
@@ -14,7 +15,6 @@ from homeassistant.components.recorder.filters import Filters
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -27,7 +27,7 @@ def async_setup(
     hass: HomeAssistant,
     conf: ConfigType,
     filters: Filters | None,
-    entities_filter: EntityFilter | None,
+    entities_filter: Callable[[str], bool] | None,
 ) -> None:
     """Set up the logbook rest API."""
     hass.http.register_view(LogbookView(conf, filters, entities_filter))
@@ -44,7 +44,7 @@ class LogbookView(HomeAssistantView):
         self,
         config: dict[str, Any],
         filters: Filters | None,
-        entities_filter: EntityFilter | None,
+        entities_filter: Callable[[str], bool] | None,
     ) -> None:
         """Initialize the logbook view."""
         self.config = config

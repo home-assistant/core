@@ -19,7 +19,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery_flow,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -27,6 +31,7 @@ from .const import DOMAIN, PLATFORMS
 from .coordinator import TPLinkDataUpdateCoordinator
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
@@ -71,7 +76,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_trigger_discovery(hass, discovered)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    async_track_time_interval(
+        hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+    )
 
     return True
 

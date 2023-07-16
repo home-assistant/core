@@ -6,12 +6,13 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, restore_state
+from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .devices import VoIPDevice
 from .entity import VoIPEntity
 
 if TYPE_CHECKING:
@@ -27,20 +28,14 @@ async def async_setup_entry(
     domain_data: DomainData = hass.data[DOMAIN]
 
     @callback
-    def async_add_device(device: dr.DeviceEntry) -> None:
+    def async_add_device(device: VoIPDevice) -> None:
         """Add device."""
         async_add_entities([VoIPCallAllowedSwitch(device)])
 
     domain_data.devices.async_add_new_device_listener(async_add_device)
 
     async_add_entities(
-        [
-            VoIPCallAllowedSwitch(device)
-            for device in dr.async_entries_for_config_entry(
-                dr.async_get(hass),
-                config_entry.entry_id,
-            )
-        ]
+        [VoIPCallAllowedSwitch(device) for device in domain_data.devices]
     )
 
 
@@ -48,7 +43,9 @@ class VoIPCallAllowedSwitch(VoIPEntity, restore_state.RestoreEntity, SwitchEntit
     """Entity to represent voip is allowed."""
 
     entity_description = SwitchEntityDescription(
-        key="allow_call", translation_key="allow_call"
+        key="allow_call",
+        translation_key="allow_call",
+        entity_category=EntityCategory.CONFIG,
     )
 
     async def async_added_to_hass(self) -> None:

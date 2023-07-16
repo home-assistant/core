@@ -157,6 +157,7 @@ WALLETS = {
     "LYD": "LYD",
     "MAD": "MAD",
     "MANA": "MANA",
+    "MASK": "MASK",
     "MATIC": "MATIC",
     "MDL": "MDL",
     "MGA": "MGA",

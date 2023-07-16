@@ -25,6 +25,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -32,10 +33,12 @@ from homeassistant.const import (
     CONF_PROXY_SSL,
     CONF_SSL,
     CONF_TIMEOUT,
+    CONF_TYPE,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -248,6 +251,8 @@ def cmd(
 class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -279,10 +284,12 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
                 "Player.OnSeek": self.async_on_speed_event,
                 "Player.OnStop": self.async_on_stop,
                 "Application.OnVolumeChanged": self.async_on_volume_changed,
+                "Other.OnKeyPress": self.async_on_key_press,
             },
         )
         self._kodi = connman.kodi
         self._unique_id = uid
+        self._device_id = None
         self._players = None
         self._properties: dict = {}
         self._item: dict = {}
@@ -291,7 +298,11 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
         self._media_position = None
 
         self._conf_name = name
-        self._attr_name = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, uid)},
+            manufacturer="Kodi",
+            name=name,
+        )
 
     def _reset_state(self, players=None):
         self._players = players
@@ -343,6 +354,20 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
         self._app_properties["volume"] = data["volume"]
         self._app_properties["muted"] = data["muted"]
         self.async_write_ha_state()
+
+    @callback
+    def async_on_key_press(self, sender, data):
+        """Handle a incoming key press notification."""
+        self.hass.bus.async_fire(
+            f"{DOMAIN}_keypress",
+            {
+                CONF_TYPE: "keypress",
+                CONF_DEVICE_ID: self._device_id,
+                ATTR_ENTITY_ID: self.entity_id,
+                "sender": sender,
+                "data": data,
+            },
+        )
 
     @property
     def unique_id(self):

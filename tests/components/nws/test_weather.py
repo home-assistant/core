@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components import nws
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
     DOMAIN as WEATHER_DOMAIN,
@@ -19,6 +20,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .const import (
+    CLEAR_NIGHT_OBSERVATION,
     EXPECTED_FORECAST_IMPERIAL,
     EXPECTED_FORECAST_METRIC,
     NONE_FORECAST,
@@ -95,6 +97,23 @@ async def test_imperial_metric(
     forecast = data.get(ATTR_FORECAST)
     for key, value in result_forecast.items():
         assert forecast[0].get(key) == value
+
+
+async def test_night_clear(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
+    """Test with clear-night in observation."""
+    instance = mock_simple_nws.return_value
+    instance.observation = CLEAR_NIGHT_OBSERVATION
+
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state.state == ATTR_CONDITION_CLEAR_NIGHT
 
 
 async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:

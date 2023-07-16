@@ -748,6 +748,8 @@ async def test_apps_update(
             ):
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
                 await hass.async_block_till_done()
+                async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
+                await hass.async_block_till_done()
                 # Check source list, remove TV inputs, and verify that the integration is
                 # now using the APP_LIST list
                 sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]

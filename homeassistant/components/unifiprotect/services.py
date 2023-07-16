@@ -161,8 +161,9 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
         camera = instance.bootstrap.get_device_from_mac(doorbell_mac)
         assert camera is not None
         doorbell_ids.add(camera.id)
+    data_before_changed = chime.dict_with_excludes()
     chime.camera_ids = sorted(doorbell_ids)
-    await chime.save_device()
+    await chime.save_device(data_before_changed)
 
 
 def async_setup_services(hass: HomeAssistant) -> None:

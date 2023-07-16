@@ -1,0 +1,48 @@
+{
+  "kind": "youtube#SubscriptionListResponse",
+  "etag": "6C9iFE7CzKQqPrEoJlE0H2U27xI",
+  "nextPageToken": "CAEQAA",
+  "pageInfo": {
+    "totalResults": 525,
+    "resultsPerPage": 1
+  },
+  "items": [
+    {
+      "kind": "youtube#subscription",
+      "etag": "4Hr8w5f03mLak3fZID0aXypQRDg",
+      "id": "l6YW-siEBx2rtBlTJ_ip10UA2t_d09UYkgtJsqbYblE",
+      "snippet": {
+        "publishedAt": "2015-08-09T21:37:44Z",
+        "title": "Linus Tech Tips",
+        "description": "Linus Tech Tips is a passionate team of \"professionally curious\" experts in consumer technology and video production who aim to educate and entertain.",
+        "resourceId": {
+          "kind": "youtube#channel",
+          "channelId": "UCXuqSBlHAE6Xw-yeJA0Tunw"
+        },
+        "channelId": "UCXuqSBlHAE6Xw-yeJA0Tunw",
+        "thumbnails": {
+          "default": {
+            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s88-c-k-c0x00ffffff-no-rj"
+          },
+          "medium": {
+            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s240-c-k-c0x00ffffff-no-rj"
+          },
+          "high": {
+            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s800-c-k-c0x00ffffff-no-rj"
+          }
+        }
+      },
+      "contentDetails": {
+        "totalItemCount": 6178,
+        "newItemCount": 0,
+        "activityType": "all"
+      },
+      "statistics": {
+        "viewCount": "214141263",
+        "subscriberCount": "2290000",
+        "hiddenSubscriberCount": false,
+        "videoCount": "5798"
+      }
+    }
+  ]
+}

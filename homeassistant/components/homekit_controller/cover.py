@@ -216,6 +216,26 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             tilt_position = self.service.value(
                 CharacteristicsTypes.HORIZONTAL_TILT_CURRENT
             )
+        # Recalculate to convert from arcdegree scale to percentage scale.
+        if self.is_vertical_tilt:
+            scale = 0.9
+            if (
+                self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT].minValue == -90
+                and self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT].maxValue
+                == 0
+            ):
+                scale = -0.9
+            tilt_position = int(tilt_position / scale)
+        elif self.is_horizontal_tilt:
+            scale = 0.9
+            if (
+                self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].minValue
+                == -90
+                and self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].maxValue
+                == 0
+            ):
+                scale = -0.9
+            tilt_position = int(tilt_position / scale)
         return tilt_position
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -241,10 +261,29 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         """Move the cover tilt to a specific position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
         if self.is_vertical_tilt:
+            # Recalculate to convert from percentage scale to arcdegree scale.
+            scale = 0.9
+            if (
+                self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET].minValue == -90
+                and self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET].maxValue
+                == 0
+            ):
+                scale = -0.9
+            tilt_position = int(tilt_position * scale)
             await self.async_put_characteristics(
                 {CharacteristicsTypes.VERTICAL_TILT_TARGET: tilt_position}
             )
         elif self.is_horizontal_tilt:
+            # Recalculate to convert from percentage scale to arcdegree scale.
+            scale = 0.9
+            if (
+                self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].minValue
+                == -90
+                and self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].maxValue
+                == 0
+            ):
+                scale = -0.9
+            tilt_position = int(tilt_position * scale)
             await self.async_put_characteristics(
                 {CharacteristicsTypes.HORIZONTAL_TILT_TARGET: tilt_position}
             )

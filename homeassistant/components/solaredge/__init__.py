@@ -1,6 +1,8 @@
 """The SolarEdge integration."""
 from __future__ import annotations
 
+import socket
+
 from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge import Solaredge
 
@@ -25,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         response = await hass.async_add_executor_job(
             api.get_details, entry.data[CONF_SITE_ID]
         )
-    except (ConnectTimeout, HTTPError) as ex:
+    except (ConnectTimeout, HTTPError, socket.gaierror) as ex:
         LOGGER.error("Could not retrieve details from SolarEdge API")
         raise ConfigEntryNotReady from ex
 

@@ -169,3 +169,9 @@ class ActiveBluetoothDataUpdateCoordinator(
         # possible after a device comes online or back in range, if a poll is due
         if self.needs_poll(service_info):
             self.hass.async_create_task(self._debounced_poll.async_call())
+
+    @callback
+    def _async_stop(self) -> None:
+        """Cancel debouncer and stop the callbacks."""
+        self._debounced_poll.async_cancel()
+        super()._async_stop()

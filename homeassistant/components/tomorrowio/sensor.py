@@ -11,6 +11,7 @@ from pytomorrowio.const import (
     PollenIndex,
     PrecipitationType,
     PrimaryPollutantType,
+    UVDescription,
 )
 
 from homeassistant.components.sensor import (
@@ -64,6 +65,8 @@ from .const import (
     TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
     TMRW_ATTR_SOLAR_GHI,
     TMRW_ATTR_SULPHUR_DIOXIDE,
+    TMRW_ATTR_UV_HEALTH_CONCERN,
+    TMRW_ATTR_UV_INDEX,
     TMRW_ATTR_WIND_GUST,
 )
 
@@ -71,6 +74,10 @@ from .const import (
 @dataclass
 class TomorrowioSensorEntityDescription(SensorEntityDescription):
     """Describes a Tomorrow.io sensor entity."""
+
+    # TomorrowioSensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
     unit_imperial: str | None = None
     unit_metric: str | None = None
@@ -304,6 +311,20 @@ SENSOR_TYPES = (
         TMRW_ATTR_FIRE_INDEX,
         name="Fire Index",
         icon="mdi:fire",
+    ),
+    TomorrowioSensorEntityDescription(
+        key=TMRW_ATTR_UV_INDEX,
+        name="UV Index",
+        icon="mdi:sun-wireless",
+    ),
+    TomorrowioSensorEntityDescription(
+        key=TMRW_ATTR_UV_HEALTH_CONCERN,
+        name="UV Radiation Health Concern",
+        value_map=UVDescription,
+        device_class=SensorDeviceClass.ENUM,
+        options=["high", "low", "moderate", "very_high", "extreme"],
+        translation_key="uv_index",
+        icon="mdi:sun-wireless",
     ),
 )
 

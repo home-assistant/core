@@ -1,7 +1,10 @@
 """Provides device triggers for sensors."""
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    async_get_entity_registry_entry_or_raise,
+)
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -69,6 +72,7 @@ CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
 CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
+CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
 CONF_VOLTAGE = "voltage"
 CONF_VOLUME = "volume"
 CONF_WATER = "water"
@@ -119,6 +123,9 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS}
     ],
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: [
+        {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS}
+    ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_VOLUME}],
     SensorDeviceClass.VOLUME_STORAGE: [{CONF_TYPE: CONF_VOLUME}],
@@ -132,7 +139,7 @@ ENTITY_TRIGGERS = {
 TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_APPARENT_POWER,
@@ -173,6 +180,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,
+                    CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_VOLTAGE,
                     CONF_VOLUME,
                     CONF_WATER,
@@ -246,7 +254,7 @@ async def async_get_triggers(
                 **automation,
                 "platform": "device",
                 "device_id": device_id,
-                "entity_id": entry.entity_id,
+                "entity_id": entry.id,
                 "domain": DOMAIN,
             }
             for automation in templates
@@ -259,8 +267,10 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
+
     try:
-        unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])
+        entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
+        unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
     except HomeAssistantError:
         unit_of_measurement = None
 

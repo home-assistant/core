@@ -255,7 +255,11 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
 
 
 def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
-    """Return the device sleep period in seconds or 0 for non sleeping devices."""
+    """Return the device sleep period in seconds or 0 for non sleeping devices.
+
+    sys.sleep.wakeup_period value is deprecated and not available in Shelly
+    firmware 1.0.0 or later.
+    """
     return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
 
 
@@ -348,7 +352,7 @@ def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
 
 def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
-    con_types = config["sys"]["ui_data"].get("consumption_types")
+    con_types = config["sys"].get("ui_data", {}).get("consumption_types")
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 

@@ -36,6 +36,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    SERVICE_TURN_ON,
     ColorMode,
 )
 from homeassistant.const import (
@@ -99,7 +100,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
+        connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
 
@@ -122,7 +123,6 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers=set(),
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
@@ -682,7 +682,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_flame"},
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_tile_effect.calls) == 1
 
@@ -823,7 +823,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_move"},
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_multizone_effect.calls) == 1
 
@@ -880,6 +880,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_stop"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 0
     assert len(bulb.set_multizone_effect.calls) == 1
     call_dict = bulb.set_multizone_effect.calls[0][1]
@@ -1741,3 +1742,56 @@ async def test_set_hev_cycle_state_fails_for_color_bulb(hass: HomeAssistant) -> 
             {ATTR_ENTITY_ID: entity_id, ATTR_POWER: True},
             blocking=True,
         )
+
+
+async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
+    """Test a light strip were zones are not populated initially."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_light_strip()
+    bulb.power_level = 65535
+    bulb.color_zones = None
+    bulb.color = [65535, 65535, 65535, 65535]
+    assert bulb.get_color_zones.calls == []
+
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+    # Make sure we at least try to fetch the first zone
+    # to ensure we populate the zones from the 503 response
+    assert len(bulb.get_color_zones.calls) == 3
+    # Once to populate the number of zones
+    assert bulb.get_color_zones.calls[0][1]["start_index"] == 0
+    # Again once we know the number of zones
+    assert bulb.get_color_zones.calls[1][1]["start_index"] == 0
+    assert bulb.get_color_zones.calls[2][1]["start_index"] == 8
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 255
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert attributes[ATTR_HS_COLOR] == (360.0, 100.0)
+    assert attributes[ATTR_RGB_COLOR] == (255, 0, 0)
+    assert attributes[ATTR_XY_COLOR] == (0.701, 0.299)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert bulb.set_power.calls[0][0][0] is True
+    bulb.set_power.reset_mock()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON

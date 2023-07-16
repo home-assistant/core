@@ -176,7 +176,9 @@ def _async_register_mac(
         # Enable entity
         ent_reg.async_update_entity(entity_id, disabled_by=None)
 
-    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
+    hass.bus.async_listen(
+        dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event, run_immediately=True
+    )
 
 
 class BaseTrackerEntity(Entity):
@@ -363,7 +365,7 @@ class ScannerEntity(BaseTrackerEntity):
         assert self.mac_address is not None
 
         return dr.async_get(self.hass).async_get_device(
-            set(), {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
         )
 
     async def async_internal_added_to_hass(self) -> None:
@@ -371,7 +373,6 @@ class ScannerEntity(BaseTrackerEntity):
         # Entities without a unique ID don't have a device
         if (
             not self.registry_entry
-            or not self.platform
             or not self.platform.config_entry
             or not self.mac_address
             or (device_entry := self.find_device_entry()) is None

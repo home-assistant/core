@@ -305,7 +305,7 @@ def skip_stop_scripts(
         return
     with patch(
         "homeassistant.helpers.script._schedule_stop_scripts_after_shutdown",
-        AsyncMock(),
+        Mock(),
     ):
         yield
 
@@ -490,17 +490,7 @@ def hass_fixture_setup() -> list[bool]:
 
 
 @pytest.fixture
-def hass(_hass: HomeAssistant) -> HomeAssistant:
-    """Fixture to provide a test instance of Home Assistant."""
-    # This wraps the async _hass fixture inside a sync fixture, to ensure
-    # the `hass` context variable is set in the execution context in which
-    # the test itself is executed
-    ha._cv_hass.set(_hass)
-    return _hass
-
-
-@pytest.fixture
-async def _hass(
+async def hass(
     hass_fixture_setup: list[bool],
     event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
@@ -537,6 +527,15 @@ async def _hass(
     loop.set_exception_handler(exc_handle)
 
     yield hass
+
+    # Config entries are not normally unloaded on HA shutdown. They are unloaded here
+    # to ensure that they could, and to help track lingering tasks and timers.
+    await asyncio.gather(
+        *(
+            config_entry.async_unload(hass)
+            for config_entry in hass.config_entries.async_entries()
+        )
+    )
 
     await hass.async_stop(force=True)
 

@@ -11,6 +11,10 @@ async def test_number_entities(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test number entities."""
+    balance_number = entity_registry.entities["number.zone_a_balance"]
+    balance_state = hass.states.get(balance_number.entity_id)
+    assert balance_state.state == "39"
+
     bass_number = entity_registry.entities["number.zone_a_bass"]
     bass_state = hass.states.get(bass_number.entity_id)
     assert bass_state.state == "1"

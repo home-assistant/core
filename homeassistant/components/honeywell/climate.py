@@ -101,6 +101,7 @@ class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -419,11 +420,6 @@ class HoneywellUSThermostat(ClimateEntity):
             try:
                 await self._data.client.login()
 
-            except aiosomecomfort.AuthError:
-                self._attr_available = False
-                await self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._data.entry_id)
-                )
             except (
                 aiosomecomfort.SomeComfortError,
                 ClientConnectionError,

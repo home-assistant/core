@@ -30,6 +30,91 @@
           "rising": "Rising",
           "falling": "Falling"
         }
+      },
+      "air_quality": {
+        "state": {
+          "good": "Good",
+          "hazardous": "Hazardous",
+          "high": "High",
+          "low": "Low",
+          "moderate": "Moderate",
+          "unhealthy": "Unhealthy"
+        }
+      },
+      "grass_pollen": {
+        "state_attributes": {
+          "level": {
+            "name": "Level",
+            "state": {
+              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
+              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
+              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
+              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
+              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+            }
+          }
+        }
+      },
+      "mold_pollen": {
+        "state_attributes": {
+          "level": {
+            "name": "Level",
+            "state": {
+              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
+              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
+              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
+              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
+              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+            }
+          }
+        }
+      },
+      "ragweed_pollen": {
+        "state_attributes": {
+          "level": {
+            "name": "Level",
+            "state": {
+              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
+              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
+              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
+              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
+              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+            }
+          }
+        }
+      },
+      "tree_pollen": {
+        "state_attributes": {
+          "level": {
+            "name": "Level",
+            "state": {
+              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
+              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
+              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
+              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
+              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+            }
+          }
+        }
+      },
+      "uv_index": {
+        "state_attributes": {
+          "level": {
+            "name": "Level",
+            "state": {
+              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
+              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
+              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
+              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
+              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+            }
+          }
+        }
       }
     }
   },

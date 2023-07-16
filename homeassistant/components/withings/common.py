@@ -41,7 +41,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import const
 from .const import Measurement
@@ -411,7 +411,7 @@ class DataManager:
     async def async_get_measures(self) -> dict[Measurement, Any]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
-        now = dt.utcnow()
+        now = dt_util.utcnow()
         startdate = now - datetime.timedelta(days=7)
 
         response = await self._hass.async_add_executor_job(
@@ -439,7 +439,7 @@ class DataManager:
     async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
-        now = dt.utcnow()
+        now = dt_util.utcnow()
         yesterday = now - datetime.timedelta(days=1)
         yesterday_noon = datetime.datetime(
             yesterday.year,

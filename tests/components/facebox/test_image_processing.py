@@ -75,6 +75,12 @@ VALID_CONFIG = {
 }
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 def mock_healthybox():
     """Mock fb.check_box_health."""

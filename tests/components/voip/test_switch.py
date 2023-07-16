@@ -1,16 +1,16 @@
 """Test VoIP switch devices."""
-
-from __future__ import annotations
-
+from homeassistant.components.voip.devices import VoIPDevice
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
 async def test_allow_call(
-    hass: HomeAssistant, config_entry, voip_devices, call_info
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    voip_device: VoIPDevice,
 ) -> None:
     """Test allow call."""
-    assert not voip_devices.async_allow_call(call_info)
-    await hass.async_block_till_done()
+    assert not voip_device.async_allow_call(hass)
 
     state = hass.states.get("switch.192_168_1_210_allow_calls")
     assert state is not None
@@ -28,13 +28,25 @@ async def test_allow_call(
         blocking=True,
     )
 
-    assert voip_devices.async_allow_call(call_info)
+    assert voip_device.async_allow_call(hass)
 
     state = hass.states.get("switch.192_168_1_210_allow_calls")
     assert state.state == "on"
 
     await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.192_168_1_210_allow_calls")
-    assert state is not None
     assert state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.192_168_1_210_allow_calls"},
+        blocking=True,
+    )
+
+    assert not voip_device.async_allow_call(hass)
+
+    state = hass.states.get("switch.192_168_1_210_allow_calls")
+    assert state.state == "off"

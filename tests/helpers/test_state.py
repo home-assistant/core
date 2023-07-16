@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
@@ -33,20 +34,17 @@ async def test_async_track_states(
     point2 = point1 + timedelta(seconds=5)
     point3 = point2 + timedelta(seconds=5)
 
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = point2
+    with freeze_time(point2) as freezer, state.AsyncTrackStates(hass) as states:
+        freezer.move_to(point1)
+        hass.states.async_set("light.test", "on")
 
-        with state.AsyncTrackStates(hass) as states:
-            mock_utcnow.return_value = point1
-            hass.states.async_set("light.test", "on")
+        freezer.move_to(point2)
+        hass.states.async_set("light.test2", "on")
+        state2 = hass.states.get("light.test2")
 
-            mock_utcnow.return_value = point2
-            hass.states.async_set("light.test2", "on")
-            state2 = hass.states.get("light.test2")
-
-            mock_utcnow.return_value = point3
-            hass.states.async_set("light.test3", "on")
-            state3 = hass.states.get("light.test3")
+        freezer.move_to(point3)
+        hass.states.async_set("light.test3", "on")
+        state3 = hass.states.get("light.test3")
 
     assert [state2, state3] == sorted(states, key=lambda state: state.entity_id)
 
@@ -92,15 +90,15 @@ async def test_get_changed_since(
     point2 = point1 + timedelta(seconds=5)
     point3 = point2 + timedelta(seconds=5)
 
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point1):
+    with freeze_time(point1) as freezer:
         hass.states.async_set("light.test", "on")
         state1 = hass.states.get("light.test")
 
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point2):
+        freezer.move_to(point2)
         hass.states.async_set("light.test2", "on")
         state2 = hass.states.get("light.test2")
 
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point3):
+        freezer.move_to(point3)
         hass.states.async_set("light.test3", "on")
         state3 = hass.states.get("light.test3")
 

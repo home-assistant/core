@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH, PERCENTAGE, VOLUME
+from homeassistant.const import LENGTH, PERCENTAGE, VOLUME, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -53,29 +53,44 @@ def convert_and_round(
 
 SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     # --- Generic ---
+    "ac_current_limit": BMWSensorEntityDescription(
+        key="ac_current_limit",
+        translation_key="ac_current_limit",
+        key_class="charging_profile",
+        unit_type=UnitOfElectricCurrent.AMPERE,
+        icon="mdi:current-ac",
+        entity_registry_enabled_default=False,
+    ),
     "charging_start_time": BMWSensorEntityDescription(
         key="charging_start_time",
-        name="Charging start time",
+        translation_key="charging_start_time",
         key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
     ),
     "charging_end_time": BMWSensorEntityDescription(
         key="charging_end_time",
-        name="Charging end time",
+        translation_key="charging_end_time",
         key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     "charging_status": BMWSensorEntityDescription(
         key="charging_status",
-        name="Charging status",
+        translation_key="charging_status",
         key_class="fuel_and_battery",
         icon="mdi:ev-station",
         value=lambda x, y: x.value,
     ),
+    "charging_target": BMWSensorEntityDescription(
+        key="charging_target",
+        translation_key="charging_target",
+        key_class="fuel_and_battery",
+        icon="mdi:battery-charging-high",
+        unit_type=PERCENTAGE,
+    ),
     "remaining_battery_percent": BMWSensorEntityDescription(
         key="remaining_battery_percent",
-        name="Remaining battery percent",
+        translation_key="remaining_battery_percent",
         key_class="fuel_and_battery",
         unit_type=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -83,14 +98,14 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     # --- Specific ---
     "mileage": BMWSensorEntityDescription(
         key="mileage",
-        name="Mileage",
+        translation_key="mileage",
         icon="mdi:speedometer",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),
     "remaining_range_total": BMWSensorEntityDescription(
         key="remaining_range_total",
-        name="Remaining range total",
+        translation_key="remaining_range_total",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
@@ -98,7 +113,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "remaining_range_electric": BMWSensorEntityDescription(
         key="remaining_range_electric",
-        name="Remaining range electric",
+        translation_key="remaining_range_electric",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
@@ -106,7 +121,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "remaining_range_fuel": BMWSensorEntityDescription(
         key="remaining_range_fuel",
-        name="Remaining range fuel",
+        translation_key="remaining_range_fuel",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
@@ -114,7 +129,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "remaining_fuel": BMWSensorEntityDescription(
         key="remaining_fuel",
-        name="Remaining fuel",
+        translation_key="remaining_fuel",
         key_class="fuel_and_battery",
         icon="mdi:gas-station",
         unit_type=VOLUME,
@@ -122,7 +137,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "remaining_fuel_percent": BMWSensorEntityDescription(
         key="remaining_fuel_percent",
-        name="Remaining fuel percent",
+        translation_key="remaining_fuel_percent",
         key_class="fuel_and_battery",
         icon="mdi:gas-station",
         unit_type=PERCENTAGE,

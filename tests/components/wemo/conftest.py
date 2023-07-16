@@ -61,9 +61,9 @@ def create_pywemo_device(pywemo_registry, pywemo_model):
     device.host = MOCK_HOST
     device.port = MOCK_PORT
     device.name = MOCK_NAME
-    device.serialnumber = MOCK_SERIAL_NUMBER
+    device.serial_number = MOCK_SERIAL_NUMBER
     device.model_name = pywemo_model.replace("LongPress", "")
-    device.udn = f"uuid:{device.model_name}-1_0-{device.serialnumber}"
+    device.udn = f"uuid:{device.model_name}-1_0-{device.serial_number}"
     device.firmware_version = MOCK_FIRMWARE_VERSION
     device.get_state.return_value = 0  # Default to Off
     device.supports_long_press.return_value = cls.supports_long_press()
@@ -102,7 +102,7 @@ def pywemo_dli_device_fixture(pywemo_registry, pywemo_model):
     """Fixture for Digital Loggers emulated instances."""
     with create_pywemo_device(pywemo_registry, pywemo_model) as pywemo_dli_device:
         pywemo_dli_device.model_name = "DLI emulated Belkin Socket"
-        pywemo_dli_device.serialnumber = "1234567891"
+        pywemo_dli_device.serial_number = "1234567891"
         yield pywemo_dli_device
 
 

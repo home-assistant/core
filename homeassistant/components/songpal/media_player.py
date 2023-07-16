@@ -34,7 +34,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
+from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY, SET_SOUND_SETTING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -332,11 +332,27 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        return await self._dev.set_power(True)
+        try:
+            return await self._dev.set_power(True)
+        except SongpalException as ex:
+            if ex.code == ERROR_REQUEST_RETRY:
+                _LOGGER.debug(
+                    "Swallowing %s, the device might be already in the wanted state", ex
+                )
+                return
+            raise
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        return await self._dev.set_power(False)
+        try:
+            return await self._dev.set_power(False)
+        except SongpalException as ex:
+            if ex.code == ERROR_REQUEST_RETRY:
+                _LOGGER.debug(
+                    "Swallowing %s, the device might be already in the wanted state", ex
+                )
+                return
+            raise
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the device."""

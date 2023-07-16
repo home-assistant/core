@@ -15,14 +15,12 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 
-from .state_attributes import decode_attributes_from_row
+from .state_attributes import decode_attributes_from_source
 from .time import (
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-
-# pylint: disable=invalid-name
 
 
 class LegacyLazyStatePreSchema31(State):
@@ -57,7 +55,9 @@ class LegacyLazyStatePreSchema31(State):
     def attributes(self) -> dict[str, Any]:
         """State attributes."""
         if self._attributes is None:
-            self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
+            self._attributes = decode_attributes_from_row_legacy(
+                self._row, self.attr_cache
+            )
         return self._attributes
 
     @attributes.setter
@@ -147,7 +147,7 @@ def legacy_row_to_compressed_state_pre_schema_31(
     """Convert a database row to a compressed state before schema 31."""
     comp_state = {
         COMPRESSED_STATE_STATE: row.state,
-        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
+        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row_legacy(row, attr_cache),
     }
     if start_time:
         comp_state[COMPRESSED_STATE_LAST_UPDATED] = start_time.timestamp()
@@ -202,7 +202,9 @@ class LegacyLazyState(State):
     def attributes(self) -> dict[str, Any]:
         """State attributes."""
         if self._attributes is None:
-            self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
+            self._attributes = decode_attributes_from_row_legacy(
+                self._row, self.attr_cache
+            )
         return self._attributes
 
     @attributes.setter
@@ -273,7 +275,7 @@ def legacy_row_to_compressed_state(
     """Convert a database row to a compressed state schema 31 and later."""
     comp_state = {
         COMPRESSED_STATE_STATE: row.state,
-        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
+        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row_legacy(row, attr_cache),
     }
     if start_time:
         comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(start_time)
@@ -285,3 +287,13 @@ def legacy_row_to_compressed_state(
         ) and row_last_updated_ts != row_last_changed_ts:
             comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_last_changed_ts
     return comp_state
+
+
+def decode_attributes_from_row_legacy(
+    row: Row, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Decode attributes from a database row."""
+    return decode_attributes_from_source(
+        getattr(row, "shared_attrs", None) or getattr(row, "attributes", None),
+        attr_cache,
+    )

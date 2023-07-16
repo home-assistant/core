@@ -70,7 +70,7 @@ class LidarrSensorEntityDescription(
 SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     "disk_space": LidarrSensorEntityDescription(
         key="disk_space",
-        name="Disk space",
+        translation_key="disk_space",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
@@ -80,7 +80,7 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     ),
     "queue": LidarrSensorEntityDescription[LidarrQueue](
         key="queue",
-        name="Queue",
+        translation_key="queue",
         native_unit_of_measurement="Albums",
         icon="mdi:download",
         value_fn=lambda data, _: data.totalRecords,
@@ -89,7 +89,7 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     ),
     "wanted": LidarrSensorEntityDescription[LidarrQueue](
         key="wanted",
-        name="Wanted",
+        translation_key="wanted",
         native_unit_of_measurement="Albums",
         icon="mdi:music",
         value_fn=lambda data, _: data.totalRecords,
