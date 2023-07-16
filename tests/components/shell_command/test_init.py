@@ -120,11 +120,14 @@ async def test_subprocess_error(mock_error, mock_call, hass: HomeAssistant) -> N
             {shell_command.DOMAIN: {"test_service": f"touch {path}"}},
         )
 
-        await hass.services.async_call("shell_command", "test_service", blocking=True)
+        response = await hass.services.async_call(
+            "shell_command", "test_service", blocking=True, return_response=True
+        )
         await hass.async_block_till_done()
         assert mock_call.call_count == 1
         assert mock_error.call_count == 1
         assert not os.path.isfile(path)
+        assert response["returncode"] == 1
 
 
 @patch("homeassistant.components.shell_command._LOGGER.debug")
@@ -137,11 +140,15 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
         {shell_command.DOMAIN: {"test_service": f"echo {test_phrase}"}},
     )
 
-    await hass.services.async_call("shell_command", "test_service", blocking=True)
+    response = await hass.services.async_call(
+        "shell_command", "test_service", blocking=True, return_response=True
+    )
 
     await hass.async_block_till_done()
     assert mock_output.call_count == 1
     assert test_phrase.encode() + b"\n" == mock_output.call_args_list[0][0][-1]
+    assert response["stdout"] == test_phrase
+    assert response["returncode"] == 0
 
 
 @patch("homeassistant.components.shell_command._LOGGER.debug")
@@ -154,11 +161,14 @@ async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
         {shell_command.DOMAIN: {"test_service": f">&2 echo {test_phrase}"}},
     )
 
-    await hass.services.async_call("shell_command", "test_service", blocking=True)
+    response = await hass.services.async_call(
+        "shell_command", "test_service", blocking=True, return_response=True
+    )
 
     await hass.async_block_till_done()
     assert mock_output.call_count == 1
     assert test_phrase.encode() + b"\n" == mock_output.call_args_list[0][0][-1]
+    assert response["stderr"] == test_phrase
 
 
 async def test_do_not_run_forever(
