@@ -373,7 +373,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             except InvalidFolder as ex:
                 _LOGGER.warning("Selected mailbox folder is invalid")
                 await self._cleanup()
-                self.config_entry.async_set_state(
+                self.config_entry._async_set_state(  # pylint: disable=protected-access
                     self.hass,
                     ConfigEntryState.SETUP_ERROR,
                     "Selected mailbox folder is invalid.",
