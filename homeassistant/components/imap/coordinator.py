@@ -54,6 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 BACKOFF_TIME = 10
 
 EVENT_IMAP = "imap_content"
+MAX_ERRORS = 3
 MAX_EVENT_DATA_BYTES = 32168
 
 
@@ -174,6 +175,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     ) -> None:
         """Initiate imap client."""
         self.imap_client = imap_client
+        self.auth_errors: int = 0
         self._last_message_id: str | None = None
         self.custom_event_template = None
         _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
@@ -315,7 +317,15 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
         try:
-            return await self._async_fetch_number_of_messages()
+            messages = await self._async_fetch_number_of_messages()
+            if self.config_entry.state == ConfigEntryState.SETUP_ERROR:
+                self.config_entry.async_set_state(
+                    self.hass,
+                    ConfigEntryState.LOADED,
+                    None,
+                )
+            self.auth_errors = 0
+            return messages
         except (
             AioImapException,
             UpdateFailed,
@@ -328,10 +338,22 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
             _LOGGER.warning("Selected mailbox folder is invalid")
             await self._cleanup()
             self.async_set_update_error(ex)
+            self.config_entry.async_set_state(
+                self.hass,
+                ConfigEntryState.SETUP_ERROR,
+                "Selected mailbox folder is invalid.",
+            )
             raise ConfigEntryError("Selected mailbox folder is invalid.") from ex
         except InvalidAuth as ex:
-            _LOGGER.warning("Username or password incorrect, starting reauthentication")
             await self._cleanup()
+            self.auth_errors += 1
+            if self.auth_errors <= MAX_ERRORS:
+                _LOGGER.warning("Authentication failed, retrying")
+            else:
+                _LOGGER.warning(
+                    "Username or password incorrect, starting reauthentication"
+                )
+                self.config_entry.async_start_reauth(self.hass)
             self.async_set_update_error(ex)
             raise ConfigEntryAuthFailed() from ex
 
@@ -363,11 +385,15 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             try:
                 number_of_messages = await self._async_fetch_number_of_messages()
             except InvalidAuth as ex:
+                self.auth_errors += 1
                 await self._cleanup()
-                _LOGGER.warning(
-                    "Username or password incorrect, starting reauthentication"
-                )
-                self.config_entry.async_start_reauth(self.hass)
+                if self.auth_errors <= MAX_ERRORS:
+                    _LOGGER.warning("Authentication failed, retrying")
+                else:
+                    _LOGGER.warning(
+                        "Username or password incorrect, starting reauthentication"
+                    )
+                    self.config_entry.async_start_reauth(self.hass)
                 self.async_set_update_error(ex)
                 await asyncio.sleep(BACKOFF_TIME)
             except InvalidFolder as ex:
@@ -380,6 +406,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 )
                 self.async_set_update_error(ex)
                 await asyncio.sleep(BACKOFF_TIME)
+                continue
             except (
                 UpdateFailed,
                 AioImapException,
@@ -390,7 +417,14 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 await asyncio.sleep(BACKOFF_TIME)
                 continue
             else:
+                self.auth_errors = 0
                 self.async_set_updated_data(number_of_messages)
+                if self.config_entry.state == ConfigEntryState.SETUP_ERROR:
+                    self.config_entry.async_set_state(
+                        self.hass,
+                        ConfigEntryState.LOADED,
+                        None,
+                    )
             try:
                 idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
@@ -398,7 +432,8 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 async with async_timeout.timeout(10):
                     await idle
 
-            except (AioImapException, asyncio.TimeoutError):
+            # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError
+            except (AioImapException, asyncio.TimeoutError, asyncio.CancelledError):
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],
