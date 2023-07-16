@@ -144,9 +144,10 @@ class SelectEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if self.current_option is None or self.current_option not in self.options:
+        current_option = self.current_option
+        if current_option is None or current_option not in self.options:
             return None
-        return self.current_option
+        return current_option
 
     @property
     def options(self) -> list[str]:
