@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, Protocol
-from pyoverkiz.models import State
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -295,7 +294,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         """Overkiz doesn't accept commands with undefined parameters. This function is guaranteed to return a `str` which is the provided `value` if set, or the current device state if set, or the provided `fallback_value` otherwise."""
         if value:
             return value
-        state = cast(State, self.device.states[state_name])
+        state = self.device.states[state_name]
         if state and state.value_as_str:
             return state.value_as_str.lower()
         return fallback_value
