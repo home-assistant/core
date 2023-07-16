@@ -6,15 +6,16 @@ DOMAIN = "tractive"
 
 RECONNECT_INTERVAL = timedelta(seconds=10)
 
-ATTR_DAILY_GOAL = "daily_goal"
 ATTR_BUZZER = "buzzer"
+ATTR_CALORIES = "calories"
+ATTR_DAILY_GOAL = "daily_goal"
 ATTR_LED = "led"
 ATTR_LIVE_TRACKING = "live_tracking"
 ATTR_MINUTES_ACTIVE = "minutes_active"
+ATTR_MINUTES_DAY_SLEEP = "minutes_day_sleep"
+ATTR_MINUTES_NIGHT_SLEEP = "minutes_night_sleep"
 ATTR_MINUTES_REST = "minutes_rest"
 ATTR_TRACKER_STATE = "tracker_state"
-ATTR_MINUTES_NIGHT_SLEEP = "minutes_night_sleep"
-ATTR_MINUTES_DAY_SLEEP = "minutes_day_sleep"
 
 # This client ID was issued by Tractive specifically for Home Assistant.
 # Please do not use it anywhere else.

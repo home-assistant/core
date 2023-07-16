@@ -22,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables
 from .const import (
+    ATTR_CALORIES,
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
@@ -188,6 +189,13 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         translation_key="minutes_rest",
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        entity_class=TractiveWellnessSensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_CALORIES,
+        translation_key="calories",
+        icon="mdi:fire",
+        native_unit_of_measurement="kcal",
         entity_class=TractiveWellnessSensor,
     ),
     TractiveSensorEntityDescription(

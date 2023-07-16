@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_BUZZER,
+    ATTR_CALORIES,
     ATTR_DAILY_GOAL,
     ATTR_LED,
     ATTR_LIVE_TRACKING,
@@ -273,8 +274,9 @@ class TractiveClient:
 
     def _send_wellness_update(self, event: dict[str, Any]) -> None:
         payload = {
-            ATTR_MINUTES_NIGHT_SLEEP: event["sleep"]["minutes_night_sleep"],
+            ATTR_CALORIES: event["activity"]["calories"],
             ATTR_MINUTES_DAY_SLEEP: event["sleep"]["minutes_day_sleep"],
+            ATTR_MINUTES_NIGHT_SLEEP: event["sleep"]["minutes_night_sleep"],
             ATTR_MINUTES_REST: event["activity"]["minutes_rest"],
         }
         self._dispatch_tracker_event(

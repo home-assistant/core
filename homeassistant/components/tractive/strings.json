@@ -30,6 +30,9 @@
       }
     },
     "sensor": {
+      "calories": {
+        "name": "Calories burned"
+      },
       "daily_goal": {
         "name": "Daily goal"
       },
