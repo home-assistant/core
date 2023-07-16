@@ -301,8 +301,6 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_UV_HEALTH_CONCERN,
         name="UV Radiation Health Concern",
         value_map=UVDescription,
-        device_class=SensorDeviceClass.ENUM,
-        options=["high", "low", "moderate", "very_high", "extreme"],
         translation_key="uv_index",
         icon="mdi:sun-wireless",
     ),
