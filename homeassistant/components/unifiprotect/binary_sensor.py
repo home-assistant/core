@@ -616,7 +616,7 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        is_on = self.entity_description.get_is_on(device, self._event)
+        is_on = self.entity_description.get_is_on(self._event)
         self._attr_is_on: bool | None = is_on
         if not is_on:
             self._event = None

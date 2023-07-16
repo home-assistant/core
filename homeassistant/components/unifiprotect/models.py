@@ -76,7 +76,7 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
             return cast(Event, get_nested_attr(obj, self.ufp_event_obj))
         return None
 
-    def get_is_on(self, obj: T, event: Event | None) -> bool:
+    def get_is_on(self, event: Event | None) -> bool:
         """Return value if event is active."""
         if event is None:
             return False
