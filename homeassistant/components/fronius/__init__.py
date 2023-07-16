@@ -177,10 +177,8 @@ class FroniusSolarNet:
         )
         return solar_net_device
 
-    async def _init_devices_inverter(self, now: datetime | None = None) -> None:
-        """Retrieve inverter information from host."""
-        _inverter_infos: list[FroniusDeviceInfo] = []
-
+    async def _init_devices_inverter(self, _now: datetime | None = None) -> None:
+        """Get available inverters and set up coordinators for new found devices."""
         _inverter_infos = await self._get_inverter_infos()
 
         _LOGGER.debug("Processing inverters for: %s", _inverter_infos)
@@ -211,9 +209,8 @@ class FroniusSolarNet:
                     self.sensor_async_add_entities, InverterSensor
                 )
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "New inverter added (UID: %s)",
-                _inverter_info.unique_id,
             )
 
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
