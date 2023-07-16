@@ -28,7 +28,7 @@
   "entity": {
     "sensor": {
       "outdoor_air_quality_index": {
-        "name": "Outdoor Air Quality Index"
+        "name": "Outdoor air quality index"
       }
     }
   }
