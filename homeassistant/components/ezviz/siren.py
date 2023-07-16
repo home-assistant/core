@@ -60,56 +60,55 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
         coordinator: EzvizDataUpdateCoordinator,
         serial: str,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the Siren."""
         super().__init__(coordinator, serial)
         self._attr_unique_id = f"{serial}_{SIREN_ENTITY_TYPE.key}"
         self.entity_description = SIREN_ENTITY_TYPE
         self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added."""
-        await super().async_added_to_hass()
+        """Run when entity about to be added to hass."""
         if not (last_state := await self.async_get_last_state()):
             return
         self._attr_is_on = last_state.state == STATE_ON
 
+        if self._attr_is_on:
+            evt.async_call_later(self.hass, OFF_DELAY, self.off_delay_listener)
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off camera siren."""
         try:
-            success = await self.hass.async_add_executor_job(
+            if await self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.sound_alarm, self._serial, 1
-            )
+            ):
+                self._attr_is_on = False
+                self.async_write_ha_state()
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
                 f"Failed to turn siren off for {self.name}"
             ) from err
 
-        if success:
-            self._attr_is_on = False
-
-        self.async_write_ha_state()
-
-    @callback
-    def off_delay_listener(self, now: datetime) -> None:
-        """Switch device off after a delay."""
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on camera siren."""
         try:
-            success = await self.hass.async_add_executor_job(
+            if await self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.sound_alarm, self._serial, 2
-            )
+            ):
+                self._attr_is_on = True
+                evt.async_call_later(self.hass, OFF_DELAY, self.off_delay_listener)
+                self.async_write_ha_state()
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
                 f"Failed to turn siren on for {self.name}"
             ) from err
 
-        if success:
-            self._attr_is_on = True
-            evt.async_call_later(self.hass, OFF_DELAY, self.off_delay_listener)
+    @callback
+    def off_delay_listener(self, now: datetime) -> None:
+        """Switch device off after a delay.
 
+        Camera firmware has hard coded turn off after 60 seconds.
+        """
+        self._attr_is_on = False
         self.async_write_ha_state()
