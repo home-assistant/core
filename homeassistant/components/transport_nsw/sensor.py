@@ -6,7 +6,12 @@ from datetime import timedelta
 from TransportNSW import TransportNSW
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity, SensorStateClass, SensorDeviceClass
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -102,7 +107,7 @@ class TransportNSWSensor(SensorEntity):
                 ATTR_DELAY: self._times[ATTR_DELAY],
                 ATTR_REAL_TIME: self._times[ATTR_REAL_TIME],
                 ATTR_DESTINATION: self._times[ATTR_DESTINATION],
-                ATTR_MODE: self._times[ATTR_MODE]
+                ATTR_MODE: self._times[ATTR_MODE],
             }
 
     @property
