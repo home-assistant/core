@@ -121,15 +121,13 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        [
-            EzvizSwitch(coordinator, camera, switch_number)
-            for camera in coordinator.data
-            for switch_number in coordinator.data[camera]["switches"]
-            if switch_number in SWITCH_TYPES
-            if SWITCH_TYPES[switch_number].supported_ext
-            in coordinator.data[camera]["supportExt"]
-            or SWITCH_TYPES[switch_number].supported_ext is None
-        ]
+        EzvizSwitch(coordinator, camera, switch_number)
+        for camera in coordinator.data
+        for switch_number in coordinator.data[camera]["switches"]
+        if switch_number in SWITCH_TYPES
+        if SWITCH_TYPES[switch_number].supported_ext
+        in coordinator.data[camera]["supportExt"]
+        or SWITCH_TYPES[switch_number].supported_ext is None
     )
 
 
