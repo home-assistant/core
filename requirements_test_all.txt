@@ -1586,7 +1586,7 @@ python-telegram-bot==13.1
 pytile==2023.04.0
 
 # homeassistant.components.tomorrowio
-pytomorrowio==0.3.5
+pytomorrowio==0.3.6
 
 # homeassistant.components.traccar
 pytraccar==1.0.0
