@@ -81,10 +81,8 @@ class User:
         """Return if user is part of the admin group."""
         if self._is_admin is not None:
             return self._is_admin
-        self._is_admin = (
-            self.is_owner
-            or self.is_active
-            and any(gr.id == GROUP_ID_ADMIN for gr in self.groups)
+        self._is_admin = self.is_owner or (
+            self.is_active and any(gr.id == GROUP_ID_ADMIN for gr in self.groups)
         )
         return self._is_admin
 
