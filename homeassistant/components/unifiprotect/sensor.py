@@ -547,7 +547,7 @@ EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         translation_key="license_plate",
         ufp_value=("is_smart_detected",),
         ufp_required_field=("can_detect_license_plate",),
-        ufp_event_obj=("last_license_plate_detect_event",),
+        ufp_event_obj="last_license_plate_detect_event",
     ),
 )
 
@@ -757,8 +757,8 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         event = self._event
         entity_description = self.entity_description
         is_on = entity_description.get_is_on(event)
-        is_license_plate = entity_description.ufp_event_obj == (
-            "last_license_plate_detect_event",
+        is_license_plate = (
+            entity_description.ufp_event_obj == "last_license_plate_detect_event"
         )
         if (
             not is_on

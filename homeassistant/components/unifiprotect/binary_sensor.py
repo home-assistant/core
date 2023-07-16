@@ -334,7 +334,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         icon="mdi:doorbell-video",
         ufp_required_field=("feature_flags", "is_doorbell"),
         ufp_value=("is_ringing",),
-        ufp_event_obj=("last_ring_event",),
+        ufp_event_obj="last_ring_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="motion",
@@ -342,7 +342,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value=("is_motion_detected",),
         ufp_enabled=("is_motion_detection_on",),
-        ufp_event_obj=("last_motion_event",),
+        ufp_event_obj="last_motion_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_any",
@@ -350,7 +350,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         icon="mdi:eye",
         ufp_value=("is_smart_detected",),
         ufp_required_field=("feature_flags", "has_smart_detect"),
-        ufp_event_obj=("last_smart_detect_event",),
+        ufp_event_obj="last_smart_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_person",
@@ -359,7 +359,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value=("is_smart_detected",),
         ufp_required_field=("can_detect_person",),
         ufp_enabled=("is_person_detection_on",),
-        ufp_event_obj=("last_person_detect_event",),
+        ufp_event_obj="last_person_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_vehicle",
@@ -368,7 +368,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value=("is_smart_detected",),
         ufp_required_field=("can_detect_vehicle",),
         ufp_enabled=("is_vehicle_detection_on",),
-        ufp_event_obj=("last_vehicle_detect_event",),
+        ufp_event_obj="last_vehicle_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_face",
@@ -377,7 +377,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value=("is_smart_detected",),
         ufp_required_field=("can_detect_face",),
         ufp_enabled=("is_face_detection_on",),
-        ufp_event_obj=("last_face_detect_event",),
+        ufp_event_obj="last_face_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_package",
@@ -386,7 +386,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value=("is_smart_detected",),
         ufp_required_field=("can_detect_package",),
         ufp_enabled=("is_package_detection_on",),
-        ufp_event_obj=("last_package_detect_event",),
+        ufp_event_obj="last_package_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_any",
@@ -397,7 +397,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
             "feature_flags",
             "has_smart_detect",
         ),
-        ufp_event_obj=("last_smart_audio_detect_event",),
+        ufp_event_obj="last_smart_audio_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_smoke",
@@ -406,7 +406,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value=("is_smart_detected",),
         ufp_required_field=("can_detect_smoke",),
         ufp_enabled=("is_smoke_detection_on",),
-        ufp_event_obj=("last_smoke_detect_event",),
+        ufp_event_obj="last_smoke_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_cmonx",
@@ -415,7 +415,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value=("is_smart_detected",),
         ufp_required_field=("can_detect_smoke",),
         ufp_enabled=("is_smoke_detection_on",),
-        ufp_event_obj=("last_cmonx_detect_event",),
+        ufp_event_obj="last_cmonx_detect_event",
     ),
 )
 

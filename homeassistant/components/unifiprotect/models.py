@@ -67,13 +67,12 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
 class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for events."""
 
-    ufp_event_obj: tuple[str, ...] | None = None
+    ufp_event_obj: str | None = None
 
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""
-
         if self.ufp_event_obj is not None:
-            return cast(Event, get_nested_attr(obj, self.ufp_event_obj))
+            return cast(Event, getattr(obj, self.ufp_event_obj, None))
         return None
 
     def get_is_on(self, event: Event | None) -> bool:
