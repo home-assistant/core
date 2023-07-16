@@ -30,6 +30,7 @@ from .const import (
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
+    ATTR_MINUTES_REST,
     ATTR_TRACKER_STATE,
     CLIENT,
     CLIENT_ID,
@@ -274,6 +275,7 @@ class TractiveClient:
         payload = {
             ATTR_MINUTES_NIGHT_SLEEP: event["sleep"]["minutes_night_sleep"],
             ATTR_MINUTES_DAY_SLEEP: event["sleep"]["minutes_day_sleep"],
+            ATTR_MINUTES_REST: event["activity"]["minutes_rest"],
         }
         self._dispatch_tracker_event(
             TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload

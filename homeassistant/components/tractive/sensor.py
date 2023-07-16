@@ -26,6 +26,7 @@ from .const import (
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
+    ATTR_MINUTES_REST,
     ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
@@ -181,6 +182,13 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveActivitySensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_MINUTES_REST,
+        translation_key="minutes_rest",
+        icon="mdi:clock-time-eight-outline",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        entity_class=TractiveWellnessSensor,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,

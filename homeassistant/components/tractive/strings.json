@@ -42,6 +42,9 @@
       "minutes_night_sleep": {
         "name": "Night sleep"
       },
+      "minutes_rest": {
+        "name": "Minutes rest"
+      },
       "tracker_battery_level": {
         "name": "Tracker battery"
       },
