@@ -433,7 +433,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                     await idle
 
             # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError
-            except (AioImapException, asyncio.TimeoutError, asyncio.CancelledError):
+            except (AioImapException, asyncio.TimeoutError):
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],
