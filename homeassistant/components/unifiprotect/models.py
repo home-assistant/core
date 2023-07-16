@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
 from enum import Enum
 import logging
 from typing import Any, Generic, TypeVar, cast
@@ -84,20 +83,9 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
 
         now = dt_util.utcnow()
         value = now > event.start
-        debug = _LOGGER.isEnabledFor(logging.DEBUG)
         if value and event.end is not None and now > event.end:
             value = False
-            # only log if the recent ended recently
-            if debug and event.end + timedelta(seconds=10) < now:
-                _LOGGER.debug(
-                    "%s (%s): end ended at %s",
-                    self.name,
-                    obj.mac,
-                    event.end.isoformat(),
-                )
 
-        if debug and value:
-            _LOGGER.debug("%s (%s): value is on", self.name, obj.mac)
         return value
 
 
