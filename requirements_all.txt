@@ -231,7 +231,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.6
+aioesphomeapi==15.1.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1944,7 +1944,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==2.1.1
+pyrainbird==3.0.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2

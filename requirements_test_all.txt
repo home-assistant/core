@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.6
+aioesphomeapi==15.1.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1445,7 +1445,7 @@ pyps4-2ndscreen==1.3.1
 pyqwikswitch==0.93
 
 # homeassistant.components.rainbird
-pyrainbird==2.1.1
+pyrainbird==3.0.0
 
 # homeassistant.components.risco
 pyrisco==0.5.7
