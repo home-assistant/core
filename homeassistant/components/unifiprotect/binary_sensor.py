@@ -557,11 +557,12 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         entity_description = self.entity_description
-        self._attr_is_on = entity_description.get_ufp_value(self.device)
+        updated_device = self.device
+        self._attr_is_on = entity_description.get_ufp_value(updated_device)
         # UP Sense can be any of the 3 contact sensor device classes
-        if entity_description.key == _KEY_DOOR and isinstance(self.device, Sensor):
+        if entity_description.key == _KEY_DOOR and isinstance(updated_device, Sensor):
             entity_description.device_class = MOUNT_DEVICE_CLASS_MAP.get(
-                self.device.mount_type, BinarySensorDeviceClass.DOOR
+                updated_device.mount_type, BinarySensorDeviceClass.DOOR
             )
 
 
