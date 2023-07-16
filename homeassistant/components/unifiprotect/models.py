@@ -77,19 +77,18 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
             return cast(Event, get_nested_attr(obj, self.ufp_event_obj))
         return None
 
-    def get_is_on(self, obj: T) -> bool:
+    def get_is_on(self, obj: T, event: Event | None) -> bool:
         """Return value if event is active."""
-
-        event = self.get_event_obj(obj)
         if event is None:
             return False
 
         now = dt_util.utcnow()
         value = now > event.start
+        debug = _LOGGER.isEnabledFor(logging.DEBUG)
         if value and event.end is not None and now > event.end:
             value = False
             # only log if the recent ended recently
-            if event.end + timedelta(seconds=10) < now:
+            if debug and event.end + timedelta(seconds=10) < now:
                 _LOGGER.debug(
                     "%s (%s): end ended at %s",
                     self.name,
@@ -97,7 +96,7 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
                     event.end.isoformat(),
                 )
 
-        if value:
+        if debug and value:
             _LOGGER.debug("%s (%s): value is on", self.name, obj.mac)
         return value
 
