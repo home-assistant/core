@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import json
+import os
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
@@ -546,5 +547,43 @@ async def test_saving_load_round_trip(tmpdir: py.path.local) -> None:
         "set": [1, 2, 3],
         "tuple": [1, 2, 3],
     }
+
+    await hass.async_stop(force=True)
+
+
+async def test_loading_corrupt_file(
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we handle unrecoverable corruption."""
+    loop = asyncio.get_running_loop()
+    hass = await async_test_home_assistant(loop)
+
+    tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
+    hass.config.config_dir = tmp_storage
+
+    store = storage.Store(
+        hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+    )
+    await store.async_save({"hello": "world"})
+    storage_path = os.path.join(tmp_storage, ".storage")
+    store_file = os.path.join(storage_path, store.key)
+
+    data = await store.async_load()
+    assert data == {"hello": "world"}
+
+    def _corrupt_store():
+        with open(store_file, "w") as f:
+            f.write("corrupt")
+
+    await hass.async_add_executor_job(_corrupt_store)
+
+    data = await store.async_load()
+    assert data is None
+    assert "Unrecoverable error decoding storage" in caplog.text
+
+    files = await hass.async_add_executor_job(
+        os.listdir, os.path.join(tmp_storage, ".storage")
+    )
+    assert ".corrupt" in files[0]
 
     await hass.async_stop(force=True)
