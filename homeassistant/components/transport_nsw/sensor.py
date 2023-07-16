@@ -6,8 +6,8 @@ from datetime import timedelta
 from TransportNSW import TransportNSW
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity, CONF_STATE_CLASS, SensorStateClass, SensorDeviceClass
-from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, UnitOfTime, ATTR_DEVICE_CLASS
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity, SensorStateClass, SensorDeviceClass
+from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,6 +70,8 @@ class TransportNSWSensor(SensorEntity):
     """Implementation of an Transport NSW sensor."""
 
     _attr_attribution = "Data provided by Transport NSW"
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, data, stop_id, name):
         """Initialize the sensor."""
@@ -100,9 +102,7 @@ class TransportNSWSensor(SensorEntity):
                 ATTR_DELAY: self._times[ATTR_DELAY],
                 ATTR_REAL_TIME: self._times[ATTR_REAL_TIME],
                 ATTR_DESTINATION: self._times[ATTR_DESTINATION],
-                ATTR_MODE: self._times[ATTR_MODE],
-                ATTR_DEVICE_CLASS: SensorDeviceClass.DURATION,
-                CONF_STATE_CLASS:  SensorStateClass.MEASUREMENT
+                ATTR_MODE: self._times[ATTR_MODE]
             }
 
     @property
