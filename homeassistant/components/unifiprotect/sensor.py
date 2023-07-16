@@ -710,15 +710,6 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
 
     entity_description: ProtectSensorEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
@@ -729,15 +720,6 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
     """A Ubiquiti UniFi Protect Sensor."""
 
     entity_description: ProtectSensorEntityDescription
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: NVR,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
@@ -758,7 +740,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         entity_description = self.entity_description
         is_on = entity_description.get_is_on(device, event)
         is_license_plate = (
-            self.entity_description.ufp_event_obj == "last_license_plate_detect_event"
+            entity_description.ufp_event_obj == "last_license_plate_detect_event"
         )
         if (
             not is_on
