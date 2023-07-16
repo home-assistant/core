@@ -58,6 +58,8 @@ class User:
         default=None,
     )
 
+    _is_admin: bool | None = attr.ib(init=False, default=None)
+
     @property
     def permissions(self) -> perm_mdl.AbstractPermissions:
         """Return permissions object for user."""
@@ -77,14 +79,19 @@ class User:
     @property
     def is_admin(self) -> bool:
         """Return if user is part of the admin group."""
-        if self.is_owner:
-            return True
+        if self._is_admin is not None:
+            return self._is_admin
+        self._is_admin = (
+            self.is_owner
+            or self.is_active
+            and any(gr.id == GROUP_ID_ADMIN for gr in self.groups)
+        )
+        return self._is_admin
 
-        return self.is_active and any(gr.id == GROUP_ID_ADMIN for gr in self.groups)
-
-    def invalidate_permission_cache(self) -> None:
-        """Invalidate permission cache."""
+    def invalidate_cache(self) -> None:
+        """Invalidate permission and is_admin cache."""
         self._permissions = None
+        self._is_admin = None
 
 
 @attr.s(slots=True)
