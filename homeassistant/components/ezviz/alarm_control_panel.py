@@ -49,7 +49,7 @@ class EzvizAlarmControlPanelEntityDescriptionMixin:
 class EzvizAlarmControlPanelEntityDescription(
     AlarmControlPanelEntityDescription, EzvizAlarmControlPanelEntityDescriptionMixin
 ):
-    """Describe a EZVIZ Alarm control panel entity."""
+    """Describe an EZVIZ Alarm control panel entity."""
 
 
 ALARM_TYPE = EzvizAlarmControlPanelEntityDescription(
@@ -75,7 +75,7 @@ async def async_setup_entry(
 
 
 class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
-    """Representation of a Ezviz alarm control panel."""
+    """Representation of an Ezviz alarm control panel."""
 
     coordinator: EzvizDataUpdateCoordinator
     _attr_has_entity_name = True
@@ -153,7 +153,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
                 self.coordinator.ezviz_client.get_group_defence_mode()
             )
             _LOGGER.debug(self._ezviz_alarm_state_number)
-            self._attr_state = ALARM_TYPE.ezviz_alarm_states[
+            self._attr_state = self.entity_description.ezviz_alarm_states[
                 int(self._ezviz_alarm_state_number)
             ]
 
