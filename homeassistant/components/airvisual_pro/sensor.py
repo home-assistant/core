@@ -30,7 +30,9 @@ from .const import DOMAIN
 class AirVisualProMeasurementKeyMixin:
     """Define an entity description mixin to include a measurement key."""
 
-    value_fn: Callable[[dict[str, Any], dict[str, Any], dict[str, Any]], float | int]
+    value_fn: Callable[
+        [dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]], float | int
+    ]
 
 
 @dataclass
@@ -53,9 +55,12 @@ SENSOR_DESCRIPTIONS = (
         key="outdoor_air_quality_index",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements, history: history.get(
-            f'Outdoor {"AQI(US)" if settings["is_aqi_usa"] else "AQI(CN)"}'
+        value_fn=lambda settings, status, measurements, history: int(
+            history.get(
+                f'Outdoor {"AQI(US)" if settings["is_aqi_usa"] else "AQI(CN)"}', -1
+            )
         ),
+        translation_key="outdoor_air_quality_index",
     ),
     AirVisualProMeasurementDescription(
         key="battery_level",
@@ -75,7 +80,9 @@ SENSOR_DESCRIPTIONS = (
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda settings, status, measurements, history: measurements["humidity"],
+        value_fn=lambda settings, status, measurements, history: measurements[
+            "humidity"
+        ],
     ),
     AirVisualProMeasurementDescription(
         key="particulate_matter_0_1",
@@ -105,7 +112,9 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda settings, status, measurements, history: measurements["temperature_C"],
+        value_fn=lambda settings, status, measurements, history: measurements[
+            "temperature_C"
+        ],
     ),
     AirVisualProMeasurementDescription(
         key="voc",
