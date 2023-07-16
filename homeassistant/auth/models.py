@@ -79,8 +79,8 @@ class User:
     @property
     def is_admin(self) -> bool:
         """Return if user is part of the admin group."""
-        if self._is_admin is not None:
-            return self._is_admin
+        if (is_admin := self._is_admin) is not None:
+            return is_admin
         self._is_admin = self.is_owner or (
             self.is_active and any(gr.id == GROUP_ID_ADMIN for gr in self.groups)
         )
