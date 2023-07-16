@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DATA_COORDINATOR,
@@ -71,13 +70,21 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    async_add_entities([EzvizAlarm(coordinator, entry.entry_id, ALARM_TYPE)])
+    device_info: DeviceInfo = {
+        "identifiers": {(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
+        "name": "EZVIZ Alarm",
+        "model": "EZVIZ Alarm",
+        "manufacturer": MANUFACTURER,
+    }
+
+    async_add_entities(
+        [EzvizAlarm(coordinator, entry.entry_id, device_info, ALARM_TYPE)]
+    )
 
 
-class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
+class EzvizAlarm(AlarmControlPanelEntity):
     """Representation of an Ezviz alarm control panel."""
 
-    coordinator: EzvizDataUpdateCoordinator
     entity_description: EzvizAlarmControlPanelEntityDescription
     _attr_has_entity_name = True
     _attr_name = None
@@ -91,23 +98,19 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         self,
         coordinator: EzvizDataUpdateCoordinator,
         entry_id: str,
+        device_info: DeviceInfo,
         entity_description: EzvizAlarmControlPanelEntityDescription,
     ) -> None:
         """Initialize alarm control panel entity."""
-        super().__init__(coordinator)
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
+        self._attr_device_info = device_info
         self.entity_description = entity_description
-        self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, "EZVIZ Alarm")},
-            "name": "EZVIZ Alarm",
-            "model": "EZVIZ Alarm",
-            "manufacturer": MANUFACTURER,
-        }
+        self.coordinator = coordinator
         self._attr_state = None
 
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
-        self.hass.async_add_executor_job(self.update)
+        self.schedule_update_ha_state(True)
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -144,17 +147,17 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
 
     def update(self) -> None:
         """Fetch data from EZVIZ."""
-        _LOGGER.debug("Updating %s", self.name)
         ezviz_alarm_state_number = "0"
         try:
             ezviz_alarm_state_number = (
                 self.coordinator.ezviz_client.get_group_defence_mode()
             )
-            _LOGGER.debug(ezviz_alarm_state_number)
+            _LOGGER.debug(
+                "Updating EZVIZ alarm with response %s", ezviz_alarm_state_number
+            )
             self._attr_state = self.entity_description.ezviz_alarm_states[
                 int(ezviz_alarm_state_number)
             ]
-
 
         except PyEzvizError as error:
             raise HomeAssistantError(
