@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 
 
 class MockLawnMowerEntity(LawnMowerEntity):
-    """Mock Lawn Mower device to use in tests."""
+    """Mock lawn mower device to use in tests."""
 
     @property
     def supported_features(self) -> LawnMowerEntityFeature:
@@ -15,12 +15,11 @@ class MockLawnMowerEntity(LawnMowerEntity):
 
 
 async def test_sync_start_mowing(hass: HomeAssistant) -> None:
-    """Test if async dock calls sync dock."""
+    """Test if async mowing calls sync mowing."""
     lawn_mower = MockLawnMowerEntity()
     lawn_mower.hass = hass
 
     lawn_mower.start_mowing = MagicMock()
-
     await lawn_mower.async_start_mowing()
 
     assert lawn_mower.start_mowing.called
@@ -38,7 +37,7 @@ async def test_sync_dock(hass: HomeAssistant) -> None:
 
 
 async def test_sync_pause(hass: HomeAssistant) -> None:
-    """Test if async dock calls sync dock."""
+    """Test if async pause calls sync pause."""
     lawn_mower = MockLawnMowerEntity()
     lawn_mower.hass = hass
 
@@ -49,7 +48,7 @@ async def test_sync_pause(hass: HomeAssistant) -> None:
 
 
 async def test_sync_enable_schedule(hass: HomeAssistant) -> None:
-    """Test if async dock calls sync dock."""
+    """Test if async schedule calls sync schedule."""
     lawn_mower = MockLawnMowerEntity()
     lawn_mower.hass = hass
 
@@ -60,7 +59,7 @@ async def test_sync_enable_schedule(hass: HomeAssistant) -> None:
 
 
 async def test_sync_disable_schedule(hass: HomeAssistant) -> None:
-    """Test if async dock calls sync dock."""
+    """Test if async disable calls sync disable."""
     lawn_mower = MockLawnMowerEntity()
     lawn_mower.hass = hass
 
@@ -70,7 +69,7 @@ async def test_sync_disable_schedule(hass: HomeAssistant) -> None:
     assert lawn_mower.disable_schedule.called
 
 
-async def test_lock_default(hass: HomeAssistant) -> None:
+async def test_lawn_mower_default(hass: HomeAssistant) -> None:
     """Test lawn mower entity with defaults."""
     lawn_mower = MockLawnMowerEntity()
     lawn_mower.hass = hass

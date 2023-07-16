@@ -1,7 +1,5 @@
 """Constants for the lawn mower integration."""
-from enum import IntFlag
-
-from homeassistant.backports.enum import StrEnum
+from enum import IntFlag, StrEnum
 
 
 class LawnMowerActivity(StrEnum):
