@@ -28,6 +28,8 @@ from .const import (
     ATTR_LED,
     ATTR_LIVE_TRACKING,
     ATTR_MINUTES_ACTIVE,
+    ATTR_MINUTES_DAY_SLEEP,
+    ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_TRACKER_STATE,
     CLIENT,
     CLIENT_ID,
@@ -38,6 +40,7 @@ from .const import (
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
+    TRACKER_WELLNESS_STATUS_UPDATED,
 )
 
 PLATFORMS = [
@@ -202,6 +205,9 @@ class TractiveClient:
                     if event["message"] == "activity_update":
                         self._send_activity_update(event)
                         continue
+                    if event["message"] == "wellness_overview":
+                        self._send_wellness_update(event)
+                        continue
                     if (
                         "hardware" in event
                         and self._last_hw_time != event["hardware"]["time"]
@@ -262,6 +268,15 @@ class TractiveClient:
         }
         self._dispatch_tracker_event(
             TRACKER_ACTIVITY_STATUS_UPDATED, event["pet_id"], payload
+        )
+
+    def _send_wellness_update(self, event: dict[str, Any]) -> None:
+        payload = {
+            ATTR_MINUTES_NIGHT_SLEEP: event["sleep"]["minutes_night_sleep"],
+            ATTR_MINUTES_DAY_SLEEP: event["sleep"]["minutes_day_sleep"],
+        }
+        self._dispatch_tracker_event(
+            TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload
         )
 
     def _send_position_update(self, event: dict[str, Any]) -> None:

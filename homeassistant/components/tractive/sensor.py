@@ -24,6 +24,8 @@ from . import Trackables
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
+    ATTR_MINUTES_DAY_SLEEP,
+    ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
@@ -31,6 +33,7 @@ from .const import (
     TRACKABLES,
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_WELLNESS_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
 
@@ -107,8 +110,8 @@ class TractiveActivitySensor(TractiveSensor):
     """Tractive active sensor."""
 
     @callback
-    def handle_activity_status_update(self, event: dict[str, Any]) -> None:
-        """Handle activity status update."""
+    def handle_status_update(self, event: dict[str, Any]) -> None:
+        """Handle status update."""
         self._attr_native_value = event[self.entity_description.key]
         self._attr_available = True
         self.async_write_ha_state()
@@ -120,7 +123,30 @@ class TractiveActivitySensor(TractiveSensor):
             async_dispatcher_connect(
                 self.hass,
                 f"{TRACKER_ACTIVITY_STATUS_UPDATED}-{self._trackable['_id']}",
-                self.handle_activity_status_update,
+                self.handle_status_update,
+            )
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_UNAVAILABLE}-{self._user_id}",
+                self.handle_server_unavailable,
+            )
+        )
+
+
+class TractiveWellnessSensor(TractiveActivitySensor):
+    """Tractive wellness sensor."""
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{TRACKER_WELLNESS_STATUS_UPDATED}-{self._trackable['_id']}",
+                self.handle_status_update,
             )
         )
 
@@ -162,6 +188,20 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:flag-checkered",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveActivitySensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_MINUTES_DAY_SLEEP,
+        translation_key="minutes_day_sleep",
+        icon="mdi:sleep",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        entity_class=TractiveWellnessSensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_MINUTES_NIGHT_SLEEP,
+        translation_key="minutes_night_sleep",
+        icon="mdi:sleep",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        entity_class=TractiveWellnessSensor,
     ),
 )
 

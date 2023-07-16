@@ -36,6 +36,12 @@
       "minutes_active": {
         "name": "Minutes active"
       },
+      "minutes_day_sleep": {
+        "name": "Day sleep"
+      },
+      "minutes_night_sleep": {
+        "name": "Night sleep"
+      },
       "tracker_battery_level": {
         "name": "Tracker battery"
       },

@@ -12,6 +12,8 @@ ATTR_LED = "led"
 ATTR_LIVE_TRACKING = "live_tracking"
 ATTR_MINUTES_ACTIVE = "minutes_active"
 ATTR_TRACKER_STATE = "tracker_state"
+ATTR_MINUTES_NIGHT_SLEEP = "minutes_night_sleep"
+ATTR_MINUTES_DAY_SLEEP = "minutes_day_sleep"
 
 # This client ID was issued by Tractive specifically for Home Assistant.
 # Please do not use it anywhere else.
@@ -23,5 +25,6 @@ TRACKABLES = "trackables"
 TRACKER_HARDWARE_STATUS_UPDATED = f"{DOMAIN}_tracker_hardware_status_updated"
 TRACKER_POSITION_UPDATED = f"{DOMAIN}_tracker_position_updated"
 TRACKER_ACTIVITY_STATUS_UPDATED = f"{DOMAIN}_tracker_activity_updated"
+TRACKER_WELLNESS_STATUS_UPDATED = f"{DOMAIN}_tracker_wellness_updated"
 
 SERVER_UNAVAILABLE = f"{DOMAIN}_server_unavailable"
