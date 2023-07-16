@@ -116,7 +116,6 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
                 DefenseModeType.HOME_MODE.value
             ):
                 self._attr_state = STATE_ALARM_DISARMED
-                self.async_write_ha_state()
 
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot disarm EZVIZ alarm") from err
@@ -128,7 +127,6 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
                 DefenseModeType.AWAY_MODE.value
             ):
                 self._attr_state = STATE_ALARM_ARMED_AWAY
-                self.async_write_ha_state()
 
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot arm EZVIZ alarm") from err
@@ -140,7 +138,6 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
                 DefenseModeType.SLEEP_MODE.value
             ):
                 self._attr_state = STATE_ALARM_ARMED_HOME
-                self.async_write_ha_state()
 
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot arm EZVIZ alarm") from err
@@ -148,7 +145,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     def update(self) -> None:
         """Fetch data from EZVIZ."""
         _LOGGER.debug("Updating %s", self.name)
-        ezviz_alarm_state_number: str = "0"
+        ezviz_alarm_state_number = "0"
         try:
             ezviz_alarm_state_number = (
                 self.coordinator.ezviz_client.get_group_defence_mode()
@@ -158,7 +155,6 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity):
                 int(ezviz_alarm_state_number)
             ]
 
-            self.async_write_ha_state()
 
         except PyEzvizError as error:
             raise HomeAssistantError(
