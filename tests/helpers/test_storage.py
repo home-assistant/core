@@ -587,3 +587,23 @@ async def test_loading_corrupt_file(
     assert ".corrupt" in files[0]
 
     await hass.async_stop(force=True)
+
+
+async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
+    """Test OSError during load is fatal."""
+    loop = asyncio.get_running_loop()
+    hass = await async_test_home_assistant(loop)
+
+    tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
+    hass.config.config_dir = tmp_storage
+
+    store = storage.Store(
+        hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+    )
+    await store.async_save({"hello": "world"})
+
+    with pytest.raises(OSError), patch(
+        "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+    ):
+        await store.async_load()
+    await hass.async_stop(force=True)
