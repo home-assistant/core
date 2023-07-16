@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "{name} Setup",
+        "description": "Press and hold down on the switch for a few seconds until the green light flashes to put it in pairing mode",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "Name the device you'd like to add"
+        }
+      },
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_in_pairing_mode": "Device not in pairing mode"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  }
+}

@@ -95,6 +95,7 @@ homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.deconz.*
+homeassistant.components.decora_ble.*
 homeassistant.components.demo.*
 homeassistant.components.derivative.*
 homeassistant.components.device_automation.*

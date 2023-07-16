@@ -1022,6 +1022,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "decora_ble": {
+      "name": "Decora BLE",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "decora_wifi": {
       "name": "Leviton Decora Wi-Fi",
       "integration_type": "hub",

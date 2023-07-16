@@ -544,6 +544,9 @@ dbus-fast==2.20.0
 # homeassistant.components.debugpy
 debugpy==1.8.0
 
+# homeassistant.components.decora_ble
+decora_bleak==0.1.0
+
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
