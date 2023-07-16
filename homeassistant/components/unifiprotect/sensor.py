@@ -739,8 +739,8 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         event = self._event
         entity_description = self.entity_description
         is_on = entity_description.get_is_on(event)
-        is_license_plate = (
-            entity_description.ufp_event_obj == "last_license_plate_detect_event"
+        is_license_plate = entity_description.ufp_event_obj == (
+            "last_license_plate_detect_event",
         )
         if (
             not is_on

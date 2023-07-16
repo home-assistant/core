@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field, fields
 from enum import Enum
+from functools import cache
 import logging
 from typing import Any, Generic, TypeVar, cast
 
@@ -27,14 +28,49 @@ class PermRequired(int, Enum):
     DELETE = 3
 
 
+_V = TypeVar("_V")
+
+
+def split_tuple(value: str | None) -> tuple[str, ...] | None:
+    """Split string to tuple."""
+    if value is None:
+        return None
+    return tuple(value.split("."))
+
+
+def converter_field(*, converter: Callable[[Any], _V], **kwargs: Any) -> _V:
+    metadata = kwargs.pop("metadata", {})
+    metadata["converter"] = converter
+    return cast(_V, field(metadata=metadata, **kwargs))
+
+
+# Fields do not change so we can cache the result
+# of calling fields() on the dataclass
+cached_fields = cache(fields)
+
+
 @dataclass
 class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     """Mixin for required keys."""
 
-    ufp_required_field: str | None = None
-    ufp_value: str | None = None
+    def __post_init__(self) -> None:
+        for field_ in cached_fields(type(self)):  # type: ignore[arg-type]
+            convert = field_.metadata.get("converter")
+            if convert is None:
+                continue
+            val = getattr(self, field_.name)
+            setattr(self, field_.name, convert(val))
+
+    ufp_required_field: tuple[str, ...] | None = converter_field(
+        default=None, converter=split_tuple
+    )
+    ufp_value: tuple[str, ...] | None = converter_field(
+        default=None, converter=split_tuple
+    )
     ufp_value_fn: Callable[[T], Any] | None = None
-    ufp_enabled: str | None = None
+    ufp_enabled: tuple[str, ...] | None = converter_field(
+        default=None, converter=split_tuple
+    )
     ufp_perm: PermRequired | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
@@ -67,7 +103,9 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
 class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for events."""
 
-    ufp_event_obj: str | None = None
+    ufp_event_obj: tuple[str, ...] | None = converter_field(
+        default=None, converter=split_tuple
+    )
 
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""
