@@ -132,10 +132,10 @@ class PublicTransportData:
         self._api_key = api_key
         self.info = {
             ATTR_ROUTE: self._route,
-            ATTR_DUE_IN: "n/a",
-            ATTR_DELAY: "n/a",
-            ATTR_REAL_TIME: "n/a",
-            ATTR_DESTINATION: "n/a",
+            ATTR_DUE_IN: None,
+            ATTR_DELAY: None,
+            ATTR_REAL_TIME: None,
+            ATTR_DESTINATION: None,
             ATTR_MODE: None,
         }
         self.tnsw = TransportNSW()
