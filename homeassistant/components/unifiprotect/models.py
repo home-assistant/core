@@ -39,6 +39,7 @@ def split_tuple(value: str | None) -> tuple[str, ...] | None:
 
 
 def converter_field(*, converter: Callable[[Any], _V], **kwargs: Any) -> _V:
+    """Create a field with a converter."""
     metadata = kwargs.pop("metadata", {})
     metadata["converter"] = converter
     return cast(_V, field(metadata=metadata, **kwargs))
@@ -54,6 +55,7 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     """Mixin for required keys."""
 
     def __post_init__(self) -> None:
+        """Convert fields."""
         for field_ in cached_fields(type(self)):  # type: ignore[arg-type]
             convert = field_.metadata.get("converter")
             if convert is None:
