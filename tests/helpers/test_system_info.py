@@ -55,7 +55,7 @@ async def test_get_system_info_supervisor_not_available(
 
 
 async def test_get_system_info_supervisor_not_loaded(hass: HomeAssistant) -> None:
-    """Test the get system info when supervisor is not loaded is in use."""
+    """Test the get system info when supervisor is not loaded."""
     with patch("platform.system", return_value="Linux"), patch(
         "homeassistant.helpers.system_info.is_docker_env", return_value=True
     ), patch(
