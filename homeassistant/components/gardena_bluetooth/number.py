@@ -90,7 +90,8 @@ async def async_setup_entry(
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]
-    entities.append(GardenaBluetoothRemainingOpenSetNumber(coordinator))
+    if Valve.remaining_open_time.uuid in coordinator.characteristics:
+        entities.append(GardenaBluetoothRemainingOpenSetNumber(coordinator))
     async_add_entities(entities)
 
 
