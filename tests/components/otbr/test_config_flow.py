@@ -240,7 +240,7 @@ async def test_hassio_discovery_flow_yellow(
     addon_info.return_value = {
         "available": True,
         "hostname": None,
-        "options": {"device": "/dev/TTYAMA1"},
+        "options": {"device": "/dev/ttyAMA1"},
         "state": None,
         "update_available": False,
         "version": None,
