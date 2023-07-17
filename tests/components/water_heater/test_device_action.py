@@ -1,5 +1,6 @@
 """The tests for Water Heater device actions."""
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -12,7 +13,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -35,16 +35,15 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
-    expected_actions = []
-    expected_actions += [
+    expected_actions = [
         {
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in ["turn_on", "turn_off"]
@@ -52,7 +51,7 @@ async def test_get_actions(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 @pytest.mark.parametrize(
@@ -78,7 +77,7 @@ async def test_get_actions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -92,7 +91,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["turn_on", "turn_off"]
@@ -100,11 +99,13 @@ async def test_get_actions_hidden_auxiliary(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
-async def test_action(hass: HomeAssistant) -> None:
+async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test for turn_on and turn_off actions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -118,7 +119,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "water_heater.entity",
+                        "entity_id": entry.id,
                         "type": "turn_off",
                     },
                 },
@@ -130,7 +131,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "water_heater.entity",
+                        "entity_id": entry.id,
                         "type": "turn_on",
                     },
                 },
@@ -150,3 +151,42 @@ async def test_action(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(turn_off_calls) == 1
     assert len(turn_on_calls) == 1
+
+    assert turn_off_calls[-1].data == {"entity_id": entry.entity_id}
+    assert turn_on_calls[-1].data == {"entity_id": entry.entity_id}
+
+
+async def test_action_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test for turn_on and turn_off actions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_turn_off",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": entry.entity_id,
+                        "type": "turn_off",
+                    },
+                },
+            ]
+        },
+    )
+
+    turn_off_calls = async_mock_service(hass, "water_heater", "turn_off")
+
+    hass.bus.async_fire("test_event_turn_off")
+    await hass.async_block_till_done()
+    assert len(turn_off_calls) == 1
+
+    assert turn_off_calls[-1].data == {"entity_id": entry.entity_id}

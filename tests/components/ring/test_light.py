@@ -32,7 +32,7 @@ async def test_light_off_reports_correctly(
 
     state = hass.states.get("light.front_light")
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Front light"
+    assert state.attributes.get("friendly_name") == "Front Light"
 
 
 async def test_light_on_reports_correctly(
@@ -43,7 +43,7 @@ async def test_light_on_reports_correctly(
 
     state = hass.states.get("light.internal_light")
     assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "Internal light"
+    assert state.attributes.get("friendly_name") == "Internal Light"
 
 
 async def test_light_can_be_turned_on(

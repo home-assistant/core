@@ -32,7 +32,7 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-ASUSWRT_LIB = "homeassistant.components.asuswrt.router.AsusWrt"
+ASUSWRT_LIB = "homeassistant.components.asuswrt.bridge.AsusWrtLegacy"
 
 HOST = "myrouter.asuswrt.com"
 IP_ADDRESS = "192.168.1.1"
@@ -309,28 +309,6 @@ async def test_loadavg_sensors(
     assert hass.states.get(f"{sensor_prefix}_load_avg_1m").state == "1.1"
     assert hass.states.get(f"{sensor_prefix}_load_avg_5m").state == "1.2"
     assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
-
-
-async def test_temperature_sensors_fail(
-    hass: HomeAssistant,
-    connect,
-    mock_available_temps,
-) -> None:
-    """Test fail creating AsusWRT temperature sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_TEMP)
-    config_entry.add_to_hass(hass)
-
-    # Only length of 3 booleans is valid. Checking the exception handling.
-    mock_available_temps.pop(2)
-
-    # initial devices setup
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # assert temperature availability exception is handled correctly
-    assert not hass.states.get(f"{sensor_prefix}_2_4ghz_temperature")
-    assert not hass.states.get(f"{sensor_prefix}_5ghz_temperature")
-    assert not hass.states.get(f"{sensor_prefix}_cpu_temperature")
 
 
 async def test_temperature_sensors(

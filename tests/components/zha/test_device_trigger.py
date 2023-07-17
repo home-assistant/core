@@ -105,7 +105,9 @@ async def test_triggers(hass: HomeAssistant, mock_devices) -> None:
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, reg_device.id
@@ -171,7 +173,9 @@ async def test_no_triggers(hass: HomeAssistant, mock_devices) -> None:
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, reg_device.id
@@ -203,7 +207,9 @@ async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> No
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     assert await async_setup_component(
         hass,
@@ -312,7 +318,9 @@ async def test_exception_no_triggers(
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     await async_setup_component(
         hass,
@@ -359,7 +367,9 @@ async def test_exception_bad_trigger(
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     await async_setup_component(
         hass,

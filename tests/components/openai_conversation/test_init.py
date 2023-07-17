@@ -13,6 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_default_prompt(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
@@ -101,18 +102,24 @@ async def test_default_prompt(
             ]
         },
     ) as mock_create:
-        result = await conversation.async_converse(hass, "hello", None, Context())
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_create.mock_calls[0][2]["messages"] == snapshot
 
 
-async def test_error_handling(hass: HomeAssistant, mock_init_component) -> None:
+async def test_error_handling(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+) -> None:
     """Test that the default prompt works."""
     with patch(
         "openai.ChatCompletion.acreate", side_effect=error.ServiceUnavailableError
     ):
-        result = await conversation.async_converse(hass, "hello", None, Context())
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
@@ -133,7 +140,9 @@ async def test_template_error(
     ), patch("openai.ChatCompletion.acreate"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        result = await conversation.async_converse(hass, "hello", None, Context())
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
