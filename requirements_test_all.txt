@@ -365,7 +365,7 @@ amberelectric==1.0.4
 androidtv[async]==0.0.70
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.9
+androidtvremote2==0.0.12
 
 # homeassistant.components.anova
 anova-wifi==0.10.0
