@@ -19,6 +19,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.json import JsonObjectType
 
 DOMAIN = "shell_command"
 
@@ -105,7 +106,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             return {}
 
-        service_response = {
+        service_response: JsonObjectType = {
             "stdout": "",
             "stderr": "",
             "returncode": process.returncode,
@@ -131,7 +132,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.exception(
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
-        return cast(ServiceResponse, service_response)
+        # return cast(ServiceResponse, service_response)
+        return service_response
 
     for name in conf:
         hass.services.async_register(
