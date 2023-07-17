@@ -59,6 +59,9 @@ async def async_setup_entry(
 class OwnTracksEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, dev_id, data=None):
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
@@ -107,11 +110,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     def location_name(self):
         """Return a location name for the current location of the device."""
         return self._data.get("location_name")
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._data.get("host_name")
 
     @property
     def source_type(self) -> SourceType:
