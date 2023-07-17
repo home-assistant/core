@@ -16,7 +16,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,7 +37,7 @@ DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
         key=Valve.manual_watering_time.uuid,
         translation_key="manual_watering_time",
-        native_unit_of_measurement="s",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         mode=NumberMode.BOX,
         native_min_value=0.0,
         native_max_value=24 * 60 * 60,
@@ -48,7 +48,7 @@ DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
         key=Valve.remaining_open_time.uuid,
         translation_key="remaining_open_time",
-        native_unit_of_measurement="s",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=0.0,
         native_max_value=24 * 60 * 60,
         native_step=60.0,
@@ -58,7 +58,7 @@ DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
         key=DeviceConfiguration.rain_pause.uuid,
         translation_key="rain_pause",
-        native_unit_of_measurement="d",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         mode=NumberMode.BOX,
         native_min_value=0.0,
         native_max_value=127.0,
@@ -69,7 +69,7 @@ DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
         key=DeviceConfiguration.season_pause.uuid,
         translation_key="season_pause",
-        native_unit_of_measurement="d",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         mode=NumberMode.BOX,
         native_min_value=0.0,
         native_max_value=365.0,
