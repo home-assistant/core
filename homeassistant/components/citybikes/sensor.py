@@ -48,6 +48,8 @@ ATTR_NETWORKS_LIST = "networks"
 ATTR_STATIONS_LIST = "stations"
 ATTR_TIMESTAMP = "timestamp"
 ATTR_UID = "uid"
+ATTR_HAS_EBIKES = "has_ebikes"
+ATTR_EBIKES = "ebikes"
 
 CONF_NETWORK = "network"
 CONF_STATIONS_LIST = "stations"
@@ -116,7 +118,12 @@ STATION_SCHEMA = vol.Schema(
         vol.Required(ATTR_NAME): cv.string,
         vol.Required(ATTR_TIMESTAMP): cv.string,
         vol.Optional(ATTR_EXTRA): vol.Schema(
-            {vol.Optional(ATTR_UID): cv.string}, extra=vol.REMOVE_EXTRA
+            {
+                vol.Optional(ATTR_UID): cv.string,
+                vol.Optional(ATTR_HAS_EBIKES): cv.boolean,
+                vol.Optional(ATTR_EBIKES): cv.positive_int,
+            },
+            extra=vol.REMOVE_EXTRA
         ),
     },
     extra=vol.REMOVE_EXTRA,
@@ -297,6 +304,8 @@ class CityBikesStation(SensorEntity):
         self._attr_native_value = station_data.get(ATTR_FREE_BIKES)
         self._attr_extra_state_attributes = {
             ATTR_UID: station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
+            ATTR_HAS_EBIKES: station_data.get(ATTR_EXTRA, {}).get(ATTR_HAS_EBIKES, False),
+            ATTR_EBIKES: station_data.get(ATTR_EXTRA, {}).get(ATTR_EBIKES, 0),
             ATTR_LATITUDE: station_data.get(ATTR_LATITUDE),
             ATTR_LONGITUDE: station_data.get(ATTR_LONGITUDE),
             ATTR_EMPTY_SLOTS: station_data.get(ATTR_EMPTY_SLOTS),
