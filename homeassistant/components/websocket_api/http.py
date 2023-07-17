@@ -179,7 +179,7 @@ class WebSocketHandler:
                     "%s: Coalesced messages exceeded maximum size (%s/%s), this usually "
                     "indicates an integration is sending too much data, one of the "
                     "registries is too large, or the system cannot "
-                    "keep up; trying to send individually",
+                    "keep up",
                     self.description,
                     len(coalesced_messages),
                     max_message_size,
