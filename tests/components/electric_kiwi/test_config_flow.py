@@ -16,6 +16,7 @@ from homeassistant.components.electric_kiwi.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
+    SCOPE_VALUES,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, SCOPES
+from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -70,7 +71,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup
 
 
-async def test_config_flow_no_credentials(hass):
+async def test_config_flow_no_credentials(hass) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -108,7 +109,7 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
         f"&state={state}"
-        f"&scope={SCOPES}"
+        f"&scope={SCOPE_VALUES}"
     )
 
     client = await hass_client_no_auth()
