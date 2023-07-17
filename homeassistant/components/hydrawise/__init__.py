@@ -1,7 +1,7 @@
 """Support for Hydrawise cloud."""
 
 
-from hydrawiser.core import Hydrawiser
+from pydrawise.legacy import LegacyHydrawise
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
-        hydrawise = await hass.async_add_executor_job(Hydrawiser, access_token)
+        hydrawise = await hass.async_add_executor_job(LegacyHydrawise, access_token)
     except (ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
         _show_failure_notification(hass, str(ex))
