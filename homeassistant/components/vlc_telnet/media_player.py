@@ -93,7 +93,6 @@ class VlcDevice(MediaPlayerEntity):
     ) -> None:
         """Initialize the vlc device."""
         self._config_entry = config_entry
-        self._name = name
         self._volume: float | None = None
         self._muted: bool | None = None
         self._media_position_updated_at: datetime | None = None
