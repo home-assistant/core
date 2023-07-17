@@ -443,7 +443,6 @@ async def test_coalesce_is_overloaded(
     """Test enabling coalesce."""
     websocket_client = await hass_ws_client(hass)
 
-    # Register a handler that registers a subscription
     @callback
     @websocket_command(
         {
@@ -457,7 +456,35 @@ async def test_coalesce_is_overloaded(
         inner = "a" * 3192
         connection.send_event(msg_id, {"event": inner})
 
+    @callback
+    @websocket_command(
+        {
+            "type": "send_message_larger_than_max",
+        }
+    )
+    def send_message_larger_than_max(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        msg_id: int = msg["id"]
+        inner = "a" * 4096
+        connection.send_event(msg_id, {"event": inner})
+
+    @callback
+    @websocket_command(
+        {
+            "type": "send_small_message",
+        }
+    )
+    def send_small_message(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        msg_id: int = msg["id"]
+        inner = "a" * 10
+        connection.send_event(msg_id, {"event": inner})
+
     async_register_command(hass, overload_websocket)
+    async_register_command(hass, send_message_larger_than_max)
+    async_register_command(hass, send_small_message)
 
     await websocket_client.send_json(
         {
@@ -483,6 +510,30 @@ async def test_coalesce_is_overloaded(
     await asyncio.gather(*send_tasks)
     returned_ids: set[int] = set()
     for _ in range(10):
+        msg = await websocket_client.receive_json()
+        assert msg["type"] == "event"
+        returned_ids.add(msg["id"])
+
+    start_id = 12
+    send_tasks.clear()
+    ids.clear()
+    for idx in range(10, 30, 2):
+        id_ = idx + start_id
+        ids.add(id_)
+        send_tasks.append(
+            websocket_client.send_json(
+                {"id": id_, "type": "send_message_larger_than_max"}
+            )
+        )
+        id_ = idx + 1 + start_id
+        ids.add(id_)
+        send_tasks.append(
+            websocket_client.send_json({"id": id_, "type": "send_small_message"})
+        )
+
+    await asyncio.gather(*send_tasks)
+    returned_ids: set[int] = set()
+    for _ in range(20):
         msg = await websocket_client.receive_json()
         assert msg["type"] == "event"
         returned_ids.add(msg["id"])
