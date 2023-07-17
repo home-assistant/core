@@ -1,9 +1,8 @@
 """Test the Electric Kiwi config flow."""
 from __future__ import annotations
 
-from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -18,11 +17,10 @@ from homeassistant.components.electric_kiwi.const import (
     OAUTH2_TOKEN,
     SCOPE_VALUES,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
 
 from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
@@ -30,48 +28,10 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-
-@pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host) -> None:
-    """Request setup."""
-    return
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-    )
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        title="1234AB 1",
-        domain=DOMAIN,
-        data={
-            "id": "mock_user",
-            "auth_implementation": DOMAIN,
-        },
-        unique_id=DOMAIN,
-    )
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Mock setting up a config entry."""
-    with patch(
-        "homeassistant.components.electric_kiwi.async_setup_entry", return_value=True
-    ) as mock_setup:
-        yield mock_setup
-
-
-async def test_config_flow_no_credentials(hass) -> None:
+async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -85,9 +45,8 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: MockConfigEntry,
-    setup_credentials: None,
+    setup_credentials,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Check full flow."""
     await async_import_client_credential(
@@ -105,11 +64,13 @@ async def test_full_flow(
         },
     )
 
+    URL_SCOPE = SCOPE_VALUES.replace(" ", "+")
+
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
         f"&state={state}"
-        f"&scope={SCOPE_VALUES}"
+        f"&scope={URL_SCOPE}"
     )
 
     client = await hass_client_no_auth()
@@ -138,17 +99,14 @@ async def test_existing_entry(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
-    mock_setup_entry: MagicMock,
-    mock_config_entry: MockConfigEntry,
     setup_credentials: None,
 ) -> None:
     """Check existing entry."""
-    mock_config_entry.add_to_hass(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER, "entry_id": DOMAIN}
+        DOMAIN, context={"source": config_entries.SOURCE_USER, "entry_id": DOMAIN}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
@@ -184,11 +142,10 @@ async def test_reauthentication(
     current_request_with_host: None,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
     setup_credentials: None,
 ) -> None:
     """Test Electric Kiwi reauthentication."""
-    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": DOMAIN}
