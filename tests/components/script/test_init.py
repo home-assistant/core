@@ -544,6 +544,10 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
                 "test_name": {
                     "alias": "ABC",
                     "sequence": [{"delay": {"seconds": 5}}],
+                },
+                "turn_on": {
+                    "alias": "Turn on",
+                    "sequence": [{"delay": {"seconds": 5}}]
                 }
             }
         },
