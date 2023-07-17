@@ -130,6 +130,11 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         url = f"http://{config['host']}:{config['port']}"
         config_entry_data = {"url": url}
 
+        if self._async_in_progress(include_uninitialized=True):
+            # We currently don't handle multiple config entries, abort if hassio
+            # discovers multiple addons with otbr support
+            return self.async_abort(reason="single_instance_allowed")
+
         if current_entries := self._async_current_entries():
             for current_entry in current_entries:
                 if current_entry.source != SOURCE_HASSIO:
