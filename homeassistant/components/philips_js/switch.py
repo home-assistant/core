@@ -6,12 +6,11 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import PhilipsJsEntity
 
 HUE_POWER_OFF = "Off"
 HUE_POWER_ON = "On"
@@ -33,12 +32,8 @@ async def async_setup_entry(
         async_add_entities([PhilipsTVAmbilightHueSwitch(coordinator)])
 
 
-class PhilipsTVScreenSwitch(
-    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], SwitchEntity
-):
+class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
     """A Philips TV screen state switch."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -51,11 +46,6 @@ class PhilipsTVScreenSwitch(
         self._attr_name = "Screen state"
         self._attr_icon = "mdi:television-shimmer"
         self._attr_unique_id = f"{coordinator.unique_id}_screenstate"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, coordinator.unique_id),
-            }
-        )
 
     @property
     def available(self) -> bool:
@@ -80,9 +70,7 @@ class PhilipsTVScreenSwitch(
         await self.coordinator.api.setScreenState("Off")
 
 
-class PhilipsTVAmbilightHueSwitch(
-    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], SwitchEntity
-):
+class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
     """A Philips TV Ambi+Hue switch."""
 
     def __init__(
@@ -93,14 +81,9 @@ class PhilipsTVAmbilightHueSwitch(
 
         super().__init__(coordinator)
 
-        self._attr_name = f"{coordinator.system['name']} Ambilight+Hue"
+        self._attr_name = "Ambilight+Hue"
         self._attr_icon = "mdi:television-ambient-light"
         self._attr_unique_id = f"{coordinator.unique_id}_ambi_hue"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, coordinator.unique_id),
-            }
-        )
 
     @property
     def available(self) -> bool:
