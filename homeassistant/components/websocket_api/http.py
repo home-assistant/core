@@ -169,13 +169,14 @@ class WebSocketHandler:
                     await send_str(coalesced_messages)
                     continue
 
-                if debug_enabled:
-                    debug(
-                        "%s: Coalesced messages exceed maximum size, this usually indicates "
-                        "an integration is sending too much data or the system cannot "
-                        "keep up; trying to send individually",
-                        self.description,
-                    )
+                logger.warning(
+                    "%s: Coalesced messages exceeded maximum size (%s/%s), this usually "
+                    "indicates an integration is sending too much data or the system cannot "
+                    "keep up; trying to send individually",
+                    len(coalesced_messages),
+                    _MAX_MESSAGE_SIZE,
+                    self.description,
+                )
                 for message in messages:
                     if debug_enabled:
                         debug("%s: Sending %s", self.description, message)
