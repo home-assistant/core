@@ -32,6 +32,7 @@ from homeassistant.components.mjpeg import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
@@ -142,8 +143,6 @@ async def async_setup_entry(
 class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     """motionEye mjpeg camera."""
 
-    _attr_name = None
-
     def __init__(
         self,
         config_entry_id: str,
@@ -201,6 +200,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
                 streaming_url = self._client.get_camera_stream_url(camera)
 
         return {
+            CONF_NAME: None,
             CONF_USERNAME: self._surveillance_username if auth is not None else None,
             CONF_PASSWORD: self._surveillance_password if auth is not None else "",
             CONF_MJPEG_URL: streaming_url or "",
