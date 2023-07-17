@@ -129,14 +129,12 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        heater = self.coordinator.data[self._id]
-
         if hvac_mode == HVACMode.HEAT:
             await self.coordinator.mill_data_connection.heater_control(
                 self._id, power_status=True
             )
             await self.coordinator.async_request_refresh()
-        elif hvac_mode == HVACMode.OFF and not heater.is_gen1:
+        elif hvac_mode == HVACMode.OFF:
             await self.coordinator.mill_data_connection.heater_control(
                 self._id, power_status=False
             )

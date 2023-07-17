@@ -197,6 +197,8 @@ class Mill:
         await asyncio.gather(*tasks)
 
     async def _update_device(self, device_data, room_data=None):
+        print(device_data)
+        print(device_data.get("lastMetrics"))
         device_type = (
             device_data.get("deviceType", {}).get("parentType", {}).get("name")
         )
@@ -300,6 +302,8 @@ class Mill:
             self.devices[device_id].power_status = power_status
             if not power_status:
                 self.devices[device_id].is_heating = False
+            else:
+                self.devices[device_id].is_heating = self.devices[device_id].set_temp > self.devices[device_id].current_temp
             self.devices[device_id].last_updated = dt.datetime.now()
 
     async def set_heater_temp(self, device_id, set_temp):
@@ -314,6 +318,7 @@ class Mill:
         }
         if await self.request(f"devices/{device_id}/settings", payload, patch=True):
             self.devices[device_id].set_temp = set_temp
+            self.devices[device_id].is_heating = set_temp > self.devices[device_id].current_temp
             self.devices[device_id].last_updated = dt.datetime.now()
 
 
@@ -324,7 +329,7 @@ class MillDevice:
     # pylint: disable=too-many-instance-attributes
 
     name: str | None = None
-    device_id: int | None = None
+    device_id: str | None = None
     available: bool | None = None
     model: str | None = None
     report_time: int | None = None
