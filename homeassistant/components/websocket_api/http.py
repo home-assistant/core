@@ -175,7 +175,7 @@ class WebSocketHandler:
                     await send_str(coalesced_messages)
                     continue
 
-                logger.warning(
+                logger.info(
                     "%s: Coalesced messages exceeded maximum size (%s/%s), this usually "
                     "indicates an integration is sending too much data, one of the "
                     "registries is too large, or the system cannot "
