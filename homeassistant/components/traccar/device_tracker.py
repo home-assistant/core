@@ -368,7 +368,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
     _attr_name = None
 
     def __init__(self, device, latitude, longitude, battery, accuracy, attributes):
-        """Set up Geofency entity."""
+        """Set up Traccar entity."""
         self._accuracy = accuracy
         self._attributes = attributes
         self._name = device
@@ -462,7 +462,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         self, device, latitude, longitude, battery, accuracy, attributes
     ):
         """Mark the device as seen."""
-        if device != self.name:
+        if device != self._name:
             return
 
         self._latitude = latitude
