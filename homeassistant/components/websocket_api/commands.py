@@ -704,10 +704,12 @@ async def handle_execute_script(
     """Handle execute script command."""
     # Circular dep
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.script import Script
+    from homeassistant.helpers.script import Script, async_validate_actions_config
+
+    script_config = await async_validate_actions_config(hass, msg["sequence"])
 
     context = connection.context(msg)
-    script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
+    script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
     response = await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_result(
         msg["id"],

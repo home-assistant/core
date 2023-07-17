@@ -93,7 +93,7 @@
         }
       },
       "settings": {
-        "title": "Settings",
+        "title": "[%key:component::purpleair::options::step::init::menu_options::settings%]",
         "data": {
           "show_on_map": "Show configured sensor locations on the map"
         }
@@ -106,6 +106,37 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pm0_3_count_concentration": {
+        "name": "PM0.3 count concentration"
+      },
+      "pm0_5_count_concentration": {
+        "name": "PM0.5 count concentration"
+      },
+      "pm1_0_count_concentration": {
+        "name": "PM1.0 count concentration"
+      },
+      "pm10_0_count_concentration": {
+        "name": "PM10.0 count concentration"
+      },
+      "pm2_5_count_concentration": {
+        "name": "PM2.5 count concentration"
+      },
+      "pm5_0_count_concentration": {
+        "name": "PM5.0 count concentration"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "voc_aqi": {
+        "name": "Volatile organic compounds air quality index"
+      }
     }
   }
 }

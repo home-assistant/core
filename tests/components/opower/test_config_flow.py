@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.opower.const import DOMAIN
 from homeassistant.components.recorder import Recorder
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -172,6 +173,7 @@ async def test_form_valid_reauth(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that we can handle a valid reauth."""
+    mock_config_entry.state = ConfigEntryState.LOADED
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 

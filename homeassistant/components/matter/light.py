@@ -128,7 +128,7 @@ class MatterLight(MatterEntity, LightEntity):
             renormalize(
                 brightness,
                 (0, 255),
-                (level_control.minLevel, level_control.maxLevel),
+                (level_control.minLevel or 1, level_control.maxLevel or 254),
             )
         )
 
@@ -220,7 +220,7 @@ class MatterLight(MatterEntity, LightEntity):
         return round(
             renormalize(
                 level_control.currentLevel,
-                (level_control.minLevel or 0, level_control.maxLevel or 254),
+                (level_control.minLevel or 1, level_control.maxLevel or 254),
                 (0, 255),
             )
         )

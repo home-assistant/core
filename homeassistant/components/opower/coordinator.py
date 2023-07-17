@@ -32,7 +32,7 @@ from .const import CONF_UTILITY, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class OpowerCoordinator(DataUpdateCoordinator):
+class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
     """Handle fetching Opower data, updating sensors and inserting statistics."""
 
     def __init__(

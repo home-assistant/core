@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant.components.opower.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -19,7 +18,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             "username": "test-username",
             "password": "test-password",
         },
-        state=ConfigEntryState.LOADED,
     )
     config_entry.add_to_hass(hass)
     return config_entry

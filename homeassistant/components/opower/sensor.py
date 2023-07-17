@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -71,6 +72,8 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         key="elec_cost_to_date",
         name="Current bill electric cost to date",
         device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="USD",
+        suggested_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.cost_to_date,
@@ -79,6 +82,8 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         key="elec_forecasted_cost",
         name="Current bill electric forecasted cost",
         device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="USD",
+        suggested_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.forecasted_cost,
@@ -87,6 +92,8 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         key="elec_typical_cost",
         name="Typical monthly electric cost",
         device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="USD",
+        suggested_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.typical_cost,
@@ -127,6 +134,8 @@ GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
         key="gas_cost_to_date",
         name="Current bill gas cost to date",
         device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="USD",
+        suggested_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.cost_to_date,
@@ -135,6 +144,8 @@ GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
         key="gas_forecasted_cost",
         name="Current bill gas forecasted cost",
         device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="USD",
+        suggested_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.forecasted_cost,
@@ -143,6 +154,8 @@ GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
         key="gas_typical_cost",
         name="Typical monthly gas cost",
         device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="USD",
+        suggested_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.typical_cost,
@@ -157,7 +170,7 @@ async def async_setup_entry(
 
     coordinator: OpowerCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[OpowerSensor] = []
-    forecasts: list[Forecast] = coordinator.data.values()
+    forecasts = coordinator.data.values()
     for forecast in forecasts:
         device_id = f"{coordinator.api.utility.subdomain()}_{forecast.account.utility_account_id}"
         device = DeviceInfo(
@@ -165,6 +178,7 @@ async def async_setup_entry(
             name=f"{forecast.account.meter_type.name} account {forecast.account.utility_account_id}",
             manufacturer="Opower",
             model=coordinator.api.utility.name(),
+            entry_type=DeviceEntryType.SERVICE,
         )
         sensors: tuple[OpowerEntityDescription, ...] = ()
         if (
@@ -191,8 +205,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class OpowerSensor(SensorEntity, CoordinatorEntity[OpowerCoordinator]):
+class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
     """Representation of an Opower sensor."""
+
+    entity_description: OpowerEntityDescription
 
     def __init__(
         self,
@@ -204,7 +220,7 @@ class OpowerSensor(SensorEntity, CoordinatorEntity[OpowerCoordinator]):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description: OpowerEntityDescription = description
+        self.entity_description = description
         self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_device_info = device
         self.utility_account_id = utility_account_id
