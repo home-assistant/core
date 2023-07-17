@@ -75,8 +75,6 @@ class TransportNSWSensor(SensorEntity):
     """Implementation of an Transport NSW sensor."""
 
     _attr_attribution = "Data provided by Transport NSW"
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, data, stop_id, name):
         """Initialize the sensor."""
@@ -141,8 +139,8 @@ class PublicTransportData:
             ATTR_ROUTE: self._route,
             ATTR_DUE_IN: None,
             ATTR_DELAY: None,
-            ATTR_REAL_TIME: "n/a",
-            ATTR_DESTINATION: "n/a",
+            ATTR_REAL_TIME: None,
+            ATTR_DESTINATION: None,
             ATTR_MODE: None,
         }
         self.tnsw = TransportNSW()
@@ -153,14 +151,14 @@ class PublicTransportData:
             self._stop_id, self._route, self._destination, self._api_key
         )
         self.info = {
-            ATTR_ROUTE: _data["route"],
-            ATTR_DUE_IN: self._get_int_value(_data["due"]),
-            ATTR_DELAY: self._get_int_value(_data["delay"]),
-            ATTR_REAL_TIME: _data["real_time"],
-            ATTR_DESTINATION: _data["destination"],
-            ATTR_MODE: _data["mode"],
+            ATTR_ROUTE: self._get_value(_data["route"]),
+            ATTR_DUE_IN: self._get_value(_data["due"]),
+            ATTR_DELAY: self._get_value(_data["delay"]),
+            ATTR_REAL_TIME: self._get_value(_data["real_time"]),
+            ATTR_DESTINATION: self._get_value(_data["destination"]),
+            ATTR_MODE: self._get_value(_data["mode"]),
         }
 
-    def _get_int_value(value):  # noqa: N805
+    def _get_value(self, value):  # noqa: N805
         """Replace the API response 'n/a' value with None."""
         return None if (value is None or str(value) == "n/a") else value
