@@ -199,7 +199,7 @@ class Store(Generic[_T]):
                         severity=IssueSeverity.CRITICAL,
                         translation_placeholders={
                             "key": self.key,
-                            "path": corrupt_path,
+                            "corrupt_path": corrupt_path,
                         },
                     )
                     return None
