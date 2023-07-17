@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
+from functools import partial
 from itertools import chain
 import logging
 from types import ModuleType
@@ -23,7 +24,6 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     ServiceCall,
-    ServiceResponse,
     SupportsResponse,
     callback,
 )
@@ -230,14 +230,15 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> ServiceResponse:
-            """Handle the service."""
-            return await service.entity_service_call(
-                self.hass, self._platforms.values(), func, call, required_features
-            )
-
+        service_func = partial(
+            service.entity_service_call,
+            self.hass,
+            self._platforms.values(),
+            func,
+            required_features=required_features,
+        )
         self.hass.services.async_register(
-            self.domain, name, handle_service, schema, supports_response
+            self.domain, name, service_func, schema, supports_response
         )
 
     async def async_setup_platform(
