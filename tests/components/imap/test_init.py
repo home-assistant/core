@@ -10,7 +10,6 @@ import pytest
 from homeassistant.components.imap import DOMAIN
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
 from homeassistant.components.sensor.const import SensorStateClass
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
@@ -360,58 +359,6 @@ async def test_late_folder_error(
     state = hass.states.get("sensor.imap_email_email_com")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
-async def test_error_recovery(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mock_imap_protocol: MagicMock,
-) -> None:
-    """Test invalid folder error handling after a search was failed.
-
-    Asserting the IMAP push coordinator.
-    """
-
-    # Tweak the loop is being executed when using IMAP-Push
-    def _idle_start_feature():
-        return _idle_start()
-
-    async def _idle_start():
-        # Cause time out error in loop
-        await asyncio.sleep(20)
-
-    mock_imap_protocol.idle_start.return_value = _idle_start_feature()
-
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    # Mock we had a setup error
-    # config_entry.async_set_state(hass, ConfigEntryState.SETUP_ERROR, "Some error")
-    config_entry.async_set_state(hass, ConfigEntryState.SETUP_ERROR, "Some error")
-    await hass.async_block_till_done()
-
-    # Make sure we have had at least one update (when polling)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
-
-    # Mock that the search fails, this will trigger
-    # that the connection will be restarted
-    # Then fail selecting the folder
-
-    # Make sure we have had at least one update (when polling)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
-
-    # we still should have an entity with an unavailable state
-    state = hass.states.get("sensor.imap_email_email_com")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    assert config_entry.state == ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])

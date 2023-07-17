@@ -13,7 +13,7 @@ from typing import Any
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 import async_timeout
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -318,12 +318,6 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         """Update the number of unread emails."""
         try:
             messages = await self._async_fetch_number_of_messages()
-            if self.config_entry.state == ConfigEntryState.SETUP_ERROR:
-                self.config_entry.async_set_state(
-                    self.hass,
-                    ConfigEntryState.LOADED,
-                    None,
-                )
             self.auth_errors = 0
             return messages
         except (
@@ -338,11 +332,6 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
             _LOGGER.warning("Selected mailbox folder is invalid")
             await self._cleanup()
             self.async_set_update_error(ex)
-            self.config_entry.async_set_state(
-                self.hass,
-                ConfigEntryState.SETUP_ERROR,
-                "Selected mailbox folder is invalid.",
-            )
             raise ConfigEntryError("Selected mailbox folder is invalid.") from ex
         except InvalidAuth as ex:
             await self._cleanup()
@@ -400,11 +389,6 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             except InvalidFolder as ex:
                 _LOGGER.warning("Selected mailbox folder is invalid")
                 await self._cleanup()
-                self.config_entry._async_set_state(  # pylint: disable=protected-access
-                    self.hass,
-                    ConfigEntryState.SETUP_ERROR,
-                    "Selected mailbox folder is invalid.",
-                )
                 self.async_set_update_error(ex)
                 await asyncio.sleep(BACKOFF_TIME)
                 continue
@@ -420,12 +404,6 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             else:
                 self.auth_errors = 0
                 self.async_set_updated_data(number_of_messages)
-                if self.config_entry.state == ConfigEntryState.SETUP_ERROR:
-                    self.config_entry.async_set_state(
-                        self.hass,
-                        ConfigEntryState.LOADED,
-                        None,
-                    )
             try:
                 idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
