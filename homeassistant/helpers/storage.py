@@ -196,6 +196,7 @@ class Store(Generic[_T]):
                         f"storage_corruption_{self.key}",
                         is_fixable=False,
                         translation_key="storage_corruption",
+                        is_persistent=True,
                         severity=IssueSeverity.CRITICAL,
                         translation_placeholders={
                             "key": self.key,
