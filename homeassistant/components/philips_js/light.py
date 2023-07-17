@@ -18,13 +18,12 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
 from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import PhilipsJsEntity
 
 EFFECT_PARTITION = ": "
 EFFECT_MODE = "Mode"
@@ -134,12 +133,8 @@ def _average_pixels(data):
     return 0.0, 0.0, 0.0
 
 
-class PhilipsTVLightEntity(
-    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], LightEntity
-):
+class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -158,15 +153,6 @@ class PhilipsTVLightEntity(
         self._attr_name = "Ambilight"
         self._attr_unique_id = coordinator.unique_id
         self._attr_icon = "mdi:television-ambient-light"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, self._attr_unique_id),
-            },
-            manufacturer="Philips",
-            model=coordinator.system.get("model"),
-            name=coordinator.system["name"],
-            sw_version=coordinator.system.get("softwareversion"),
-        )
 
         self._update_from_coordinator()
 
