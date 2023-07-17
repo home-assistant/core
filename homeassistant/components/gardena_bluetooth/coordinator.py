@@ -80,7 +80,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
                 ) from exception
         return data
 
-    def read_cached(
+    def get_cached(
         self, char: Characteristic[CharacteristicType]
     ) -> CharacteristicType | None:
         """Read cached characteristic."""
