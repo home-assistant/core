@@ -8,9 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    SensorDeviceClass,
     SensorEntity,
-    SensorStateClass,
 )
 from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
