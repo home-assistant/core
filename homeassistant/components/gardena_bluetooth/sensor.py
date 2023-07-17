@@ -81,7 +81,7 @@ class GardenaBluetoothSensor(GardenaBluetoothEntity, SensorEntity):
         self.entity_description = description
 
     def _handle_coordinator_update(self) -> None:
-        value = self.coordinator.read_cached(self.entity_description.char)
+        value = self.coordinator.get_cached(self.entity_description.char)
         if isinstance(value, datetime):
             value = value.replace(
                 tzinfo=dt_util.get_time_zone(self.hass.config.time_zone)
@@ -106,7 +106,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.address}-remaining_open_timestamp"
 
     def _handle_coordinator_update(self) -> None:
-        value = self.coordinator.read_cached(Valve.remaining_open_time)
+        value = self.coordinator.get_cached(Valve.remaining_open_time)
         if not value:
             self._attr_native_value = None
             super()._handle_coordinator_update()
