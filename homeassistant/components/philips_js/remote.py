@@ -35,6 +35,8 @@ async def async_setup_entry(
 class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
     """Device that sends commands."""
 
+    _attr_translation_key = "remote"
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -42,7 +44,6 @@ class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
         """Initialize the Philips TV."""
         super().__init__(coordinator)
         self._tv = coordinator.api
-        self._attr_name = "Remote"
         self._attr_unique_id = coordinator.unique_id
         self._turn_on = PluggableAction(self.async_write_ha_state)
 
