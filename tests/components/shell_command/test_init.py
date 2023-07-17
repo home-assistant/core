@@ -83,6 +83,28 @@ async def test_template_render_no_template(mock_call, hass: HomeAssistant) -> No
     assert cmd == "ls /bin"
 
 
+@patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")
+async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
+    """Ensure shell_commands with invalid templates are handled properly."""
+    mock_call.return_value = mock_process_creator(error=False)
+    assert await async_setup_component(
+        hass,
+        shell_command.DOMAIN,
+        {
+            shell_command.DOMAIN: {
+                "test_service": ("ls /bin {{ states['invalid/domain'] }}")
+            }
+        },
+    )
+
+    response = await hass.services.async_call(
+        "shell_command", "test_service", blocking=True, return_response=True
+    )
+
+    await hass.async_block_till_done()
+    assert not response
+
+
 @patch("homeassistant.components.shell_command.asyncio.create_subprocess_exec")
 async def test_template_render(mock_call, hass: HomeAssistant) -> None:
     """Ensure shell_commands with templates get rendered properly."""
@@ -198,9 +220,10 @@ async def test_do_not_run_forever(
         side_effect=mock_create_subprocess_shell,
     ):
         await hass.services.async_call(
-            shell_command.DOMAIN, "test_service", blocking=True
+            shell_command.DOMAIN, "test_service", blocking=True, return_response=True
         )
         await hass.async_block_till_done()
+        assert not response
 
     mock_process.kill.assert_called_once()
     assert "Timed out" in caplog.text

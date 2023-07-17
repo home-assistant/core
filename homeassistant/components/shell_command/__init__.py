@@ -60,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)
-                return None
+                return {}
         else:
             rendered_args = None
 
@@ -103,7 +103,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     process._transport.close()  # type: ignore[attr-defined]
                 del process
 
-            return None
+            return {}
 
         service_response = {
             "stdout": "",
