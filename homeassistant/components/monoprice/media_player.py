@@ -125,6 +125,8 @@ class MonopriceZone(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, monoprice, sources, namespace, zone_id):
         """Initialize new zone."""
@@ -137,12 +139,11 @@ class MonopriceZone(MediaPlayerEntity):
         self._attr_source_list = sources[2]
         self._zone_id = zone_id
         self._attr_unique_id = f"{namespace}_{self._zone_id}"
-        self._attr_name = f"Zone {self._zone_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Monoprice",
             model="6-Zone Amplifier",
-            name=self.name,
+            name=f"Zone {self._zone_id}",
         )
 
         self._snapshot = None
