@@ -1,11 +1,9 @@
 """Base Philips js entity."""
 from __future__ import annotations
 
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PhilipsTVDataUpdateCoordinator
-from .const import DOMAIN
 
 
 class PhilipsJsEntity(CoordinatorEntity[PhilipsTVDataUpdateCoordinator]):
@@ -19,12 +17,4 @@ class PhilipsJsEntity(CoordinatorEntity[PhilipsTVDataUpdateCoordinator]):
     ) -> None:
         """Initialize light."""
         super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, coordinator.unique_id),
-            },
-            manufacturer="Philips",
-            model=coordinator.system.get("model"),
-            name=coordinator.system["name"],
-            sw_version=coordinator.system.get("softwareversion"),
-        )
+        self._attr_device_info = coordinator.device_info
