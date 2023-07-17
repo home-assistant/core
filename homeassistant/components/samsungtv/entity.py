@@ -21,8 +21,6 @@ class SamsungTVEntity(Entity):
         self._mac = config_entry.data.get(CONF_MAC)
         self._attr_unique_id = config_entry.unique_id
         self._attr_device_info = DeviceInfo(
-            # Instead of setting the device name to the entity name, samsungtv
-            # should be updated to set has_entity_name = True
             name=config_entry.data.get(CONF_NAME),
             manufacturer=config_entry.data.get(CONF_MANUFACTURER),
             model=config_entry.data.get(CONF_MODEL),
