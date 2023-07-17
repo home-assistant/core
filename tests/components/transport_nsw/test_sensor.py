@@ -43,6 +43,7 @@ async def test_transportnsw_config(mocked_get_departures, hass: HomeAssistant) -
     assert state.attributes["destination"] == "Palm Beach"
     assert state.attributes["mode"] == "Bus"
 
+
 def get_departuresMock_notFound(_stop_id, route, destination, api_key):
     """Mock TransportNSW departures loading."""
     data = {
@@ -56,8 +57,13 @@ def get_departuresMock_notFound(_stop_id, route, destination, api_key):
     }
     return data
 
-@patch("TransportNSW.TransportNSW.get_departures", side_effect=get_departuresMock_notFound)
-async def test_transportnsw_config_not_found(mocked_get_departures_not_found, hass: HomeAssistant) -> None:
+
+@patch(
+    "TransportNSW.TransportNSW.get_departures", side_effect=get_departuresMock_notFound
+)
+async def test_transportnsw_config_not_found(
+    mocked_get_departures_not_found, hass: HomeAssistant
+) -> None:
     """Test minimal TransportNSW configuration."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG)
     await hass.async_block_till_done()
