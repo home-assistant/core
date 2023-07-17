@@ -886,7 +886,7 @@ async def entity_service_call(  # noqa: C901
             for entity in entities
         )
     )
-    tasks: list[asyncio.Task[None]] = []
+    tasks: list[Coroutine[Any, Any, None]] = []
 
     for entity in entities:
         if not entity.should_poll:
@@ -895,7 +895,7 @@ async def entity_service_call(  # noqa: C901
         # Context expires if the turn on commands took a long time.
         # Set context again so it's there when we update
         entity.async_set_context(call.context)
-        tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
+        tasks.append(entity.async_update_ha_state(True))
 
     if tasks:
         await asyncio.gather(*tasks)
