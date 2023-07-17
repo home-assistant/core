@@ -224,7 +224,7 @@ class WebSocketHandler:
                     chunks = [message]
                     chunk_size = json_array_wrapper_byte_count + message_size
 
-                # If the last messages were not sent send them now.
+                # If the last messages was not sent, send them now.
                 if chunks:
                     coalesced_messages = f"[{','.join(chunks)}]"
                     if debug_enabled:
