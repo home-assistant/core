@@ -141,23 +141,6 @@ class Store(Generic[_T]):
         finally:
             self._load_task = None
 
-    def _handle_unrecoverable_corruption(self, err: JSONDecodeError) -> str:
-        """Handle an unrecoverable corruption error."""
-        isotime = dt_util.utcnow().isoformat()
-        corrupt_postfix = f".corrupt.{isotime}"
-        corrupt_path = f"{self.path}{corrupt_postfix}"
-        _LOGGER.error(
-            "Unrecoverable error decoding storage %s; "
-            "This may indicate an unclean shutdown or disk corruption; "
-            "The corrupt file will be saved as %s; "
-            "It is recommended to restore from backup: %s",
-            self.key,
-            corrupt_path,
-            err,
-        )
-        os.rename(self.path, corrupt_path)
-        return corrupt_path
-
     async def _async_load_data(self):
         """Load the data."""
         # Check if we have a pending write
@@ -182,8 +165,22 @@ class Store(Generic[_T]):
                     # We can't recover from this, so we'll log an error, rename the file and
                     # return None so that we can start with a clean slate which will
                     # allow startup to continue so they can restore from a backup.
-                    corrupt_path = await self.hass.async_add_executor_job(
-                        self._handle_unrecoverable_corruption, err.__cause__
+                    isotime = dt_util.utcnow().isoformat()
+                    corrupt_postfix = f".corrupt.{isotime}"
+                    corrupt_path = f"{self.path}{corrupt_postfix}"
+                    await self.hass.async_add_executor_job(
+                        os.rename, self.path, corrupt_path
+                    )
+                    _LOGGER.error(
+                        "Unrecoverable error decoding storage %s at %s; "
+                        "This may indicate an unclean shutdown, invalid syntax "
+                        "from manual edits, or disk corruption; "
+                        "The corrupt file has been saved as %s; "
+                        "It is recommended to restore from backup: %s",
+                        self.key,
+                        self.path,
+                        corrupt_path,
+                        err,
                     )
                     from .issue_registry import (  # pylint: disable=import-outside-toplevel
                         IssueSeverity,
@@ -194,13 +191,15 @@ class Store(Generic[_T]):
                         self.hass,
                         HOMEASSISTANT_DOMAIN,
                         f"storage_corruption_{self.key}",
-                        is_fixable=False,
+                        is_fixable=True,
                         translation_key="storage_corruption",
                         is_persistent=True,
                         severity=IssueSeverity.CRITICAL,
                         translation_placeholders={
-                            "key": self.key,
+                            "file_key": self.key,
+                            "original_path": self.path,
                             "corrupt_path": corrupt_path,
+                            "error": str(err),
                         },
                     )
                     return None
