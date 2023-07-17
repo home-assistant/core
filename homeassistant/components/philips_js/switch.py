@@ -35,6 +35,8 @@ async def async_setup_entry(
 class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
     """A Philips TV screen state switch."""
 
+    _attr_translation_key = "screen_state"
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -43,7 +45,6 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
 
         super().__init__(coordinator)
 
-        self._attr_name = "Screen state"
         self._attr_icon = "mdi:television-shimmer"
         self._attr_unique_id = f"{coordinator.unique_id}_screenstate"
 
@@ -73,6 +74,8 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
 class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
     """A Philips TV Ambi+Hue switch."""
 
+    _attr_translation_key = "ambilight_hue"
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -81,7 +84,6 @@ class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
 
         super().__init__(coordinator)
 
-        self._attr_name = "Ambilight+Hue"
         self._attr_icon = "mdi:television-ambient-light"
         self._attr_unique_id = f"{coordinator.unique_id}_ambi_hue"
 
