@@ -583,10 +583,24 @@ async def test_loading_corrupt_file(
     assert "Unrecoverable error decoding storage" in caplog.text
 
     issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"storage_corruption_{MOCK_KEY}"
+    found_issue = None
+    issue_entry = None
+    for (domain, issue), entry in issue_registry.issues.items():
+        if domain == HOMEASSISTANT_DOMAIN and issue.startswith(
+            f"storage_corruption_{MOCK_KEY}_"
+        ):
+            found_issue = issue
+            issue_entry = entry
+            break
+
+    assert found_issue is not None
+    assert issue_entry is not None
+    assert issue_entry.is_fixable is True
+    assert issue_entry.translation_placeholders["file_key"] == MOCK_KEY
+    assert (
+        issue_entry.translation_placeholders["error"]
+        == "unexpected character: line 1 column 1 (char 0)"
     )
-    assert issue is not None
 
     files = await hass.async_add_executor_job(
         os.listdir, os.path.join(tmp_storage, ".storage")

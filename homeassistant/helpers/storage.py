@@ -190,7 +190,7 @@ class Store(Generic[_T]):
                     async_create_issue(
                         self.hass,
                         HOMEASSISTANT_DOMAIN,
-                        f"storage_corruption_{self.key}",
+                        f"storage_corruption_{self.key}_{isotime}",
                         is_fixable=True,
                         translation_key="storage_corruption",
                         is_persistent=True,
