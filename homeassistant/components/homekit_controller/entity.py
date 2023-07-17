@@ -11,8 +11,6 @@ from aiohomekit.model.characteristics import (
 )
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -53,23 +51,11 @@ class HomeKitEntity(Entity):
         """Return a Service model that this entity is attached to."""
         return self.accessory.services.iid(self._iid)
 
-    @callback
-    def _async_state_changed(
-        self, new_values_dict: dict[tuple[int, int], dict[str, Any]] | None = None
-    ) -> None:
-        """Handle when characteristics change value."""
-        if new_values_dict is None or self.all_characteristics.intersection(
-            new_values_dict
-        ):
-            self.async_write_ha_state()
-
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._accessory.signal_state_updated,
-                self._async_state_changed,
+            self._accessory.async_subscribe(
+                self.all_characteristics, self._async_write_ha_state
             )
         )
 
