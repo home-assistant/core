@@ -174,9 +174,9 @@ class WebSocketHandler:
                     "indicates an integration is sending too much data, one of the "
                     "registries is too large, or the system cannot "
                     "keep up; trying to send individually",
+                    self.description,
                     len(coalesced_messages),
                     _MAX_MESSAGE_SIZE,
-                    self.description,
                 )
                 for message in messages:
                     if debug_enabled:
