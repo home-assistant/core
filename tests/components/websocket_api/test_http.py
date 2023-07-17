@@ -540,7 +540,6 @@ async def test_coalesce_is_overloaded(
 
     assert ids == returned_ids
     assert "Coalesced messages exceeded maximum size" in caplog.text
-    assert "send individually" in caplog.text
 
 
 async def test_binary_message(
