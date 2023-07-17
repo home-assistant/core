@@ -43,7 +43,7 @@
     },
     "switch": {
       "active": {
-        "name": "Active"
+        "name": "[%key:common::state::active%]"
       }
     }
   }
