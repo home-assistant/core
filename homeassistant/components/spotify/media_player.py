@@ -143,7 +143,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             return MediaPlayerEntityFeature.SELECT_SOURCE
         if self.data.current_user["product"] == "premium":
             return SUPPORT_SPOTIFY
-        return MediaPlayerEntityFeature.SELECT_SOURCE
+        return MediaPlayerEntityFeature(0)
 
     @property
     def state(self) -> MediaPlayerState:
