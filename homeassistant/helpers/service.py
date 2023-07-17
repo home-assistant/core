@@ -741,6 +741,8 @@ async def entity_service_call(  # noqa: C901
     Calls all platforms simultaneously.
     """
     entity_perms: None | (Callable[[str, str], bool]) = None
+    return_response = call.return_response
+
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
@@ -851,33 +853,39 @@ async def entity_service_call(  # noqa: C901
         entities.append(entity)
 
     if not entities:
-        if call.return_response:
+        if return_response:
             raise HomeAssistantError(
                 "Service call requested response data but did not match any entities"
             )
         return None
 
-    if call.return_response and len(entities) != 1:
+    if len(entities) == 1:
+        # Single entity case avoids creating tasks and allows returning
+        # service data
+        entity = entities[0]
+        response_data = await _handle_entity_call(
+            hass, entity, func, data, call.context
+        )
+        if entity.should_poll:
+            # Context expires if the turn on commands took a long time.
+            # Set context again so it's there when we update
+            entity.async_set_context(call.context)
+            await entity.async_update_ha_state(True)
+        return response_data if return_response else None
+
+    if return_response:
         raise HomeAssistantError(
             "Service call requested response data but matched more than one entity"
         )
 
-    done, pending = await asyncio.wait(
-        [
-            asyncio.create_task(
-                entity.async_request_call(
-                    _handle_entity_call(hass, entity, func, data, call.context)
-                )
+    await asyncio.gather(
+        *(
+            entity.async_request_call(
+                _handle_entity_call(hass, entity, func, data, call.context)
             )
             for entity in entities
-        ]
+        )
     )
-    assert not pending
-
-    response_data: ServiceResponse | None
-    for task in done:
-        response_data = task.result()  # pop exception if have
-
     tasks: list[asyncio.Task[None]] = []
 
     for entity in entities:
@@ -890,12 +898,9 @@ async def entity_service_call(  # noqa: C901
         tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
     if tasks:
-        done, pending = await asyncio.wait(tasks)
-        assert not pending
-        for future in done:
-            future.result()  # pop exception if have
+        await asyncio.gather(*tasks)
 
-    return response_data if call.return_response else None
+    return None
 
 
 async def _handle_entity_call(
