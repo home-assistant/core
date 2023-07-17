@@ -35,6 +35,7 @@ from .util import describe_request
 if TYPE_CHECKING:
     from .connection import ActiveConnection
 
+_MAX_MESSAGE_SIZE = 4 * 1024 * 1024  # 4MB, defined by aiohttp
 
 _WS_LOGGER: Final = logging.getLogger(f"{__name__}.connection")
 
@@ -161,11 +162,24 @@ class WebSocketHandler:
                     messages.append(process if isinstance(process, str) else process())
                     messages_remaining -= 1
 
-                joined_messages = ",".join(messages)
-                coalesced_messages = f"[{joined_messages}]"
+                coalesced_messages = f"[{','.join(messages)}]"
+                if len(coalesced_messages) < _MAX_MESSAGE_SIZE:
+                    if debug_enabled:
+                        debug("%s: Sending %s", self.description, coalesced_messages)
+                    await send_str(coalesced_messages)
+                    continue
+
                 if debug_enabled:
-                    debug("%s: Sending %s", self.description, coalesced_messages)
-                await send_str(coalesced_messages)
+                    debug(
+                        "%s: Coalesced messages exceed maximum size, this usually indicates "
+                        "an integration is sending too much data or the system cannot "
+                        "keep up; trying to send individually",
+                        self.description,
+                    )
+                for message in messages:
+                    if debug_enabled:
+                        debug("%s: Sending %s", self.description, message)
+                    await send_str(message)
         except asyncio.CancelledError:
             debug("%s: Writer cancelled", self.description)
             raise
