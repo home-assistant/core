@@ -12,7 +12,14 @@ import os
 from typing import Any, Generic, TypeVar
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    Event,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
@@ -134,7 +141,7 @@ class Store(Generic[_T]):
         finally:
             self._load_task = None
 
-    def _handle_unrecoverable_corruption(self, err: JSONDecodeError) -> None:
+    def _handle_unrecoverable_corruption(self, err: JSONDecodeError) -> str:
         """Handle an unrecoverable corruption error."""
         isotime = dt_util.utcnow().isoformat()
         corrupt_postfix = f".corrupt.{isotime}"
@@ -148,8 +155,8 @@ class Store(Generic[_T]):
             corrupt_path,
             err,
         )
-        if os.path.exists(self.path):
-            os.rename(self.path, corrupt_path)
+        os.rename(self.path, corrupt_path)
+        return corrupt_path
 
     async def _async_load_data(self):
         """Load the data."""
@@ -175,8 +182,25 @@ class Store(Generic[_T]):
                     # We can't recover from this, so we'll log an error, rename the file and
                     # return None so that we can start with a clean slate which will
                     # allow startup to continue so they can restore from a backup.
-                    await self.hass.async_add_executor_job(
+                    corrupt_path = await self.hass.async_add_executor_job(
                         self._handle_unrecoverable_corruption, err.__cause__
+                    )
+                    from .issue_registry import (  # pylint: disable=import-outside-toplevel
+                        IssueSeverity,
+                        async_create_issue,
+                    )
+
+                    async_create_issue(
+                        self.hass,
+                        HOMEASSISTANT_DOMAIN,
+                        f"storage_corruption_{self.key}",
+                        is_fixable=False,
+                        translation_key="storage_corruption",
+                        severity=IssueSeverity.CRITICAL,
+                        translation_placeholders={
+                            "key": self.key,
+                            "path": corrupt_path,
+                        },
                     )
                     return None
                 raise
