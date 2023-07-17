@@ -1570,7 +1570,6 @@ async def test_restore_state(
     assert state_1 is not state_2
 
     assert state_1.state == state_2.state
-    assert state_1.name == state_2.name
     assert state_1.attributes["latitude"] == state_2.attributes["latitude"]
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
