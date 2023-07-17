@@ -128,6 +128,7 @@ class WebSocketHandler:
         debug = logger.debug
         is_enabled_for = logger.isEnabledFor
         logging_debug = logging.DEBUG
+        max_message_size = _MAX_MESSAGE_SIZE
         # Exceptions if Socket disconnected or cancelled by connection handler
         try:
             while not wsock.closed:
@@ -163,7 +164,12 @@ class WebSocketHandler:
                     messages_remaining -= 1
 
                 coalesced_messages = f"[{','.join(messages)}]"
-                if len(coalesced_messages) < _MAX_MESSAGE_SIZE:
+                # We only check the length of the coalesced messages after
+                # combining them to avoid the overhead of checking the length
+                # of each message individually, and since the majority of
+                # the time we will never hit the max message size limit this
+                # is a good tradeoff.
+                if len(coalesced_messages) < max_message_size:
                     if debug_enabled:
                         debug("%s: Sending %s", self.description, coalesced_messages)
                     await send_str(coalesced_messages)
@@ -176,7 +182,7 @@ class WebSocketHandler:
                     "keep up; trying to send individually",
                     self.description,
                     len(coalesced_messages),
-                    _MAX_MESSAGE_SIZE,
+                    max_message_size,
                 )
                 for message in messages:
                     if debug_enabled:
