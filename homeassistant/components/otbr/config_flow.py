@@ -51,10 +51,10 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
         device = addon_info.get("options", {}).get("device")
 
     if _is_yellow(hass) and device == "/dev/TTYAMA1":
-        return "Home Assistant Yellow"
+        return f"Home Assistant Yellow ({discovery_info.name})"
 
     if device and "SkyConnect" in device:
-        return "Home Assistant SkyConnect"
+        return f"Home Assistant SkyConnect ({discovery_info.name})"
 
     return discovery_info.name
 
