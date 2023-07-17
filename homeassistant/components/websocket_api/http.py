@@ -130,7 +130,7 @@ class WebSocketHandler:
         logging_debug = logging.DEBUG
         max_message_size = _MAX_MESSAGE_SIZE
         # Exceptions if Socket disconnected or cancelled by connection handler
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             while not wsock.closed:
                 if (messages_remaining := len(message_queue)) == 0:
                     self._ready_future = loop.create_future()
@@ -184,10 +184,54 @@ class WebSocketHandler:
                     len(coalesced_messages),
                     max_message_size,
                 )
+                json_array_wrapper_byte_count = 2  # 2 for the []s
+                json_seperator_byte_count = 1  # 1 for the comma
+
+                chunks: list[str] = []
+                chunk_size = json_array_wrapper_byte_count
                 for message in messages:
+                    message_size = len(message) + json_seperator_byte_count
+                    if chunk_size + message_size < max_message_size:
+                        chunks.append(message)
+                        chunk_size += message_size
+                        continue
+
+                    if chunks:
+                        # If there are no chunks it means that all of the messages
+                        # are larger than the max message size.
+                        coalesced_messages = f"[{','.join(chunks)}]"
+                        if debug_enabled:
+                            debug(
+                                "%s: Sending %s", self.description, coalesced_messages
+                            )
+                        await send_str(coalesced_messages)
+
+                    # If a single message is larger than the max message size
+                    # we send it individually.
+                    if message_size > max_message_size:
+                        if debug_enabled:
+                            debug(
+                                "%s: Sending oversized message %s",
+                                self.description,
+                                message,
+                            )
+                        await send_str(message)
+                        chunks = []
+                        chunk_size = json_array_wrapper_byte_count
+                        continue
+
+                    # Start a new bucket with the current message
+                    chunks = [message]
+                    chunk_size = json_array_wrapper_byte_count + message_size
+
+                # If the last messages were not send
+                # send them now.
+                if chunks:
+                    coalesced_messages = f"[{','.join(chunks)}]"
                     if debug_enabled:
-                        debug("%s: Sending %s", self.description, message)
-                    await send_str(message)
+                        debug("%s: Sending %s", self.description, coalesced_messages)
+                    await send_str(coalesced_messages)
+
         except asyncio.CancelledError:
             debug("%s: Writer cancelled", self.description)
             raise
