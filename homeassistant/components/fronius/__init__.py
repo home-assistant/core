@@ -211,6 +211,7 @@ class FroniusSolarNet:
 
             _LOGGER.debug(
                 "New inverter added (UID: %s)",
+                _inverter_info.unique_id,
             )
 
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
