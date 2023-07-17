@@ -5,7 +5,6 @@ import asyncio
 from contextlib import suppress
 import logging
 import shlex
-from typing import cast
 
 import async_timeout
 import voluptuous as vol
@@ -132,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.exception(
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
-        # return cast(ServiceResponse, service_response)
+
         return service_response
 
     for name in conf:
