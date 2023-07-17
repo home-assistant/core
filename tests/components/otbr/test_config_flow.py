@@ -255,7 +255,7 @@ async def test_hassio_discovery_flow_yellow(
     }
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant Yellow"
+    assert result["title"] == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -263,7 +263,7 @@ async def test_hassio_discovery_flow_yellow(
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Home Assistant Yellow"
+    assert config_entry.title == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
@@ -301,7 +301,7 @@ async def test_hassio_discovery_flow_sky_connect(
     }
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant SkyConnect"
+    assert result["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -309,7 +309,9 @@ async def test_hassio_discovery_flow_sky_connect(
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Home Assistant SkyConnect"
+    assert (
+        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    )
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
