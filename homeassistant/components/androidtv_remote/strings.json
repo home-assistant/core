@@ -39,7 +39,7 @@
     "step": {
       "init": {
         "data": {
-          "enable_ime": "Enable IME. Needed for getting the current app. Disable for devices that instead of on screen keyboard show 'Use keyboard on mobile device screen'."
+          "enable_ime": "Enable IME. Needed for getting the current app. Disable for devices that show 'Use keyboard on mobile device screen' instead of the on screen keyboard."
         }
       }
     }
