@@ -861,7 +861,7 @@ async def entity_service_call(  # noqa: C901
 
     if len(entities) == 1:
         # Single entity case avoids creating tasks and allows returning
-        # service data
+        # ServiceResponse
         entity = entities[0]
         response_data = await _handle_entity_call(
             hass, entity, func, data, call.context
