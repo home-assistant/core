@@ -36,6 +36,14 @@
         "name": "Season pause"
       }
     },
+    "sensor": {
+      "activation_reason": {
+        "name": "Activation reason"
+      },
+      "remaining_open_timestamp": {
+        "name": "Valve closing"
+      }
+    },
     "switch": {
       "state": {
         "name": "[%key:common::state::open%]"
