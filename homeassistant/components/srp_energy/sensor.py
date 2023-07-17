@@ -82,6 +82,10 @@ async def async_setup_entry(
                 return previous_daily_usage
         except TimeoutError as timeout_err:
             raise UpdateFailed("Timeout communicating with API") from timeout_err
+        except KeyError as missing_data_err:
+            raise UpdateFailed(
+                f"Verify account and credentials. Missing Data: {missing_data_err}"
+            ) from missing_data_err
         except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
