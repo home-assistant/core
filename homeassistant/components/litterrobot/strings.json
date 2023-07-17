@@ -25,12 +25,6 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
-  "issues": {
-    "migrated_attributes": {
-      "title": "Litter-Robot attributes are now their own sensors",
-      "description": "The vacuum entity attributes are now available as diagnostic sensors.\n\nPlease adjust any automations or scripts you may have that use these attributes."
-    }
-  },
   "entity": {
     "binary_sensor": {
       "sleeping": {
@@ -130,7 +124,7 @@
     },
     "time": {
       "sleep_mode_start_time": {
-        "name": "Sleep mode start time"
+        "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
       }
     },
     "vacuum": {
@@ -141,6 +135,22 @@
     "update": {
       "firmware": {
         "name": "Firmware"
+      }
+    }
+  },
+  "services": {
+    "set_sleep_mode": {
+      "name": "Set sleep mode",
+      "description": "Sets the sleep mode and start time.",
+      "fields": {
+        "enabled": {
+          "name": "[%key:common::state::enabled%]",
+          "description": "Whether sleep mode should be enabled."
+        },
+        "start_time": {
+          "name": "Start time",
+          "description": "The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours."
+        }
       }
     }
   }

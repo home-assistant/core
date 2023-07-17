@@ -55,7 +55,7 @@ def get_device_id(hass: HomeAssistant) -> str:
     """Get device_id."""
     device_registry = dr.async_get(hass)
     identifiers = {(DOMAIN, "VF1AAAAA555777999")}
-    device = device_registry.async_get_device(identifiers)
+    device = device_registry.async_get_device(identifiers=identifiers)
     return device.id
 
 
@@ -272,7 +272,9 @@ async def test_service_invalid_device_id2(
         model=extra_vehicle[ATTR_MODEL],
         sw_version=extra_vehicle[ATTR_SW_VERSION],
     )
-    device_id = device_registry.async_get_device(extra_vehicle[ATTR_IDENTIFIERS]).id
+    device_id = device_registry.async_get_device(
+        identifiers=extra_vehicle[ATTR_IDENTIFIERS]
+    ).id
 
     data = {ATTR_VEHICLE: device_id}
 

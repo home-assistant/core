@@ -121,7 +121,10 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)}, name=self.name)
+        device_info = DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)})
+        if "host_name" in self._data:
+            device_info["name"] = self._data["host_name"]
+        return device_info
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""

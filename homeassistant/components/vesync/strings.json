@@ -43,5 +43,11 @@
         "name": "Current voltage"
       }
     }
+  },
+  "services": {
+    "update_devices": {
+      "name": "Update devices",
+      "description": "Adds new VeSync devices to Home Assistant."
+    }
   }
 }
