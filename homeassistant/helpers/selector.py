@@ -1137,6 +1137,7 @@ class TextSelectorConfig(TypedDict, total=False):
     """Class to represent a text selector config."""
 
     multiline: bool
+    prefix: str
     suffix: str
     type: TextSelectorType
     autocomplete: str
@@ -1169,6 +1170,7 @@ class TextSelector(Selector[TextSelectorConfig]):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("multiline", default=False): bool,
+            vol.Optional("prefix"): str,
             vol.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.

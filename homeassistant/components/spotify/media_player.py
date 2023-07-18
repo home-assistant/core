@@ -120,9 +120,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         self._attr_unique_id = user_id
 
-        if self.data.current_user["product"] == "premium":
-            self._attr_supported_features = SUPPORT_SPOTIFY
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, user_id)},
             manufacturer="Spotify AB",
@@ -137,6 +134,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
         self._currently_playing: dict | None = {}
         self._playlist: dict | None = None
+        self._restricted_device: bool = False
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return the supported features."""
+        if self._restricted_device:
+            return MediaPlayerEntityFeature.SELECT_SOURCE
+        if self.data.current_user["product"] == "premium":
+            return SUPPORT_SPOTIFY
+        return MediaPlayerEntityFeature(0)
 
     @property
     def state(self) -> MediaPlayerState:
@@ -408,6 +415,10 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             self._playlist = None
             if context["type"] == MediaType.PLAYLIST:
                 self._playlist = self.data.client.playlist(uri)
+
+        device = self._currently_playing.get("device")
+        if device is not None:
+            self._restricted_device = device["is_restricted"]
 
     async def async_browse_media(
         self,
