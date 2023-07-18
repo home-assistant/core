@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Union
+from typing import Any, Optional
 
 from decora_bleak import DECORA_SERVICE_UUID, DecoraBLEDevice
 import voluptuous as vol
@@ -55,11 +55,16 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            result = await self._attempt_create_entry(address, user_input[CONF_NAME])
-            if isinstance(result, str):
-                errors["base"] = result
-            else:
-                return result
+            api_key, error = await self._get_api_key(address)
+            if api_key is not None:
+                assert error is None
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data={CONF_ADDRESS: address, CONF_API_KEY: api_key},
+                )
+
+            if error is not None:
+                errors["base"] = error
 
         placeholders = {"name": self._discovery_info.name}
         self.context["title_placeholders"] = placeholders
@@ -92,11 +97,16 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
 
-            result = await self._attempt_create_entry(address, user_input[CONF_NAME])
-            if isinstance(result, str):
-                errors["base"] = result
-            else:
-                return result
+            api_key, error = await self._get_api_key(address)
+            if api_key is not None:
+                assert error is None
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data={CONF_ADDRESS: address, CONF_API_KEY: api_key},
+                )
+
+            if error is not None:
+                errors["base"] = error
 
         current_addresses = self._async_current_ids()
         for discovery in async_discovered_service_info(self.hass):
@@ -133,23 +143,16 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _attempt_create_entry(
-        self, address: str, name: str
-    ) -> Union[FlowResult, str]:
+    async def _get_api_key(self, address: str) -> tuple[Optional[str], Optional[str]]:
         ble_device = bluetooth.async_ble_device_from_address(
             self.hass, address.upper(), connectable=True
         )
 
         if ble_device:
             api_key = await DecoraBLEDevice.get_api_key(ble_device)
-
             if api_key is not None:
-                return self.async_create_entry(
-                    title=name, data={CONF_ADDRESS: address, CONF_API_KEY: api_key}
-                )
+                return api_key, None
 
-            _LOGGER.error("Device did not return an API key, not in pairing mode")
-            return "not_in_pairing_mode"
+            return None, "not_in_pairing_mode"
 
-        _LOGGER.error("Could not find BLE device")
-        return "cannot_connect"
+        return None, "cannot_connect"
