@@ -210,7 +210,7 @@ class NumberDeviceClass(StrEnum):
     """
 
     PM1 = "pm1"
-    """Particulate matter <= 0.1 μm.
+    """Particulate matter <= 1 μm.
 
     Unit of measurement: `µg/m³`
     """

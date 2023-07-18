@@ -65,7 +65,7 @@ def _get_air_quality(device: Device) -> int | None:
 
 
 def _get_filter_time_left(device: Device) -> int:
-    """Fetch the filter's remaining life (in hours)."""
+    """Fetch the filter's remaining lifetime (in hours)."""
     assert device.air_purifier_control is not None
     return round(
         cast(
