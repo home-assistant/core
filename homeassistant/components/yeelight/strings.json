@@ -41,7 +41,7 @@
   "entity": {
     "binary_sensor": {
       "nightlight": {
-        "name": "Nightlight"
+        "name": "[%key:component::yeelight::entity::light::nightlight::name%]"
       }
     },
     "light": {

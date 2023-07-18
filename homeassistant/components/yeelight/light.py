@@ -864,7 +864,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 class YeelightColorLightSupport(YeelightGenericLight):
     """Representation of a Color Yeelight light support."""
 
-    _attr_name = None
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS, ColorMode.RGB}
 
     @property
@@ -930,8 +929,6 @@ class YeelightColorLightWithoutNightlightSwitch(
     YeelightColorLightSupport, YeelightWithoutNightlightSwitchMixIn
 ):
     """Representation of a Color Yeelight light."""
-
-    _attr_name = None
 
 
 class YeelightColorLightWithNightlightSwitch(
