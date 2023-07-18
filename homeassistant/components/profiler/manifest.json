@@ -3,6 +3,7 @@
   "name": "Profiler",
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "disabled": "Dependencies does not support Python 3.12",
   "documentation": "https://www.home-assistant.io/integrations/profiler",
   "quality_scale": "internal",
   "requirements": ["pyprof2calltree==1.4.5", "guppy3==3.1.3", "objgraph==3.5.0"]
