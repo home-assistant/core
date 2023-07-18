@@ -7,22 +7,29 @@ import logging
 
 import async_timeout
 from iammeter.client import IamMeter
-
-# from iammeter.power_meter import IamMeterError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import debounce
+from homeassistant.helpers import debounce, update_coordinator
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
+)
+
+from .const import (
+    DEVICE_3080,
+    DEVICE_3080T,
+    DOMAIN,
+    SENSOR_TYPES_3080,
+    SENSOR_TYPES_3080T,
+    IammeterSensorEntityDescription,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +77,7 @@ async def async_setup_platform(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=DEFAULT_DEVICE_NAME,
+        name=config_name,
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
@@ -78,44 +85,43 @@ async def async_setup_platform(
         ),
     )
     await coordinator.async_refresh()
-    entities = []
-    for sensor_name, val in api.measurement.items():
-        if sensor_name == "sn":
-            serial_number = val
-            continue
-        if sensor_name in ("Model", "mac"):
-            continue
-        uid = f"{serial_number}-{sensor_name}"
-        entities.append(IamMeterSensor(coordinator, uid, sensor_name, config_name))
-    async_add_entities(entities)
+    if coordinator.data["Model"] == DEVICE_3080:
+        async_add_entities(
+            IammeterSensor(coordinator, description)
+            for description in SENSOR_TYPES_3080
+        )
+    if coordinator.data["Model"] == DEVICE_3080T:
+        async_add_entities(
+            IammeterSensor(coordinator, description)
+            for description in SENSOR_TYPES_3080T
+        )
 
 
-class IamMeterSensor(CoordinatorEntity, SensorEntity):
-    """Class for a sensor."""
+class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
+    """Representation of a Sensor."""
 
-    def __init__(self, coordinator, uid, sensor_name, dev_name) -> None:
-        """Initialize an iammeter sensor."""
+    entity_description: IammeterSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        description: IammeterSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
         super().__init__(coordinator)
-        self.uid = uid
-        self.sensor_name = sensor_name
-        self.dev_name = dev_name
+        self.entity_description = description
+        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.data['sn']}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.data["sn"])},
+            manufacturer="IamMeter",
+            name=coordinator.name,
+        )
 
     @property
-    def native_value(self) -> float:
-        """Return the state of the sensor."""
-        return self.coordinator.data.get(self.sensor_name, None)
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return self.uid
-
-    @property
-    def name(self) -> str:
-        """Name of this iammeter attribute."""
-        return f"{self.dev_name} {self.sensor_name}"
-
-    @property
-    def icon(self) -> str:
-        """Icon for each sensor."""
-        return "mdi:flash"
+    def native_value(self):
+        """Return the native sensor value."""
+        raw_attr = self.coordinator.data.get(self.entity_description.key, None)
+        if self.entity_description.value:
+            return self.entity_description.value(raw_attr)
+        return raw_attr
