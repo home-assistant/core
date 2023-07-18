@@ -19,10 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T", bound=ProtectAdoptableDeviceModel | NVR)
 
 
-def split_tuple(value: str | None) -> tuple[str, ...] | None:
+def split_tuple(value: tuple[str, ...] | str | None) -> tuple[str, ...] | None:
     """Split string to tuple."""
     if value is None:
         return None
+    if TYPE_CHECKING:
+        assert isinstance(value, str)
     return tuple(value.split("."))
 
 
@@ -44,23 +46,11 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     ufp_enabled: tuple[str, ...] | str | None = None
     ufp_perm: PermRequired | None = None
 
-    def __init__(
-        self,
-        *args: Any,
-        ufp_required_field: str | None = None,
-        ufp_value: str | None = None,
-        ufp_value_func: Callable[[T], Any] | None = None,
-        ufp_enabled: str | None = None,
-        ufp_perm: PermRequired | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize the entity description."""
-        self.ufp_required_field = split_tuple(ufp_required_field)
-        self.ufp_value = split_tuple(ufp_value)
-        self.ufp_value_fn = ufp_value_func
-        self.ufp_enabled = split_tuple(ufp_enabled)
-        self.ufp_perm = ufp_perm
-        super().__init__(*args, **kwargs)
+    def __post_init__(self) -> None:
+        """Pre-convert strings to tuples for faster get_nested_attr."""
+        self.ufp_required_field = split_tuple(self.ufp_required_field)
+        self.ufp_value = split_tuple(self.ufp_value)
+        self.ufp_enabled = split_tuple(self.ufp_enabled)
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
