@@ -392,11 +392,14 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._currently_playing = current or {}
 
         context = self._currently_playing.get("context", {})
+
+        # For some users in some cases, the uri is formed like "spotify:user:{name}:playlist:{id}" and spotipy wants the type to be playlist.
         uri = context.get("uri")
         if uri is not None:
             parts = uri.split(":")
-            if "user" in parts and "playlist" in parts:
+            if len(parts) == 5 and parts[1] == "user" and parts[3] == "playlist":
                 uri = ":".join([parts[0], parts[3], parts[4]])
+
         if context is not None and (
             self._playlist is None or self._playlist["uri"] != uri
         ):
