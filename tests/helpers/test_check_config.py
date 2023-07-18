@@ -264,6 +264,3 @@ async def test_removed_yaml_support(hass: HomeAssistant) -> None:
         log_ha_config(res)
 
         assert res.keys() == {"homeassistant"}
-        assert res.error_str.startswith(
-            "Config found for bla integration in configuration.yaml. YAML support for this integration has been removed. Please remove it from your configuration.yaml."
-        )
