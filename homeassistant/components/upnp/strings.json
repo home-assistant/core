@@ -27,6 +27,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "wan_status": {
+        "name": "[%key:component::upnp::entity::sensor::wan_status::name%]"
+      }
+    },
     "sensor": {
       "bytes_received": {
         "name": "Bytes received"
