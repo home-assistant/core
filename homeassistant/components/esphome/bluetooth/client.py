@@ -57,7 +57,7 @@ def mac_to_int(address: str) -> int:
     return int(address.replace(":", ""), 16)
 
 
-def _on_disconnected(task: asyncio.Task[Any], fut: asyncio.Future[None]) -> None:
+def _on_disconnected(task: asyncio.Task[Any], _: asyncio.Future[None]) -> None:
     if task and not task.done():
         task.cancel()
 
