@@ -58,9 +58,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
         Capability.media_playback_shuffle,
         Capability.switch,
     ]
-    # Must be able to be turned on/off.
-    if Capability.switch not in capabilities:
-        return None
     # Must have one of these.
     media_player_capabilities = [
         Capability.audio_mute,
