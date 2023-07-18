@@ -1021,13 +1021,11 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "zwjcy": (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
-            name="Temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY,
-            name="Humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
