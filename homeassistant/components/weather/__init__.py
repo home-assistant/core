@@ -1,7 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
@@ -593,15 +593,15 @@ class WeatherEntity(Entity):
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return None
+        raise NotImplementedError
 
     async def async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return None
+        raise NotImplementedError
 
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        return None
+        raise NotImplementedError
 
     @property
     def native_precipitation_unit(self) -> str | None:
@@ -1046,7 +1046,7 @@ class WeatherEntity(Entity):
 
     @final
     async def async_update_forecast(
-        self, forecast_types: set[Literal["daily", "hourly", "twice_daily"]] | None
+        self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
     ) -> None:
         """Push updated forecast to all listeners."""
         if forecast_types is None:

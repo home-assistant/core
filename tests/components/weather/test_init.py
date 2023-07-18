@@ -65,6 +65,8 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from . import create_entity
+
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
 from tests.typing import WebSocketGenerator
 
@@ -142,30 +144,6 @@ class MockWeatherEntityCompat(WeatherEntity):
                 temperature=20,
             )
         ]
-
-
-async def create_entity(hass: HomeAssistant, **kwargs):
-    """Create the weather entity to run tests on."""
-    kwargs = {
-        "native_temperature": None,
-        "native_temperature_unit": None,
-        "is_daytime": True,
-        **kwargs,
-    }
-    platform: WeatherPlatform = getattr(hass.components, "test.weather")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockWeatherMockForecast(
-            name="Test", condition=ATTR_CONDITION_SUNNY, **kwargs
-        )
-    )
-
-    entity0 = platform.ENTITIES[0]
-    assert await async_setup_component(
-        hass, "weather", {"weather": {"platform": "test"}}
-    )
-    await hass.async_block_till_done()
-    return entity0
 
 
 @pytest.mark.parametrize(
@@ -1090,50 +1068,6 @@ async def test_precision_for_temperature(hass: HomeAssistant) -> None:
 
     assert weather.state_attributes[ATTR_WEATHER_TEMPERATURE] == 20.5
     assert weather.state_attributes[ATTR_WEATHER_DEW_POINT] == 2.5
-
-
-async def test_subscribe_forecast(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    enable_custom_integrations: None,
-) -> None:
-    """Test multiple forecast."""
-
-    entity0 = await create_entity(
-        hass,
-        native_temperature=38,
-        native_temperature_unit=UnitOfTemperature.CELSIUS,
-        supported_features=WeatherEntityFeature.FORECAST_DAILY,
-    )
-
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id(
-        {
-            "type": "weather/subscribe_forecast",
-            "forecast_type": "daily",
-            "entity_id": entity0.entity_id,
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] is None
-    subscription_id = msg["id"]
-
-    msg = await client.receive_json()
-    assert msg["id"] == subscription_id
-    assert msg["type"] == "event"
-    assert msg["event"] == {
-        "type": "daily",
-        "forecast": [
-            {
-                "cloud_coverage": None,
-                "temperature": 38.0,
-                "templow": 38.0,
-                "wind_bearing": None,
-            }
-        ],
-    }
 
 
 async def test_forecast_twice_daily_missing_is_daytime(
