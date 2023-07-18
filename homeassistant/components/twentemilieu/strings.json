@@ -17,5 +17,24 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "non_recyclable_waste_pickup": {
+        "name": "Non-recyclable waste pickup"
+      },
+      "organic_waste_pickup": {
+        "name": "Organic waste pickup"
+      },
+      "packages_waste_pickup": {
+        "name": "Packages waste pickup"
+      },
+      "paper_waste_pickup": {
+        "name": "Paper waste pickup"
+      },
+      "christmas_tree_pickup": {
+        "name": "Christmas tree pickup"
+      }
+    }
   }
 }

@@ -407,9 +407,11 @@ omit =
     homeassistant/components/garages_amsterdam/binary_sensor.py
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gardena_bluetooth/__init__.py
+    homeassistant/components/gardena_bluetooth/binary_sensor.py
     homeassistant/components/gardena_bluetooth/const.py
     homeassistant/components/gardena_bluetooth/coordinator.py
     homeassistant/components/gardena_bluetooth/number.py
+    homeassistant/components/gardena_bluetooth/sensor.py
     homeassistant/components/gardena_bluetooth/switch.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*

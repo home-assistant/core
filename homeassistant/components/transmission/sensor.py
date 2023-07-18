@@ -38,21 +38,53 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
 
     dev = [
-        TransmissionSpeedSensor(tm_client, name, "Down speed", "download"),
-        TransmissionSpeedSensor(tm_client, name, "Up speed", "upload"),
-        TransmissionStatusSensor(tm_client, name, "Status", "status"),
-        TransmissionTorrentsSensor(
-            tm_client, name, "Active torrents", "active_torrents"
+        TransmissionSpeedSensor(
+            tm_client,
+            name,
+            "download_speed",
+            "download",
+        ),
+        TransmissionSpeedSensor(
+            tm_client,
+            name,
+            "upload_speed",
+            "upload",
+        ),
+        TransmissionStatusSensor(
+            tm_client,
+            name,
+            "transmission_status",
+            "status",
         ),
         TransmissionTorrentsSensor(
-            tm_client, name, "Paused torrents", "paused_torrents"
+            tm_client,
+            name,
+            "active_torrents",
+            "active_torrents",
         ),
-        TransmissionTorrentsSensor(tm_client, name, "Total torrents", "total_torrents"),
         TransmissionTorrentsSensor(
-            tm_client, name, "Completed torrents", "completed_torrents"
+            tm_client,
+            name,
+            "paused_torrents",
+            "paused_torrents",
         ),
         TransmissionTorrentsSensor(
-            tm_client, name, "Started torrents", "started_torrents"
+            tm_client,
+            name,
+            "total_torrents",
+            "total_torrents",
+        ),
+        TransmissionTorrentsSensor(
+            tm_client,
+            name,
+            "completed_torrents",
+            "completed_torrents",
+        ),
+        TransmissionTorrentsSensor(
+            tm_client,
+            name,
+            "started_torrents",
+            "started_torrents",
         ),
     ]
 
@@ -65,10 +97,10 @@ class TransmissionSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, tm_client, client_name, sensor_name, key):
+    def __init__(self, tm_client, client_name, sensor_translation_key, key):
         """Initialize the sensor."""
         self._tm_client: TransmissionClient = tm_client
-        self._attr_name = sensor_name
+        self._attr_translation_key = sensor_translation_key
         self._key = key
         self._state = None
         self._attr_unique_id = f"{tm_client.config_entry.entry_id}-{key}"
@@ -128,7 +160,6 @@ class TransmissionStatusSensor(TransmissionSensor):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING]
-    _attr_translation_key = "transmission_status"
 
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
