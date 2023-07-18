@@ -20,7 +20,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import Coordinator, GardenaBluetoothEntity
+from .coordinator import (
+    Coordinator,
+    GardenaBluetoothDescriptorEntity,
+    GardenaBluetoothEntity,
+)
 
 
 @dataclass
@@ -60,25 +64,15 @@ async def async_setup_entry(
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]
-    entities.append(GardenaBluetoothRemainSensor(coordinator))
+    if Valve.remaining_open_time.uuid in coordinator.characteristics:
+        entities.append(GardenaBluetoothRemainSensor(coordinator))
     async_add_entities(entities)
 
 
-class GardenaBluetoothSensor(GardenaBluetoothEntity, SensorEntity):
+class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
     """Representation of a sensor."""
 
     entity_description: GardenaBluetoothSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: Coordinator,
-        description: GardenaBluetoothSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, {description.key})
-        self._attr_native_value = None
-        self._attr_unique_id = f"{coordinator.address}-{description.key}"
-        self.entity_description = description
 
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self.entity_description.char)
