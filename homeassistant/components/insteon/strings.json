@@ -76,7 +76,7 @@
         }
       },
       "add_override": {
-        "description": "Add a device override.",
+        "description": "[%key:component::insteon::options::step::init::menu_options::add_override%]",
         "data": {
           "address": "Device address (i.e. 1a2b3c)",
           "cat": "Device category (i.e. 0x10)",
@@ -101,7 +101,7 @@
       "remove_x10": {
         "description": "Remove an X10 device",
         "data": {
-          "address": "Select a device address to remove"
+          "address": "[%key:component::insteon::options::step::remove_override::data::address%]"
         }
       }
     },
@@ -120,7 +120,7 @@
           "description": "All-Link group number."
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Linking mode   controller - IM is controller   responder - IM is responder."
         }
       }
@@ -131,7 +131,7 @@
       "fields": {
         "group": {
           "name": "Group",
-          "description": "All-Link group number."
+          "description": "[%key:component::insteon::services::add_all_link::fields::group::description%]"
         }
       }
     },
@@ -165,7 +165,7 @@
     },
     "x10_all_units_off": {
       "name": "X10 all units off",
-      "description": "Tells the Insteom Modem (IM) start All-Linking mode. Once the IM is in All-Linking mode, press the link button on the device to complete All-Linking.",
+      "description": "[%key:component::insteon::services::add_all_link::description%]",
       "fields": {
         "housecode": {
           "name": "Housecode",
@@ -178,8 +178,8 @@
       "description": "Sends X10 All Lights On command.",
       "fields": {
         "housecode": {
-          "name": "Housecode",
-          "description": "X10 house code."
+          "name": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::name%]",
+          "description": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::description%]"
         }
       }
     },
@@ -188,8 +188,8 @@
       "description": "Sends X10 All Lights Off command.",
       "fields": {
         "housecode": {
-          "name": "Housecode",
-          "description": "X10 house code."
+          "name": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::name%]",
+          "description": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::description%]"
         }
       }
     },
@@ -209,7 +209,7 @@
       "fields": {
         "group": {
           "name": "Group",
-          "description": "INSTEON group or scene number."
+          "description": "[%key:component::insteon::services::scene_on::fields::group::description%]"
         }
       }
     },
@@ -219,7 +219,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Name of the device to load. Use \"all\" to load the database of all devices."
+          "description": "[%key:component::insteon::services::load_all_link_database::fields::entity_id::description%]"
         }
       }
     }

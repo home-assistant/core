@@ -29,7 +29,7 @@
         "title": "Configure Google Cloud",
         "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
         "data": {
-          "cloud_project_id": "Google Cloud Project ID"
+          "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
         }
       },
       "reauth_confirm": {
@@ -101,8 +101,8 @@
           "description": "Unique ID for the trip. Default is auto-generated using a timestamp."
         },
         "structure": {
-          "name": "Structure",
-          "description": "Name(s) of structure(s) to change. Defaults to all structures if not specified."
+          "name": "[%key:component::nest::services::set_away_mode::fields::structure::name%]",
+          "description": "[%key:component::nest::services::set_away_mode::fields::structure::description%]"
         }
       }
     },
@@ -111,12 +111,12 @@
       "description": "Cancels an existing estimated time of arrival window for a Nest structure.",
       "fields": {
         "trip_id": {
-          "name": "Trip ID",
+          "name": "[%key:component::nest::services::set_eta::fields::trip_id::name%]",
           "description": "Unique ID for the trip."
         },
         "structure": {
-          "name": "Structure",
-          "description": "Name(s) of structure(s) to change. Defaults to all structures if not specified."
+          "name": "[%key:component::nest::services::set_away_mode::fields::structure::name%]",
+          "description": "[%key:component::nest::services::set_away_mode::fields::structure::description%]"
         }
       }
     }

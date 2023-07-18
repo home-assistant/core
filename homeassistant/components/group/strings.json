@@ -23,7 +23,7 @@
           "all": "All entities",
           "entities": "Members",
           "hide_members": "Hide members",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "cover": {
@@ -70,9 +70,9 @@
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
           "ignore_non_numeric": "Ignore non-numeric",
-          "entities": "Members",
-          "hide_members": "Hide members",
-          "name": "Name",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "type": "Type",
           "round_digits": "Round value to number of decimals",
           "device_class": "Device class",
@@ -172,7 +172,7 @@
       },
       "state_attributes": {
         "entity_id": {
-          "name": "Members"
+          "name": "[%key:component::group::config::step::binary_sensor::data::entities%]"
         }
       }
     }
@@ -205,7 +205,7 @@
           "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id]."
         },
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "Name of the group."
         },
         "icon": {
@@ -235,8 +235,8 @@
       "description": "Removes a group.",
       "fields": {
         "object_id": {
-          "name": "Object ID",
-          "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id]."
+          "name": "[%key:component::group::services::set::fields::object_id::name%]",
+          "description": "[%key:component::group::services::set::fields::object_id::description%]"
         }
       }
     }

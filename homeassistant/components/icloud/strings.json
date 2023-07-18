@@ -60,7 +60,7 @@
       "fields": {
         "account": {
           "name": "Account",
-          "description": "Your iCloud account username (email) or account name."
+          "description": "[%key:component::icloud::services::update::fields::account::description%]"
         },
         "device_name": {
           "name": "Device name",
@@ -74,7 +74,7 @@
       "fields": {
         "account": {
           "name": "Account",
-          "description": "Your iCloud account username (email) or account name."
+          "description": "[%key:component::icloud::services::update::fields::account::description%]"
         },
         "device_name": {
           "name": "Device name",
@@ -96,7 +96,7 @@
       "fields": {
         "account": {
           "name": "Account",
-          "description": "Your iCloud account username (email) or account name."
+          "description": "[%key:component::icloud::services::update::fields::account::description%]"
         },
         "device_name": {
           "name": "Device name",
