@@ -175,6 +175,11 @@ class PushCamera(Camera):
         return False
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"webhook_{self.webhook_id}"
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
