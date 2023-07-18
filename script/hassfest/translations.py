@@ -40,6 +40,7 @@ ALLOW_NAME_TRANSLATION = {
     "nmap_tracker",
     "rpi_power",
     "waze_travel_time",
+    "zodiac",
 }
 
 REMOVED_TITLE_MSG = (
@@ -324,6 +325,20 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     slug_validator=translation_key_validator,
                 ),
                 slug_validator=cv.slug,
+            ),
+            vol.Optional("services"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Optional("fields"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Required("description"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
             ),
         }
     )
