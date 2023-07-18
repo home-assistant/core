@@ -45,11 +45,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from . import RensonCoordinator, RensonData
 from .const import DOMAIN
 from .entity import RensonEntity
+
+OPTIONS_MAPPING = {
+    "Off": "off",
+    "Level1": "level1",
+    "Level2": "level2",
+    "Level3": "level3",
+    "Level4": "level4",
+    "Breeze": "breeze",
+    "Holiday": "holiday",
+}
 
 
 @dataclass
@@ -282,9 +291,9 @@ class RensonSensor(RensonEntity, SensorEntity):
         if self.raw_format:
             self._attr_native_value = value
         elif self.entity_description.device_class == SensorDeviceClass.ENUM:
-            self._attr_native_value = slugify(
+            self._attr_native_value = OPTIONS_MAPPING[
                 self.api.parse_value(value, self.data_type)
-            )
+            ]
         else:
             self._attr_native_value = self.api.parse_value(value, self.data_type)
 
