@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
+from gardena_bluetooth.const import Battery
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gardena_bluetooth import DeviceUnavailable
@@ -20,9 +21,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_setup(
     hass: HomeAssistant,
     mock_entry: MockConfigEntry,
+    mock_read_char_raw: dict[str, bytes],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup creates expected devices."""
+
+    mock_read_char_raw[Battery.battery_level.uuid] = Battery.battery_level.encode(100)
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
