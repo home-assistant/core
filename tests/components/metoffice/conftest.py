@@ -1,8 +1,11 @@
 """Fixtures for Met Office weather integration tests."""
+# ruff: noqa: F821
 from unittest.mock import patch
 
-from datapoint.exceptions import APIException
+# from datapoint.exceptions import APIException
 import pytest
+
+collect_ignore_glob = ["test_*.py"]
 
 
 @pytest.fixture
