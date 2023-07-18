@@ -1,12 +1,12 @@
 {
   "services": {
     "set_theme": {
-      "name": "Set theme",
-      "description": "Sets a theme (unless the client selected a per-device theme).",
+      "name": "Set the default theme",
+      "description": "Sets the default theme Home Assistant uses. Can be overridden by an user.",
       "fields": {
         "name": {
           "name": "Theme",
-          "description": "Name of a predefined theme."
+          "description": "Name of a theme."
         },
         "mode": {
           "name": "Mode",
