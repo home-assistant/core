@@ -11,10 +11,12 @@ from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from . import (
     BASE_URL,
     CONFIG_ENTRY_DATA,
+    CONFIG_ENTRY_DATA_2,
     DATASET_CH15,
     DATASET_CH16,
     DATASET_INSECURE_NW_KEY,
@@ -280,3 +282,32 @@ async def test_get_active_dataset_tlvs_invalid(
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text="unexpected")
     with pytest.raises(HomeAssistantError):
         assert await otbr.async_get_active_dataset_tlvs(hass)
+
+
+async def test_remove_extra_entries(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we remove additional config entries."""
+
+    config_entry1 = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=otbr.DOMAIN,
+        options={},
+        title="Open Thread Border Router",
+    )
+    config_entry2 = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_2,
+        domain=otbr.DOMAIN,
+        options={},
+        title="Open Thread Border Router",
+    )
+    config_entry1.add_to_hass(hass)
+    config_entry2.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 2
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ), patch(
+        "homeassistant.components.otbr.util.compute_pskc"
+    ):  # Patch to speed up tests
+        assert await async_setup_component(hass, otbr.DOMAIN, {})
+    assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
