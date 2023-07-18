@@ -26,18 +26,18 @@ async def async_setup_entry(
 
     coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
 
-    devs = []
-    for device in coordinator.devices:
-        if device.type == LIGHT:
-            devs.append(device)
-
-    async_add_entities(ComelitLightEntity(coordinator, device) for device in devs)
+    async_add_entities(
+        ComelitLightEntity(coordinator, device)
+        for device in coordinator.devices
+        if device.type == LIGHT
+    )
 
 
 class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
     """Light device."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: ComelitSerialBridge, device: ComelitSerialBridgeObject
@@ -77,11 +77,6 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._device.status == LIGHT_ON
-
-    @property
-    def name(self) -> str:
-        """Return name of the light."""
-        return self._device.name
 
     @property
     def available(self) -> bool:

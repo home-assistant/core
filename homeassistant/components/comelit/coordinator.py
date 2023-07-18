@@ -39,12 +39,6 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         )
 
     @callback
-    def async_listener(self) -> None:
-        """Fetch data from the router."""
-
-        asyncio.run_coroutine_threadsafe(self._async_update_data(), self.hass.loop)
-
-    @callback
     def async_on_close(self, func: CALLBACK_TYPE) -> None:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
@@ -62,7 +56,6 @@ class ComelitSerialBridge(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed
 
         self._devices = await self.api.get_all_devices()
-        # self._alarm = await self.api.get_alarm_config()
 
         await self.api.logout()
 
