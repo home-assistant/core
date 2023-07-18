@@ -173,23 +173,25 @@ async def test_do_not_run_forever(
 
     mock_process = Mock()
     mock_process.communicate = block
+    mock_process.kill = Mock()
     mock_create_subprocess_shell = AsyncMock(return_value=mock_process)
+
+    assert await async_setup_component(
+        hass,
+        shell_command.DOMAIN,
+        {shell_command.DOMAIN: {"test_service": "mock_sleep 10000"}},
+    )
+    await hass.async_block_till_done()
 
     with patch.object(shell_command, "COMMAND_TIMEOUT", 0.001), patch(
         "homeassistant.components.shell_command.asyncio.create_subprocess_shell",
         side_effect=mock_create_subprocess_shell,
     ):
-        assert await async_setup_component(
-            hass,
-            shell_command.DOMAIN,
-            {shell_command.DOMAIN: {"test_service": "mock_sleep 10000"}},
-        )
-        await hass.async_block_till_done()
-
         await hass.services.async_call(
             shell_command.DOMAIN, "test_service", blocking=True
         )
         await hass.async_block_till_done()
 
+    mock_process.kill.assert_called_once()
     assert "Timed out" in caplog.text
     assert "mock_sleep 10000" in caplog.text
