@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PASSWORD): int,
-        vol.Required(CONF_PORT): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_PORT): int,
     }
 )
 
