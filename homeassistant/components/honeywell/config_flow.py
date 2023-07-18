@@ -22,8 +22,6 @@ from .const import (
     DOMAIN,
 )
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
-
 
 class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a honeywell config flow."""
@@ -42,12 +40,23 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm re-authentication with Honeywell."""
         errors: dict[str, str] = {}
-
+        assert self.entry is not None
+        reauth_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_USERNAME, default=self.entry.data.get(CONF_USERNAME, "")
+                ): str,
+                vol.Required(
+                    CONF_PASSWORD, default=self.entry.data.get(CONF_PASSWORD, "")
+                ): str,
+            }
+        )
         if user_input:
             assert self.entry is not None
+            username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             data = {
-                CONF_USERNAME: self.entry.data[CONF_USERNAME],
+                CONF_USERNAME: username,
                 CONF_PASSWORD: password,
             }
 
@@ -71,6 +80,7 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.entry,
                     data={
                         **self.entry.data,
+                        CONF_USERNAME: username,
                         CONF_PASSWORD: password,
                     },
                 )
@@ -79,7 +89,7 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=REAUTH_SCHEMA,
+            data_schema=reauth_schema,
             errors=errors,
         )
 
