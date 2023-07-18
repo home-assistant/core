@@ -27,7 +27,6 @@ async def async_setup_entry(
             coordinator,
             BinarySensorEntityDescription(
                 key=str(monitor.id),
-                name=None,
                 device_class=BinarySensorDeviceClass.CONNECTIVITY,
             ),
             monitor=monitor,

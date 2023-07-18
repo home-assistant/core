@@ -40,11 +40,6 @@
           "up": "Up"
         }
       }
-    },
-    "switch": {
-      "active": {
-        "name": "[%key:common::state::active%]"
-      }
     }
   }
 }
