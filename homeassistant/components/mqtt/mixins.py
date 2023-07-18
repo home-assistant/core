@@ -1134,9 +1134,10 @@ class MqttEntity(
             # Follow name of device class
             self._attr_has_entity_name = True
             if CONF_DEVICE in config and CONF_NAME not in config[CONF_DEVICE]:
-                _LOGGER.warning(
+                _LOGGER.info(
                     "No device name set in config: %s,"
-                    "'has_entity_name' was set to True, please set a device name, see also "
+                    "'has_entity_name' was set to True, assuming the entity is linked "
+                    "to an existing shared device, see also "
                     "https://developers.home-assistant.io/docs/core/entity/#entity-naming",
                     config,
                 )
@@ -1144,9 +1145,10 @@ class MqttEntity(
         if CONF_DEVICE in config:
             self._attr_has_entity_name = device_named = CONF_NAME in config[CONF_DEVICE]
             if not device_named:
-                _LOGGER.warning(
+                _LOGGER.info(
                     "No device name set in config: %s,"
-                    "'has_entity_name' was set to False, this is not recommended, see also "
+                    "'has_entity_name' was set to True, assuming the entity is linked "
+                    "to an existing shared device, see also "
                     "https://developers.home-assistant.io/docs/core/entity/#entity-naming",
                     config,
                 )
