@@ -60,8 +60,6 @@ async def async_setup_entry(
 class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
     """Representation of a UptimeRobot sensor."""
 
-    _attr_name = None
-
     @property
     def native_value(self) -> str:
         """Return the status of the monitor."""
