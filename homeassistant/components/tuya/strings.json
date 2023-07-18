@@ -61,9 +61,9 @@
       },
       "motion_sensitivity": {
         "state": {
-          "0": "[%key:component::tuya::entity::select::decibel_sensitivity::state::0%]",
+          "0": "Low sensitivity",
           "1": "Medium sensitivity",
-          "2": "[%key:component::tuya::entity::select::decibel_sensitivity::state::1%]"
+          "2": "High sensitivity"
         }
       },
       "record_mode": {

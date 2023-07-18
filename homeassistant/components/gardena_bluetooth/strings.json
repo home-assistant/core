@@ -19,6 +19,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "valve_connected_state": {
+        "name": "Valve connection"
+      }
+    },
     "number": {
       "remaining_open_time": {
         "name": "Remaining open time"
@@ -34,6 +39,14 @@
       },
       "season_pause": {
         "name": "Season pause"
+      }
+    },
+    "sensor": {
+      "activation_reason": {
+        "name": "Activation reason"
+      },
+      "remaining_open_timestamp": {
+        "name": "Valve closing"
       }
     },
     "switch": {
