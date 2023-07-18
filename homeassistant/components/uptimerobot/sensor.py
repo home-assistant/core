@@ -46,7 +46,6 @@ async def async_setup_entry(
             coordinator,
             SensorEntityDescription(
                 key=str(monitor.id),
-                name=None,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 device_class=SensorDeviceClass.ENUM,
                 options=["down", "not_checked_yet", "pause", "seems_down", "up"],
@@ -60,6 +59,8 @@ async def async_setup_entry(
 
 class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
     """Representation of a UptimeRobot sensor."""
+
+    _attr_name = None
 
     @property
     def native_value(self) -> str:
