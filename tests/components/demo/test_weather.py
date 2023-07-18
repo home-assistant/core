@@ -1,11 +1,13 @@
 """The tests for the demo weather component."""
+import datetime
+from typing import Any
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+
 from homeassistant.components import weather
+from homeassistant.components.demo.weather import WEATHER_UPDATE_INTERVAL
 from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRESSURE,
@@ -44,10 +46,78 @@ async def test_attributes(hass: HomeAssistant, disable_platforms) -> None:
     assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
 
 
+TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(seconds=5 + 1)
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "expected_forecast"),
+    [
+        (
+            "daily",
+            [
+                {
+                    "condition": "snowy",
+                    "precipitation": 2.0,
+                    "temperature": -23.3,
+                    "templow": -26.1,
+                    "precipitation_probability": 60,
+                },
+                {
+                    "condition": "sunny",
+                    "precipitation": 0.0,
+                    "temperature": -22.8,
+                    "templow": -24.4,
+                    "precipitation_probability": 0,
+                },
+            ],
+        ),
+        (
+            "hourly",
+            [
+                {
+                    "condition": "sunny",
+                    "precipitation": 2.0,
+                    "temperature": -23.3,
+                    "templow": -26.1,
+                    "precipitation_probability": 60,
+                },
+                {
+                    "condition": "sunny",
+                    "precipitation": 0.0,
+                    "temperature": -22.8,
+                    "templow": -24.4,
+                    "precipitation_probability": 0,
+                },
+            ],
+        ),
+        (
+            "twice_daily",
+            [
+                {
+                    "condition": "snowy",
+                    "precipitation": 2.0,
+                    "temperature": -23.3,
+                    "templow": -26.1,
+                    "precipitation_probability": 60,
+                },
+                {
+                    "condition": "sunny",
+                    "precipitation": 0.0,
+                    "temperature": -22.8,
+                    "templow": -24.4,
+                    "precipitation_probability": 0,
+                },
+            ],
+        ),
+    ],
+)
 async def test_forecast(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
     disable_platforms: None,
+    forecast_type: str,
+    expected_forecast: list[dict[str, Any]],
 ) -> None:
     """Test multiple forecast."""
     assert await async_setup_component(
@@ -61,8 +131,8 @@ async def test_forecast(
     await client.send_json_auto_id(
         {
             "type": "weather/subscribe_forecast",
-            "forecast_type": "daily",
-            "entity_id": "weather.demo_weather_south",
+            "forecast_type": forecast_type,
+            "entity_id": "weather.demo_weather_north",
         }
     )
     msg = await client.receive_json()
@@ -73,16 +143,21 @@ async def test_forecast(
     msg = await client.receive_json()
     assert msg["id"] == subscription_id
     assert msg["type"] == "event"
-    forecast = msg["event"]["forecast"]
+    forecast1 = msg["event"]["forecast"]
 
-    assert forecast[0].get(ATTR_FORECAST_CONDITION) == "rainy"
-    assert forecast[0].get(ATTR_FORECAST_PRECIPITATION) == 1
-    assert forecast[0].get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 60
-    assert forecast[0].get(ATTR_FORECAST_TEMP) == 22
-    assert forecast[0].get(ATTR_FORECAST_TEMP_LOW) == 15
-    assert forecast[6].get(ATTR_FORECAST_CONDITION) == "fog"
-    assert forecast[6].get(ATTR_FORECAST_PRECIPITATION) == 0.2
-    assert forecast[6].get(ATTR_FORECAST_TEMP) == 21
-    assert forecast[6].get(ATTR_FORECAST_TEMP_LOW) == 12
-    assert forecast[6].get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 100
-    assert len(forecast) == 7
+    assert len(forecast1) == 7
+    for key, val in expected_forecast[0].items():
+        assert forecast1[0][key] == val
+    for key, val in expected_forecast[1].items():
+        assert forecast1[6][key] == val
+
+    freezer.tick(WEATHER_UPDATE_INTERVAL + datetime.timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    forecast2 = msg["event"]["forecast"]
+
+    assert forecast2 != forecast1
+    assert len(forecast2) == 7

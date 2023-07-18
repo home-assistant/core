@@ -47,6 +47,8 @@ CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
+WEATHER_UPDATE_INTERVAL = timedelta(minutes=30)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -193,7 +195,7 @@ class DemoWeather(WeatherEntity):
 
         self.async_on_remove(
             async_track_time_interval(
-                self.hass, update_forecasts, timedelta(seconds=30)
+                self.hass, update_forecasts, WEATHER_UPDATE_INTERVAL
             )
         )
 
@@ -241,11 +243,10 @@ class DemoWeather(WeatherEntity):
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast."""
-        if self._forecast_daily is None:
-            return []
         reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
+        assert self._forecast_daily is not None
         for entry in self._forecast_daily:
             data_dict = Forecast(
                 datetime=reftime.isoformat(),
@@ -262,11 +263,10 @@ class DemoWeather(WeatherEntity):
 
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast."""
-        if self._forecast_hourly is None:
-            return []
         reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
+        assert self._forecast_hourly is not None
         for entry in self._forecast_hourly:
             data_dict = Forecast(
                 datetime=reftime.isoformat(),
@@ -283,25 +283,21 @@ class DemoWeather(WeatherEntity):
 
     async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the twice daily forecast."""
-        if self._forecast_twice_daily is None:
-            return []
         reftime = dt_util.now().replace(hour=11, minute=00)
 
         forecast_data = []
+        assert self._forecast_twice_daily is not None
         for entry in self._forecast_twice_daily:
-            try:
-                data_dict = Forecast(
-                    datetime=reftime.isoformat(),
-                    condition=entry[0],
-                    precipitation=entry[1],
-                    temperature=entry[2],
-                    templow=entry[3],
-                    precipitation_probability=entry[4],
-                    is_daytime=entry[5],
-                )
-                reftime = reftime + timedelta(hours=12)
-                forecast_data.append(data_dict)
-            except IndexError:
-                continue
+            data_dict = Forecast(
+                datetime=reftime.isoformat(),
+                condition=entry[0],
+                precipitation=entry[1],
+                temperature=entry[2],
+                templow=entry[3],
+                precipitation_probability=entry[4],
+                is_daytime=entry[5],
+            )
+            reftime = reftime + timedelta(hours=12)
+            forecast_data.append(data_dict)
 
         return forecast_data
