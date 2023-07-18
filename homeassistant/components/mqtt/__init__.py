@@ -336,7 +336,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             """Reload the platforms."""
             # Fetch updated manual configured items and validate
             config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
-            mqtt_data.updated_config = config_yaml.get(DOMAIN, {})
+            mqtt_data.config = config_yaml.get(DOMAIN, {})
 
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)
