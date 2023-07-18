@@ -8,12 +8,12 @@ from aiocomelit.const import LIGHT, LIGHT_OFF, LIGHT_ON
 
 from homeassistant.components.light import LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import COORDINATOR_CTX_DEVICES, DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
@@ -45,7 +45,7 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         """Init light entity."""
         self._api = coordinator.api
         self._device = device
-        super().__init__(coordinator)
+        super().__init__(coordinator, COORDINATOR_CTX_DEVICES)
         self._attr_unique_id = f"{coordinator.api.host}-light-{device.index}"
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -55,15 +55,6 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
             model="Serial Bridge",
             name=device.name,
         )
-
-    @callback
-    def _update_callback(self) -> None:
-        """Handle device update."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to HASS."""
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

@@ -14,7 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, COORDINATOR_CTX_ALARM, COORDINATOR_CTX_DEVICES, DOMAIN
 
 
 class ComelitSerialBridge(DataUpdateCoordinator):
@@ -43,8 +43,12 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         """Add a function to call when router is closed."""
         self._on_close.append(func)
 
-    async def _async_update_data(self) -> bool:
+    async def _async_update_data(self) -> dict[str, list]:
         """Update router data."""
+        data: dict = {
+            COORDINATOR_CTX_DEVICES: [],
+            COORDINATOR_CTX_ALARM: [],
+        }
         _LOGGER.debug("Polling Comelit Serial Bridge host: %s", self._host)
         try:
             logged = await self.api.login()
@@ -56,10 +60,10 @@ class ComelitSerialBridge(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed
 
         self._devices = await self.api.get_all_devices()
-
+        data[COORDINATOR_CTX_DEVICES] = self._devices
         await self.api.logout()
 
-        return True
+        return data
 
     @property
     def devices(self) -> list[ComelitSerialBridgeObject]:
