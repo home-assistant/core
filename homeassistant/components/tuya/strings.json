@@ -494,16 +494,16 @@
         "name": "Total cleaning times"
       },
       "duster_cloth_life": {
-        "name": "Duster cloth life"
+        "name": "Duster cloth lifetime"
       },
       "side_brush_life": {
-        "name": "Side brush life"
+        "name": "Side brush lifetime"
       },
       "filter_life": {
-        "name": "Filter life"
+        "name": "Filter lifetime"
       },
       "rolling_brush_life": {
-        "name": "Rolling brush life"
+        "name": "Rolling brush lifetime"
       },
       "last_operation_duration": {
         "name": "Last operation duration"
