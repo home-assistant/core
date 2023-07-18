@@ -605,7 +605,7 @@ connect-box==0.2.8
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.xiaomi_miio
-construct==2.10.56
+construct==2.10.68
 
 # homeassistant.components.utility_meter
 croniter==1.0.6
