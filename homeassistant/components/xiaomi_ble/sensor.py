@@ -72,6 +72,7 @@ SENSOR_DESCRIPTIONS = {
     # Impedance sensor (ohm)
     (DeviceClass.IMPEDANCE, Units.OHM): SensorEntityDescription(
         key=f"{DeviceClass.IMPEDANCE}_{Units.OHM}",
+        icon="mdi:omega",
         native_unit_of_measurement=Units.OHM,
         state_class=SensorStateClass.MEASUREMENT,
     ),
