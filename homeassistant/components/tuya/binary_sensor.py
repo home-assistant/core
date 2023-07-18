@@ -318,7 +318,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_STATE,
             device_class=BinarySensorDeviceClass.SMOKE,
-            on_value="1",
+            on_value={"1", "alarm"},
         ),
         TAMPER_BINARY_SENSOR,
     ),
