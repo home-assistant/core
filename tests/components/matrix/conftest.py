@@ -15,6 +15,7 @@ from nio import (
     LoginResponse,
     Response,
     UploadResponse,
+    WhoamiError,
 )
 from PIL import Image
 import pytest
@@ -50,6 +51,7 @@ TEST_DEFAULT_ROOM = "!DefaultNotificationRoom:example.com"
 TEST_JOINABLE_ROOMS = ["!RoomIdString:example.com", "#RoomAliasString:example.com"]
 TEST_BAD_ROOM = "!UninvitedRoom:example.com"
 TEST_MXID = "@user:example.com"
+TEST_DEVICE_ID = "FAKEID"
 TEST_PASSWORD = "password"
 TEST_TOKEN = "access_token"
 
@@ -58,8 +60,6 @@ NIO_IMPORT_PREFIX = "homeassistant.components.matrix.nio."
 
 class _MockAsyncClient(AsyncClient):
     """Mock class to simulate MatrixBot._client's I/O methods."""
-
-    logged_in: bool = False
 
     async def close(self):
         return None
@@ -72,7 +72,6 @@ class _MockAsyncClient(AsyncClient):
 
     async def login(self, *args, **kwargs):
         if kwargs.get("password") == TEST_PASSWORD or kwargs.get("token") == TEST_TOKEN:
-            self.logged_in = True
             self.access_token = TEST_TOKEN
             return LoginResponse(
                 access_token=TEST_TOKEN,
@@ -80,8 +79,18 @@ class _MockAsyncClient(AsyncClient):
                 user_id=TEST_MXID,
             )
         else:
-            self.logged_in = False
+            self.access_token = ""
             return LoginError(message="LoginError", status_code="status_code")
+
+    async def whoami(self):
+        if self.access_token == TEST_TOKEN:
+            self.user_id = TEST_MXID
+            self.device_id = TEST_DEVICE_ID
+        else:
+            self.access_token = ""
+            return WhoamiError(
+                message="Invalid access token passed.", status_code="M_UNKNOWN_TOKEN"
+            )
 
     async def room_send(self, *args, **kwargs):
         if not self.logged_in:
@@ -98,7 +107,7 @@ class _MockAsyncClient(AsyncClient):
         return None
 
     async def upload(self, *args, **kwargs):
-        return UploadResponse(content_uri="mxc://example.com/randomgibberish")
+        return UploadResponse(content_uri="mxc://example.com/randomgibberish"), None
 
 
 MOCK_CONFIG_DATA = {

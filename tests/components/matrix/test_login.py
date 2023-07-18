@@ -19,24 +19,24 @@ async def test_login(matrix_bot: MatrixBot, mock_client):
     assert matrix_bot._client.logged_in
 
     # Test good login using a good password and bad stored access_token.
-    matrix_bot._auth_tokens = {TEST_MXID: "WrongToken"}
+    matrix_bot._access_tokens = {TEST_MXID: "WrongToken"}
     await matrix_bot._login()
     assert matrix_bot._client.logged_in
 
     # Test good login using a good access_token and bad password.
-    matrix_bot._auth_tokens = {TEST_MXID: TEST_TOKEN}
+    matrix_bot._access_tokens = {TEST_MXID: TEST_TOKEN}
     await matrix_bot._login()
     assert matrix_bot._client.logged_in
 
     # Test bad login using a bad password and bad stored access_token.
     matrix_bot._password = "WrongPassword"
-    matrix_bot._auth_tokens = {TEST_MXID: "WrongToken"}
+    matrix_bot._access_tokens = {TEST_MXID: "WrongToken"}
     with pytest.raises(ConfigEntryAuthFailed):
         await matrix_bot._login()
     assert not matrix_bot._client.logged_in
 
     # Test bad login using bad password and missing access token.
-    matrix_bot._auth_tokens = {}
+    matrix_bot._access_tokens = {}
     with pytest.raises(ConfigEntryAuthFailed):
         await matrix_bot._login()
     assert not matrix_bot._client.logged_in

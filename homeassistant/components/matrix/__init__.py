@@ -19,6 +19,8 @@ from nio.responses import (
     Response,
     UploadError,
     UploadResponse,
+    WhoamiError,
+    WhoamiResponse,
 )
 from PIL import Image
 import voluptuous as vol
@@ -166,7 +168,7 @@ class MatrixBot:
         self.hass = hass
 
         self._session_filepath = config_file
-        self._auth_tokens: JsonObjectType = {}
+        self._access_tokens: JsonObjectType = {}
 
         self._homeserver = homeserver
         self._verify_tls = verify_ssl
@@ -192,7 +194,7 @@ class MatrixBot:
 
         async def handle_startup(event: HassEvent) -> None:
             """Run once when Home Assistant finished startup."""
-            self._auth_tokens = await self._get_auth_tokens()
+            self._access_tokens = await self._get_auth_tokens()
             await self._login()
             await self._join_rooms()
             # Sync once so that we don't respond to past events.
@@ -296,30 +298,43 @@ class MatrixBot:
 
     async def _store_auth_token(self, token: str) -> None:
         """Store authentication token to session and persistent storage."""
-        self._auth_tokens[self._mx_id] = token
+        self._access_tokens[self._mx_id] = token
 
         await self.hass.async_add_executor_job(
-            save_json, self._session_filepath, self._auth_tokens, True  # private=True
+            save_json, self._session_filepath, self._access_tokens, True  # private=True
         )
 
     async def _login(self) -> None:
         """Log in to the Matrix homeserver.
 
-        Attempts to use the stored authentication token.
+        Attempts to use the stored access token.
         If that fails, then tries using the password.
         If that also fails, raises LocalProtocolError.
         """
 
-        # If we have an authentication token
-        if (token := self._auth_tokens.get(self._mx_id)) is not None:
-            response = await self._client.login(token=token)
-            _LOGGER.debug("Logging in using stored token")
-
-            if isinstance(response, LoginError):
+        # If we have an access token
+        if (token := self._access_tokens.get(self._mx_id)) is not None:
+            _LOGGER.debug("Restoring login from stored access token")
+            self._client.restore_login(
+                user_id=self._client.user_id,
+                device_id=self._client.device_id,
+                access_token=token,
+            )
+            response = await self._client.whoami()
+            if isinstance(response, WhoamiError):
                 _LOGGER.warning(
-                    "Login by token failed: %s, %s",
+                    "Restoring login from access token failed: %s, %s",
                     response.status_code,
                     response.message,
+                )
+                self._client.access_token = (
+                    ""  # Force a soft-logout if the homeserver didn't.
+                )
+            elif isinstance(response, WhoamiResponse):
+                _LOGGER.debug(
+                    "Successfully restored login from access token: user_id '%s', device_id '%s'",
+                    response.user_id,
+                    response.device_id,
                 )
 
         # If the token login did not succeed
@@ -355,7 +370,7 @@ class MatrixBot:
 
         _LOGGER.debug("Uploading file from path, %s", image_path)
         async with aiofiles.open(image_path, "r+b") as image_file:
-            response = await self._client.upload(
+            response, _ = await self._client.upload(
                 image_file,
                 content_type=mime_type,
                 filename=os.path.basename(image_path),
