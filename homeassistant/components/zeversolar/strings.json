@@ -19,9 +19,6 @@
   },
   "entity": {
     "sensor": {
-      "current_power": {
-        "name": "Current power"
-      },
       "energy_today": {
         "name": "Energy today"
       }

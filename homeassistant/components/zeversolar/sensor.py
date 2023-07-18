@@ -39,7 +39,6 @@ class ZeversolarEntityDescription(
 SENSOR_TYPES = (
     ZeversolarEntityDescription(
         key="pac",
-        translation_key="current_power",
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
