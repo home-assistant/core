@@ -108,6 +108,9 @@
       }
     },
     "number": {
+      "temperature": {
+        "name": "[%key:component::number::entity_component::temperature::name%]"
+      },
       "time": {
         "name": "Time"
       },
@@ -169,10 +172,10 @@
         "name": "Maximum brightness 3"
       },
       "move_down": {
-        "name": "Move down %"
+        "name": "Move down"
       },
       "move_up": {
-        "name": "Move up %"
+        "name": "Move up"
       },
       "down_delay": {
         "name": "Down delay"
@@ -418,6 +421,45 @@
       }
     },
     "sensor": {
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
+      },
+      "voc": {
+        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+      },
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      },
+      "carbon_dioxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
+      },
+      "illuminance": {
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "pm25": {
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+      },
+      "pm1": {
+        "name": "[%key:component::sensor::entity_component::pm1::name%]"
+      },
+      "pm10": {
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
+      },
+      "current": {
+        "name": "[%key:component::sensor::entity_component::current::name%]"
+      },
+      "power": {
+        "name": "[%key:component::sensor::entity_component::power::name%]"
+      },
+      "voltage": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      },
       "battery_state": {
         "name": "Battery state"
       },

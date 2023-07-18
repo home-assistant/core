@@ -36,12 +36,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "bh": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
+            translation_key="time",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
+            translation_key="time",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
@@ -113,6 +115,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
@@ -285,6 +288,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "fs": (
         NumberEntityDescription(
             key=DPCode.TEMP,
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),
@@ -294,11 +298,13 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "jsq": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),
