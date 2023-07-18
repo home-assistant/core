@@ -35,7 +35,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 POWER_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="power",
-        translation_key="current_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,

@@ -38,11 +38,6 @@
       "dual_head_ratio": {
         "name": "Dual head ratio"
       }
-    },
-    "sensor": {
-      "current_power": {
-        "name": "Current power"
-      }
     }
   }
 }
