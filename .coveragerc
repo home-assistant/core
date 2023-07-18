@@ -712,7 +712,6 @@ omit =
     homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minio/minio_helper.py
-    homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
     homeassistant/components/mochad/__init__.py
