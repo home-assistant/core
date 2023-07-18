@@ -60,7 +60,7 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert error is None
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
-                    data={CONF_ADDRESS: address, CONF_API_KEY: api_key},
+                    data={CONF_ADDRESS: address.upper(), CONF_API_KEY: api_key},
                 )
 
             if error is not None:
@@ -102,7 +102,7 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert error is None
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
-                    data={CONF_ADDRESS: address, CONF_API_KEY: api_key},
+                    data={CONF_ADDRESS: address.upper(), CONF_API_KEY: api_key},
                 )
 
             if error is not None:
