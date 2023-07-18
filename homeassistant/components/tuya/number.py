@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -264,14 +264,16 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "szjqr": (
         NumberEntityDescription(
             key=DPCode.ARM_DOWN_PERCENT,
-            name="Move down %",
+            name="Move down",
             icon="mdi:arrow-down-bold",
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.ARM_UP_PERCENT,
-            name="Move up %",
+            name="Move up",
             icon="mdi:arrow-up-bold",
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
