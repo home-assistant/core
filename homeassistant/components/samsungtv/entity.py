@@ -20,6 +20,7 @@ class SamsungTVEntity(Entity):
         self._bridge = bridge
         self._mac = config_entry.data.get(CONF_MAC)
         self._attr_name = config_entry.data.get(CONF_NAME)
+        # Fallback for legacy models that doesn't have a API to retrieve MAC or SerialNumber
         self._attr_unique_id = config_entry.unique_id or config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             # Instead of setting the device name to the entity name, samsungtv
