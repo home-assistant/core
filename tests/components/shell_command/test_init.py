@@ -1,9 +1,10 @@
 """The tests for the Shell command component."""
 from __future__ import annotations
 
+import asyncio
 import os
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
@@ -160,17 +161,28 @@ async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
     assert test_phrase.encode() + b"\n" == mock_output.call_args_list[0][0][-1]
 
 
-@pytest.mark.skip(reason="disabled to check if it fixes flaky CI")
-async def test_do_no_run_forever(
+async def test_do_not_run_forever(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test subprocesses terminate after the timeout."""
 
-    with patch.object(shell_command, "COMMAND_TIMEOUT", 0.001):
+    async def block():
+        event = asyncio.Event()
+        await event.wait()
+        return (None, None)
+
+    mock_process = Mock()
+    mock_process.communicate = block
+    mock_create_subprocess_shell = AsyncMock(return_value=mock_process)
+
+    with patch.object(shell_command, "COMMAND_TIMEOUT", 0.001), patch(
+        "homeassistant.components.shell_command.asyncio.create_subprocess_shell",
+        side_effect=mock_create_subprocess_shell,
+    ):
         assert await async_setup_component(
             hass,
             shell_command.DOMAIN,
-            {shell_command.DOMAIN: {"test_service": "sleep 10000"}},
+            {shell_command.DOMAIN: {"test_service": "mock_sleep 10000"}},
         )
         await hass.async_block_till_done()
 
@@ -180,4 +192,4 @@ async def test_do_no_run_forever(
         await hass.async_block_till_done()
 
     assert "Timed out" in caplog.text
-    assert "sleep 10000" in caplog.text
+    assert "mock_sleep 10000" in caplog.text
