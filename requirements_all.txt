@@ -2681,9 +2681,6 @@ watchdog==2.3.1
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
 
-# homeassistant.components.cisco_webex_teams
-webexteamssdk==1.1.1
-
 # homeassistant.components.assist_pipeline
 webrtc-noise-gain==1.2.3
 
