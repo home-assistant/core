@@ -48,7 +48,7 @@ dependencies    = [
     "orjson==3.9.1",
     "pip>=21.3.1,<23.2",
     "python-slugify==4.0.1",
-    "PyYAML==6.0",
+    "PyYAML==6.0.1",
     "requests==2.31.0",
     "typing_extensions>=4.6.3,<5.0",
     "ulid-transform==0.7.2",
