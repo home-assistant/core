@@ -2,7 +2,7 @@
   "services": {
     "set_theme": {
       "name": "Set the default theme",
-      "description": "Sets the default theme Home Assistant uses. Can be overridden by an user.",
+      "description": "Sets the default theme Home Assistant uses. Can be overridden by a user.",
       "fields": {
         "name": {
           "name": "Theme",
