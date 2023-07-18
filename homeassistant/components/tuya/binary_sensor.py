@@ -51,7 +51,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "dgnbj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.GAS_SENSOR_STATE,
-            translation_key="gas",
             icon="mdi:gas-cylinder",
             device_class=BinarySensorDeviceClass.GAS,
             on_value="alarm",

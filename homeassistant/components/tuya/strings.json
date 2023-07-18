@@ -19,29 +19,26 @@
   },
   "entity": {
     "binary_sensor": {
-      "gas": {
-        "name": "[%key:component::binary_sensor::entity_component::gas::name%]"
-      },
       "methane": {
         "name": "Methane"
       },
       "voc": {
-        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+        "name": "VOCs"
       },
       "pm25": {
-        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+        "name": "PM2.5"
       },
       "carbon_monoxide": {
-        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+        "name": "Carbon monoxide"
       },
       "carbon_dioxide": {
-        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
+        "name": "Carbon dioxide"
       },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
       "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
+        "name": "Pressure"
       },
       "feeding": {
         "name": "Feeding"
@@ -183,7 +180,7 @@
     },
     "select": {
       "volume": {
-        "name": "Volume"
+        "name": "[%key:component::tuya::entity::number::volume::name%]"
       },
       "cups": {
         "name": "Cups"
@@ -324,22 +321,22 @@
           "standby": "[%key:common::state::standby%]",
           "random": "Random",
           "smart": "Smart",
-          "wall_follow": "Follow Wall",
+          "wall_follow": "Follow wall",
           "mop": "Mop",
           "spiral": "Spiral",
-          "left_spiral": "Spiral Left",
-          "right_spiral": "Spiral Right",
+          "left_spiral": "Spiral left",
+          "right_spiral": "Spiral right",
           "bow": "Bow",
-          "left_bow": "Bow Left",
-          "right_bow": "Bow Right",
-          "partial_bow": "Bow Partially",
+          "left_bow": "Bow left",
+          "right_bow": "Bow right",
+          "partial_bow": "Bow partially",
           "chargego": "Return to dock",
           "single": "Single",
           "zone": "Zone",
           "pose": "Pose",
           "point": "Point",
           "part": "Part",
-          "pick_zone": "Pick Zone"
+          "pick_zone": "Pick zone"
         }
       },
       "vertical_fan_angle": {
@@ -467,7 +464,7 @@
         "name": "Gas"
       },
       "formaldehyde": {
-        "name": "Formaldehyde"
+        "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },
       "luminosity": {
         "name": "Luminosity"
@@ -488,7 +485,7 @@
         "name": "Remaining time"
       },
       "methane": {
-        "name": "Methane"
+        "name": "[%key:component::tuya::entity::binary_sensor::methane::name%]"
       },
       "total_energy": {
         "name": "Total energy"
