@@ -72,10 +72,9 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         loop = self._loop
         disconnected_futures = self._disconnected_futures
         disconnected_future = loop.create_future()
-        disconnected_futures.add(disconnected_future)
-        task = asyncio.current_task(loop)
-        disconnect_handler = partial(_on_disconnected, task)
+        disconnect_handler = partial(_on_disconnected, asyncio.current_task(loop))
         disconnected_future.add_done_callback(disconnect_handler)
+        disconnected_futures.add(disconnected_future)
         try:
             return await func(self, *args, **kwargs)
         except asyncio.CancelledError as ex:
