@@ -391,13 +391,18 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
         self._currently_playing = current or {}
 
-        context = self._currently_playing.get("context")
+        context = self._currently_playing.get("context", {})
+        uri = context.get("uri")
+        if uri is not None:
+            parts = uri.split(":")
+            if "user" in parts and "playlist" in parts:
+                uri = ":".join([parts[0], parts[3], parts[4]])
         if context is not None and (
-            self._playlist is None or self._playlist["uri"] != context["uri"]
+            self._playlist is None or self._playlist["uri"] != uri
         ):
             self._playlist = None
             if context["type"] == MediaType.PLAYLIST:
-                self._playlist = self.data.client.playlist(current["context"]["uri"])
+                self._playlist = self.data.client.playlist(uri)
 
     async def async_browse_media(
         self,
