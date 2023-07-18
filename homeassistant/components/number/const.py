@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -209,7 +210,7 @@ class NumberDeviceClass(StrEnum):
     """
 
     PM1 = "pm1"
-    """Particulate matter <= 0.1 μm.
+    """Particulate matter <= 1 μm.
 
     Unit of measurement: `µg/m³`
     """
@@ -307,6 +308,12 @@ class NumberDeviceClass(StrEnum):
     """Amount of VOC.
 
     Unit of measurement: `µg/m³`
+    """
+
+    VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
+    """Ratio of VOC.
+
+    Unit of measurement: `ppm`, `ppb`
     """
 
     VOLTAGE = "voltage"
@@ -420,6 +427,10 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    },
+    NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
     },
     NumberDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     NumberDeviceClass.VOLUME: set(UnitOfVolume),

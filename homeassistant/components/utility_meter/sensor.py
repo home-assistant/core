@@ -28,8 +28,13 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -120,6 +125,28 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
+    source_entity = registry.async_get(source_entity_id)
+    dev_reg = dr.async_get(hass)
+    # Resolve source entity device
+    if (
+        (source_entity is not None)
+        and (source_entity.device_id is not None)
+        and (
+            (
+                device := dev_reg.async_get(
+                    device_id=source_entity.device_id,
+                )
+            )
+            is not None
+        )
+    ):
+        device_info = DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+    else:
+        device_info = None
+
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
@@ -149,6 +176,7 @@ async def async_setup_entry(
             tariff_entity=tariff_entity,
             tariff=None,
             unique_id=entry_id,
+            device_info=device_info,
         )
         meters.append(meter_sensor)
         hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -168,6 +196,7 @@ async def async_setup_entry(
                 tariff_entity=tariff_entity,
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
+                device_info=device_info,
             )
             meters.append(meter_sensor)
             hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -341,9 +370,11 @@ class UtilityMeterSensor(RestoreSensor):
         tariff,
         unique_id,
         suggested_entity_id=None,
+        device_info=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
@@ -411,7 +442,7 @@ class UtilityMeterSensor(RestoreSensor):
         if (old_state_val := self._validate_state(old_state)) is not None:
             return new_state_val - old_state_val
 
-        _LOGGER.warning(
+        _LOGGER.debug(
             "%s received an invalid state change coming from %s (%s > %s)",
             self.name,
             self._sensor_source_id,

@@ -93,7 +93,12 @@ class FeedManager:
 
     def _init_regular_updates(self, hass: HomeAssistant) -> None:
         """Schedule regular updates at the top of the clock."""
-        track_time_interval(hass, lambda now: self._update(), self._scan_interval)
+        track_time_interval(
+            hass,
+            lambda now: self._update(),
+            self._scan_interval,
+            cancel_on_shutdown=True,
+        )
 
     @property
     def last_update_successful(self) -> bool:

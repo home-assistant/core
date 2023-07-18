@@ -40,6 +40,7 @@ SUPPORT_LGTV = (
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.STOP
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -74,6 +75,7 @@ def setup_platform(
 class LgTVDevice(MediaPlayerEntity):
     """Representation of a LG TV."""
 
+    _attr_assumed_state = True
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_media_content_type = MediaType.CHANNEL
 
@@ -83,8 +85,6 @@ class LgTVDevice(MediaPlayerEntity):
         self._name = name
         self._muted = False
         self._on_action_script = on_action_script
-        # Assume that the TV is in Play mode
-        self._playing = True
         self._volume = 0
         self._channel_id = None
         self._channel_name = ""
@@ -106,7 +106,7 @@ class LgTVDevice(MediaPlayerEntity):
 
         try:
             with self._client as client:
-                self._attr_state = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.ON
 
                 self.__update_volume()
 
@@ -233,24 +233,17 @@ class LgTVDevice(MediaPlayerEntity):
         """Select input source."""
         self._client.change_channel(self._sources[source])
 
-    def media_play_pause(self) -> None:
-        """Simulate play pause media player."""
-        if self._playing:
-            self.media_pause()
-        else:
-            self.media_play()
-
     def media_play(self) -> None:
         """Send play command."""
-        self._playing = True
-        self._attr_state = MediaPlayerState.PLAYING
         self.send_command(LG_COMMAND.PLAY)
 
     def media_pause(self) -> None:
         """Send media pause command to media player."""
-        self._playing = False
-        self._attr_state = MediaPlayerState.PAUSED
         self.send_command(LG_COMMAND.PAUSE)
+
+    def media_stop(self) -> None:
+        """Send media stop command to media player."""
+        self.send_command(LG_COMMAND.STOP)
 
     def media_next_track(self) -> None:
         """Send next track command."""

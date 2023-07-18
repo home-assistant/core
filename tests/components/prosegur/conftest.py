@@ -28,6 +28,15 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_list_contracts() -> AsyncMock:
+    """Return list of contracts per user."""
+    return [
+        {"contractId": "123", "description": "a b c"},
+        {"contractId": "456", "description": "x y z"},
+    ]
+
+
+@pytest.fixture
 def mock_install() -> AsyncMock:
     """Return the mocked alarm install."""
     install = MagicMock()

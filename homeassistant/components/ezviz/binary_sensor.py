@@ -25,10 +25,6 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         key="alarm_schedules_enabled"
     ),
     "encrypted": BinarySensorEntityDescription(key="encrypted"),
-    "upgrade_available": BinarySensorEntityDescription(
-        key="upgrade_available",
-        device_class=BinarySensorDeviceClass.UPDATE,
-    ),
 }
 
 

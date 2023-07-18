@@ -436,7 +436,7 @@ async def test_storage_collection_websocket(
     store = storage.Store(hass, 1, "test-data")
     coll = MockStorageCollection(store)
     changes = track_changes(coll)
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         coll,
         "test_item/collection",
         "test_item",

@@ -511,6 +511,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "rqbj": (
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
+            name=None,
             icon="mdi:gas-cylinder",
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -633,6 +634,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "ylcg": (
         TuyaSensorEntityDescription(
             key=DPCode.PRESSURE_VALUE,
+            name=None,
             device_class=SensorDeviceClass.PRESSURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -852,25 +854,25 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.DUSTER_CLOTH,
-            name="Duster cloth life",
+            name="Duster cloth lifetime",
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.EDGE_BRUSH,
-            name="Side brush life",
+            name="Side brush lifetime",
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.FILTER_LIFE,
-            name="Filter life",
+            name="Filter lifetime",
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ROLL_BRUSH,
-            name="Rolling brush life",
+            name="Rolling brush lifetime",
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -1014,6 +1016,22 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+    ),
+    # Soil sensor (Plant monitor)
+    "zwjcy": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
     ),
 }
 

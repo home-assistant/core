@@ -3,8 +3,9 @@
 from datetime import timedelta
 from http import HTTPStatus
 import json
-from unittest.mock import patch, sentinel
+from unittest.mock import sentinel
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
@@ -245,29 +246,18 @@ def test_get_significant_states_only(hass_history) -> None:
         points.append(start + timedelta(minutes=i))
 
     states = []
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
+    with freeze_time(start) as freezer:
         set_state("123", attributes={"attribute": 10.64})
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[0],
-    ):
+        freezer.move_to(points[0])
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[1],
-    ):
+        freezer.move_to(points[1])
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[2],
-    ):
+        freezer.move_to(points[2])
         # everything is different
         states.append(set_state("412", attributes={"attribute": 54.23}))
 
@@ -335,9 +325,7 @@ def record_states(hass):
     four = three + timedelta(seconds=1)
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -351,17 +339,12 @@ def record_states(hass):
             set_state(therm, 20, attributes={"current_temperature": 19.5})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=one + timedelta(microseconds=1),
-    ):
+        freezer.move_to(one + timedelta(microseconds=1))
         states[mp].append(
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
         # This state will be skipped because domain is excluded
@@ -376,9 +359,7 @@ def record_states(hass):
             set_state(therm2, 20, attributes={"current_temperature": 19})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
         )
@@ -406,7 +387,10 @@ async def test_fetch_period_api(
 
 
 async def test_fetch_period_api_with_use_include_order(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the fetch period view for history with include order."""
     await async_setup_component(
@@ -417,6 +401,8 @@ async def test_fetch_period_api_with_use_include_order(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=sensor.power"
     )
     assert response.status == HTTPStatus.OK
+
+    assert "The 'use_include_order' option is deprecated" in caplog.text
 
 
 async def test_fetch_period_api_with_minimal_response(
@@ -472,7 +458,10 @@ async def test_fetch_period_api_with_no_timestamp(
 
 
 async def test_fetch_period_api_with_include_order(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -491,6 +480,9 @@ async def test_fetch_period_api_with_include_order(
         params={"filter_entity_id": "non.existing,something.else"},
     )
     assert response.status == HTTPStatus.OK
+
+    assert "The 'use_include_order' option is deprecated" in caplog.text
+    assert "The 'include' option is deprecated" in caplog.text
 
 
 async def test_entity_ids_limit_via_api(
@@ -696,3 +688,72 @@ async def test_fetch_period_api_with_no_entity_ids(
     assert response.status == HTTPStatus.BAD_REQUEST
     response_json = await response.json()
     assert response_json == {"message": "filter_entity_id is missing"}
+
+
+@pytest.mark.parametrize(
+    ("filter_entity_id", "status_code", "response_contains1", "response_contains2"),
+    [
+        ("light.kitchen,light.cow", HTTPStatus.OK, "light.kitchen", "light.cow"),
+        (
+            "light.kitchen,light.cow&",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        (
+            "light.kitchen,li-ght.cow",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        (
+            "light.kit!chen",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        (
+            "lig+ht.kitchen,light.cow",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        (
+            "light.kitchenlight.cow",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        ("cow", HTTPStatus.BAD_REQUEST, "message", "Invalid filter_entity_id"),
+    ],
+)
+async def test_history_with_invalid_entity_ids(
+    filter_entity_id,
+    status_code,
+    response_contains1,
+    response_contains2,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test sending valid and invalid entity_ids to the API."""
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+
+    await async_wait_recording_done(hass)
+    now = dt_util.utcnow().isoformat()
+    client = await hass_client()
+
+    response = await client.get(
+        f"/api/history/period/{now}",
+        params={"filter_entity_id": filter_entity_id},
+    )
+    assert response.status == status_code
+    response_json = await response.json()
+    assert response_contains1 in str(response_json)
+    assert response_contains2 in str(response_json)

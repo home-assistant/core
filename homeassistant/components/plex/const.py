@@ -57,3 +57,5 @@ SERVICE_REFRESH_LIBRARY = "refresh_library"
 SERVICE_SCAN_CLIENTS = "scan_for_clients"
 
 PLEX_URI_SCHEME = "plex://"
+
+INVALID_TOKEN_MESSAGE = "Invalid token"

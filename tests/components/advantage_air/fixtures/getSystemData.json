@@ -220,11 +220,64 @@
       }
     }
   },
+  "myThings": {
+    "things": {
+      "200": {
+        "buttonType": "upDown",
+        "channelDipState": 1,
+        "id": "200",
+        "name": "Blind 1",
+        "value": 100
+      },
+      "201": {
+        "buttonType": "upDown",
+        "channelDipState": 2,
+        "id": "201",
+        "name": "Blind 2",
+        "value": 0
+      },
+      "202": {
+        "buttonType": "openClose",
+        "channelDipState": 3,
+        "id": "202",
+        "name": "Garage",
+        "value": 100
+      },
+      "203": {
+        "buttonType": "onOff",
+        "channelDipState": 4,
+        "id": "203",
+        "name": "Thing Light",
+        "value": 100
+      },
+      "204": {
+        "buttonType": "upDown",
+        "channelDipState": 5,
+        "id": "204",
+        "name": "Thing Light Dimmable",
+        "value": 100
+      },
+      "205": {
+        "buttonType": "onOff",
+        "channelDipState": 8,
+        "id": "205",
+        "name": "Relay",
+        "value": 100
+      },
+      "206": {
+        "buttonType": "onOff",
+        "channelDipState": 9,
+        "id": "206",
+        "name": "Fan",
+        "value": 100
+      }
+    }
+  },
   "system": {
     "hasAircons": true,
     "hasLights": true,
     "hasSensors": false,
-    "hasThings": false,
+    "hasThings": true,
     "hasThingsBOG": false,
     "hasThingsLight": false,
     "needsUpdate": false,

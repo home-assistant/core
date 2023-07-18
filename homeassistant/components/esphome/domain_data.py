@@ -12,10 +12,9 @@ from typing_extensions import Self
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
-from .entry_data import RuntimeEntryData
+from .entry_data import ESPHomeStorage, RuntimeEntryData
 
 STORAGE_VERSION = 1
 MAX_CACHED_SERVICES = 128
@@ -26,12 +25,12 @@ class DomainData:
     """Define a class that stores global esphome data in hass.data[DOMAIN]."""
 
     _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
-    _stores: dict[str, Store] = field(default_factory=dict)
+    _stores: dict[str, ESPHomeStorage] = field(default_factory=dict)
     _gatt_services_cache: MutableMapping[int, BleakGATTServiceCollection] = field(
-        default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
+        default_factory=lambda: LRU(MAX_CACHED_SERVICES)
     )
     _gatt_mtu_cache: MutableMapping[int, int] = field(
-        default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
+        default_factory=lambda: LRU(MAX_CACHED_SERVICES)
     )
 
     def get_gatt_services_cache(
@@ -79,15 +78,13 @@ class DomainData:
         """Pop the runtime entry data instance associated with this config entry."""
         return self._entry_datas.pop(entry.entry_id)
 
-    def is_entry_loaded(self, entry: ConfigEntry) -> bool:
-        """Check whether the given entry is loaded."""
-        return entry.entry_id in self._entry_datas
-
-    def get_or_create_store(self, hass: HomeAssistant, entry: ConfigEntry) -> Store:
+    def get_or_create_store(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> ESPHomeStorage:
         """Get or create a Store instance for the given config entry."""
         return self._stores.setdefault(
             entry.entry_id,
-            Store(
+            ESPHomeStorage(
                 hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
             ),
         )

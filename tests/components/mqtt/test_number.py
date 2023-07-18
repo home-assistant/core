@@ -189,6 +189,14 @@ async def test_value_template(
     state = hass.states.get("number.test_number")
     assert state.state == "10"
 
+    # Assert an empty value from a template is ignored
+    async_fire_mqtt_message(hass, topic, '{"other_val":12}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "10"
+
     async_fire_mqtt_message(hass, topic, '{"val":20.5}')
 
     await hass.async_block_till_done()
@@ -1089,7 +1097,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

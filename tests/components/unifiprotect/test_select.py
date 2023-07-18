@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from copy import copy
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
-import pytest
 from pyunifiprotect.data import (
     Camera,
     DoorbellMessageType,
@@ -22,21 +20,15 @@ from pyunifiprotect.data import (
 from pyunifiprotect.data.nvr import DoorbellMessage
 
 from homeassistant.components.select import ATTR_OPTIONS
-from homeassistant.components.unifiprotect.const import (
-    ATTR_DURATION,
-    ATTR_MESSAGE,
-    DEFAULT_ATTRIBUTION,
-)
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
     LIGHT_SELECTS,
-    SERVICE_SET_DOORBELL_MESSAGE,
     VIEWER_SELECTS,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
@@ -547,99 +539,3 @@ async def test_select_set_option_viewer(
     )
 
     viewer.set_liveview.assert_called_once_with(liveview)
-
-
-async def test_select_service_doorbell_invalid(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-) -> None:
-    """Test Doorbell Text service (invalid)."""
-
-    await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
-
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[1]
-    )
-
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
-    doorbell.set_lcd_text = AsyncMock()
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "unifiprotect",
-            SERVICE_SET_DOORBELL_MESSAGE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_MESSAGE: "Test"},
-            blocking=True,
-        )
-
-    assert not doorbell.set_lcd_text.called
-
-
-async def test_select_service_doorbell_success(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-) -> None:
-    """Test Doorbell Text service (success)."""
-
-    await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
-
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[2]
-    )
-
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
-    doorbell.set_lcd_text = AsyncMock()
-
-    await hass.services.async_call(
-        "unifiprotect",
-        SERVICE_SET_DOORBELL_MESSAGE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MESSAGE: "Test",
-        },
-        blocking=True,
-    )
-
-    doorbell.set_lcd_text.assert_called_once_with(
-        DoorbellMessageType.CUSTOM_MESSAGE, "Test", reset_at=None
-    )
-
-
-@patch("homeassistant.components.unifiprotect.select.utcnow")
-async def test_select_service_doorbell_with_reset(
-    mock_now,
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-    fixed_now: datetime,
-) -> None:
-    """Test Doorbell Text service (success with reset time)."""
-
-    mock_now.return_value = fixed_now
-
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[2]
-    )
-
-    await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
-
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
-    doorbell.set_lcd_text = AsyncMock()
-
-    await hass.services.async_call(
-        "unifiprotect",
-        SERVICE_SET_DOORBELL_MESSAGE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MESSAGE: "Test",
-            ATTR_DURATION: 60,
-        },
-        blocking=True,
-    )
-
-    doorbell.set_lcd_text.assert_called_once_with(
-        DoorbellMessageType.CUSTOM_MESSAGE,
-        "Test",
-        reset_at=fixed_now + timedelta(minutes=60),
-    )

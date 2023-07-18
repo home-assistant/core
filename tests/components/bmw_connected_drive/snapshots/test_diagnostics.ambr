@@ -139,6 +139,22 @@
             }),
           ]),
         }),
+        'climate': dict({
+          'account_timezone': dict({
+            '_dst_offset': '0:00:00',
+            '_dst_saved': '0:00:00',
+            '_hasdst': False,
+            '_std_offset': '0:00:00',
+            '_tznames': list([
+              'UTC',
+              'UTC',
+            ]),
+          }),
+          'activity': 'STANDBY',
+          'activity_end_time': None,
+          'activity_end_time_no_tz': None,
+          'is_climate_on': False,
+        }),
         'condition_based_services': dict({
           'is_service_required': False,
           'messages': list([
@@ -273,6 +289,16 @@
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+              'chargingControl': list([
+                'START',
+                'STOP',
+              ]),
+              'flapControl': list([
+                'NOT_SUPPORTED',
+              ]),
+              'plugControl': list([
+                'NOT_SUPPORTED',
+              ]),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
@@ -508,9 +534,9 @@
             'electricChargingState': dict({
               'chargingConnectionType': 'UNKNOWN',
               'chargingLevelPercent': 80,
-              'chargingStatus': 'INVALID',
+              'chargingStatus': 'CHARGING',
               'chargingTarget': 80,
-              'isChargerConnected': False,
+              'isChargerConnected': True,
               'range': 472,
               'remainingChargingMinutes': 10,
             }),
@@ -762,9 +788,9 @@
           'charging_end_time': '2022-07-10T11:10:00+00:00',
           'charging_start_time': None,
           'charging_start_time_no_tz': None,
-          'charging_status': 'NOT_CHARGING',
+          'charging_status': 'CHARGING',
           'charging_target': 80,
-          'is_charger_connected': False,
+          'is_charger_connected': True,
           'remaining_battery_percent': 80,
           'remaining_fuel': list([
             None,
@@ -788,8 +814,8 @@
         'has_electric_drivetrain': True,
         'is_charging_plan_supported': True,
         'is_lsc_enabled': True,
-        'is_remote_charge_start_enabled': False,
-        'is_remote_charge_stop_enabled': False,
+        'is_remote_charge_start_enabled': True,
+        'is_remote_charge_stop_enabled': True,
         'is_remote_climate_start_enabled': True,
         'is_remote_climate_stop_enabled': True,
         'is_remote_horn_enabled': True,
@@ -808,6 +834,32 @@
         ]),
         'name': 'i4 eDrive40',
         'timestamp': '2023-01-04T14:57:06+00:00',
+        'tires': dict({
+          'front_left': dict({
+            'current_pressure': 241,
+            'manufacturing_week': '2021-10-04T00:00:00',
+            'season': 2,
+            'target_pressure': 269,
+          }),
+          'front_right': dict({
+            'current_pressure': 255,
+            'manufacturing_week': '2019-06-10T00:00:00',
+            'season': 2,
+            'target_pressure': 269,
+          }),
+          'rear_left': dict({
+            'current_pressure': 324,
+            'manufacturing_week': '2019-03-18T00:00:00',
+            'season': 2,
+            'target_pressure': 303,
+          }),
+          'rear_right': dict({
+            'current_pressure': 331,
+            'manufacturing_week': '2019-03-18T00:00:00',
+            'season': 2,
+            'target_pressure': 303,
+          }),
+        }),
         'vehicle_location': dict({
           'account_region': 'row',
           'heading': '**REDACTED**',
@@ -968,6 +1020,22 @@
           'has_check_control_messages': False,
           'messages': list([
           ]),
+        }),
+        'climate': dict({
+          'account_timezone': dict({
+            '_dst_offset': '0:00:00',
+            '_dst_saved': '0:00:00',
+            '_hasdst': False,
+            '_std_offset': '0:00:00',
+            '_tznames': list([
+              'UTC',
+              'UTC',
+            ]),
+          }),
+          'activity': 'UNKNOWN',
+          'activity_end_time': None,
+          'activity_end_time_no_tz': None,
+          'is_climate_on': False,
         }),
         'condition_based_services': dict({
           'is_service_required': False,
@@ -1466,6 +1534,7 @@
         ]),
         'name': 'i3 (+ REX)',
         'timestamp': '2022-07-10T09:25:53+00:00',
+        'tires': None,
         'vehicle_location': dict({
           'account_region': 'row',
           'heading': None,
@@ -1628,6 +1697,16 @@
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+              'chargingControl': list([
+                'START',
+                'STOP',
+              ]),
+              'flapControl': list([
+                'NOT_SUPPORTED',
+              ]),
+              'plugControl': list([
+                'NOT_SUPPORTED',
+              ]),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
@@ -1753,9 +1832,9 @@
             'electricChargingState': dict({
               'chargingConnectionType': 'UNKNOWN',
               'chargingLevelPercent': 80,
-              'chargingStatus': 'INVALID',
+              'chargingStatus': 'CHARGING',
               'chargingTarget': 80,
-              'isChargerConnected': False,
+              'isChargerConnected': True,
               'range': 472,
               'remainingChargingMinutes': 10,
             }),
@@ -2298,6 +2377,7 @@
       }),
     ]),
     'info': dict({
+      'gcid': 'SOME_GCID',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
@@ -2455,6 +2535,22 @@
         'has_check_control_messages': False,
         'messages': list([
         ]),
+      }),
+      'climate': dict({
+        'account_timezone': dict({
+          '_dst_offset': '0:00:00',
+          '_dst_saved': '0:00:00',
+          '_hasdst': False,
+          '_std_offset': '0:00:00',
+          '_tznames': list([
+            'UTC',
+            'UTC',
+          ]),
+        }),
+        'activity': 'UNKNOWN',
+        'activity_end_time': None,
+        'activity_end_time_no_tz': None,
+        'is_climate_on': False,
       }),
       'condition_based_services': dict({
         'is_service_required': False,
@@ -2953,6 +3049,7 @@
       ]),
       'name': 'i3 (+ REX)',
       'timestamp': '2022-07-10T09:25:53+00:00',
+      'tires': None,
       'vehicle_location': dict({
         'account_region': 'row',
         'heading': None,
@@ -3114,6 +3211,16 @@
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+              'chargingControl': list([
+                'START',
+                'STOP',
+              ]),
+              'flapControl': list([
+                'NOT_SUPPORTED',
+              ]),
+              'plugControl': list([
+                'NOT_SUPPORTED',
+              ]),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
@@ -3239,9 +3346,9 @@
             'electricChargingState': dict({
               'chargingConnectionType': 'UNKNOWN',
               'chargingLevelPercent': 80,
-              'chargingStatus': 'INVALID',
+              'chargingStatus': 'CHARGING',
               'chargingTarget': 80,
-              'isChargerConnected': False,
+              'isChargerConnected': True,
               'range': 472,
               'remainingChargingMinutes': 10,
             }),
@@ -3784,6 +3891,7 @@
       }),
     ]),
     'info': dict({
+      'gcid': 'SOME_GCID',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
@@ -3946,6 +4054,16 @@
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+              'chargingControl': list([
+                'START',
+                'STOP',
+              ]),
+              'flapControl': list([
+                'NOT_SUPPORTED',
+              ]),
+              'plugControl': list([
+                'NOT_SUPPORTED',
+              ]),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
@@ -4071,9 +4189,9 @@
             'electricChargingState': dict({
               'chargingConnectionType': 'UNKNOWN',
               'chargingLevelPercent': 80,
-              'chargingStatus': 'INVALID',
+              'chargingStatus': 'CHARGING',
               'chargingTarget': 80,
-              'isChargerConnected': False,
+              'isChargerConnected': True,
               'range': 472,
               'remainingChargingMinutes': 10,
             }),
@@ -4616,6 +4734,7 @@
       }),
     ]),
     'info': dict({
+      'gcid': 'SOME_GCID',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',

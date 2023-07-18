@@ -14,6 +14,7 @@ from yolink.const import (
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_MULTI_OUTLET,
     ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_POWER_FAILURE_ALARM,
     ATTR_DEVICE_SIREN,
     ATTR_DEVICE_SMART_REMOTER,
     ATTR_DEVICE_SWITCH,
@@ -71,6 +72,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_MULTI_OUTLET,
     ATTR_DEVICE_SMART_REMOTER,
     ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_POWER_FAILURE_ALARM,
     ATTR_DEVICE_SIREN,
     ATTR_DEVICE_SWITCH,
     ATTR_DEVICE_TH_SENSOR,
@@ -86,6 +88,7 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_POWER_FAILURE_ALARM,
     ATTR_DEVICE_SMART_REMOTER,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
@@ -110,12 +113,19 @@ def cvt_battery(val: int | None) -> int | None:
     return 0
 
 
+def cvt_volume(val: int | None) -> str | None:
+    """Convert volume to string."""
+    if val is None:
+        return None
+    volume_level = {1: "low", 2: "medium", 3: "high"}
+    return volume_level.get(val, None)
+
+
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        name="Battery",
         state_class=SensorStateClass.MEASUREMENT,
         value=cvt_battery,
         exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
@@ -124,7 +134,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        name="Humidity",
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
     ),
@@ -132,7 +141,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
     ),
@@ -141,7 +149,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="devTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in MCU_DEV_TEMPERATURE_SENSOR,
         should_update_entity=lambda value: value is not None,
@@ -150,12 +157,46 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="loraInfo",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        name="Signal",
         value=lambda value: value["signal"] if value is not None else None,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         should_update_entity=lambda value: value is not None,
+    ),
+    YoLinkSensorEntityDescription(
+        key="state",
+        translation_key="power_failure_alarm",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:flash",
+        options=["normal", "alert", "off"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+    ),
+    YoLinkSensorEntityDescription(
+        key="mute",
+        translation_key="power_failure_alarm_mute",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:volume-mute",
+        options=["muted", "unmuted"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=lambda value: "muted" if value is True else "unmuted",
+    ),
+    YoLinkSensorEntityDescription(
+        key="sound",
+        translation_key="power_failure_alarm_volume",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:volume-high",
+        options=["low", "medium", "high"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=cvt_volume,
+    ),
+    YoLinkSensorEntityDescription(
+        key="beep",
+        translation_key="power_failure_alarm_beep",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:bullhorn",
+        options=["enabled", "disabled"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=lambda value: "enabled" if value is True else "disabled",
     ),
 )
 
@@ -202,9 +243,6 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
-        )
-        self._attr_name = (
-            f"{coordinator.device.device_name} ({self.entity_description.name})"
         )
 
     @callback

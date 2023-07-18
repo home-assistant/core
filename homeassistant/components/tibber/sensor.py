@@ -289,7 +289,9 @@ async def async_setup_entry(
             )
 
         # migrate to new device ids
-        device_entry = device_registry.async_get_device({(TIBBER_DOMAIN, old_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(TIBBER_DOMAIN, old_id)}
+        )
         if device_entry and entry.entry_id in device_entry.config_entries:
             device_registry.async_update_device(
                 device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
@@ -606,7 +608,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                 )
 
                 last_stats = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics, self.hass, 1, statistic_id, True, {}
+                    get_last_statistics, self.hass, 1, statistic_id, True, set()
                 )
 
                 if not last_stats:

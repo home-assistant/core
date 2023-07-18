@@ -148,7 +148,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
         self._fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
-        self._attr_supported_features = VacuumEntityFeature.START
+        self._attr_supported_features = (
+            VacuumEntityFeature.START | VacuumEntityFeature.STATE
+        )
 
         self._start_script = Script(hass, config[SERVICE_START], friendly_name, DOMAIN)
 
@@ -192,8 +194,6 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._battery_level = None
         self._attr_fan_speed = None
 
-        if self._template:
-            self._attr_supported_features |= VacuumEntityFeature.STATE
         if self._battery_level_template:
             self._attr_supported_features |= VacuumEntityFeature.BATTERY
 

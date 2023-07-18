@@ -1,9 +1,8 @@
 """Test VoIP config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import voip
-from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,59 +24,58 @@ async def test_form_user(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_IP_ADDRESS: "127.0.0.1"},
+            {},
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_invalid_ip(hass: HomeAssistant) -> None:
-    """Test user form config flow with invalid ip address."""
-
+async def test_single_instance(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> None:
+    """Test that only one instance can be created."""
     result = await hass.config_entries.flow.async_init(
         voip.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
-    assert not result["errors"]
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_IP_ADDRESS: "not an ip address"},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_IP_ADDRESS: "invalid_ip_address"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
 
 
-async def test_load_unload_entry(
-    hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
-) -> None:
-    """Test adding/removing VoIP."""
-    entry = MockConfigEntry(
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
         domain=voip.DOMAIN,
-        data={
-            CONF_IP_ADDRESS: "127.0.0.1",
-        },
+        data={},
+        unique_id="1234",
     )
-    entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.voip.SIP_PORT",
-        new=unused_udp_port_factory(),
-    ):
-        assert await voip.async_setup_entry(hass, entry)
+    assert config_entry.options == {}
 
-        # Verify single instance
-        result = await hass.config_entries.flow.async_init(
-            voip.DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == "abort"
-        assert result["reason"] == "single_instance_allowed"
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        assert await voip.async_unload_entry(hass, entry)
+    # Default
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {"sip_port": 5060}
+
+    # Manual
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id,
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"sip_port": 5061},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {"sip_port": 5061}

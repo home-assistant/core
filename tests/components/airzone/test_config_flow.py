@@ -46,6 +46,9 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,
     ):
@@ -88,6 +91,9 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
     ) as mock_hvac, patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,
@@ -185,6 +191,9 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,
     ):
@@ -260,6 +269,9 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,
     ):
@@ -309,6 +321,9 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
     ) as mock_hvac, patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,

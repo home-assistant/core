@@ -253,10 +253,7 @@ async def test_fail_setup_if_no_command_topic(
     """Test if command fails with command topic."""
     with pytest.raises(AssertionError):
         await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']. Got None."
-        in caplog.text
-    )
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -669,6 +666,12 @@ async def test_brightness_from_rgb_controlling_scale(
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("rgb_color") == (255, 128, 64)
 
+    # Test zero rgb is ignored
+    async_fire_mqtt_message(hass, "test_scale_rgb/rgb/status", "0,0,0")
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+
     mqtt_mock.async_publish.reset_mock()
     await common.async_turn_on(hass, "light.test", brightness=191)
     await hass.async_block_till_done()
@@ -793,6 +796,19 @@ async def test_controlling_state_via_topic_with_templates(
     assert state.attributes.get("xy_color") == (0.123, 0.123)
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "xy"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 100}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 100
+
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 50}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 50
+
+    # test zero brightness received is ignored
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 0}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 50
 
 
 @pytest.mark.parametrize(
@@ -2406,9 +2422,7 @@ async def test_discovery_ignores_extra_keys(
     """Test discovery ignores extra keys that are not blocked."""
     await mqtt_mock_entry()
     # inserted `platform` key should be ignored
-    data = (
-        '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
-    )
+    data = '{ "name": "Beer",  "platform": "mqtt",  "command_topic": "test_topic"}'
     async_fire_mqtt_message(hass, "homeassistant/light/bla/config", data)
     await hass.async_block_till_done()
     state = hass.states.get("light.beer")
@@ -3426,7 +3440,11 @@ async def test_sending_mqtt_xy_command_with_template(
     assert state.attributes["xy_color"] == (0.151, 0.343)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

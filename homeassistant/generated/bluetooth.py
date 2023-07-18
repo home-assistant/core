@@ -84,6 +84,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 20296,
     },
     {
+        "connectable": True,
+        "domain": "gardena_bluetooth",
+        "manufacturer_id": 1062,
+        "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
+    },
+    {
         "connectable": False,
         "domain": "govee_ble",
         "local_name": "Govee*",
@@ -326,6 +332,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "qingping",
         "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "rapt_ble",
+        "manufacturer_data_start": [
+            80,
+            84,
+        ],
+        "manufacturer_id": 16722,
+    },
+    {
+        "domain": "rapt_ble",
+        "manufacturer_data_start": [
+            71,
+        ],
+        "manufacturer_id": 17739,
     },
     {
         "connectable": False,

@@ -6,7 +6,6 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    DOMAIN as VACUUM_DOMAIN,
     ENTITY_ID_FORMAT,
     STATE_CLEANING,
     STATE_DOCKED,
@@ -39,7 +38,7 @@ from ..const import (
     CONF_STATE_TOPIC,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from ..models import ReceiveMessage
 from ..util import get_mqtt_data, valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
@@ -65,7 +64,6 @@ DEFAULT_SERVICES = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.STATUS
     | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
@@ -155,13 +153,6 @@ PLATFORM_SCHEMA_STATE_MODERN = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-# Configuring MQTT Vacuums under the vacuum platform key was deprecated in
-# HA Core 2022.6;
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA_STATE = vol.All(
-    warn_for_legacy_schema(VACUUM_DOMAIN),
-)
-
 DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
@@ -207,7 +198,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
-        self._attr_supported_features = strings_to_services(
+        self._attr_supported_features = VacuumEntityFeature.STATE | strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
@@ -268,8 +259,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
-        """Check for a missing feature or command topic."""
-        if self._command_topic is None or self.supported_features & feature == 0:
+        """Publish a command."""
+        if self._command_topic is None:
             return
 
         await self.async_publish(

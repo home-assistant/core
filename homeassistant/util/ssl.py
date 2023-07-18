@@ -1,12 +1,70 @@
 """Helper to create SSL contexts."""
 import contextlib
+from functools import cache
 from os import environ
 import ssl
 
 import certifi
 
+from homeassistant.backports.enum import StrEnum
 
-def create_no_verify_ssl_context() -> ssl.SSLContext:
+
+class SSLCipherList(StrEnum):
+    """SSL cipher lists."""
+
+    PYTHON_DEFAULT = "python_default"
+    INTERMEDIATE = "intermediate"
+    MODERN = "modern"
+
+
+SSL_CIPHER_LISTS = {
+    SSLCipherList.INTERMEDIATE: (
+        "ECDHE-ECDSA-CHACHA20-POLY1305:"
+        "ECDHE-RSA-CHACHA20-POLY1305:"
+        "ECDHE-ECDSA-AES128-GCM-SHA256:"
+        "ECDHE-RSA-AES128-GCM-SHA256:"
+        "ECDHE-ECDSA-AES256-GCM-SHA384:"
+        "ECDHE-RSA-AES256-GCM-SHA384:"
+        "DHE-RSA-AES128-GCM-SHA256:"
+        "DHE-RSA-AES256-GCM-SHA384:"
+        "ECDHE-ECDSA-AES128-SHA256:"
+        "ECDHE-RSA-AES128-SHA256:"
+        "ECDHE-ECDSA-AES128-SHA:"
+        "ECDHE-RSA-AES256-SHA384:"
+        "ECDHE-RSA-AES128-SHA:"
+        "ECDHE-ECDSA-AES256-SHA384:"
+        "ECDHE-ECDSA-AES256-SHA:"
+        "ECDHE-RSA-AES256-SHA:"
+        "DHE-RSA-AES128-SHA256:"
+        "DHE-RSA-AES128-SHA:"
+        "DHE-RSA-AES256-SHA256:"
+        "DHE-RSA-AES256-SHA:"
+        "ECDHE-ECDSA-DES-CBC3-SHA:"
+        "ECDHE-RSA-DES-CBC3-SHA:"
+        "EDH-RSA-DES-CBC3-SHA:"
+        "AES128-GCM-SHA256:"
+        "AES256-GCM-SHA384:"
+        "AES128-SHA256:"
+        "AES256-SHA256:"
+        "AES128-SHA:"
+        "AES256-SHA:"
+        "DES-CBC3-SHA:"
+        "!DSS"
+    ),
+    SSLCipherList.MODERN: (
+        "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
+        "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
+        "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
+        "ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
+        "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
+    ),
+}
+
+
+@cache
+def create_no_verify_ssl_context(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+) -> ssl.SSLContext:
     """Return an SSL context that does not verify the server certificate.
 
     This is a copy of aiohttp's create_default_context() function, with the
@@ -15,18 +73,22 @@ def create_no_verify_ssl_context() -> ssl.SSLContext:
     https://github.com/aio-libs/aiohttp/blob/33953f110e97eecc707e1402daa8d543f38a189b/aiohttp/connector.py#L911
     """
     sslcontext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    sslcontext.options |= ssl.OP_NO_SSLv2
-    sslcontext.options |= ssl.OP_NO_SSLv3
     sslcontext.check_hostname = False
     sslcontext.verify_mode = ssl.CERT_NONE
     with contextlib.suppress(AttributeError):
         # This only works for OpenSSL >= 1.0.0
         sslcontext.options |= ssl.OP_NO_COMPRESSION
     sslcontext.set_default_verify_paths()
+    if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
+        sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
+
     return sslcontext
 
 
-def client_context() -> ssl.SSLContext:
+@cache
+def client_context(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+) -> ssl.SSLContext:
     """Return an SSL context for making requests."""
 
     # Reuse environment variable definition from requests, since it's already a
@@ -34,7 +96,13 @@ def client_context() -> ssl.SSLContext:
     # certs from certifi package.
     cafile = environ.get("REQUESTS_CA_BUNDLE", certifi.where())
 
-    return ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile)
+    sslcontext = ssl.create_default_context(
+        purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
+    )
+    if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
+        sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
+
+    return sslcontext
 
 
 # Create this only once and reuse it
@@ -71,13 +139,7 @@ def server_context_modern() -> ssl.SSLContext:
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
-    context.set_ciphers(
-        "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
-        "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
-        "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
-        "ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
-        "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
-    )
+    context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.MODERN])
 
     return context
 
@@ -97,38 +159,6 @@ def server_context_intermediate() -> ssl.SSLContext:
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
-    context.set_ciphers(
-        "ECDHE-ECDSA-CHACHA20-POLY1305:"
-        "ECDHE-RSA-CHACHA20-POLY1305:"
-        "ECDHE-ECDSA-AES128-GCM-SHA256:"
-        "ECDHE-RSA-AES128-GCM-SHA256:"
-        "ECDHE-ECDSA-AES256-GCM-SHA384:"
-        "ECDHE-RSA-AES256-GCM-SHA384:"
-        "DHE-RSA-AES128-GCM-SHA256:"
-        "DHE-RSA-AES256-GCM-SHA384:"
-        "ECDHE-ECDSA-AES128-SHA256:"
-        "ECDHE-RSA-AES128-SHA256:"
-        "ECDHE-ECDSA-AES128-SHA:"
-        "ECDHE-RSA-AES256-SHA384:"
-        "ECDHE-RSA-AES128-SHA:"
-        "ECDHE-ECDSA-AES256-SHA384:"
-        "ECDHE-ECDSA-AES256-SHA:"
-        "ECDHE-RSA-AES256-SHA:"
-        "DHE-RSA-AES128-SHA256:"
-        "DHE-RSA-AES128-SHA:"
-        "DHE-RSA-AES256-SHA256:"
-        "DHE-RSA-AES256-SHA:"
-        "ECDHE-ECDSA-DES-CBC3-SHA:"
-        "ECDHE-RSA-DES-CBC3-SHA:"
-        "EDH-RSA-DES-CBC3-SHA:"
-        "AES128-GCM-SHA256:"
-        "AES256-GCM-SHA384:"
-        "AES128-SHA256:"
-        "AES256-SHA256:"
-        "AES128-SHA:"
-        "AES256-SHA:"
-        "DES-CBC3-SHA:"
-        "!DSS"
-    )
+    context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE])
 
     return context

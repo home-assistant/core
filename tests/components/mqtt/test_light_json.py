@@ -198,10 +198,7 @@ async def test_fail_setup_if_no_command_topic(
     """Test if setup fails with no command topic."""
     with pytest.raises(AssertionError):
         await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']. Got None."
-        in caplog.text
-    )
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -266,6 +263,49 @@ async def test_fail_setup_if_color_modes_invalid(
     with pytest.raises(AssertionError):
         await mqtt_mock_entry()
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "state_topic": "test_light",
+                    "color_mode": True,
+                    "supported_color_modes": "color_temp",
+                }
+            }
+        }
+    ],
+)
+async def test_single_color_mode(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test setup with single color_mode."""
+    await mqtt_mock_entry()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    await common.async_turn_on(hass, "light.test", brightness=50, color_temp=192)
+
+    async_fire_mqtt_message(
+        hass,
+        "test_light",
+        '{"state": "ON", "brightness": 50, "color_mode": "color_temp", "color_temp": 192}',
+    )
+    color_modes = [light.ColorMode.COLOR_TEMP]
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+    assert state.attributes.get(light.ATTR_COLOR_TEMP) == 192
+    assert state.attributes.get(light.ATTR_BRIGHTNESS) == 50
+    assert state.attributes.get(light.ATTR_COLOR_MODE) == color_modes[0]
 
 
 @pytest.mark.parametrize(
@@ -492,6 +532,37 @@ async def test_controlling_state_via_topic(
 
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("effect") == "colorloop"
+
+    async_fire_mqtt_message(
+        hass,
+        "test_light_rgb",
+        '{"state":"ON",'
+        '"color":{"r":255,"g":255,"b":255},'
+        '"brightness":128,'
+        '"color_temp":155,'
+        '"effect":"colorloop"}',
+    )
+    light_state = hass.states.get("light.test")
+    assert light_state.state == STATE_ON
+    assert light_state.attributes.get("brightness") == 128
+
+    async_fire_mqtt_message(
+        hass,
+        "test_light_rgb",
+        '{"state":"OFF","brightness":0}',
+    )
+    light_state = hass.states.get("light.test")
+    assert light_state.state == STATE_OFF
+    assert light_state.attributes.get("brightness") is None
+
+    # test previous zero brightness received was ignored and brightness is restored
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON"}')
+    light_state = hass.states.get("light.test")
+    assert light_state.attributes.get("brightness") == 128
+
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON","brightness":0}')
+    light_state = hass.states.get("light.test")
+    assert light_state.attributes.get("brightness") == 128
 
 
 @pytest.mark.parametrize(
@@ -2370,7 +2441,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
