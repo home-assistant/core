@@ -28,7 +28,7 @@
       "invalid_charset": "The specified charset is not supported",
       "invalid_folder": "The selected folder is invalid",
       "invalid_search": "The selected search is invalid",
-      "ssl_error": "An SSL error occurred. Change SSL cipher list and try again"
+      "ssl_error": "An SSL error occurred. Change SSL cipher list and try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -43,12 +43,12 @@
           "search": "[%key:component::imap::config::step::user::data::search%]",
           "custom_event_data_template": "Template to create custom event data",
           "max_message_size": "Max message size (2048 < size < 30000)",
-          "enable_push": "Enable Push-IMAP if the server supports it. Turn off if Push-IMAP updates are unreliable"
+          "enable_push": "Enable Push-IMAP if the server supports it. Turn off if Push-IMAP updates are unreliable."
         }
       }
     },
     "error": {
-      "already_configured": "An entry with these folder and search options already exists",
+      "already_configured": "An entry with these folder and search options already exists.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_charset": "[%key:component::imap::config::error::invalid_charset%]",
