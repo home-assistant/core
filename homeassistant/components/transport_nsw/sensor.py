@@ -124,7 +124,7 @@ class TransportNSWSensor(SensorEntity):
         self._icon = ICONS[self._times[ATTR_MODE]]
 
 
-def _get_value(value):  # noqa: N805
+def _get_value(value):
     """Replace the API response 'n/a' value with None."""
     return None if (value is None or value == "n/a") else value
 
