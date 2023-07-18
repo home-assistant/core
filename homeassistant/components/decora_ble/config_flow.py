@@ -21,8 +21,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
-DEFAULT_NAME = "Room Lights"
-
 
 class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Decora BLE."""
@@ -69,9 +67,7 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         placeholders = {"name": self._discovery_info.name}
         self.context["title_placeholders"] = placeholders
 
-        field_values = (
-            user_input if user_input is not None else {CONF_NAME: DEFAULT_NAME}
-        )
+        field_values = user_input if user_input is not None else {}
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_NAME, default=field_values.get(CONF_NAME)): str,
@@ -121,9 +117,7 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        field_values = (
-            user_input if user_input is not None else {CONF_NAME: DEFAULT_NAME}
-        )
+        field_values = user_input if user_input is not None else {}
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_ADDRESS): vol.In(
