@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@v3.5.3
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -124,7 +124,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 

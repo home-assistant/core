@@ -21,7 +21,7 @@
     "select": {
       "basic_anti_flicker": {
         "state": {
-          "0": "Disabled",
+          "0": "[%key:common::state::disabled%]",
           "1": "50 Hz",
           "2": "60 Hz"
         }
@@ -75,7 +75,7 @@
       "relay_status": {
         "state": {
           "last": "Remember last state",
-          "memory": "Remember last state",
+          "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
           "power_off": "[%key:common::state::off%]",
@@ -93,7 +93,7 @@
           "low": "Low",
           "middle": "Middle",
           "high": "High",
-          "closed": "Closed"
+          "closed": "[%key:common::state::closed%]"
         }
       },
       "vacuum_collection": {
@@ -105,7 +105,7 @@
       },
       "vacuum_mode": {
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "random": "Random",
           "smart": "Smart",
           "wall_follow": "Follow Wall",
@@ -199,7 +199,7 @@
           "reserve_1": "Reserve 1",
           "reserve_2": "Reserve 2",
           "reserve_3": "Reserve 3",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "warm": "Heat preservation"
         }
       },
@@ -209,6 +209,30 @@
           "mild": "Mild",
           "good": "Good",
           "severe": "Severe"
+        }
+      }
+    }
+  },
+  "issues": {
+    "service_deprecation_turn_off": {
+      "title": "Tuya vacuum support for vacuum.turn_off is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::tuya::issues::service_deprecation_turn_off::title%]",
+            "description": "Tuya vacuum support for the vacuum.turn_off service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.stop and select submit below to mark this issue as resolved."
+          }
+        }
+      }
+    },
+    "service_deprecation_turn_on": {
+      "title": "Tuya vacuum support for vacuum.turn_on is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::tuya::issues::service_deprecation_turn_on::title%]",
+            "description": "Tuya vacuum support for the vacuum.turn_on service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.start and select submit below to mark this issue as resolved."
+          }
         }
       }
     }

@@ -81,7 +81,7 @@ class MatterEntity(Entity):
             self._attributes_map[attr_cls] = attr_path
             sub_paths.append(attr_path)
             self._unsubscribes.append(
-                self.matter_client.subscribe(
+                self.matter_client.subscribe_events(
                     callback=self._on_matter_event,
                     event_filter=EventType.ATTRIBUTE_UPDATED,
                     node_filter=self._endpoint.node.node_id,
@@ -93,7 +93,7 @@ class MatterEntity(Entity):
         )
         # subscribe to node (availability changes)
         self._unsubscribes.append(
-            self.matter_client.subscribe(
+            self.matter_client.subscribe_events(
                 callback=self._on_matter_event,
                 event_filter=EventType.NODE_UPDATED,
                 node_filter=self._endpoint.node.node_id,

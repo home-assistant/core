@@ -21,7 +21,7 @@ async def test_lock_entity(
     integration: MockConfigEntry,
 ) -> None:
     """Test the lock entity."""
-    entity_id = "lock.loqed_lock_home"
+    entity_id = "lock.home"
 
     state = hass.states.get(entity_id)
 
@@ -37,7 +37,7 @@ async def test_lock_responds_to_bolt_state_updates(
     lock.bolt_state = "night_lock"
     coordinator.async_update_listeners()
 
-    entity_id = "lock.loqed_lock_home"
+    entity_id = "lock.home"
 
     state = hass.states.get(entity_id)
 
@@ -50,7 +50,7 @@ async def test_lock_transition_to_unlocked(
 ) -> None:
     """Tests the lock transitions to unlocked state."""
 
-    entity_id = "lock.loqed_lock_home"
+    entity_id = "lock.home"
 
     await hass.services.async_call(
         "lock", SERVICE_UNLOCK, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -64,7 +64,7 @@ async def test_lock_transition_to_locked(
 ) -> None:
     """Tests the lock transitions to locked state."""
 
-    entity_id = "lock.loqed_lock_home"
+    entity_id = "lock.home"
 
     await hass.services.async_call(
         "lock", SERVICE_LOCK, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -78,7 +78,7 @@ async def test_lock_transition_to_open(
 ) -> None:
     """Tests the lock transitions to open state."""
 
-    entity_id = "lock.loqed_lock_home"
+    entity_id = "lock.home"
 
     await hass.services.async_call(
         "lock", SERVICE_OPEN, {ATTR_ENTITY_ID: entity_id}, blocking=True

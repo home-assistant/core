@@ -44,6 +44,7 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
     """Representation of an Abode switch."""
 
     _device: AbodeSW
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
