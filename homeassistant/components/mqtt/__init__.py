@@ -163,7 +163,7 @@ REMOVED_OPTIONS = vol.All(
 #       ...
 # ```
 #
-# Already supported style:
+# Legacy supported style:
 #
 # mqtt:
 #   {domain}:
