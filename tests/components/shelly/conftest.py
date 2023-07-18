@@ -189,6 +189,7 @@ MOCK_STATUS_RPC = {
         "current_pos": 50,
         "apower": 85.3,
     },
+    "devicepower:0": {"external": {"present": True}},
     "temperature:0": {"tC": 22.9},
     "illuminance:0": {"lux": 345},
     "sys": {

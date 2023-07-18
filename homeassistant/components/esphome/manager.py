@@ -378,6 +378,12 @@ class ESPHomeManager:
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
+            # Reset expected disconnect flag on successful reconnect
+            # as it will be flipped to False on unexpected disconnect.
+            #
+            # We use this to determine if a deep sleep device should
+            # be marked as unavailable or not.
+            entry_data.expected_disconnect = True
             if entry_data.device_info.name:
                 assert reconnect_logic is not None, "Reconnect logic must be set"
                 reconnect_logic.name = entry_data.device_info.name

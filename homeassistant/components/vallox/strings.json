@@ -18,5 +18,37 @@
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "services": {
+    "set_profile_fan_speed_home": {
+      "name": "Set profile fan speed home",
+      "description": "Sets the fan speed of the Home profile.",
+      "fields": {
+        "fan_speed": {
+          "name": "Fan speed",
+          "description": "Fan speed."
+        }
+      }
+    },
+    "set_profile_fan_speed_away": {
+      "name": "Set profile fan speed away",
+      "description": "Sets the fan speed of the Away profile.",
+      "fields": {
+        "fan_speed": {
+          "name": "Fan speed",
+          "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
+        }
+      }
+    },
+    "set_profile_fan_speed_boost": {
+      "name": "Set profile fan speed boost",
+      "description": "Sets the fan speed of the Boost profile.",
+      "fields": {
+        "fan_speed": {
+          "name": "Fan speed",
+          "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
+        }
+      }
+    }
   }
 }
