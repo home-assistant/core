@@ -596,6 +596,7 @@ omit =
     homeassistant/components/keymitt_ble/entity.py
     homeassistant/components/keymitt_ble/switch.py
     homeassistant/components/keymitt_ble/coordinator.py
+    homeassistant/components/kitchen_sink/weather.py
     homeassistant/components/kiwi/lock.py
     homeassistant/components/kodi/__init__.py
     homeassistant/components/kodi/browse_media.py
