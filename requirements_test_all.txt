@@ -69,7 +69,7 @@ PyMetno==0.10.0
 PyMicroBot==0.0.9
 
 # homeassistant.components.nina
-PyNINA==0.3.0
+PyNINA==0.3.1
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.7
+aioesphomeapi==15.1.9
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -365,7 +365,7 @@ amberelectric==1.0.4
 androidtv[async]==0.0.70
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.9
+androidtvremote2==0.0.12
 
 # homeassistant.components.anova
 anova-wifi==0.10.0
@@ -1586,7 +1586,7 @@ python-telegram-bot==13.1
 pytile==2023.04.0
 
 # homeassistant.components.tomorrowio
-pytomorrowio==0.3.5
+pytomorrowio==0.3.6
 
 # homeassistant.components.traccar
 pytraccar==1.0.0
@@ -1963,7 +1963,7 @@ wled==0.16.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.0.0
+wyoming==1.1.0
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
