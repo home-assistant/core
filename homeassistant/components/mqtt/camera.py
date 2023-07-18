@@ -41,7 +41,7 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
 
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
     }

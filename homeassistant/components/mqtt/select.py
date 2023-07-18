@@ -54,7 +54,7 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Required(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },

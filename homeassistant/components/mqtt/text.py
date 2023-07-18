@@ -78,7 +78,7 @@ def valid_text_size_configuration(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
         vol.Optional(CONF_MIN, default=0): cv.positive_int,
         vol.Optional(CONF_MODE, default=text.TextMode.TEXT): vol.In(

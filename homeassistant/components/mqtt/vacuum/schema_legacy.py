@@ -131,7 +131,7 @@ PLATFORM_SCHEMA_LEGACY_MODERN = (
             ),
             vol.Inclusive(CONF_FAN_SPEED_TEMPLATE, "fan_speed"): cv.template,
             vol.Inclusive(CONF_FAN_SPEED_TOPIC, "fan_speed"): valid_publish_topic,
-            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(
                 CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
             ): cv.string,

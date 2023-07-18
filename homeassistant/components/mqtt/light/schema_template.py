@@ -100,7 +100,7 @@ PLATFORM_SCHEMA_MODERN_TEMPLATE = (
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
         }

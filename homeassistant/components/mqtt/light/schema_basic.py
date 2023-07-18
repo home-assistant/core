@@ -190,7 +190,7 @@ PLATFORM_SCHEMA_MODERN_BASIC = (
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
             ),

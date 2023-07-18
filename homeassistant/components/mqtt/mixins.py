@@ -210,7 +210,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_MANUFACTURER): cv.string,
             vol.Optional(CONF_MODEL): cv.string,
-            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_HW_VERSION): cv.string,
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
@@ -1013,7 +1013,7 @@ class MqttEntity(
     """Representation of an MQTT entity."""
 
     _attr_should_poll = False
-    _default_name: str | None | UndefinedType
+    _default_name: str | None
     _entity_id_format: str
 
     def __init__(
@@ -1127,10 +1127,7 @@ class MqttEntity(
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
             self._attr_name = entity_name
-        elif (
-            not (use_device_class_name := self._default_to_device_class_name())
-            and self._default_name is not UNDEFINED
-        ):
+        elif not (use_device_class_name := self._default_to_device_class_name()):
             # Assign the default name
             self._attr_name = self._default_name
         elif use_device_class_name:

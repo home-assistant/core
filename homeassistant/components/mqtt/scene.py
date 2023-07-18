@@ -34,7 +34,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,

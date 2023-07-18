@@ -89,7 +89,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
             CONF_COMMAND_TEMPLATE, default=DEFAULT_COMMAND_TEMPLATE
         ): cv.template,
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
         vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.string,
