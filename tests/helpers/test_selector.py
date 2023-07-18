@@ -747,6 +747,11 @@ def test_icon_selector_schema(schema, valid_selections, invalid_selections) -> N
             ("abc",),
             (None,),
         ),
+        (
+            {"include_default": True},
+            ("abc",),
+            (None,),
+        ),
     ),
 )
 def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> None:
