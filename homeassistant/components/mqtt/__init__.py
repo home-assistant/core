@@ -150,21 +150,30 @@ REMOVED_OPTIONS = vol.All(
     cv.removed(CONF_WILL_MESSAGE),  # Removed in HA Core 2023.4
 )
 
-
-def _warn_config_style(config: list[Any] | _T) -> list[Any] | _T:
-    """Detect not conformant yaml configuration."""
-    if not isinstance(config, list):
-        _LOGGER.debug(
-            "Your MQTT configuration format does not comply ADR 0007. Expected a list, got %s. See also https://github.com/home-assistant/architecture/discussions/906",
-            type(config),
-        )
-    return config
-
-
+# We accept 2 schemes for configuring manual MQTT items
+#
+# Preferred style:
+#
+# mqtt:
+#   - {domain}:
+#       name: ""
+#       ...
+#   - {domain}:
+#       name: ""
+#       ...
+# ```
+#
+# Already supported style:
+#
+# mqtt:
+#   {domain}:
+#     - name: ""
+#       ...
+#     - name: ""
+#       ...
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            _warn_config_style,
             cv.ensure_list,
             cv.remove_falsy,
             [REMOVED_OPTIONS],
