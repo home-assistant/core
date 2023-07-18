@@ -183,13 +183,6 @@ async def async_check_ha_config_file(  # noqa: C901
                 config = config_schema(config)
                 if domain in config:
                     result[domain] = config[domain]
-                else:
-                    result.add_error(
-                        f"Config found for {domain} integration in "
-                        "configuration.yaml. YAML support for this "
-                        "integration has been removed. Please remove "
-                        "it from your configuration.yaml."
-                    )
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue
