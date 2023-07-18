@@ -1141,19 +1141,15 @@ class MqttEntity(
                     config,
                 )
             return
-        if (device_config := CONF_DEVICE in config) and CONF_NAME in config[
-            CONF_DEVICE
-        ]:
-            # Only set has_entity_name if a valid name is set
-            self._attr_has_entity_name = True
-        elif device_config:
-            self._attr_has_entity_name = False
-            _LOGGER.warning(
-                "No device name set in config: %s,"
-                "'has_entity_name' was set to False, this is not recommended, see also "
-                "https://developers.home-assistant.io/docs/core/entity/#entity-naming",
-                config,
-            )
+        if CONF_DEVICE in config:
+            self._attr_has_entity_name = device_named = CONF_NAME in config[CONF_DEVICE]
+            if not device_named:
+                _LOGGER.warning(
+                    "No device name set in config: %s,"
+                    "'has_entity_name' was set to False, this is not recommended, see also "
+                    "https://developers.home-assistant.io/docs/core/entity/#entity-naming",
+                    config,
+                )
 
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""
