@@ -110,14 +110,14 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "0123456789_yellow_toner_remaining"
 
-    state = hass.states.get("sensor.hl_l2340dw_drum_remaining_lifetime")
+    state = hass.states.get("sensor.hl_l2340dw_drum_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.hl_l2340dw_drum_remaining_lifetime")
+    entry = registry.async_get("sensor.hl_l2340dw_drum_remaining_life")
     assert entry
     assert entry.unique_id == "0123456789_drum_remaining_lifetime"
 
