@@ -25,11 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_PASSWORD]
         )
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except OSError as err:
-        raise PlatformNotReady from err
-    except InvallidPassword as err:
-        raise PlatformNotReady from err
-    except LoadFailure as err:
+    except (OSError, InvallidPassword, LoadFailure)  as err:
         raise PlatformNotReady from err
 
     return True
