@@ -5,7 +5,6 @@ from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.switch import (
-    SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -21,7 +20,6 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 SWITCH_TYPE = SwitchEntityDescription(
     key="switch",
-    device_class=SwitchDeviceClass.SWITCH,
 )
 
 
