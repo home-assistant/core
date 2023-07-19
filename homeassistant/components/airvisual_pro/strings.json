@@ -27,6 +27,9 @@
   },
   "entity": {
     "sensor": {
+      "pm01": {
+        "name": "PM0.1"
+      },
       "outdoor_air_quality_index": {
         "name": "Outdoor air quality index"
       }
