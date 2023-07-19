@@ -105,10 +105,11 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
     entity_description: GardenaBluetoothNumberEntityDescription
 
     def _handle_coordinator_update(self) -> None:
-        if data := self.coordinator.get_cached(self.entity_description.char):
-            self._attr_native_value = float(data)
-        else:
+        data = self.coordinator.get_cached(self.entity_description.char)
+        if data is None:
             self._attr_native_value = None
+        else:
+            self._attr_native_value = float(data)
         super()._handle_coordinator_update()
 
     async def async_set_native_value(self, value: float) -> None:

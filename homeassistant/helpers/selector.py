@@ -1201,7 +1201,11 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     selector_type = "theme"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("include_default", default=False): cv.boolean,
+        }
+    )
 
     def __init__(self, config: ThemeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

@@ -333,7 +333,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.FILTER_LIFE_LEVEL: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.FILTER_LIFE_LEVEL,
-        name="Filter Life",
+        name="Filter lifetime",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
