@@ -63,7 +63,10 @@ def mock_client(enable_bluetooth: None, mock_read_char_raw: dict[str, Any]) -> N
 
     def _read_char_raw(uuid: str, default: Any = SENTINEL):
         try:
-            return mock_read_char_raw[uuid]
+            val = mock_read_char_raw[uuid]
+            if isinstance(val, Exception):
+                raise val
+            return val
         except KeyError:
             if default is SENTINEL:
                 raise CharacteristicNotFound from KeyError
@@ -85,3 +88,13 @@ def mock_client(enable_bluetooth: None, mock_read_char_raw: dict[str, Any]) -> N
         "2023-01-01", tz_offset=1
     ):
         yield client
+
+
+@pytest.fixture(autouse=True)
+def enable_all_entities():
+    """Make sure all entities are enabled."""
+    with patch(
+        "homeassistant.components.gardena_bluetooth.coordinator.GardenaBluetoothEntity.entity_registry_enabled_default",
+        new=Mock(return_value=True),
+    ):
+        yield
