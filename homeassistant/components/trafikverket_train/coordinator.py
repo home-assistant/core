@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the Trafikverket Train integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 import logging
 
@@ -12,11 +13,26 @@ from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_TIME, DOMAIN
+
+
+@dataclass
+class TrainData:
+    """Dataclass for Trafikverket Train data."""
+
+    departure_time: datetime | None
+    departure_state: str
+    cancelled: bool
+    delayed_time: int | None
+    planned_time: datetime | None
+    estimated_time: datetime | None
+    actual_time: datetime | None
+    other_info: str | None
+    deviation: str | None
+
 
 _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -43,7 +59,7 @@ def next_departuredate(departure: list[str]) -> date:
     return next_weekday(today_date, WEEKDAYS.index(departure[0]))
 
 
-class TVDataUpdateCoordinator(DataUpdateCoordinator):
+class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     """A Trafikverket Data Update Coordinator."""
 
     def __init__(
@@ -68,7 +84,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
         self._time: time | None = dt_util.parse_time(entry.data[CONF_TIME])
         self._weekdays: list[str] = entry.data[CONF_WEEKDAY]
 
-    async def _async_update_data(self) -> dict[str, StateType | datetime | timedelta]:
+    async def _async_update_data(self) -> TrainData:
         """Fetch data from Trafikverket."""
 
         when = dt_util.now()
@@ -97,26 +113,25 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             ) from error
 
         departure_time = state.advertised_time_at_location
-        if state.time_at_location:
-            departure_time = state.time_at_location
         if state.estimated_time_at_location:
             departure_time = state.estimated_time_at_location
+        elif state.time_at_location:
+            departure_time = state.time_at_location
 
         delay_time = state.get_delay_time()
 
-        states: dict[str, StateType | datetime | timedelta] = {
-            "departure_time": self.get_as_utc(departure_time),
-            "departure_state": state.get_state().value,
-            "cancelled": state.canceled,
-            "delayed_time": delay_time.seconds if delay_time else None,
-            "planned_time": self.get_as_utc(state.advertised_time_at_location),
-            "estimated_time": self.get_as_utc(state.estimated_time_at_location),
-            "actual_time": self.get_as_utc(state.time_at_location),
-            "other_info": self.get_as_joined(state.other_information),
-            "deviation": self.get_as_joined(state.deviations),
-        }
+        states = TrainData(
+            departure_time=self.get_as_utc(departure_time),
+            departure_state=state.get_state().value,
+            cancelled=state.canceled,
+            delayed_time=delay_time.seconds if delay_time else None,
+            planned_time=self.get_as_utc(state.advertised_time_at_location),
+            estimated_time=self.get_as_utc(state.estimated_time_at_location),
+            actual_time=self.get_as_utc(state.time_at_location),
+            other_info=self.get_as_joined(state.other_information),
+            deviation=self.get_as_joined(state.deviations),
+        )
 
-        _LOGGER.debug("States: %s", states)
         return states
 
     def get_as_utc(self, date_value: datetime | None) -> datetime | None:

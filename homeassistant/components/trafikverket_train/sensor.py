@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import time, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pytrafikverket.trafikverket_train import StationInfo
 
@@ -101,20 +101,21 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         self._update_attr()
         return super()._handle_coordinator_update()
 
+    @callback
     def _update_attr(self) -> None:
         """Retrieve latest state."""
 
         data = self.coordinator.data
 
-        self._attr_native_value = data["departure_time"]
+        self._attr_native_value = data.departure_time
 
-        self._attr_extra_state_attributes: dict[str, Any] = {
-            ATTR_DEPARTURE_STATE: data["departure_state"],
-            ATTR_CANCELED: data["cancelled"],
-            ATTR_DELAY_TIME: data["delayed_time"],
-            ATTR_PLANNED_TIME: data["planned_time"],
-            ATTR_ESTIMATED_TIME: data["estimated_time"],
-            ATTR_ACTUAL_TIME: data["actual_time"],
-            ATTR_OTHER_INFORMATION: data["other_info"],
-            ATTR_DEVIATIONS: data["deviation"],
+        self._attr_extra_state_attributes = {
+            ATTR_DEPARTURE_STATE: data.departure_state,
+            ATTR_CANCELED: data.cancelled,
+            ATTR_DELAY_TIME: data.delayed_time,
+            ATTR_PLANNED_TIME: data.planned_time,
+            ATTR_ESTIMATED_TIME: data.estimated_time,
+            ATTR_ACTUAL_TIME: data.actual_time,
+            ATTR_OTHER_INFORMATION: data.other_info,
+            ATTR_DEVIATIONS: data.deviation,
         }
