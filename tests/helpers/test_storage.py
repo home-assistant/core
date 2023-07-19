@@ -552,18 +552,19 @@ async def test_saving_load_round_trip(tmpdir: py.path.local) -> None:
     await hass.async_stop(force=True)
 
 
-async def test_loading_corrupt_file(
+async def test_loading_corrupt_core_file(
     tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test we handle unrecoverable corruption."""
+    """Test we handle unrecoverable corruption in a core file."""
     loop = asyncio.get_running_loop()
     hass = await async_test_home_assistant(loop)
 
     tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
     hass.config.config_dir = tmp_storage
 
+    storage_key = "core.anything"
     store = storage.Store(
-        hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+        hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
     )
     await store.async_save({"hello": "world"})
     storage_path = os.path.join(tmp_storage, ".storage")
@@ -587,7 +588,7 @@ async def test_loading_corrupt_file(
     issue_entry = None
     for (domain, issue), entry in issue_registry.issues.items():
         if domain == HOMEASSISTANT_DOMAIN and issue.startswith(
-            f"storage_corruption_{MOCK_KEY}_"
+            f"storage_corruption_{storage_key}_"
         ):
             found_issue = issue
             issue_entry = entry
@@ -596,10 +597,72 @@ async def test_loading_corrupt_file(
     assert found_issue is not None
     assert issue_entry is not None
     assert issue_entry.is_fixable is True
-    assert issue_entry.translation_placeholders["file_key"] == MOCK_KEY
+    assert issue_entry.translation_placeholders["storage_key"] == storage_key
+    assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
     assert (
         issue_entry.translation_placeholders["error"]
         == "unexpected character: line 1 column 1 (char 0)"
+    )
+
+    files = await hass.async_add_executor_job(
+        os.listdir, os.path.join(tmp_storage, ".storage")
+    )
+    assert ".corrupt" in files[0]
+
+    await hass.async_stop(force=True)
+
+
+async def test_loading_corrupt_file_known_domain(
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we handle unrecoverable corruption for a known domain."""
+    loop = asyncio.get_running_loop()
+    hass = await async_test_home_assistant(loop)
+    hass.config.components.add("testdomain")
+    storage_key = "testdomain.testkey"
+
+    tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
+    hass.config.config_dir = tmp_storage
+
+    store = storage.Store(
+        hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
+    )
+    await store.async_save({"hello": "world"})
+    storage_path = os.path.join(tmp_storage, ".storage")
+    store_file = os.path.join(storage_path, store.key)
+
+    data = await store.async_load()
+    assert data == {"hello": "world"}
+
+    def _corrupt_store():
+        with open(store_file, "w") as f:
+            f.write('{"valid":"json"}..with..corrupt')
+
+    await hass.async_add_executor_job(_corrupt_store)
+
+    data = await store.async_load()
+    assert data is None
+    assert "Unrecoverable error decoding storage" in caplog.text
+
+    issue_registry = ir.async_get(hass)
+    found_issue = None
+    issue_entry = None
+    for (domain, issue), entry in issue_registry.issues.items():
+        if domain == HOMEASSISTANT_DOMAIN and issue.startswith(
+            f"storage_corruption_{storage_key}_"
+        ):
+            found_issue = issue
+            issue_entry = entry
+            break
+
+    assert found_issue is not None
+    assert issue_entry is not None
+    assert issue_entry.is_fixable is True
+    assert issue_entry.translation_placeholders["storage_key"] == storage_key
+    assert issue_entry.issue_domain == "testdomain"
+    assert (
+        issue_entry.translation_placeholders["error"]
+        == "unexpected content after document: line 1 column 17 (char 16)"
     )
 
     files = await hass.async_add_executor_job(
