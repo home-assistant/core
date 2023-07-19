@@ -1711,18 +1711,16 @@ async def test_state_translated(
     )
     assert tpl4.async_render() == "On"
 
-    tpl5 = template.Template('{{ state_translated("contextfunction") }}', hass)
-    assert tpl5.async_render() is None
+    with pytest.raises(TemplateError):
+        template.Template(
+            '{{ state_translated("contextfunction") }}', hass
+        ).async_render()
 
     tpl6 = template.Template('{{ state_translated("switch.invalid") }}', hass)
     assert tpl6.async_render() == "unknown"
 
-    tpl7 = template.Template('{{ state_translated("-invalid") }}', hass)
-    try:
-        tpl7.async_render()
-        assert False
-    except TemplateError:
-        assert True
+    with pytest.raises(TemplateError):
+        template.Template('{{ state_translated("-invalid") }}', hass).async_render()
 
     def mock_get_cached_translations(
         _hass: HomeAssistant,

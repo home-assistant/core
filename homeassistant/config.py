@@ -667,7 +667,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     if CONF_UNIT_SYSTEM in config:
         hac.units = get_unit_system(config[CONF_UNIT_SYSTEM])
 
-    async def load_translations(_event: Event):
+    async def load_translations(_event: Event) -> None:
         _LOGGER.debug(f"Loading translations for language: {hass.config.language}")
         await load_state_translations_to_cache(hass, language=hass.config.language)
 

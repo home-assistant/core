@@ -872,18 +872,9 @@ class StateTranslated:
         self._hass = hass
 
     def __call__(self, entity_id: str) -> str | None:
-        language = self._hass.config.language
         """Retrieve translated state if available."""
-        state = None
-        if "." in entity_id:
-            state = _get_state_if_valid(self._hass, entity_id)
-
-        else:
-            if entity_id in _RESERVED_NAMES:
-                return None
-
-            if not valid_entity_id(f"{entity_id}.entity"):
-                raise TemplateError(f"Invalid domain name '{entity_id}'")  # type: ignore[arg-type]
+        language = self._hass.config.language
+        state = _get_state_if_valid(self._hass, entity_id)
 
         if state is None:
             return STATE_UNKNOWN
