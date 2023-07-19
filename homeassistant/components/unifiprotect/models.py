@@ -40,6 +40,10 @@ class PermRequired(int, Enum):
 class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     """Mixin for required keys."""
 
+    # `ufp_required_field`, `ufp_value`, and `ufp_enabled` are defined as
+    # a `str` in the dataclass, but `__post_init__` converts it to a
+    # `tuple[str, ...]` to avoid doing it at run time in `get_nested_attr`
+    # which is usually called millions of times per day.
     ufp_required_field: tuple[str, ...] | str | None = None
     ufp_value: tuple[str, ...] | str | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
@@ -56,6 +60,10 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
         """Return value from UniFi Protect device."""
         if (ufp_value := self.ufp_value) is not None:
             if TYPE_CHECKING:
+                # `ufp_value` is defined as a `str` in the dataclass, but
+                # `__post_init__` converts it to a `tuple[str, ...]` to avoid
+                # doing it at run time in `get_nested_attr` which is usually called
+                # millions of times per day. This tells mypy that it's a tuple.
                 assert isinstance(ufp_value, tuple)
             return get_nested_attr(obj, ufp_value)
         if (ufp_value_fn := self.ufp_value_fn) is not None:
@@ -70,6 +78,10 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
         """Return value from UniFi Protect device."""
         if (ufp_enabled := self.ufp_enabled) is not None:
             if TYPE_CHECKING:
+                # `ufp_enabled` is defined as a `str` in the dataclass, but
+                # `__post_init__` converts it to a `tuple[str, ...]` to avoid
+                # doing it at run time in `get_nested_attr` which is usually called
+                # millions of times per day. This tells mypy that it's a tuple.
                 assert isinstance(ufp_enabled, tuple)
             return bool(get_nested_attr(obj, ufp_enabled))
         return True
@@ -79,6 +91,10 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
         if (ufp_required_field := self.ufp_required_field) is None:
             return True
         if TYPE_CHECKING:
+            # `ufp_required_field` is defined as a `str` in the dataclass, but
+            # `__post_init__` converts it to a `tuple[str, ...]` to avoid
+            # doing it at run time in `get_nested_attr` which is usually called
+            # millions of times per day. This tells mypy that it's a tuple.
             assert isinstance(ufp_required_field, tuple)
         return bool(get_nested_attr(obj, ufp_required_field))
 
