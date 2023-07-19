@@ -24,6 +24,11 @@
         "name": "Valve connection"
       }
     },
+    "button": {
+      "factory_reset": {
+        "name": "Factory reset"
+      }
+    },
     "number": {
       "remaining_open_time": {
         "name": "Remaining open time"
