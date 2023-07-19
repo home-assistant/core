@@ -83,40 +83,13 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Mass sensor (lb)
-    (DeviceClass.MASS, Units.MASS_POUNDS): SensorEntityDescription(
-        key=f"{DeviceClass.MASS}_{Units.MASS_POUNDS}",
-        device_class=SensorDeviceClass.WEIGHT,
-        native_unit_of_measurement=UnitOfMass.POUNDS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     # Mass non stabilized sensor (kg)
     (DeviceClass.MASS_NON_STABILIZED, Units.MASS_KILOGRAMS): SensorEntityDescription(
         key=f"{DeviceClass.MASS_NON_STABILIZED}_{Units.MASS_KILOGRAMS}",
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Mass non stabilized sensor (lb)
-    (DeviceClass.MASS_NON_STABILIZED, Units.MASS_POUNDS): SensorEntityDescription(
-        key=f"{DeviceClass.MASS_NON_STABILIZED}_{Units.MASS_POUNDS}",
-        device_class=SensorDeviceClass.WEIGHT,
-        native_unit_of_measurement=UnitOfMass.POUNDS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Mass stabilized sensor (kg)
-    (DeviceClass.MASS_STABILIZED, Units.MASS_KILOGRAMS): SensorEntityDescription(
-        key=f"{DeviceClass.MASS_STABILIZED}_{Units.MASS_KILOGRAMS}",
-        device_class=SensorDeviceClass.WEIGHT,
-        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Mass stabilized sensor (lb)
-    (DeviceClass.MASS_STABILIZED, Units.MASS_POUNDS): SensorEntityDescription(
-        key=f"{DeviceClass.MASS_STABILIZED}_{Units.MASS_POUNDS}",
-        device_class=SensorDeviceClass.WEIGHT,
-        native_unit_of_measurement=UnitOfMass.POUNDS,
-        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (DeviceClass.MOISTURE, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",

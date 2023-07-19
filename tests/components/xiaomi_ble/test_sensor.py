@@ -544,17 +544,15 @@ async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     assert mass_non_stabilized_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
     assert mass_non_stabilized_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
-    mass_stabilized_sensor = hass.states.get(
-        "sensor.mi_body_composition_scale_2_b5dc_mass_stabilized"
-    )
-    mass_stabilized_sensor_attr = mass_stabilized_sensor.attributes
-    assert mass_stabilized_sensor.state == "58.85"
+    mass_sensor = hass.states.get("sensor.mi_body_composition_scale_2_b5dc_mass")
+    mass_sensor_attr = mass_sensor.attributes
+    assert mass_sensor.state == "58.85"
     assert (
-        mass_stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
-        == "Mi Body Composition Scale 2 (B5DC) Mass Stabilized"
+        mass_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Mi Body Composition Scale 2 (B5DC) Mass"
     )
-    assert mass_stabilized_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
-    assert mass_stabilized_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+    assert mass_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
     impedance_sensor = hass.states.get(
         "sensor.mi_body_composition_scale_2_b5dc_impedance"
