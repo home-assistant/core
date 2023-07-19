@@ -22,7 +22,7 @@ from homeassistant.components.panasonic_viera.const import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_service
 
 MOCK_BASIC_DATA = {
     CONF_HOST: "0.0.0.0",
@@ -115,3 +115,9 @@ async def init_integration(hass: HomeAssistant, mock_remote: Mock) -> MockConfig
     await hass.async_block_till_done()
 
     return mock_entry
+
+
+@pytest.fixture
+def calls(hass: HomeAssistant):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")

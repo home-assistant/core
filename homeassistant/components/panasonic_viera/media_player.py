@@ -20,6 +20,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.trigger import PluggableAction
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -31,6 +32,7 @@ from .const import (
     DEFAULT_MODEL_NUMBER,
     DOMAIN,
 )
+from .triggers.turn_on import async_get_turn_on_trigger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +57,7 @@ async def async_setup_entry(
 class PanasonicVieraTVEntity(MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
-    _attr_supported_features = (
+    _supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -63,7 +65,6 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.TURN_OFF
-        | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.STOP
@@ -75,6 +76,15 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         self._remote = remote
         self._name = name
         self._device_info = device_info
+        self._turn_on = PluggableAction(self.async_write_ha_state)
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        if self._turn_on:
+            return self._supported_features | MediaPlayerEntityFeature.TURN_ON
+
+        return self._supported_features
 
     @property
     def unique_id(self):
@@ -131,7 +141,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn on the media player."""
-        await self._remote.async_turn_on(context=self._context)
+        await self._turn_on.async_run(self.hass, self._context)
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
@@ -209,3 +219,14 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(self.hass, media_content_id)
+
+    async def async_added_to_hass(self) -> None:
+        """Connect and subscribe to dispatcher signals and state updates."""
+        await super().async_added_to_hass()
+
+        if (entry := self.registry_entry) and entry.device_id:
+            self.async_on_remove(
+                self._turn_on.async_register(
+                    self.hass, async_get_turn_on_trigger(entry.device_id)
+                )
+            )

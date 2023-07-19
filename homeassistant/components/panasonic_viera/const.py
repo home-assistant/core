@@ -2,6 +2,7 @@
 DOMAIN = "panasonic_viera"
 
 DEVICE_MANUFACTURER = "Panasonic"
+DATA_CONFIG_ENTRY = "config_entry"
 
 CONF_ON_ACTION = "turn_on_action"
 CONF_APP_ID = "app_id"
