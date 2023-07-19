@@ -66,6 +66,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         translation_key="delayed_time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement="s",
         value_fn=lambda data: data["delayed_time"],
     ),
     TrafikverketSensorEntityDescription(
