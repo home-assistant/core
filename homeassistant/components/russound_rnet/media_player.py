@@ -87,7 +87,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         self._russ = russ
         self._attr_source_list = sources
         # Each controller has a maximum of 6 zones, every increment of 6 zones
-        #  maps to an additional controller for easier backward compatibility
+        # maps to an additional controller for easier backward compatibility
         self._controller_id = str(math.ceil(zone_id / 6))
         # Each zone resets to 1-6 per controller
         self._zone_id = (zone_id - 1) % 6 + 1
