@@ -342,7 +342,6 @@ class MqttAttributes(Entity):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes: dict[str, Any] | None = None
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         self._attributes_config = config
 
@@ -380,16 +379,14 @@ class MqttAttributes(Entity):
                         if k not in MQTT_ATTRIBUTES_BLOCKED
                         and k not in self._attributes_extra_blocked
                     }
-                    self._attributes = filtered_dict
+                    self._attr_extra_state_attributes = filtered_dict
                     get_mqtt_data(self.hass).state_write_requests.write_state_request(
                         self
                     )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
-                    self._attributes = None
             except ValueError:
                 _LOGGER.warning("Erroneous JSON: %s", payload)
-                self._attributes = None
 
         self._attributes_sub_state = async_prepare_subscribe_topics(
             self.hass,
@@ -413,11 +410,6 @@ class MqttAttributes(Entity):
         self._attributes_sub_state = async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        return self._attributes
 
 
 class MqttAvailability(Entity):

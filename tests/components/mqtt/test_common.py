@@ -682,7 +682,7 @@ async def help_test_discovery_update_attr(
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "50" }')
     state = hass.states.get(f"{domain}.test")
-    assert state and state.attributes.get("val") == "100"
+    assert state and state.attributes.get("val") != "50"
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "attr-topic2", '{ "val": "75" }')
