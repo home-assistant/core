@@ -1,4 +1,4 @@
-""" Library to handle connection with mill."""
+"""Library to handle connection with mill."""
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +9,6 @@ import logging
 
 import aiohttp
 import async_timeout
-
 
 API_ENDPOINT = "https://api.millnorwaycloud.com/"
 DEFAULT_TIMEOUT = 10
@@ -31,7 +30,7 @@ class Mill:
         websession=None,
     ) -> None:
         """Initialize the Mill connection."""
-        self.devices = {}
+        self.devices: dict = {}
         if websession is None:
 
             async def _create_session():
@@ -197,8 +196,6 @@ class Mill:
         await asyncio.gather(*tasks)
 
     async def _update_device(self, device_data, room_data=None):
-        print(device_data)
-        print(device_data.get("lastMetrics"))
         device_type = (
             device_data.get("deviceType", {}).get("parentType", {}).get("name")
         )
@@ -208,8 +205,8 @@ class Mill:
             now = dt.datetime.now()
             if (
                 _id in self.devices
-                and self.devices[_id].last_updated
-                and (now - self.devices[_id].last_updated < dt.timedelta(seconds=15))
+                and self.devices[_id].last_fetched
+                and (now - self.devices[_id].last_fetched < dt.timedelta(seconds=15))
             ):
                 return
             device_stats = await self.request(
@@ -303,8 +300,11 @@ class Mill:
             if not power_status:
                 self.devices[device_id].is_heating = False
             else:
-                self.devices[device_id].is_heating = self.devices[device_id].set_temp > self.devices[device_id].current_temp
-            self.devices[device_id].last_updated = dt.datetime.now()
+                self.devices[device_id].is_heating = (
+                    self.devices[device_id].set_temp
+                    > self.devices[device_id].current_temp
+                )
+            self.devices[device_id].last_fetched = dt.datetime.now()
 
     async def set_heater_temp(self, device_id, set_temp):
         """Set heater temp."""
@@ -318,8 +318,10 @@ class Mill:
         }
         if await self.request(f"devices/{device_id}/settings", payload, patch=True):
             self.devices[device_id].set_temp = set_temp
-            self.devices[device_id].is_heating = set_temp > self.devices[device_id].current_temp
-            self.devices[device_id].last_updated = dt.datetime.now()
+            self.devices[device_id].is_heating = (
+                set_temp > self.devices[device_id].current_temp
+            )
+            self.devices[device_id].last_fetched = dt.datetime.now()
 
 
 @dataclass(kw_only=True)
@@ -364,6 +366,8 @@ class MillDevice:
     @property
     def last_updated(self) -> dt.datetime:
         """Last updated."""
+        if self.report_time is None:
+            return dt.datetime.fromtimestamp(0).astimezone(dt.timezone.utc)
         return dt.datetime.fromtimestamp(self.report_time / 1000).astimezone(
             dt.timezone.utc
         )
@@ -380,7 +384,7 @@ class Heater(MillDevice):
     home_id: str | None = None
     independent_device: bool | None = None
     is_heating: bool | None = None
-    last_updated: dt.datetime | None = None
+    last_fetched: dt.datetime | None = None
     open_window: str | None = None
     power_status: bool | None = None
     room_avg_temp: float | None = None
