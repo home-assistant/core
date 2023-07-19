@@ -40,7 +40,7 @@ DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up binary sensor based on a config entry."""
+    """Set up button based on a config entry."""
     coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = [
         GardenaBluetoothButton(coordinator, description)
@@ -51,7 +51,7 @@ async def async_setup_entry(
 
 
 class GardenaBluetoothButton(GardenaBluetoothDescriptorEntity, ButtonEntity):
-    """Representation of a binary sensor."""
+    """Representation of a button."""
 
     entity_description: GardenaBluetoothButtonEntityDescription
 
