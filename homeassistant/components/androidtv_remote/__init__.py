@@ -1,6 +1,7 @@
 """The Android TV Remote integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from androidtvremote2 import (
