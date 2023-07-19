@@ -34,7 +34,7 @@ MAKER_SWITCH_TOGGLE = "toggle"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    unused_config_entry: ConfigEntry,
+    _config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WeMo switches."""
