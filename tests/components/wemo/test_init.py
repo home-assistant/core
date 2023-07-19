@@ -5,6 +5,7 @@ from unittest.mock import create_autospec, patch
 
 import pywemo
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wemo import (
     CONF_DISCOVERY,
     CONF_STATIC,
@@ -17,6 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from . import entity_test_helpers
 from .conftest import (
     MOCK_FIRMWARE_VERSION,
     MOCK_HOST,
@@ -98,7 +100,11 @@ async def test_static_config_without_port(hass: HomeAssistant, pywemo_device) ->
     assert len(entity_entries) == 1
 
 
-async def test_reload_config_entry(hass: HomeAssistant, pywemo_device) -> None:
+async def test_reload_config_entry(
+    hass: HomeAssistant,
+    pywemo_device: pywemo.WeMoDevice,
+    pywemo_registry: pywemo.SubscriptionRegistry,
+) -> None:
     """Config entry can be reloaded without errors."""
     assert await async_setup_component(
         hass,
@@ -110,10 +116,33 @@ async def test_reload_config_entry(hass: HomeAssistant, pywemo_device) -> None:
             },
         },
     )
-    await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert await hass.config_entries.async_reload(entries[0].entry_id)
+
+    async def _async_test_entry_and_entity() -> tuple[str, str]:
+        await hass.async_block_till_done()
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+
+        pywemo_device.get_state.assert_called()
+        pywemo_device.reset_mock()
+
+        pywemo_registry.register.assert_called_once_with(pywemo_device)
+        pywemo_registry.register.reset_mock()
+
+        entity_registry = er.async_get(hass)
+        entity_entries = list(entity_registry.entities.values())
+        assert len(entity_entries) == 1
+        await entity_test_helpers.test_turn_off_state(
+            hass, entity_entries[0], SWITCH_DOMAIN
+        )
+
+        return entries[0].entry_id, entity_entries[0].entity_id
+
+    pywemo_registry.unregister.assert_not_called()
+    entry_id, entity_id = await _async_test_entry_and_entity()
+    assert await hass.config_entries.async_reload(entry_id)
+    ids = await _async_test_entry_and_entity()
+    assert ids == (entry_id, entity_id)
+    pywemo_registry.unregister.assert_called_once_with(pywemo_device)
 
 
 async def test_static_config_with_invalid_host(hass: HomeAssistant) -> None:
