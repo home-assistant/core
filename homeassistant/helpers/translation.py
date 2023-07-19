@@ -211,10 +211,10 @@ class _TranslationCache:
         return self.get_cached(language, category, components)
 
     def get_cached(
-            self,
-            language: str,
-            category: str,
-            components: set[str],
+        self,
+        language: str,
+        category: str,
+        components: set[str],
     ) -> list[dict[str, dict[str, Any]]]:
         """Reads resources from the cache."""
         cached = self.cache.get(language, {})
@@ -334,10 +334,10 @@ async def async_get_translations(
 
 @bind_hass
 def get_cached_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
+    hass: HomeAssistant,
+    language: str,
+    category: str,
+    integrations: Iterable[str] | None = None,
 ):
     """Return cached all backend translations.
 
@@ -367,11 +367,10 @@ def get_cached_translations(
 
 @bind_hass
 async def load_state_translations_to_cache(
-        hass: HomeAssistant,
-        language: str,
+    hass: HomeAssistant,
+    language: str,
 ):
     """Loads state translations to cache."""
     await async_get_translations(hass, language, "entity")
     await async_get_translations(hass, language, "state")
     await async_get_translations(hass, language, "entity_component")
-

@@ -670,6 +670,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     async def load_translations(_event: Event):
         _LOGGER.debug(f"Loading translations for language: {hass.config.language}")
         await load_state_translations_to_cache(hass, language=hass.config.language)
+
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, load_translations)
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)

@@ -37,7 +37,7 @@ from homeassistant.helpers import (
     entity,
     entity_registry as er,
     template,
-    translation
+    translation,
 )
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
@@ -1642,7 +1642,9 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
-async def test_state_translated(hass: HomeAssistant, entity_registry: er.EntityRegistry):
+async def test_state_translated(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+):
     """Test state_translated method."""
     assert await async_setup_component(
         hass,
@@ -1664,15 +1666,19 @@ async def test_state_translated(hass: HomeAssistant, entity_registry: er.EntityR
         "binary_sensor.with_device_class", "on", attributes={"device_class": "motion"}
     )
     hass.states.async_set(
-        "binary_sensor.with_unknown_device_class", "on", attributes={"device_class": "unknown_class"}
+        "binary_sensor.with_unknown_device_class",
+        "on",
+        attributes={"device_class": "unknown_class"},
     )
-
     hass.states.async_set(
-        "some_domain.with_device_class_1", "off", attributes={"device_class": "some_device_class"}
+        "some_domain.with_device_class_1",
+        "off",
+        attributes={"device_class": "some_device_class"},
     )
-
     hass.states.async_set(
-        "some_domain.with_device_class_2", "foo", attributes={"device_class": "some_device_class"}
+        "some_domain.with_device_class_2",
+        "foo",
+        attributes={"device_class": "some_device_class"},
     )
 
     config_entry = MockConfigEntry(domain="light")
@@ -1681,7 +1687,7 @@ async def test_state_translated(hass: HomeAssistant, entity_registry: er.EntityR
         "hue",
         "5678",
         config_entry=config_entry,
-        translation_key="translation_key"
+        translation_key="translation_key",
     )
     hass.states.async_set("light.hue_5678", "on", attributes={})
 
@@ -1719,10 +1725,10 @@ async def test_state_translated(hass: HomeAssistant, entity_registry: er.EntityR
         assert True
 
     def mock_get_cached_translations(
-            _hass: HomeAssistant,
-            _language: str,
-            category: str,
-            _integrations: Iterable[str] | None = None
+        _hass: HomeAssistant,
+        _language: str,
+        category: str,
+        _integrations: Iterable[str] | None = None,
     ):
         if category == "entity":
             return {
@@ -1731,21 +1737,25 @@ async def test_state_translated(hass: HomeAssistant, entity_registry: er.EntityR
         if category == "state":
             return {
                 "component.some_domain.state.some_device_class.off": "state_is_off",
-                "component.some_domain.state._.foo": "state_is_foo"
+                "component.some_domain.state._.foo": "state_is_foo",
             }
         return {}
 
     with patch(
         "homeassistant.helpers.template.get_cached_translations",
-        side_effect=mock_get_cached_translations
+        side_effect=mock_get_cached_translations,
     ):
         tpl8 = template.Template('{{ state_translated("light.hue_5678") }}', hass)
         assert tpl8.async_render() == "state_is_on"
 
-        tpl9 = template.Template('{{ state_translated("some_domain.with_device_class_1") }}', hass)
+        tpl9 = template.Template(
+            '{{ state_translated("some_domain.with_device_class_1") }}', hass
+        )
         assert tpl9.async_render() == "state_is_off"
 
-        tpl10 = template.Template('{{ state_translated("some_domain.with_device_class_2") }}', hass)
+        tpl10 = template.Template(
+            '{{ state_translated("some_domain.with_device_class_2") }}', hass
+        )
         assert tpl10.async_render() == "state_is_foo"
 
 

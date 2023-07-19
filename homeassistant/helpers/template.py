@@ -896,7 +896,9 @@ class StateTranslated:
         if "device_class" in state.attributes:
             device_class = state.attributes["device_class"]
 
-        translations_entity_component = get_cached_translations(self._hass, language, "entity_component")
+        translations_entity_component = get_cached_translations(
+            self._hass, language, "entity_component"
+        )
         if len(translations_entity_component) > 0:
             key = f"component.{domain}.entity_component.{device_class}.state.{state.state}"
             if key in translations_entity_component:
@@ -906,12 +908,16 @@ class StateTranslated:
                 return str(translations_entity_component[key])
 
         entry = entity_registry.async_get(self._hass).async_get(entity_id)
-        if (entry is not None and
-                entry.unique_id is not None and
-                hasattr(entry, "translation_key") and
-                entry.translation_key is not None):
+        if (
+            entry is not None
+            and entry.unique_id is not None
+            and hasattr(entry, "translation_key")
+            and entry.translation_key is not None
+        ):
             key = f"component.{entry.platform}.entity.{domain}.{entry.translation_key}.state.{state.state}"
-            translations_entity = get_cached_translations(self._hass, language, "entity")
+            translations_entity = get_cached_translations(
+                self._hass, language, "entity"
+            )
             if len(translations_entity) > 0 and key in translations_entity:
                 return str(translations_entity[key])
 
@@ -2579,7 +2585,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
-        return isinstance(obj, (AllStates, StateTranslated)) or super().is_safe_callable(obj)
+        return isinstance(
+            obj, (AllStates, StateTranslated)
+        ) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
