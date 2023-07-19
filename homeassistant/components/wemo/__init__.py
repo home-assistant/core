@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Sequence
-from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import Any
@@ -20,6 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DOMAIN
+from .models import WemoConfigEntryData, WemoData, _async_wemo_data
 from .wemo_device import DeviceCoordinator, async_register_device
 
 # Max number of devices to initialize at once. This limit is in place to
@@ -81,16 +81,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@dataclass
-class WemoData:
-    """Component state data."""
-
-    discovery_enabled: bool
-    static_config: Sequence[HostPortTuple]
-    registry: pywemo.SubscriptionRegistry
-    config_entry_data: WemoConfigEntryData | None = None
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for WeMo devices."""
     # Keep track of WeMo device subscriptions for push updates
@@ -124,15 +114,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@dataclass
-class WemoConfigEntryData:
-    """Config entry state data."""
-
-    device_coordinators: dict[str, DeviceCoordinator]
-    discovery: WemoDiscovery
-    dispatcher: WemoDispatcher
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a wemo config entry."""
     wemo_data = _async_wemo_data(hass)
@@ -157,17 +138,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a wemo config entry."""
     _LOGGER.debug("Unloading WeMo")
     wemo_data = _async_wemo_data(hass)
-    assert wemo_data.config_entry_data
-    discovery, dispatcher = (
-        wemo_data.config_entry_data.discovery,
-        wemo_data.config_entry_data.dispatcher,
-    )
 
-    discovery.async_stop_discovery()
+    wemo_data.config_entry_data.discovery.async_stop_discovery()
 
+    dispatcher = wemo_data.config_entry_data.dispatcher
     if unload_ok := await dispatcher.async_unload_platforms(hass):
         assert not wemo_data.config_entry_data.device_coordinators
-        wemo_data.config_entry_data = None
+        wemo_data.config_entry_data = None  # type: ignore[assignment]
     return unload_ok
 
 
@@ -180,7 +157,6 @@ async def async_wemo_dispatcher_connect(
     platform = Platform(module.rsplit(".", 1)[1])
 
     config_entry_data = _async_wemo_data(hass).config_entry_data
-    assert config_entry_data
     await config_entry_data.dispatcher.async_connect_platform(platform, dispatch)
 
 
@@ -345,10 +321,3 @@ def validate_static_config(host: str, port: int | None) -> pywemo.WeMoDevice | N
         return None
 
     return device
-
-
-@callback
-def _async_wemo_data(hass: HomeAssistant) -> WemoData:
-    wemo_data = hass.data[DOMAIN]
-    assert isinstance(wemo_data, WemoData)
-    return wemo_data
