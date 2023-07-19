@@ -492,9 +492,9 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.3.1" setuptools wheel
-          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
-          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
+          PIP_CACHE_DIR=$PIP_CACHE pip install -U "pip>=21.3.1" setuptools wheel
+          PIP_CACHE_DIR=$PIP_CACHE pip install -r requirements_all.txt
+          PIP_CACHE_DIR=$PIP_CACHE pip install -r requirements_test.txt
           pip install -e . --config-settings editable_mode=compat
 
   hassfest:
