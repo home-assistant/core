@@ -47,10 +47,13 @@ from .const import (
     CONF_TIME_ZONE,
     CONF_TYPE,
     CONF_UNIT_SYSTEM,
+    EVENT_COMPONENT_LOADED,
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_STARTED,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     __version__,
 )
-from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
+from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback, Event
 from .exceptions import HomeAssistantError
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import (
@@ -60,6 +63,7 @@ from .helpers import (
     issue_registry as ir,
 )
 from .helpers.entity_values import EntityValues
+from .helpers.translation import load_state_translations_to_cache
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
@@ -662,6 +666,13 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     if CONF_UNIT_SYSTEM in config:
         hac.units = get_unit_system(config[CONF_UNIT_SYSTEM])
+
+    async def load_translations(_event: Event):
+        _LOGGER.debug(f"Loading translations for language: {hass.config.language}")
+        await load_state_translations_to_cache(hass, language=hass.config.language)
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, load_translations)
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)
 
 
 def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:

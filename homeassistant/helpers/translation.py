@@ -208,6 +208,15 @@ class _TranslationCache:
         if components_to_load:
             await self._async_load(language, components_to_load)
 
+        return self.get_cached(language, category, components)
+
+    def get_cached(
+            self,
+            language: str,
+            category: str,
+            components: set[str],
+    ) -> list[dict[str, dict[str, Any]]]:
+        """Reads resources from the cache."""
         cached = self.cache.get(language, {})
 
         return [cached.get(component, {}).get(category, {}) for component in components]
@@ -293,7 +302,7 @@ async def async_get_translations(
     """Return all backend translations.
 
     If integration specified, load it for that one.
-    Otherwise default to loaded intgrations combined with config flow
+    Otherwise default to loaded integrations combined with config flow
     integrations if config_flow is true.
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
@@ -321,3 +330,48 @@ async def async_get_translations(
     for entry in cached:
         result.update(entry)
     return result
+
+
+@bind_hass
+def get_cached_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+):
+    """Return cached all backend translations.
+
+    If integrations specified, return translations for them.
+    Otherwise default to loaded integrations.
+    """
+    if integrations is not None:
+        components = set(integrations)
+    elif category in ("state", "entity_component", "services"):
+        components = set(hass.config.components)
+    else:
+        # Only 'state' supports merging, so remove platforms from selection
+        components = {
+            component for component in hass.config.components if "." not in component
+        }
+
+    result = {}
+
+    if TRANSLATION_FLATTEN_CACHE in hass.data:
+        cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+        cached = cache.get_cached(language, category, components)
+        for entry in cached:
+            result.update(entry)
+
+    return result
+
+
+@bind_hass
+async def load_state_translations_to_cache(
+        hass: HomeAssistant,
+        language: str,
+):
+    """Loads state translations to cache."""
+    await async_get_translations(hass, language, "entity")
+    await async_get_translations(hass, language, "state")
+    await async_get_translations(hass, language, "entity_component")
+
