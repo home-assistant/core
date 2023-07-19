@@ -121,7 +121,7 @@ async def test_reload_config_entry(
         await hass.async_block_till_done()
 
         pywemo_device.get_state.assert_called()
-        pywemo_device.reset_mock()
+        pywemo_device.get_state.reset_mock()
 
         pywemo_registry.register.assert_called_once_with(pywemo_device)
         pywemo_registry.register.reset_mock()
