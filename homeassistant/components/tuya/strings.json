@@ -34,9 +34,6 @@
       "carbon_dioxide": {
         "name": "Carbon dioxide"
       },
-      "child_lock": {
-        "name": "Child lock"
-      },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
@@ -51,27 +48,6 @@
       },
       "tilt": {
         "name": "Tilt"
-      },
-      "lock_doorbell": {
-        "name": "Doorbell"
-      },
-      "lock_duress_alert": {
-        "name": "Duress alert"
-      },
-      "lock_open_close": {
-        "name": "Locking and unlocking event"
-      },
-      "lock_open_inside": {
-        "name": "Unlock inside of door"
-      },
-      "lock_reverse": {
-        "name": "Double locking status"
-      },
-      "lock_status": {
-        "name": "Status"
-      },
-      "lock_anti_outside": {
-        "name": "Double locking by lifting up"
       }
     },
     "button": {
@@ -200,18 +176,6 @@
       },
       "down_delay": {
         "name": "Down delay"
-      },
-      "lock_time_auto": {
-        "name": "Auto lock time"
-      },
-      "lock_stay_hold_time": {
-        "name": "Loitering hold time"
-      },
-      "lock_open_rate": {
-        "name": "Opening percentage"
-      },
-      "lock_alarm_time": {
-        "name": "Alert duration"
       }
     },
     "select": {
@@ -645,13 +609,7 @@
         "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "battery_state": {
-        "name": "Battery state",
-        "state": {
-          "high": "High",
-          "medium": "Medium",
-          "low": "Low",
-          "poweroff": "Power off"
-        }
+        "name": "Battery state"
       },
       "gas": {
         "name": "Gas"
@@ -816,6 +774,212 @@
           "uninsured_lock": "Uninsured Lock",
           "insured_lock": "Insured Lock"
         }
+      }
+    },
+    "switch": {
+      "start": {
+        "name": "Start"
+      },
+      "heat_preservation": {
+        "name": "Heat preservation"
+      },
+      "disinfection": {
+        "name": "Disinfection"
+      },
+      "water": {
+        "name": "Water"
+      },
+      "slow_feed": {
+        "name": "Slow feed"
+      },
+      "filter_reset": {
+        "name": "Filter reset"
+      },
+      "water_pump_reset": {
+        "name": "Water pump reset"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "reset_of_water_usage_days": {
+        "name": "Reset of water usage days"
+      },
+      "uv_sterilization": {
+        "name": "UV sterilization"
+      },
+      "plug": {
+        "name": "Plug"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "switch": {
+        "name": "Switch"
+      },
+      "socket": {
+        "name": "Socket"
+      },
+      "radio": {
+        "name": "Radio"
+      },
+      "alarm_1": {
+        "name": "Alarm 1"
+      },
+      "alarm_2": {
+        "name": "Alarm 2"
+      },
+      "alarm_3": {
+        "name": "Alarm 3"
+      },
+      "alarm_4": {
+        "name": "Alarm 4"
+      },
+      "sleep_aid": {
+        "name": "Sleep aid"
+      },
+      "switch_1": {
+        "name": "Switch 1"
+      },
+      "switch_2": {
+        "name": "Switch 2"
+      },
+      "switch_3": {
+        "name": "Switch 3"
+      },
+      "switch_4": {
+        "name": "Switch 4"
+      },
+      "switch_5": {
+        "name": "Switch 5"
+      },
+      "switch_6": {
+        "name": "Switch 6"
+      },
+      "switch_7": {
+        "name": "Switch 7"
+      },
+      "switch_8": {
+        "name": "Switch 8"
+      },
+      "usb_1": {
+        "name": "USB 1"
+      },
+      "usb_2": {
+        "name": "USB 2"
+      },
+      "usb_3": {
+        "name": "USB 3"
+      },
+      "usb_4": {
+        "name": "USB 4"
+      },
+      "usb_5": {
+        "name": "USB 5"
+      },
+      "usb_6": {
+        "name": "USB 6"
+      },
+      "socket_1": {
+        "name": "Socket 1"
+      },
+      "socket_2": {
+        "name": "Socket 2"
+      },
+      "socket_3": {
+        "name": "Socket 3"
+      },
+      "socket_4": {
+        "name": "Socket 4"
+      },
+      "socket_5": {
+        "name": "Socket 5"
+      },
+      "socket_6": {
+        "name": "Socket 6"
+      },
+      "ionizer": {
+        "name": "Ionizer"
+      },
+      "filter_cartridge_reset": {
+        "name": "Filter cartridge reset"
+      },
+      "humidification": {
+        "name": "Humidification"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
+      "mute_voice": {
+        "name": "Mute voice"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "battery_lock": {
+        "name": "Battery lock"
+      },
+      "cry_detection": {
+        "name": "Cry detection"
+      },
+      "sound_detection": {
+        "name": "Sound detection"
+      },
+      "video_recording": {
+        "name": "Video recording"
+      },
+      "motion_recording": {
+        "name": "Motion recording"
+      },
+      "privacy_mode": {
+        "name": "Privacy mode"
+      },
+      "flip": {
+        "name": "Flip"
+      },
+      "time_watermark": {
+        "name": "Time watermark"
+      },
+      "wide_dynamic_range": {
+        "name": "Wide dynamic range"
+      },
+      "motion_tracking": {
+        "name": "Motion tracking"
+      },
+      "motion_alarm": {
+        "name": "Motion alarm"
+      },
+      "energy_saving": {
+        "name": "Energy saving"
+      },
+      "open_window_detection": {
+        "name": "Open window detection"
+      },
+      "spray": {
+        "name": "Spray"
+      },
+      "voice": {
+        "name": "Voice"
+      },
+      "anion": {
+        "name": "Anion"
+      },
+      "oxygen_bar": {
+        "name": "Oxygen bar"
+      },
+      "natural_wind": {
+        "name": "Natural wind"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "reverse": {
+        "name": "Reverse"
+      },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "sterilization": {
+        "name": "Sterilization"
       }
     }
   },

@@ -296,14 +296,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "szjqr": (
         NumberEntityDescription(
             key=DPCode.ARM_DOWN_PERCENT,
-            name="Move down",
+            translation_key="move_down",
             icon="mdi:arrow-down-bold",
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.ARM_UP_PERCENT,
-            name="Move up",
+            translation_key="move_up",
             icon="mdi:arrow-up-bold",
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
