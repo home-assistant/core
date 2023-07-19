@@ -2,6 +2,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 
 from aiocomelit import (
     ComeliteSerialBridgeAPi,
@@ -14,7 +15,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, COORDINATOR_CTX_ALARM, COORDINATOR_CTX_DEVICES, DOMAIN
+from .const import _LOGGER, DOMAIN
 
 
 class ComelitSerialBridge(DataUpdateCoordinator):
@@ -25,8 +26,8 @@ class ComelitSerialBridge(DataUpdateCoordinator):
 
         self._host = host
         self._pin = pin
-        self._devices: list[ComelitSerialBridgeObject] = []
-        self._alarm: list[ComelitVedoObject] = []
+        self._devices_data: dict[str, dict[int, ComelitSerialBridgeObject]] = {}
+        self._alarm_data: dict[str, dict[int, ComelitVedoObject]] = {}
         self._on_close: list[Callable] = []
 
         self.api = ComeliteSerialBridgeAPi(host, pin)
@@ -43,12 +44,8 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         """Add a function to call when router is closed."""
         self._on_close.append(func)
 
-    async def _async_update_data(self) -> dict[str, list]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update router data."""
-        data: dict = {
-            COORDINATOR_CTX_DEVICES: [],
-            COORDINATOR_CTX_ALARM: [],
-        }
         _LOGGER.debug("Polling Comelit Serial Bridge host: %s", self._host)
         try:
             logged = await self.api.login()
@@ -59,13 +56,8 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         if not logged:
             raise ConfigEntryAuthFailed
 
-        self._devices = await self.api.get_all_devices()
-        data[COORDINATOR_CTX_DEVICES] = self._devices
+        self._devices_data = await self.api.get_all_devices()
+        self._alarm_data = await self.api.get_alarm_config()
         await self.api.logout()
 
-        return data
-
-    @property
-    def devices(self) -> list[ComelitSerialBridgeObject]:
-        """Return a list of devices."""
-        return self._devices
+        return self._devices_data | self._alarm_data

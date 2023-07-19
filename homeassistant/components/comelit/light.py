@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COORDINATOR_CTX_DEVICES, DOMAIN
+from .const import DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
@@ -28,8 +28,7 @@ async def async_setup_entry(
 
     async_add_entities(
         ComelitLightEntity(coordinator, device)
-        for device in coordinator.devices
-        if device.type == LIGHT
+        for _, device in coordinator.data[LIGHT].items()
     )
 
 
@@ -45,7 +44,7 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         """Init light entity."""
         self._api = coordinator.api
         self._device = device
-        super().__init__(coordinator, COORDINATOR_CTX_DEVICES)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.api.host}-light-{device.index}"
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -59,17 +58,14 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self.coordinator.api.light_switch(self._device.index, LIGHT_ON)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.light_switch(self._device.index, LIGHT_OFF)
+        await self.coordinator.async_request_refresh()
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self._device.status == LIGHT_ON
-
-    @property
-    def available(self) -> bool:
-        """Available."""
-        return self.coordinator.last_update_success
+        return self.coordinator.data[LIGHT][self._device.index].status == LIGHT_ON
