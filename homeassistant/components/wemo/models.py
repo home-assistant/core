@@ -38,5 +38,6 @@ class WemoData:
 
 
 @callback
-def _async_wemo_data(hass: HomeAssistant) -> WemoData:
+def async_wemo_data(hass: HomeAssistant) -> WemoData:
+    """Fetch WemoData with proper typing."""
     return cast(WemoData, hass.data[DOMAIN])
