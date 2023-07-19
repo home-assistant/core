@@ -49,16 +49,10 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self.entry is not None
         if user_input:
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
-            data = {
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-            }
-
             try:
                 await self.is_valid(
-                    username=data[CONF_USERNAME], password=data[CONF_PASSWORD]
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
                 )
 
             except aiosomecomfort.AuthError:
@@ -76,8 +70,7 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.entry,
                     data={
                         **self.entry.data,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
+                        **user_input,
                     },
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
