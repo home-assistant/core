@@ -9,7 +9,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
 )
 from homeassistant.const import (
-    CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
@@ -22,15 +21,13 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DEFAULT_NAME, DOMAIN
 from .sensor import CONF_ALTITUDE, DEFAULT_ALTITUDE
 
-PLACEHOLDERS = {"api_account_url": "https://www.last.fm/api/account/create"}
-
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_RADIUS): vol.Coerce(float),
         vol.Required(CONF_LATITUDE): cv.latitude,
         vol.Required(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_ALTITUDE, default=DEFAULT_ALTITUDE): vol.Coerce(float),
+        vol.Optional(CONF_ALTITUDE): vol.Coerce(float),
     }
 )
 
@@ -38,33 +35,48 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
-    data: dict[str, Any] = {}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Initialize user input."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(
-                title=DEFAULT_NAME,
+                title=user_input[CONF_NAME],
                 data={},
-                options={},
+                options={
+                    CONF_RADIUS: user_input[CONF_RADIUS],
+                    CONF_LATITUDE: user_input[CONF_LATITUDE],
+                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                    CONF_ALTITUDE: user_input.get(CONF_ALTITUDE),
+                },
             )
+        form_data: dict[str, Any] = {
+            CONF_LATITUDE: self.hass.config.latitude,
+            CONF_LONGITUDE: self.hass.config.longitude,
+            CONF_ALTITUDE: DEFAULT_ALTITUDE,
+        }
         return self.async_show_form(
             step_id="user",
-            errors=errors,
-            description_placeholders=PLACEHOLDERS,
-            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, form_data),
         )
 
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Import config from yaml."""
+        latitude = import_config.get(CONF_LATITUDE, self.hass.config.latitude)
+        longitude = import_config.get(CONF_LONGITUDE, self.hass.config.longitude)
         for entry in self._async_current_entries():
-            if entry.options[CONF_API_KEY] == import_config[CONF_API_KEY]:
+            if (
+                entry.options[CONF_LATITUDE] == latitude
+                and entry.options[CONF_LONGITUDE] == longitude
+            ):
                 return self.async_abort(reason="already_configured")
         return self.async_create_entry(
-            title="LastFM",
+            title=import_config.get(CONF_NAME, DEFAULT_NAME),
             data={},
-            options={},
+            options={
+                CONF_RADIUS: import_config[CONF_RADIUS],
+                CONF_LATITUDE: latitude,
+                CONF_LONGITUDE: longitude,
+                CONF_ALTITUDE: import_config.get(CONF_ALTITUDE),
+            },
         )
