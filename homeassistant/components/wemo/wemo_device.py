@@ -128,8 +128,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
         """Unregister push subscriptions and remove from coordinators dict."""
         await super().async_shutdown()
         del _async_coordinators(self.hass)[self.device_id]
-        if not self.options:
-            return
+        assert self.options  # Always set by async_register_device.
         if self.options.enable_subscription:
             await self._async_set_enable_subscription(False)
         # Check that the device is available (last_update_success) before disabling long
