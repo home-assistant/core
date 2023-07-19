@@ -60,7 +60,7 @@ def mac_to_int(address: str) -> int:
 def _on_disconnected(task: asyncio.Task[Any], _: asyncio.Future[None]) -> None:
     """Call when the ESPHome or BLE device disconnects."""
     if task and not task.done():
-        task.cancel("Disconnected")
+        task.cancel("ESPHome or BLE device disconnected")
 
 
 def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
