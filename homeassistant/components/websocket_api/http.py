@@ -95,7 +95,7 @@ class WebSocketHandler:
         # to where messages are queued. This allows the implementation
         # to use a deque and an asyncio.Future to avoid the overhead of
         # an asyncio.Queue.
-        self._message_queue: deque[str | Callable[[], str] | None] = deque()
+        self._message_queue: deque[str | None] = deque()
         self._ready_future: asyncio.Future[None] | None = None
 
     def __repr__(self) -> str:
@@ -136,12 +136,11 @@ class WebSocketHandler:
                     messages_remaining = len(message_queue)
 
                 # A None message is used to signal the end of the connection
-                if (process := message_queue.popleft()) is None:
+                if (message := message_queue.popleft()) is None:
                     return
 
                 debug_enabled = is_enabled_for(logging_debug)
                 messages_remaining -= 1
-                message = process if isinstance(process, str) else process()
 
                 if (
                     not messages_remaining
@@ -156,9 +155,9 @@ class WebSocketHandler:
                 messages: list[str] = [message]
                 while messages_remaining:
                     # A None message is used to signal the end of the connection
-                    if (process := message_queue.popleft()) is None:
+                    if (message := message_queue.popleft()) is None:
                         return
-                    messages.append(process if isinstance(process, str) else process())
+                    messages.append(message)
                     messages_remaining -= 1
 
                 joined_messages = ",".join(messages)
@@ -184,7 +183,7 @@ class WebSocketHandler:
             self._peak_checker_unsub = None
 
     @callback
-    def _send_message(self, message: str | dict[str, Any] | Callable[[], str]) -> None:
+    def _send_message(self, message: str | dict[str, Any]) -> None:
         """Send a message to the client.
 
         Closes connection if the client is not reading the messages.

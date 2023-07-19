@@ -1830,6 +1830,7 @@ async def test_device_name_defaulting_config_entry(
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(title=config_entry_title, entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
     entity_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )

@@ -307,16 +307,18 @@ async def async_setup_entry_helper(
     async def _async_setup_entities() -> None:
         """Set up MQTT items from configuration.yaml."""
         mqtt_data = get_mqtt_data(hass)
-        if mqtt_data.updated_config:
-            # The platform has been reloaded
-            config_yaml = mqtt_data.updated_config
-        else:
-            config_yaml = mqtt_data.config or {}
-        if not config_yaml:
+        if not (config_yaml := mqtt_data.config):
             return
-        if domain not in config_yaml:
+        setups: list[Coroutine[Any, Any, None]] = [
+            async_setup(config)
+            for config_item in config_yaml
+            for config_domain, configs in config_item.items()
+            for config in configs
+            if config_domain == domain
+        ]
+        if not setups:
             return
-        await asyncio.gather(*[async_setup(config) for config in config_yaml[domain]])
+        await asyncio.gather(*setups)
 
     # discover manual configured MQTT items
     mqtt_data.reload_handlers[domain] = _async_setup_entities
