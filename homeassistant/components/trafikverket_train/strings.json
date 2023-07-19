@@ -57,9 +57,6 @@
           }
         }
       },
-      "departure_time": {
-        "name": "Departure time"
-      },
       "cancelled": {
         "name": "Cancelled"
       },

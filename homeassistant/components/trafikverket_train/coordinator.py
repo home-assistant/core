@@ -147,3 +147,15 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         )
 
         return states
+
+    async def get_as_utc(self, date_value: datetime | None) -> datetime | None:
+        """Return utc datetime or None."""
+        if date_value:
+            return dt_util.as_utc(date_value)
+        return None
+
+    async def get_as_joined(self, information: list[str] | None) -> str | None:
+        """Return joined information or None."""
+        if information:
+            return ", ".join(information)
+        return None
