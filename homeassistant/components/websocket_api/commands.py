@@ -68,6 +68,7 @@ def async_register_commands(
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
+    async_reg(hass, handle_get_single_state)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
@@ -266,9 +267,14 @@ def handle_get_states(
 ) -> None:
     """Handle get states command."""
     states = _async_get_allowed_states(hass, connection)
+    # print(states)
+
+    # {"type":"auth","access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOGY0MzY0NjE1NWM0MTQ1YjRjYmY5MzIwYTM3M2VlYiIsImlhdCI6MTY4OTcxNDk5NywiZXhwIjoyMDA1MDc0OTk3fQ.9toxhJb_SDxJYlw4BEXiKbxdkJBLLxKEiPikTbG73Qk"}
+    # {"id": 19, "type": "get_states"}
 
     try:
         serialized_states = [state.as_dict_json() for state in states]
+        # print("-")
     except (ValueError, TypeError):
         pass
     else:
@@ -280,6 +286,8 @@ def handle_get_states(
     for state in states:
         try:
             serialized_states.append(state.as_dict_json())
+            # print("-")
+
         except (ValueError, TypeError):
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
@@ -287,11 +295,56 @@ def handle_get_states(
                     find_paths_unserializable_data(state, dump=JSON_DUMP)
                 ),
             )
-
     _send_handle_get_states_response(connection, msg["id"], serialized_states)
 
 
 def _send_handle_get_states_response(
+    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+) -> None:
+    """Send handle get states response."""
+    joined_states = ",".join(serialized_states)
+    connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
+
+
+@callback
+@decorators.websocket_command({vol.Required("type"): "get_single_state"})
+def handle_get_single_state(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get states command."""
+    states = _async_get_allowed_states(hass, connection)
+    # print("Get single state")
+
+    # {"type":"auth","access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOGY0MzY0NjE1NWM0MTQ1YjRjYmY5MzIwYTM3M2VlYiIsImlhdCI6MTY4OTcxNDk5NywiZXhwIjoyMDA1MDc0OTk3fQ.9toxhJb_SDxJYlw4BEXiKbxdkJBLLxKEiPikTbG73Qk"}
+    # {"id": 19, "type": "get_states"}
+    # {"id": 19, "type": "get_single_state"}
+    try:
+        serialized_states = [state.as_dict_json() for state in states]
+        # print("-")
+    except (ValueError, TypeError):
+        pass
+    else:
+        _send_handle_get_states_response(connection, msg["id"], serialized_states)
+        return
+
+    # If we can't serialize, we'll filter out unserializable states
+    serialized_states = []
+    for state in states:
+        try:
+            serialized_states.append(state.as_dict_json())
+            # print("-")
+
+        except (ValueError, TypeError):
+            connection.logger.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(state, dump=JSON_DUMP)
+                ),
+            )
+    _send_handle_get_states_response(connection, msg["id"], serialized_states)
+
+
+def _send_handle_get_single_state_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle get states response."""
