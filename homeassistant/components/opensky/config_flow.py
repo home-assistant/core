@@ -5,9 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigFlow,
-)
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -47,7 +45,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_RADIUS: user_input[CONF_RADIUS],
                     CONF_LATITUDE: user_input[CONF_LATITUDE],
                     CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                    CONF_ALTITUDE: user_input.get(CONF_ALTITUDE),
+                    CONF_ALTITUDE: user_input.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
                 },
             )
         form_data: dict[str, Any] = {
@@ -77,6 +75,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_RADIUS: import_config[CONF_RADIUS],
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
-                CONF_ALTITUDE: import_config.get(CONF_ALTITUDE),
+                CONF_ALTITUDE: import_config.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
             },
         )

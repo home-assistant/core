@@ -96,7 +96,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             OpenSkySensor(
-                entry.options[CONF_NAME],
+                entry.title,
                 opensky,
                 bounding_box,
                 entry.options.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
