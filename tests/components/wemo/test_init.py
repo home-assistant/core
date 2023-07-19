@@ -119,8 +119,6 @@ async def test_reload_config_entry(
 
     async def _async_test_entry_and_entity() -> tuple[str, str]:
         await hass.async_block_till_done()
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
 
         pywemo_device.get_state.assert_called()
         pywemo_device.reset_mock()
@@ -135,14 +133,19 @@ async def test_reload_config_entry(
             hass, entity_entries[0], SWITCH_DOMAIN
         )
 
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+
         return entries[0].entry_id, entity_entries[0].entity_id
 
-    pywemo_registry.unregister.assert_not_called()
     entry_id, entity_id = await _async_test_entry_and_entity()
+    pywemo_registry.unregister.assert_not_called()
+
     assert await hass.config_entries.async_reload(entry_id)
+
     ids = await _async_test_entry_and_entity()
-    assert ids == (entry_id, entity_id)
     pywemo_registry.unregister.assert_called_once_with(pywemo_device)
+    assert ids == (entry_id, entity_id)
 
 
 async def test_static_config_with_invalid_host(hass: HomeAssistant) -> None:
