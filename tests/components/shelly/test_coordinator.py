@@ -13,6 +13,7 @@ from homeassistant.components.shelly.const import (
     ATTR_GENERATION,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
+    MAX_PUSH_UPDATE_FAILURES,
     RPC_RECONNECT_INTERVAL,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
@@ -266,35 +267,11 @@ async def test_block_device_push_updates_failure(
     await init_integration(hass, 1)
 
     # Move time to force polling
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
-    )
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
-    )
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
-    )
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
-    )
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
-    )
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
-    )
-    await hass.async_block_till_done()
+    for _ in range(MAX_PUSH_UPDATE_FAILURES + 1):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+        )
+        await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(
         domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
