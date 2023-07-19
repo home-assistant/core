@@ -900,10 +900,10 @@ class StateTranslated:
         if len(translations_entity_component) > 0:
             key = f"component.{domain}.entity_component.{device_class}.state.{state.state}"
             if key in translations_entity_component:
-                return str(translations_entity_component[key]) + " #1.1"
+                return str(translations_entity_component[key])
             key = f"component.{domain}.entity_component._.state.{state.state}"
             if key in translations_entity_component:
-                return str(translations_entity_component[key]) + " #1.2"
+                return str(translations_entity_component[key])
 
         entry = entity_registry.async_get(self._hass).async_get(entity_id)
         if (entry is not None and
@@ -913,18 +913,18 @@ class StateTranslated:
             key = f"component.{entry.platform}.entity.{domain}.{entry.translation_key}.state.{state.state}"
             translations_entity = get_cached_translations(self._hass, language, "entity")
             if len(translations_entity) > 0 and key in translations_entity:
-                return str(translations_entity[key]) + " #2"
+                return str(translations_entity[key])
 
         translations_state = get_cached_translations(self._hass, language, "state")
         if len(translations_state) > 0:
             key = f"component.{domain}.state.{device_class}.{state.state}"
             if key in translations_state:
-                return str(translations_state[key]) + " #3.1"
+                return str(translations_state[key])
             key = f"component.{domain}.state._.{state.state}"
             if key in translations_state:
-                return str(translations_state[key]) + " #3.2"
+                return str(translations_state[key])
         _LOGGER.warning(f"No translation found for entity: {entity_id}")
-        return state.state + " #4"
+        return state.state
 
     def __repr__(self) -> str:
         """Representation of Translated state."""
