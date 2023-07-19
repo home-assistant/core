@@ -406,13 +406,6 @@ omit =
     homeassistant/components/garages_amsterdam/__init__.py
     homeassistant/components/garages_amsterdam/binary_sensor.py
     homeassistant/components/garages_amsterdam/sensor.py
-    homeassistant/components/gardena_bluetooth/__init__.py
-    homeassistant/components/gardena_bluetooth/binary_sensor.py
-    homeassistant/components/gardena_bluetooth/const.py
-    homeassistant/components/gardena_bluetooth/coordinator.py
-    homeassistant/components/gardena_bluetooth/number.py
-    homeassistant/components/gardena_bluetooth/sensor.py
-    homeassistant/components/gardena_bluetooth/switch.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
     homeassistant/components/geocaching/__init__.py
@@ -707,13 +700,11 @@ omit =
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
-    homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minio/minio_helper.py
-    homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
     homeassistant/components/mochad/__init__.py
