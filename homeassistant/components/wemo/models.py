@@ -8,7 +8,7 @@ import pywemo
 
 from homeassistant.core import HomeAssistant, callback
 
-from . import DOMAIN
+from .const import DOMAIN
 
 if TYPE_CHECKING:  # Avoid circular dependencies.
     from . import HostPortTuple, WemoDiscovery, WemoDispatcher
