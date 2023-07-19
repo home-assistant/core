@@ -577,7 +577,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "wnykq": (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
-            name="Switch",
+            translation_key="switch",
         ),
     ),
     # SIREN: Siren (switch) with Temperature and humidity sensor
