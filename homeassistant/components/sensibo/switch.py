@@ -151,9 +151,11 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     @async_handle_api_call
     async def async_turn_on_timer(self, key: str, value: bool) -> bool:
         """Make service call to api for setting timer."""
+        current_state = self.device_data.device_on
+        new_state = bool(current_state is False)
         data = {
             "minutesFromNow": 60,
-            "acState": {**self.device_data.ac_states, "on": value},
+            "acState": {**self.device_data.ac_states, "on": new_state},
         }
         result = await self._client.async_set_timer(self._device_id, data)
         return bool(result.get("status") == "success")
