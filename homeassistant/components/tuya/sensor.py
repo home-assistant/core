@@ -60,7 +60,6 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
         translation_key="battery_state",
         icon="mdi:battery",
         entity_category=EntityCategory.DIAGNOSTIC,
-        translation_key="battery_state",
     ),
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY_VALUE,
