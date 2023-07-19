@@ -10,6 +10,8 @@ from typing_extensions import Self
 class StrEnum(str, Enum):
     """Partial backport of Python 3.11's StrEnum for our basic use cases."""
 
+    value: str
+
     def __new__(cls, value: str, *args: Any, **kwargs: Any) -> Self:
         """Create a new StrEnum instance."""
         if not isinstance(value, str):
@@ -18,7 +20,7 @@ class StrEnum(str, Enum):
 
     def __str__(self) -> str:
         """Return self.value."""
-        return str(self.value)
+        return self.value
 
     @staticmethod
     def _generate_next_value_(

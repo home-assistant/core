@@ -171,7 +171,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         registry = dr.async_get(self.hass)
         if not (
             device := registry.async_get_device(
-                identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )
         ):
             return self.async_abort(reason="no_devices_found")
