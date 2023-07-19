@@ -1,10 +1,16 @@
 """Tests for the wemo component."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import create_autospec, patch
 
 import pywemo
 
-from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, WemoDiscovery
+from homeassistant.components.wemo import (
+    CONF_DISCOVERY,
+    CONF_STATIC,
+    WemoDiscovery,
+    async_wemo_dispatcher_connect,
+)
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -164,17 +170,26 @@ async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
         device.supports_long_press.return_value = False
         return device
 
+    semaphore = asyncio.Semaphore(value=0)
+
+    async def async_connect(*args):
+        await async_wemo_dispatcher_connect(*args)
+        semaphore.release()
+
     pywemo_devices = [create_device(0), create_device(1)]
     # Setup the component and start discovery.
     with patch(
         "pywemo.discover_devices", return_value=pywemo_devices
     ) as mock_discovery, patch(
         "homeassistant.components.wemo.WemoDiscovery.discover_statics"
-    ) as mock_discover_statics:
+    ) as mock_discover_statics, patch(
+        "homeassistant.components.wemo.binary_sensor.async_wemo_dispatcher_connect",
+        side_effect=async_connect,
+    ):
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: True}}
         )
-        await pywemo_registry.semaphore.acquire()  # Returns after platform setup.
+        await semaphore.acquire()  # Returns after platform setup.
         mock_discovery.assert_called()
         mock_discover_statics.assert_called()
         pywemo_devices.append(create_device(2))
