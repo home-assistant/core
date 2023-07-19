@@ -17,7 +17,7 @@ ENTITY_ID = "media_player.panasonic_viera_tv"
 FAKE_UUID = "mock-unique-id"
 
 
-async def test_webostv_turn_on_trigger_device_id(
+async def test_panasonic_viera_turn_on_trigger_device_id(
     hass: HomeAssistant, init_integration: MockConfigEntry, calls
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
@@ -76,7 +76,7 @@ async def test_webostv_turn_on_trigger_device_id(
     assert len(calls) == 0
 
 
-async def test_webostv_turn_on_trigger_entity_id(
+async def test_panasonic_viera_turn_on_trigger_entity_id(
     hass: HomeAssistant, init_integration: MockConfigEntry, calls
 ) -> None:
     """Test for turn_on triggers by entity_id firing."""

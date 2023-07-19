@@ -20,8 +20,8 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.trigger import PluggableAction
 
+from . import Remote
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_MANUFACTURER,
@@ -32,7 +32,7 @@ from .const import (
     DEFAULT_MODEL_NUMBER,
     DOMAIN,
 )
-from .triggers.turn_on import async_get_turn_on_trigger
+from .entity import PanasonicVieraEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities([tv_device])
 
 
-class PanasonicVieraTVEntity(MediaPlayerEntity):
+class PanasonicVieraTVEntity(PanasonicVieraEntity, MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
     _supported_features = (
@@ -71,12 +71,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, remote, name, device_info):
+    def __init__(self, remote: Remote, name: str, device_info: dict[str, Any]) -> None:
         """Initialize the entity."""
-        self._remote = remote
+        super().__init__(remote)
         self._name = name
         self._device_info = device_info
-        self._turn_on = PluggableAction(self.async_write_ha_state)
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -123,6 +122,8 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
+        if self._turn_on:
+            return True
         return self._remote.available
 
     @property
@@ -219,14 +220,3 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(self.hass, media_content_id)
-
-    async def async_added_to_hass(self) -> None:
-        """Connect and subscribe to dispatcher signals and state updates."""
-        await super().async_added_to_hass()
-
-        if (entry := self.registry_entry) and entry.device_id:
-            self.async_on_remove(
-                self._turn_on.async_register(
-                    self.hass, async_get_turn_on_trigger(entry.device_id)
-                )
-            )

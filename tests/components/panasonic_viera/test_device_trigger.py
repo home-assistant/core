@@ -139,6 +139,6 @@ async def test_failure_scenarios(
         "type": "panasonic_viera.turn_on",
     }
 
-    # Test that device id from non webostv domain raises exception
+    # Test that device id from non panasonic_viera domain raises exception
     with pytest.raises(InvalidDeviceAutomationConfig):
         await device_trigger.async_validate_trigger_config(hass, config)

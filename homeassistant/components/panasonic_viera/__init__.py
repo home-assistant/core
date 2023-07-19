@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -80,15 +79,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
-    if (on_action := config[CONF_ON_ACTION]) is not None:
-        on_action = Script(hass, on_action, config[CONF_NAME], DOMAIN)
-
     params = {}
     if CONF_APP_ID in config and CONF_ENCRYPTION_KEY in config:
         params["app_id"] = config[CONF_APP_ID]
         params["encryption_key"] = config[CONF_ENCRYPTION_KEY]
 
-    remote = Remote(hass, host, port, on_action, **params)
+    remote = Remote(hass, host, port, **params)
     await remote.async_create_remote_control(during_setup=True)
 
     panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
@@ -131,20 +127,17 @@ class Remote:
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         host,
         port,
-        on_action=None,
         app_id=None,
         encryption_key=None,
-    ):
+    ) -> None:
         """Initialize the Remote class."""
         self._hass = hass
 
         self._host = host
         self._port = port
-
-        self._on_action = on_action
 
         self._app_id = app_id
         self._encryption_key = encryption_key
@@ -175,12 +168,10 @@ class Remote:
             _LOGGER.debug("Could not establish remote connection: %s", err)
             self._control = None
             self.state = STATE_OFF
-            self.available = self._on_action is not None
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self._control = None
             self.state = STATE_OFF
-            self.available = self._on_action is not None
 
     async def async_update(self):
         """Update device data."""
@@ -203,15 +194,6 @@ class Remote:
             key = getattr(key, "value", key)
 
         await self._handle_errors(self._control.send_key, key)
-
-    async def async_turn_on(self, context):
-        """Turn on the TV."""
-        if self._on_action is not None:
-            await self._on_action.async_run(context=context)
-            await self.async_update()
-        elif self.state != STATE_ON:
-            await self.async_send_key(Keys.power)
-            await self.async_update()
 
     async def async_turn_off(self):
         """Turn off the TV."""
@@ -257,14 +239,11 @@ class Remote:
         except (SOAPError, HTTPError) as err:
             _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
-            self.available = True
             await self.async_create_remote_control()
         except (URLError, OSError) as err:
             _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
-            self.available = self._on_action is not None
             await self.async_create_remote_control()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self.state = STATE_OFF
-            self.available = self._on_action is not None

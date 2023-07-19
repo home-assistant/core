@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Remote
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_MANUFACTURER,
@@ -21,6 +22,7 @@ from .const import (
     DEFAULT_MODEL_NUMBER,
     DOMAIN,
 )
+from .entity import PanasonicVieraEntity
 
 
 async def async_setup_entry(
@@ -39,11 +41,12 @@ async def async_setup_entry(
     async_add_entities([PanasonicVieraRemoteEntity(remote, name, device_info)])
 
 
-class PanasonicVieraRemoteEntity(RemoteEntity):
+class PanasonicVieraRemoteEntity(PanasonicVieraEntity, RemoteEntity):
     """Representation of a Panasonic Viera TV Remote."""
 
-    def __init__(self, remote, name, device_info):
+    def __init__(self, remote: Remote, name: str, device_info: dict[str, Any]) -> None:
         """Initialize the entity."""
+        super().__init__(remote)
         # Save a reference to the imported class
         self._remote = remote
         self._name = name
@@ -84,8 +87,8 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         return self._remote.state == STATE_ON
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        await self._remote.async_turn_on(context=self._context)
+        """Turn on the media player."""
+        await self._turn_on.async_run(self.hass, self._context)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
