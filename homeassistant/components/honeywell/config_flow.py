@@ -89,7 +89,7 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=reauth_schema,
+            data_schema=self.add_suggested_values_to_schema(REAUTH_SCHEMA, self.entry.data),
             errors=errors,
         )
 
