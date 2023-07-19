@@ -8,7 +8,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==22.2.0
 awesomeversion==22.9.0
 bcrypt==4.0.1
-bleak-retry-connector==3.0.2
+bleak-retry-connector==3.1.0
 bleak==0.20.2
 bluetooth-adapters==0.16.0
 bluetooth-auto-recovery==1.2.1
@@ -35,7 +35,7 @@ paho-mqtt==1.6.1
 Pillow==10.0.0
 pip>=21.3.1
 psutil-home-assistant==0.0.1
-PyJWT==2.7.0
+PyJWT==2.8.0
 PyNaCl==1.5.0
 pyOpenSSL==23.2.0
 pyserial==3.5
