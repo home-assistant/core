@@ -398,7 +398,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
         self._currently_playing = current or {}
 
-        context = self._currently_playing.get("context", {})
+        context = self._currently_playing.get("context") or {}
 
         # For some users in some cases, the uri is formed like
         # "spotify:user:{name}:playlist:{id}" and spotipy wants
@@ -409,9 +409,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             if len(parts) == 5 and parts[1] == "user" and parts[3] == "playlist":
                 uri = ":".join([parts[0], parts[3], parts[4]])
 
-        if context is not None and (
-            self._playlist is None or self._playlist["uri"] != uri
-        ):
+        if context and (self._playlist is None or self._playlist["uri"] != uri):
             self._playlist = None
             if context["type"] == MediaType.PLAYLIST:
                 self._playlist = self.data.client.playlist(uri)
