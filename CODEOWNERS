@@ -277,8 +277,6 @@ build.json @home-assistant/supervisor
 /tests/components/discord/ @tkdrob
 /homeassistant/components/discovergy/ @jpbede
 /tests/components/discovergy/ @jpbede
-/homeassistant/components/discovery/ @home-assistant/core
-/tests/components/discovery/ @home-assistant/core
 /homeassistant/components/dlink/ @tkdrob
 /tests/components/dlink/ @tkdrob
 /homeassistant/components/dlna_dmr/ @StevenLooman @chishm
@@ -747,7 +745,6 @@ build.json @home-assistant/supervisor
 /tests/components/meteoclimatic/ @adrianmo
 /homeassistant/components/metoffice/ @MrHarcombe @avee87
 /tests/components/metoffice/ @MrHarcombe @avee87
-/homeassistant/components/miflora/ @danielhiversen @basnijholt
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
 /homeassistant/components/mill/ @danielhiversen

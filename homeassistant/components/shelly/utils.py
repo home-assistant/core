@@ -12,7 +12,7 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -20,7 +20,6 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.entity_registry import async_get as er_async_get
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -211,7 +210,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     await context.initialize(port)
 
     @callback
-    def shutdown_listener(ev: EventType) -> None:
+    def shutdown_listener(ev: Event) -> None:
         context.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)

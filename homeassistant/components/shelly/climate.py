@@ -210,7 +210,7 @@ class BlockSleepingClimate(
         """Device availability."""
         if self.device_block is not None:
             return not cast(bool, self.device_block.valveError)
-        return self.coordinator.last_update_success
+        return super().available
 
     @property
     def hvac_mode(self) -> HVACMode:
