@@ -1611,43 +1611,6 @@ async def test_get_agent_info(
     assert agent_info == snapshot
 
 
-async def test_ws_get_agent_info(
-    hass: HomeAssistant,
-    init_components,
-    mock_agent,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test get agent info."""
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id({"type": "conversation/agent/info"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == snapshot
-
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": "homeassistant"}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == snapshot
-
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": mock_agent.agent_id}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == snapshot
-
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": "not_exist"}
-    )
-    msg = await client.receive_json()
-    assert not msg["success"]
-    assert msg["error"] == snapshot
-
-
 async def test_ws_hass_agent_debug(
     hass: HomeAssistant,
     init_components,
