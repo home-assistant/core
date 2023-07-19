@@ -1,7 +1,6 @@
 """The Android TV Remote integration."""
 from __future__ import annotations
 
-import async_timeout
 import logging
 
 from androidtvremote2 import (
@@ -10,6 +9,7 @@ from androidtvremote2 import (
     ConnectionClosed,
     InvalidAuth,
 )
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
