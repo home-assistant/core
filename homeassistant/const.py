@@ -1101,6 +1101,7 @@ SERVER_PORT: Final = 8123
 URL_ROOT: Final = "/"
 URL_API: Final = "/api/"
 URL_API_STREAM: Final = "/api/stream"
+URL_API_CORE_STATE: Final = "/api/core/state"
 URL_API_CONFIG: Final = "/api/config"
 URL_API_STATES: Final = "/api/states"
 URL_API_STATES_ENTITY: Final = "/api/states/{}"
