@@ -58,8 +58,9 @@ def mac_to_int(address: str) -> int:
 
 
 def _on_disconnected(task: asyncio.Task[Any], _: asyncio.Future[None]) -> None:
+    """Call when the ESPHome or BLE device disconnects."""
     if task and not task.done():
-        task.cancel()
+        task.cancel("Disconnected")
 
 
 def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
@@ -78,16 +79,22 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         try:
             return await func(self, *args, **kwargs)
         except asyncio.CancelledError as ex:
-            if not disconnected_future.done():
+            ble_device = self._ble_device
+            device_info = (
+                f"{self._source_name}: {ble_device.name} - {ble_device.address}"
+            )
+            disconnected = disconnected_future.done()
+            _LOGGER.debug(
+                "%s: Bluetooth operation cancelled (disconnected=%s)",
+                device_info,
+                disconnected,
+            )
+            if not disconnected:
                 # If the disconnected future is not done, the task was cancelled
                 # externally and we need to raise cancelled error to avoid
                 # blocking the cancellation.
                 raise
-            ble_device = self._ble_device
-            raise BleakError(
-                f"{self._source_name }: {ble_device.name} - {ble_device.address}: "
-                "Disconnected during operation"
-            ) from ex
+            raise BleakError(f"{device_info}: Disconnected during operation") from ex
         finally:
             disconnected_futures.discard(disconnected_future)
             disconnected_future.remove_done_callback(disconnect_handler)
@@ -340,7 +347,7 @@ class ESPHomeClient(BaseBleakClient):
                         # exception.
                         await connected_future
                 raise
-            except Exception:
+            except Exception as ex:
                 if connected_future.done():
                     with contextlib.suppress(BleakError):
                         # If the connect call throws an exception,
@@ -350,7 +357,7 @@ class ESPHomeClient(BaseBleakClient):
                         # exception from the connect call as it
                         # will be more descriptive.
                         await connected_future
-                connected_future.cancel()
+                connected_future.cancel(f"Unhandled exception in connect call: {ex}")
                 raise
             await connected_future
 
