@@ -99,7 +99,7 @@ async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
     )
 
     with pytest.raises(TemplateError):
-        response = await hass.services.async_call(
+        await hass.services.async_call(
             "shell_command", "test_service", blocking=True, return_response=True
         )
 
@@ -221,7 +221,7 @@ async def test_do_not_run_forever(
         side_effect=mock_create_subprocess_shell,
     ):
         with pytest.raises(asyncio.TimeoutError):
-            response = await hass.services.async_call(
+            await hass.services.async_call(
                 shell_command.DOMAIN,
                 "test_service",
                 blocking=True,
