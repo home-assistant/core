@@ -24,15 +24,18 @@ from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import (
+    MOCK_MAC,
     init_integration,
     inject_rpc_device_event,
     mock_polling_rpc_update,
     mock_rest_update,
     register_entity,
 )
+from .conftest import MOCK_BLOCKS
 
 from tests.common import async_fire_time_changed
 
@@ -247,6 +250,55 @@ async def test_block_sleeping_device_no_periodic_updates(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_block_device_push_updates_failure(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
+    """Test block device with push updates failure."""
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+
+    monkeypatch.setattr(
+        mock_block_device,
+        "update",
+        AsyncMock(return_value=MOCK_BLOCKS),
+    )
+    await init_integration(hass, 1)
+
+    # Move time to force polling
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
+    )
 
 
 async def test_block_button_click_event(
