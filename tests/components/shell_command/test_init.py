@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components import shell_command
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_setup_component
 
 
@@ -97,12 +98,12 @@ async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
         },
     )
 
-    response = await hass.services.async_call(
-        "shell_command", "test_service", blocking=True, return_response=True
-    )
+    with pytest.raises(TemplateError):
+        response = await hass.services.async_call(
+            "shell_command", "test_service", blocking=True, return_response=True
+        )
 
     await hass.async_block_till_done()
-    assert not response
 
 
 @patch("homeassistant.components.shell_command.asyncio.create_subprocess_exec")
@@ -219,11 +220,14 @@ async def test_do_not_run_forever(
         "homeassistant.components.shell_command.asyncio.create_subprocess_shell",
         side_effect=mock_create_subprocess_shell,
     ):
-        await hass.services.async_call(
-            shell_command.DOMAIN, "test_service", blocking=True, return_response=True
-        )
+        with pytest.raises(asyncio.TimeoutError):
+            response = await hass.services.async_call(
+                shell_command.DOMAIN,
+                "test_service",
+                blocking=True,
+                return_response=True,
+            )
         await hass.async_block_till_done()
-        assert not response
 
     mock_process.kill.assert_called_once()
     assert "Timed out" in caplog.text
