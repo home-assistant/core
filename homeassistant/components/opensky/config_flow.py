@@ -30,8 +30,8 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 )
 
 
-class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Config flow handler for LastFm."""
+class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Config flow handler for OpenSky."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
