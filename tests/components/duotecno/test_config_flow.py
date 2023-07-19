@@ -21,8 +21,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.duotecno.config_flow.validate_input",
-        return_value={"title": "1.1.1.1:1234"},
+        "duotecno.controller.PyDuotecno.connect",
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -50,10 +50,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.duotecno.config_flow.validate_input",
-        side_effect=InvallidPassword,
-    ):
+    with patch("duotecno.controller.PyDuotecno.connect", side_effect=InvallidPassword):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -73,10 +70,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.duotecno.config_flow.validate_input",
-        side_effect=ConnectionError,
-    ):
+    with patch("duotecno.controller.PyDuotecno.connect", side_effect=ConnectionError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -96,10 +90,7 @@ async def test_form_except(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.duotecno.config_flow.validate_input",
-        side_effect=Exception,
-    ):
+    with patch("duotecno.controller.PyDuotecno.connect", side_effect=Exception):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
