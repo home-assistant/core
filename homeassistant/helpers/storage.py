@@ -171,13 +171,14 @@ class Store(Generic[_T]):
                     await self.hass.async_add_executor_job(
                         os.rename, self.path, corrupt_path
                     )
+                    storage_key = self.key
                     _LOGGER.error(
                         "Unrecoverable error decoding storage %s at %s; "
                         "This may indicate an unclean shutdown, invalid syntax "
                         "from manual edits, or disk corruption; "
                         "The corrupt file has been saved as %s; "
                         "It is recommended to restore from backup: %s",
-                        self.key,
+                        storage_key,
                         self.path,
                         corrupt_path,
                         err,
@@ -187,16 +188,23 @@ class Store(Generic[_T]):
                         async_create_issue,
                     )
 
+                    issue_domain = HOMEASSISTANT_DOMAIN
+                    if (
+                        domain := (storage_key.partition(".")[0])
+                    ) and domain in self.hass.config.components:
+                        issue_domain = domain
+
                     async_create_issue(
                         self.hass,
                         HOMEASSISTANT_DOMAIN,
-                        f"storage_corruption_{self.key}_{isotime}",
+                        f"storage_corruption_{storage_key}_{isotime}",
                         is_fixable=True,
+                        issue_domain=issue_domain,
                         translation_key="storage_corruption",
                         is_persistent=True,
                         severity=IssueSeverity.CRITICAL,
                         translation_placeholders={
-                            "file_key": self.key,
+                            "storage_key": storage_key,
                             "original_path": self.path,
                             "corrupt_path": corrupt_path,
                             "error": str(err),
