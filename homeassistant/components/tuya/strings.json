@@ -609,7 +609,13 @@
         "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "battery_state": {
-        "name": "Battery state"
+        "name": "Battery state",
+        "state": {
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low",
+          "poweroff": "Power off"
+        }
       },
       "gas": {
         "name": "Gas"
@@ -737,14 +743,6 @@
           "mild": "Mild",
           "good": "Good",
           "severe": "Severe"
-        }
-      },
-      "battery_state": {
-        "state": {
-          "high": "High",
-          "medium": "Medium",
-          "low": "Low",
-          "poweroff": "Power off"
         }
       },
       "lock_alarm": {
