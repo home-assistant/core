@@ -231,7 +231,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.9
+aioesphomeapi==15.1.11
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -791,7 +791,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux-led==0.28.37
+flux-led==1.0.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -820,7 +820,7 @@ fritzconnection[qr]==1.12.2
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena_bluetooth==1.0.1
+gardena_bluetooth==1.0.2
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
@@ -1239,9 +1239,6 @@ nessclient==0.10.0
 
 # homeassistant.components.netdata
 netdata==1.1.0
-
-# homeassistant.components.discovery
-netdisco==3.0.0
 
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
@@ -2145,7 +2142,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.30.0
+python-roborock==0.30.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33

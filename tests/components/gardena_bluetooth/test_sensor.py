@@ -26,6 +26,7 @@ from tests.common import MockConfigEntry
             [
                 Valve.remaining_open_time.encode(100),
                 Valve.remaining_open_time.encode(10),
+                Valve.remaining_open_time.encode(0),
             ],
             "sensor.mock_title_valve_closing",
         ),
