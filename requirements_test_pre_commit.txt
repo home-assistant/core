@@ -3,4 +3,4 @@
 black==23.3.0
 codespell==2.2.2
 ruff==0.0.277
-yamllint==1.28.0
+yamllint==1.32.0

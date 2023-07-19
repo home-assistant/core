@@ -27,9 +27,9 @@
   "options": {
     "step": {
       "init": {
-        "description": "Select the channels you want to add.",
+        "description": "[%key:component::youtube::config::step::channels::description%]",
         "data": {
-          "channels": "YouTube channels"
+          "channels": "[%key:component::youtube::config::step::channels::data::channels%]"
         }
       }
     }

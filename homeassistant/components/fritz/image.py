@@ -30,9 +30,6 @@ async def async_setup_entry(
         avm_wrapper.fritz_guest_wifi.get_info
     )
 
-    if not guest_wifi_info.get("NewEnable"):
-        return
-
     async_add_entities(
         [
             FritzGuestWifiQRImage(

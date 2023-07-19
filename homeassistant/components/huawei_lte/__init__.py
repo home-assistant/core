@@ -413,9 +413,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_info = DeviceInfo(
             configuration_url=router.url,
             connections=router.device_connections,
-            default_manufacturer=DEFAULT_MANUFACTURER,
             identifiers=router.device_identifiers,
-            manufacturer=entry.data.get(CONF_MANUFACTURER),
+            manufacturer=entry.data.get(CONF_MANUFACTURER, DEFAULT_MANUFACTURER),
             name=router.device_name,
         )
         hw_version = None
