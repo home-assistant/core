@@ -44,7 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.add_is_available_updated_callback(is_available_updated)
 
     try:
-        await asyncio.wait_for(api.async_connect(), 5.0)
+        async with async_timeout.timeout(5.0):
+            api.async_connect()
     except InvalidAuth as exc:
         # The Android TV is hard reset or the certificate and key files were deleted.
         raise ConfigEntryAuthFailed from exc
