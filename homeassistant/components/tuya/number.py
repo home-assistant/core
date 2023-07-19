@@ -36,14 +36,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "bh": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            translation_key="time",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
-            translation_key="time",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
