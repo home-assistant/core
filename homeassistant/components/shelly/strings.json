@@ -118,5 +118,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "push_update_failure": {
+      "title": "Shelly device push update failure.",
+      "description": "Push updates from the Shelly device with IP address {ip_address} do not reach the Home Assistant server. You need to check CoIoT configuration in the web panel of the device."
+    }
   }
 }
