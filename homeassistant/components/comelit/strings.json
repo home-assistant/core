@@ -3,17 +3,15 @@
     "flow_title": "{host}",
     "step": {
       "reauth_confirm": {
-        "description": "Please enter the correct password for host: {host}",
+        "description": "Please enter the correct PIN for VEDO system: {host}",
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       }
     },

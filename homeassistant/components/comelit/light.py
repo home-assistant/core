@@ -28,7 +28,7 @@ async def async_setup_entry(
 
     async_add_entities(
         ComelitLightEntity(coordinator, device)
-        for _, device in coordinator.data[LIGHT].items()
+        for device in coordinator.data[LIGHT].values()
     )
 
 
@@ -55,15 +55,18 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
             name=device.name,
         )
 
+    async def _light_set_state(self, state: int):
+        """Set desired light state."""
+        await self.coordinator.api.light_switch(self._device.index, state)
+        await self.coordinator.async_request_refresh()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self.coordinator.api.light_switch(self._device.index, LIGHT_ON)
-        await self.coordinator.async_request_refresh()
+        await self._light_set_state(LIGHT_ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.coordinator.api.light_switch(self._device.index, LIGHT_OFF)
-        await self.coordinator.async_request_refresh()
+        await self._light_set_state(LIGHT_OFF)
 
     @property
     def is_on(self) -> bool:

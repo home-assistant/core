@@ -16,11 +16,7 @@ PLATFORMS = [Platform.LIGHT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Comelit platform."""
-    coordinator = ComelitSerialBridge(
-        entry.data[CONF_HOST],
-        entry.data[CONF_PIN],
-        hass=hass,
-    )
+    coordinator = ComelitSerialBridge(hass, entry.data[CONF_HOST], entry.data[CONF_PIN])
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 

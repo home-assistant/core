@@ -1,17 +1,14 @@
 """Support for Comelit."""
 import asyncio
-from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
 
 from aiocomelit import (
     ComeliteSerialBridgeAPi,
-    ComelitSerialBridgeObject,
-    ComelitVedoObject,
 )
 import aiohttp
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -21,14 +18,11 @@ from .const import _LOGGER, DOMAIN
 class ComelitSerialBridge(DataUpdateCoordinator):
     """Queries Comelit Serial Bridge."""
 
-    def __init__(self, host: str, pin: int, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, pin: int) -> None:
         """Initialize the scanner."""
 
         self._host = host
         self._pin = pin
-        self._devices_data: dict[str, dict[int, ComelitSerialBridgeObject]] = {}
-        self._alarm_data: dict[str, dict[int, ComelitVedoObject]] = {}
-        self._on_close: list[Callable] = []
 
         self.api = ComeliteSerialBridgeAPi(host, pin)
 
@@ -38,11 +32,6 @@ class ComelitSerialBridge(DataUpdateCoordinator):
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=5),
         )
-
-    @callback
-    def async_on_close(self, func: CALLBACK_TYPE) -> None:
-        """Add a function to call when router is closed."""
-        self._on_close.append(func)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update router data."""
@@ -56,8 +45,8 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         if not logged:
             raise ConfigEntryAuthFailed
 
-        self._devices_data = await self.api.get_all_devices()
-        self._alarm_data = await self.api.get_alarm_config()
+        devices_data = await self.api.get_all_devices()
+        alarm_data = await self.api.get_alarm_config()
         await self.api.logout()
 
-        return self._devices_data | self._alarm_data
+        return devices_data | alarm_data

@@ -36,7 +36,7 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    coordinator = ComelitSerialBridge(data[CONF_HOST], data[CONF_PIN], hass)
+    coordinator = ComelitSerialBridge(hass, data[CONF_HOST], data[CONF_PIN])
 
     try:
         await coordinator.api.login()
