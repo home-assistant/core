@@ -211,48 +211,47 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "ms": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.OPEN_INSIDE,
-            name="Unlock inside of door",
             icon="mdi:home-export-outline",
+            translation_key="lock_open_inside",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.OPEN_CLOSE,
-            name="Locking and unlocking event",
             icon="mdi:lock-pattern",
+            translation_key="lock_open_close",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.DOOR_OPENED,
-            name="Door",
             device_class=BinarySensorDeviceClass.DOOR,
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.REVERSE_LOCK,
-            name="Double locking status",
+            translation_key="lock_reverse",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CHILD_LOCK,
-            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
+            translation_key="child_lock",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.DOORBELL,
-            name="Doorbell",
             device_class=BinarySensorDeviceClass.SOUND,
+            translation_key="lock_doorbell",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.ANTI_LOCK_OUTSIDE,
-            name="Double locking by lifting up",
+            translation_key="lock_anti_outside",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.LOCK_MOTOR_STATE,
-            name="Status",
             device_class=BinarySensorDeviceClass.LOCK,
+            translation_key="lock_status",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.HIJACK,
-            name="Duress alert",
             icon="mdi:lock-alert-outline",
             device_class=BinarySensorDeviceClass.SAFETY,
+            translation_key="lock_duress_alert",
         ),
     ),
     # Luminance Sensor

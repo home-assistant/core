@@ -34,6 +34,9 @@
       "carbon_dioxide": {
         "name": "Carbon dioxide"
       },
+      "child_lock": {
+        "name": "Child lock"
+      },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
@@ -48,6 +51,27 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "lock_doorbell": {
+        "name": "Doorbell"
+      },
+      "lock_duress_alert": {
+        "name": "Duress alert"
+      },
+      "lock_open_close": {
+        "name": "Locking and unlocking event"
+      },
+      "lock_open_inside": {
+        "name": "Unlock inside of door"
+      },
+      "lock_reverse": {
+        "name": "Double locking status"
+      },
+      "lock_status": {
+        "name": "Status"
+      },
+      "lock_anti_outside": {
+        "name": "Double locking by lifting up"
       }
     },
     "button": {
@@ -176,6 +200,18 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "lock_time_auto": {
+        "name": "Auto lock time"
+      },
+      "lock_stay_hold_time": {
+        "name": "Loitering hold time"
+      },
+      "lock_open_rate": {
+        "name": "Opening percentage"
+      },
+      "lock_alarm_time": {
+        "name": "Alert duration"
       }
     },
     "select": {
@@ -417,6 +453,7 @@
         }
       },
       "language": {
+        "name": "Language",
         "state": {
           "chinese_simplified": "Chinese Simplified",
           "english": "English",
@@ -433,6 +470,7 @@
         }
       },
       "lock_alarm_volume": {
+        "name": "Alert volume",
         "state": {
           "mute": "Mute",
           "low": "Low",
@@ -441,13 +479,33 @@
         }
       },
       "lock_basic_nightvision": {
+        "name": "Infrared (IR) night vision",
         "state": {
           "0": "Level 1",
           "1": "Level 2",
           "2": "Level 3"
         }
       },
+      "lock_voice_volume": {
+        "name": "Local voice volume",
+        "state": {
+          "mute": "Mute",
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High"
+        }
+      },
       "lock_doorbell_volume": {
+        "name": "Doorbell volume",
+        "state": {
+          "mute": "Mute",
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High"
+        }
+      },
+      "lock_keypress_volume": {
+        "name": "Volume on keypress",
         "state": {
           "mute": "Mute",
           "low": "Low",
@@ -456,6 +514,7 @@
         }
       },
       "lock_door_unclosed_trigger": {
+        "name": "Trigger time of unclosed",
         "state": {
           "5s": "5 seconds",
           "10s": "10 seconds",
@@ -465,6 +524,7 @@
         }
       },
       "lock_doorbell_song": {
+        "name": "Doorbell ringtone",
         "state": {
           "ding_0": "Song 1",
           "ding_1": "Song 2",
@@ -479,12 +539,14 @@
         }
       },
       "lock_motor_direction": {
+        "name": "Rotation direction of motor",
         "state": {
           "clockwise": "Clockwise",
           "anti_clockwise": "Anti Clockwise"
         }
       },
       "lock_low_power_threshold": {
+        "name": "Low battery alert",
         "state": {
           "5_percent": "5%",
           "10_percent": "10%",
@@ -493,6 +555,7 @@
         }
       },
       "lock_motor_torque": {
+        "name": "Torque force of motor",
         "state": {
           "torque_low": "Low",
           "torque_middle": "Middle",
@@ -500,6 +563,7 @@
         }
       },
       "lock_open_speed_state": {
+        "name": "Unlocking speed",
         "state": {
           "low": "Low",
           "middle": "Middle",
@@ -507,6 +571,7 @@
         }
       },
       "lock_photo_mode": {
+        "name": "Photo mode",
         "state": {
           "close": "Close",
           "power_save": "Power Save",
@@ -515,6 +580,7 @@
         }
       },
       "lock_ringtone": {
+        "name": "Local ringtone",
         "state": {
           "sound_1": "Sound 1",
           "sound_2": "Sound 2",
@@ -525,6 +591,7 @@
         }
       },
       "lock_sound_mode": {
+        "name": "Sound mode",
         "state": {
           "ringtone_0": "Ringtone 1",
           "ringtone_1": "Ringtone 2",
@@ -535,6 +602,7 @@
         }
       },
       "lock_stay_alarm_mode": {
+        "name": "Loitering alert mode",
         "state": {
           "close": "Close",
           "normal": "Normal",
@@ -543,12 +611,14 @@
         }
       },
       "lock_stay_capture_mode": {
+        "name": "Loitering photo capture mode",
         "state": {
           "mode_1": "Mode 1",
           "mode_2": "Mode 2"
         }
       },
       "lock_stay_trigger_distance": {
+        "name": "Loitering sensing range",
         "state": {
           "away_from": "Away From",
           "close_to": "Close To",
@@ -556,6 +626,7 @@
         }
       },
       "lock_unlock_switch": {
+        "name": "Unlock mode",
         "state": {
           "combination": "Combination",
           "single_unlock": "Single Unlock",
@@ -746,6 +817,7 @@
         }
       },
       "lock_alarm": {
+        "name": "Last alert",
         "state": {
           "wrong_finger": "Wrong Finger",
           "wrong_password": "Wrong Passwod",
@@ -764,22 +836,85 @@
         }
       },
       "lock_status": {
+        "name": "Door",
         "state": {
           "open": "[%key:common::state::unlocked%]",
           "closed": "[%key:common::state::locked%]"
         }
       },
       "lock_antilock": {
+        "name": "Double locking status",
         "state": {
           "unlocked": "Unlocked",
           "anti_locked": "Anti locked"
         }
       },
       "lock_insurance": {
+        "name": "Latching status",
         "state": {
           "uninsured_lock": "Uninsured Lock",
           "insured_lock": "Insured Lock"
         }
+      },
+      "lock_last_fingerprint": {
+        "name": "Last ID fingerprint"
+      },
+      "lock_last_password": {
+        "name": "Last ID password"
+      },
+      "lock_last_temporary_password": {
+        "name": "Last ID temporary password"
+      },
+      "lock_last_dynamic_password": {
+        "name": "Last ID dynamic password"
+      },
+      "lock_last_card": {
+        "name": "Last ID card"
+      },
+      "lock_last_identity_card": {
+        "name": "Last ID identity card"
+      },
+      "lock_last_face_recognition": {
+        "name": "Last ID face recognition"
+      },
+      "lock_last_mechanical_key": {
+        "name": "Last ID mechanical key"
+      },
+      "lock_last_iris": {
+        "name": "Last ID iris"
+      },
+      "lock_last_palm_print": {
+        "name": "Last ID palm print"
+      },
+      "lock_last_finger_vein": {
+        "name": "Last ID finger vein"
+      },
+      "lock_last_bluetooth": {
+        "name": "Last ID bluetoot"
+      },
+      "lock_last_remote": {
+        "name": "Last ID remote"
+      },
+      "lock_last_mobile_phone": {
+        "name": "Last ID mobile phone"
+      },
+      "lock_last_voice": {
+        "name": "Last ID voice (remote)"
+      },
+      "lock_last_app": {
+        "name": "Last ID app (remote)"
+      },
+      "lock_last_access_control_system": {
+        "name": "Last ID access control system"
+      },
+      "lock_last_emergency_password": {
+        "name": "Last ID emergency password"
+      },
+      "lock_last_administrator": {
+        "name": "Last ID administrator"
+      },
+      "lock_last_housekeeper": {
+        "name": "Last ID housekeeper"
       }
     },
     "switch": {
@@ -986,6 +1121,48 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "lock_auto": {
+        "name": "Auto-lock"
+      },
+      "lock_arming": {
+        "name": "Arming"
+      },
+      "lock_hibernation": {
+        "name": "Hibernation"
+      },
+      "lock_verification_free": {
+        "name": "Verification-free"
+      },
+      "lock_double_locking_limit": {
+        "name": "Double locking limit"
+      },
+      "disconnection_alert": {
+        "name": "Disconnection alert"
+      },
+      "lock_function": {
+        "name": "Lock function"
+      },
+      "lock_mandatory_double": {
+        "name": "Mandatory double locking"
+      },
+      "lock_phone_call": {
+        "name": "Phone call"
+      },
+      "lock_normally_open": {
+        "name": "Normally open"
+      },
+      "lock_special_control": {
+        "name": "Special control"
+      },
+      "lock_wakeup": {
+        "name": "Wake-up status"
+      },
+      "lock_password_free_feedback": {
+        "name": "Password-free unlocking feedback"
+      },
+      "lock_unlock_secret_key": {
+        "name": "Unlock with special secret key"
       }
     }
   },
