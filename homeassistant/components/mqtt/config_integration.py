@@ -52,7 +52,7 @@ from .const import (
 
 DEFAULT_TLS_PROTOCOL = "auto"
 
-PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
+CONFIG_SCHEMA_BASE = vol.Schema(
     {
         Platform.ALARM_CONTROL_PANEL.value: vol.All(
             cv.ensure_list,

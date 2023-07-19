@@ -1,1 +1,23 @@
-{ "title": "Conversation" }
+{
+  "title": "Conversation",
+  "services": {
+    "process": {
+      "name": "Process",
+      "description": "Launches a conversation from a transcribed text.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "Transcribed text input."
+        },
+        "language": {
+          "name": "Language",
+          "description": "Language of text. Defaults to server language."
+        },
+        "agent_id": {
+          "name": "Agent",
+          "description": "Conversation agent to process your request. The conversation agent is the brains of your assistant. It processes the incoming text commands."
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,6 @@ GPSType = tuple[float, float]
 ConfigType = dict[str, Any]
 ContextType = homeassistant.core.Context
 DiscoveryInfoType = dict[str, Any]
-EventType = homeassistant.core.Event
 ServiceDataType = dict[str, Any]
 StateType = str | int | float | None
 TemplateVarsType = Mapping[str, Any] | None
@@ -33,4 +32,5 @@ UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
 # that may rely on them.
 # In due time they will be removed.
 HomeAssistantType = homeassistant.core.HomeAssistant
+EventType = homeassistant.core.Event
 ServiceCallType = homeassistant.core.ServiceCall

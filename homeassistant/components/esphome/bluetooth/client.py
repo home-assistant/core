@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 import contextlib
+from functools import partial
 import logging
 from typing import Any, TypeVar, cast
 import uuid
@@ -56,35 +57,40 @@ def mac_to_int(address: str) -> int:
     return int(address.replace(":", ""), 16)
 
 
+def _on_disconnected(task: asyncio.Task[Any], _: asyncio.Future[None]) -> None:
+    if task and not task.done():
+        task.cancel()
+
+
 def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw BleakError if not connected."""
 
     async def _async_wrap_bluetooth_connected_operation(
         self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
-        disconnected_event = (
-            self._disconnected_event  # pylint: disable=protected-access
-        )
-        if not disconnected_event:
-            raise BleakError("Not connected")
-        action_task = asyncio.create_task(func(self, *args, **kwargs))
-        disconnect_task = asyncio.create_task(disconnected_event.wait())
-        await asyncio.wait(
-            (action_task, disconnect_task),
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-        if disconnect_task.done():
-            action_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await action_task
-
+        # pylint: disable=protected-access
+        loop = self._loop
+        disconnected_futures = self._disconnected_futures
+        disconnected_future = loop.create_future()
+        disconnect_handler = partial(_on_disconnected, asyncio.current_task(loop))
+        disconnected_future.add_done_callback(disconnect_handler)
+        disconnected_futures.add(disconnected_future)
+        try:
+            return await func(self, *args, **kwargs)
+        except asyncio.CancelledError as ex:
+            if not disconnected_future.done():
+                # If the disconnected future is not done, the task was cancelled
+                # externally and we need to raise cancelled error to avoid
+                # blocking the cancellation.
+                raise
+            ble_device = self._ble_device
             raise BleakError(
-                f"{self._source_name}: "  # pylint: disable=protected-access
-                f"{self._ble_device.name} - "  # pylint: disable=protected-access
-                f" {self._ble_device.address}: "  # pylint: disable=protected-access
+                f"{self._source_name }: {ble_device.name} - {ble_device.address}: "
                 "Disconnected during operation"
-            )
-        return action_task.result()
+            ) from ex
+        finally:
+            disconnected_futures.discard(disconnected_future)
+            disconnected_future.remove_done_callback(disconnect_handler)
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
@@ -152,7 +158,8 @@ class ESPHomeClient(BaseBleakClient):
         self._notify_cancels: dict[
             int, tuple[Callable[[], Coroutine[Any, Any, None]], Callable[[], None]]
         ] = {}
-        self._disconnected_event: asyncio.Event | None = None
+        self._loop = asyncio.get_running_loop()
+        self._disconnected_futures: set[asyncio.Future[None]] = set()
         device_info = self.entry_data.device_info
         assert device_info is not None
         self._device_info = device_info
@@ -192,9 +199,10 @@ class ESPHomeClient(BaseBleakClient):
         for _, notify_abort in self._notify_cancels.values():
             notify_abort()
         self._notify_cancels.clear()
-        if self._disconnected_event:
-            self._disconnected_event.set()
-            self._disconnected_event = None
+        for future in self._disconnected_futures:
+            if not future.done():
+                future.set_result(None)
+        self._disconnected_futures.clear()
         self._unsubscribe_connection_state()
 
     def _async_ble_device_disconnected(self) -> None:
@@ -359,7 +367,6 @@ class ESPHomeClient(BaseBleakClient):
             await self.disconnect()
             raise
 
-        self._disconnected_event = asyncio.Event()
         return True
 
     @api_error_as_bleak_error

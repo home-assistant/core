@@ -64,7 +64,7 @@ async def async_setup_entry(
                 aux=False,
                 target_temp_high=None,
                 target_temp_low=None,
-                hvac_modes=[cls.value for cls in HVACMode if cls != HVACMode.HEAT_COOL],
+                hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT_COOL],
             ),
             DemoClimate(
                 unique_id="climate_3",
@@ -83,7 +83,7 @@ async def async_setup_entry(
                 aux=None,
                 target_temp_high=24,
                 target_temp_low=21,
-                hvac_modes=[cls.value for cls in HVACMode if cls != HVACMode.HEAT],
+                hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT],
             ),
         ]
     )

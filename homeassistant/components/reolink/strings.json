@@ -93,6 +93,11 @@
           "alwaysonatnight": "Auto & always on at night"
         }
       }
+    },
+    "sensor": {
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      }
     }
   }
 }

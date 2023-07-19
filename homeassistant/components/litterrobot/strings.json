@@ -124,7 +124,7 @@
     },
     "time": {
       "sleep_mode_start_time": {
-        "name": "Sleep mode start time"
+        "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
       }
     },
     "vacuum": {
@@ -135,6 +135,22 @@
     "update": {
       "firmware": {
         "name": "Firmware"
+      }
+    }
+  },
+  "services": {
+    "set_sleep_mode": {
+      "name": "Set sleep mode",
+      "description": "Sets the sleep mode and start time.",
+      "fields": {
+        "enabled": {
+          "name": "[%key:common::state::enabled%]",
+          "description": "Whether sleep mode should be enabled."
+        },
+        "start_time": {
+          "name": "Start time",
+          "description": "The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours."
+        }
       }
     }
   }
