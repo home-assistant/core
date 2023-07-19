@@ -285,7 +285,10 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                     severity=ir.IssueSeverity.ERROR,
                     learn_more_url="https://www.home-assistant.io/integrations/shelly/#shelly-device-configuration-generation-1",
                     translation_key="push_update_failure",
-                    translation_placeholders={"ip_address": self.device.ip_address},
+                    translation_placeholders={
+                        "device_name": self.entry.title,
+                        "ip_address": self.device.ip_address,
+                    },
                 )
             device_update_info(self.hass, self.device, self.entry)
 
