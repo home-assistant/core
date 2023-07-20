@@ -136,4 +136,4 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], RestoreSensor
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_sensor_data():
-            self._state = cast(float, state.native_value)
+            self._state = cast(StateType, state.native_value)
