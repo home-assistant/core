@@ -79,7 +79,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         disconnected_futures.add(disconnected_future)
         try:
             return await func(self, *args, **kwargs)
-        except asyncio.CancelledError as ex:
+        except asyncio.CancelledError:
             ble_device = self._ble_device
             device_info = (
                 f"{self._source_name}: {ble_device.name} - {ble_device.address}"
@@ -99,7 +99,11 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
                 uncancel()
                 # Only works on Python 3.11+
                 # https://github.com/python/cpython/issues/102780
-            raise BleakError(f"{device_info}: Disconnected during operation") from ex
+            # Should not raise from here to ensure asyncio.CancelledError
+            # is not propagated to the caller.
+            raise BleakError(  # noqa: TRY200
+                f"{device_info}: Disconnected during operation"
+            )
         finally:
             disconnected_futures.discard(disconnected_future)
             disconnected_future.remove_done_callback(disconnect_handler)
