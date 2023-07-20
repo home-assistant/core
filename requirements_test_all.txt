@@ -10,7 +10,7 @@ AEMET-OpenData==0.2.2
 AIOAladdinConnect==0.1.56
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.14
+AIOSomecomfort==0.0.15
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.11
+aioesphomeapi==15.1.12
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -424,7 +424,7 @@ bellows==0.35.8
 bimmer-connected==0.13.8
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.0.2
+bleak-retry-connector==3.1.0
 
 # homeassistant.components.bluetooth
 bleak==0.20.2
@@ -1720,7 +1720,7 @@ sensorpro-ble==0.5.3
 sensorpush-ble==1.5.5
 
 # homeassistant.components.sentry
-sentry-sdk==1.27.1
+sentry-sdk==1.28.1
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.6

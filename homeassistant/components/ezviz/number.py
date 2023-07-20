@@ -97,7 +97,7 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def native_value(self) -> float | None:
