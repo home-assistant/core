@@ -45,6 +45,7 @@ class HomeWizardSwitchEntityDescription(
 SWITCHES = [
     HomeWizardSwitchEntityDescription(
         key="power_on",
+        name=None,
         device_class=SwitchDeviceClass.OUTLET,
         create_fn=lambda coordinator: coordinator.supports_state(),
         available_fn=lambda data: data.state is not None and not data.state.switch_lock,

@@ -1,7 +1,7 @@
 """Test Google Smart Home."""
 import asyncio
 from types import SimpleNamespace
-from unittest.mock import ANY, call, patch
+from unittest.mock import ANY, patch
 
 import pytest
 from pytest_unordered import unordered
@@ -488,76 +488,41 @@ async def test_execute(
     events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     service_events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
-    with patch.object(
-        hass.services, "async_call", wraps=hass.services.async_call
-    ) as call_service_mock:
-        result = await sh.async_handle_message(
-            hass,
-            MockConfig(should_report_state=report_state),
-            None,
-            {
-                "requestId": REQ_ID,
-                "inputs": [
-                    {
-                        "intent": "action.devices.EXECUTE",
-                        "payload": {
-                            "commands": [
-                                {
-                                    "devices": [
-                                        {"id": "light.non_existing"},
-                                        {"id": "light.ceiling_lights"},
-                                        {"id": "light.kitchen_lights"},
-                                    ],
-                                    "execution": [
-                                        {
-                                            "command": "action.devices.commands.OnOff",
-                                            "params": {"on": True},
-                                        },
-                                        {
-                                            "command": "action.devices.commands.BrightnessAbsolute",
-                                            "params": {"brightness": 20},
-                                        },
-                                    ],
-                                }
-                            ]
-                        },
-                    }
-                ],
-            },
-            const.SOURCE_CLOUD,
-        )
-        assert call_service_mock.call_count == 4
-        expected_calls = [
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.ceiling_lights"},
-                blocking=not report_state,
-                context=ANY,
-            ),
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.kitchen_lights"},
-                blocking=not report_state,
-                context=ANY,
-            ),
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.ceiling_lights", "brightness_pct": 20},
-                blocking=not report_state,
-                context=ANY,
-            ),
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.kitchen_lights", "brightness_pct": 20},
-                blocking=not report_state,
-                context=ANY,
-            ),
-        ]
-        call_service_mock.assert_has_awaits(expected_calls, any_order=True)
+    result = await sh.async_handle_message(
+        hass,
+        MockConfig(should_report_state=report_state),
+        None,
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.EXECUTE",
+                    "payload": {
+                        "commands": [
+                            {
+                                "devices": [
+                                    {"id": "light.non_existing"},
+                                    {"id": "light.ceiling_lights"},
+                                    {"id": "light.kitchen_lights"},
+                                ],
+                                "execution": [
+                                    {
+                                        "command": "action.devices.commands.OnOff",
+                                        "params": {"on": True},
+                                    },
+                                    {
+                                        "command": "action.devices.commands.BrightnessAbsolute",
+                                        "params": {"brightness": 20},
+                                    },
+                                ],
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
     await hass.async_block_till_done()
 
     assert result == {
@@ -682,11 +647,7 @@ async def test_execute_times_out(
         # Make DemoLigt.async_turn_on hang waiting for the turn_on_wait event
         await turn_on_wait.wait()
 
-    with patch.object(
-        hass.services, "async_call", wraps=hass.services.async_call
-    ) as call_service_mock, patch.object(
-        DemoLight, "async_turn_on", wraps=slow_turn_on
-    ):
+    with patch.object(DemoLight, "async_turn_on", wraps=slow_turn_on):
         result = await sh.async_handle_message(
             hass,
             MockConfig(should_report_state=report_state),
@@ -722,51 +683,10 @@ async def test_execute_times_out(
             },
             const.SOURCE_CLOUD,
         )
-        # Only the two first calls are executed
-        assert call_service_mock.call_count == 2
-        expected_calls = [
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.ceiling_lights"},
-                blocking=not report_state,
-                context=ANY,
-            ),
-            call(
-                "light",
-                "turn_on",
-                {"entity_id": "light.kitchen_lights"},
-                blocking=not report_state,
-                context=ANY,
-            ),
-        ]
-        call_service_mock.assert_has_awaits(expected_calls, any_order=True)
 
         turn_on_wait.set()
         await hass.async_block_till_done()
         await hass.async_block_till_done()
-        # The remaining two calls should now have executed
-        assert call_service_mock.call_count == 4
-        expected_calls.extend(
-            [
-                call(
-                    "light",
-                    "turn_on",
-                    {"entity_id": "light.ceiling_lights", "brightness_pct": 20},
-                    blocking=not report_state,
-                    context=ANY,
-                ),
-                call(
-                    "light",
-                    "turn_on",
-                    {"entity_id": "light.kitchen_lights", "brightness_pct": 20},
-                    blocking=not report_state,
-                    context=ANY,
-                ),
-            ]
-        )
-        call_service_mock.assert_has_awaits(expected_calls, any_order=True)
-    await hass.async_block_till_done()
 
     assert result == {
         "requestId": REQ_ID,

@@ -77,6 +77,7 @@ DISCOVERY_SCHEMAS = [
             device_types.ColorDimmerSwitch,
             device_types.DimmerSwitch,
             device_types.OnOffLightSwitch,
+            device_types.Thermostat,
         ),
     ),
 ]
