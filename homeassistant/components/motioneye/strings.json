@@ -37,6 +37,33 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "actions": {
+        "name": "Actions"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "text_overlay": {
+        "name": "Text overlay"
+      },
+      "video_streaming": {
+        "name": "Video streaming"
+      },
+      "still_images": {
+        "name": "Still images"
+      },
+      "movies": {
+        "name": "Movies"
+      },
+      "upload_enabled": {
+        "name": "Upload enabled"
+      }
+    }
+  },
   "services": {
     "set_text_overlay": {
       "name": "Set text overlay",
