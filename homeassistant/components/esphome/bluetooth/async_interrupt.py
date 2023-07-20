@@ -33,7 +33,7 @@ class _Interrupt:
     __slots__ = (
         "_exception",
         "_future",
-        "_exception_args",
+        "_message",
         "_loop",
         "_interrupted",
         "_task",
@@ -45,13 +45,15 @@ class _Interrupt:
         self,
         loop: asyncio.AbstractEventLoop,
         future: asyncio.Future[Any],
-        exception: Exception,
+        exception: type[Exception],
+        message: str | None,
     ) -> None:
         """Initialize the interrupt context manager."""
         self._loop = loop
         self._future = future
         self._interrupted = False
         self._exception = exception
+        self._message = message
         self._task: asyncio.Task | None
         self._cancelling: int = 0
         self._exited = False
@@ -86,11 +88,13 @@ class _Interrupt:
                     not (uncancel := getattr(self._task, "uncancel", None))
                     or uncancel() <= self._cancelling
                 ):
+                    if self._message:
+                        raise self._exception(self._message) from None
                     raise self._exception from exc_val
         self._future.remove_done_callback(self._on_interrupt)
         return None
 
-    def _on_interrupt(self, future: asyncio.Future[Any]) -> None:
+    def _on_interrupt(self, _: asyncio.Future[Any]) -> None:
         """Handle interrupt."""
         if self._exited:
             # Must not cancel the task here if we already
@@ -106,7 +110,8 @@ class _Interrupt:
 
 def interrupt(
     future: asyncio.Future[Any],
-    exception: Exception,
+    exception: type[Exception],
+    message: str | None,
 ) -> _Interrupt:
     """Interrupt context manager.
 
@@ -120,7 +125,7 @@ def interrupt(
 
     future - the future that will cause the block to be interrupted
     exception - the exception to raise when the future is done
-    exception_args - the arguments to pass to the exception constructor
+    message - the message to pass when constructing the exception
     """
     loop = asyncio.get_running_loop()
-    return _Interrupt(loop, future, exception)
+    return _Interrupt(loop, future, exception, message)
