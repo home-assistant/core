@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 import contextlib
-from functools import partial
 import logging
 from typing import Any, TypeVar, cast
 import uuid
@@ -29,6 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from ..domain_data import DomainData
+from .async_interrupt import interrupt
 from .characteristic import BleakGATTCharacteristicESPHome
 from .descriptor import BleakGATTDescriptorESPHome
 from .service import BleakGATTServiceESPHome
@@ -57,12 +57,6 @@ def mac_to_int(address: str) -> int:
     return int(address.replace(":", ""), 16)
 
 
-def _on_disconnected(task: asyncio.Task[Any], _: asyncio.Future[None]) -> None:
-    """Call when the ESPHome or BLE device disconnects."""
-    if task and not task.done():
-        task.cancel("ESPHome or BLE device disconnected")
-
-
 def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw BleakError if not connected."""
 
@@ -73,40 +67,17 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         loop = self._loop
         disconnected_futures = self._disconnected_futures
         disconnected_future = loop.create_future()
-        task = asyncio.current_task(loop)
-        disconnect_handler = partial(_on_disconnected, task)
-        disconnected_future.add_done_callback(disconnect_handler)
         disconnected_futures.add(disconnected_future)
+        ble_device = self._ble_device
+        disconnected_message = (
+            f"{self._source_name }: {ble_device.name} - {ble_device.address}: "
+            "Disconnected during operation"
+        )
         try:
-            return await func(self, *args, **kwargs)
-        except asyncio.CancelledError:
-            ble_device = self._ble_device
-            device_info = (
-                f"{self._source_name}: {ble_device.name} - {ble_device.address}"
-            )
-            disconnected = disconnected_future.done()
-            _LOGGER.debug(
-                "%s: Bluetooth operation cancelled (disconnected=%s)",
-                device_info,
-                disconnected,
-            )
-            if not disconnected:
-                # If the disconnected future is not done, the task was cancelled
-                # externally and we need to raise cancelled error to avoid
-                # blocking the cancellation.
-                raise
-            if uncancel := getattr(task, "uncancel", None):
-                uncancel()
-                # Only works on Python 3.11+
-                # https://github.com/python/cpython/issues/102780
-            # Should not raise from here to ensure asyncio.CancelledError
-            # is not propagated to the caller.
-            raise BleakError(  # noqa: TRY200
-                f"{device_info}: Disconnected during operation"
-            )
+            async with interrupt(disconnected_future, BleakError, disconnected_message):
+                return await func(self, *args, **kwargs)
         finally:
             disconnected_futures.discard(disconnected_future)
-            disconnected_future.remove_done_callback(disconnect_handler)
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
