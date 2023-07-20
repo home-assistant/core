@@ -18,6 +18,7 @@ from homeassistant.const import (
     URL_API,
     URL_API_COMPONENTS,
     URL_API_CONFIG,
+    URL_API_CORE_STATE,
     URL_API_ERROR_LOG,
     URL_API_EVENTS,
     URL_API_SERVICES,
@@ -55,6 +56,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
+    hass.http.register_view(APICoreStateView)
     hass.http.register_view(APIEventStream)
     hass.http.register_view(APIConfigView)
     hass.http.register_view(APIStatesView)
@@ -82,6 +84,24 @@ class APIStatusView(HomeAssistantView):
     def get(self, request):
         """Retrieve if API is running."""
         return self.json_message("API running.")
+
+
+class APICoreStateView(HomeAssistantView):
+    """View to handle core state requests."""
+
+    url = URL_API_CORE_STATE
+    name = "api:core:state"
+
+    @ha.callback
+    def get(self, request: web.Request) -> web.Response:
+        """Retrieve the current core state.
+
+        This API is intended to be a fast and lightweight way to check if the
+        Home Assistant core is running. Its primary use case is for supervisor
+        to check if Home Assistant is running.
+        """
+        hass: HomeAssistant = request.app["hass"]
+        return self.json({"state": hass.state.value})
 
 
 class APIEventStream(HomeAssistantView):

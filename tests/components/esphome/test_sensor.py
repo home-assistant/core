@@ -13,7 +13,7 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import ATTR_ICON, STATE_UNKNOWN
+from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -275,3 +275,30 @@ async def test_generic_text_sensor(
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "i am a teapot"
+
+
+async def test_generic_numeric_sensor_empty_string_uom(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic numeric sensor that has an empty string as the uom."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+            unit_of_measurement="",
+        )
+    ]
+    states = [SensorState(key=1, state=123, missing_state=False)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "123"
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
