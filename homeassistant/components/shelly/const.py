@@ -174,3 +174,7 @@ class BLEScannerMode(StrEnum):
     DISABLED = "disabled"
     ACTIVE = "active"
     PASSIVE = "passive"
+
+
+MAX_PUSH_UPDATE_FAILURES = 5
+PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"

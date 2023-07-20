@@ -244,7 +244,7 @@ class NestEventMediaStore(EventMediaStore):
         devices = {}
         for device in device_manager.devices.values():
             if device_entry := device_registry.async_get_device(
-                {(DOMAIN, device.name)}
+                identifiers={(DOMAIN, device.name)}
             ):
                 devices[device.name] = device_entry.id
         return devices

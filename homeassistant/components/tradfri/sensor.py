@@ -24,7 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 
 from .base_class import TradfriBaseEntity
 from .const import (
@@ -65,7 +64,7 @@ def _get_air_quality(device: Device) -> int | None:
 
 
 def _get_filter_time_left(device: Device) -> int:
-    """Fetch the filter's remaining life (in hours)."""
+    """Fetch the filter's remaining lifetime (in hours)."""
     assert device.air_purifier_control is not None
     return round(
         cast(
@@ -89,7 +88,7 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
 SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
         key="aqi",
-        name="air quality",
+        translation_key="aqi",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         icon="mdi:air-filter",
@@ -97,7 +96,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
     ),
     TradfriSensorEntityDescription(
         key="filter_life_remaining",
-        name="filter time left",
+        translation_key="filter_life_remaining",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
         icon="mdi:clock-outline",
@@ -202,9 +201,6 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
         self.entity_description = description
 
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
-
-        if description.name is not UNDEFINED:
-            self._attr_name = f"{self._attr_name}: {description.name}"
 
         self._refresh()  # Set initial state
 
