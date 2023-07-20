@@ -25,7 +25,7 @@ class DemoEvent(EventEntity):
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = ["pressed"]
     _attr_has_entity_name = True
-    _attr_name = "Button pushed"
+    _attr_name = "Button press"
     _attr_should_poll = False
     _attr_translation_key = "push"
     _attr_unique_id = "push"
@@ -44,3 +44,4 @@ class DemoEvent(EventEntity):
     def _async_handle_event(self, _: Event) -> None:
         """Handle the demo button event."""
         self._trigger_event("pressed")
+        self.async_write_ha_state()
