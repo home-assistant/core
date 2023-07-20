@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, State
 
 from . import MOCK_RESULTS, MOCK_SERVERS, MOCK_STATES
 
-from tests.common import MockConfigEntry, mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 
 async def test_speedtestdotnet_sensors(
@@ -40,11 +40,19 @@ async def test_speedtestdotnet_sensors(
 
 async def test_restore_last_state(hass: HomeAssistant, mock_api: MagicMock) -> None:
     """Test restoring last state for sensors."""
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
         [
-            State(f"sensor.speedtest_{sensor}", state)
-            for sensor, state in MOCK_STATES.items()
+            (
+                State("sensor.speedtest_ping", "19.465"),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "19.465",
+                    },
+                    "native_unit_of_measurement": "ms",
+                },
+            ),
         ],
     )
     entry = MockConfigEntry(domain=DOMAIN)
