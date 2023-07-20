@@ -17,7 +17,7 @@ ComponentSetup = Callable[[MockConfigEntry], Awaitable[None]]
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
-    """Create LastFM entry in Home Assistant."""
+    """Create OpenSky entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="OpenSky",

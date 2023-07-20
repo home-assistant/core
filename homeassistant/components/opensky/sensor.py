@@ -56,7 +56,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Last.fm sensor platform from yaml."""
+    """Set up the OpenSky sensor platform from yaml."""
 
     async_create_issue(
         hass,
