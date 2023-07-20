@@ -193,7 +193,6 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(
             self.coordinator.data
         )
-        self._update_attr()
 
     @callback
     def _handle_coordinator_update(self) -> None:
