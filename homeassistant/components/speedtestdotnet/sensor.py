@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
-    SensorEntity,
+    RestoreSensor,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -78,10 +77,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SpeedtestSensor(
-    CoordinatorEntity[SpeedTestDataCoordinator], RestoreEntity, SensorEntity
-):
+class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], RestoreSensor):
     """Implementation of a speedtest.net sensor."""
 
     entity_description: SpeedtestSensorEntityDescription
