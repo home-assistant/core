@@ -18,11 +18,6 @@ __version__ = "1.0.0"
 __all__ = ("interrupt",)
 
 
-import logging
-
-_LOGGER = logging.getLogger(__name__)
-
-
 @final
 class _Interrupt:
     """Interrupt context manager.
@@ -80,7 +75,6 @@ class _Interrupt:
     ) -> bool | None:
         """Exit the interrupt context manager."""
         self._exited = True
-        _LOGGER.warning("Exited exc_type=%s, exc_val=%s", exc_type, exc_val)
         if self._interrupted:
             if TYPE_CHECKING:
                 assert self._task is not None
@@ -98,12 +92,6 @@ class _Interrupt:
 
     def _on_interrupt(self, future: asyncio.Future[Any]) -> None:
         """Handle interrupt."""
-        _LOGGER.warning(
-            "Interrupting task %s via %s, self._exited=%s",
-            self._task,
-            future,
-            self._exited,
-        )
         if self._exited:
             # Must not cancel the task here if we already
             # exited the context manager or the cancellation
