@@ -71,6 +71,35 @@ def mock_use_sqlite(request):
         yield
 
 
+async def test_purge_big_database(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test deleting 2/3 old states from a big database."""
+    instance = await async_setup_recorder_instance(hass)
+
+    for _ in range(3400):
+        await _add_test_states(hass)
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        state_attributes = session.query(StateAttributes)
+        assert states.count() == 20400
+        assert state_attributes.count() == 3
+
+        purge_before = dt_util.utcnow() - timedelta(days=4)
+
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            states_batch_size=1,
+            events_batch_size=1,
+            repack=False,
+        )
+        assert not finished
+        assert states.count() == 6800
+        assert state_attributes.count() == 1
+
+
 async def test_purge_old_states(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
