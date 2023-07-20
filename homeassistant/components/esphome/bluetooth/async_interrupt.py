@@ -78,7 +78,7 @@ class _Interrupt:
 
     def _on_interrupt(self, task: asyncio.Task[Any], _: asyncio.Future[Any]) -> None:
         """Handle interrupt."""
-        task.cancel()
+        task.cancel("Interrupted by interrupt context manager")
         if TYPE_CHECKING:
             assert self._interrupt_call is not None
         self._future.remove_done_callback(self._interrupt_call)
