@@ -125,7 +125,6 @@ class EventEntity(RestoreEntity):
         self.__last_event = dt_util.utcnow()
         self.__last_event_type = event_type
         self.__last_event_extra_state_attributes = extra_state_attributes
-        self.async_write_ha_state()
 
     @final
     def trigger_event(
