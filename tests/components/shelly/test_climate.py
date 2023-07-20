@@ -502,7 +502,7 @@ async def test_device_not_calibrated(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    mock_status = MOCK_STATUS_COAP
+    mock_status = MOCK_STATUS_COAP.copy()
     mock_status["calibrated"] = False
     monkeypatch.setattr(
         mock_block_device,
@@ -513,5 +513,18 @@ async def test_device_not_calibrated(
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+    )
+
+    # The device has been calibrated
+    monkeypatch.setattr(
+        mock_block_device,
+        "status",
+        MOCK_STATUS_COAP,
+    )
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
         domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
     )
