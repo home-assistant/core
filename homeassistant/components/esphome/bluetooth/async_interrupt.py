@@ -18,6 +18,11 @@ __version__ = "1.0.0"
 __all__ = ("interrupt",)
 
 
+import logging
+
+_LOGGER = logging.getLogger(__name__)
+
+
 @final
 class _Interrupt:
     """Interrupt context manager.
@@ -37,6 +42,8 @@ class _Interrupt:
         "_loop",
         "_interrupted",
         "_task",
+        "_cancelling",
+        "_exited",
     )
 
     def __init__(
@@ -51,10 +58,17 @@ class _Interrupt:
         self._interrupted = False
         self._exception = exception
         self._task: asyncio.Task | None
+        self._cancelling: int = 0
+        self._exited = False
 
     async def __aenter__(self) -> _Interrupt:
         """Enter the interrupt context manager."""
-        self._task = asyncio.current_task()
+        if self._exited:
+            raise RuntimeError("Already exited")
+        task = asyncio.current_task()
+        self._task = task
+        if cancelling := getattr(task, "cancelling", None):
+            self._cancelling = cancelling()
         self._future.add_done_callback(self._on_interrupt)
         return self
 
@@ -65,19 +79,36 @@ class _Interrupt:
         exc_tb: TracebackType | None,
     ) -> bool | None:
         """Exit the interrupt context manager."""
-        if exc_type is asyncio.CancelledError and self._interrupted:
+        self._exited = True
+        _LOGGER.warning("Exited exc_type=%s, exc_val=%s", exc_type, exc_val)
+        if self._interrupted:
             if TYPE_CHECKING:
                 assert self._task is not None
-            if uncancel := getattr(self._task, "uncancel", None):
-                uncancel()
-            raise self._exception
+            if exc_type is asyncio.CancelledError:
+                if not (uncancel := getattr(self._task, "uncancel", None)):
+                    # pre 3.11
+                    raise self._exception
+                if uncancel() <= self._cancelling:
+                    raise self._exception from exc_val
         self._future.remove_done_callback(self._on_interrupt)
         return None
 
-    def _on_interrupt(self, _: asyncio.Future[Any]) -> None:
+    def _on_interrupt(self, future: asyncio.Future[Any]) -> None:
         """Handle interrupt."""
+        _LOGGER.warning(
+            "Interrupting task %s via %s, self._exited=%s",
+            self._task,
+            future,
+            self._exited,
+        )
+        if self._exited:
+            # Must not cancel the task here if we already
+            # exited the context manager or the cancellation
+            # would raise upwards
+            return
         if TYPE_CHECKING:
             assert self._task is not None
+        self._interrupted = True
         self._task.cancel("Interrupted by interrupt context manager")
         self._future.remove_done_callback(self._on_interrupt)
 
