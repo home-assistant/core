@@ -29,6 +29,7 @@ async def test_sensor(hass: HomeAssistant, setup_integration: ComponentSetup) ->
         == "https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg"
     )
     assert state.attributes["video_id"] == "wysukDrMdqU"
+    assert state.attributes["published_at"] == "2023-05-11T00:20:46Z"
 
     state = hass.states.get("sensor.google_for_developers_subscribers")
     assert state
