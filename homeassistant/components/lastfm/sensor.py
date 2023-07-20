@@ -128,7 +128,7 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         return STATE_NOT_SCROBBLING
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
         play_count = None
         last_track = None
