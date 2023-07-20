@@ -26,7 +26,7 @@ class _Interrupt:
     """Interrupt context manager.
 
     Internal class, please don't instantiate it directly
-    Use interrupt() public factories instead.
+    Use interrupt() public factory instead.
 
     exception is raised immediately when future is finished.
 
