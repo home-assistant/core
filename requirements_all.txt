@@ -1091,6 +1091,9 @@ justnimbus==0.6.0
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.0.0
 
+# homeassistant.components.tplink
+kasa-crypt==0.2.0
+
 # homeassistant.components.keba
 keba-kecontact==1.1.0
 
@@ -1380,6 +1383,9 @@ opower==0.0.33
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
+
+# homeassistant.components.tplink
+orjson==3.9.1
 
 # homeassistant.components.oru
 oru==0.1.11

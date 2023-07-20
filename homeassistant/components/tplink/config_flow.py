@@ -9,14 +9,26 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_discover_devices
-from .const import DOMAIN
+from . import (
+    async_discover_devices,
+    async_init_store,
+    async_update_store,
+    decrypt,
+    encrypt,
+)
+from .const import DATA_STORAGE, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,6 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, SmartDevice] = {}
         self._discovered_device: SmartDevice | None = None
+        # self._auth_credentials: AuthCredentials = AuthCredentials()
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
@@ -84,8 +97,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        await async_init_store(self.hass)
         errors = {}
         if user_input is not None:
+            un = encrypt(user_input[CONF_USERNAME])
+            pw = encrypt(user_input[CONF_PASSWORD])
+            if (
+                un != self.hass.data[DOMAIN][DATA_STORAGE][CONF_USERNAME]
+                or pw != self.hass.data[DOMAIN][DATA_STORAGE][CONF_PASSWORD]
+            ):
+                self.hass.data[DOMAIN][DATA_STORAGE][CONF_USERNAME] = un
+                self.hass.data[DOMAIN][DATA_STORAGE][CONF_PASSWORD] = pw
+                await async_update_store(self.hass)
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             try:
@@ -97,7 +120,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_HOST, default=""): str,
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=decrypt(
+                            self.hass.data[DOMAIN][DATA_STORAGE][CONF_USERNAME]
+                        ),
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        default=decrypt(
+                            self.hass.data[DOMAIN][DATA_STORAGE][CONF_PASSWORD]
+                        ),
+                    ): str,
+                }
+            ),
             errors=errors,
         )
 
@@ -144,6 +183,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, raise_on_progress: bool = True
     ) -> SmartDevice:
         """Try to connect."""
+
         self._async_abort_entries_match({CONF_HOST: host})
         device: SmartDevice = await Discover.discover_single(host)
         await self.async_set_unique_id(

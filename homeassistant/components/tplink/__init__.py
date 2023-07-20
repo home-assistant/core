@@ -5,7 +5,13 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from kasa import SmartDevice, SmartDeviceException
+from kasa import (
+    AuthCredentials,
+    SmartDevice,
+    SmartDeviceException,
+    TPLinkSmartHomeProtocol,
+    UnauthenticatedDevice,
+)
 from kasa.discover import Discover
 
 from homeassistant import config_entries
@@ -15,6 +21,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -23,11 +31,12 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery_flow,
+    storage,
 )
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import DATA_STORAGE, DATA_STORAGE_VERSION, DOMAIN, PLATFORMS
 from .coordinator import TPLinkDataUpdateCoordinator
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
@@ -53,10 +62,34 @@ def async_trigger_discovery(
         )
 
 
+def decrypt(encrypted: str) -> str:
+    """Decrypt a string."""
+    return TPLinkSmartHomeProtocol.decrypt(bytes.fromhex(encrypted))
+
+
+def encrypt(plaintext: str) -> str:
+    """Encrypt a string."""
+    eb = TPLinkSmartHomeProtocol.encrypt(plaintext)[4:]
+    return str(eb.hex())
+
+
+def _get_auth_credentials(hass: HomeAssistant) -> AuthCredentials:
+    return AuthCredentials(
+        username=decrypt(hass.data[DOMAIN][DATA_STORAGE][CONF_USERNAME]),
+        password=decrypt(hass.data[DOMAIN][DATA_STORAGE][CONF_PASSWORD]),
+    )
+
+
 async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Discover TPLink devices on configured network interfaces."""
+
     broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
-    tasks = [Discover.discover(target=str(address)) for address in broadcast_addresses]
+    tasks = [
+        Discover.discover(
+            target=str(address), auth_credentials=_get_auth_credentials(hass)
+        )
+        for address in broadcast_addresses
+    ]
     discovered_devices: dict[str, SmartDevice] = {}
     for device_list in await asyncio.gather(*tasks):
         for device in device_list.values():
@@ -64,9 +97,37 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     return discovered_devices
 
 
+async def async_update_store(hass: HomeAssistant) -> bool:
+    """Update the data store."""
+    store: storage.Store = storage.Store(
+        hass, DATA_STORAGE_VERSION, DOMAIN, private=True
+    )
+    await store.async_save(data=hass.data[DOMAIN][DATA_STORAGE])
+    return True
+
+
+async def async_init_store(hass: HomeAssistant) -> bool:
+    """Initialize the data store."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    store: storage.Store = storage.Store(
+        hass, DATA_STORAGE_VERSION, DOMAIN, private=True
+    )
+    stored = await store.async_load()
+    if stored is None:
+        stored = {CONF_USERNAME: "", CONF_PASSWORD: ""}
+
+    hass.data[DOMAIN][DATA_STORAGE] = stored
+    return True
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
-    hass.data[DOMAIN] = {}
+
+    # hass.data[DOMAIN] = {}
+
+    await async_init_store(hass)
 
     if discovered_devices := await async_discover_devices(hass):
         async_trigger_discovery(hass, discovered_devices)
@@ -112,8 +173,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass_data: dict[str, Any] = hass.data[DOMAIN]
     device: SmartDevice = hass_data[entry.entry_id].device
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if not isinstance(device, UnauthenticatedDevice):
+        if unload_ok := await hass.config_entries.async_unload_platforms(
+            entry, PLATFORMS
+        ):
+            hass_data.pop(entry.entry_id)
+    else:
         hass_data.pop(entry.entry_id)
+        unload_ok = True
+
     await device.protocol.close()
     return unload_ok
 
