@@ -273,7 +273,7 @@ async def test_error_event_type(
         )
     )
 
-    assert voice_assistant_udp_server_v1.handle_event.called_with(
+    voice_assistant_udp_server_v1.handle_event.assert_called_with(
         VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
         {"code": "code", "message": "message"},
     )

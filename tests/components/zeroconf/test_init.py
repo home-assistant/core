@@ -247,7 +247,7 @@ async def test_setup_with_default_interface(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert mock_async_zeroconf.called_with(interface_choice=InterfaceChoice.Default)
+    mock_async_zeroconf.assert_called_with(interface_choice=InterfaceChoice.Default)
 
 
 async def test_setup_without_default_interface(
@@ -264,7 +264,7 @@ async def test_setup_without_default_interface(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: False}}
         )
 
-    assert mock_async_zeroconf.called_with()
+    mock_async_zeroconf.assert_called_with()
 
 
 async def test_setup_without_ipv6(
@@ -283,7 +283,7 @@ async def test_setup_without_ipv6(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert mock_async_zeroconf.called_with(ip_version=IPVersion.V4Only)
+    mock_async_zeroconf.assert_called_with(ip_version=IPVersion.V4Only)
 
 
 async def test_setup_with_ipv6(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
@@ -300,7 +300,7 @@ async def test_setup_with_ipv6(hass: HomeAssistant, mock_async_zeroconf: None) -
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert mock_async_zeroconf.called_with()
+    mock_async_zeroconf.assert_called_with()
 
 
 async def test_setup_with_ipv6_default(
@@ -317,7 +317,7 @@ async def test_setup_with_ipv6_default(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert mock_async_zeroconf.called_with()
+    mock_async_zeroconf.assert_called_with()
 
 
 async def test_zeroconf_match_macaddress(

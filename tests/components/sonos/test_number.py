@@ -44,7 +44,7 @@ async def test_number_entities(
             {ATTR_ENTITY_ID: audio_delay_number.entity_id, "value": 3},
             blocking=True,
         )
-        assert mock_audio_delay.called_with(3)
+        mock_audio_delay.assert_called_with(3)
 
     sub_gain_number = entity_registry.entities["number.zone_a_sub_gain"]
     sub_gain_state = hass.states.get(sub_gain_number.entity_id)
@@ -57,4 +57,4 @@ async def test_number_entities(
             {ATTR_ENTITY_ID: sub_gain_number.entity_id, "value": -8},
             blocking=True,
         )
-        assert mock_sub_gain.called_with(-8)
+        mock_sub_gain.assert_called_with(-8)
