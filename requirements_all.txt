@@ -442,6 +442,9 @@ asterisk-mbox==0.5.0
 # homeassistant.components.yeelight
 async-upnp-client==0.33.2
 
+# homeassistant.components.esphome
+async_interrupt==1.1.1
+
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
 
