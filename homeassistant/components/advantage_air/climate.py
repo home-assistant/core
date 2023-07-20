@@ -164,7 +164,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         """Set the Fan Mode."""
         mode = (
             ADVANTAGE_AIR_MYFAN
-            if self._ac.get(ADVANTAGE_AIR_AUTOFAN_ENABLED)
+            if fan_mode == FAN_AUTO and self._ac.get(ADVANTAGE_AIR_AUTOFAN_ENABLED)
             else fan_mode
         )
         await self.async_update_ac({"fan": mode})
