@@ -184,7 +184,6 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
-        self._attr_extra_state_attributes = {}
         self._update_attr()
 
     @callback
