@@ -33,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     "face-recognition",
     "opencv-python-headless",
     "pybluez",
+    "pycocotools",
     "pycups",
     "python-eq3bt",
     "python-gammu",
@@ -157,7 +158,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.23.1
+protobuf==4.23.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder

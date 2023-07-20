@@ -61,7 +61,7 @@ async def test_battery_sensor(
     remote_control: Device,
 ) -> None:
     """Test that a battery sensor is correctly added."""
-    entity_id = "sensor.test"
+    entity_id = "sensor.test_battery"
     device = remote_control
     mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
@@ -92,7 +92,7 @@ async def test_cover_battery_sensor(
     blind: Blind,
 ) -> None:
     """Test that a battery sensor is correctly added for a cover (blind)."""
-    entity_id = "sensor.test"
+    entity_id = "sensor.test_battery"
     device = blind.device
     mock_gateway.mock_devices.append(device)
     await setup_integration(hass)

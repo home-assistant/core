@@ -65,14 +65,14 @@ async def test_light_on_off(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -105,14 +105,14 @@ async def test_light_brightness(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -123,7 +123,7 @@ async def test_light_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -141,7 +141,7 @@ async def test_light_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_TRANSITION: 2},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_TRANSITION: 2},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -152,7 +152,7 @@ async def test_light_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_FLASH: FLASH_LONG},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_FLASH: FLASH_LONG},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -163,7 +163,7 @@ async def test_light_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_TRANSITION: 2},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_TRANSITION: 2},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -181,7 +181,7 @@ async def test_light_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_FLASH: FLASH_SHORT},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_FLASH: FLASH_SHORT},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -223,14 +223,14 @@ async def test_light_brightness_on_off(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -248,7 +248,7 @@ async def test_light_brightness_on_off(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -293,14 +293,14 @@ async def test_light_legacy_white_converted_to_brightness(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -343,14 +343,14 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -369,7 +369,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -414,14 +414,14 @@ async def test_light_on_and_brightness(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -464,14 +464,14 @@ async def test_rgb_color_temp_light(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -489,7 +489,7 @@ async def test_rgb_color_temp_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -508,7 +508,7 @@ async def test_rgb_color_temp_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -552,14 +552,14 @@ async def test_light_rgb(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -578,7 +578,7 @@ async def test_light_rgb(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -599,7 +599,7 @@ async def test_light_rgb(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
+            ATTR_ENTITY_ID: "light.test_mylight",
             ATTR_BRIGHTNESS: 127,
             ATTR_HS_COLOR: (100, 100),
         },
@@ -624,7 +624,7 @@ async def test_light_rgb(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -684,7 +684,7 @@ async def test_light_rgbw(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBW]
@@ -693,7 +693,7 @@ async def test_light_rgbw(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -713,7 +713,7 @@ async def test_light_rgbw(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -735,7 +735,7 @@ async def test_light_rgbw(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
+            ATTR_ENTITY_ID: "light.test_mylight",
             ATTR_BRIGHTNESS: 127,
             ATTR_HS_COLOR: (100, 100),
         },
@@ -762,7 +762,7 @@ async def test_light_rgbw(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -785,7 +785,7 @@ async def test_light_rgbw(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -855,7 +855,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
@@ -865,7 +865,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -887,7 +887,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -911,7 +911,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
+            ATTR_ENTITY_ID: "light.test_mylight",
             ATTR_BRIGHTNESS: 127,
             ATTR_HS_COLOR: (100, 100),
         },
@@ -941,7 +941,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -967,7 +967,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -994,7 +994,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
+            ATTR_ENTITY_ID: "light.test_mylight",
             ATTR_RGBWW_COLOR: (255, 255, 255, 255, 255),
         },
         blocking=True,
@@ -1022,7 +1022,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1092,7 +1092,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
@@ -1102,7 +1102,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1123,7 +1123,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_BRIGHTNESS: 127},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1146,7 +1146,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
+            ATTR_ENTITY_ID: "light.test_mylight",
             ATTR_BRIGHTNESS: 127,
             ATTR_HS_COLOR: (100, 100),
         },
@@ -1175,7 +1175,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1200,7 +1200,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1226,7 +1226,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
+            ATTR_ENTITY_ID: "light.test_mylight",
             ATTR_RGBWW_COLOR: (255, 255, 255, 255, 255),
         },
         blocking=True,
@@ -1253,7 +1253,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1312,7 +1312,7 @@ async def test_light_color_temp(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -1325,7 +1325,7 @@ async def test_light_color_temp(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1344,7 +1344,7 @@ async def test_light_color_temp(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False)])
@@ -1387,7 +1387,7 @@ async def test_light_color_temp_no_mireds_set(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -1400,7 +1400,7 @@ async def test_light_color_temp_no_mireds_set(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1419,7 +1419,7 @@ async def test_light_color_temp_no_mireds_set(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 6000},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_COLOR_TEMP_KELVIN: 6000},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1439,7 +1439,7 @@ async def test_light_color_temp_no_mireds_set(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False)])
@@ -1489,7 +1489,7 @@ async def test_light_color_temp_legacy(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -1504,7 +1504,7 @@ async def test_light_color_temp_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1523,7 +1523,7 @@ async def test_light_color_temp_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False)])
@@ -1575,7 +1575,7 @@ async def test_light_rgb_legacy(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -1585,7 +1585,7 @@ async def test_light_rgb_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1601,7 +1601,7 @@ async def test_light_rgb_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        {ATTR_ENTITY_ID: "light.test_mylight"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False)])
@@ -1610,7 +1610,7 @@ async def test_light_rgb_legacy(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_RGB_COLOR: (255, 255, 255)},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1653,7 +1653,7 @@ async def test_light_effects(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("light.test_my_light")
+    state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_EFFECT_LIST] == ["effect1", "effect2"]
@@ -1661,7 +1661,7 @@ async def test_light_effects(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_EFFECT: "effect1"},
+        {ATTR_ENTITY_ID: "light.test_mylight", ATTR_EFFECT: "effect1"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(

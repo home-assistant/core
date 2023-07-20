@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 import jinja2
 import voluptuous as vol
@@ -42,7 +42,7 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
-from .config_integration import PLATFORM_CONFIG_SCHEMA_BASE
+from .config_integration import CONFIG_SCHEMA_BASE
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -130,25 +130,54 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_WILL_MESSAGE,
 ]
 
+_T = TypeVar("_T")
+
+REMOVED_OPTIONS = vol.All(
+    cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
+    cv.removed(CONF_BROKER),  # Removed in HA Core 2023.4
+    cv.removed(CONF_CERTIFICATE),  # Removed in HA Core 2023.4
+    cv.removed(CONF_CLIENT_ID),  # Removed in HA Core 2023.4
+    cv.removed(CONF_CLIENT_CERT),  # Removed in HA Core 2023.4
+    cv.removed(CONF_CLIENT_KEY),  # Removed in HA Core 2023.4
+    cv.removed(CONF_DISCOVERY),  # Removed in HA Core 2022.3
+    cv.removed(CONF_DISCOVERY_PREFIX),  # Removed in HA Core 2023.4
+    cv.removed(CONF_KEEPALIVE),  # Removed in HA Core 2023.4
+    cv.removed(CONF_PASSWORD),  # Removed in HA Core 2023.4
+    cv.removed(CONF_PORT),  # Removed in HA Core 2023.4
+    cv.removed(CONF_PROTOCOL),  # Removed in HA Core 2023.4
+    cv.removed(CONF_TLS_INSECURE),  # Removed in HA Core 2023.4
+    cv.removed(CONF_USERNAME),  # Removed in HA Core 2023.4
+    cv.removed(CONF_WILL_MESSAGE),  # Removed in HA Core 2023.4
+)
+
+# We accept 2 schemes for configuring manual MQTT items
+#
+# Preferred style:
+#
+# mqtt:
+#   - {domain}:
+#       name: ""
+#       ...
+#   - {domain}:
+#       name: ""
+#       ...
+# ```
+#
+# Legacy supported style:
+#
+# mqtt:
+#   {domain}:
+#     - name: ""
+#       ...
+#     - name: ""
+#       ...
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
-            cv.removed(CONF_BROKER),  # Removed in HA Core 2023.4
-            cv.removed(CONF_CERTIFICATE),  # Removed in HA Core 2023.4
-            cv.removed(CONF_CLIENT_ID),  # Removed in HA Core 2023.4
-            cv.removed(CONF_CLIENT_CERT),  # Removed in HA Core 2023.4
-            cv.removed(CONF_CLIENT_KEY),  # Removed in HA Core 2023.4
-            cv.removed(CONF_DISCOVERY),  # Removed in HA Core 2022.3
-            cv.removed(CONF_DISCOVERY_PREFIX),  # Removed in HA Core 2023.4
-            cv.removed(CONF_KEEPALIVE),  # Removed in HA Core 2023.4
-            cv.removed(CONF_PASSWORD),  # Removed in HA Core 2023.4
-            cv.removed(CONF_PORT),  # Removed in HA Core 2023.4
-            cv.removed(CONF_PROTOCOL),  # Removed in HA Core 2023.4
-            cv.removed(CONF_TLS_INSECURE),  # Removed in HA Core 2023.4
-            cv.removed(CONF_USERNAME),  # Removed in HA Core 2023.4
-            cv.removed(CONF_WILL_MESSAGE),  # Removed in HA Core 2023.4
-            PLATFORM_CONFIG_SCHEMA_BASE,
+            cv.ensure_list,
+            cv.remove_falsy,
+            [REMOVED_OPTIONS],
+            [CONFIG_SCHEMA_BASE],
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -190,7 +219,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Fetch configuration
         conf = dict(entry.data)
         hass_config = await conf_util.async_hass_config_yaml(hass)
-        mqtt_yaml = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+        mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
         client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
@@ -336,7 +365,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             """Reload the platforms."""
             # Fetch updated manual configured items and validate
             config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
-            mqtt_data.updated_config = config_yaml.get(DOMAIN, {})
+            mqtt_data.config = config_yaml.get(DOMAIN, {})
 
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)

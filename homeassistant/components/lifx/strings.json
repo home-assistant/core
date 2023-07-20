@@ -10,7 +10,7 @@
       },
       "pick_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "discovery_confirm": {
@@ -24,6 +24,202 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "clean_cycle": {
+        "name": "Clean cycle"
+      }
+    },
+    "select": {
+      "infrared_brightness": {
+        "name": "Infrared brightness"
+      },
+      "theme": {
+        "name": "Theme"
+      }
+    },
+    "sensor": {
+      "rssi": {
+        "name": "RSSI"
+      }
+    }
+  },
+  "services": {
+    "set_hev_cycle_state": {
+      "name": "Set HEV cycle state",
+      "description": "Controls the HEV LEDs on a LIFX Clean bulb.",
+      "fields": {
+        "power": {
+          "name": "[%key:common::action::enable%]",
+          "description": "Start or stop a Clean cycle."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "How long the HEV LEDs will remain on. Uses the configured default duration if not specified."
+        }
+      }
+    },
+    "set_state": {
+      "name": "Set State",
+      "description": "Sets a color/brightness and possibly turn the light on/off.",
+      "fields": {
+        "infrared": {
+          "name": "Infrared",
+          "description": "Automatic infrared level when light brightness is low."
+        },
+        "zones": {
+          "name": "Zones",
+          "description": "List of zone numbers to affect (8 per LIFX Z, starts at 0)."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Duration it takes to get to the final state."
+        },
+        "power": {
+          "name": "Power",
+          "description": "Turn the light on or off. Leave out to keep the power as it is."
+        }
+      }
+    },
+    "effect_pulse": {
+      "name": "Pulse effect",
+      "description": "Runs a flash effect by changing to a color and back.",
+      "fields": {
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "Decides how colors are changed."
+        },
+        "brightness": {
+          "name": "Brightness value",
+          "description": "Number indicating brightness of the temporary color, where 1 is the minimum brightness and 255 is the maximum brightness supported by the light."
+        },
+        "brightness_pct": {
+          "name": "Brightness",
+          "description": "Percentage indicating the brightness of the temporary color, where 1 is the minimum brightness and 100 is the maximum brightness supported by the light."
+        },
+        "color_name": {
+          "name": "Color name",
+          "description": "A human readable color name."
+        },
+        "rgb_color": {
+          "name": "RGB color",
+          "description": "The temporary color in RGB-format."
+        },
+        "period": {
+          "name": "Period",
+          "description": "Duration of the effect."
+        },
+        "cycles": {
+          "name": "Cycles",
+          "description": "Number of times the effect should run."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "Powered off lights are temporarily turned on during the effect."
+        }
+      }
+    },
+    "effect_colorloop": {
+      "name": "Color loop effect",
+      "description": "Runs an effect with looping colors.",
+      "fields": {
+        "brightness": {
+          "name": "Brightness value",
+          "description": "Number indicating brightness of the color loop, where 1 is the minimum brightness and 255 is the maximum brightness supported by the light."
+        },
+        "brightness_pct": {
+          "name": "Brightness",
+          "description": "Percentage indicating the brightness of the color loop, where 1 is the minimum brightness and 100 is the maximum brightness supported by the light."
+        },
+        "saturation_min": {
+          "name": "Minimum saturation",
+          "description": "Percentage indicating the minimum saturation of the colors in the loop."
+        },
+        "saturation_max": {
+          "name": "Maximum saturation",
+          "description": "Percentage indicating the maximum saturation of the colors in the loop."
+        },
+        "period": {
+          "name": "[%key:component::lifx::services::effect_pulse::fields::period::name%]",
+          "description": "Duration between color changes."
+        },
+        "change": {
+          "name": "Change",
+          "description": "Hue movement per period, in degrees on a color wheel."
+        },
+        "spread": {
+          "name": "Spread",
+          "description": "Maximum hue difference between participating lights, in degrees on a color wheel."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "[%key:component::lifx::services::effect_pulse::fields::power_on::description%]"
+        }
+      }
+    },
+    "effect_move": {
+      "name": "Move effect",
+      "description": "Starts the firmware-based Move effect on a LIFX Z, Lightstrip or Beam.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "How long in seconds for the effect to move across the length of the light."
+        },
+        "direction": {
+          "name": "Direction",
+          "description": "Direction the effect will move across the device."
+        },
+        "theme": {
+          "name": "[%key:component::lifx::entity::select::theme::name%]",
+          "description": "(Optional) set one of the predefined themes onto the device before starting the effect."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "Powered off lights will be turned on before starting the effect."
+        }
+      }
+    },
+    "effect_flame": {
+      "name": "Flame effect",
+      "description": "Starts the firmware-based Flame effect on LIFX Tiles or Candle.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "How fast the flames will move."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "[%key:component::lifx::services::effect_move::fields::power_on::description%]"
+        }
+      }
+    },
+    "effect_morph": {
+      "name": "Morph effect",
+      "description": "Starts the firmware-based Morph effect on LIFX Tiles on Candle.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "How fast the colors will move."
+        },
+        "palette": {
+          "name": "Palette",
+          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-900) values to use for this effect. Overrides the theme attribute."
+        },
+        "theme": {
+          "name": "[%key:component::lifx::entity::select::theme::name%]",
+          "description": "Predefined color theme to use for the effect. Overridden by the palette attribute."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "[%key:component::lifx::services::effect_move::fields::power_on::description%]"
+        }
+      }
+    },
+    "effect_stop": {
+      "name": "Stop effect",
+      "description": "Stops a running effect."
     }
   }
 }
