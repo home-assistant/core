@@ -56,7 +56,7 @@ async def test_user_unavailable(
 
     state = hass.states.get(entity_id)
 
-    assert state.state == "unavailable"
+    assert not state
 
 
 async def test_first_time_user(

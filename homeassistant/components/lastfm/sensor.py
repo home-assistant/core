@@ -4,7 +4,6 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-from pylast import Track
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -39,13 +38,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
-
-
-def format_track(track: Track | None) -> str | None:
-    """Format the track."""
-    if track is None:
-        return None
-    return f"{track.artist} - {track.title}"
 
 
 async def async_setup_platform(
@@ -138,7 +130,7 @@ class LastFmSensor(
     def native_value(self) -> str:
         """Return value of sensor."""
         if self.user and self.user.now_playing is not None:
-            return format_track(self.user.now_playing) or STATE_NOT_SCROBBLING
+            return self.user.now_playing
         return STATE_NOT_SCROBBLING
 
     @property
@@ -148,6 +140,6 @@ class LastFmSensor(
             return None
         return {
             ATTR_PLAY_COUNT: self.user.play_count,
-            ATTR_LAST_PLAYED: format_track(self.user.last_track),
-            ATTR_TOP_PLAYED: format_track(self.user.top_track),
+            ATTR_LAST_PLAYED: self.user.last_track,
+            ATTR_TOP_PLAYED: self.user.top_track,
         }

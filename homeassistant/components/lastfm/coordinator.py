@@ -9,7 +9,7 @@ from pylast import LastFMNetwork, PyLastError, Track
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_USERS,
@@ -18,15 +18,22 @@ from .const import (
 )
 
 
+def format_track(track: Track | None) -> str | None:
+    """Format the track."""
+    if track is None:
+        return None
+    return f"{track.artist} - {track.title}"
+
+
 @dataclass
 class LastFMUserData:
     """Data holder for LastFM data."""
 
     play_count: int
     image: str
-    now_playing: Track | None
-    top_track: Track | None
-    last_track: Track | None
+    now_playing: str | None
+    top_track: str | None
+    last_track: str | None
 
 
 class LastFMDataUpdateCoordinator(
@@ -60,15 +67,15 @@ class LastFMDataUpdateCoordinator(
         try:
             play_count = user.get_playcount()
             image = user.get_image()
-            now_playing = user.get_now_playing()
+            now_playing = format_track(user.get_now_playing())
             top_tracks = user.get_top_tracks(limit=1)
             top_track = None
             if len(top_tracks) > 0:
-                top_track = top_tracks[0].item
+                top_track = format_track(top_tracks[0].item)
             last_tracks = user.get_recent_tracks(limit=1)
             last_track = None
             if len(last_tracks) > 0:
-                last_track = last_tracks[0].track
+                last_track = format_track(last_tracks[0].track)
             return LastFMUserData(
                 play_count,
                 image,
@@ -77,5 +84,4 @@ class LastFMDataUpdateCoordinator(
                 last_track,
             )
         except PyLastError as exc:
-            LOGGER.error("Failed to load LastFM user `%s`: %r", username, exc)
-            return None
+            raise UpdateFailed from exc
