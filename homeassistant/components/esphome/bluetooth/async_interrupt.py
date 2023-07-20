@@ -92,8 +92,7 @@ def interrupt(
 
     Useful in cases when you want to apply interrupt logic around block
     of code that uses await expression where an exception needs to be
-    raised as soon as possible without waiting for the next await expression
-    to avoid race conditions.
+    raised as soon as possible to avoid race conditions.
 
     >>> async with interrupt(future, APIUnavailableError, 'API is became unavailable'):
     ...     await api.call()
