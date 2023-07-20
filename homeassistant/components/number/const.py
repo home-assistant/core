@@ -31,6 +31,7 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumetricFlux,
 )
@@ -120,6 +121,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `LENGTH_*` units
     - SI /metric: `mm`, `cm`, `m`, `km`
     - USCS / imperial: `in`, `ft`, `yd`, `mi`
+    """
+
+    DURATION = "duration"
+    """Fixed duration.
+
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
     """
 
     ENERGY = "energy"
@@ -392,6 +399,13 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.DATA_RATE: set(UnitOfDataRate),
     NumberDeviceClass.DATA_SIZE: set(UnitOfInformation),
     NumberDeviceClass.DISTANCE: set(UnitOfLength),
+    NumberDeviceClass.DURATION: {
+        UnitOfTime.DAYS,
+        UnitOfTime.HOURS,
+        UnitOfTime.MINUTES,
+        UnitOfTime.SECONDS,
+        UnitOfTime.MILLISECONDS,
+    },
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
     NumberDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     NumberDeviceClass.FREQUENCY: set(UnitOfFrequency),
