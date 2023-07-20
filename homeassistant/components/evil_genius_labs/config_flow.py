@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 import pyevilgenius
 import voluptuous as vol
 
@@ -15,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -31,7 +31,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             data = await hub.get_all()
             info = await hub.get_info()
     except aiohttp.ClientError as err:

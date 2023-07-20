@@ -7,7 +7,6 @@ import logging
 import random
 
 import aiohue
-import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,6 +34,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 from homeassistant.util import color
+from homeassistant.util.timeout import asyncio_timeout
 
 from ..bridge import HueBridge
 from ..const import (
@@ -262,7 +262,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_safe_fetch(bridge, fetch_method):
     """Safely fetch data."""
     try:
-        async with async_timeout.timeout(4):
+        async with asyncio_timeout(4):
             return await bridge.async_request_call(fetch_method)
     except aiohue.Unauthorized as err:
         await bridge.handle_unauthorized_error()

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-import async_timeout
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
 from homeassistant.components.sensor import (
@@ -18,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_IS_TOU,
@@ -52,7 +52,7 @@ async def async_setup_entry(
             end_date = dt_util.now(phx_time_zone)
             start_date = end_date - timedelta(days=1)
 
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 hourly_usage = await hass.async_add_executor_job(
                     api.usage,
                     start_date,

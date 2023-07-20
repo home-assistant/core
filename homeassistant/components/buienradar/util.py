@@ -5,7 +5,6 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 from buienradar.buienradar import parse_data
 from buienradar.constants import (
     ATTRIBUTION,
@@ -31,6 +30,7 @@ from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import SCHEDULE_NOK, SCHEDULE_OK
 
@@ -92,7 +92,7 @@ class BrData:
         resp = None
         try:
             websession = async_get_clientsession(self.hass)
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 resp = await websession.get(url)
 
                 result[STATUS_CODE] = resp.status

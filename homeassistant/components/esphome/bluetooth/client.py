@@ -17,7 +17,6 @@ from aioesphomeapi import (
 )
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
 from aioesphomeapi.core import BluetoothGATTAPIError
-import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
 from bleak.backends.device import BLEDevice
@@ -27,6 +26,7 @@ from bleak.exc import BleakError
 from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.util.timeout import asyncio_timeout
 
 from ..domain_data import DomainData
 from .characteristic import BleakGATTCharacteristicESPHome
@@ -387,7 +387,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.name,
             self._ble_device.address,
         )
-        async with async_timeout.timeout(timeout):
+        async with asyncio_timeout(timeout):
             await self.entry_data.wait_for_ble_connections_free()
 
     @property

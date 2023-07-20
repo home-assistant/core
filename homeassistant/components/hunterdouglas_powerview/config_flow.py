@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -12,6 +11,7 @@ from homeassistant.components import dhcp, zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from . import async_get_device_info
 from .const import DOMAIN, HUB_EXCEPTIONS
@@ -34,7 +34,7 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
     pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             device_info = await async_get_device_info(pv_request, hub_address)
     except HUB_EXCEPTIONS as err:
         raise CannotConnect from err

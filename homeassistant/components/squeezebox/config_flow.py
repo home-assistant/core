@@ -4,7 +4,6 @@ from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
@@ -15,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_registry import async_get
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -131,7 +131,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # no host specified, see if we can discover an unconfigured LMS server
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio_timeout(TIMEOUT):
                 await self._discover()
             return await self.async_step_edit()
         except asyncio.TimeoutError:

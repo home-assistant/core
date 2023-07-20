@@ -7,7 +7,6 @@ import logging
 
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import camera
@@ -20,6 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -314,7 +314,7 @@ class MicrosoftFace:
                 payload = None
 
         try:
-            async with async_timeout.timeout(self.timeout):
+            async with asyncio_timeout(self.timeout):
                 response = await getattr(self.websession, method)(
                     url, data=payload, headers=headers, params=params
                 )

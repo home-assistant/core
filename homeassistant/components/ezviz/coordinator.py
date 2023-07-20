@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-from async_timeout import timeout
 from pyezviz.client import EzvizClient
 from pyezviz.exceptions import (
     EzvizAuthTokenExpired,
@@ -15,6 +14,7 @@ from pyezviz.exceptions import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -37,7 +37,7 @@ class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from EZVIZ."""
         try:
-            async with timeout(self._api_timeout):
+            async with asyncio_timeout(self._api_timeout):
                 return await self.hass.async_add_executor_job(
                     self.ezviz_client.load_cameras
                 )

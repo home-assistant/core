@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-import async_timeout
 from yolink.const import ATTR_DEVICE_SMART_REMOTER
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
@@ -22,6 +21,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from . import api
 from .const import DOMAIN, YOLINK_EVENT
@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     yolink_home = YoLinkHome()
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             await yolink_home.async_setup(
                 auth_mgr, YoLinkHomeMessageListener(hass, entry)
             )

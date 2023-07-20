@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
@@ -13,6 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ async def _update_google_domains(hass, session, domain, user, password, timeout)
     params = {"hostname": domain}
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio_timeout(timeout):
             resp = await session.get(url, params=params)
             body = await resp.text()
 

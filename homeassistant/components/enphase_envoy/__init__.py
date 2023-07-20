@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import async_timeout
 from envoy_reader.envoy_reader import EnvoyReader
 import httpx
 
@@ -15,6 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import COORDINATOR, DOMAIN, NAME, PLATFORMS, SENSORS
 
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from API endpoint."""
-        async with async_timeout.timeout(30):
+        async with asyncio_timeout(30):
             try:
                 await envoy_reader.getData()
             except httpx.HTTPStatusError as err:

@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 
-from async_timeout import timeout
 from sharkiq import (
     AylaApi,
     SharkIqAuthError,
@@ -17,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL
 
@@ -55,7 +55,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
         """Asynchronously update the data for a single vacuum."""
         dsn = sharkiq.serial_number
         LOGGER.debug("Updating sharkiq data for device DSN %s", dsn)
-        async with timeout(API_TIMEOUT):
+        async with asyncio_timeout(API_TIMEOUT):
             await sharkiq.async_update()
 
     async def _async_update_data(self) -> bool:

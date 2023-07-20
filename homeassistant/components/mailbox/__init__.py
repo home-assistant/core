@@ -10,7 +10,6 @@ from typing import Any, Final
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound
-import async_timeout
 
 from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
@@ -25,6 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -267,7 +267,7 @@ class MailboxMediaView(MailboxView):
         mailbox = self.get_mailbox(platform)
 
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 try:
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:

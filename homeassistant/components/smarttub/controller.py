@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 
 from aiohttp import client_exceptions
-import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
@@ -15,6 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_ERRORS,
@@ -85,7 +85,7 @@ class SmartTubController:
 
         data = {}
         try:
-            async with async_timeout.timeout(POLLING_TIMEOUT):
+            async with asyncio_timeout(POLLING_TIMEOUT):
                 for spa in self.spas:
                     data[spa.id] = await self._get_spa_data(spa)
         except APIError as err:

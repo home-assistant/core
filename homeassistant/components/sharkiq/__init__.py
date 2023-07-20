@@ -2,7 +2,6 @@
 import asyncio
 from contextlib import suppress
 
-import async_timeout
 from sharkiq import (
     AylaApi,
     SharkIqAuthError,
@@ -16,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     API_TIMEOUT,
@@ -35,7 +35,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     """Connect to vacuum."""
     try:
-        async with async_timeout.timeout(API_TIMEOUT):
+        async with asyncio_timeout(API_TIMEOUT):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except SharkIqAuthError:
@@ -87,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
     """Disconnect to vacuum."""
     LOGGER.debug("Disconnecting from Ayla Api")
-    async with async_timeout.timeout(5):
+    async with asyncio_timeout(5):
         with suppress(
             SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError
         ):

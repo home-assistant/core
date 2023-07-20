@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 
-import async_timeout
 import pyotgw
 from pyotgw import vars as gw_vars
 from serial import SerialException
@@ -20,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.timeout import asyncio_timeout
 
 from . import DOMAIN
 from .const import (
@@ -69,7 +69,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
 
             try:
-                async with async_timeout.timeout(CONNECTION_TIMEOUT):
+                async with asyncio_timeout(CONNECTION_TIMEOUT):
                     await test_connection()
             except asyncio.TimeoutError:
                 return self._show_form({"base": "timeout_connect"})

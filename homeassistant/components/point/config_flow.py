@@ -3,7 +3,6 @@ import asyncio
 from collections import OrderedDict
 import logging
 
-import async_timeout
 from pypoint import PointSession
 import voluptuous as vol
 
@@ -12,6 +11,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -94,7 +94,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "follow_link"
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 url = await self._get_authorization_url()
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")

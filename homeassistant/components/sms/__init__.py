@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-import async_timeout
 import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -13,6 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_BAUD_SPEED,
@@ -125,7 +125,7 @@ class SignalCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch device signal quality."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 return await self._gateway.get_signal_quality_async()
         except gammu.GSMError as exc:
             raise UpdateFailed(f"Error communicating with device: {exc}") from exc
@@ -147,7 +147,7 @@ class NetworkCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch device network info."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 return await self._gateway.get_network_info_async()
         except gammu.GSMError as exc:
             raise UpdateFailed(f"Error communicating with device: {exc}") from exc

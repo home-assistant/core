@@ -10,7 +10,6 @@ from aioopenexchangerates import (
     OpenExchangeRatesAuthError,
     OpenExchangeRatesClientError,
 )
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,6 +17,7 @@ from homeassistant.const import CONF_API_KEY, CONF_BASE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import CLIENT_TIMEOUT, DEFAULT_BASE, DOMAIN, LOGGER
 
@@ -40,7 +40,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     """Validate the user input allows us to connect."""
     client = Client(data[CONF_API_KEY], async_get_clientsession(hass))
 
-    async with async_timeout.timeout(CLIENT_TIMEOUT):
+    async with asyncio_timeout(CLIENT_TIMEOUT):
         await client.get_latest(base=data[CONF_BASE])
 
     return {"title": data[CONF_BASE]}
@@ -119,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.currencies:
             client = Client("dummy-api-key", async_get_clientsession(self.hass))
             try:
-                async with async_timeout.timeout(CLIENT_TIMEOUT):
+                async with asyncio_timeout(CLIENT_TIMEOUT):
                     self.currencies = await client.get_currencies()
             except OpenExchangeRatesClientError as err:
                 raise AbortFlow("cannot_connect") from err

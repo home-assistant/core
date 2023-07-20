@@ -14,7 +14,6 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
-import async_timeout
 import pytest
 import voluptuous as vol
 
@@ -53,6 +52,7 @@ from homeassistant.exceptions import (
 )
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
+from homeassistant.util.timeout import asyncio_timeout
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .common import async_capture_events, async_mock_service
@@ -235,7 +235,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         assert can_call_async_get_hass()
 
     hass.async_create_task(_async_create_task(), "create_task")
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
 
@@ -246,7 +246,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         task_finished.set()
 
     hass.async_add_job(_add_job)
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
 
@@ -263,7 +263,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         hass.async_add_job(_callback)
 
     _schedule_callback_from_callback()
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
 
@@ -279,7 +279,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         hass.async_add_job(_coroutine())
 
     _schedule_coroutine_from_callback()
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
 
@@ -295,7 +295,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         hass.async_add_job(_callback)
 
     await _schedule_callback_from_coroutine()
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
 
@@ -310,7 +310,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         await hass.async_create_task(_coroutine())
 
     await _schedule_callback_from_coroutine()
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
 
@@ -326,7 +326,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         hass.add_job(_async_add_job)
 
     await hass.async_add_executor_job(_async_add_executor_job_add_job)
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
 
@@ -341,7 +341,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         hass.create_task(_async_create_task())
 
     await hass.async_add_executor_job(_async_add_executor_job_create_task)
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
 
@@ -359,7 +359,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
 
     my_job_add_job = MyJobAddJob()
     my_job_add_job.start()
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
     my_job_add_job.join()
@@ -377,7 +377,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
 
     my_job_create_task = MyJobCreateTask()
     my_job_create_task.start()
-    async with async_timeout.timeout(1):
+    async with asyncio_timeout(1):
         await task_finished.wait()
     task_finished.clear()
     my_job_create_task.join()

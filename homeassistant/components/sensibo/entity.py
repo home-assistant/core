@@ -4,13 +4,13 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
-import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
@@ -28,7 +28,7 @@ def async_handle_api_call(
         """Wrap services for api calls."""
         res: bool = False
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio_timeout(TIMEOUT):
                 res = await function(*args, **kwargs)
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError from err

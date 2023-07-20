@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-import async_timeout
 from starlink_grpc import (
     AlertDict,
     ChannelContext,
@@ -20,6 +19,7 @@ from starlink_grpc import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         )
 
     async def _async_update_data(self) -> StarlinkData:
-        async with async_timeout.timeout(4):
+        async with asyncio_timeout(4):
             try:
                 status = await self.hass.async_add_executor_job(
                     status_data, self.channel_context
@@ -59,7 +59,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     async def async_stow_starlink(self, stow: bool):
         """Set whether Starlink system tied to this coordinator should be stowed."""
-        async with async_timeout.timeout(4):
+        async with asyncio_timeout(4):
             try:
                 await self.hass.async_add_executor_job(
                     set_stow_state, not stow, self.channel_context
@@ -69,7 +69,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     async def async_reboot_starlink(self):
         """Reboot the Starlink system tied to this coordinator."""
-        async with async_timeout.timeout(4):
+        async with asyncio_timeout(4):
             try:
                 await self.hass.async_add_executor_job(reboot, self.channel_context)
             except GrpcError as exc:

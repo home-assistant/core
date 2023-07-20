@@ -5,7 +5,6 @@ import logging
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from gios import Gios
 from gios.exceptions import GiosError
 from gios.model import GiosSensors
@@ -17,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
 
@@ -88,7 +88,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
     async def _async_update_data(self) -> GiosSensors:
         """Update data via library."""
         try:
-            async with timeout(API_TIMEOUT):
+            async with asyncio_timeout(API_TIMEOUT):
                 return await self.gios.async_update()
         except (GiosError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error

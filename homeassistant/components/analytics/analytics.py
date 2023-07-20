@@ -8,7 +8,6 @@ from typing import Any
 import uuid
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
@@ -38,6 +37,7 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import async_get_loaded_integrations
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ANALYTICS_ENDPOINT_URL,
@@ -315,7 +315,7 @@ class Analytics:
             )
 
         try:
-            async with async_timeout.timeout(30):
+            async with asyncio_timeout(30):
                 response = await self.session.post(self.endpoint, json=payload)
                 if response.status == 200:
                     LOGGER.info(

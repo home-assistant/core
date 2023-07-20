@@ -6,12 +6,12 @@ from contextlib import suppress
 from typing import Any
 
 import aiopulse
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_ID
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -43,7 +43,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         hubs: list[aiopulse.Hub] = []
         with suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(5):
+            async with asyncio_timeout(5):
                 async for hub in aiopulse.Hub.discover():
                     if hub.id not in already_configured:
                         hubs.append(hub)

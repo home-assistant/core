@@ -9,7 +9,6 @@ import socket
 import sys
 from typing import Any
 
-import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
@@ -22,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.timeout import asyncio_timeout
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
@@ -107,7 +107,7 @@ async def try_connect(
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
-            async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+            async with asyncio_timeout(GATEWAY_READY_TIMEOUT):
                 await gateway_ready.wait()
                 return True
         except asyncio.TimeoutError:
@@ -299,7 +299,7 @@ async def _gw_start(
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     try:
-        async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+        async with asyncio_timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready.wait()
     except asyncio.TimeoutError:
         _LOGGER.warning(

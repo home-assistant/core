@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import re
 from typing import Any
 
-from async_timeout import timeout
 from pynina import ApiError, Nina
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     _LOGGER,
@@ -103,7 +103,7 @@ class NINADataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
-        async with timeout(10):
+        async with asyncio_timeout(10):
             try:
                 await self._nina.update()
             except ApiError as err:

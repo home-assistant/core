@@ -10,7 +10,6 @@ from pathlib import Path
 import time
 from typing import TYPE_CHECKING
 
-import async_timeout
 from voip_utils import (
     CallInfo,
     RtcpState,
@@ -35,6 +34,7 @@ from homeassistant.components.assist_pipeline.vad import (
 )
 from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.util.timeout import asyncio_timeout
 from homeassistant.util.ulid import ulid
 
 from .const import (
@@ -265,7 +265,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     self._clear_audio_queue()
 
             # Run pipeline with a timeout
-            async with async_timeout.timeout(self.pipeline_timeout):
+            async with asyncio_timeout(self.pipeline_timeout):
                 await async_pipeline_from_audio_stream(
                     self.hass,
                     context=self._context,
@@ -321,7 +321,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         """
         # Timeout if no audio comes in for a while.
         # This means the caller hung up.
-        async with async_timeout.timeout(self.audio_timeout):
+        async with asyncio_timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
         while chunk:
@@ -332,7 +332,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 # Buffer until command starts
                 return True
 
-            async with async_timeout.timeout(self.audio_timeout):
+            async with asyncio_timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()
 
         return False
@@ -349,7 +349,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         # Timeout if no audio comes in for a while.
         # This means the caller hung up.
-        async with async_timeout.timeout(self.audio_timeout):
+        async with asyncio_timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
         while chunk:
@@ -359,7 +359,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
             yield chunk
 
-            async with async_timeout.timeout(self.audio_timeout):
+            async with asyncio_timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()
 
     def _clear_audio_queue(self) -> None:
@@ -401,7 +401,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             tts_samples = len(audio_bytes) / (WIDTH * CHANNELS)
             tts_seconds = tts_samples / RATE
 
-            async with async_timeout.timeout(tts_seconds + self.tts_extra_timeout):
+            async with asyncio_timeout(tts_seconds + self.tts_extra_timeout):
                 # Assume TTS audio is 16Khz 16-bit mono
                 await self._async_send_audio(audio_bytes)
         except asyncio.TimeoutError as err:

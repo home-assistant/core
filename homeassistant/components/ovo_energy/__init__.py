@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import logging
 
 import aiohttp
-import async_timeout
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
@@ -20,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import CONF_ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             try:
                 authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME],

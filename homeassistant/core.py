@@ -37,7 +37,6 @@ from typing import (
 )
 from urllib.parse import urlparse
 
-import async_timeout
 from typing_extensions import Self
 import voluptuous as vol
 import yarl
@@ -88,7 +87,7 @@ from .util.async_ import (
 )
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
-from .util.timeout import TimeoutManager
+from .util.timeout import TimeoutManager, asyncio_timeout
 from .util.ulid import ulid, ulid_at_time
 from .util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
@@ -816,7 +815,7 @@ class HomeAssistant:
             )
             task.cancel()
             try:
-                async with async_timeout.timeout(0.1):
+                async with asyncio_timeout(0.1):
                     await task
             except asyncio.CancelledError:
                 pass

@@ -5,7 +5,6 @@ from typing import Any
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -13,6 +12,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -66,7 +66,7 @@ async def _run_client(hass: HomeAssistant, client: Client, interval: float) -> N
 
     while True:
         try:
-            async with async_timeout.timeout(interval):
+            async with asyncio_timeout(interval):
                 await client.start()
 
             _LOGGER.debug("Client connected %s", client.host)

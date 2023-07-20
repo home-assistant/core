@@ -6,7 +6,6 @@ import json
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 import voluptuous as vol
@@ -18,6 +17,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DEFAULT_PORT, DOMAIN, LOGGER
 
@@ -42,7 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            async with timeout(15):
+            async with asyncio_timeout(15):
                 device_info = await fully.getDeviceInfo()
         except (
             ClientConnectorError,

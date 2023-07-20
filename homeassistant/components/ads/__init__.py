@@ -6,7 +6,6 @@ import logging
 import struct
 import threading
 
-import async_timeout
 import pyads
 import voluptuous as vol
 
@@ -20,6 +19,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -301,7 +301,7 @@ class AdsEntity(Entity):
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)

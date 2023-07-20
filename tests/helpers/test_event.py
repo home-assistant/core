@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 from astral import LocationInfo
 import astral.sun
-import async_timeout
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import jinja2
@@ -47,6 +46,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 
@@ -4218,7 +4218,7 @@ async def test_call_later(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio_timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
 
 
@@ -4238,7 +4238,7 @@ async def test_async_call_later(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio_timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
     assert isinstance(remove, Callable)
     remove()
@@ -4260,7 +4260,7 @@ async def test_async_call_later_timedelta(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio_timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
     assert isinstance(remove, Callable)
     remove()
@@ -4287,7 +4287,7 @@ async def test_async_call_later_cancel(hass: HomeAssistant) -> None:
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
     with contextlib.suppress(asyncio.TimeoutError):
-        async with async_timeout.timeout(delay + delay_tolerance):
+        async with asyncio_timeout(delay + delay_tolerance):
             assert await future, "callback not canceled"
 
 

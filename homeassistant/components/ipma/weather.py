@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 
-import async_timeout
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast
 from pyipma.location import Location
@@ -31,6 +30,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTRIBUTION,
@@ -101,7 +101,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update Condition and Forecast."""
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             new_observation = await self._location.observation(self._api)
             new_forecast = await self._location.forecast(self._api, self._period)
 

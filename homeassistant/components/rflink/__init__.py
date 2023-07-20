@@ -5,7 +5,6 @@ import asyncio
 from collections import defaultdict
 import logging
 
-import async_timeout
 from rflink.protocol import ProtocolBase, create_rflink_connection
 from serial import SerialException
 import voluptuous as vol
@@ -31,6 +30,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.timeout import asyncio_timeout
 
 from .utils import brightness_to_rflink
 
@@ -280,7 +280,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         try:
-            async with async_timeout.timeout(CONNECTION_TIMEOUT):
+            async with asyncio_timeout(CONNECTION_TIMEOUT):
                 transport, protocol = await connection
 
         except (

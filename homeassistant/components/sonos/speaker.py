@@ -10,7 +10,6 @@ import logging
 import time
 from typing import Any, cast
 
-import async_timeout
 import defusedxml.ElementTree as ET
 from soco.core import SoCo
 from soco.events_base import Event as SonosEvent, SubscriptionBase
@@ -33,6 +32,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval, track_time_interval
 from homeassistant.util import dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from .alarms import SonosAlarms
 from .const import (
@@ -1122,7 +1122,7 @@ class SonosSpeaker:
             return True
 
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio_timeout(5):
                 while not _test_groups(groups):
                     await hass.data[DATA_SONOS].topology_condition.wait()
         except asyncio.TimeoutError:

@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from async_timeout import timeout
 from pymelcloud import Device, get_devices
 import voluptuous as vol
 
@@ -21,6 +20,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -153,7 +153,7 @@ async def mel_devices_setup(
     """Query connected devices from MELCloud."""
     session = async_get_clientsession(hass)
     try:
-        async with timeout(10):
+        async with asyncio_timeout(10):
             all_devices = await get_devices(
                 token,
                 session,

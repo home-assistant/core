@@ -3,7 +3,6 @@ from copy import deepcopy
 import datetime
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
@@ -24,6 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 from homeassistant.util.json import json_loads
+from homeassistant.util.timeout import asyncio_timeout
 
 from tests.common import (
     MockConfigEntry,
@@ -500,7 +500,7 @@ async def test_subscribe_unsubscribe_events(
     hass.bus.async_fire("test_event", {"hello": "world"})
     hass.bus.async_fire("ignore_event")
 
-    async with timeout(3):
+    async with asyncio_timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 5
@@ -715,7 +715,7 @@ async def test_subscribe_unsubscribe_events_whitelist(
 
     hass.bus.async_fire("themes_updated")
 
-    async with timeout(3):
+    async with asyncio_timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 6
@@ -1614,7 +1614,7 @@ async def test_subscribe_trigger(hass: HomeAssistant, websocket_client) -> None:
     hass.bus.async_fire("test_event", {"hello": "world"}, context=context)
     hass.bus.async_fire("ignore_event")
 
-    async with timeout(3):
+    async with asyncio_timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 5

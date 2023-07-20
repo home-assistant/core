@@ -7,7 +7,6 @@ from typing import Any
 from aiohttp import ClientSession
 from airly import Airly
 from airly.exceptions import AirlyError
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,6 +14,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import CONF_USE_NEAREST, DOMAIN, NO_AIRLY_SENSORS
 
@@ -105,7 +105,7 @@ async def test_location(
         measurements = airly.create_measurements_session_point(
             latitude=latitude, longitude=longitude
         )
-    async with async_timeout.timeout(10):
+    async with asyncio_timeout(10):
         await measurements.update()
 
     current = measurements.current

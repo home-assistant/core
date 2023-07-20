@@ -9,7 +9,6 @@ import socket
 from typing import cast
 
 from aioesphomeapi import VoiceAssistantEventType
-import async_timeout
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -25,6 +24,7 @@ from homeassistant.components.assist_pipeline.vad import (
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 from .entry_data import RuntimeEntryData
@@ -210,7 +210,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         Returns False if the connection was stopped gracefully (b"" put onto the queue).
         """
         # Timeout if no audio comes in for a while.
-        async with async_timeout.timeout(self.audio_timeout):
+        async with asyncio_timeout(self.audio_timeout):
             chunk = await self.queue.get()
 
         while chunk:
@@ -220,7 +220,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             if segmenter.in_command:
                 return True
 
-            async with async_timeout.timeout(self.audio_timeout):
+            async with asyncio_timeout(self.audio_timeout):
                 chunk = await self.queue.get()
 
         # If chunk is falsey, `stop()` was called
@@ -240,7 +240,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             yield buffered_chunk
 
         # Timeout if no audio comes in for a while.
-        async with async_timeout.timeout(self.audio_timeout):
+        async with asyncio_timeout(self.audio_timeout):
             chunk = await self.queue.get()
 
         while chunk:
@@ -250,7 +250,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
             yield chunk
 
-            async with async_timeout.timeout(self.audio_timeout):
+            async with asyncio_timeout(self.audio_timeout):
                 chunk = await self.queue.get()
 
     async def _iterate_packets_with_vad(
@@ -259,7 +259,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         segmenter = VoiceCommandSegmenter(silence_seconds=silence_seconds)
         chunk_buffer: deque[bytes] = deque(maxlen=100)
         try:
-            async with async_timeout.timeout(pipeline_timeout):
+            async with asyncio_timeout(pipeline_timeout):
                 speech_detected = await self._wait_for_speech(segmenter, chunk_buffer)
                 if not speech_detected:
                     _LOGGER.debug(
@@ -326,7 +326,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         _LOGGER.debug("Starting pipeline")
         try:
-            async with async_timeout.timeout(pipeline_timeout):
+            async with asyncio_timeout(pipeline_timeout):
                 await async_pipeline_from_audio_stream(
                     self.hass,
                     context=self.context,

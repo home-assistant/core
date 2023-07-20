@@ -6,7 +6,6 @@ import logging
 import os
 import ssl
 
-import async_timeout
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
@@ -16,6 +15,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ABORT_REASON_CANNOT_CONNECT,
@@ -226,7 +226,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return None
 
         try:
-            async with async_timeout.timeout(BRIDGE_TIMEOUT):
+            async with asyncio_timeout(BRIDGE_TIMEOUT):
                 await bridge.connect()
         except asyncio.TimeoutError:
             _LOGGER.error(

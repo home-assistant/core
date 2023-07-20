@@ -7,10 +7,10 @@ from typing import Any
 
 from aioqsw.exceptions import QswError
 from aioqsw.localapi import QnapQswApi
-import async_timeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, QSW_TIMEOUT_SEC
 
@@ -36,7 +36,7 @@ class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        async with async_timeout.timeout(QSW_TIMEOUT_SEC):
+        async with asyncio_timeout(QSW_TIMEOUT_SEC):
             try:
                 await self.qsw.update()
             except QswError as error:
@@ -60,7 +60,7 @@ class QswFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update firmware data via library."""
-        async with async_timeout.timeout(QSW_TIMEOUT_SEC):
+        async with asyncio_timeout(QSW_TIMEOUT_SEC):
             try:
                 await self.qsw.check_firmware()
             except QswError as error:

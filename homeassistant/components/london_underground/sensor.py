@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import async_timeout
 from london_tube_status import TubeData
 import voluptuous as vol
 
@@ -19,6 +18,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ class LondonTubeCoordinator(DataUpdateCoordinator):
         self._data = data
 
     async def _async_update_data(self):
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             await self._data.update()
             return self._data.data
 

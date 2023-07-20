@@ -10,7 +10,6 @@ import logging
 from typing import Any
 
 from aiohttp import web
-from async_timeout import timeout
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import PIL
 import voluptuous as vol
@@ -46,6 +45,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
+from homeassistant.util.timeout import asyncio_timeout
 
 from .camera import GenericCamera, generate_auth
 from .const import (
@@ -170,7 +170,7 @@ async def async_test_still(
     auth = generate_auth(info)
     try:
         async_client = get_async_client(hass, verify_ssl=verify_ssl)
-        async with timeout(GET_IMAGE_TIMEOUT):
+        async with asyncio_timeout(GET_IMAGE_TIMEOUT):
             response = await async_client.get(url, auth=auth, timeout=GET_IMAGE_TIMEOUT)
             response.raise_for_status()
             image = response.content

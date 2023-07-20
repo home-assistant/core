@@ -9,7 +9,6 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
 from airly.exceptions import AirlyError
-import async_timeout
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
@@ -19,6 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_API_ADVICE,
@@ -167,7 +167,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
             measurements = self.airly.create_measurements_session_point(
                 self.latitude, self.longitude
             )
-        async with async_timeout.timeout(20):
+        async with asyncio_timeout(20):
             try:
                 await measurements.update()
             except (AirlyError, ClientConnectorError) as error:

@@ -3,12 +3,12 @@ import asyncio
 import logging
 import os
 
-import async_timeout
 from google.cloud import texttospeech
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -286,7 +286,7 @@ class GoogleCloudTTSProvider(Provider):
                 "input": synthesis_input,
             }
 
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 assert self.hass
                 response = await self.hass.async_add_executor_job(
                     self._client.synthesize_speech, request

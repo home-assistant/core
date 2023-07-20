@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 from logging import Logger
 
-import async_timeout
 from elmax_api.exceptions import (
     ElmaxApiError,
     ElmaxBadLoginError,
@@ -27,6 +26,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
 
@@ -87,7 +87,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
 
     async def _async_update_data(self):
         try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
+            async with asyncio_timeout(DEFAULT_TIMEOUT):
                 # Retrieve the panel online status first
                 panels = await self._client.list_control_panels()
                 panel = next(

@@ -8,7 +8,6 @@ from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.scene import Scene
@@ -18,6 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ async def async_setup_platform(
 
     try:
         httpsession = async_get_clientsession(hass)
-        async with async_timeout.timeout(timeout):
+        async with asyncio_timeout(timeout):
             scenes_resp = await httpsession.get(url, headers=headers)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -90,7 +90,7 @@ class LifxCloudScene(Scene):
 
         try:
             httpsession = async_get_clientsession(self.hass)
-            async with async_timeout.timeout(self._timeout):
+            async with asyncio_timeout(self._timeout):
                 await httpsession.put(url, headers=self._headers)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):

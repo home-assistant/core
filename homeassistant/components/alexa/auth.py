@@ -6,13 +6,13 @@ import json
 import logging
 
 import aiohttp
-import async_timeout
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ class Auth:
     async def _async_request_new_token(self, lwa_params):
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 response = await session.post(
                     LWA_TOKEN_URI,
                     headers=LWA_HEADERS,

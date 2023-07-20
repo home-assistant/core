@@ -7,7 +7,6 @@ from collections.abc import Callable
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
-import async_timeout
 from pydeconz import DeconzSession, errors
 from pydeconz.interfaces import sensors
 from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
@@ -24,6 +23,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
@@ -353,7 +353,7 @@ async def get_deconz_session(
         config[CONF_API_KEY],
     )
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             await deconz_session.refresh_state()
         return deconz_session
 

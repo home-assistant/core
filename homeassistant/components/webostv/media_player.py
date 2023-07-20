@@ -12,7 +12,6 @@ from ssl import SSLContext
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
-import async_timeout
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -37,6 +36,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
+from homeassistant.util.timeout import asyncio_timeout
 
 from . import update_client_key
 from .const import (
@@ -479,10 +479,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             ssl_context = SSLContext()
 
         websession = async_get_clientsession(self.hass)
-        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-            response = await websession.get(url, ssl=ssl_context)
-            if response.status == HTTPStatus.OK:
-                content = await response.read()
+        with suppress(asyncio.TimeoutError):
+            async with asyncio_timeout(10):
+                response = await websession.get(url, ssl=ssl_context)
+                if response.status == HTTPStatus.OK:
+                    content = await response.read()
 
         if content is None:
             _LOGGER.warning("Error retrieving proxied image from %s", url)

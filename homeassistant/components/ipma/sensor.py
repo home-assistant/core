@@ -5,7 +5,6 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 
-import async_timeout
 from pyipma.api import IPMA_API
 from pyipma.location import Location
 
@@ -14,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DATA_API, DATA_LOCATION, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 from .entity import IPMADevice
@@ -83,7 +83,7 @@ class IPMASensor(SensorEntity, IPMADevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update Fire risk."""
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             self._attr_native_value = await self.entity_description.value_fn(
                 self._location, self._api
             )

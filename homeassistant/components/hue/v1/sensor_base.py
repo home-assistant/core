@@ -7,12 +7,12 @@ from typing import Any
 
 from aiohue import AiohueException, Unauthorized
 from aiohue.v1.sensors import TYPE_ZLL_PRESENCE
-import async_timeout
 
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import callback
 from homeassistant.helpers import debounce, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from ..const import REQUEST_REFRESH_DELAY
 from .helpers import remove_devices
@@ -61,7 +61,7 @@ class SensorManager:
     async def async_update_data(self):
         """Update sensor data."""
         try:
-            async with async_timeout.timeout(4):
+            async with asyncio_timeout(4):
                 return await self.bridge.async_request_call(
                     self.bridge.api.sensors.update
                 )

@@ -2,7 +2,6 @@
 import asyncio
 import logging
 
-import async_timeout
 from pyflick.authentication import AuthException, SimpleFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
 import voluptuous as vol
@@ -15,6 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.helpers import aiohttp_client
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -45,7 +45,7 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio_timeout(60):
                 token = await auth.async_get_access_token()
         except asyncio.TimeoutError as err:
             raise CannotConnect() from err

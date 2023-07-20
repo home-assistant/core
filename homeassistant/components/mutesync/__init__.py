@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 
-import async_timeout
 import mutesync
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,6 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, UPDATE_INTERVAL_IN_MEETING, UPDATE_INTERVAL_NOT_IN_MEETING
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def update_data():
         """Update the data."""
-        async with async_timeout.timeout(2.5):
+        async with asyncio_timeout(2.5):
             state = await client.get_state()
 
             if state["muted"] is None or state["in_meeting"] is None:

@@ -7,13 +7,13 @@ import datetime
 import logging
 from typing import TypeVar
 
-import async_timeout
 from pyrainbird.async_client import AsyncRainbirdController, RainbirdApiException
 from pyrainbird.data import ModelAndVersion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
 
@@ -82,7 +82,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
     async def _async_update_data(self) -> RainbirdDeviceState:
         """Fetch data from Rain Bird device."""
         try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
+            async with asyncio_timeout(TIMEOUT_SECONDS):
                 return await self._fetch_data()
         except RainbirdApiException as err:
             raise UpdateFailed(f"Error communicating with Device: {err}") from err

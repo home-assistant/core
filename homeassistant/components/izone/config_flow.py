@@ -4,11 +4,10 @@ import asyncio
 from contextlib import suppress
 import logging
 
-from async_timeout import timeout
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DISPATCH_CONTROLLER_DISCOVERED, IZONE, TIMEOUT_DISCOVERY
 from .discovery import async_start_discovery_service, async_stop_discovery_service
@@ -28,7 +27,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     disco = await async_start_discovery_service(hass)
 
     with suppress(asyncio.TimeoutError):
-        async with timeout(TIMEOUT_DISCOVERY):
+        async with asyncio_timeout(TIMEOUT_DISCOVERY):
             await controller_ready.wait()
 
     if not disco.pi_disco.controllers:

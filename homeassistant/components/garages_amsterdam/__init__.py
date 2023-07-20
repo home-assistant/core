@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-import async_timeout
 from odp_amsterdam import ODPAmsterdam
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -40,7 +40,7 @@ async def get_coordinator(
         return hass.data[DOMAIN]
 
     async def async_get_garages():
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             return {
                 garage.garage_name: garage
                 for garage in await ODPAmsterdam(

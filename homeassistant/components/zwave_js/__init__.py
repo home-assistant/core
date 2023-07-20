@@ -7,7 +7,6 @@ from collections.abc import Coroutine
 from contextlib import suppress
 from typing import Any
 
-from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
@@ -46,6 +45,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.util.timeout import asyncio_timeout
 
 from .addon import get_addon_manager
 from .api import async_register_api
@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # connect and throw error if connection failed
     try:
-        async with timeout(CONNECT_TIMEOUT):
+        async with asyncio_timeout(CONNECT_TIMEOUT):
             await client.connect()
     except InvalidServerVersion as err:
         if use_addon:

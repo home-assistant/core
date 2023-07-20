@@ -4,13 +4,13 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +120,7 @@ class YandexSpeechKitProvider(Provider):
         actual_language = language
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 url_param = {
                     "text": message,
                     "lang": actual_language,

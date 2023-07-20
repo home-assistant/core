@@ -5,13 +5,13 @@ import asyncio
 from http import HTTPStatus
 
 from aiohttp import ClientError, ClientResponseError
-from async_timeout import timeout
 import pymelcloud
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -43,7 +43,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            async with timeout(10):
+            async with asyncio_timeout(10):
                 if (acquired_token := token) is None:
                     acquired_token = await pymelcloud.login(
                         username,

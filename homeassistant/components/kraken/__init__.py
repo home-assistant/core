@@ -5,7 +5,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 import krakenex
 import pykrakenapi
 
@@ -14,6 +13,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_TRACKED_ASSET_PAIRS,
@@ -73,7 +73,7 @@ class KrakenData:
         once.
         """
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 return await self._hass.async_add_executor_job(self._get_kraken_data)
         except pykrakenapi.pykrakenapi.KrakenAPIError as error:
             if "Unknown asset pair" in str(error):

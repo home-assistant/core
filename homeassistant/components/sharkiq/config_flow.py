@@ -6,7 +6,6 @@ from collections.abc import Mapping
 from typing import Any
 
 import aiohttp
-import async_timeout
 from sharkiq import SharkIqAuthError, get_ayla_api
 import voluptuous as vol
 
@@ -15,6 +14,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     DOMAIN,
@@ -51,7 +51,7 @@ async def _validate_input(
     )
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except (asyncio.TimeoutError, aiohttp.ClientError, TypeError) as error:

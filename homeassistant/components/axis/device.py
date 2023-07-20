@@ -4,7 +4,6 @@ import asyncio
 from types import MappingProxyType
 from typing import Any
 
-import async_timeout
 import axis
 from axis.configuration import Configuration
 from axis.errors import Unauthorized
@@ -30,6 +29,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.setup import async_when_setup
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_MANUFACTURER,
@@ -251,7 +251,7 @@ async def get_axis_device(
     )
 
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio_timeout(30):
             await device.vapix.initialize()
 
         return device

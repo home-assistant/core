@@ -6,13 +6,13 @@ from contextlib import suppress
 import logging
 import shlex
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.timeout import asyncio_timeout
 
 DOMAIN = "shell_command"
 
@@ -83,7 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         process = await create_process
         try:
-            async with async_timeout.timeout(COMMAND_TIMEOUT):
+            async with asyncio_timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
         except asyncio.TimeoutError:
             _LOGGER.error(

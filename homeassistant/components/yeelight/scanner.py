@@ -9,7 +9,6 @@ from ipaddress import IPv4Address
 import logging
 from urllib.parse import urlparse
 
-import async_timeout
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
 from typing_extensions import Self
@@ -19,6 +18,7 @@ from homeassistant.components import network, ssdp
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     DISCOVERY_ATTEMPTS,
@@ -157,7 +157,7 @@ class YeelightScanner:
             listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(DISCOVERY_TIMEOUT):
+            async with asyncio_timeout(DISCOVERY_TIMEOUT):
                 await host_event.wait()
 
         self._host_discovered_events[host].remove(host_event)

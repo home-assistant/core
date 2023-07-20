@@ -5,7 +5,6 @@ import asyncio
 from http import HTTPStatus
 import logging
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
@@ -14,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://api.flock.com/hooks/sendMessage/"
@@ -49,7 +49,7 @@ class FlockNotificationService(BaseNotificationService):
         _LOGGER.debug("Attempting to call Flock at %s", self._url)
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 response = await self._session.post(self._url, json=payload)
                 result = await response.json()
 

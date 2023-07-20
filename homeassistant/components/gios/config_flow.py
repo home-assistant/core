@@ -5,7 +5,6 @@ import asyncio
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from gios import ApiError, Gios, InvalidSensorsDataError, NoStationError
 import voluptuous as vol
 
@@ -13,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN
 
@@ -37,7 +37,7 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 websession = async_get_clientsession(self.hass)
 
-                async with timeout(API_TIMEOUT):
+                async with asyncio_timeout(API_TIMEOUT):
                     gios = Gios(user_input[CONF_STATION_ID], websession)
                     await gios.async_update()
 

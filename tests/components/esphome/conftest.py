@@ -15,7 +15,6 @@ from aioesphomeapi import (
     ReconnectLogic,
     UserService,
 )
-import async_timeout
 import pytest
 from zeroconf import Zeroconf
 
@@ -32,6 +31,7 @@ from homeassistant.components.esphome.const import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.timeout import asyncio_timeout
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
@@ -254,7 +254,7 @@ async def _mock_generic_device_entry(
         "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        async with async_timeout.timeout(2):
+        async with asyncio_timeout(2):
             await try_connect_done.wait()
 
     await hass.async_block_till_done()

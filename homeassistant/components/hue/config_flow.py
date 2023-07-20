@@ -9,7 +9,6 @@ import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
 from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupnp
 from aiohue.util import normalize_bridge_id
-import async_timeout
 import slugify as unicode_slug
 import voluptuous as vol
 
@@ -24,6 +23,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.util.network import is_ipv6_address
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -110,7 +110,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Find / discover bridges
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio_timeout(5):
                 bridges = await discover_nupnp(
                     websession=aiohttp_client.async_get_clientsession(self.hass)
                 )

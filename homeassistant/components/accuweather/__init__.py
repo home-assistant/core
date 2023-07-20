@@ -8,7 +8,6 @@ from typing import Any
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry
@@ -19,6 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import ATTR_FORECAST, CONF_FORECAST, DOMAIN, MANUFACTURER
 
@@ -123,7 +123,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update data via library."""
         forecast: list[dict[str, Any]] = []
         try:
-            async with timeout(10):
+            async with asyncio_timeout(10):
                 current = await self.accuweather.async_get_current_conditions()
                 if self.forecast:
                     forecast = await self.accuweather.async_get_daily_forecast()

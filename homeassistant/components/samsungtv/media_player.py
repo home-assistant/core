@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Coroutine, Sequence
 from typing import Any
 
-import async_timeout
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
@@ -36,6 +35,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
+from homeassistant.util.timeout import asyncio_timeout
 
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
@@ -217,7 +217,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             # enter it unless we have to (Python 3.11 will have zero cost try)
             return
         try:
-            async with async_timeout.timeout(APP_LIST_DELAY):
+            async with asyncio_timeout(APP_LIST_DELAY):
                 await self._app_list_event.wait()
         except asyncio.TimeoutError as err:
             # No need to try again

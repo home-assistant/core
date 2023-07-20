@@ -6,7 +6,6 @@ import logging
 
 import aioeagle
 import aiohttp
-import async_timeout
 from eagle100 import Eagle as Eagle100Reader
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
@@ -16,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_CLOUD_ID,
@@ -50,7 +50,7 @@ async def async_get_type(hass, cloud_id, install_code, host):
     )
 
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio_timeout(30):
             meters = await hub.get_device_list()
     except aioeagle.BadAuth as err:
         raise InvalidAuth from err
@@ -150,7 +150,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
         else:
             is_connected = eagle200_meter.is_connected
 
-        async with async_timeout.timeout(30):
+        async with asyncio_timeout(30):
             data = await eagle200_meter.get_device_query()
 
         if self.eagle200_meter is None:

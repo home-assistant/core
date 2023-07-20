@@ -7,7 +7,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from miio import (
     AirFresh,
     AirFreshA1,
@@ -40,6 +39,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_AVAILABLE,
@@ -176,7 +176,7 @@ def _async_update_data_default(hass, device):
 
         async def _async_fetch_data():
             """Fetch data from the device."""
-            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio_timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
@@ -265,7 +265,7 @@ def _async_update_data_vacuum(
         """Fetch data from the device using async_add_executor_job."""
 
         async def execute_update() -> VacuumCoordinatorData:
-            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio_timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state

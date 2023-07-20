@@ -8,7 +8,6 @@ import logging
 from typing import TYPE_CHECKING, cast
 
 import aiohttp
-import async_timeout
 
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
@@ -17,6 +16,7 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import API_CHANGE, DATE_FORMAT, DOMAIN, Cause
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
@@ -147,7 +147,7 @@ async def async_send_changereport_message(
     session = async_get_clientsession(hass)
 
     try:
-        async with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with asyncio_timeout(DEFAULT_TIMEOUT):
             response = await session.post(
                 config.endpoint,
                 headers=headers,
@@ -289,7 +289,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     session = async_get_clientsession(hass)
 
     try:
-        async with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with asyncio_timeout(DEFAULT_TIMEOUT):
             response = await session.post(
                 config.endpoint,
                 headers=headers,

@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from pyflick import FlickAPI, FlickPrice
 
 from homeassistant.components.sensor import SensorEntity
@@ -12,6 +11,7 @@ from homeassistant.const import CURRENCY_CENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT, DOMAIN
 
@@ -58,7 +58,7 @@ class FlickPricingSensor(SensorEntity):
         if self._price and self._price.end_at >= utcnow():
             return  # Power price data is still valid
 
-        async with async_timeout.timeout(60):
+        async with asyncio_timeout(60):
             self._price = await self._api.getPricing()
 
         _LOGGER.debug("Pricing data: %s", self._price)

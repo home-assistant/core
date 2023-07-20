@@ -6,7 +6,6 @@ import contextlib
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 import switchbot
 from switchbot import SwitchbotModel
 
@@ -15,6 +14,7 @@ from homeassistant.components.bluetooth.active_update_coordinator import (
     ActiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.util.timeout import asyncio_timeout
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -117,7 +117,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
         with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(DEVICE_STARTUP_TIMEOUT):
+            async with asyncio_timeout(DEVICE_STARTUP_TIMEOUT):
                 await self._ready_event.wait()
                 return True
         return False

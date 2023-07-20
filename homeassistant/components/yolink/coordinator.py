@@ -4,13 +4,13 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import async_timeout
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import ATTR_DEVICE_STATE, DOMAIN
 
@@ -35,7 +35,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 device_state_resp = await self.device.fetch_state()
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err

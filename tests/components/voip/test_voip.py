@@ -3,13 +3,13 @@ import asyncio
 import time
 from unittest.mock import AsyncMock, Mock, patch
 
-import async_timeout
 import pytest
 
 from homeassistant.components import assist_pipeline, voip
 from homeassistant.components.voip.devices import VoIPDevice
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.timeout import asyncio_timeout
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 _MEDIA_ID = "12345"
@@ -118,7 +118,7 @@ async def test_pipeline(
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
-        async with async_timeout.timeout(1):
+        async with asyncio_timeout(1):
             await done.wait()
 
 
@@ -159,7 +159,7 @@ async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) ->
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to time out
-        async with async_timeout.timeout(1):
+        async with asyncio_timeout(1):
             await done.wait()
 
 
@@ -200,7 +200,7 @@ async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) 
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to time out
-        async with async_timeout.timeout(1):
+        async with asyncio_timeout(1):
             await done.wait()
 
 
@@ -319,5 +319,5 @@ async def test_tts_timeout(
         rtp_protocol.on_chunk(bytes(_ONE_SECOND * 4))
 
         # Wait for mock pipeline to exhaust the audio stream
-        async with async_timeout.timeout(1):
+        async with asyncio_timeout(1):
             await done.wait()

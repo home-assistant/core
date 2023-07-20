@@ -34,7 +34,6 @@ from typing import (
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
-import async_timeout
 from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
@@ -78,6 +77,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
+from homeassistant.util.timeout import asyncio_timeout
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
 from .singleton import singleton
@@ -651,7 +651,7 @@ class Template:
         try:
             template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
-            async with async_timeout.timeout(timeout):
+            async with asyncio_timeout(timeout):
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))

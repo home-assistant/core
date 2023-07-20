@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
-import async_timeout
 from hass_nabucasa import Cloud, cloud_api
 
 from homeassistant.components import persistent_notification
@@ -38,6 +37,7 @@ from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_ENTITY_CONFIG,
@@ -500,7 +500,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             )
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
             return True

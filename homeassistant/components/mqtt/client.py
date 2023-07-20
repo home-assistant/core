@@ -12,7 +12,6 @@ import time
 from typing import TYPE_CHECKING, Any
 import uuid
 
-import async_timeout
 import attr
 import certifi
 
@@ -41,6 +40,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_BIRTH_MESSAGE,
@@ -892,7 +892,7 @@ class MQTT:
         # may be executed first.
         await self._register_mid(mid)
         try:
-            async with async_timeout.timeout(TIMEOUT_ACK):
+            async with asyncio_timeout(TIMEOUT_ACK):
                 await self._pending_operations[mid].wait()
         except asyncio.TimeoutError:
             _LOGGER.warning(

@@ -6,11 +6,11 @@ from typing import Any
 
 from aioflo.api import API
 from aioflo.errors import RequestError
-from async_timeout import timeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN as FLO_DOMAIN, LOGGER
 
@@ -39,7 +39,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            async with timeout(20):
+            async with asyncio_timeout(20):
                 await self.send_presence_ping()
                 await self._update_device()
                 await self._update_consumption_data()

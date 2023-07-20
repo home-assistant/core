@@ -7,7 +7,6 @@ import logging
 import time
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -17,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ async def async_http_request(hass, uri):
     """Perform actual request."""
     try:
         session = async_get_clientsession(hass)
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio_timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
         if req.status != HTTPStatus.OK:
             return {"error": req.status}

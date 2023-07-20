@@ -8,7 +8,6 @@ import itertools
 import os
 from typing import Any, TypedDict, cast
 
-from async_timeout import timeout
 import RFXtrx as rfxtrxmod
 import serial
 import serial.tools.list_ports
@@ -33,6 +32,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.util.timeout import asyncio_timeout
 
 from . import (
     DOMAIN,
@@ -374,7 +374,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         # Wait for entities to finish cleanup
         with suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with asyncio_timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
 
@@ -409,7 +409,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         # Wait for entities to finish renaming
         with suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with asyncio_timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
 

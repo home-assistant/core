@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import async_timeout
 from devolo_plc_api import Device
 from devolo_plc_api.device_api import (
     ConnectedStationInfo,
@@ -30,6 +29,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONNECTED_PLC_DEVICES,
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         assert device.plcnet
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 return await device.plcnet.async_get_network_overview()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 return await device.device.async_get_wifi_guest_access()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 return await device.device.async_get_wifi_connected_station()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
@@ -106,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with async_timeout.timeout(30):
+            async with asyncio_timeout(30):
                 return await device.device.async_get_wifi_neighbor_access_points()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err

@@ -10,7 +10,6 @@ from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -28,6 +27,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from .api import (
     ConfigEntryLyricClient,
@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(exception) from exception
 
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio_timeout(60):
                 await lyric.get_locations()
             return lyric
         except LyricAuthenticationException as exception:

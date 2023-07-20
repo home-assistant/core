@@ -6,7 +6,6 @@ import logging
 from typing import cast
 
 from aiohttp import ContentTypeError
-from async_timeout import timeout
 import pyevilgenius
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +17,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -85,18 +85,18 @@ class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         """Update Evil Genius data."""
         if not hasattr(self, "info"):
-            async with timeout(5):
+            async with asyncio_timeout(5):
                 self.info = await self.client.get_info()
 
         if not hasattr(self, "product"):
-            async with timeout(5):
+            async with asyncio_timeout(5):
                 try:
                     self.product = await self.client.get_product()
                 except ContentTypeError:
                     # Older versions of the API don't support this
                     self.product = None
 
-        async with timeout(5):
+        async with asyncio_timeout(5):
             return cast(dict, await self.client.get_all())
 
 

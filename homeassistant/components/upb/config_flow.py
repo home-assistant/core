@@ -4,12 +4,12 @@ from contextlib import suppress
 import logging
 from urllib.parse import urlparse
 
-import async_timeout
 import upb_lib
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_ADDRESS, CONF_FILE_PATH, CONF_HOST, CONF_PROTOCOL
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -44,8 +44,9 @@ async def _validate_input(data):
 
     upb.connect(_connected_callback)
 
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(VALIDATE_TIMEOUT):
-        await connected_event.wait()
+    with suppress(asyncio.TimeoutError):
+        async with asyncio_timeout(VALIDATE_TIMEOUT):
+            await connected_event.wait()
 
     upb.disconnect()
 

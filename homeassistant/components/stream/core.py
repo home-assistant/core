@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
-import async_timeout
 import attr
 import numpy as np
 
@@ -18,6 +17,7 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_STREAMS,
@@ -332,7 +332,7 @@ class StreamOutput:
     async def part_recv(self, timeout: float | None = None) -> bool:
         """Wait for an event signalling the latest part segment."""
         try:
-            async with async_timeout.timeout(timeout):
+            async with asyncio_timeout(timeout):
                 await self._part_event.wait()
         except asyncio.TimeoutError:
             return False

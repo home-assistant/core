@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import async_timeout
 from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
@@ -15,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ async def discover_devices(hass, hass_config):
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
         async def _fetch_channels():
-            async with async_timeout.timeout(SCAN_INTERVAL.total_seconds()):
+            async with asyncio_timeout(SCAN_INTERVAL.total_seconds()):
                 channels = {
                     channel["id"]: channel
                     # pylint: disable-next=cell-var-from-loop

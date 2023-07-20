@@ -5,7 +5,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from led_ble import BLEAK_EXCEPTIONS, LEDBLE
 
 from homeassistant.components import bluetooth
@@ -15,6 +14,7 @@ from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DEVICE_TIMEOUT, DOMAIN, UPDATE_SECONDS
 from .models import LEDBLEData
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise
 
     try:
-        async with async_timeout.timeout(DEVICE_TIMEOUT):
+        async with asyncio_timeout(DEVICE_TIMEOUT):
             await startup_event.wait()
     except asyncio.TimeoutError as ex:
         raise ConfigEntryNotReady(

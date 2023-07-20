@@ -6,7 +6,6 @@ import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 from pyrainbird.async_client import (
     AsyncRainbirdClient,
     AsyncRainbirdController,
@@ -21,6 +20,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_DURATION,
@@ -106,7 +106,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
         try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
+            async with asyncio_timeout(TIMEOUT_SECONDS):
                 return await controller.get_serial_number()
         except asyncio.TimeoutError as err:
             raise ConfigFlowError(

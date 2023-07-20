@@ -11,7 +11,6 @@ from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.websocket import WebsocketState
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,6 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_MANUFACTURER,
@@ -375,7 +375,7 @@ class UniFiController:
     async def async_reconnect(self) -> None:
         """Try to reconnect UniFi Network session."""
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio_timeout(5):
                 await self.api.login()
                 self.api.start_websocket()
 
@@ -444,7 +444,7 @@ async def get_unifi_controller(
     )
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             await controller.check_unifi_os()
             await controller.login()
         return controller

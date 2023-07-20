@@ -8,7 +8,6 @@ import copy
 import logging
 from typing import Any, NamedTuple, cast
 
-import async_timeout
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
@@ -32,6 +31,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_EVENT,
@@ -164,7 +164,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     config = entry.data
 
     # Initialize library
-    async with async_timeout.timeout(30):
+    async with asyncio_timeout(30):
         rfx_object = await hass.async_add_executor_job(_create_rfx, config)
 
     # Setup some per device config

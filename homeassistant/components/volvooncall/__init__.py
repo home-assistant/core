@@ -3,7 +3,6 @@
 import logging
 
 from aiohttp.client_exceptions import ClientResponseError
-import async_timeout
 from volvooncall import Connection
 from volvooncall.dashboard import Instrument
 
@@ -24,6 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_MUTABLE,
@@ -186,7 +186,7 @@ class VolvoUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             await self.volvo_data.update()
 
 

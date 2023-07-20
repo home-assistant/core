@@ -5,7 +5,6 @@ import asyncio
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
-import async_timeout
 from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.constants import CONFIG_NETWORKING, CONFIG_PORTAL
 import voluptuous as vol
@@ -25,6 +24,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     _LOGGER,
@@ -102,7 +102,7 @@ async def async_setup_entry(
     )
 
     try:
-        async with async_timeout.timeout(60):
+        async with asyncio_timeout(60):
             await isy.initialize()
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(

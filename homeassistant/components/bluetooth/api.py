@@ -8,10 +8,10 @@ from asyncio import Future
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
-import async_timeout
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.util.timeout import asyncio_timeout
 
 from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import DATA_MANAGER
@@ -152,7 +152,7 @@ async def async_process_advertisements(
     )
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio_timeout(timeout):
             return await done
     finally:
         unload()

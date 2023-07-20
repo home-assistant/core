@@ -4,7 +4,6 @@ import logging
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
-from async_timeout import timeout
 from pydaikin.daikin_base import Appliance, DaikinException
 from pydaikin.discovery import Discovery
 import voluptuous as vol
@@ -14,6 +13,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, KEY_MAC, TIMEOUT
 
@@ -70,7 +70,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = None
 
         try:
-            async with timeout(TIMEOUT):
+            async with asyncio_timeout(TIMEOUT):
                 device = await Appliance.factory(
                     host,
                     async_get_clientsession(self.hass),

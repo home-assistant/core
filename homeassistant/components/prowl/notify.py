@@ -5,7 +5,6 @@ import asyncio
 from http import HTTPStatus
 import logging
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -20,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://api.prowlapp.com/publicapi/"
@@ -64,7 +64,7 @@ class ProwlNotificationService(BaseNotificationService):
         session = async_get_clientsession(self._hass)
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 response = await session.post(url, data=payload)
                 result = await response.text()
 

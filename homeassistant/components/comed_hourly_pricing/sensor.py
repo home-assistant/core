@@ -7,7 +7,6 @@ import json
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -21,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://hourlypricing.comed.com/api"
@@ -112,7 +112,7 @@ class ComedHourlyPricingSensor(SensorEntity):
                 else:
                     url_string += "?type=currenthouraverage"
 
-                async with async_timeout.timeout(60):
+                async with asyncio_timeout(60):
                     response = await self.websession.get(url_string)
                     # The API responds with MIME type 'text/html'
                     text = await response.text()

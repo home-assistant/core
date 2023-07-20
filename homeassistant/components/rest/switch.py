@@ -6,7 +6,6 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-import async_timeout
 import httpx
 import voluptuous as vol
 
@@ -37,6 +36,7 @@ from homeassistant.helpers.template_entity import (
     TemplateEntity,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 CONF_BODY_OFF = "body_off"
@@ -186,7 +186,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        async with async_timeout.timeout(self._timeout):
+        async with asyncio_timeout(self._timeout):
             req: httpx.Response = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
@@ -212,7 +212,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        async with async_timeout.timeout(self._timeout):
+        async with asyncio_timeout(self._timeout):
             req = await websession.get(
                 self._state_resource,
                 auth=self._auth,

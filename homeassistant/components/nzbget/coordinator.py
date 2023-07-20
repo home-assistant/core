@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from async_timeout import timeout
 from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 
 from homeassistant.const import (
@@ -18,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -96,7 +96,7 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
             }
 
         try:
-            async with timeout(4):
+            async with asyncio_timeout(4):
                 return await self.hass.async_add_executor_job(_update_data)
         except NZBGetAPIException as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error

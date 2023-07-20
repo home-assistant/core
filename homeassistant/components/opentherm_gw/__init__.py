@@ -3,7 +3,6 @@ import asyncio
 from datetime import date, datetime
 import logging
 
-import async_timeout
 import pyotgw
 import pyotgw.vars as gw_vars
 from serial import SerialException
@@ -30,6 +29,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_CH_OVRD,
@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     config_entry.add_update_listener(options_updated)
 
     try:
-        async with async_timeout.timeout(CONNECTION_TIMEOUT):
+        async with asyncio_timeout(CONNECTION_TIMEOUT):
             await gateway.connect_and_subscribe()
     except (asyncio.TimeoutError, ConnectionError, SerialException) as ex:
         await gateway.cleanup()

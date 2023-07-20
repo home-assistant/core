@@ -5,7 +5,6 @@ import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 import serial
 from serial.tools import list_ports
 import ultraheat_api
@@ -17,6 +16,7 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, ULTRAHEAT_TIMEOUT
 
@@ -105,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         reader = ultraheat_api.UltraheatReader(port)
         heat_meter = ultraheat_api.HeatMeterService(reader)
         try:
-            async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
+            async with asyncio_timeout(ULTRAHEAT_TIMEOUT):
                 # validate and retrieve the model and device number for a unique id
                 data = await self.hass.async_add_executor_job(heat_meter.read)
 

@@ -7,7 +7,6 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -22,6 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_APP_DATA,
@@ -166,7 +166,7 @@ class MobileAppNotificationService(BaseNotificationService):
         target_data["registration_info"] = reg_info
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 response = await async_get_clientsession(self._hass).post(
                     push_url, json=target_data
                 )

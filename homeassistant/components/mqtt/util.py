@@ -8,13 +8,13 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_PAYLOAD,
@@ -71,7 +71,7 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
             return state_reached_future.result()
 
     try:
-        async with async_timeout.timeout(AVAILABILITY_TIMEOUT):
+        async with asyncio_timeout(AVAILABILITY_TIMEOUT):
             # Await the client setup or an error state was received
             return await state_reached_future
     except asyncio.TimeoutError:

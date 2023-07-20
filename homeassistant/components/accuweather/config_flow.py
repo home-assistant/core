@@ -7,7 +7,6 @@ from typing import Any
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,6 +20,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import CONF_FORECAST, DOMAIN
 
@@ -53,7 +53,7 @@ class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             websession = async_get_clientsession(self.hass)
             try:
-                async with timeout(10):
+                async with asyncio_timeout(10):
                     accuweather = AccuWeather(
                         user_input[CONF_API_KEY],
                         websession,

@@ -8,7 +8,6 @@ from pprint import pformat
 from typing import Any, cast
 from urllib.parse import urlparse
 
-import async_timeout
 from pydeconz.errors import LinkButtonNotPressed, RequestError, ResponseError
 from pydeconz.gateway import DeconzSession
 from pydeconz.utils import (
@@ -27,6 +26,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
@@ -100,7 +100,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio_timeout(10):
                 self.bridges = await deconz_discovery(session)
 
         except (asyncio.TimeoutError, ResponseError):
@@ -157,7 +157,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             deconz_session = DeconzSession(session, self.host, self.port)
 
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio_timeout(10):
                     api_key = await deconz_session.get_api_key()
 
             except LinkButtonNotPressed:
@@ -178,7 +178,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             session = aiohttp_client.async_get_clientsession(self.hass)
 
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio_timeout(10):
                     self.bridge_id = await deconz_get_bridge_id(
                         session, self.host, self.port, self.api_key
                     )

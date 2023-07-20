@@ -6,7 +6,6 @@ import logging
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
@@ -34,6 +33,7 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import json_loads
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,7 +149,7 @@ class APIEventStream(HomeAssistantView):
 
             while True:
                 try:
-                    async with async_timeout.timeout(STREAM_PING_INTERVAL):
+                    async with asyncio_timeout(STREAM_PING_INTERVAL):
                         payload = await to_write.get()
 
                     if payload is stop_obj:

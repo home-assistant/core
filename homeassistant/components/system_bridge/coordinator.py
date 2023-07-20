@@ -7,7 +7,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -39,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, MODULES
 
@@ -183,7 +183,7 @@ class SystemBridgeDataUpdateCoordinator(
     async def _setup_websocket(self) -> None:
         """Use WebSocket for updates."""
         try:
-            async with async_timeout.timeout(20):
+            async with asyncio_timeout(20):
                 await self.websocket_client.connect(
                     session=async_get_clientsession(self.hass),
                 )

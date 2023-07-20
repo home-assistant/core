@@ -15,7 +15,6 @@ from random import SystemRandom
 from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
-import async_timeout
 import attr
 import voluptuous as vol
 
@@ -59,6 +58,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (  # noqa: F401
     CAMERA_IMAGE_TIMEOUT,
@@ -168,7 +168,7 @@ async def _async_get_image(
     are handled.
     """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-        async with async_timeout.timeout(timeout):
+        async with asyncio_timeout(timeout):
             if image_bytes := await camera.async_camera_image(
                 width=width, height=height
             ):
@@ -525,7 +525,7 @@ class Camera(Entity):
             self._create_stream_lock = asyncio.Lock()
         async with self._create_stream_lock:
             if not self.stream:
-                async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                async with asyncio_timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                     source = await self.stream_source()
                 if not source:
                     return None

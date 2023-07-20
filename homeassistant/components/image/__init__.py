@@ -11,7 +11,6 @@ from random import SystemRandom
 from typing import Final, final
 
 from aiohttp import hdrs, web
-import async_timeout
 import httpx
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -28,6 +27,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
 
@@ -72,7 +72,7 @@ def valid_image_content_type(content_type: str | None) -> str:
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
     with suppress(asyncio.CancelledError, asyncio.TimeoutError, ImageContentTypeError):
-        async with async_timeout.timeout(timeout):
+        async with asyncio_timeout(timeout):
             if image_bytes := await image_entity.async_image():
                 content_type = valid_image_content_type(image_entity.content_type)
                 image = Image(content_type, image_bytes)

@@ -2,7 +2,6 @@
 import asyncio
 import logging
 
-import async_timeout
 from pyipma import IPMAException
 from pyipma.api import IPMA_API
 from pyipma.location import Location
@@ -12,6 +11,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 from .config_flow import IpmaFlowHandler  # noqa: F401
 from .const import DATA_API, DATA_LOCATION, DOMAIN
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     api = IPMA_API(async_get_clientsession(hass))
 
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio_timeout(30):
             location = await Location.get(api, float(latitude), float(longitude))
     except (IPMAException, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady(

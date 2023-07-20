@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
@@ -13,6 +12,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -80,7 +80,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update the data."""
         data = {}
-        async with async_timeout.timeout(20):
+        async with asyncio_timeout(20):
             try:
                 weather_response = await self._get_owm_weather()
                 data = self._convert_weather_response(weather_response)

@@ -3,7 +3,6 @@ import logging
 from typing import TypedDict
 
 from aiohttp.web import Request
-import async_timeout
 from loqedAPI import loqed
 
 from homeassistant.components import webhook
@@ -11,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -86,7 +86,7 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
 
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             return await self._api.async_get_lock_details()
 
     async def _handle_webhook(

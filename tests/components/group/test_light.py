@@ -1,7 +1,6 @@
 """The tests for the Group Light platform."""
 from unittest.mock import MagicMock, patch
 
-import async_timeout
 import pytest
 
 from homeassistant import config as hass_config
@@ -45,6 +44,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.timeout import asyncio_timeout
 
 from tests.common import async_capture_events, get_fixture_path
 
@@ -1643,7 +1643,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ENTITY_ID) == ["light.bedroom_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio_timeout(0.5):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TOGGLE,

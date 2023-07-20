@@ -9,7 +9,6 @@ from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
@@ -42,6 +41,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.timeout import asyncio_timeout
 
 from tests.common import (
     async_capture_events,
@@ -1000,7 +1000,7 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
         assert script_obj.last_action == wait_alias
         hass.states.async_set("switch.test", "not_on")
 
-        async with timeout(0.1):
+        async with asyncio_timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -1386,7 +1386,7 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
         ):
             async_fire_time_changed(hass, second_non_matching_time)
 
-        async with timeout(0.1):
+        async with asyncio_timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True

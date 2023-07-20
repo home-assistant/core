@@ -5,13 +5,13 @@ import socket
 from unittest.mock import Mock, patch
 
 from aioesphomeapi import VoiceAssistantEventType
-import async_timeout
 import pytest
 
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.esphome import DomainData
 from homeassistant.components.esphome.voice_assistant import VoiceAssistantUDPServer
 from homeassistant.core import HomeAssistant
+from homeassistant.util.timeout import asyncio_timeout
 
 _TEST_INPUT_TEXT = "This is an input test"
 _TEST_OUTPUT_TEXT = "This is an output test"
@@ -148,7 +148,7 @@ async def test_udp_server(
         sock.sendto(b"test", ("127.0.0.1", port))
 
         # Give the socket some time to send/receive the data
-        async with async_timeout.timeout(1):
+        async with asyncio_timeout(1):
             while voice_assistant_udp_server_v1.queue.qsize() == 0:
                 await asyncio.sleep(0.1)
 

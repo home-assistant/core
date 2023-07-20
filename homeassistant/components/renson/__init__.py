@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from renson_endura_delta.renson import RensonVentilation
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +13,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN
 
@@ -84,5 +84,5 @@ class RensonCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        async with async_timeout.timeout(30):
+        async with asyncio_timeout(30):
             return await self.hass.async_add_executor_job(self.api.get_all_data)

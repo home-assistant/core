@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-import async_timeout
 from poolsense import PoolSense
 from poolsense.exceptions import PoolSenseError
 
@@ -16,6 +15,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import ATTRIBUTION, DOMAIN
 
@@ -90,7 +90,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         data = {}
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             try:
                 data = await self.poolsense.get_poolsense_data()
             except PoolSenseError as error:

@@ -8,7 +8,6 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
-import async_timeout
 from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
@@ -23,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
 
@@ -218,7 +218,7 @@ class PingDataSubProcess(PingData):
             close_fds=False,  # required for posix_spawn
         )
         try:
-            async with async_timeout.timeout(self._count + PING_TIMEOUT):
+            async with asyncio_timeout(self._count + PING_TIMEOUT):
                 out_data, out_error = await pinger.communicate()
 
             if out_data:

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from aiohttp import ClientSession
-from async_timeout import timeout
 from python_awair import Awair, AwairLocal
 from python_awair.air_data import AirData
 from python_awair.devices import AwairBaseDevice, AwairLocalDevice
@@ -22,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     API_TIMEOUT,
@@ -122,7 +122,7 @@ class AwairCloudDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, AwairResult]:
         """Update data via Awair client library."""
-        async with timeout(API_TIMEOUT):
+        async with asyncio_timeout(API_TIMEOUT):
             try:
                 LOGGER.debug("Fetching users and devices")
                 user = await self._awair.user()
@@ -154,7 +154,7 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, AwairResult]:
         """Update data via Awair client library."""
-        async with timeout(API_TIMEOUT):
+        async with asyncio_timeout(API_TIMEOUT):
             try:
                 if self._device is None:
                     LOGGER.debug("Fetching devices")

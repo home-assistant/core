@@ -1,7 +1,6 @@
 """The tests for the group fan platform."""
 from unittest.mock import patch
 
-import async_timeout
 import pytest
 
 from homeassistant import config as hass_config
@@ -37,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.timeout import asyncio_timeout
 
 from tests.common import assert_setup_component, get_fixture_path
 
@@ -576,7 +576,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ENTITY_ID) == ["fan.bedroom_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio_timeout(0.5):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_TURN_ON,

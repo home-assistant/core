@@ -21,7 +21,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import async_timeout
 from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
 from rtsp_to_webrtc.interface import WebRTCClientInterface
@@ -32,6 +31,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client: WebRTCClientInterface
     try:
-        async with async_timeout.timeout(TIMEOUT):
+        async with asyncio_timeout(TIMEOUT):
             client = await get_adaptive_client(
                 async_get_clientsession(hass), entry.data[DATA_SERVER_URL]
             )
@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         the stream itself happens directly between the client and proxy.
         """
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio_timeout(TIMEOUT):
                 return await client.offer_stream_id(stream_id, offer_sdp, stream_source)
         except TimeoutError as err:
             raise HomeAssistantError("Timeout talking to RTSPtoWebRTC server") from err

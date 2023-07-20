@@ -8,7 +8,6 @@ import logging
 from typing import Any, Final
 
 import aiohttp
-import async_timeout
 from smhi import Smhi
 from smhi.smhi_lib import SmhiForecast, SmhiForecastException
 
@@ -60,6 +59,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     ATTR_SMHI_THUNDER_PROBABILITY,
@@ -165,7 +165,7 @@ class SmhiWeather(WeatherEntity):
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio_timeout(TIMEOUT):
                 self._forecasts = await self._smhi_api.async_get_forecast()
                 self._fail_count = 0
         except (asyncio.TimeoutError, SmhiForecastException):

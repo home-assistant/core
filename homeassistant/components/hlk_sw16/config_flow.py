@@ -1,13 +1,13 @@
 """Config flow for HLK-SW16."""
 import asyncio
 
-import async_timeout
 from hlk_sw16 import create_hlk_sw16_connection
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     CONNECTION_TIMEOUT,
@@ -36,7 +36,7 @@ async def connect_client(hass, user_input):
         reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
         keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
     )
-    async with async_timeout.timeout(CONNECTION_TIMEOUT):
+    async with asyncio_timeout(CONNECTION_TIMEOUT):
         return await client_aw
 
 

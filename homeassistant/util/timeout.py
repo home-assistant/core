@@ -7,12 +7,19 @@ from __future__ import annotations
 
 import asyncio
 import enum
+import sys
 from types import TracebackType
 from typing import Any
 
 from typing_extensions import Self
 
 from .async_ import run_callback_threadsafe
+
+if sys.version_info[:2] < (3, 11):
+    from async_timeout import timeout as asyncio_timeout  # noqa: F401
+else:
+    from asyncio import timeout as asyncio_timeout  # noqa: F401
+
 
 ZONE_GLOBAL = "global"
 
@@ -514,3 +521,6 @@ class TimeoutManager:
         return run_callback_threadsafe(
             self._loop, self.async_freeze, zone_name
         ).result()
+
+
+__all__ = ["asyncio_timeout", "TimeoutManager", "ZONE_GLOBAL", "ZONE_GLOBAL"]

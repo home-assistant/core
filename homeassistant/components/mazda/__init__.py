@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 from pymazda import (
     Client as MazdaAPI,
     MazdaAccountLockedException,
@@ -35,6 +34,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_REGION, DATA_VEHICLES, DOMAIN
 
@@ -53,7 +53,7 @@ PLATFORMS = [
 
 async def with_timeout(task, timeout_seconds=30):
     """Run an async task with a timeout."""
-    async with async_timeout.timeout(timeout_seconds):
+    async with asyncio_timeout(timeout_seconds):
         return await task
 
 

@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 from typing import cast
 
-import async_timeout
 from pynut2.nut2 import PyNUTClient, PyNUTError
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import (
     COORDINATOR,
@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> dict[str, str]:
         """Fetch data from NUT."""
-        async with async_timeout.timeout(10):
+        async with asyncio_timeout(10):
             await hass.async_add_executor_job(data.update)
             if not data.status:
                 raise UpdateFailed("Error fetching UPS state")

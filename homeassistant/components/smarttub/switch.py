@@ -1,13 +1,13 @@
 """Platform for switch integration."""
 from typing import Any
 
-import async_timeout
 from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import API_TIMEOUT, ATTR_PUMPS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
@@ -80,6 +80,6 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the pump on or off."""
-        async with async_timeout.timeout(API_TIMEOUT):
+        async with asyncio_timeout(API_TIMEOUT):
             await self.pump.toggle()
         await self.coordinator.async_request_refresh()

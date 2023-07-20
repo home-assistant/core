@@ -2,7 +2,6 @@
 import asyncio
 from typing import Any, cast
 
-from async_timeout import timeout
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 
@@ -11,6 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DEFAULT_PORT, LOGGER, UPDATE_INTERVAL
 
@@ -36,7 +36,7 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
-            async with timeout(15):
+            async with asyncio_timeout(15):
                 # Get device info and settings in parallel
                 result = await asyncio.gather(
                     self.fully.getDeviceInfo(), self.fully.getSettings()

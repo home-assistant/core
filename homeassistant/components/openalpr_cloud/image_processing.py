@@ -7,7 +7,6 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
@@ -31,6 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.timeout import asyncio_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -199,7 +199,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         body = {"image_bytes": str(b64encode(image), "utf-8")}
 
         try:
-            async with async_timeout.timeout(self.timeout):
+            async with asyncio_timeout(self.timeout):
                 request = await websession.post(
                     OPENALPR_API_URL, params=params, data=body
                 )

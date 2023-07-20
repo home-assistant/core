@@ -7,7 +7,6 @@ from typing import Any
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,6 +14,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.network import is_ipv6_address
+from homeassistant.util.timeout import asyncio_timeout
 
 from .const import DOMAIN, RUN_TIMEOUT
 from .models import BAFDiscovery
@@ -27,7 +27,7 @@ async def async_try_connect(ip_address: str) -> Device:
     device = Device(Service(ip_addresses=[ip_address], port=PORT))
     run_future = device.async_run()
     try:
-        async with async_timeout.timeout(RUN_TIMEOUT):
+        async with asyncio_timeout(RUN_TIMEOUT):
             await device.async_wait_available()
     except asyncio.TimeoutError as ex:
         raise CannotConnect from ex
