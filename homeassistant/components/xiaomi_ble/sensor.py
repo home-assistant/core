@@ -24,6 +24,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfElectricPotential,
+    UnitOfMass,
     UnitOfPressure,
     UnitOfTemperature,
 )
@@ -67,6 +68,28 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Impedance sensor (ohm)
+    (DeviceClass.IMPEDANCE, Units.OHM): SensorEntityDescription(
+        key=f"{DeviceClass.IMPEDANCE}_{Units.OHM}",
+        icon="mdi:omega",
+        native_unit_of_measurement=Units.OHM,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Mass sensor (kg)
+    (DeviceClass.MASS, Units.MASS_KILOGRAMS): SensorEntityDescription(
+        key=f"{DeviceClass.MASS}_{Units.MASS_KILOGRAMS}",
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Mass non stabilized sensor (kg)
+    (DeviceClass.MASS_NON_STABILIZED, Units.MASS_KILOGRAMS): SensorEntityDescription(
+        key=f"{DeviceClass.MASS_NON_STABILIZED}_{Units.MASS_KILOGRAMS}",
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (DeviceClass.MOISTURE, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",
