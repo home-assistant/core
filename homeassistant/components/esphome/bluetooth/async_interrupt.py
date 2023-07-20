@@ -10,8 +10,6 @@ This is based loosely on async_timeout by Andrew Svetlov and cpython asyncio.tim
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from functools import partial
 from types import TracebackType
 from typing import TYPE_CHECKING, Any, final
 
@@ -38,7 +36,7 @@ class _Interrupt:
         "_exception_args",
         "_loop",
         "_interrupted",
-        "_interrupt_call",
+        "_task",
     )
 
     def __init__(
@@ -52,13 +50,12 @@ class _Interrupt:
         self._future = future
         self._interrupted = False
         self._exception = exception
-        self._interrupt_call: Callable[[asyncio.Future[Any]], None] | None
+        self._task: asyncio.Task | None
 
     async def __aenter__(self) -> _Interrupt:
         """Enter the interrupt context manager."""
-        task = asyncio.current_task()
-        self._interrupt_call = partial(self._on_interrupt, task)
-        self._future.add_done_callback(self._interrupt_call)
+        self._task = asyncio.current_task()
+        self._future.add_done_callback(self._on_interrupt)
         return self
 
     async def __aexit__(
@@ -69,18 +66,20 @@ class _Interrupt:
     ) -> bool | None:
         """Exit the interrupt context manager."""
         if exc_type is asyncio.CancelledError and self._interrupted:
+            if TYPE_CHECKING:
+                assert self._task is not None
+            if uncancel := getattr(self._task, "uncancel", None):
+                uncancel()
             raise self._exception
-        if TYPE_CHECKING:
-            assert self._interrupt_call is not None
-        self._future.remove_done_callback(self._interrupt_call)
+        self._future.remove_done_callback(self._on_interrupt)
         return None
 
-    def _on_interrupt(self, task: asyncio.Task[Any], _: asyncio.Future[Any]) -> None:
+    def _on_interrupt(self, _: asyncio.Future[Any]) -> None:
         """Handle interrupt."""
-        task.cancel("Interrupted by interrupt context manager")
         if TYPE_CHECKING:
-            assert self._interrupt_call is not None
-        self._future.remove_done_callback(self._interrupt_call)
+            assert self._task is not None
+        self._task.cancel("Interrupted by interrupt context manager")
+        self._future.remove_done_callback(self._on_interrupt)
 
 
 def interrupt(
