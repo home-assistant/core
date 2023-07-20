@@ -222,6 +222,21 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
         }
     }
 
+    hass.states.async_set("light.window", "green", {}, context=new_context)
+    await hass.async_block_till_done()
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {"lc": new_state.last_changed.timestamp(), "s": "green"},
+                "-": {"a": ["new"]},
+            }
+        }
+    }
+
 
 async def test_message_to_json(caplog: pytest.LogCaptureFixture) -> None:
     """Test we can serialize websocket messages."""

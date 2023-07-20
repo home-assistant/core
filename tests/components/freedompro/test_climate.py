@@ -33,7 +33,7 @@ async def test_climate_get_state(hass: HomeAssistant, init_integration) -> None:
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({("freedompro", uid)})
+    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"

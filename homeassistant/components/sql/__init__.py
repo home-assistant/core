@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -23,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template_entity import CONF_AVAILABILITY, CONF_PICTURE
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN, PLATFORMS
@@ -41,7 +43,7 @@ def validate_sql_select(value: str) -> str:
 QUERY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COLUMN_NAME): cv.string,
-        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.template,
         vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -49,6 +51,9 @@ QUERY_SCHEMA = vol.Schema(
         vol.Optional(CONF_DB_URL): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_AVAILABILITY): cv.template,
+        vol.Optional(CONF_ICON): cv.template,
+        vol.Optional(CONF_PICTURE): cv.template,
     }
 )
 
