@@ -276,17 +276,16 @@ class DaikinClimate(ClimateEntity):
             await self._api.device.set_advanced_mode(
                 HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_ON
             )
-        else:
-            if self.preset_mode == PRESET_AWAY:
-                await self._api.device.set_holiday(ATTR_STATE_OFF)
-            elif self.preset_mode == PRESET_BOOST:
-                await self._api.device.set_advanced_mode(
-                    HA_PRESET_TO_DAIKIN[PRESET_BOOST], ATTR_STATE_OFF
-                )
-            elif self.preset_mode == PRESET_ECO:
-                await self._api.device.set_advanced_mode(
-                    HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_OFF
-                )
+        elif self.preset_mode == PRESET_AWAY:
+            await self._api.device.set_holiday(ATTR_STATE_OFF)
+        elif self.preset_mode == PRESET_BOOST:
+            await self._api.device.set_advanced_mode(
+                HA_PRESET_TO_DAIKIN[PRESET_BOOST], ATTR_STATE_OFF
+            )
+        elif self.preset_mode == PRESET_ECO:
+            await self._api.device.set_advanced_mode(
+                HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_OFF
+            )
 
     @property
     def preset_modes(self):

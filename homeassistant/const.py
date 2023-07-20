@@ -7,7 +7,7 @@ from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 8
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -221,8 +221,8 @@ CONF_RECIPIENT: Final = "recipient"
 CONF_REGION: Final = "region"
 CONF_REPEAT: Final = "repeat"
 CONF_RESOURCE: Final = "resource"
-CONF_RESOURCES: Final = "resources"
 CONF_RESOURCE_TEMPLATE: Final = "resource_template"
+CONF_RESOURCES: Final = "resources"
 CONF_RESPONSE_VARIABLE: Final = "response_variable"
 CONF_RGB: Final = "rgb"
 CONF_ROOM: Final = "room"
@@ -1101,6 +1101,7 @@ SERVER_PORT: Final = 8123
 URL_ROOT: Final = "/"
 URL_API: Final = "/api/"
 URL_API_STREAM: Final = "/api/stream"
+URL_API_CORE_STATE: Final = "/api/core/state"
 URL_API_CONFIG: Final = "/api/config"
 URL_API_STATES: Final = "/api/states"
 URL_API_STATES_ENTITY: Final = "/api/states/{}"

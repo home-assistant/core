@@ -52,6 +52,8 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
+    CONF_ACTION_TEMPLATE,
+    CONF_ACTION_TOPIC,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_CURRENT_TEMP_TEMPLATE,
@@ -90,8 +92,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT HVAC"
 
-CONF_ACTION_TEMPLATE = "action_template"
-CONF_ACTION_TOPIC = "action_topic"
 CONF_AUX_COMMAND_TOPIC = "aux_command_topic"
 CONF_AUX_STATE_TEMPLATE = "aux_state_template"
 CONF_AUX_STATE_TOPIC = "aux_state_topic"
@@ -109,10 +109,8 @@ CONF_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
 CONF_HUMIDITY_MAX = "max_humidity"
 CONF_HUMIDITY_MIN = "min_humidity"
 
-# CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
-# are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
-# was already removed or never added support was deprecated with release 2023.2
-# and will be removed with release 2023.8
+# Support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+# was removed in HA Core 2023.8
 CONF_POWER_STATE_TEMPLATE = "power_state_template"
 CONF_POWER_STATE_TOPIC = "power_state_topic"
 
@@ -352,12 +350,10 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    # CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
-    # are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
-    # was already removed or never added support was deprecated with release 2023.2
-    # and will be removed with release 2023.8
-    cv.deprecated(CONF_POWER_STATE_TEMPLATE),
-    cv.deprecated(CONF_POWER_STATE_TOPIC),
+    # Support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+    # was removed in HA Core 2023.8
+    cv.removed(CONF_POWER_STATE_TEMPLATE),
+    cv.removed(CONF_POWER_STATE_TOPIC),
     _PLATFORM_SCHEMA_BASE,
     valid_preset_mode_configuration,
     valid_humidity_range_configuration,
@@ -368,11 +364,10 @@ _DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA
 
 DISCOVERY_SCHEMA = vol.All(
     _DISCOVERY_SCHEMA_BASE,
-    # CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE are deprecated,
-    # support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE was already removed or never added
-    # support was deprecated with release 2023.2 and will be removed with release 2023.8
-    cv.deprecated(CONF_POWER_STATE_TEMPLATE),
-    cv.deprecated(CONF_POWER_STATE_TOPIC),
+    # Support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+    # was removed in HA Core 2023.8
+    cv.removed(CONF_POWER_STATE_TEMPLATE),
+    cv.removed(CONF_POWER_STATE_TOPIC),
     valid_preset_mode_configuration,
     valid_humidity_range_configuration,
     valid_humidity_state_configuration,

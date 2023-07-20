@@ -441,7 +441,7 @@ class TemplateEntity(Entity):
         """Run an action script."""
         if run_variables is None:
             run_variables = {}
-        return await script.async_run(
+        await script.async_run(
             run_variables={
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
                 **run_variables,
@@ -624,7 +624,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
         TriggerBaseEntity.__init__(self, hass, config)
 
     @callback
-    def _process_manual_data(self, value: str | None = None) -> None:
+    def _process_manual_data(self, value: Any | None = None) -> None:
         """Process new data manually.
 
         Implementing class should call this last in update method to render templates.

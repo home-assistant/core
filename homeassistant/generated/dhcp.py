@@ -187,6 +187,10 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "flux_led",
+        "hostname": "zengge",
+    },
+    {
+        "domain": "flux_led",
         "hostname": "sta*",
         "macaddress": "C82E47*",
     },
@@ -502,14 +506,6 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "A4D578*",
     },
     {
-        "domain": "senseme",
-        "registered_devices": True,
-    },
-    {
-        "domain": "senseme",
-        "macaddress": "20F85E*",
-    },
-    {
         "domain": "sensibo",
         "hostname": "sensibo*",
     },
@@ -605,23 +601,33 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "tplink",
-        "hostname": "es*",
+        "hostname": "e[sp]*",
         "macaddress": "54AF97*",
     },
     {
         "domain": "tplink",
-        "hostname": "ep*",
+        "hostname": "e[sp]*",
         "macaddress": "E848B8*",
     },
     {
         "domain": "tplink",
-        "hostname": "ep*",
+        "hostname": "e[sp]*",
         "macaddress": "1C61B4*",
     },
     {
         "domain": "tplink",
-        "hostname": "ep*",
+        "hostname": "e[sp]*",
         "macaddress": "003192*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "B4B024*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "9C5322*",
     },
     {
         "domain": "tplink",
@@ -757,6 +763,16 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "6C5AB0*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "54AF97*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "AC15A2*",
     },
     {
         "domain": "tuya",

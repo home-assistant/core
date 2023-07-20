@@ -25,10 +25,44 @@
       }
     }
   },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+  "services": {
+    "select_first": {
+      "name": "First",
+      "description": "Selects the first option."
+    },
+    "select_last": {
+      "name": "Last",
+      "description": "Selects the last option."
+    },
+    "select_next": {
+      "name": "Next",
+      "description": "Selects the next option.",
+      "fields": {
+        "cycle": {
+          "name": "Cycle",
+          "description": "If the option should cycle from the last to the first."
+        }
+      }
+    },
+    "select_option": {
+      "name": "Select",
+      "description": "Selects an option.",
+      "fields": {
+        "option": {
+          "name": "Option",
+          "description": "Option to be selected."
+        }
+      }
+    },
+    "select_previous": {
+      "name": "Previous",
+      "description": "Selects the previous option.",
+      "fields": {
+        "cycle": {
+          "name": "Cycle",
+          "description": "If the option should cycle from the first to the last."
+        }
+      }
     }
   }
 }

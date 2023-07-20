@@ -984,8 +984,8 @@ async def test_discovery_broken(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
-    data1 = '{ "name": "Beer",' '  "off_delay": -1 }'
-    data2 = '{ "name": "Milk",' '  "state_topic": "test_topic" }'
+    data1 = '{ "name": "Beer",  "off_delay": -1 }'
+    data2 = '{ "name": "Milk",  "state_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass,
         mqtt_mock_entry,
@@ -1203,7 +1203,11 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

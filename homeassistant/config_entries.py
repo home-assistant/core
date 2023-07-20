@@ -10,9 +10,8 @@ from enum import Enum
 import functools
 import logging
 from random import randint
-from types import MappingProxyType, MethodType
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
-import weakref
 
 from typing_extensions import Self
 
@@ -303,9 +302,7 @@ class ConfigEntry:
         self.supports_remove_device: bool | None = None
 
         # Listeners to call on update
-        self.update_listeners: list[
-            weakref.ReferenceType[UpdateListenerType] | weakref.WeakMethod
-        ] = []
+        self.update_listeners: list[UpdateListenerType] = []
 
         # Reason why config entry is in a failed state
         self.reason: str | None = None
@@ -341,7 +338,7 @@ class ConfigEntry:
 
         # Only store setup result as state if it was not forwarded.
         if self.domain == integration.domain:
-            self.async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
+            self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         if self.supports_unload is None:
             self.supports_unload = await support_entry_unload(hass, self.domain)
@@ -360,7 +357,9 @@ class ConfigEntry:
                 err,
             )
             if self.domain == integration.domain:
-                self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, "Import error")
+                self._async_set_state(
+                    hass, ConfigEntryState.SETUP_ERROR, "Import error"
+                )
             return
 
         if self.domain == integration.domain:
@@ -376,12 +375,14 @@ class ConfigEntry:
                     self.domain,
                     err,
                 )
-                self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, "Import error")
+                self._async_set_state(
+                    hass, ConfigEntryState.SETUP_ERROR, "Import error"
+                )
                 return
 
             # Perform migration
             if not await self.async_migrate(hass):
-                self.async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
+                self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
                 return
 
         error_reason = None
@@ -421,7 +422,7 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
-            self.async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
             wait_time = 2 ** min(tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
@@ -482,9 +483,9 @@ class ConfigEntry:
             return
 
         if result:
-            self.async_set_state(hass, ConfigEntryState.LOADED, None)
+            self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
-            self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
+            self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
 
     async def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
@@ -505,7 +506,7 @@ class ConfigEntry:
         Returns if unload is possible and was successful.
         """
         if self.source == SOURCE_IGNORE:
-            self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+            self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
             return True
 
         if self.state == ConfigEntryState.NOT_LOADED:
@@ -519,7 +520,7 @@ class ConfigEntry:
                 # that was uninstalled, or an integration
                 # that has been renamed without removing the config
                 # entry.
-                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
         component = integration.get_component()
@@ -530,14 +531,14 @@ class ConfigEntry:
 
             if self.state is not ConfigEntryState.LOADED:
                 self.async_cancel_retry_setup()
-                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
         supports_unload = hasattr(component, "async_unload_entry")
 
         if not supports_unload:
             if integration.domain == self.domain:
-                self.async_set_state(
+                self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, "Unload not supported"
                 )
             return False
@@ -549,7 +550,7 @@ class ConfigEntry:
 
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
-                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
             await self._async_process_on_unload(hass)
 
@@ -559,7 +560,7 @@ class ConfigEntry:
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if integration.domain == self.domain:
-                self.async_set_state(
+                self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, str(ex) or "Unknown error"
                 )
             return False
@@ -591,7 +592,7 @@ class ConfigEntry:
             )
 
     @callback
-    def async_set_state(
+    def _async_set_state(
         self, hass: HomeAssistant, state: ConfigEntryState, reason: str | None
     ) -> None:
         """Set the state of the config entry."""
@@ -653,16 +654,8 @@ class ConfigEntry:
 
         Returns function to unlisten.
         """
-        weak_listener: Any
-        # weakref.ref is not applicable to a bound method, e.g.,
-        # method of a class instance, as reference will die immediately.
-        if hasattr(listener, "__self__"):
-            weak_listener = weakref.WeakMethod(cast(MethodType, listener))
-        else:
-            weak_listener = weakref.ref(listener)
-        self.update_listeners.append(weak_listener)
-
-        return lambda: self.update_listeners.remove(weak_listener)
+        self.update_listeners.append(listener)
+        return lambda: self.update_listeners.remove(listener)
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
@@ -699,8 +692,9 @@ class ConfigEntry:
         if not self._tasks and not self._background_tasks:
             return
 
+        cancel_message = f"Config entry {self.title} with {self.domain} unloading"
         for task in self._background_tasks:
-            task.cancel()
+            task.cancel(cancel_message)
 
         _, pending = await asyncio.wait(
             [*self._tasks, *self._background_tasks], timeout=10
@@ -892,7 +886,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         """Cancel any initializing flows."""
         for task_list in self._initialize_tasks.values():
             for task in task_list:
-                task.cancel()
+                task.cancel(
+                    "Config entry initialize canceled: Home Assistant is shutting down"
+                )
         await self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
@@ -1348,12 +1344,11 @@ class ConfigEntries:
         if not changed:
             return False
 
-        for listener_ref in entry.update_listeners:
-            if (listener := listener_ref()) is not None:
-                self.hass.async_create_task(
-                    listener(self.hass, entry),
-                    f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
-                )
+        for listener in entry.update_listeners:
+            self.hass.async_create_task(
+                listener(self.hass, entry),
+                f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
+            )
 
         self._async_schedule_save()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)

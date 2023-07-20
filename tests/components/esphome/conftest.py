@@ -15,18 +15,19 @@ from aioesphomeapi import (
     ReconnectLogic,
     UserService,
 )
+import async_timeout
 import pytest
 from zeroconf import Zeroconf
 
 from homeassistant.components.esphome import (
-    CONF_DEVICE_NAME,
-    CONF_NOISE_PSK,
-    DOMAIN,
     dashboard,
 )
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+    DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -51,6 +52,11 @@ def esphome_mock_async_zeroconf(mock_async_zeroconf):
 async def load_homeassistant(hass) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture(autouse=True)
+def mock_tts(mock_tts_cache_dir):
+    """Auto mock the tts cache."""
 
 
 @pytest.fixture
@@ -153,6 +159,8 @@ class MockESPHomeDevice:
         """Init the mock."""
         self.entry = entry
         self.state_callback: Callable[[EntityState], None]
+        self.on_disconnect: Callable[[bool], None]
+        self.on_connect: Callable[[bool], None]
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -161,6 +169,22 @@ class MockESPHomeDevice:
     def set_state(self, state: EntityState) -> None:
         """Mock setting state."""
         self.state_callback(state)
+
+    def set_on_disconnect(self, on_disconnect: Callable[[bool], None]) -> None:
+        """Set the disconnect callback."""
+        self.on_disconnect = on_disconnect
+
+    async def mock_disconnect(self, expected_disconnect: bool) -> None:
+        """Mock disconnecting."""
+        await self.on_disconnect(expected_disconnect)
+
+    def set_on_connect(self, on_connect: Callable[[], None]) -> None:
+        """Set the connect callback."""
+        self.on_connect = on_connect
+
+    async def mock_connect(self) -> None:
+        """Mock connecting."""
+        await self.on_connect()
 
 
 async def _mock_generic_device_entry(
@@ -209,20 +233,31 @@ async def _mock_generic_device_entry(
     mock_client.subscribe_states = _subscribe_states
 
     try_connect_done = Event()
-    real_try_connect = ReconnectLogic._try_connect
 
-    async def mock_try_connect(self):
-        """Set an event when ReconnectLogic._try_connect has been awaited."""
-        result = await real_try_connect(self)
-        try_connect_done.set()
-        return result
+    class MockReconnectLogic(ReconnectLogic):
+        """Mock ReconnectLogic."""
 
-    with patch.object(ReconnectLogic, "_try_connect", mock_try_connect):
+        def __init__(self, *args, **kwargs):
+            """Init the mock."""
+            super().__init__(*args, **kwargs)
+            mock_device.set_on_disconnect(kwargs["on_disconnect"])
+            mock_device.set_on_connect(kwargs["on_connect"])
+            self._try_connect = self.mock_try_connect
+
+        async def mock_try_connect(self):
+            """Set an event when ReconnectLogic._try_connect has been awaited."""
+            result = await super()._try_connect()
+            try_connect_done.set()
+            return result
+
+    with patch(
+        "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await try_connect_done.wait()
+        async with async_timeout.timeout(2):
+            await try_connect_done.wait()
 
     await hass.async_block_till_done()
-
     return mock_device
 
 
@@ -294,9 +329,15 @@ async def mock_esphome_device(
         user_service: list[UserService],
         states: list[EntityState],
         entry: MockConfigEntry | None = None,
+        device_info: dict[str, Any] | None = None,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
-            hass, mock_client, {}, (entity_info, user_service), states, entry
+            hass,
+            mock_client,
+            device_info or {},
+            (entity_info, user_service),
+            states,
+            entry,
         )
 
     return _mock_device

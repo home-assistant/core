@@ -17,6 +17,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -211,6 +212,19 @@ class CloudClient(Interface):
     async def async_cloud_connect_update(self, connect: bool) -> None:
         """Process cloud remote message to client."""
         await self._prefs.async_update(remote_enabled=connect)
+
+    async def async_cloud_connection_info(
+        self, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Process cloud connection info message to client."""
+        return {
+            "remote": {
+                "connected": self.cloud.remote.is_connected,
+                "enabled": self._prefs.remote_enabled,
+                "instance_domain": self.cloud.remote.instance_domain,
+            },
+            "version": HA_VERSION,
+        }
 
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud alexa message to client."""
