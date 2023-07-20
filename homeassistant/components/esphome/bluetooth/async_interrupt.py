@@ -85,10 +85,13 @@ class _Interrupt:
             if TYPE_CHECKING:
                 assert self._task is not None
             if exc_type is asyncio.CancelledError:
-                if not (uncancel := getattr(self._task, "uncancel", None)):
-                    # pre 3.11
-                    raise self._exception
-                if uncancel() <= self._cancelling:
+                # Only py3.11 has uncancel, but this is OK since
+                # if there really is multiple cancel requests
+                # it will raise on the next loop anyways
+                if (
+                    not (uncancel := getattr(self._task, "uncancel", None))
+                    or uncancel() <= self._cancelling
+                ):
                     raise self._exception from exc_val
         self._future.remove_done_callback(self._on_interrupt)
         return None
