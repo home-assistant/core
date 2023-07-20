@@ -110,7 +110,7 @@ class EzvizAlarm(AlarmControlPanelEntity):
 
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
