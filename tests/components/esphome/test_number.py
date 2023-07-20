@@ -118,7 +118,7 @@ async def test_generic_number_with_unit_of_measurement_as_empty_string(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("number.test_mynumber")
+    state = hass.states.get("number.test_my_number")
     assert state is not None
     assert state.state == "42"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
