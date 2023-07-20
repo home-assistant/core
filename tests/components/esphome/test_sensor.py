@@ -298,7 +298,7 @@ async def test_generic_numeric_sensor_empty_string_uom(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_mysensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "123"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
