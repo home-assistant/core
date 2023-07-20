@@ -46,7 +46,7 @@ class _Interrupt:
         loop: asyncio.AbstractEventLoop,
         future: asyncio.Future[Any],
         exception: type[Exception],
-        *exception_args: Any,
+        exception_args: tuple[Any, ...] | None,
     ) -> None:
         """Initialize the interrupt context manager."""
         self._loop = loop
@@ -71,6 +71,8 @@ class _Interrupt:
     ) -> bool | None:
         """Exit the interrupt context manager."""
         if exc_type is asyncio.CancelledError and self._interrupted:
+            if self._exception_args is None:
+                raise self._exception()
             raise self._exception(*self._exception_args)
         if TYPE_CHECKING:
             assert self._interrupt_call is not None
@@ -86,7 +88,9 @@ class _Interrupt:
 
 
 def interrupt(
-    future: asyncio.Future[Any], exception: type[Exception], *exception_args: Any
+    future: asyncio.Future[Any],
+    exception: type[Exception],
+    exception_args: tuple[Any, ...] | None = None,
 ) -> _Interrupt:
     """Interrupt context manager.
 

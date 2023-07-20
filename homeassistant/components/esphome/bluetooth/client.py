@@ -69,12 +69,16 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         disconnected_future = loop.create_future()
         disconnected_futures.add(disconnected_future)
         ble_device = self._ble_device
-        disconnected_message = (
+        exception_args = (
             f"{self._source_name }: {ble_device.name} - {ble_device.address}: "
-            "Disconnected during operation"
+            "Disconnected during operation",
         )
         try:
-            async with interrupt(disconnected_future, BleakError, disconnected_message):
+            async with interrupt(
+                disconnected_future,
+                BleakError,
+                exception_args,
+            ):
                 return await func(self, *args, **kwargs)
         finally:
             disconnected_futures.discard(disconnected_future)
