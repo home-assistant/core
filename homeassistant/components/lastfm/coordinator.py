@@ -36,9 +36,7 @@ class LastFMUserData:
     last_track: str | None
 
 
-class LastFMDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, LastFMUserData | None]]
-):
+class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData]]):
     """A LastFM Data Update Coordinator."""
 
     config_entry: ConfigEntry
@@ -54,13 +52,13 @@ class LastFMDataUpdateCoordinator(
         )
         self._client = LastFMNetwork(api_key=self.config_entry.options[CONF_API_KEY])
 
-    async def _async_update_data(self) -> dict[str, LastFMUserData | None]:
+    async def _async_update_data(self) -> dict[str, LastFMUserData]:
         res = {}
         for username in self.config_entry.options[CONF_USERS]:
-            res[username] = await self.hass.async_add_executor_job(
-                self._get_user_data, username
-            )
-        if len(res.values()) == list(res.values()).count(None):
+            data = await self.hass.async_add_executor_job(self._get_user_data, username)
+            if data is not None:
+                res[username] = data
+        if not res:
             raise UpdateFailed
         return res
 
@@ -86,5 +84,6 @@ class LastFMDataUpdateCoordinator(
                 last_track,
             )
         except PyLastError as exc:
-            LOGGER.error("LastFM update for %s failed: %r", username, exc)
+            if self.last_update_success:
+                LOGGER.error("LastFM update for %s failed: %r", username, exc)
             return None
