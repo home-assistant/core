@@ -309,15 +309,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.data.get(CONF_SLEEP_PERIOD):
         platforms = RPC_PLATFORMS
 
-    # delete push update issue if it exists
-    if get_device_entry_gen(entry) == 1:
-        LOGGER.debug(
-            "Deleting issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
-        )
-        ir.async_delete_issue(
-            hass, DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
-        )
-
     if get_device_entry_gen(entry) == 2:
         if unload_ok := await hass.config_entries.async_unload_platforms(
             entry, platforms
@@ -333,6 +324,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             get_entry_data(hass).pop(entry.entry_id)
 
         return unload_ok
+
+    # delete push update issue if it exists
+    LOGGER.debug(
+        "Deleting issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+    )
+    ir.async_delete_issue(
+        hass, DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+    )
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
