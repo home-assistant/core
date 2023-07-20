@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
-def next_weekday(fromdate: date, weekday: int) -> date:
+def _next_weekday(fromdate: date, weekday: int) -> date:
     """Return the date of the next time a specific weekday happen."""
     days_ahead = weekday - fromdate.weekday()
     if days_ahead <= 0:
@@ -46,7 +46,7 @@ def next_weekday(fromdate: date, weekday: int) -> date:
     return fromdate + timedelta(days_ahead)
 
 
-def next_departuredate(departure: list[str]) -> date:
+def _next_departuredate(departure: list[str]) -> date:
     """Calculate the next departuredate from an array input of short days."""
     today_date = date.today()
     today_weekday = date.weekday(today_date)
@@ -55,8 +55,22 @@ def next_departuredate(departure: list[str]) -> date:
     for day in departure:
         next_departure = WEEKDAYS.index(day)
         if next_departure > today_weekday:
-            return next_weekday(today_date, next_departure)
-    return next_weekday(today_date, WEEKDAYS.index(departure[0]))
+            return _next_weekday(today_date, next_departure)
+    return _next_weekday(today_date, WEEKDAYS.index(departure[0]))
+
+
+def _get_as_utc(date_value: datetime | None) -> datetime | None:
+    """Return utc datetime or None."""
+    if date_value:
+        return dt_util.as_utc(date_value)
+    return None
+
+
+def _get_as_joined(information: list[str] | None) -> str | None:
+    """Return joined information or None."""
+    if information:
+        return ", ".join(information)
+    return None
 
 
 class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
@@ -90,7 +104,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         when = dt_util.now()
         state: TrainStop | None = None
         if self._time:
-            departure_day = next_departuredate(self._weekdays)
+            departure_day = _next_departuredate(self._weekdays)
             when = datetime.combine(
                 departure_day,
                 self._time,
@@ -121,27 +135,15 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         delay_time = state.get_delay_time()
 
         states = TrainData(
-            departure_time=self.get_as_utc(departure_time),
+            departure_time=_get_as_utc(departure_time),
             departure_state=state.get_state().value,
             cancelled=state.canceled,
             delayed_time=delay_time.seconds if delay_time else None,
-            planned_time=self.get_as_utc(state.advertised_time_at_location),
-            estimated_time=self.get_as_utc(state.estimated_time_at_location),
-            actual_time=self.get_as_utc(state.time_at_location),
-            other_info=self.get_as_joined(state.other_information),
-            deviation=self.get_as_joined(state.deviations),
+            planned_time=_get_as_utc(state.advertised_time_at_location),
+            estimated_time=_get_as_utc(state.estimated_time_at_location),
+            actual_time=_get_as_utc(state.time_at_location),
+            other_info=_get_as_joined(state.other_information),
+            deviation=_get_as_joined(state.deviations),
         )
 
         return states
-
-    def get_as_utc(self, date_value: datetime | None) -> datetime | None:
-        """Return utc datetime or None."""
-        if date_value:
-            return dt_util.as_utc(date_value)
-        return None
-
-    def get_as_joined(self, information: list[str] | None) -> str | None:
-        """Return joined information or None."""
-        if information:
-            return ", ".join(information)
-        return None
