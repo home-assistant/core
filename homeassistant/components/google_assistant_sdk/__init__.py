@@ -129,14 +129,6 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         self.language: str | None = None
 
     @property
-    def attribution(self):
-        """Return the attribution."""
-        return {
-            "name": "Powered by Google Assistant SDK",
-            "url": "https://www.home-assistant.io/integrations/google_assistant_sdk/",
-        }
-
-    @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return SUPPORTED_LANGUAGE_CODES

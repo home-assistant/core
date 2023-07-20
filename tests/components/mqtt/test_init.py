@@ -2106,8 +2106,8 @@ async def test_setup_manual_mqtt_with_invalid_config(
     with pytest.raises(AssertionError):
         await mqtt_mock_entry()
     assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']."
-        " Got None. (See ?, line ?)" in caplog.text
+        "Invalid config for [mqtt]: required key not provided @ data['mqtt'][0]['light'][0]['command_topic']. "
+        "Got None. (See ?, line ?)" in caplog.text
     )
 
 
