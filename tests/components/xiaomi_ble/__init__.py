@@ -105,6 +105,22 @@ HHCCJCY10_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=False,
 )
 
+MISCALE_V2_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="MIBFS",
+    address="50:FB:19:1B:B5:DC",
+    device=generate_ble_device("00:00:00:00:00:00", None),
+    rssi=-60,
+    manufacturer_data={},
+    service_data={
+        "0000181b-0000-1000-8000-00805f9b34fb": b"\x02\xa6\xe7\x07\x07\x07\x0b\x1f\x1d\x1f\x02\xfa-"
+    },
+    service_uuids=["0000181b-0000-1000-8000-00805f9b34fb"],
+    source="local",
+    advertisement=generate_advertisement_data(local_name="Not it"),
+    time=0,
+    connectable=False,
+)
+
 MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
     name="LYWSD02MMC",
     address="A4:C1:38:56:53:84",
