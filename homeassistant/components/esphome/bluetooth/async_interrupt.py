@@ -6,7 +6,7 @@ a block of code when a future is done.
 The purpose is to raise as soon as possible without waiting for the next await expression
 to avoid any race conditions.
 
-This is based loosely on async_timeout by Andrew Svetlov.
+This is based loosely on async_timeout by Andrew Svetlov and cpython asyncio.timeout
 """
 from __future__ import annotations
 
