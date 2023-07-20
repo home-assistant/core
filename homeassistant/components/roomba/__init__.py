@@ -3,6 +3,8 @@ import asyncio
 from functools import partial
 import logging
 
+from roombapy import RoombaConnectionError, RoombaFactory
+
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
