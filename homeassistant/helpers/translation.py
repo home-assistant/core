@@ -332,8 +332,8 @@ async def async_get_translations(
     return result
 
 
-@bind_hass
-def get_cached_translations(
+@callback
+def async_get_cached_translations(
     hass: HomeAssistant,
     language: str,
     category: str,
@@ -354,18 +354,19 @@ def get_cached_translations(
             component for component in hass.config.components if "." not in component
         }
 
+    if TRANSLATION_FLATTEN_CACHE not in hass.data:
+        return {}
+    
     result = {}
 
-    if TRANSLATION_FLATTEN_CACHE in hass.data:
-        cache = hass.data[TRANSLATION_FLATTEN_CACHE]
-        cached = cache.get_cached(language, category, components)
-        for entry in cached:
-            result.update(entry)
+    cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+    cached = cache.get_cached(language, category, components)
+    for entry in cached:
+        result.update(entry)
 
     return result
 
 
-@bind_hass
 async def load_state_translations_to_cache(
     hass: HomeAssistant,
     language: str,
