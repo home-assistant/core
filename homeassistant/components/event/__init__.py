@@ -144,9 +144,9 @@ class EventEntity(RestoreEntity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if self.__last_event is None:
+        if (last_event := self.__last_event) is None:
             return None
-        return self.__last_event.isoformat(timespec="milliseconds")
+        return last_event.isoformat(timespec="milliseconds")
 
     @final
     @property
