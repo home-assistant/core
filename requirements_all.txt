@@ -2726,7 +2726,7 @@ yolink-api==0.2.9
 youless-api==1.0.1
 
 # homeassistant.components.media_extractor
-yt-dlp==2023.3.4
+yt-dlp==2023.7.6
 
 # homeassistant.components.zamg
 zamg==0.2.4
