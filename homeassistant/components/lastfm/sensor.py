@@ -77,7 +77,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    coordinator: DataUpdateCoordinator[dict[str, LastFMUserData]] = hass.data[DOMAIN][
+    coordinator: LastFMDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
     async_add_entities(
@@ -85,7 +85,6 @@ async def async_setup_entry(
             LastFmSensor(coordinator, username, entry.entry_id)
             for username in entry.options[CONF_USERS]
         ),
-        True,
     )
 
 
