@@ -729,10 +729,10 @@ async def test_cleanup_device(
     # Verify device and registry entries are created
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is not None
 
     # Remove MQTT from the device
@@ -753,11 +753,11 @@ async def test_cleanup_device(
     # Verify device and registry entries are cleared
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -788,10 +788,10 @@ async def test_cleanup_device_mqtt(
     # Verify device and registry entries are created
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is not None
 
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", "")
@@ -801,11 +801,11 @@ async def test_cleanup_device_mqtt(
     # Verify device and registry entries are cleared
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -873,10 +873,10 @@ async def test_cleanup_device_multiple_config_entries(
         mqtt_config_entry.entry_id,
         config_entry.entry_id,
     }
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is not None
 
     # Remove MQTT from the device
@@ -900,12 +900,12 @@ async def test_cleanup_device_multiple_config_entries(
         connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -973,10 +973,10 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         mqtt_config_entry.entry_id,
         config_entry.entry_id,
     }
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is not None
 
     # Send MQTT messages to remove
@@ -992,12 +992,12 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 

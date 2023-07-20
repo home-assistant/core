@@ -92,7 +92,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.mqtt_sensor",
+            "sensor.none_mqtt_sensor",
             DEFAULT_SENSOR_NAME,
             None,
             True,
@@ -173,7 +173,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.mysensor",
+            "sensor.none_mysensor",
             "MySensor",
             None,
             True,
@@ -250,4 +250,6 @@ async def test_default_entity_and_device_name(
     assert state is not None
     assert state.name == friendly_name
 
-    assert ("No device name set in config" in caplog.text) is assert_log
+    assert (
+        "MQTT device information always needs to include a name" in caplog.text
+    ) is assert_log
