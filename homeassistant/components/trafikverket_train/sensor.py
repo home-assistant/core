@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_TIME, DOMAIN, ATTRIBUTION
+from .const import ATTRIBUTION, DOMAIN
 from .coordinator import TrainData, TVDataUpdateCoordinator
 
 
@@ -29,7 +29,7 @@ from .coordinator import TrainData, TVDataUpdateCoordinator
 class TrafikverketRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[dict[str, StateType | datetime]], StateType | datetime]
+    value_fn: Callable[[TrainData], StateType | datetime]
 
 
 @dataclass
@@ -45,13 +45,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         translation_key="departure_time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data["departure_time"],
+        value_fn=lambda data: data.departure_time,
     ),
     TrafikverketSensorEntityDescription(
         key="departure_state",
         translation_key="departure_state",
         icon="mdi:clock",
-        value_fn=lambda data: data["departure_state"],
+        value_fn=lambda data: data.departure_time,
         device_class=SensorDeviceClass.ENUM,
         options=["on_time", "delayed", "canceled"],
     ),
@@ -59,7 +59,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="cancelled",
         translation_key="cancelled",
         icon="mdi:alert",
-        value_fn=lambda data: data["cancelled"],
+        value_fn=lambda data: data.cancelled,
     ),
     TrafikverketSensorEntityDescription(
         key="delayed_time",
@@ -67,14 +67,14 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        value_fn=lambda data: data["delayed_time"],
+        value_fn=lambda data: data.delayed_time,
     ),
     TrafikverketSensorEntityDescription(
         key="planned_time",
         translation_key="planned_time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data["planned_time"],
+        value_fn=lambda data: data.planned_time,
         entity_registry_enabled_default=False,
     ),
     TrafikverketSensorEntityDescription(
@@ -82,7 +82,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         translation_key="estimated_time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data["estimated_time"],
+        value_fn=lambda data: data.estimated_time,
         entity_registry_enabled_default=False,
     ),
     TrafikverketSensorEntityDescription(
@@ -90,20 +90,20 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         translation_key="actual_time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data["actual_time"],
+        value_fn=lambda data: data.actual_time,
         entity_registry_enabled_default=False,
     ),
     TrafikverketSensorEntityDescription(
         key="other_info",
         translation_key="other_info",
         icon="mdi:information-variant",
-        value_fn=lambda data: data["other_info"],
+        value_fn=lambda data: data.other_info,
     ),
     TrafikverketSensorEntityDescription(
         key="deviation",
         translation_key="deviation",
         icon="mdi:alert",
-        value_fn=lambda data: data["deviation"],
+        value_fn=lambda data: data.deviation,
     ),
 )
 
@@ -187,6 +187,7 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         self._attr_extra_state_attributes = {}
         self._update_attr()
 
+    @callback
     def _update_attr(self) -> None:
         """Update _attr."""
         self._attr_native_value = self.entity_description.value_fn(
@@ -198,6 +199,7 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     def _handle_coordinator_update(self) -> None:
         self._update_attr()
         return super()._handle_coordinator_update()
+<<<<<<< HEAD
 
     @callback
     def _update_attr(self) -> None:
@@ -208,3 +210,5 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         self._attr_extra_state_attributes = self.entity_description.extra_fn(
             self.coordinator.data
         )
+=======
+>>>>>>> 9abaf9daae (cleanup from rebase)
