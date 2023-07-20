@@ -43,4 +43,4 @@ class DemoEvent(EventEntity):
     @callback
     def _async_handle_event(self, _: Event) -> None:
         """Handle the demo button event."""
-        self.async_trigger_event("pressed")
+        self._trigger_event("pressed")

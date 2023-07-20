@@ -8,7 +8,7 @@ from typing import Any, final
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -115,8 +115,7 @@ class EventEntity(RestoreEntity):
         raise AttributeError()
 
     @final
-    @callback
-    def async_trigger_event(
+    def _trigger_event(
         self, event_type: str, extra_state_attributes: dict[str, Any] | None = None
     ) -> None:
         """Process a new event."""
@@ -125,15 +124,6 @@ class EventEntity(RestoreEntity):
         self.__last_event = dt_util.utcnow()
         self.__last_event_type = event_type
         self.__last_event_extra_state_attributes = extra_state_attributes
-
-    @final
-    def trigger_event(
-        self, event_type: str, extra_state_attributes: dict[str, Any] | None = None
-    ) -> None:
-        """Process a new event."""
-        self.hass.loop.call_soon_threadsafe(
-            self.async_trigger_event, event_type, extra_state_attributes
-        )
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.

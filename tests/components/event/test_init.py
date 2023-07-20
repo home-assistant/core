@@ -1,6 +1,5 @@
 """The tests for the event integration."""
 from collections.abc import Generator
-from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 import pytest
@@ -37,9 +36,6 @@ async def test_event(hass: HomeAssistant) -> None:
     """Test the event entity."""
     event = EventEntity()
     event.entity_id = "event.doorbell"
-    event.async_write_ha_state = MagicMock()
-    event.hass = hass
-
     # Test event with no data at all
     assert event.state is None
     assert event.state_attributes == {ATTR_EVENT_TYPE: None}
@@ -68,7 +64,7 @@ async def test_event(hass: HomeAssistant) -> None:
     # Test triggering an event
     now = dt_util.utcnow()
     with freeze_time(now):
-        event.async_trigger_event("long_press")
+        event._trigger_event("long_press")
 
         assert event.state == now.isoformat(timespec="milliseconds")
         assert event.state_attributes == {ATTR_EVENT_TYPE: "long_press"}
@@ -77,27 +73,17 @@ async def test_event(hass: HomeAssistant) -> None:
     # Test triggering an event, with extra attribute data
     now = dt_util.utcnow()
     with freeze_time(now):
-        event.async_trigger_event("short_press", {"hello": "world"})
+        event._trigger_event("short_press", {"hello": "world"})
 
         assert event.state == now.isoformat(timespec="milliseconds")
         assert event.state_attributes == {ATTR_EVENT_TYPE: "short_press"}
         assert event.extra_state_attributes == {"hello": "world"}
 
-    # Test triggering via sync
-    now = dt_util.utcnow()
-    with freeze_time(now):
-        await hass.async_add_executor_job(event.trigger_event, "long_press")
-        await hass.async_block_till_done()
-
-        assert event.state == now.isoformat(timespec="milliseconds")
-        assert event.state_attributes == {ATTR_EVENT_TYPE: "long_press"}
-        assert not event.extra_state_attributes
-
     # Test triggering an unknown event
     with pytest.raises(
         ValueError, match="^Invalid event type unknown_event for event.doorbell$"
     ):
-        event.async_trigger_event("unknown_event")
+        event._trigger_event("unknown_event")
 
 
 async def test_restore_state(
