@@ -1,5 +1,5 @@
 """Common fixtures for the Gardena Bluetooth tests."""
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -11,11 +11,13 @@ from gardena_bluetooth.parse import Characteristic
 import pytest
 
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
+from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import HomeAssistant
 
 from . import WATER_TIMER_SERVICE_INFO
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -45,8 +47,27 @@ def mock_read_char_raw():
     }
 
 
+@pytest.fixture
+async def scan_step(
+    hass: HomeAssistant,
+) -> Generator[None, None, Callable[[], Awaitable[None]]]:
+    """Step system time forward."""
+
+    with freeze_time("2023-01-01", tz_offset=1) as frozen_time:
+
+        async def delay():
+            """Trigger delay in system."""
+            frozen_time.tick(delta=SCAN_INTERVAL)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+        yield delay
+
+
 @pytest.fixture(autouse=True)
-def mock_client(enable_bluetooth: None, mock_read_char_raw: dict[str, Any]) -> None:
+def mock_client(
+    enable_bluetooth: None, scan_step, mock_read_char_raw: dict[str, Any]
+) -> None:
     """Auto mock bluetooth."""
 
     client = Mock(spec_set=Client)
@@ -82,11 +103,7 @@ def mock_client(enable_bluetooth: None, mock_read_char_raw: dict[str, Any]) -> N
     with patch(
         "homeassistant.components.gardena_bluetooth.config_flow.Client",
         return_value=client,
-    ), patch(
-        "homeassistant.components.gardena_bluetooth.Client", return_value=client
-    ), freeze_time(
-        "2023-01-01", tz_offset=1
-    ):
+    ), patch("homeassistant.components.gardena_bluetooth.Client", return_value=client):
         yield client
 
 

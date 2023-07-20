@@ -1104,10 +1104,12 @@ def mock_get_source_ip() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_zeroconf() -> Generator[None, None, None]:
     """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
+    with patch(
+        "homeassistant.components.zeroconf.HaZeroconf", autospec=True
+    ) as mock_zc, patch(
         "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
     ):
-        yield
+        yield mock_zc
 
 
 @pytest.fixture
