@@ -60,6 +60,8 @@ class LastFMDataUpdateCoordinator(
             res[username] = await self.hass.async_add_executor_job(
                 self._get_user_data, username
             )
+        if len(res.values()) == list(res.values()).count(None):
+            raise UpdateFailed
         return res
 
     def _get_user_data(self, username: str) -> LastFMUserData | None:
@@ -84,4 +86,5 @@ class LastFMDataUpdateCoordinator(
                 last_track,
             )
         except PyLastError as exc:
-            raise UpdateFailed from exc
+            LOGGER.error("LastFM update for %s failed: %r", username, exc)
+            return None

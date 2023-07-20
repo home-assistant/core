@@ -18,7 +18,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
-    DataUpdateCoordinator,
 )
 
 from .const import (
@@ -30,7 +29,7 @@ from .const import (
     DOMAIN,
     STATE_NOT_SCROBBLING,
 )
-from .coordinator import LastFMUserData
+from .coordinator import LastFMDataUpdateCoordinator, LastFMUserData
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -77,9 +76,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    coordinator: LastFMDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: LastFMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         (
             LastFmSensor(coordinator, username, entry.entry_id)
@@ -88,9 +85,7 @@ async def async_setup_entry(
     )
 
 
-class LastFmSensor(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str, LastFMUserData]]], SensorEntity
-):
+class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity):
     """A class for the Last.fm account."""
 
     _attr_attribution = "Data provided by Last.fm"
@@ -98,7 +93,7 @@ class LastFmSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, LastFMUserData]],
+        coordinator: LastFMDataUpdateCoordinator,
         username: str,
         entry_id: str,
     ) -> None:
@@ -116,29 +111,29 @@ class LastFmSensor(
         )
 
     @property
-    def user(self) -> LastFMUserData | None:
+    def user_data(self) -> LastFMUserData | None:
         """Returns the user from the coordinator."""
         return self.coordinator.data.get(self._username)
 
     @property
     def available(self) -> bool:
         """If user not found in coordinator, entity is unavailable."""
-        return self.user is not None
+        return super().available and self.user_data is not None
 
     @property
     def native_value(self) -> str:
         """Return value of sensor."""
-        if self.user and self.user.now_playing is not None:
-            return self.user.now_playing
+        if self.user_data and self.user_data.now_playing is not None:
+            return self.user_data.now_playing
         return STATE_NOT_SCROBBLING
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
-        if self.user is None:
+        if self.user_data is None:
             return None
         return {
-            ATTR_PLAY_COUNT: self.user.play_count,
-            ATTR_LAST_PLAYED: self.user.last_track,
-            ATTR_TOP_PLAYED: self.user.top_track,
+            ATTR_PLAY_COUNT: self.user_data.play_count,
+            ATTR_LAST_PLAYED: self.user_data.last_track,
+            ATTR_TOP_PLAYED: self.user_data.top_track,
         }
