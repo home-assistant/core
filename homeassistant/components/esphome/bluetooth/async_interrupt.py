@@ -3,6 +3,9 @@
 This module provides a context manager that can be used to interrupt
 a block of code when a future is done.
 
+The purpose is to raise as soon as possible without waiting for the next await expression
+to avoid any race conditions.
+
 This is based loosely on async_timeout by Andrew Svetlov.
 """
 from __future__ import annotations
