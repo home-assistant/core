@@ -130,10 +130,15 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
-        if self.user_data is None:
-            return None
+        play_count = None
+        last_track = None
+        top_track = None
+        if self.user_data:
+            play_count = self.user_data.play_count
+            last_track = self.user_data.last_track
+            top_track = self.user_data.top_track
         return {
-            ATTR_PLAY_COUNT: self.user_data.play_count,
-            ATTR_LAST_PLAYED: self.user_data.last_track,
-            ATTR_TOP_PLAYED: self.user_data.top_track,
+            ATTR_PLAY_COUNT: play_count,
+            ATTR_LAST_PLAYED: last_track,
+            ATTR_TOP_PLAYED: top_track,
         }
