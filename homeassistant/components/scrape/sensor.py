@@ -208,8 +208,6 @@ class ScrapeSensor(
             SensorDeviceClass.TIMESTAMP,
         }:
             self._attr_native_value = value
-            _LOGGER.debug("_attr_native_value=%s", self._attr_native_value)
-            _LOGGER.debug("raw_value=%s", raw_value)
             self._process_manual_data(raw_value)
             return
 
