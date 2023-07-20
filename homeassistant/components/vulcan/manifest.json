@@ -3,6 +3,7 @@
   "name": "Uonet+ Vulcan",
   "codeowners": ["@Antoni-Czaplicki"],
   "config_flow": true,
+  "disabled": "Dependencies does not support Python 3.12",
   "documentation": "https://www.home-assistant.io/integrations/vulcan",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",

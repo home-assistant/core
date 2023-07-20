@@ -2659,9 +2659,6 @@ vsure==2.6.6
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
 
-# homeassistant.components.vulcan
-vulcan-api==2.3.0
-
 # homeassistant.components.vultr
 vultr==0.1.2
 
