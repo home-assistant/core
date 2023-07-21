@@ -94,7 +94,7 @@ ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
 ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
 ATTR_FORECAST_DEW_POINT: Final = "dew_point"
 ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
-ATTR_FORECAST_UV_INDEX: Final = "uv-index"
+ATTR_FORECAST_UV_INDEX: Final = "uv_index"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
