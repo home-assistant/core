@@ -177,8 +177,8 @@ class EventEntity(RestoreEntity):
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {ATTR_EVENT_TYPE: self.__last_event_type}
-        if self.__last_event_attributes:
-            attributes |= self.__last_event_attributes
+        if last_event_attributes := self.__last_event_attributes:
+            attributes |= last_event_attributes
         return attributes
 
     @final
