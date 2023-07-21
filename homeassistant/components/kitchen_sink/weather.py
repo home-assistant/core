@@ -306,7 +306,7 @@ class DemoWeather(WeatherEntity):
                 self._forecast_twice_daily = (
                     self._forecast_twice_daily[1:] + self._forecast_twice_daily[:1]
                 )
-            await self.async_update_forecast(None)
+            await self.async_update_listeners(None)
 
         self.async_on_remove(
             async_track_time_interval(

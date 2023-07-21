@@ -98,4 +98,4 @@ async def ws_subscribe_forecast(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
     # Push an initial forecast update
-    await entity.async_update_forecast({forecast_type})
+    await entity.async_update_listeners({forecast_type})

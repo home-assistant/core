@@ -1045,7 +1045,7 @@ class WeatherEntity(Entity):
         return unsubscribe
 
     @final
-    async def async_update_forecast(
+    async def async_update_listeners(
         self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
     ) -> None:
         """Push updated forecast to all listeners."""

@@ -81,16 +81,16 @@ async def test_subscribe_forecast(
         ],
     }
 
-    await entity0.async_update_forecast(None)
+    await entity0.async_update_listeners(None)
     msg = await client.receive_json()
     assert msg["event"] == forecast
 
-    await entity0.async_update_forecast(["daily"])
+    await entity0.async_update_listeners(["daily"])
     msg = await client.receive_json()
     assert msg["event"] == forecast
 
     entity0.forecast_list = None
-    await entity0.async_update_forecast(None)
+    await entity0.async_update_listeners(None)
     msg = await client.receive_json()
     assert msg["event"] == {"type": "daily", "forecast": None}
 
