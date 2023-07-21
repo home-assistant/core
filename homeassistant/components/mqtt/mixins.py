@@ -210,7 +210,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_MANUFACTURER): cv.string,
             vol.Optional(CONF_MODEL): cv.string,
-            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
+            vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_HW_VERSION): cv.string,
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
@@ -1128,19 +1128,9 @@ class MqttEntity(
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
             self._attr_name = entity_name
-        elif not (use_device_class_name := self._default_to_device_class_name()):
+        elif not self._default_to_device_class_name():
             # Assign the default name
             self._attr_name = self._default_name
-        elif use_device_class_name:
-            # Follow name of device class
-            if CONF_DEVICE in config and CONF_NAME not in config[CONF_DEVICE]:
-                _LOGGER.info(
-                    "MQTT device information always needs to include a name, got %s, "
-                    "if device information is shared between multiple entities, the device "
-                    "name must be included in each entity's device configuration",
-                    config,
-                )
-            return
         if CONF_DEVICE in config:
             if CONF_NAME not in config[CONF_DEVICE]:
                 _LOGGER.info(
