@@ -449,7 +449,6 @@ class ESPHomeClient(BaseBleakClient):
         )
         return False
 
-    @verify_connected
     @api_error_as_bleak_error
     async def get_services(
         self, dangerous_use_bleak_cache: bool = False, **kwargs: Any
@@ -464,9 +463,14 @@ class ESPHomeClient(BaseBleakClient):
             dangerous_use_bleak_cache=dangerous_use_bleak_cache, **kwargs
         )
 
+    @verify_connected
     async def _get_services(
         self, dangerous_use_bleak_cache: bool = False, **kwargs: Any
     ) -> BleakGATTServiceCollection:
+        """Get all services registered for this GATT server.
+
+        Must only be called from get_services or connected
+        """
         address_as_int = self._address_as_int
         cache = self._cache
         # If the connection version >= 3, we must use the cache
