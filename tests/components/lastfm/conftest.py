@@ -44,6 +44,7 @@ def mock_imported_config_entry() -> MockConfigEntry:
         data={},
         options={
             CONF_API_KEY: API_KEY,
+            CONF_MAIN_USER: None,
             CONF_USERS: [USERNAME_1, USERNAME_2],
         },
     )
