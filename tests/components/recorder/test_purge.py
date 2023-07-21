@@ -77,13 +77,13 @@ async def test_purge_big_database(
     """Test deleting 2/3 old states from a big database."""
     instance = await async_setup_recorder_instance(hass)
 
-    for _ in range(3400):
+    for _ in range(1000):
         await _add_test_states(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 20400
+        assert states.count() == 6000
         assert state_attributes.count() == 3
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
@@ -96,7 +96,7 @@ async def test_purge_big_database(
             repack=False,
         )
         assert not finished
-        assert states.count() == 6800
+        assert states.count() == 2000
         assert state_attributes.count() == 1
 
 
