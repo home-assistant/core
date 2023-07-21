@@ -122,7 +122,7 @@
   "issues": {
     "device_not_calibrated": {
       "title": "Shelly device {device_name} is not calibrated",
-      "description": "Shelly device {device_name} with IP address {ip_address} requires calibration, you can calibrate it in the device's web panel."
+      "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be restarted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'."
     },
     "push_update_failure": {
       "title": "Shelly device {device_name} push update failure",
