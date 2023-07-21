@@ -2,10 +2,14 @@
 import asyncio
 from os import path
 import pathlib
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
+from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
+    EVENT_CORE_CONFIG_UPDATE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
@@ -444,19 +448,33 @@ async def test_custom_component_translations(
 async def test_load_state_translations_to_cache(
     hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
 ):
-    """Test the get load state translations to cache helper."""
+    """Test the load state translations to cache helper."""
 
     with patch(
         "homeassistant.helpers.translation.async_load_translations",
     ) as mock:
         await translation.async_load_state_translations_to_cache(hass, "en")
+        mock.assert_has_calls(
+            [
+                call(hass, "en", "entity", None),
+                call(hass, "en", "state", None),
+                call(hass, "en", "entity_component", None),
+            ]
+        )
 
-        _, args, _ = mock.mock_calls[0]
-        assert args[2] == "entity"
-        _, args, _ = mock.mock_calls[1]
-        assert args[2] == "state"
-        _, args, _ = mock.mock_calls[2]
-        assert args[2] == "entity_component"
+    with patch(
+        "homeassistant.helpers.translation.async_load_translations",
+    ) as mock:
+        await translation.async_load_state_translations_to_cache(
+            hass, "en", ["some_integration"]
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, "en", "entity", ["some_integration"]),
+                call(hass, "en", "state", ["some_integration"]),
+                call(hass, "en", "entity_component", ["some_integration"]),
+            ]
+        )
 
 
 async def test_get_cached_translations(
@@ -494,3 +512,35 @@ async def test_get_cached_translations(
     )
     assert translations["component.switch.state.string1"] == "Value 1"
     assert translations["component.switch.state.string2"] == "Value 2"
+
+
+async def test_setup_load_listeners(hass: HomeAssistant):
+    """Test the setup load listeners helper."""
+    translation.async_setup_load_listeners(hass)
+    with patch(
+        "homeassistant.helpers.translation.async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "loaded_component"})
+        await hass.async_block_till_done()
+        mock.assert_called_once_with(hass, hass.config.language, ["loaded_component"])
+
+    with patch(
+        "homeassistant.helpers.translation.async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "config.component"})
+        await hass.async_block_till_done()
+        mock.assert_not_called()
+
+    with patch(
+        "homeassistant.helpers.translation.async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {"language": "en"})
+        await hass.async_block_till_done()
+        mock.assert_called_once_with(hass, hass.config.language)
+
+    with patch(
+        "homeassistant.helpers.translation.async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {})
+        await hass.async_block_till_done()
+        mock.assert_not_called()

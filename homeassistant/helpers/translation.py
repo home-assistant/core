@@ -6,7 +6,11 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
+    EVENT_CORE_CONFIG_UPDATE,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
@@ -409,3 +413,33 @@ async def async_load_state_translations_to_cache(
     await async_load_translations(hass, language, "entity", integrations)
     await async_load_translations(hass, language, "state", integrations)
     await async_load_translations(hass, language, "entity_component", integrations)
+
+
+@callback
+def async_setup_load_listeners(hass: HomeAssistant) -> None:
+    """Register listeners for translation loaders.
+
+    Listeners load translations for every loaded component and after config change.
+    """
+
+    async def load_translations(event: Event) -> None:
+        if "language" in event.data:
+            language = hass.config.language
+            _LOGGER.debug(f"Loading translations for language: {language}")
+            await async_load_state_translations_to_cache(hass, language)
+
+    async def load_translations_for_component(event: Event) -> None:
+        component = event.data.get("component")
+        if component is None or "." in str(component):
+            _LOGGER.debug(
+                f"Skipping loading translations for a unsupported component: {component}"
+            )
+            return
+        language = hass.config.language
+        _LOGGER.debug(
+            f"Loading translations for language: {hass.config.language} and component: {component}"
+        )
+        await async_load_state_translations_to_cache(hass, language, [component])
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations_for_component)
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)

@@ -8,7 +8,7 @@ import logging
 import math
 import random
 from typing import Any
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import orjson
