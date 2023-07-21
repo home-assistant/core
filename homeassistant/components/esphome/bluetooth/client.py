@@ -364,16 +364,18 @@ class ESPHomeClient(BaseBleakClient):
             await connected_future
 
         try:
-            await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
+            await self._get_services(
+                dangerous_use_bleak_cache=dangerous_use_bleak_cache
+            )
         except asyncio.CancelledError:
             # On cancel we must still raise cancelled error
             # to avoid blocking the cancellation even if the
             # disconnect call fails.
             with contextlib.suppress(Exception):
-                await self.disconnect()
+                await self._disconnect()
             raise
         except Exception:
-            await self.disconnect()
+            await self._disconnect()
             raise
 
         return True
@@ -381,6 +383,9 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def disconnect(self) -> bool:
         """Disconnect from the peripheral device."""
+        return await self._disconnect()
+
+    async def _disconnect(self) -> bool:
         self._async_disconnected_cleanup()
         await self._client.bluetooth_device_disconnect(self._address_as_int)
         await self._wait_for_free_connection_slot(DISCONNECT_TIMEOUT)
@@ -444,6 +449,7 @@ class ESPHomeClient(BaseBleakClient):
         )
         return False
 
+    @verify_connected
     @api_error_as_bleak_error
     async def get_services(
         self, dangerous_use_bleak_cache: bool = False, **kwargs: Any
@@ -454,6 +460,13 @@ class ESPHomeClient(BaseBleakClient):
            A :py:class:`bleak.backends.service.BleakGATTServiceCollection`
            with this device's services tree.
         """
+        return await self._get_services(
+            dangerous_use_bleak_cache=dangerous_use_bleak_cache, **kwargs
+        )
+
+    async def _get_services(
+        self, dangerous_use_bleak_cache: bool = False, **kwargs: Any
+    ) -> BleakGATTServiceCollection:
         address_as_int = self._address_as_int
         cache = self._cache
         # If the connection version >= 3, we must use the cache
@@ -538,6 +551,7 @@ class ESPHomeClient(BaseBleakClient):
             raise BleakError(f"Characteristic {char_specifier} was not found!")
         return characteristic
 
+    @verify_connected
     @api_error_as_bleak_error
     async def clear_cache(self) -> bool:
         """Clear the GATT cache."""
@@ -726,6 +740,7 @@ class ESPHomeClient(BaseBleakClient):
             wait_for_response=False,
         )
 
+    @verify_connected
     @api_error_as_bleak_error
     async def stop_notify(
         self,
