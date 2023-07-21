@@ -30,7 +30,7 @@ pytest-picked==0.4.6
 pytest-xdist==3.3.1
 pytest==7.3.1
 requests_mock==1.11.0
-respx==0.20.1
+respx==0.20.2
 syrupy==4.0.8
 tomli==2.0.1;python_version<"3.11"
 tqdm==4.65.0
