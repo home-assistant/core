@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+import re
 from types import MappingProxyType
 from typing import Any, TypedDict, cast
 
@@ -259,7 +260,12 @@ class FritzBoxTools(
             self._unique_id = info.serial_number
 
         self._model = info.model_name
-        self._current_firmware = info.software_version
+        if (
+            version_normalized := re.search(r"^\d+\.[0]?(.*)", info.software_version)
+        ) is not None:
+            self._current_firmware = version_normalized.group(1)
+        else:
+            self._current_firmware = info.software_version
 
         (
             self._update_available,
