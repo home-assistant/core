@@ -1,7 +1,7 @@
 """Demo platform that offers fake meteorological data."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -27,7 +27,6 @@ from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 CONDITION_CLASSES: dict[str, list[str]] = {
@@ -47,8 +46,6 @@ CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
-WEATHER_UPDATE_INTERVAL = timedelta(minutes=30)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -56,20 +53,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
-    setup_platform(hass, {}, async_add_entities)
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Demo weather."""
-    add_entities(
+    async_add_entities(
         [
             DemoWeather(
-                "South",
+                "Legacy weather",
                 "Sunshine",
                 21.6414,
                 92,
@@ -89,9 +76,41 @@ def setup_platform(
                 ],
                 None,
                 None,
+                None,
             ),
             DemoWeather(
-                "North",
+                "Legacy + daily weather",
+                "Sunshine",
+                21.6414,
+                92,
+                1099,
+                0.5,
+                UnitOfTemperature.CELSIUS,
+                UnitOfPressure.HPA,
+                UnitOfSpeed.METERS_PER_SECOND,
+                [
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
+                ],
+                [
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
+                ],
+                None,
+                None,
+            ),
+            DemoWeather(
+                "Daily + hourly weather",
                 "Shower rain",
                 -12,
                 54,
@@ -100,6 +119,7 @@ def setup_platform(
                 UnitOfTemperature.FAHRENHEIT,
                 UnitOfPressure.INHG,
                 UnitOfSpeed.MILES_PER_HOUR,
+                None,
                 [
                     [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
                     [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
@@ -118,14 +138,107 @@ def setup_platform(
                     [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
                     [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
                 ],
+                None,
+            ),
+            DemoWeather(
+                "Daily + bi-daily + hourly weather",
+                "Sunshine",
+                21.6414,
+                92,
+                1099,
+                0.5,
+                UnitOfTemperature.CELSIUS,
+                UnitOfPressure.HPA,
+                UnitOfSpeed.METERS_PER_SECOND,
+                None,
                 [
-                    [ATTR_CONDITION_SNOWY, 2, -10, -15, 60, True],
-                    [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25, False],
-                    [ATTR_CONDITION_SUNNY, 0, -18, -22, 70, True],
-                    [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90, False],
-                    [ATTR_CONDITION_SNOWY, 4, -19, -20, 40, True],
-                    [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0, False],
-                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0, True],
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_RAINY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_RAINY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_RAINY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
+                ],
+                [
+                    [ATTR_CONDITION_CLOUDY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_CLOUDY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_CLOUDY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_CLOUDY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_CLOUDY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_CLOUDY, 0.2, 21, 12, 100],
+                ],
+                [
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60, True],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30, False],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10, True],
+                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0, False],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20, True],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0, False],
+                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100, True],
+                ],
+            ),
+            DemoWeather(
+                "Hourly + bi-daily weather",
+                "Sunshine",
+                21.6414,
+                92,
+                1099,
+                0.5,
+                UnitOfTemperature.CELSIUS,
+                UnitOfPressure.HPA,
+                UnitOfSpeed.METERS_PER_SECOND,
+                None,
+                None,
+                [
+                    [ATTR_CONDITION_CLOUDY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_CLOUDY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_CLOUDY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_CLOUDY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_CLOUDY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_CLOUDY, 0.2, 21, 12, 100],
+                ],
+                [
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60, True],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30, False],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10, True],
+                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0, False],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20, True],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0, False],
+                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100, True],
+                ],
+            ),
+            DemoWeather(
+                "Daily + broken bi-daily weather",
+                "Sunshine",
+                21.6414,
+                92,
+                1099,
+                0.5,
+                UnitOfTemperature.CELSIUS,
+                UnitOfPressure.HPA,
+                UnitOfSpeed.METERS_PER_SECOND,
+                None,
+                [
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_RAINY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_RAINY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_RAINY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
+                ],
+                None,
+                [
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
                 ],
             ),
         ]
@@ -149,13 +262,14 @@ class DemoWeather(WeatherEntity):
         temperature_unit: str,
         pressure_unit: str,
         wind_speed_unit: str,
+        forecast: list[list] | None,
         forecast_daily: list[list] | None,
         forecast_hourly: list[list] | None,
         forecast_twice_daily: list[list] | None,
     ) -> None:
         """Initialize the Demo weather."""
-        self._attr_name = f"Demo Weather {name}"
-        self._attr_unique_id = f"demo-weather-{name.lower()}"
+        self._attr_name = f"Test Weather {name}"
+        self._attr_unique_id = f"test-weather-{name.lower()}"
         self._condition = condition
         self._native_temperature = temperature
         self._native_temperature_unit = temperature_unit
@@ -164,6 +278,7 @@ class DemoWeather(WeatherEntity):
         self._native_pressure_unit = pressure_unit
         self._native_wind_speed = wind_speed
         self._native_wind_speed_unit = wind_speed_unit
+        self._forecast = forecast
         self._forecast_daily = forecast_daily
         self._forecast_hourly = forecast_hourly
         self._forecast_twice_daily = forecast_twice_daily
@@ -178,7 +293,7 @@ class DemoWeather(WeatherEntity):
     async def async_added_to_hass(self) -> None:
         """Set up a timer updating the forecasts."""
 
-        async def update_forecasts(_: datetime) -> None:
+        async def update_forecasts(_) -> None:
             if self._forecast_daily:
                 self._forecast_daily = (
                     self._forecast_daily[1:] + self._forecast_daily[:1]
@@ -195,7 +310,7 @@ class DemoWeather(WeatherEntity):
 
         self.async_on_remove(
             async_track_time_interval(
-                self.hass, update_forecasts, WEATHER_UPDATE_INTERVAL
+                self.hass, update_forecasts, timedelta(seconds=30)
             )
         )
 
@@ -241,12 +356,35 @@ class DemoWeather(WeatherEntity):
             k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
         ][0]
 
-    async def async_forecast_daily(self) -> list[Forecast]:
-        """Return the daily forecast."""
+    @property
+    def forecast(self) -> list[Forecast]:
+        """Return legacy forecast."""
+        if self._forecast is None:
+            return []
         reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
-        assert self._forecast_daily is not None
+        for entry in self._forecast:
+            data_dict = Forecast(
+                datetime=reftime.isoformat(),
+                condition=entry[0],
+                precipitation=entry[1],
+                temperature=entry[2],
+                templow=entry[3],
+                precipitation_probability=entry[4],
+            )
+            reftime = reftime + timedelta(hours=24)
+            forecast_data.append(data_dict)
+
+        return forecast_data
+
+    async def async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast."""
+        if self._forecast_daily is None:
+            return []
+        reftime = dt_util.now().replace(hour=16, minute=00)
+
+        forecast_data = []
         for entry in self._forecast_daily:
             data_dict = Forecast(
                 datetime=reftime.isoformat(),
@@ -263,10 +401,11 @@ class DemoWeather(WeatherEntity):
 
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast."""
+        if self._forecast_hourly is None:
+            return []
         reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
-        assert self._forecast_hourly is not None
         for entry in self._forecast_hourly:
             data_dict = Forecast(
                 datetime=reftime.isoformat(),
@@ -283,21 +422,25 @@ class DemoWeather(WeatherEntity):
 
     async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the twice daily forecast."""
+        if self._forecast_twice_daily is None:
+            return []
         reftime = dt_util.now().replace(hour=11, minute=00)
 
         forecast_data = []
-        assert self._forecast_twice_daily is not None
         for entry in self._forecast_twice_daily:
-            data_dict = Forecast(
-                datetime=reftime.isoformat(),
-                condition=entry[0],
-                precipitation=entry[1],
-                temperature=entry[2],
-                templow=entry[3],
-                precipitation_probability=entry[4],
-                is_daytime=entry[5],
-            )
-            reftime = reftime + timedelta(hours=12)
-            forecast_data.append(data_dict)
+            try:
+                data_dict = Forecast(
+                    datetime=reftime.isoformat(),
+                    condition=entry[0],
+                    precipitation=entry[1],
+                    temperature=entry[2],
+                    templow=entry[3],
+                    precipitation_probability=entry[4],
+                    is_daytime=entry[5],
+                )
+                reftime = reftime + timedelta(hours=12)
+                forecast_data.append(data_dict)
+            except IndexError:
+                continue
 
         return forecast_data

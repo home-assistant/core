@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from enum import IntFlag
 from typing import Final
 
 from homeassistant.const import (
@@ -17,6 +18,15 @@ from homeassistant.util.unit_conversion import (
     SpeedConverter,
     TemperatureConverter,
 )
+
+
+class WeatherEntityFeature(IntFlag):
+    """Supported features of the update entity."""
+
+    FORECAST_DAILY = 1
+    FORECAST_HOURLY = 2
+    FORECAST_TWICE_DAILY = 4
+
 
 ATTR_WEATHER_HUMIDITY = "humidity"
 ATTR_WEATHER_OZONE = "ozone"
