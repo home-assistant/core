@@ -1,4 +1,4 @@
-"""The pegel_online component."""
+"""The PEGELONLINE component."""
 from __future__ import annotations
 
 import logging
@@ -27,7 +27,7 @@ PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up pegel_online entry."""
+    """Set up PEGELONLINE entry."""
     station_uuid = entry.data[CONF_STATION]
     name = entry.title
 
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload pegel_online entry."""
+    """Unload PEGELONLINE entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

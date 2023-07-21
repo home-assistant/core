@@ -1,4 +1,4 @@
-"""Constants for pegel_online."""
+"""Constants for PEGELONLINE."""
 from datetime import timedelta
 
 DOMAIN = "pegel_online"

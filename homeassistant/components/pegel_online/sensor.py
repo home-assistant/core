@@ -1,4 +1,4 @@
-"""pegel_online sensor entities."""
+"""PEGELONLINE sensor entities."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,7 +35,7 @@ class PegelOnlineRequiredKeysMixin:
 class PegelOnlineSensorEntityDescription(
     SensorEntityDescription, PegelOnlineRequiredKeysMixin
 ):
-    """Generic pegel_online entity description."""
+    """PEGELONLINE sensor entity description."""
 
 
 SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
@@ -53,7 +53,7 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Pi-hole sensor."""
+    """Set up the PEGELONLINE sensor."""
     (coordinator, station) = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
@@ -64,7 +64,7 @@ async def async_setup_entry(
 
 
 class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
-    """Representation of a pegel_online sensor."""
+    """Representation of a PEGELONLINE sensor."""
 
     entity_description: PegelOnlineSensorEntityDescription
 
@@ -74,7 +74,7 @@ class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
         station: Station,
         description: PegelOnlineSensorEntityDescription,
     ) -> None:
-        """Initialize a pegel_online sensor."""
+        """Initialize a PEGELONLINE sensor."""
         super().__init__(coordinator, station)
         self.entity_description = description
         self._attr_unique_id = f"{station.uuid}/{description.key}"

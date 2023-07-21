@@ -1,4 +1,4 @@
-"""The pegel_online base entity."""
+"""The PEGELONLINE base entity."""
 from __future__ import annotations
 
 from aiopegelonline import Station
@@ -14,7 +14,7 @@ from .model import PegelOnlineData
 
 
 class PegelOnlineEntity(CoordinatorEntity):
-    """Representation of a pegel_online entity."""
+    """Representation of a PEGELONLINE entity."""
 
     _attr_has_entity_name = True
     _attr_available = True
@@ -22,7 +22,7 @@ class PegelOnlineEntity(CoordinatorEntity):
     def __init__(
         self, coordinator: DataUpdateCoordinator[PegelOnlineData], station: Station
     ) -> None:
-        """Initialize a pegel_online entity."""
+        """Initialize a PEGELONLINE entity."""
         super().__init__(coordinator)
         self.station = station
         self._attr_extra_state_attributes = {}

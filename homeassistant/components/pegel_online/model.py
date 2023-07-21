@@ -1,4 +1,4 @@
-"""Models for pegel_online."""
+"""Models for PEGELONLINE."""
 
 from typing import TypedDict
 
@@ -6,6 +6,6 @@ from aiopegelonline import CurrentMeasurement
 
 
 class PegelOnlineData(TypedDict):
-    """TypedDict for pegel_online Coordinator Data."""
+    """TypedDict for PEGELONLINE Coordinator Data."""
 
     current_measurement: CurrentMeasurement
