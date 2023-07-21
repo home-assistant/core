@@ -643,7 +643,7 @@ async def test_pts_out_of_order(hass: HomeAssistant) -> None:
 
 
 async def test_stream_stopped_while_decoding(hass: HomeAssistant) -> None:
-    """Tests that worker quits when stop() is called while decodign."""
+    """Tests that worker quits when stop() is called while decoding."""
     # Add some synchronization so that the test can pause the background
     # worker. When the worker is stopped, the test invokes stop() which
     # will cause the worker thread to exit once it enters the decode
@@ -1028,7 +1028,7 @@ async def test_worker_disable_ll_hls(hass: HomeAssistant) -> None:
 
 
 async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> None:
-    """Test that the has_keyframe metadata matches the media."""
+    """Test getting a rotated image."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
