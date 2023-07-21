@@ -160,7 +160,9 @@ class GenericCamera(Camera):
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
         if self._stream_source:
-            self._attr_supported_features = CameraEntityFeature.STREAM
+            self._attr_supported_features = (
+                CameraEntityFeature.STREAM | CameraEntityFeature.STREAM_SNAPSHOT
+            )
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):
@@ -173,14 +175,19 @@ class GenericCamera(Camera):
         self._last_image = None
 
     async def async_camera_image(
-        self, width: int | None = None, height: int | None = None
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        wait_for_next_keyframe: bool = False,
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if not self._still_image_url:
             if not self.stream:
                 await self.async_create_stream()
             if self.stream:
-                return await self.stream.async_get_image(width, height)
+                return await self.stream.async_get_image(
+                    width, height, wait_for_next_keyframe
+                )
             return None
         try:
             url = self._still_image_url.async_render(parse_result=False)

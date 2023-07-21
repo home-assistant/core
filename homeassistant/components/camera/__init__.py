@@ -101,6 +101,7 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
+    STREAM_SNAPSHOT = 4
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
@@ -926,7 +927,11 @@ async def async_handle_snapshot_service(
             f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
         )
 
-    image = await camera.async_camera_image()
+    async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
+        if camera.supported_features & CameraEntityFeature.STREAM_SNAPSHOT:
+            image = await camera.async_camera_image(wait_for_next_keyframe=True)  # type: ignore[call-arg]
+        else:
+            image = await camera.async_camera_image()
 
     if image is None:
         return

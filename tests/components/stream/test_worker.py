@@ -966,7 +966,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
 
 
 async def test_get_image(hass: HomeAssistant, h264_video, filename) -> None:
-    """Test that the has_keyframe metadata matches the media."""
+    """Test getting an image from the stream."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
@@ -976,10 +976,30 @@ async def test_get_image(hass: HomeAssistant, h264_video, filename) -> None:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
         stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
 
-    with patch.object(hass.config, "is_allowed_path", return_value=True):
+    worker_wake = threading.Event()
+
+    temp_av_open = av.open
+
+    def blocking_open(stream_source, *args, **kwargs):
+        # Block worker thread until test wakes up
+        worker_wake.wait()
+        return temp_av_open(stream_source, *args, **kwargs)
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True), patch(
+        "av.open", new=blocking_open
+    ):
         make_recording = hass.async_create_task(stream.async_record(filename))
+        assert stream._keyframe_converter._image is None
+        # async_get_image should not work because there is no keyframe yet
+        assert not await stream.async_get_image()
+        # async_get_image should work if called with wait_for_next_keyframe=True
+        next_keyframe_request = hass.async_create_task(
+            stream.async_get_image(wait_for_next_keyframe=True)
+        )
+        worker_wake.set()
         await make_recording
-    assert stream._keyframe_converter._image is None
+
+    assert await next_keyframe_request == EMPTY_8_6_JPEG
 
     assert await stream.async_get_image() == EMPTY_8_6_JPEG
 

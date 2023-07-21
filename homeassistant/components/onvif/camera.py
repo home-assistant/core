@@ -94,7 +94,9 @@ async def async_setup_entry(
 class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     """Representation of an ONVIF camera."""
 
-    _attr_supported_features = CameraEntityFeature.STREAM
+    _attr_supported_features = (
+        CameraEntityFeature.STREAM | CameraEntityFeature.STREAM_SNAPSHOT
+    )
 
     def __init__(self, device: ONVIFDevice, profile: Profile) -> None:
         """Initialize ONVIF camera entity."""
@@ -136,12 +138,17 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         return await self._async_get_stream_uri()
 
     async def async_camera_image(
-        self, width: int | None = None, height: int | None = None
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        wait_for_next_keyframe=False,
     ) -> bytes | None:
         """Return a still image response from the camera."""
 
         if self.stream and self.stream.dynamic_stream_settings.preload_stream:
-            return await self.stream.async_get_image(width, height)
+            return await self.stream.async_get_image(
+                width, height, wait_for_next_keyframe
+            )
 
         if self.device.capabilities.snapshot:
             try:
