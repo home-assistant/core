@@ -30,6 +30,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.COVER,
     Platform.DATE,
     Platform.DATETIME,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
