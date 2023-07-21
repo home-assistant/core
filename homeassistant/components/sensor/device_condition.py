@@ -169,6 +169,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_OZONE,
                     CONF_IS_POWER,
                     CONF_IS_POWER_FACTOR,
+                    CONF_IS_PH,
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,
