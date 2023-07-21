@@ -1,5 +1,6 @@
 """The tests for the event integration."""
 from collections.abc import Generator
+from typing import Any
 
 from freezegun import freeze_time
 import pytest
@@ -13,9 +14,10 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -23,16 +25,18 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
+    async_mock_restore_state_shutdown_restart,
     mock_config_flow,
     mock_integration,
     mock_platform,
     mock_restore_cache,
+    mock_restore_cache_with_extra_data,
 )
 
 TEST_DOMAIN = "test"
 
 
-async def test_event(hass: HomeAssistant) -> None:
+async def test_event() -> None:
     """Test the event entity."""
     event = EventEntity()
     event.entity_id = "event.doorbell"
@@ -76,8 +80,10 @@ async def test_event(hass: HomeAssistant) -> None:
         event._trigger_event("short_press", {"hello": "world"})
 
         assert event.state == now.isoformat(timespec="milliseconds")
-        assert event.state_attributes == {ATTR_EVENT_TYPE: "short_press"}
-        assert event.extra_state_attributes == {"hello": "world"}
+        assert event.state_attributes == {
+            ATTR_EVENT_TYPE: "short_press",
+            "hello": "world",
+        }
 
     # Test triggering an unknown event
     with pytest.raises(
@@ -86,26 +92,33 @@ async def test_event(hass: HomeAssistant) -> None:
         event._trigger_event("unknown_event")
 
 
-async def test_restore_state(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Test we restore state integration."""
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
         (
-            State(
-                "event.doorbell",
-                "2021-01-01T23:59:59.123+00:00",
-                attributes={
-                    ATTR_EVENT_TYPES: [
-                        "single_press",
-                        "double_press",
-                        "do",
-                        "not",
-                        "restore",
-                    ],
-                    ATTR_EVENT_TYPE: "double_press",
-                    "hello": "world",
+            (
+                State(
+                    "event.doorbell",
+                    "2021-01-01T23:59:59.123+00:00",
+                    attributes={
+                        ATTR_EVENT_TYPE: "ignored",
+                        ATTR_EVENT_TYPES: [
+                            "single_press",
+                            "double_press",
+                            "do",
+                            "not",
+                            "restore",
+                        ],
+                        "hello": "worm",
+                    },
+                ),
+                {
+                    "last_event_type": "double_press",
+                    "last_event_attributes": {
+                        "hello": "world",
+                    },
                 },
             ),
         ),
@@ -123,6 +136,109 @@ async def test_restore_state(
     assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
     assert state.attributes[ATTR_EVENT_TYPE] == "double_press"
     assert state.attributes["hello"] == "world"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
+    """Test we restore state integration."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "event.doorbell",
+                    "2021-01-01T23:59:59.123+00:00",
+                ),
+                {
+                    "invalid_unexpected_key": "double_press",
+                    "last_event_attributes": {
+                        "hello": "world",
+                    },
+                },
+            ),
+        ),
+    )
+
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
+    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert "hello" not in state.attributes
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
+    """Test we restore state integration."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "event.doorbell",
+                "2021-01-01T23:59:59.123+00:00",
+                attributes={
+                    ATTR_EVENT_TYPES: [
+                        "single_press",
+                        "double_press",
+                    ],
+                    ATTR_EVENT_TYPE: "double_press",
+                    "hello": "world",
+                },
+            ),
+        ),
+    )
+
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
+    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert "hello" not in state.attributes
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_saving_state(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
+    """Test we restore state integration."""
+    restore_data = {"last_event_type": "double_press", "last_event_attributes": None}
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "event.doorbell",
+                    "2021-01-01T23:59:59.123+00:00",
+                ),
+                restore_data,
+            ),
+        ),
+    )
+
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == "event.doorbell"
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == restore_data
 
 
 class MockFlow(ConfigFlow):
