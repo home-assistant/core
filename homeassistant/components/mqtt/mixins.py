@@ -1012,6 +1012,7 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
@@ -1132,7 +1133,6 @@ class MqttEntity(
             self._attr_name = self._default_name
         elif use_device_class_name:
             # Follow name of device class
-            self._attr_has_entity_name = True
             if CONF_DEVICE in config and CONF_NAME not in config[CONF_DEVICE]:
                 _LOGGER.info(
                     "MQTT device information always needs to include a name, got %s, "
@@ -1142,7 +1142,6 @@ class MqttEntity(
                 )
             return
         if CONF_DEVICE in config:
-            self._attr_has_entity_name = True
             if CONF_NAME not in config[CONF_DEVICE]:
                 _LOGGER.info(
                     "MQTT device information always needs to include a name, got %s, "
