@@ -19,7 +19,7 @@ pylint-per-file-ignores==1.2.1
 pipdeptree==2.10.2
 pytest-asyncio==0.20.3
 pytest-aiohttp==1.0.4
-pytest-cov==3.0.0
+pytest-cov==4.1.0
 pytest-freezer==0.4.8
 pytest-socket==0.5.1
 pytest-test-groups==1.0.3
