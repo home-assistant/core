@@ -335,6 +335,7 @@ FLOWS = {
         "p1_monitor",
         "panasonic_viera",
         "peco",
+        "pegel_online",
         "philips_js",
         "pi_hole",
         "picnic",

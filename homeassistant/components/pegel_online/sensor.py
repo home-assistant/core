@@ -1,0 +1,93 @@
+"""pegel_online sensor entities."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from aiopegelonline import Station
+
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DOMAIN
+from .entity import PegelOnlineEntity
+from .model import PegelOnlineData
+
+
+@dataclass
+class PegelOnlineRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    fn_native_unit: Callable[[PegelOnlineData], str]
+    fn_native_value: Callable[[PegelOnlineData], StateType]
+
+
+@dataclass
+class PegelOnlineSensorEntityDescription(
+    SensorEntityDescription, PegelOnlineRequiredKeysMixin
+):
+    """Generic pegel_online entity description."""
+
+
+SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
+    PegelOnlineSensorEntityDescription(
+        key="current_measurement",
+        translation_key="current_measurement",
+        state_class=SensorStateClass.MEASUREMENT,
+        fn_native_unit=lambda data: data["current_measurement"].uom,
+        fn_native_value=lambda data: data["current_measurement"].value,
+        icon="mdi:waves-arrow-up",
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Pi-hole sensor."""
+    (coordinator, station) = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [
+            PegelOnlineSensor(coordinator, station, description)
+            for description in SENSORS
+        ]
+    )
+
+
+class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
+    """Representation of a pegel_online sensor."""
+
+    entity_description: PegelOnlineSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        station: Station,
+        description: PegelOnlineSensorEntityDescription,
+    ) -> None:
+        """Initialize a pegel_online sensor."""
+        super().__init__(coordinator, station)
+        self.entity_description = description
+        self._attr_unique_id = f"{station.uuid}/{description.key}"
+        self._attr_native_unit_of_measurement = self.entity_description.fn_native_unit(
+            coordinator.data
+        )
+
+        if station.latitude and station.longitude:
+            self._attr_extra_state_attributes.update(
+                {ATTR_LATITUDE: station.latitude, ATTR_LONGITUDE: station.longitude}
+            )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the device."""
+        return self.entity_description.fn_native_value(self.coordinator.data)
