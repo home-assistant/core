@@ -21,7 +21,7 @@ pytest-asyncio==0.20.3
 pytest-aiohttp==1.0.4
 pytest-cov==3.0.0
 pytest-freezer==0.4.8
-pytest-socket==0.5.1
+pytest-socket==0.6.0
 pytest-test-groups==1.0.3
 pytest-sugar==0.9.6
 pytest-timeout==2.1.0
