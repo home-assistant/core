@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
@@ -48,7 +49,7 @@ OPTIONS_FLOW = {
 }
 
 
-async def validate_input(hass: core.HomeAssistant, auth):
+async def validate_input(auth: Auth) -> None:
     """Validate the user input allows us to connect."""
     try:
         await auth.startup()
@@ -58,9 +59,9 @@ async def validate_input(hass: core.HomeAssistant, auth):
         raise Require2FA
 
 
-async def _send_blink_2fa_pin(auth, pin):
+async def _send_blink_2fa_pin(hass: core.HomeAssistant, auth: Auth, pin: str):
     """Send 2FA pin to blink servers."""
-    blink = Blink()
+    blink = Blink(session=async_get_clientsession(hass))
     blink.auth = auth
     blink.setup_login_ids()
     blink.setup_urls()
@@ -92,11 +93,13 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data[CONF_USERNAME] = user_input["username"]
             data[CONF_PASSWORD] = user_input["password"]
 
-            self.auth = Auth(data, no_prompt=True)
+            self.auth = Auth(
+                data, no_prompt=True, session=async_get_clientsession(self.hass)
+            )
             await self.async_set_unique_id(data[CONF_USERNAME])
 
             try:
-                await validate_input(self.hass, self.auth)
+                await validate_input(self.auth)
                 return self._async_finish_flow()
             except Require2FA:
                 return await self.async_step_2fa()
@@ -123,7 +126,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             pin = user_input.get(CONF_PIN)
             try:
-                valid_token = await _send_blink_2fa_pin(self.auth, pin)
+                valid_token = await _send_blink_2fa_pin(self.hass, self.auth, pin)
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
