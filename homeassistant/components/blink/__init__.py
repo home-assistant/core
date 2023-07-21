@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
     blink = Blink(session=session)
     auth_data = deepcopy(dict(entry.data))
-    blink.auth = Auth(auth_data, no_prompt=True, session=session)
+    blink.auth = Auth(auth_data, no_prompt=True, session=async_get_clientsession(hass))
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     try:
