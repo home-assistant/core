@@ -72,11 +72,11 @@ class AtwWaterHeater(WaterHeaterEntity):
         """Return a device description for device registry."""
         return self._api.device_info
 
-    async def async_turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._device.set({PROPERTY_POWER: True})
 
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.set({PROPERTY_POWER: False})
 
