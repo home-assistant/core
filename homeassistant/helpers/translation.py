@@ -339,10 +339,9 @@ async def async_load_translations(
     category: str,
     integrations: Iterable[str] | None = None,
 ) -> None:
-    """Load all backend translations to cache.
+    """Prime backend translation cache.
 
-    If integration specified, load it for that one.
-    Otherwise default to loaded integration.
+    If integrations are not specified, translation cache is primed for all loaded integrations.
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
 
