@@ -727,7 +727,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.5.35
+env-canada==0.5.36
 
 # homeassistant.components.enphase_envoy
 envoy-reader==0.20.1
@@ -2684,7 +2684,7 @@ wyoming==1.1.0
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.18.2
+xiaomi-ble==0.19.1
 
 # homeassistant.components.knx
 xknx==2.11.1
