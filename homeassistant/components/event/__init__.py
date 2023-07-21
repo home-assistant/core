@@ -113,7 +113,7 @@ class EventEntity(RestoreEntity):
     _attr_event_types: list[str]
     _attr_state: None
 
-    __last_event: datetime | None = None
+    __last_event_triggered: datetime | None = None
     __last_event_type: str | None = None
     __last_event_attributes: dict[str, Any] | None = None
 
@@ -145,7 +145,7 @@ class EventEntity(RestoreEntity):
         """Process a new event."""
         if event_type not in self.event_types:
             raise ValueError(f"Invalid event type {event_type} for {self.entity_id}")
-        self.__last_event = dt_util.utcnow()
+        self.__last_event_triggered = dt_util.utcnow()
         self.__last_event_type = event_type
         self.__last_event_attributes = event_attributes
 
@@ -168,7 +168,7 @@ class EventEntity(RestoreEntity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if (last_event := self.__last_event) is None:
+        if (last_event := self.__last_event_triggered) is None:
             return None
         return last_event.isoformat(timespec="milliseconds")
 
@@ -190,7 +190,7 @@ class EventEntity(RestoreEntity):
             and state.state is not None
             and (event_data := await self.async_get_last_event_data())
         ):
-            self.__last_event = dt_util.parse_datetime(state.state)
+            self.__last_event_triggered = dt_util.parse_datetime(state.state)
             self.__last_event_type = event_data.last_event_type
             self.__last_event_attributes = event_data.last_event_attributes
 
