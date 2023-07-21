@@ -39,7 +39,7 @@ async def async_setup_entry(
 
 
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
-    """Representation of an Plugwise thermostat."""
+    """Representation of a Plugwise thermostat."""
 
     _attr_has_entity_name = True
     _attr_name = None

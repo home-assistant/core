@@ -54,7 +54,7 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Required(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
@@ -89,6 +89,7 @@ async def _async_setup_entity(
 class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = select.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]

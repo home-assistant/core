@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hydrawise",
   "iot_class": "cloud_polling",
-  "loggers": ["hydrawiser"],
-  "requirements": ["Hydrawiser==0.2"]
+  "loggers": ["pydrawise"],
+  "requirements": ["pydrawise==2023.7.0"]
 }

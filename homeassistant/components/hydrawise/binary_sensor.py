@@ -1,7 +1,7 @@
 """Support for Hydrawise sprinkler binary sensors."""
 from __future__ import annotations
 
-from hydrawiser.core import Hydrawiser
+from pydrawise.legacy import LegacyHydrawise
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -56,7 +56,7 @@ async def async_setup_entry(
     coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    hydrawise: Hydrawiser = coordinator.api
+    hydrawise: LegacyHydrawise = coordinator.api
 
     entities = [
         HydrawiseBinarySensor(
