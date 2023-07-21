@@ -687,7 +687,7 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
-                    self._tasks.add(hass.async_create_task(job))
+                    self.async_create_task(hass, job)
 
         if not self._tasks and not self._background_tasks:
             return
