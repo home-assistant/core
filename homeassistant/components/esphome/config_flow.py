@@ -258,6 +258,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info.slug,
             discovery_info.config["host"],
             discovery_info.config["port"],
+            discovery_info.config.get("relative_url", ""),
         )
         return self.async_abort(reason="service_received")
 

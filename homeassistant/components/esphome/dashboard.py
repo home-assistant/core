@@ -62,8 +62,9 @@ class ESPHomeDashboardManager:
         """Restore the dashboard from storage."""
         self._data = await self._store.async_load()
         if (data := self._data) and (info := data.get("info")):
+            relative_url = info.get("relative_url", "")
             await self.async_set_dashboard_info(
-                info["addon_slug"], info["host"], info["port"]
+                info["addon_slug"], info["host"], info["port"], relative_url
             )
 
     @callback
@@ -72,10 +73,13 @@ class ESPHomeDashboardManager:
         return self._current_dashboard
 
     async def async_set_dashboard_info(
-        self, addon_slug: str, host: str, port: int
+        self, addon_slug: str, host: str, port: int, relative_url: str
     ) -> None:
         """Set the dashboard info."""
-        url = f"http://{host}:{port}"
+        url = f"http://{host}:{port}{relative_url}"
+        # remove the last slash as the DashboardAPI adds a slash before each operation path
+        if url.endswith("/"):
+            url = url[:-1]
         hass = self._hass
 
         if cur_dashboard := self._current_dashboard:
@@ -103,7 +107,14 @@ class ESPHomeDashboardManager:
             EVENT_HOMEASSISTANT_STOP, on_hass_stop
         )
 
-        new_data = {"info": {"addon_slug": addon_slug, "host": host, "port": port}}
+        new_data = {
+            "info": {
+                "addon_slug": addon_slug,
+                "host": host,
+                "port": port,
+                "relative_url": relative_url,
+            }
+        }
         if self._data != new_data:
             await self._store.async_save(new_data)
 
@@ -149,11 +160,11 @@ def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboard | None:
 
 
 async def async_set_dashboard_info(
-    hass: HomeAssistant, addon_slug: str, host: str, port: int
+    hass: HomeAssistant, addon_slug: str, host: str, port: int, relative_url: str
 ) -> None:
     """Set the dashboard info."""
     manager = await async_get_or_create_dashboard_manager(hass)
-    await manager.async_set_dashboard_info(addon_slug, host, port)
+    await manager.async_set_dashboard_info(addon_slug, host, port, relative_url)
 
 
 class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):

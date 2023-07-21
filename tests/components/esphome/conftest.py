@@ -147,7 +147,7 @@ async def mock_dashboard(hass):
         return_value=data,
     ):
         await dashboard.async_set_dashboard_info(
-            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT, ""
         )
         yield data
 

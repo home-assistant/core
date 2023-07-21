@@ -19,11 +19,23 @@ async def test_dashboard_storage(
 ) -> None:
     """Test dashboard storage."""
     assert hass_storage[dashboard.STORAGE_KEY]["data"] == {
-        "info": {"addon_slug": "mock-slug", "host": "mock-host", "port": 1234}
+        "info": {
+            "addon_slug": "mock-slug",
+            "host": "mock-host",
+            "port": 1234,
+            "relative_url": "",
+        }
     }
-    await dashboard.async_set_dashboard_info(hass, "test-slug", "new-host", 6052)
+    await dashboard.async_set_dashboard_info(
+        hass, "test-slug", "new-host", 6052, "/esphome"
+    )
     assert hass_storage[dashboard.STORAGE_KEY]["data"] == {
-        "info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}
+        "info": {
+            "addon_slug": "test-slug",
+            "host": "new-host",
+            "port": 6052,
+            "relative_url": "/esphome",
+        }
     }
 
 
@@ -54,7 +66,9 @@ async def test_setup_dashboard_fails(
     ) as mock_get_devices:
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
+        await dashboard.async_set_dashboard_info(
+            hass, "test-slug", "test-host", 6052, ""
+        )
         assert mock_config_entry.state == ConfigEntryState.LOADED
         assert mock_get_devices.call_count == 1
 
@@ -69,7 +83,7 @@ async def test_setup_dashboard_fails_when_already_setup(
     """Test failed dashboard setup still reloads entries if one existed before."""
     with patch.object(dashboard.ESPHomeDashboardAPI, "get_devices") as mock_get_devices:
         await dashboard.async_set_dashboard_info(
-            hass, "test-slug", "working-host", 6052
+            hass, "test-slug", "working-host", 6052, ""
         )
         await hass.async_block_till_done()
 
@@ -84,7 +98,9 @@ async def test_setup_dashboard_fails_when_already_setup(
     ) as mock_get_devices, patch(
         "homeassistant.components.esphome.async_setup_entry", return_value=True
     ) as mock_setup:
-        await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
+        await dashboard.async_set_dashboard_info(
+            hass, "test-slug", "test-host", 6052, ""
+        )
         await hass.async_block_till_done()
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -101,14 +117,18 @@ async def test_new_info_reload_config_entries(
     assert init_integration.state == ConfigEntryState.LOADED
 
     with patch("homeassistant.components.esphome.async_setup_entry") as mock_setup:
-        await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
+        await dashboard.async_set_dashboard_info(
+            hass, "test-slug", "test-host", 6052, ""
+        )
 
     assert len(mock_setup.mock_calls) == 1
     assert mock_setup.mock_calls[0][1][1] == init_integration
 
     # Test it's a no-op when the same info is set
     with patch("homeassistant.components.esphome.async_setup_entry") as mock_setup:
-        await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
+        await dashboard.async_set_dashboard_info(
+            hass, "test-slug", "test-host", 6052, ""
+        )
 
     assert len(mock_setup.mock_calls) == 0
 
@@ -153,7 +173,9 @@ async def test_new_dashboard_fix_reauth(
     ) as mock_get_encryption_key, patch(
         "homeassistant.components.esphome.async_setup_entry", return_value=True
     ) as mock_setup:
-        await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
+        await dashboard.async_set_dashboard_info(
+            hass, "test-slug", "test-host", 6052, ""
+        )
         await hass.async_block_till_done()
 
     assert len(mock_get_encryption_key.mock_calls) == 1
