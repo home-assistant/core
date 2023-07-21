@@ -1,35 +1,18 @@
 """Support for myStrom sensors of switches/plugs."""
 from __future__ import annotations
 
-import logging
-
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, UnitOfPower, UnitOfTemperature
+from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
-
-DEFAULT_NAME = "myStrom Switch"
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
@@ -49,7 +32,6 @@ class MyStromSwitchConsumptionSensor(SensorEntity):
     """Representation of the consumption of a myStrom switch/plug."""
 
     _attr_has_entity_name = True
-    _attr_name = "Power"
 
     def __init__(self, device, name):
         """Initialize the sensor."""
@@ -74,7 +56,6 @@ class MyStromSwitchTemperatureSensor(SensorEntity):
     """Representation of the temperature of a myStrom switch/plug."""
 
     _attr_has_entity_name = True
-    _attr_name = "Temperature"
 
     def __init__(self, device, name):
         """Initialize the sensor."""
