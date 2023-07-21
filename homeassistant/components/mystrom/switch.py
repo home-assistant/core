@@ -1,11 +1,18 @@
 """Support for myStrom switches/plugs."""
 from __future__ import annotations
+from contextlib import suppress
 
 import logging
 from typing import Any
 
 from pymystrom.exceptions import MyStromConnectionError
+from pymystrom.switch import MyStromSwitch as PyMyStromSwitch
 import voluptuous as vol
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -16,6 +23,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import convert
 
 from .const import DOMAIN, MANUFACTURER
 
@@ -36,7 +44,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the myStrom entities."""
     device = hass.data[DOMAIN][entry.entry_id].device
-    async_add_entities([MyStromSwitch(device, entry.title)])
+    async_add_entities(
+        [
+            MyStromSwitch(device, entry.title),
+            MyStromPowerSensor(device, entry.title),
+            MyStromTemperatureSensor(device, entry.title),
+        ]
+    )
 
 
 async def async_setup_platform(
@@ -73,7 +87,7 @@ class MyStromSwitch(SwitchEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, plug, name):
+    def __init__(self, plug: PyMyStromSwitch, name):
         """Initialize the myStrom switch/plug."""
         self.plug = plug
         self._attr_unique_id = self.plug.mac
@@ -108,3 +122,57 @@ class MyStromSwitch(SwitchEntity):
             if self.available:
                 self._attr_available = False
                 _LOGGER.error("No route to myStrom plug")
+
+
+class MyStromPowerSensor(SensorEntity):
+    """Representation of a MySwitch Power Sensor."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = SensorDeviceClass.POWER
+
+    def __init__(self, plug: PyMyStromSwitch, name) -> None:
+        """Initialize the sensor."""
+        self._plug = plug
+        self._attr_name = f"{name} Power"
+        self._attr_unique_id = f"{plug.mac}.power"
+        # self.entity_id = f"sensor.{plug.mac}.power"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._plug.mac)},
+            name=name,
+            manufacturer=MANUFACTURER,
+            sw_version=self._plug.firmware,
+        )
+
+    async def async_update(self):
+        """Update the state."""
+        with suppress(KeyError, ValueError):
+            await self._plug.get_state()
+            self._attr_native_value = convert(self._plug.consumption, float)
+
+
+class MyStromTemperatureSensor(SensorEntity):
+    """Representation of a MySwitch Temperature Sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = SensorDeviceClass.TEMPERATURE
+
+    def __init__(self, plug: PyMyStromSwitch, name) -> None:
+        """Initialize the sensor."""
+        self._plug = plug
+        self._attr_name = f"{name} Temperature"
+        self._attr_unique_id = f"{plug.mac}.temperature"
+        # self.entity_id = f"sensor.{plug.mac}.temperature"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._plug.mac)},
+            name=name,
+            manufacturer=MANUFACTURER,
+            sw_version=self._plug.firmware,
+        )
+
+    async def async_update(self):
+        """Update the state."""
+        with suppress(KeyError, ValueError):
+            await self._plug.get_state()
+            self._attr_native_value = convert(self._plug.temperature, float)
