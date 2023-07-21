@@ -194,7 +194,7 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
-        if self.options[CONF_MAIN_USER]:
+        if CONF_MAIN_USER in self.options:
             try:
                 main_user, _ = get_lastfm_user(
                     self.options[CONF_API_KEY],
