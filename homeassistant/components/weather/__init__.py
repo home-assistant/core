@@ -1035,7 +1035,10 @@ class WeatherEntity(Entity):
         forecast_type: Literal["daily", "hourly", "twice_daily"],
         forecast_listener: Callable[[list[dict[str, Any]] | None], None],
     ) -> CALLBACK_TYPE:
-        """Subscribe to forecast updates."""
+        """Subscribe to forecast updates.
+
+        Called by websocket API.
+        """
         self._forecast_listeners[forecast_type].append(forecast_listener)
 
         @callback
@@ -1043,6 +1046,19 @@ class WeatherEntity(Entity):
             self._forecast_listeners[forecast_type].remove(forecast_listener)
 
         return unsubscribe
+
+    @final
+    @callback
+    def async_has_listeners(
+        self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
+    ) -> bool:
+        """Return True if there are listeners for the given forecast types."""
+        if forecast_types is None:
+            forecast_types = {"daily", "hourly", "twice_daily"}
+        for forecast_type in forecast_types:
+            if self._forecast_listeners[forecast_type]:
+                return True
+        return False
 
     @final
     async def async_update_listeners(

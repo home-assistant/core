@@ -50,6 +50,9 @@ async def test_subscribe_forecast(
         native_temperature_unit=UnitOfTemperature.CELSIUS,
         supported_features=WeatherEntityFeature.FORECAST_DAILY,
     )
+    assert not entity0.async_has_listeners(None)
+    assert not entity0.async_has_listeners(["daily"])
+    assert not entity0.async_has_listeners(["hourly"])
 
     client = await hass_ws_client(hass)
 
@@ -81,6 +84,9 @@ async def test_subscribe_forecast(
         ],
     }
 
+    assert entity0.async_has_listeners(None)
+    assert entity0.async_has_listeners(["daily"])
+    assert not entity0.async_has_listeners(["hourly"])
     await entity0.async_update_listeners(None)
     msg = await client.receive_json()
     assert msg["event"] == forecast

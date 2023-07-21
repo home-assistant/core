@@ -179,6 +179,9 @@ class DemoWeather(WeatherEntity):
         """Set up a timer updating the forecasts."""
 
         async def update_forecasts(_: datetime) -> None:
+            # Only update the forecast if there are subscribed listeners
+            if not self.async_has_listeners(None):
+                return
             if self._forecast_daily:
                 self._forecast_daily = (
                     self._forecast_daily[1:] + self._forecast_daily[:1]
