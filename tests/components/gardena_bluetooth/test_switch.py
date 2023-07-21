@@ -1,6 +1,7 @@
 """Test Gardena Bluetooth sensor."""
 
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, call
 
 from gardena_bluetooth.const import Valve
@@ -40,15 +41,16 @@ async def test_setup(
     mock_entry: MockConfigEntry,
     mock_client: Mock,
     mock_switch_chars: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
 ) -> None:
     """Test setup creates expected entities."""
 
     entity_id = "switch.mock_title_open"
-    coordinator = await setup_entry(hass, mock_entry, [Platform.SWITCH])
+    await setup_entry(hass, mock_entry, [Platform.SWITCH])
     assert hass.states.get(entity_id) == snapshot
 
     mock_switch_chars[Valve.state.uuid] = b"\x01"
-    await coordinator.async_refresh()
+    await scan_step()
     assert hass.states.get(entity_id) == snapshot
 
 

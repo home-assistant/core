@@ -50,7 +50,12 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    UndefinedType,
+)
 from homeassistant.util.json import json_loads
 
 from . import debug_info, subscription
@@ -342,7 +347,6 @@ class MqttAttributes(Entity):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes: dict[str, Any] | None = None
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         self._attributes_config = config
 
@@ -380,16 +384,14 @@ class MqttAttributes(Entity):
                         if k not in MQTT_ATTRIBUTES_BLOCKED
                         and k not in self._attributes_extra_blocked
                     }
-                    self._attributes = filtered_dict
+                    self._attr_extra_state_attributes = filtered_dict
                     get_mqtt_data(self.hass).state_write_requests.write_state_request(
                         self
                     )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
-                    self._attributes = None
             except ValueError:
                 _LOGGER.warning("Erroneous JSON: %s", payload)
-                self._attributes = None
 
         self._attributes_sub_state = async_prepare_subscribe_topics(
             self.hass,
@@ -413,11 +415,6 @@ class MqttAttributes(Entity):
         self._attributes_sub_state = async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        return self._attributes
 
 
 class MqttAvailability(Entity):
@@ -1007,7 +1004,9 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
+    _default_name: str | None
     _entity_id_format: str
 
     def __init__(
@@ -1024,8 +1023,8 @@ class MqttEntity(
         self._sub_state: dict[str, EntitySubscription] = {}
 
         # Load config
-        self._setup_common_attributes_from_config(self._config)
         self._setup_from_config(self._config)
+        self._setup_common_attributes_from_config(self._config)
 
         # Initialize entity_id from config
         self._init_entity_id()
@@ -1066,8 +1065,8 @@ class MqttEntity(
             async_handle_schema_error(discovery_payload, err)
             return
         self._config = config
-        self._setup_common_attributes_from_config(self._config)
         self._setup_from_config(self._config)
+        self._setup_common_attributes_from_config(self._config)
 
         # Prepare MQTT subscriptions
         self.attributes_prepare_discovery_update(config)
@@ -1115,6 +1114,23 @@ class MqttEntity(
     def config_schema() -> vol.Schema:
         """Return the config schema."""
 
+    def _set_entity_name(self, config: ConfigType) -> None:
+        """Help setting the entity name if needed."""
+        entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
+        # Only set _attr_name if it is needed
+        if entity_name is not UNDEFINED:
+            self._attr_name = entity_name
+        elif not self._default_to_device_class_name():
+            # Assign the default name
+            self._attr_name = self._default_name
+        if CONF_DEVICE in config:
+            if CONF_NAME not in config[CONF_DEVICE]:
+                _LOGGER.info(
+                    "MQTT device information always needs to include a name, got %s, "
+                    "if device information is shared between multiple entities, the device "
+                    "name must be included in each entity's device configuration",
+                )
+
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
@@ -1122,7 +1138,8 @@ class MqttEntity(
             config.get(CONF_ENABLED_BY_DEFAULT)
         )
         self._attr_icon = config.get(CONF_ICON)
-        self._attr_name = config.get(CONF_NAME)
+        # Set the entity name if needed
+        self._set_entity_name(config)
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""

@@ -315,6 +315,7 @@ omit =
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/__init__.py
+    homeassistant/components/ezviz/alarm_control_panel.py
     homeassistant/components/ezviz/binary_sensor.py
     homeassistant/components/ezviz/camera.py
     homeassistant/components/ezviz/image.py
@@ -1317,6 +1318,7 @@ omit =
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
     homeassistant/components/trafikverket_train/__init__.py
+    homeassistant/components/trafikverket_train/coordinator.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py

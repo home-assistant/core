@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_GUST_SPEED,
     ATTR_FORECAST_WIND_SPEED,
@@ -23,6 +24,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_PRESSURE_UNIT,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_TEMPERATURE_UNIT,
+    ATTR_WEATHER_UV_INDEX,
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_VISIBILITY_UNIT,
     ATTR_WEATHER_WIND_BEARING,
@@ -583,7 +585,7 @@ async def test_precipitation_no_unit(
     )
 
 
-async def test_wind_bearing_ozone_and_cloud_coverage(
+async def test_wind_bearing_ozone_and_cloud_coverage_and_uv_index(
     hass: HomeAssistant,
     enable_custom_integrations: None,
 ) -> None:
@@ -591,18 +593,23 @@ async def test_wind_bearing_ozone_and_cloud_coverage(
     wind_bearing_value = 180
     ozone_value = 10
     cloud_coverage = 75
+    uv_index = 1.2
 
     entity0 = await create_entity(
         hass,
         wind_bearing=wind_bearing_value,
         ozone=ozone_value,
         cloud_coverage=cloud_coverage,
+        uv_index=uv_index,
     )
 
     state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
     assert float(state.attributes[ATTR_WEATHER_WIND_BEARING]) == 180
     assert float(state.attributes[ATTR_WEATHER_OZONE]) == 10
     assert float(state.attributes[ATTR_WEATHER_CLOUD_COVERAGE]) == 75
+    assert float(state.attributes[ATTR_WEATHER_UV_INDEX]) == 1.2
+    assert float(forecast[ATTR_FORECAST_UV_INDEX]) == 1.2
 
 
 async def test_humidity(

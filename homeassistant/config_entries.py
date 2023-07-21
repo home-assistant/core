@@ -687,13 +687,14 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
-                    self._tasks.add(hass.async_create_task(job))
+                    self.async_create_task(hass, job)
 
         if not self._tasks and not self._background_tasks:
             return
 
+        cancel_message = f"Config entry {self.title} with {self.domain} unloading"
         for task in self._background_tasks:
-            task.cancel()
+            task.cancel(cancel_message)
 
         _, pending = await asyncio.wait(
             [*self._tasks, *self._background_tasks], timeout=10
@@ -885,7 +886,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         """Cancel any initializing flows."""
         for task_list in self._initialize_tasks.values():
             for task in task_list:
-                task.cancel()
+                task.cancel(
+                    "Config entry initialize canceled: Home Assistant is shutting down"
+                )
         await self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
