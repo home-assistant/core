@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+import base64
 
 import requests
 import voluptuous as vol
@@ -12,7 +13,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import ( CONF_HOST, CONF_USERNAME, CONF_PASSWORD, )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -21,7 +22,11 @@ DEFAULT_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+})
 
 
 def get_scanner(
@@ -33,13 +38,14 @@ def get_scanner(
     except ConnectionError:
         return None
 
-
 class LinksysSmartWifiDeviceScanner(DeviceScanner):
     """Class which queries a Linksys Access Point."""
 
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
+        self.username = config.get(CONF_USERNAME)
+        self.password = config.get(CONF_PASSWORD)
         self.last_results = {}
 
         # Check if the access point is accessible
@@ -96,14 +102,21 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
         return True
 
     def _make_request(self):
-        # Weirdly enough, this doesn't seem to require authentication
+        # create the login hash
+        credentials = f"{self.username}:{self.password}"
+        encoded_credentials = base64.b64encode(credentials.encode()).decode()
+        authorization_header = f"Basic {encoded_credentials}"
+
         data = [
             {
                 "request": {"sinceRevision": 0},
                 "action": "http://linksys.com/jnap/devicelist/GetDevices",
             }
         ]
-        headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
+        headers = {
+            "X-JNAP-Action": "http://linksys.com/jnap/core/Transaction",
+            "X-JNAP-Authorization": authorization_header
+        }
         return requests.post(
             f"http://{self.host}/JNAP/",
             timeout=DEFAULT_TIMEOUT,
