@@ -7,7 +7,11 @@ from typing import Any
 from pymystrom.exceptions import MyStromConnectionError
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA,
+    SwitchDeviceClass,
+    SwitchEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -73,36 +77,37 @@ class MyStromSwitch(SwitchEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, plug, name):
+    def __init__(self, device, name):
         """Initialize the myStrom switch/plug."""
-        self.plug = plug
-        self._attr_unique_id = self.plug.mac
+        self.device = device
+        self._attr_unique_id = self.device.mac
+        self._attr_device_class = SwitchDeviceClass.OUTLET
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.plug.mac)},
+            identifiers={(DOMAIN, self.device.mac)},
             name=name,
             manufacturer=MANUFACTURER,
-            sw_version=self.plug.firmware,
+            sw_version=self.device.firmware,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
-            await self.plug.turn_on()
+            await self.device.turn_on()
         except MyStromConnectionError:
             _LOGGER.error("No route to myStrom plug")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
-            await self.plug.turn_off()
+            await self.device.turn_off()
         except MyStromConnectionError:
             _LOGGER.error("No route to myStrom plug")
 
     async def async_update(self) -> None:
         """Get the latest data from the device and update the data."""
         try:
-            await self.plug.get_state()
-            self._attr_is_on = self.plug.relay
+            await self.device.get_state()
+            self._attr_is_on = self.device.relay
             self._attr_available = True
         except MyStromConnectionError:
             if self.available:
