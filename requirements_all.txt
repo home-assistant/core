@@ -8,7 +8,7 @@ AEMET-OpenData==0.2.2
 AIOAladdinConnect==0.1.56
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.14
+AIOSomecomfort==0.0.15
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -231,7 +231,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.9
+aioesphomeapi==15.1.14
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -249,7 +249,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.8
+aiohomekit==2.6.9
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -442,6 +442,9 @@ asterisk-mbox==0.5.0
 # homeassistant.components.yeelight
 async-upnp-client==0.33.2
 
+# homeassistant.components.esphome
+async_interrupt==1.1.1
+
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
 
@@ -503,7 +506,7 @@ bimmer-connected==0.13.8
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.0.2
+bleak-retry-connector==3.1.0
 
 # homeassistant.components.bluetooth
 bleak==0.20.2
@@ -727,7 +730,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.5.35
+env-canada==0.5.36
 
 # homeassistant.components.enphase_envoy
 envoy-reader==0.20.1
@@ -791,7 +794,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux-led==0.28.37
+flux-led==1.0.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -820,7 +823,7 @@ fritzconnection[qr]==1.12.2
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena_bluetooth==1.0.1
+gardena_bluetooth==1.0.2
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
@@ -1240,9 +1243,6 @@ nessclient==0.10.0
 # homeassistant.components.netdata
 netdata==1.1.0
 
-# homeassistant.components.discovery
-netdisco==3.0.0
-
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
 
@@ -1603,7 +1603,7 @@ pycketcasts==1.0.1
 pycmus==0.1.1
 
 # homeassistant.components.tensorflow
-pycocotools==2.0.6
+# pycocotools==2.0.6
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.5.1
@@ -1672,7 +1672,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.1
+pyfibaro==0.7.2
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -1816,7 +1816,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.9
+pymazda==0.3.10
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
@@ -2142,7 +2142,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.30.0
+python-roborock==0.30.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2360,7 +2360,7 @@ sensorpro-ble==0.5.3
 sensorpush-ble==1.5.5
 
 # homeassistant.components.sentry
-sentry-sdk==1.27.1
+sentry-sdk==1.28.1
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.6
@@ -2687,7 +2687,7 @@ wyoming==1.1.0
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.17.2
+xiaomi-ble==0.19.1
 
 # homeassistant.components.knx
 xknx==2.11.1
@@ -2711,7 +2711,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.2.1
+yalexs-ble==2.2.3
 
 # homeassistant.components.august
 yalexs==1.5.1
@@ -2729,7 +2729,7 @@ yolink-api==0.2.9
 youless-api==1.0.1
 
 # homeassistant.components.media_extractor
-yt-dlp==2023.3.4
+yt-dlp==2023.7.6
 
 # homeassistant.components.zamg
 zamg==0.2.4
