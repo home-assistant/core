@@ -231,7 +231,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.13
+aioesphomeapi==15.1.14
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -730,7 +730,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.5.35
+env-canada==0.5.36
 
 # homeassistant.components.enphase_envoy
 envoy-reader==0.20.1
@@ -1672,7 +1672,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.1
+pyfibaro==0.7.2
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -2687,7 +2687,7 @@ wyoming==1.1.0
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.18.2
+xiaomi-ble==0.19.1
 
 # homeassistant.components.knx
 xknx==2.11.1
