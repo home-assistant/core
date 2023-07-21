@@ -48,10 +48,10 @@ OPTIONS_FLOW = {
 }
 
 
-def validate_input(hass: core.HomeAssistant, auth):
+async def validate_input(hass: core.HomeAssistant, auth):
     """Validate the user input allows us to connect."""
     try:
-        auth.startup()
+        await auth.startup()
     except (LoginError, TokenRefreshFailed) as err:
         raise InvalidAuth from err
     if auth.check_key_required():
@@ -84,7 +84,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         data = {CONF_USERNAME: "", CONF_PASSWORD: "", "device_id": DEVICE_ID}
@@ -96,9 +96,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(data[CONF_USERNAME])
 
             try:
-                await self.hass.async_add_executor_job(
-                    validate_input, self.hass, self.auth
-                )
+                await validate_input(self.hass, self.auth)
                 return self._async_finish_flow()
             except Require2FA:
                 return await self.async_step_2fa()
@@ -119,7 +117,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_2fa(self, user_input=None):
+    async def async_step_2fa(self, user_input=None) -> FlowResult:
         """Handle 2FA step."""
         errors = {}
         if user_input is not None:
