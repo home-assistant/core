@@ -58,7 +58,8 @@ async def async_pipeline_from_audio_stream(
     conversation_id: str | None = None,
     tts_audio_output: str | None = None,
     device_id: str | None = None,
-    detect_wake_word: bool = False,
+    start_stage: PipelineStage = PipelineStage.STT,
+    end_stage: PipelineStage = PipelineStage.TTS,
 ) -> None:
     """Create an audio pipeline from an audio stream.
 
@@ -73,8 +74,8 @@ async def async_pipeline_from_audio_stream(
             hass,
             context=context,
             pipeline=async_get_pipeline(hass, pipeline_id=pipeline_id),
-            start_stage=PipelineStage.WAKE if detect_wake_word else PipelineStage.STT,
-            end_stage=PipelineStage.TTS,
+            start_stage=start_stage,
+            end_stage=end_stage,
             event_callback=event_callback,
             tts_audio_output=tts_audio_output,
         ),
