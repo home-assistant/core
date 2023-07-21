@@ -2,6 +2,7 @@
   "domain": "snmp",
   "name": "SNMP",
   "codeowners": [],
+  "disabled": "Dependencies does not support Python 3.12",
   "documentation": "https://www.home-assistant.io/integrations/snmp",
   "iot_class": "local_polling",
   "loggers": ["pyasn1", "pysmi", "pysnmp"],

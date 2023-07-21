@@ -1,8 +1,9 @@
 """Tests for Brother Printer integration."""
+# ruff: noqa: F821
 import json
 from unittest.mock import patch
 
-from homeassistant.components.brother.const import DOMAIN
+# from homeassistant.components.brother.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 

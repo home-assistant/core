@@ -3,6 +3,7 @@
   "name": "Brother Printer",
   "codeowners": ["@bieniu"],
   "config_flow": true,
+  "disabled": "Dependencies does not support Python 3.12",
   "documentation": "https://www.home-assistant.io/integrations/brother",
   "integration_type": "device",
   "iot_class": "local_polling",
