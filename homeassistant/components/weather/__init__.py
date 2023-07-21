@@ -1048,19 +1048,6 @@ class WeatherEntity(Entity):
         return unsubscribe
 
     @final
-    @callback
-    def async_has_listeners(
-        self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
-    ) -> bool:
-        """Return True if there are listeners for the given forecast types."""
-        if forecast_types is None:
-            forecast_types = {"daily", "hourly", "twice_daily"}
-        for forecast_type in forecast_types:
-            if self._forecast_listeners[forecast_type]:
-                return True
-        return False
-
-    @final
     async def async_update_listeners(
         self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
     ) -> None:
