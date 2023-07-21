@@ -33,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     "face-recognition",
     "opencv-python-headless",
     "pybluez",
+    "pycocotools",
     "pycups",
     "python-eq3bt",
     "python-gammu",

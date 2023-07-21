@@ -29,5 +29,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "button": {
+      "clear_notifications": {
+        "name": "Clear notifications"
+      }
+    }
   }
 }

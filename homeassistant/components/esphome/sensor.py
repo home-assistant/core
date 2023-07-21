@@ -76,7 +76,10 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         super()._on_static_info_update(static_info)
         static_info = self._static_info
         self._attr_force_update = static_info.force_update
-        self._attr_native_unit_of_measurement = static_info.unit_of_measurement
+        # protobuf doesn't support nullable strings so we need to check
+        # if the string is empty
+        if unit_of_measurement := static_info.unit_of_measurement:
+            self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_device_class = try_parse_enum(
             SensorDeviceClass, static_info.device_class
         )
