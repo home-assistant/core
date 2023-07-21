@@ -237,6 +237,7 @@ class MockWeatherMockForecast(MockWeather):
                 ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
                 ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
                 ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                ATTR_FORECAST_UV_INDEX: self.uv_index,
                 ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
                     "native_precipitation"
                 ),

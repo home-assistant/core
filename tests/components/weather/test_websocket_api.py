@@ -76,6 +76,7 @@ async def test_subscribe_forecast(
                 "cloud_coverage": None,
                 "temperature": 38.0,
                 "templow": 38.0,
+                "uv_index": None,
                 "wind_bearing": None,
             }
         ],
