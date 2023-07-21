@@ -51,68 +51,64 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "dgnbj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.GAS_SENSOR_STATE,
-            name="Gas",
             icon="mdi:gas-cylinder",
-            device_class=BinarySensorDeviceClass.SAFETY,
+            device_class=BinarySensorDeviceClass.GAS,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CH4_SENSOR_STATE,
-            name="Methane",
+            translation_key="methane",
             device_class=BinarySensorDeviceClass.GAS,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.VOC_STATE,
-            name="Volatile organic compound",
+            translation_key="voc",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.PM25_STATE,
-            name="Particulate matter 2.5 µm",
+            translation_key="pm25",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO_STATE,
-            name="Carbon monoxide",
+            translation_key="carbon_monoxide",
             icon="mdi:molecule-co",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO2_STATE,
+            translation_key="carbon_dioxide",
             icon="mdi:molecule-co2",
-            name="Carbon dioxide",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CH2O_STATE,
-            name="Formaldehyde",
+            translation_key="formaldehyde",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.DOORCONTACT_STATE,
-            name="Door",
             device_class=BinarySensorDeviceClass.DOOR,
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.WATERSENSOR_STATE,
-            name="Water leak",
             device_class=BinarySensorDeviceClass.MOISTURE,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESSURE_STATE,
-            name="Pressure",
+            translation_key="pressure",
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_STATE,
-            name="Smoke",
             icon="mdi:smoke-detector",
             device_class=BinarySensorDeviceClass.SMOKE,
             on_value="alarm",
@@ -149,7 +145,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "cwwsq": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.FEED_STATE,
-            name="Feeding",
+            translation_key="feeding",
             icon="mdi:information",
             on_value="feeding",
         ),
@@ -215,7 +211,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "ldcg": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.TEMPER_ALARM,
-            name="Tamper",
             device_class=BinarySensorDeviceClass.TAMPER,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -290,7 +285,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "wkf": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.WINDOW_STATE,
-            name="Window",
             device_class=BinarySensorDeviceClass.WINDOW,
             on_value="opened",
         ),
@@ -318,7 +312,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_STATE,
             device_class=BinarySensorDeviceClass.SMOKE,
-            on_value="1",
+            on_value={"1", "alarm"},
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -328,21 +322,20 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_vibration",
             dpcode=DPCode.SHOCK_STATE,
-            name="Vibration",
             device_class=BinarySensorDeviceClass.VIBRATION,
             on_value="vibration",
         ),
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_drop",
             dpcode=DPCode.SHOCK_STATE,
-            name="Drop",
+            translation_key="drop",
             icon="mdi:icon=package-down",
             on_value="drop",
         ),
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_tilt",
             dpcode=DPCode.SHOCK_STATE,
-            name="Tilt",
+            translation_key="tilt",
             icon="mdi:spirit-level",
             on_value="tilt",
         ),

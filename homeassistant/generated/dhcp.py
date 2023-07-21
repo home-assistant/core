@@ -187,6 +187,10 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "flux_led",
+        "hostname": "zengge",
+    },
+    {
+        "domain": "flux_led",
         "hostname": "sta*",
         "macaddress": "C82E47*",
     },
