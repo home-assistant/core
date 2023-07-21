@@ -16,6 +16,7 @@ from aioesphomeapi import (
 )
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
 from aioesphomeapi.core import BluetoothGATTAPIError
+from async_interrupt import interrupt
 import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
@@ -62,29 +63,21 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     async def _async_wrap_bluetooth_connected_operation(
         self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
-        disconnected_event = (
-            self._disconnected_event  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        loop = self._loop
+        disconnected_futures = self._disconnected_futures
+        disconnected_future = loop.create_future()
+        disconnected_futures.add(disconnected_future)
+        ble_device = self._ble_device
+        disconnect_message = (
+            f"{self._source_name }: {ble_device.name} - {ble_device.address}: "
+            "Disconnected during operation"
         )
-        if not disconnected_event:
-            raise BleakError("Not connected")
-        action_task = asyncio.create_task(func(self, *args, **kwargs))
-        disconnect_task = asyncio.create_task(disconnected_event.wait())
-        await asyncio.wait(
-            (action_task, disconnect_task),
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-        if disconnect_task.done():
-            action_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await action_task
-
-            raise BleakError(
-                f"{self._source_name}: "  # pylint: disable=protected-access
-                f"{self._ble_device.name} - "  # pylint: disable=protected-access
-                f" {self._ble_device.address}: "  # pylint: disable=protected-access
-                "Disconnected during operation"
-            )
-        return action_task.result()
+        try:
+            async with interrupt(disconnected_future, BleakError, disconnect_message):
+                return await func(self, *args, **kwargs)
+        finally:
+            disconnected_futures.discard(disconnected_future)
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
@@ -152,7 +145,8 @@ class ESPHomeClient(BaseBleakClient):
         self._notify_cancels: dict[
             int, tuple[Callable[[], Coroutine[Any, Any, None]], Callable[[], None]]
         ] = {}
-        self._disconnected_event: asyncio.Event | None = None
+        self._loop = asyncio.get_running_loop()
+        self._disconnected_futures: set[asyncio.Future[None]] = set()
         device_info = self.entry_data.device_info
         assert device_info is not None
         self._device_info = device_info
@@ -192,9 +186,10 @@ class ESPHomeClient(BaseBleakClient):
         for _, notify_abort in self._notify_cancels.values():
             notify_abort()
         self._notify_cancels.clear()
-        if self._disconnected_event:
-            self._disconnected_event.set()
-            self._disconnected_event = None
+        for future in self._disconnected_futures:
+            if not future.done():
+                future.set_result(None)
+        self._disconnected_futures.clear()
         self._unsubscribe_connection_state()
 
     def _async_ble_device_disconnected(self) -> None:
@@ -332,7 +327,7 @@ class ESPHomeClient(BaseBleakClient):
                         # exception.
                         await connected_future
                 raise
-            except Exception:
+            except Exception as ex:
                 if connected_future.done():
                     with contextlib.suppress(BleakError):
                         # If the connect call throws an exception,
@@ -342,7 +337,7 @@ class ESPHomeClient(BaseBleakClient):
                         # exception from the connect call as it
                         # will be more descriptive.
                         await connected_future
-                connected_future.cancel()
+                connected_future.cancel(f"Unhandled exception in connect call: {ex}")
                 raise
             await connected_future
 
@@ -359,7 +354,6 @@ class ESPHomeClient(BaseBleakClient):
             await self.disconnect()
             raise
 
-        self._disconnected_event = asyncio.Event()
         return True
 
     @api_error_as_bleak_error

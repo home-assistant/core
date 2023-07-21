@@ -196,7 +196,7 @@ class WatcherBase(ABC):
 
         dev_reg: DeviceRegistry = async_get(self.hass)
         if device := dev_reg.async_get_device(
-            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
+            connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
         ):
             for entry_id in device.config_entries:
                 if entry := self.hass.config_entries.async_get_entry(entry_id):

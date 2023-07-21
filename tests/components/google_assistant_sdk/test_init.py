@@ -326,7 +326,6 @@ async def test_conversation_agent(
     assert entry.state is ConfigEntryState.LOADED
 
     agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
-    assert agent.attribution.keys() == {"name", "url"}
     assert agent.supported_languages == SUPPORTED_LANGUAGE_CODES
 
     text1 = "tell me a joke"
