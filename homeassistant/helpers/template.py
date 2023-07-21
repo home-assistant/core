@@ -912,7 +912,9 @@ class StateTranslated:
             if len(translations_entity) > 0 and key in translations_entity:
                 return str(translations_entity[key])
 
-        translations_state = async_get_cached_translations(self._hass, language, "state")
+        translations_state = async_get_cached_translations(
+            self._hass, language, "state"
+        )
         if len(translations_state) > 0:
             key = f"component.{domain}.state.{device_class}.{state.state}"
             if key in translations_state:

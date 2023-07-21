@@ -673,12 +673,16 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     async def load_translations_for_component(event: Event) -> None:
         component = event.data.get("component")
-        if "." in component:
-            _LOGGER.debug(f"Skipping loading translations for an invalid component: {component}")
+        if component is None or "." in str(component):
+            _LOGGER.debug(
+                f"Skipping loading translations for an invalid component: {component}"
+            )
             return
         language = hass.config.language
-        _LOGGER.debug(f"Loading translations for language: {hass.config.language} and component: {component}")
-        await async_load_state_translations_to_cache(hass, language, (component,))
+        _LOGGER.debug(
+            f"Loading translations for language: {hass.config.language} and component: {component}"
+        )
+        await async_load_state_translations_to_cache(hass, language, [component])
 
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations_for_component)
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)

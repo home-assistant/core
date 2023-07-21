@@ -385,9 +385,9 @@ def async_get_cached_translations(
 
 @callback
 def _async_get_components_to_load(
-        hass: HomeAssistant,
-        category: str,
-        integrations: Iterable[str] | None = None,
+    hass: HomeAssistant,
+    category: str,
+    integrations: Iterable[str] | None = None,
 ) -> set[str]:
     if integrations is not None:
         components = set(integrations)
