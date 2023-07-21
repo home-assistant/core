@@ -447,7 +447,7 @@ async def test_load_state_translations_to_cache(
     """Test the get load state translations to cache helper."""
 
     with patch(
-        "homeassistant.helpers.translation.async_get_translations",
+        "homeassistant.helpers.translation.async_load_translations",
     ) as mock:
         await translation.async_load_state_translations_to_cache(hass, "en")
 

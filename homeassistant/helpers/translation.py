@@ -196,17 +196,25 @@ class _TranslationCache:
         self.loaded: dict[str, set[str]] = {}
         self.cache: dict[str, dict[str, dict[str, Any]]] = {}
 
+    async def async_load(
+        self,
+        language: str,
+        components: set[str],
+    ) -> None:
+        """Load resources into the cache."""
+        components_to_load = components - self.loaded.setdefault(language, set())
+
+        if components_to_load:
+            await self._async_load(language, components_to_load)
+
     async def async_fetch(
         self,
         language: str,
         category: str,
         components: set[str],
     ) -> list[dict[str, dict[str, Any]]]:
-        """Load resources into the cache."""
-        components_to_load = components - self.loaded.setdefault(language, set())
-
-        if components_to_load:
-            await self._async_load(language, components_to_load)
+        """Load resources into the cache and return them."""
+        await self.async_load(language, components)
 
         return self.get_cached(language, category, components)
 
@@ -307,17 +315,10 @@ async def async_get_translations(
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
 
-    if integrations is not None:
-        components = set(integrations)
-    elif config_flow:
+    if integrations is None and config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
-    elif category in ("state", "entity_component", "services"):
-        components = set(hass.config.components)
     else:
-        # Only 'state' supports merging, so remove platforms from selection
-        components = {
-            component for component in hass.config.components if "." not in component
-        }
+        components = _async_get_components_to_load(hass, category, integrations)
 
     async with lock:
         if TRANSLATION_FLATTEN_CACHE in hass.data:
@@ -332,6 +333,29 @@ async def async_get_translations(
     return result
 
 
+async def async_load_translations(
+    hass: HomeAssistant,
+    language: str,
+    category: str,
+    integrations: Iterable[str] | None = None,
+) -> None:
+    """Load all backend translations to cache.
+
+    If integration specified, load it for that one.
+    Otherwise default to loaded integration.
+    """
+    lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
+
+    components = _async_get_components_to_load(hass, category, integrations)
+
+    async with lock:
+        if TRANSLATION_FLATTEN_CACHE in hass.data:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+        else:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
+        await cache.async_load(language, components)
+
+
 @callback
 def async_get_cached_translations(
     hass: HomeAssistant,
@@ -339,20 +363,12 @@ def async_get_cached_translations(
     category: str,
     integrations: Iterable[str] | None = None,
 ) -> dict[str, Any]:
-    """Return cached all backend translations.
+    """Return all cached backend translations.
 
     If integrations specified, return translations for them.
     Otherwise default to loaded integrations.
     """
-    if integrations is not None:
-        components = set(integrations)
-    elif category in ("state", "entity_component", "services"):
-        components = set(hass.config.components)
-    else:
-        # Only 'state' supports merging, so remove platforms from selection
-        components = {
-            component for component in hass.config.components if "." not in component
-        }
+    components = _async_get_components_to_load(hass, category, integrations)
 
     if TRANSLATION_FLATTEN_CACHE not in hass.data:
         return {}
@@ -367,12 +383,30 @@ def async_get_cached_translations(
     return result
 
 
+@callback
+def _async_get_components_to_load(
+        hass: HomeAssistant,
+        category: str,
+        integrations: Iterable[str] | None = None,
+) -> set[str]:
+    if integrations is not None:
+        components = set(integrations)
+    elif category in ("state", "entity_component", "services"):
+        components = set(hass.config.components)
+    else:
+        # Only 'state' supports merging, so remove platforms from selection
+        components = {
+            component for component in hass.config.components if "." not in component
+        }
+    return components
+
+
 async def async_load_state_translations_to_cache(
     hass: HomeAssistant,
     language: str,
     integrations: Iterable[str] | None = None,
 ) -> None:
     """Load state translations to cache."""
-    await async_get_translations(hass, language, "entity", integrations)
-    await async_get_translations(hass, language, "state", integrations)
-    await async_get_translations(hass, language, "entity_component", integrations)
+    await async_load_translations(hass, language, "entity", integrations)
+    await async_load_translations(hass, language, "state", integrations)
+    await async_load_translations(hass, language, "entity_component", integrations)
