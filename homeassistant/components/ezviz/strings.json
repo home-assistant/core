@@ -99,6 +99,14 @@
         "name": "Last motion image"
       }
     },
+    "binary_sensor": {
+      "alarm_schedules_enabled": {
+        "name": "Alarm schedules enabled"
+      },
+      "encrypted": {
+        "name": "Encryption"
+      }
+    },
     "sensor": {
       "alarm_sound_mod": {
         "name": "Alarm sound level"

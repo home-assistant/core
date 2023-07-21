@@ -19,6 +19,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
     Forecast,
@@ -110,6 +111,11 @@ class MockWeather(MockEntity, WeatherEntity):
     def cloud_coverage(self) -> float | None:
         """Return the cloud coverage in %."""
         return self._handle("cloud_coverage")
+
+    @property
+    def uv_index(self) -> float | None:
+        """Return the UV index."""
+        return self._handle("uv_index")
 
     @property
     def native_visibility(self) -> float | None:
@@ -228,6 +234,7 @@ class MockWeatherMockForecast(MockWeather):
                 ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
                 ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
                 ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                ATTR_FORECAST_UV_INDEX: self.uv_index,
                 ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
                     "native_precipitation"
                 ),

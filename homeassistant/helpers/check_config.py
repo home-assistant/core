@@ -181,7 +181,9 @@ async def async_check_ha_config_file(  # noqa: C901
         if config_schema is not None:
             try:
                 config = config_schema(config)
-                result[domain] = config[domain]
+                # Don't fail if the validator removed the domain from the config
+                if domain in config:
+                    result[domain] = config[domain]
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue

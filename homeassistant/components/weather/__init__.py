@@ -40,6 +40,7 @@ from .const import (
     ATTR_WEATHER_PRESSURE_UNIT,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_TEMPERATURE_UNIT,
+    ATTR_WEATHER_UV_INDEX,
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_VISIBILITY_UNIT,
     ATTR_WEATHER_WIND_BEARING,
@@ -93,6 +94,7 @@ ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
 ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
 ATTR_FORECAST_DEW_POINT: Final = "dew_point"
 ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
+ATTR_FORECAST_UV_INDEX: Final = "uv_index"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -146,6 +148,7 @@ class Forecast(TypedDict, total=False):
     native_wind_speed: float | None
     wind_speed: None
     native_dew_point: float | None
+    uv_index: float | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -184,6 +187,7 @@ class WeatherEntity(Entity):
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_cloud_coverage: int | None = None
+    _attr_uv_index: float | None = None
     _attr_precision: float
     _attr_pressure: None = (
         None  # Provide backwards compatibility. Use _attr_native_pressure
@@ -503,6 +507,11 @@ class WeatherEntity(Entity):
         """Return the Cloud coverage in %."""
         return self._attr_cloud_coverage
 
+    @property
+    def uv_index(self) -> float | None:
+        """Return the UV index."""
+        return self._attr_uv_index
+
     @final
     @property
     def visibility(self) -> float | None:
@@ -679,6 +688,9 @@ class WeatherEntity(Entity):
 
         if (cloud_coverage := self.cloud_coverage) is not None:
             data[ATTR_WEATHER_CLOUD_COVERAGE] = cloud_coverage
+
+        if (uv_index := self.uv_index) is not None:
+            data[ATTR_WEATHER_UV_INDEX] = uv_index
 
         if (pressure := self.native_pressure) is not None:
             from_unit = self.native_pressure_unit or self._default_pressure_unit
