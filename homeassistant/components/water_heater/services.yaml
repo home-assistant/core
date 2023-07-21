@@ -40,15 +40,11 @@ set_operation_mode:
         text:
 
 turn_on:
-  name: Turn on
-  description: Turn water heater on.
   target:
     entity:
       domain: water_heater
 
 turn_off:
-  name: Turn off
-  description: Turn water heater off.
   target:
     entity:
       domain: water_heater
