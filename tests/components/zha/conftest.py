@@ -332,8 +332,8 @@ def zha_device_mock(
 
 @pytest.fixture
 def hass_disable_services(hass):
-    """Mock service register."""
-    with patch.object(hass.services, "async_register"), patch.object(
-        hass.services, "has_service", return_value=True
+    """Mock services."""
+    with patch.object(
+        hass, "services", MagicMock(has_service=MagicMock(return_value=True))
     ):
         yield hass

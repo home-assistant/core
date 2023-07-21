@@ -87,7 +87,9 @@ async def test_get_triggers(
     """Test we get the expected triggers from a rfxtrx."""
     await setup_entry(hass, {event.code: {}})
 
-    device_entry = device_registry.async_get_device(event.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=event.device_identifiers
+    )
     assert device_entry
 
     # Add alternate identifiers, to make sure we can handle future formats
@@ -95,7 +97,9 @@ async def test_get_triggers(
     device_registry.async_update_device(
         device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
     )
-    device_entry = device_registry.async_get_device(event.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=event.device_identifiers
+    )
     assert device_entry
 
     expected_triggers = [
@@ -131,7 +135,9 @@ async def test_firing_event(
 
     await setup_entry(hass, {event.code: {"fire_event": True}})
 
-    device_entry = device_registry.async_get_device(event.device_identifiers, set())
+    device_entry = device_registry.async_get_device(
+        identifiers=event.device_identifiers
+    )
     assert device_entry
 
     calls = async_mock_service(hass, "test", "automation")
@@ -175,8 +181,8 @@ async def test_invalid_trigger(
 
     await setup_entry(hass, {event.code: {"fire_event": True}})
 
-    device_identifers: Any = event.device_identifiers
-    device_entry = device_registry.async_get_device(device_identifers, set())
+    device_identifiers: Any = event.device_identifiers
+    device_entry = device_registry.async_get_device(identifiers=device_identifiers)
     assert device_entry
 
     assert await async_setup_component(

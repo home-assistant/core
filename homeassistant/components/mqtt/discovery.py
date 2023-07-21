@@ -54,6 +54,7 @@ SUPPORTED_COMPONENTS = [
     "device_tracker",
     "fan",
     "humidifier",
+    "image",
     "light",
     "lock",
     "number",

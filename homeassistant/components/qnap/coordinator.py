@@ -7,6 +7,7 @@ from typing import Any
 
 from qnapstats import QNAPStats
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -30,18 +30,18 @@ _LOGGER = logging.getLogger(__name__)
 class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Custom coordinator for the qnap integration."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the qnap coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
-        protocol = "https" if config[CONF_SSL] else "http"
+        protocol = "https" if config_entry.data[CONF_SSL] else "http"
         self._api = QNAPStats(
-            f"{protocol}://{config.get(CONF_HOST)}",
-            config.get(CONF_PORT),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            verify_ssl=config.get(CONF_VERIFY_SSL),
-            timeout=config.get(CONF_TIMEOUT),
+            f"{protocol}://{config_entry.data.get(CONF_HOST)}",
+            config_entry.data.get(CONF_PORT),
+            config_entry.data.get(CONF_USERNAME),
+            config_entry.data.get(CONF_PASSWORD),
+            verify_ssl=config_entry.data.get(CONF_VERIFY_SSL),
+            timeout=config_entry.data.get(CONF_TIMEOUT),
         )
 
     def _sync_update(self) -> dict[str, dict[str, Any]]:

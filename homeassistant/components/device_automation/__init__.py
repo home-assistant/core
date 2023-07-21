@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ENTITY_ID,
     CONF_PLATFORM,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -338,6 +339,22 @@ def async_get_entity_registry_entry_or_raise(
     if entry is None:
         raise EntityNotFound
     return entry
+
+
+@callback
+def async_validate_entity_schema(
+    hass: HomeAssistant, config: ConfigType, schema: vol.Schema
+) -> ConfigType:
+    """Validate schema and resolve entity registry entry id to entity_id."""
+    config = schema(config)
+
+    registry = er.async_get(hass)
+    if CONF_ENTITY_ID in config:
+        config[CONF_ENTITY_ID] = er.async_resolve_entity_id(
+            registry, config[CONF_ENTITY_ID]
+        )
+
+    return config
 
 
 def handle_device_errors(

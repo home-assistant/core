@@ -106,6 +106,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_icon = "mdi:spotify"
     _attr_media_image_remotely_accessible = False
+    _attr_name = None
 
     def __init__(
         self,
@@ -118,9 +119,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data = data
 
         self._attr_unique_id = user_id
-
-        if self.data.current_user["product"] == "premium":
-            self._attr_supported_features = SUPPORT_SPOTIFY
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, user_id)},
@@ -136,6 +134,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
         self._currently_playing: dict | None = {}
         self._playlist: dict | None = None
+        self._restricted_device: bool = False
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return the supported features."""
+        if self._restricted_device:
+            return MediaPlayerEntityFeature.SELECT_SOURCE
+        if self.data.current_user["product"] == "premium":
+            return SUPPORT_SPOTIFY
+        return MediaPlayerEntityFeature(0)
 
     @property
     def state(self) -> MediaPlayerState:
@@ -390,13 +398,25 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
         self._currently_playing = current or {}
 
-        context = self._currently_playing.get("context")
-        if context is not None and (
-            self._playlist is None or self._playlist["uri"] != context["uri"]
-        ):
+        context = self._currently_playing.get("context") or {}
+
+        # For some users in some cases, the uri is formed like
+        # "spotify:user:{name}:playlist:{id}" and spotipy wants
+        # the type to be playlist.
+        uri = context.get("uri")
+        if uri is not None:
+            parts = uri.split(":")
+            if len(parts) == 5 and parts[1] == "user" and parts[3] == "playlist":
+                uri = ":".join([parts[0], parts[3], parts[4]])
+
+        if context and (self._playlist is None or self._playlist["uri"] != uri):
             self._playlist = None
             if context["type"] == MediaType.PLAYLIST:
-                self._playlist = self.data.client.playlist(current["context"]["uri"])
+                self._playlist = self.data.client.playlist(uri)
+
+        device = self._currently_playing.get("device")
+        if device is not None:
+            self._restricted_device = device["is_restricted"]
 
     async def async_browse_media(
         self,

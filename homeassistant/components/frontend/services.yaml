@@ -11,6 +11,7 @@ set_theme:
       example: "default"
       selector:
         theme:
+          include_default: true
     mode:
       name: Mode
       description: The mode the theme is for.

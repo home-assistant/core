@@ -232,7 +232,7 @@ class _GlobalTaskContext:
         """Cancel own task."""
         if self._task.done():
             return
-        self._task.cancel()
+        self._task.cancel("Global task timeout")
 
     def pause(self) -> None:
         """Pause timers while it freeze."""
@@ -330,7 +330,7 @@ class _ZoneTaskContext:
         # Timeout
         if self._task.done():
             return
-        self._task.cancel()
+        self._task.cancel("Zone timeout")
 
     def pause(self) -> None:
         """Pause timers while it freeze."""

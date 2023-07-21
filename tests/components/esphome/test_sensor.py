@@ -1,6 +1,9 @@
 """Test ESPHome sensors."""
+import math
+
 from aioesphomeapi import (
     APIClient,
+    EntityCategory as ESPHomeEntityCategory,
     LastResetType,
     SensorInfo,
     SensorState,
@@ -10,8 +13,10 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 
 async def test_generic_numeric_sensor(
@@ -36,9 +41,44 @@ async def test_generic_numeric_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
+
+
+async def test_generic_numeric_sensor_with_entity_category_and_icon(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry,
+) -> None:
+    """Test a generic sensor entity."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+            entity_category=ESPHomeEntityCategory.CONFIG,
+            icon="mdi:leaf",
+        )
+    ]
+    states = [SensorState(key=1, state=50)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "50"
+    assert state.attributes[ATTR_ICON] == "mdi:leaf"
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get("sensor.test_mysensor")
+    assert entry is not None
+    assert entry.unique_id == "my_sensor"
+    assert entry.entity_category is EntityCategory.CONFIG
 
 
 async def test_generic_numeric_sensor_state_class_measurement(
@@ -66,10 +106,15 @@ async def test_generic_numeric_sensor_state_class_measurement(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get("sensor.test_mysensor")
+    assert entry is not None
+    assert entry.unique_id == "my_sensor"
+    assert entry.entity_category is None
 
 
 async def test_generic_numeric_sensor_device_class_timestamp(
@@ -95,7 +140,7 @@ async def test_generic_numeric_sensor_device_class_timestamp(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "2023-06-22T18:43:52+00:00"
 
@@ -124,10 +169,60 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
+
+
+async def test_generic_numeric_sensor_no_state(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic numeric sensor that has no state."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+        )
+    ]
+    states = []
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_generic_numeric_sensor_nan_state(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic numeric sensor that has nan state."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+        )
+    ]
+    states = [SensorState(key=1, state=math.nan, missing_state=False)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_generic_numeric_sensor_missing_state(
@@ -150,7 +245,7 @@ async def test_generic_numeric_sensor_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -177,6 +272,33 @@ async def test_generic_text_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "i am a teapot"
+
+
+async def test_generic_numeric_sensor_empty_string_uom(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic numeric sensor that has an empty string as the uom."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+            unit_of_measurement="",
+        )
+    ]
+    states = [SensorState(key=1, state=123, missing_state=False)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == "123"
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
