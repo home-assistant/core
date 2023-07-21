@@ -296,28 +296,21 @@ class WaterHeaterEntity(Entity):
             ft.partial(self.set_temperature, **kwargs)
         )
 
-    async def async_turn_on(self) -> None:
-        """Turn the entity on."""
-        if hasattr(self, "turn_on"):
-            await self.hass.async_add_executor_job(self.turn_on)
-            return
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        raise NotImplementedError()
 
-        # Fake turn on
-        for mode in (STATE_HEAT_PUMP, STATE_GAS, STATE_ELECTRIC):
-            if self.operation_list is not None and mode not in self.operation_list:
-                continue
-            await self.async_set_operation_mode(mode)
-            break
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
 
-    async def async_turn_off(self) -> None:
-        """Turn the entity off."""
-        if hasattr(self, "turn_off"):
-            await self.hass.async_add_executor_job(self.turn_off)
-            return
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        raise NotImplementedError()
 
-        # Fake turn off
-        if self.operation_list is not None and STATE_OFF in self.operation_list:
-            await self.async_set_operation_mode(STATE_OFF)
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""

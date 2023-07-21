@@ -1,7 +1,7 @@
 """The tests for the water heater component."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import voluptuous as vol
@@ -65,25 +65,6 @@ async def test_sync_turn_on(hass: HomeAssistant) -> None:
     water_heater = MockWaterHeaterEntity()
     water_heater.hass = hass
 
-    setattr(water_heater, "set_operation_mode", MagicMock())
-
-    await water_heater.async_turn_on()
-
-    # When turn on is called the first available active mode should be activated from
-    # STATE_HEAT_PUMP, STATE_GAS, STATE_ELECTRIC if any of there modes is available
-    # pylint: disable-next=no-member
-    assert water_heater.set_operation_mode.call_args[0][0] == "heat_pump"
-    # pylint: disable-next=no-member
-    water_heater.set_operation_mode.reset_mock()
-
-    with patch.object(water_heater, "_attr_operation_list", side_effect=["off", "eco"]):
-        await water_heater.async_turn_on()
-
-        # When turn on is called the first available active mode should be activated from
-        # STATE_HEAT_PUMP, STATE_GAS, STATE_ELECTRIC if any of there modes is available
-        # pylint: disable-next=no-member
-        assert water_heater.set_operation_mode.called is False
-
     # Test with turn_on method defined
     setattr(water_heater, "turn_on", MagicMock())
     await water_heater.async_turn_on()
@@ -91,18 +72,18 @@ async def test_sync_turn_on(hass: HomeAssistant) -> None:
     # pylint: disable-next=no-member
     assert water_heater.turn_on.call_count == 1
 
+    # Test with async_turn_on method defined
+    setattr(water_heater, "async_turn_on", AsyncMock())
+    await water_heater.async_turn_on()
+
+    # pylint: disable-next=no-member
+    assert water_heater.async_turn_on.call_count == 1
+
 
 async def test_sync_turn_off(hass: HomeAssistant) -> None:
     """Test if async turn_off calls sync turn_off."""
     water_heater = MockWaterHeaterEntity()
     water_heater.hass = hass
-
-    setattr(water_heater, "set_operation_mode", MagicMock())
-
-    await water_heater.async_turn_off()
-
-    # pylint: disable-next=no-member
-    assert water_heater.set_operation_mode.call_args[0][0] == "off"
 
     # Test with turn_off method defined
     setattr(water_heater, "turn_off", MagicMock())
@@ -110,3 +91,10 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
 
     # pylint: disable-next=no-member
     assert water_heater.turn_off.call_count == 1
+
+    # Test with async_turn_off method defined
+    setattr(water_heater, "async_turn_off", AsyncMock())
+    await water_heater.async_turn_off()
+
+    # pylint: disable-next=no-member
+    assert water_heater.async_turn_off.call_count == 1
