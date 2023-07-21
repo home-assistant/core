@@ -192,6 +192,7 @@ class ScrapeSensor(
     async def async_added_to_hass(self) -> None:
         """Ensure the data from the initial update is reflected in the state."""
         await ManualTriggerEntity.async_added_to_hass(self)
+        # https://github.com/python/mypy/issues/15097
         await CoordinatorEntity.async_added_to_hass(self)  # type: ignore[arg-type]
         self._async_update_from_rest_data()
 
