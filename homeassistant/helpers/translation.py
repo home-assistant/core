@@ -356,7 +356,7 @@ def async_get_cached_translations(
 
     if TRANSLATION_FLATTEN_CACHE not in hass.data:
         return {}
-    
+
     result = {}
 
     cache = hass.data[TRANSLATION_FLATTEN_CACHE]
@@ -367,11 +367,12 @@ def async_get_cached_translations(
     return result
 
 
-async def load_state_translations_to_cache(
+async def async_load_state_translations_to_cache(
     hass: HomeAssistant,
     language: str,
+    integrations: Iterable[str] | None = None,
 ) -> None:
     """Load state translations to cache."""
-    await async_get_translations(hass, language, "entity")
-    await async_get_translations(hass, language, "state")
-    await async_get_translations(hass, language, "entity_component")
+    await async_get_translations(hass, language, "entity", integrations)
+    await async_get_translations(hass, language, "state", integrations)
+    await async_get_translations(hass, language, "entity_component", integrations)

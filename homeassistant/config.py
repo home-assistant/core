@@ -49,7 +49,6 @@ from .const import (
     CONF_UNIT_SYSTEM,
     EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
-    EVENT_HOMEASSISTANT_STARTED,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     __version__,
 )
@@ -63,7 +62,7 @@ from .helpers import (
     issue_registry as ir,
 )
 from .helpers.entity_values import EntityValues
-from .helpers.translation import load_state_translations_to_cache
+from .helpers.translation import async_load_state_translations_to_cache
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
@@ -668,11 +667,17 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         hac.units = get_unit_system(config[CONF_UNIT_SYSTEM])
 
     async def load_translations(_event: Event) -> None:
-        _LOGGER.debug(f"Loading translations for language: {hass.config.language}")
-        await load_state_translations_to_cache(hass, language=hass.config.language)
+        language = hass.config.language
+        _LOGGER.debug(f"Loading translations for language: {language}")
+        await async_load_state_translations_to_cache(hass, language)
 
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, load_translations)
+    async def load_translations_for_component(event: Event) -> None:
+        language = hass.config.language
+        component = event.data.get("component")
+        _LOGGER.debug(f"Loading translations for language: {hass.config.language} and component: {component}")
+        await async_load_state_translations_to_cache(hass, language, (component,))
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations_for_component)
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)
 
 

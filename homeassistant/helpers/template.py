@@ -81,7 +81,7 @@ from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
 from .singleton import singleton
-from .translation import get_cached_translations
+from .translation import async_get_cached_translations
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -887,7 +887,7 @@ class StateTranslated:
         if "device_class" in state.attributes:
             device_class = state.attributes["device_class"]
 
-        translations_entity_component = get_cached_translations(
+        translations_entity_component = async_get_cached_translations(
             self._hass, language, "entity_component", (domain,)
         )
         if len(translations_entity_component) > 0:
@@ -906,13 +906,13 @@ class StateTranslated:
             and entry.translation_key is not None
         ):
             key = f"component.{entry.platform}.entity.{domain}.{entry.translation_key}.state.{state.state}"
-            translations_entity = get_cached_translations(
+            translations_entity = async_get_cached_translations(
                 self._hass, language, "entity"
             )
             if len(translations_entity) > 0 and key in translations_entity:
                 return str(translations_entity[key])
 
-        translations_state = get_cached_translations(self._hass, language, "state")
+        translations_state = async_get_cached_translations(self._hass, language, "state")
         if len(translations_state) > 0:
             key = f"component.{domain}.state.{device_class}.{state.state}"
             if key in translations_state:

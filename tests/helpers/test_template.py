@@ -1658,7 +1658,7 @@ async def test_state_translated(
         },
     )
     await hass.async_block_till_done()
-    await translation.load_state_translations_to_cache(hass, "en")
+    await translation.async_load_state_translations_to_cache(hass, "en")
 
     hass.states.async_set("switch.without_translations", "on", attributes={})
     hass.states.async_set("binary_sensor.without_device_class", "on", attributes={})
@@ -1740,7 +1740,7 @@ async def test_state_translated(
         return {}
 
     with patch(
-        "homeassistant.helpers.template.get_cached_translations",
+        "homeassistant.helpers.template.async_get_cached_translations",
         side_effect=mock_get_cached_translations,
     ):
         tpl8 = template.Template('{{ state_translated("light.hue_5678") }}', hass)
