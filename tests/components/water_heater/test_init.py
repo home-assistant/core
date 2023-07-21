@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.water_heater import (
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 
@@ -58,6 +59,7 @@ class MockWaterHeaterEntity(WaterHeaterEntity):
 
     _attr_operation_list: list[str] = ["off", "heat_pump", "gas"]
     _attr_operation = "heat_pump"
+    _attr_supported_features = WaterHeaterEntityFeature.ON_OFF
 
 
 async def test_sync_turn_on(hass: HomeAssistant) -> None:

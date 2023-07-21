@@ -44,6 +44,7 @@ class AtwWaterHeater(WaterHeaterEntity):
 
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
 

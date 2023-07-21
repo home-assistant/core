@@ -61,6 +61,7 @@ class WaterHeaterEntityFeature(IntFlag):
     TARGET_TEMPERATURE = 1
     OPERATION_MODE = 2
     AWAY_MODE = 4
+    ON_OFF = 8
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
@@ -116,8 +117,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, {}, "async_turn_on", [WaterHeaterEntityFeature.ON_OFF]
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, {}, "async_turn_off", [WaterHeaterEntityFeature.ON_OFF]
+    )
     component.async_register_entity_service(
         SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA, async_service_away_mode
     )
