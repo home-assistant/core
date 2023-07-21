@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import lru_cache
 import logging
 from typing import Any, Final, final
 
@@ -182,6 +183,12 @@ class UpdateEntityDescription(EntityDescription):
     entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
+@lru_cache(maxsize=256)
+def _version_is_newer(latest_version: str, installed_version: str) -> bool:
+    """Return True if version is newer."""
+    return AwesomeVersion(latest_version) > installed_version
+
+
 class UpdateEntity(RestoreEntity):
     """Representation of an update entity."""
 
@@ -355,7 +362,7 @@ class UpdateEntity(RestoreEntity):
             return STATE_OFF
 
         try:
-            newer = AwesomeVersion(latest_version) > installed_version
+            newer = _version_is_newer(latest_version, installed_version)
             return STATE_ON if newer else STATE_OFF
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match
