@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from unittest.mock import Mock
 
 import pytest
 
 from homeassistant.components import no_ip
+from homeassistant.config_entries import ConfigEntry, UnknownEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -97,3 +99,29 @@ async def test_setup_fails(
     )
     assert result
     assert aioclient_mock.call_count == counter
+
+
+async def test_update_listener(hass: HomeAssistant) -> None:
+    """Test update_listener."""
+    config_entry = ConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="test",
+        source="test",
+        data={
+            "domain": DOMAIN,
+            "username": USERNAME,
+            "password": PASSWORD,
+        },
+    )
+
+    # Assign the separate function update_listener to the ConfigEntry as a method
+    config_entry.add_update_listener(no_ip.update_listener)
+
+    # Mock the async_reload method of the config_entries object
+    config_entry_mock = Mock()
+    config_entry_mock.async_reload = Mock(side_effect=UnknownEntry)
+
+    # Execute the update_listener function and pass the mock instance as an argument
+    with pytest.raises(UnknownEntry):
+        await no_ip.update_listener(hass, config_entry_mock)
