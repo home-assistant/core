@@ -68,7 +68,7 @@ def async_register_commands(
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
-    async_reg(hass, handle_get_single_state)
+    async_reg(hass, handle_get_single_entity)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
@@ -286,7 +286,6 @@ def handle_get_states(
     for state in states:
         try:
             serialized_states.append(state.as_dict_json())
-            # print("-")
 
         except (ValueError, TypeError):
             connection.logger.error(
@@ -307,32 +306,47 @@ def _send_handle_get_states_response(
 
 
 @callback
-@decorators.websocket_command({vol.Required("type"): "get_single_state"})
-def handle_get_single_state(
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_single_entity",
+        vol.Required("entity_to_get", default=MATCH_ALL): str,
+    }
+)
+def handle_get_single_entity(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle get states command."""
+    """Handle get single state command."""
     states = _async_get_allowed_states(hass, connection)
     # print("Get single state")
 
     # {"type":"auth","access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhOGY0MzY0NjE1NWM0MTQ1YjRjYmY5MzIwYTM3M2VlYiIsImlhdCI6MTY4OTcxNDk5NywiZXhwIjoyMDA1MDc0OTk3fQ.9toxhJb_SDxJYlw4BEXiKbxdkJBLLxKEiPikTbG73Qk"}
     # {"id": 19, "type": "get_states"}
     # {"id": 19, "type": "get_single_state"}
-    try:
-        serialized_states = [state.as_dict_json() for state in states]
-        # print("-")
-    except (ValueError, TypeError):
-        pass
-    else:
-        _send_handle_get_states_response(connection, msg["id"], serialized_states)
-        return
+    # """
+    # x = "0"
+    # try:
+    #    serialized_states = [state.as_dict_json() for state in states]
+    # str(json.loads(states))
+    # outp = str(json.loads(states))
+    # if "result" in outp:
+    #    x = outp["result"]
+    # print("xxx")
 
+    # except (ValueError, TypeError):
+    #    pass
+    # else:
+    #    _send_handle_get_states_response(connection, msg["id"], serialized_states)
+    #    return
+    # """
     # If we can't serialize, we'll filter out unserializable states
     serialized_states = []
     for state in states:
         try:
-            serialized_states.append(state.as_dict_json())
-            # print("-")
+            entity_to_get = msg.get("entity_to_get")
+            x = json.loads(state.as_dict_json())
+            if entity_to_get in x["entity_id"]:
+                serialized_states.append(x["entity_id"])
+                serialized_states.append(x["state"])
 
         except (ValueError, TypeError):
             connection.logger.error(
@@ -341,10 +355,16 @@ def handle_get_single_state(
                     find_paths_unserializable_data(state, dump=JSON_DUMP)
                 ),
             )
-    _send_handle_get_states_response(connection, msg["id"], serialized_states)
+    # print(len(serialized_states))
+    if len(serialized_states) == 0:
+        serialized_states.append("Error")
+        errormess = f"Entity {entity_to_get} not found"
+        serialized_states.append(errormess)
+
+    _send_handle_get_single_entity_response(connection, msg["id"], serialized_states)
 
 
-def _send_handle_get_single_state_response(
+def _send_handle_get_single_entity_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle get states response."""
