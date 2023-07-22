@@ -4,14 +4,20 @@ from unittest.mock import patch
 
 from homeassistant.components.no_ip import DOMAIN, NoIPDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DOMAIN,
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 
 
-# Mock-Funktion für _async_update_data
+# Mock-Funktion for _async_update_data
 async def mock_async_update_data(self) -> dict[str, Any]:
     """Mock for the _async_update_data method."""
     return {
+        CONF_IP_ADDRESS: "1.2.3.4",
         CONF_DOMAIN: "test",
         CONF_USERNAME: None,
         CONF_PASSWORD: None,
@@ -29,7 +35,12 @@ async def test_coordinator_update(hass: HomeAssistant) -> None:
         version=1,
         domain=DOMAIN,
         title="test",
-        data={CONF_DOMAIN: "test", CONF_USERNAME: None, CONF_PASSWORD: None},
+        data={
+            CONF_IP_ADDRESS: "1.2.3.4",
+            CONF_DOMAIN: "test",
+            CONF_USERNAME: None,
+            CONF_PASSWORD: None,
+        },
         source="test",
         options={},
     )
@@ -42,6 +53,7 @@ async def test_coordinator_update(hass: HomeAssistant) -> None:
 
     # Add more assertions based on the actual data you expect
     assert data == {
+        CONF_IP_ADDRESS: "1.2.3.4",
         CONF_DOMAIN: "test",
         CONF_USERNAME: None,
         CONF_PASSWORD: None,
