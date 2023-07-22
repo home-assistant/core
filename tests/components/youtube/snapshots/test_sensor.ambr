@@ -2,10 +2,10 @@
 # name: test_sensor
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg',
+      'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
       'friendly_name': 'Google for Developers Latest upload',
       'icon': 'mdi:youtube',
-      'published_at': '2023-05-11T00:20:46Z',
+      'published_at': datetime.datetime(2023, 5, 11, 0, 20, 46, tzinfo=datetime.timezone.utc),
       'video_id': 'wysukDrMdqU',
     }),
     'context': <ANY>,

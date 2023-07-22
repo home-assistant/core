@@ -689,7 +689,6 @@ goalzero==0.2.2
 goodwe==0.2.31
 
 # homeassistant.components.google_mail
-# homeassistant.components.youtube
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
@@ -2003,6 +2002,9 @@ yolink-api==0.2.9
 
 # homeassistant.components.youless
 youless-api==1.0.1
+
+# homeassistant.components.youtube
+youtubeaio==1.1.2
 
 # homeassistant.components.zamg
 zamg==0.2.4

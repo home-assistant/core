@@ -2,16 +2,81 @@
 # name: test_diagnostics
   dict({
     'UC_x5XG1OV2P6uZZ5FSM9Ttw': dict({
-      'icon': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
-      'id': 'UC_x5XG1OV2P6uZZ5FSM9Ttw',
-      'latest_video': dict({
-        'published_at': '2023-05-11T00:20:46Z',
-        'thumbnail': 'https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg',
-        'title': "What's new in Google Home in less than 1 minute",
-        'video_id': 'wysukDrMdqU',
+      'channel': dict({
+        'channel_id': 'UC_x5XG1OV2P6uZZ5FSM9Ttw',
+        'nullable_content_details': dict({
+          'related_playlists': dict({
+            'likes': '',
+            'uploads': 'UU_x5XG1OV2P6uZZ5FSM9Ttw',
+          }),
+        }),
+        'nullable_snippet': dict({
+          'default_language': None,
+          'published_at': '2007-08-23T00:34:43+00:00',
+          'thumbnails': dict({
+            'default': dict({
+              'height': 88,
+              'url': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s88-c-k-c0x00ffffff-no-rj',
+              'width': 88,
+            }),
+            'high': dict({
+              'height': 800,
+              'url': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+              'width': 800,
+            }),
+            'medium': dict({
+              'height': 240,
+              'url': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s240-c-k-c0x00ffffff-no-rj',
+              'width': 240,
+            }),
+          }),
+          'title': 'Google for Developers',
+        }),
+        'nullable_statistics': dict({
+          'subscriber_count': 2290000,
+          'subscriber_count_hidden': False,
+          'video_count': 5798,
+          'view_count': 214141263,
+        }),
       }),
-      'subscriber_count': 2290000,
-      'title': 'Google for Developers',
+      'latest_video': dict({
+        'nullable_content_details': dict({
+          'video_id': 'wysukDrMdqU',
+        }),
+        'nullable_snippet': dict({
+          'added_at': '2023-05-11T00:20:46+00:00',
+          'playlist_id': 'UU_x5XG1OV2P6uZZ5FSM9Ttw',
+          'thumbnails': dict({
+            'default': dict({
+              'height': 90,
+              'url': 'https://i.ytimg.com/vi/wysukDrMdqU/default.jpg',
+              'width': 120,
+            }),
+            'high': dict({
+              'height': 360,
+              'url': 'https://i.ytimg.com/vi/wysukDrMdqU/hqdefault.jpg',
+              'width': 480,
+            }),
+            'maxres': dict({
+              'height': 720,
+              'url': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
+              'width': 1280,
+            }),
+            'medium': dict({
+              'height': 180,
+              'url': 'https://i.ytimg.com/vi/wysukDrMdqU/mqdefault.jpg',
+              'width': 320,
+            }),
+            'standard': dict({
+              'height': 480,
+              'url': 'https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg',
+              'width': 640,
+            }),
+          }),
+          'title': "What's new in Google Home in less than 1 minute",
+        }),
+        'playlist_item_id': 'VVVfeDVYRzFPVjJQNnVaWjVGU005VHR3Lnd5c3VrRHJNZHFV',
+      }),
     }),
   })
 # ---
