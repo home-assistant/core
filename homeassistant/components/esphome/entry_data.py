@@ -135,9 +135,9 @@ class RuntimeEntryData:
     def friendly_name(self) -> str:
         """Return the friendly name of the device."""
         device_info = self.device_info
-        return (device_info and device_info.friendly_name) or self.name.replace(
+        return (device_info and device_info.friendly_name) or self.name.title().replace(
             "_", " "
-        ).title()
+        )
 
     @property
     def signal_device_updated(self) -> str:
