@@ -1,7 +1,7 @@
 """Test the No-IP.com Sensor."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.no_ip import sensor
 from homeassistant.components.no_ip.const import DOMAIN
@@ -12,13 +12,43 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utcnow
 
 
+async def test_async_added_to_hass() -> None:
+    """Test async_added_to_hass method of NoIPSensor."""
+    coordinator = MagicMock()
+    coordinator.data = {
+        CONF_DOMAIN: "example.com",
+        CONF_IP_ADDRESS: "1.2.3.4",
+    }
+    hass = HomeAssistant()
+    entity = sensor.NoIPSensor(coordinator)
+    entity.hass = hass
+
+    # Mock the async_get_last_sensor_data method to return None
+    async_get_last_sensor_data_mock = AsyncMock(return_value=None)
+    entity.async_get_last_sensor_data = async_get_last_sensor_data_mock
+
+    # Call async_added_to_hass method
+    await entity.async_added_to_hass()
+
+    # Assert that native_value is set correctly
+    assert entity.native_value == "1.2.3.4"
+    assert entity.name == "example.com"
+    assert entity.unique_id == "example.com"
+
+    # Simulate a state change and ensure that native_value is updated
+    coordinator.data[CONF_IP_ADDRESS] = "4.3.2.1"
+    async_dispatcher_send(hass, f"{DOMAIN}_{entity.unique_id}")
+    await hass.async_block_till_done()
+    assert entity.native_value == "4.3.2.1"
+
+
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test async_setup_entry function."""
     config_entry = ConfigEntry(1, DOMAIN, "test", {}, "test", {}, utcnow(), None, None)
     coordinator = MagicMock()
     coordinator.data = {
         CONF_DOMAIN: "example.com",
-        CONF_IP_ADDRESS: "192.168.0.1",
+        CONF_IP_ADDRESS: "1.2.3.4",
     }
     hass.data[DOMAIN] = {config_entry.entry_id: coordinator}
     async_add_entities = MagicMock()
@@ -32,7 +62,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     assert isinstance(entities[0], sensor.NoIPSensor)
     assert entities[0].name == "example.com"
     assert entities[0].unique_id == "example.com"
-    assert entities[0].native_value == "192.168.0.1"
+    assert entities[0].native_value == "1.2.3.4"
 
 
 async def test_noip_sensor_native_value() -> None:
@@ -40,33 +70,13 @@ async def test_noip_sensor_native_value() -> None:
     coordinator = MagicMock()
     coordinator.data = {
         CONF_DOMAIN: "example.com",
-        CONF_IP_ADDRESS: "192.168.0.1",
+        CONF_IP_ADDRESS: "1.2.3.4",
     }
     entity = sensor.NoIPSensor(coordinator)
-    assert entity.native_value == "192.168.0.1"
+    assert entity.native_value == "1.2.3.4"
 
     coordinator.data = {
         CONF_DOMAIN: "example.com",
     }
     entity = sensor.NoIPSensor(coordinator)
     assert entity.native_value is None
-
-
-async def test_async_added_to_hass() -> None:
-    """Test async_added_to_hass method of NoIPSensor."""
-    coordinator = MagicMock()
-    coordinator.data = {
-        CONF_DOMAIN: "example.com",
-        CONF_IP_ADDRESS: "192.168.0.1",
-    }
-    hass = HomeAssistant()
-    entity = sensor.NoIPSensor(coordinator)
-    entity.hass = hass
-    await entity.async_added_to_hass()
-    assert entity.native_value == "192.168.0.1"
-
-    # Simulate a state change and ensure that native_value is updated
-    coordinator.data[CONF_IP_ADDRESS] = "10.0.0.1"
-    async_dispatcher_send(hass, f"{DOMAIN}_{entity.unique_id}")
-    await hass.async_block_till_done()
-    assert entity.native_value == "10.0.0.1"
