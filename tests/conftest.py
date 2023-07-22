@@ -111,7 +111,7 @@ asyncio.set_event_loop_policy = lambda policy: None
 
 def _utcnow() -> datetime.datetime:
     """Make utcnow patchable by freezegun."""
-    return datetime.datetime.now(datetime.timezone.utc)
+    return datetime.datetime.now(datetime.UTC)
 
 
 dt_util.utcnow = _utcnow  # type: ignore[assignment]
