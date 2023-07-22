@@ -82,6 +82,7 @@ omit =
     homeassistant/components/arwn/sensor.py
     homeassistant/components/aseko_pool_live/__init__.py
     homeassistant/components/aseko_pool_live/binary_sensor.py
+    homeassistant/components/aseko_pool_live/coordinator.py
     homeassistant/components/aseko_pool_live/entity.py
     homeassistant/components/aseko_pool_live/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
