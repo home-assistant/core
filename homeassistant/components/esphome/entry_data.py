@@ -86,6 +86,7 @@ class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
     entry_id: str
+    title: str
     client: APIClient
     store: ESPHomeStorage
     state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
@@ -127,14 +128,16 @@ class RuntimeEntryData:
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return self.device_info.name if self.device_info else self.entry_id
+        device_info = self.device_info
+        return (device_info and device_info.name) or self.title
 
     @property
     def friendly_name(self) -> str:
         """Return the friendly name of the device."""
-        if self.device_info and self.device_info.friendly_name:
-            return self.device_info.friendly_name
-        return self.name
+        device_info = self.device_info
+        return (device_info and device_info.friendly_name) or self.name.replace(
+            "_", " "
+        ).title()
 
     @property
     def signal_device_updated(self) -> str:
@@ -303,6 +306,7 @@ class RuntimeEntryData:
         current_state_by_type = self.state[state_type]
         current_state = current_state_by_type.get(key, _SENTINEL)
         subscription_key = (state_type, key)
+        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
         if (
             current_state == state
             and subscription_key not in stale_state
@@ -314,19 +318,21 @@ class RuntimeEntryData:
                 and (cast(SensorInfo, entity_info)).force_update
             )
         ):
+            if debug_enabled:
+                _LOGGER.debug(
+                    "%s: ignoring duplicate update with key %s: %s",
+                    self.name,
+                    key,
+                    state,
+                )
+            return
+        if debug_enabled:
             _LOGGER.debug(
-                "%s: ignoring duplicate update with key %s: %s",
+                "%s: dispatching update with key %s: %s",
                 self.name,
                 key,
                 state,
             )
-            return
-        _LOGGER.debug(
-            "%s: dispatching update with key %s: %s",
-            self.name,
-            key,
-            state,
-        )
         stale_state.discard(subscription_key)
         current_state_by_type[key] = state
         if subscription := self.state_subscriptions.get(subscription_key):
@@ -367,8 +373,8 @@ class RuntimeEntryData:
 
     async def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
-        if self.device_info is None:
-            raise ValueError("device_info is not set yet")
+        if TYPE_CHECKING:
+            assert self.device_info is not None
         store_data: StoreData = {
             "device_info": self.device_info.to_dict(),
             "services": [],
@@ -377,9 +383,10 @@ class RuntimeEntryData:
         for info_type, infos in self.info.items():
             comp_type = INFO_TO_COMPONENT_TYPE[info_type]
             store_data[comp_type] = [info.to_dict() for info in infos.values()]  # type: ignore[literal-required]
-        for service in self.services.values():
-            store_data["services"].append(service.to_dict())
 
+        store_data["services"] = [
+            service.to_dict() for service in self.services.values()
+        ]
         if store_data == self._storage_contents:
             return
 

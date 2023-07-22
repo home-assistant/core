@@ -140,6 +140,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     _static_info: _InfoT
     _state: _StateT
     _has_state: bool
@@ -164,7 +165,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         if object_id := entity_info.object_id:
             # Use the object_id to suggest the entity_id
             self.entity_id = f"{domain}.{device_info.name}_{object_id}"
-        self._attr_has_entity_name = bool(device_info.friendly_name)
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
