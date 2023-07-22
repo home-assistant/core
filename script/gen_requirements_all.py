@@ -11,13 +11,10 @@ import re
 import sys
 from typing import Any
 
+import tomllib
+
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
     "Adafruit-BBIO",
