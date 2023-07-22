@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast
 
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -37,8 +36,8 @@ class NoIPBaseEntity(CoordinatorEntity[NoIPDataUpdateCoordinator], RestoreSensor
     async def async_added_to_hass(self) -> None:
         """Run when the entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        if state := await self.async_get_last_sensor_data():
-            self._attr_native_value = cast(str, state.native_value)
+        if self.coordinator.data:
+            self._attr_native_value = self.coordinator.data.get(CONF_IP_ADDRESS, None)
         self._unsub_dispatchers.append(
             async_dispatcher_connect(
                 self.hass, TRACKER_UPDATE_STR, self.async_write_ha_state
