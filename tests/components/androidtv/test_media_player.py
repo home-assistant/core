@@ -1,4 +1,5 @@
 """The tests for the androidtv platform."""
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
@@ -70,10 +71,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import slugify
+from homeassistant.util.dt import utcnow
 
 from . import patchers
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 HOST = "127.0.0.1"
@@ -892,8 +894,11 @@ async def test_get_image_http(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patchers.patch_shell("11")[patch_key], patchers.PATCH_SCREENCAP:
+    with patchers.patch_shell("11")[
+        patch_key
+    ], patchers.PATCH_SCREENCAP as patch_screen_cap:
         await async_update_entity(hass, entity_id)
+        patch_screen_cap.assert_called()
 
     media_player_name = "media_player." + slugify(
         CONFIG_ANDROID_DEFAULT[TEST_ENTITY_NAME]
@@ -906,6 +911,26 @@ async def test_get_image_http(
     resp = await client.get(state.attributes["entity_picture"])
     content = await resp.read()
     assert content == b"image"
+
+    next_update = utcnow() + timedelta(seconds=30)
+    with patchers.patch_shell("11")[
+        patch_key
+    ], patchers.PATCH_SCREENCAP as patch_screen_cap, patch(
+        "homeassistant.util.utcnow", return_value=next_update
+    ):
+        async_fire_time_changed(hass, next_update, True)
+        await hass.async_block_till_done()
+        patch_screen_cap.assert_not_called()
+
+    next_update = utcnow() + timedelta(seconds=60)
+    with patchers.patch_shell("11")[
+        patch_key
+    ], patchers.PATCH_SCREENCAP as patch_screen_cap, patch(
+        "homeassistant.util.utcnow", return_value=next_update
+    ):
+        async_fire_time_changed(hass, next_update, True)
+        await hass.async_block_till_done()
+        patch_screen_cap.assert_called()
 
 
 async def test_get_image_http_fail(hass: HomeAssistant) -> None:
