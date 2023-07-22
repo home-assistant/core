@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import _create_mocked_pegelonline
+from . import PegelOnlineMock
 
 from tests.common import MockConfigEntry
 
@@ -33,22 +33,30 @@ MOCK_CONFIG_ENTRY_DATA = {CONF_STATION: "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8"}
 
 MOCK_NEARBY_STATIONS = {
     "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8": Station(
-        "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8",
-        "DRESDEN",
-        "STANDORT DRESDEN",
-        55.63,
-        13.475467710324812,
-        51.16440557554545,
-        "ELBE",
+        {
+            "uuid": "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8",
+            "number": "501060",
+            "shortname": "DRESDEN",
+            "longname": "DRESDEN",
+            "km": 55.63,
+            "agency": "STANDORT DRESDEN",
+            "longitude": 13.738831783620384,
+            "latitude": 51.054459765598125,
+            "water": {"shortname": "ELBE", "longname": "ELBE"},
+        }
     ),
     "85d686f1-xxxx-xxxx-xxxx-3207b50901a7": Station(
-        "85d686f1-xxxx-xxxx-xxxx-3207b50901a7",
-        "MEISSEN",
-        "STANDORT DRESDEN",
-        82.2,
-        13.738831783620384,
-        51.054459765598125,
-        "ELBE",
+        {
+            "uuid": "85d686f1-xxxx-xxxx-xxxx-3207b50901a7",
+            "number": "501060",
+            "shortname": "MEISSEN",
+            "longname": "MEISSEN",
+            "km": 82.2,
+            "agency": "STANDORT DRESDEN",
+            "longitude": 13.475467710324812,
+            "latitude": 51.16440557554545,
+            "water": {"shortname": "ELBE", "longname": "ELBE"},
+        }
     ),
 }
 
@@ -65,8 +73,8 @@ async def test_user(hass: HomeAssistant) -> None:
         "homeassistant.components.pegel_online.async_setup_entry", return_value=True
     ) as mock_setup_entry, patch(
         "homeassistant.components.pegel_online.config_flow.PegelOnline",
-        return_value=_create_mocked_pegelonline(nearby_stations=MOCK_NEARBY_STATIONS),
-    ):
+    ) as pegelonline:
+        pegelonline.return_value = PegelOnlineMock(nearby_stations=MOCK_NEARBY_STATIONS)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA_STEP1
         )
@@ -102,8 +110,8 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.pegel_online.config_flow.PegelOnline",
-        return_value=_create_mocked_pegelonline(nearby_stations=MOCK_NEARBY_STATIONS),
-    ):
+    ) as pegelonline:
+        pegelonline.return_value = PegelOnlineMock(nearby_stations=MOCK_NEARBY_STATIONS)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA_STEP1
         )
@@ -127,8 +135,8 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.pegel_online.config_flow.PegelOnline",
-        return_value=_create_mocked_pegelonline(side_effect=ClientError),
-    ):
+    ) as pegelonline:
+        pegelonline.return_value = PegelOnlineMock(side_effect=ClientError)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA_STEP1
         )
@@ -147,8 +155,8 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.pegel_online.config_flow.PegelOnline",
-        return_value=_create_mocked_pegelonline(nearby_stations={}),
-    ):
+    ) as pegelonline:
+        pegelonline.return_value = PegelOnlineMock(nearby_stations={})
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA_STEP1
         )

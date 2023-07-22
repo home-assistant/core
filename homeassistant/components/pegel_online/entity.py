@@ -34,4 +34,5 @@ class PegelOnlineEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self.station.uuid)},
             name=f"{self.station.name} {self.station.water_name}",
             manufacturer=self.station.agency,
+            configuration_url=self.station.base_data_url,
         )
