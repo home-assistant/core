@@ -8,6 +8,7 @@ from homeassistant.components.no_ip.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utcnow
 
 
@@ -49,3 +50,23 @@ async def test_noip_sensor_native_value() -> None:
     }
     entity = sensor.NoIPSensor(coordinator)
     assert entity.native_value is None
+
+
+async def test_async_added_to_hass() -> None:
+    """Test async_added_to_hass method of NoIPSensor."""
+    coordinator = MagicMock()
+    coordinator.data = {
+        CONF_DOMAIN: "example.com",
+        CONF_IP_ADDRESS: "192.168.0.1",
+    }
+    hass = HomeAssistant()
+    entity = sensor.NoIPSensor(coordinator)
+    entity.hass = hass
+    await entity.async_added_to_hass()
+    assert entity.native_value == "192.168.0.1"
+
+    # Simulate a state change and ensure that native_value is updated
+    coordinator.data[CONF_IP_ADDRESS] = "10.0.0.1"
+    async_dispatcher_send(hass, f"{DOMAIN}_{entity.unique_id}")
+    await hass.async_block_till_done()
+    assert entity.native_value == "10.0.0.1"
