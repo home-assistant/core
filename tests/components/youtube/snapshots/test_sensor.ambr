@@ -5,6 +5,7 @@
       'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg',
       'friendly_name': 'Google for Developers Latest upload',
       'icon': 'mdi:youtube',
+      'published_at': '2023-05-11T00:20:46Z',
       'video_id': 'wysukDrMdqU',
     }),
     'context': <ANY>,

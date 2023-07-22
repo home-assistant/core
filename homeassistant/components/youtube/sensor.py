@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import StateType
 from . import YouTubeDataUpdateCoordinator
 from .const import (
     ATTR_LATEST_VIDEO,
+    ATTR_PUBLISHED_AT,
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
     ATTR_TITLE,
@@ -47,7 +48,8 @@ SENSOR_TYPES = [
         value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE],
         entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_THUMBNAIL],
         attributes_fn=lambda channel: {
-            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID]
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO][ATTR_PUBLISHED_AT],
         },
     ),
     YouTubeSensorEntityDescription(
