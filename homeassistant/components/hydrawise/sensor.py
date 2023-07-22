@@ -1,6 +1,7 @@
 """Support for Hydrawise sprinkler sensors."""
 from __future__ import annotations
 
+from pydrawise.legacy import LegacyHydrawise
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -10,13 +11,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
-from .const import DATA_HYDRAWISE, LOGGER
+from .const import DOMAIN, LOGGER
+from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -54,11 +56,12 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    hydrawise = hass.data[DATA_HYDRAWISE].data
+    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
+    hydrawise: LegacyHydrawise = coordinator.api
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     entities = [
-        HydrawiseSensor(zone, description)
+        HydrawiseSensor(data=zone, coordinator=coordinator, description=description)
         for zone in hydrawise.relays
         for description in SENSOR_TYPES
         if description.key in monitored_conditions
@@ -70,11 +73,11 @@ def setup_platform(
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    def update(self) -> None:
+    @callback
+    def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the states."""
-        mydata = self.hass.data[DATA_HYDRAWISE].data
         LOGGER.debug("Updating Hydrawise sensor: %s", self.name)
-        relay_data = mydata.relays[self.data["relay"] - 1]
+        relay_data = self.coordinator.api.relays[self.data["relay"] - 1]
         if self.entity_description.key == "watering_time":
             if relay_data["timestr"] == "Now":
                 self._attr_native_value = int(relay_data["run"] / 60)
@@ -83,6 +86,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         else:  # _sensor_type == 'next_cycle'
             next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
             LOGGER.debug("New cycle time: %s", next_cycle)
-            self._attr_native_value = dt.utc_from_timestamp(
-                dt.as_timestamp(dt.now()) + next_cycle
+            self._attr_native_value = dt_util.utc_from_timestamp(
+                dt_util.as_timestamp(dt_util.now()) + next_cycle
             )
+        super()._handle_coordinator_update()

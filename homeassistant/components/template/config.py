@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -16,6 +17,7 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    image as image_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
@@ -48,6 +50,9 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         ),
         vol.Optional(BUTTON_DOMAIN): vol.All(
             cv.ensure_list, [button_platform.BUTTON_SCHEMA]
+        ),
+        vol.Optional(IMAGE_DOMAIN): vol.All(
+            cv.ensure_list, [image_platform.IMAGE_SCHEMA]
         ),
     }
 )

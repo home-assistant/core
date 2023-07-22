@@ -1,6 +1,7 @@
 """Support for Hydrawise cloud."""
 
-from hydrawiser.core import Hydrawiser
+
+from pydrawise.legacy import LegacyHydrawise
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -8,19 +9,10 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    DATA_HYDRAWISE,
-    DOMAIN,
-    LOGGER,
-    NOTIFICATION_ID,
-    NOTIFICATION_TITLE,
-    SCAN_INTERVAL,
-    SIGNAL_UPDATE_HYDRAWISE,
-)
+from .const import DOMAIN, LOGGER, NOTIFICATION_ID, NOTIFICATION_TITLE, SCAN_INTERVAL
+from .coordinator import HydrawiseDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -35,40 +27,36 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hunter Hydrawise component."""
     conf = config[DOMAIN]
     access_token = conf[CONF_ACCESS_TOKEN]
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
-        hydrawise = Hydrawiser(user_token=access_token)
-        hass.data[DATA_HYDRAWISE] = HydrawiseHub(hydrawise)
+        hydrawise = await hass.async_add_executor_job(LegacyHydrawise, access_token)
     except (ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
-        persistent_notification.create(
-            hass,
-            f"Error: {ex}<br />You will need to restart hass after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
+        _show_failure_notification(hass, str(ex))
         return False
 
-    def hub_refresh(event_time):
-        """Call Hydrawise hub to refresh information."""
-        LOGGER.debug("Updating Hydrawise Hub component")
-        hass.data[DATA_HYDRAWISE].data.update_controller_info()
-        dispatcher_send(hass, SIGNAL_UPDATE_HYDRAWISE)
+    if not hydrawise.current_controller:
+        LOGGER.error("Failed to fetch Hydrawise data")
+        _show_failure_notification(hass, "Failed to fetch Hydrawise data.")
+        return False
 
-    # Call the Hydrawise API to refresh updates
-    track_time_interval(hass, hub_refresh, scan_interval)
+    hass.data[DOMAIN] = HydrawiseDataUpdateCoordinator(hass, hydrawise, scan_interval)
+
+    # NOTE: We don't need to call async_config_entry_first_refresh() because
+    # data is fetched when the Hydrawiser object is instantiated.
 
     return True
 
 
-class HydrawiseHub:
-    """Representation of a base Hydrawise device."""
-
-    def __init__(self, data):
-        """Initialize the entity."""
-        self.data = data
+def _show_failure_notification(hass: HomeAssistant, error: str) -> None:
+    persistent_notification.create(
+        hass,
+        f"Error: {error}<br />You will need to restart hass after fixing.",
+        title=NOTIFICATION_TITLE,
+        notification_id=NOTIFICATION_ID,
+    )

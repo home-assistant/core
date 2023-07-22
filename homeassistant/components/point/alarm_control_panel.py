@@ -67,7 +67,7 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(POINT_DOMAIN, home_id)},
             manufacturer="Minut",
-            name=self._home["name"],
+            name=self._attr_name,
         )
 
     async def async_added_to_hass(self) -> None:

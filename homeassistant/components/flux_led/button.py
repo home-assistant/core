@@ -10,7 +10,7 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.const import CONF_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,10 +22,13 @@ _RESTART_KEY = "restart"
 _UNPAIR_REMOTES_KEY = "unpair_remotes"
 
 RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
-    key=_RESTART_KEY, name="Restart", device_class=ButtonDeviceClass.RESTART
+    key=_RESTART_KEY,
+    device_class=ButtonDeviceClass.RESTART,
 )
 UNPAIR_REMOTES_DESCRIPTION = ButtonEntityDescription(
-    key=_UNPAIR_REMOTES_KEY, name="Unpair Remotes", icon="mdi:remote-off"
+    key=_UNPAIR_REMOTES_KEY,
+    translation_key="unpair_remotes",
+    icon="mdi:remote-off",
 )
 
 
@@ -62,7 +65,6 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
         """Initialize the button."""
         self.entity_description = description
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data.get(CONF_NAME, entry.title)} {description.name}"
         base_unique_id = entry.unique_id or entry.entry_id
         self._attr_unique_id = f"{base_unique_id}_{description.key}"
 

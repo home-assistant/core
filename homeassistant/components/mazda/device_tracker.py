@@ -28,7 +28,7 @@ async def async_setup_entry(
 class MazdaDeviceTracker(MazdaEntity, TrackerEntity):
     """Class for the device tracker."""
 
-    _attr_name = "Device tracker"
+    _attr_translation_key = "device_tracker"
     _attr_icon = "mdi:car"
     _attr_force_update = False
 

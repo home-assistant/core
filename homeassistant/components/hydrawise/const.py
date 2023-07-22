@@ -11,7 +11,6 @@ CONF_WATERING_TIME = "watering_minutes"
 NOTIFICATION_ID = "hydrawise_notification"
 NOTIFICATION_TITLE = "Hydrawise Setup"
 
-DATA_HYDRAWISE = "hydrawise"
 DOMAIN = "hydrawise"
 DEFAULT_WATERING_TIME = 15
 

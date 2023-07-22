@@ -215,6 +215,7 @@ class Recorder(threading.Thread):
 
         self.schema_version = 0
         self._commits_without_expire = 0
+        self._event_session_has_pending_writes = False
 
         self.recorder_runs_manager = RecorderRunsManager()
         self.states_manager = StatesManager()
@@ -298,9 +299,39 @@ class Recorder(threading.Thread):
     @callback
     def async_initialize(self) -> None:
         """Initialize the recorder."""
+        entity_filter = self.entity_filter
+        exclude_event_types = self.exclude_event_types
+        queue_put = self._queue.put_nowait
+        event_task = EventTask
+
+        @callback
+        def _event_listener(event: Event) -> None:
+            """Listen for new events and put them in the process queue."""
+            if event.event_type in exclude_event_types:
+                return
+
+            if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
+                queue_put(event_task(event))
+                return
+
+            if isinstance(entity_id, str):
+                if entity_filter(entity_id):
+                    queue_put(event_task(event))
+                return
+
+            if isinstance(entity_id, list):
+                for eid in entity_id:
+                    if entity_filter(eid):
+                        queue_put(event_task(event))
+                        return
+                return
+
+            # Unknown what it is.
+            queue_put(event_task(event))
+
         self._event_listener = self.hass.bus.async_listen(
             MATCH_ALL,
-            self.event_listener,
+            _event_listener,
             run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
@@ -322,7 +353,7 @@ class Recorder(threading.Thread):
         if (
             self._event_listener
             and not self._database_lock_task
-            and self._event_session_has_pending_writes()
+            and self._event_session_has_pending_writes
         ):
             self.queue_task(COMMIT_TASK)
 
@@ -410,27 +441,6 @@ class Recorder(threading.Thread):
         if self._periodic_listener:
             self._periodic_listener()
             self._periodic_listener = None
-
-    @callback
-    def _async_event_filter(self, event: Event) -> bool:
-        """Filter events."""
-        if event.event_type in self.exclude_event_types:
-            return False
-
-        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
-            return True
-
-        if isinstance(entity_id, str):
-            return self.entity_filter(entity_id)
-
-        if isinstance(entity_id, list):
-            for eid in entity_id:
-                if self.entity_filter(eid):
-                    return True
-            return False
-
-        # Unknown what it is.
-        return True
 
     async def _async_close(self, event: Event) -> None:
         """Empty the queue if its still present at close."""
@@ -543,10 +553,10 @@ class Recorder(threading.Thread):
         If the number of entities has increased, increase the size of the LRU
         cache to avoid thrashing.
         """
-        new_size = self.hass.states.async_entity_ids_count() * 2
-        self.state_attributes_manager.adjust_lru_size(new_size)
-        self.states_meta_manager.adjust_lru_size(new_size)
-        self.statistics_meta_manager.adjust_lru_size(new_size)
+        if new_size := self.hass.states.async_entity_ids_count() * 2:
+            self.state_attributes_manager.adjust_lru_size(new_size)
+            self.states_meta_manager.adjust_lru_size(new_size)
+            self.statistics_meta_manager.adjust_lru_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
@@ -687,6 +697,11 @@ class Recorder(threading.Thread):
             # Ensure shutdown happens cleanly if
             # anything goes wrong in the run loop
             self._shutdown()
+
+    def _add_to_session(self, session: Session, obj: object) -> None:
+        """Add an object to the session."""
+        self._event_session_has_pending_writes = True
+        session.add(obj)
 
     def _run(self) -> None:
         """Start processing events to save."""
@@ -1016,11 +1031,11 @@ class Recorder(threading.Thread):
         else:
             event_types = EventTypes(event_type=event.event_type)
             event_type_manager.add_pending(event_types)
-            session.add(event_types)
+            self._add_to_session(session, event_types)
             dbevent.event_type_rel = event_types
 
         if not event.data:
-            session.add(dbevent)
+            self._add_to_session(session, dbevent)
             return
 
         event_data_manager = self.event_data_manager
@@ -1042,10 +1057,10 @@ class Recorder(threading.Thread):
             # No matching attributes found, save them in the DB
             dbevent_data = EventData(shared_data=shared_data, hash=hash_)
             event_data_manager.add_pending(dbevent_data)
-            session.add(dbevent_data)
+            self._add_to_session(session, dbevent_data)
             dbevent.event_data_rel = dbevent_data
 
-        session.add(dbevent)
+        self._add_to_session(session, dbevent)
 
     def _process_state_changed_event_into_session(self, event: Event) -> None:
         """Process a state_changed event into the session."""
@@ -1090,7 +1105,7 @@ class Recorder(threading.Thread):
         else:
             states_meta = StatesMeta(entity_id=entity_id)
             states_meta_manager.add_pending(states_meta)
-            session.add(states_meta)
+            self._add_to_session(session, states_meta)
             dbstate.states_meta_rel = states_meta
 
         # Map the event data to the StateAttributes table
@@ -1115,10 +1130,10 @@ class Recorder(threading.Thread):
             # No matching attributes found, save them in the DB
             dbstate_attributes = StateAttributes(shared_attrs=shared_attrs, hash=hash_)
             state_attributes_manager.add_pending(dbstate_attributes)
-            session.add(dbstate_attributes)
+            self._add_to_session(session, dbstate_attributes)
             dbstate.state_attributes = dbstate_attributes
 
-        session.add(dbstate)
+        self._add_to_session(session, dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
@@ -1130,14 +1145,9 @@ class Recorder(threading.Thread):
             return True
         return False
 
-    def _event_session_has_pending_writes(self) -> bool:
-        """Return True if there are pending writes in the event session."""
-        session = self.event_session
-        return bool(session and (session.new or session.dirty))
-
     def _commit_event_session_or_retry(self) -> None:
         """Commit the event session if there is work to do."""
-        if not self._event_session_has_pending_writes():
+        if not self._event_session_has_pending_writes:
             return
         tries = 1
         while tries <= self.db_max_retries:
@@ -1163,6 +1173,7 @@ class Recorder(threading.Thread):
         self._commits_without_expire += 1
 
         session.commit()
+        self._event_session_has_pending_writes = False
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
         # many selects for matching attributes by loading them
@@ -1255,15 +1266,9 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Sending keepalive")
         self.event_session.connection().scalar(select(1))
 
-    @callback
-    def event_listener(self, event: Event) -> None:
-        """Listen for new events and put them in the process queue."""
-        if self._async_event_filter(event):
-            self.queue_task(EventTask(event))
-
     async def async_block_till_done(self) -> None:
         """Async version of block_till_done."""
-        if self._queue.empty() and not self._event_session_has_pending_writes():
+        if self._queue.empty() and not self._event_session_has_pending_writes:
             return
         event = asyncio.Event()
         self.queue_task(SynchronizeTask(event))
@@ -1417,6 +1422,8 @@ class Recorder(threading.Thread):
         if self.event_session is None:
             return
         if self.recorder_runs_manager.active:
+            # .end will add to the event session
+            self._event_session_has_pending_writes = True
             self.recorder_runs_manager.end(self.event_session)
         try:
             self._commit_event_session_or_retry()

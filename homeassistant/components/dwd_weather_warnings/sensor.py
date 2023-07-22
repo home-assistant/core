@@ -22,12 +22,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ADVANCE_WARNING_SENSOR,
@@ -47,10 +47,10 @@ from .const import (
     ATTR_WARNING_COUNT,
     CONF_REGION_NAME,
     CURRENT_WARNING_SENSOR,
-    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_NAME,
     DOMAIN,
-    LOGGER,
 )
+from .coordinator import DwdWeatherWarningsCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -89,12 +89,17 @@ async def async_setup_platform(
     # Show issue as long as the YAML configuration exists.
     async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.8.0",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.12.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Deutscher Wetterdienst (DWD) Weather Warnings",
+        },
     )
 
     hass.async_create_task(
@@ -108,56 +113,60 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up entities from config entry."""
-    api = WrappedDwDWWAPI(hass.data[DOMAIN][entry.entry_id])
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            DwdWeatherWarningsSensor(api, entry.title, entry.unique_id, description)
+            DwdWeatherWarningsSensor(coordinator, entry, description)
             for description in SENSOR_TYPES
         ],
         True,
     )
 
 
-class DwdWeatherWarningsSensor(SensorEntity):
+class DwdWeatherWarningsSensor(
+    CoordinatorEntity[DwdWeatherWarningsCoordinator], SensorEntity
+):
     """Representation of a DWD-Weather-Warnings sensor."""
 
     _attr_attribution = "Data provided by DWD"
 
     def __init__(
         self,
-        api,
-        name,
-        unique_id,
+        coordinator: DwdWeatherWarningsCoordinator,
+        entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
-        self._api = api
+        super().__init__(coordinator)
+
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{unique_id}-{description.key}"
+        self._attr_name = f"{DEFAULT_NAME} {entry.title} {description.name}"
+        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
+
+        self.api = coordinator.api
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
-            return self._api.api.current_warning_level
+            return self.api.current_warning_level
 
-        return self._api.api.expected_warning_level
+        return self.api.expected_warning_level
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         data = {
-            ATTR_REGION_NAME: self._api.api.warncell_name,
-            ATTR_REGION_ID: self._api.api.warncell_id,
-            ATTR_LAST_UPDATE: self._api.api.last_update,
+            ATTR_REGION_NAME: self.api.warncell_name,
+            ATTR_REGION_ID: self.api.warncell_id,
+            ATTR_LAST_UPDATE: self.api.last_update,
         }
 
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
-            searched_warnings = self._api.api.current_warnings
+            searched_warnings = self.api.current_warnings
         else:
-            searched_warnings = self._api.api.expected_warnings
+            searched_warnings = self.api.expected_warnings
 
         data[ATTR_WARNING_COUNT] = len(searched_warnings)
 
@@ -173,7 +182,7 @@ class DwdWeatherWarningsSensor(SensorEntity):
             data[f"warning_{i}_parameters"] = warning[API_ATTR_WARNING_PARAMETERS]
             data[f"warning_{i}_color"] = warning[API_ATTR_WARNING_COLOR]
 
-            # Dictionary for the attribute containing the complete warning
+            # Dictionary for the attribute containing the complete warning.
             warning_copy = warning.copy()
             warning_copy[API_ATTR_WARNING_START] = data[f"warning_{i}_start"]
             warning_copy[API_ATTR_WARNING_END] = data[f"warning_{i}_end"]
@@ -184,28 +193,4 @@ class DwdWeatherWarningsSensor(SensorEntity):
     @property
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
-        return self._api.api.data_valid
-
-    def update(self) -> None:
-        """Get the latest data from the DWD-Weather-Warnings API."""
-        LOGGER.debug(
-            "Update requested for %s (%s) by %s",
-            self._api.api.warncell_name,
-            self._api.api.warncell_id,
-            self.entity_description.key,
-        )
-        self._api.update()
-
-
-class WrappedDwDWWAPI:
-    """Wrapper for the DWD-Weather-Warnings api."""
-
-    def __init__(self, api):
-        """Initialize a DWD-Weather-Warnings wrapper."""
-        self.api = api
-
-    @Throttle(DEFAULT_SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from the DWD-Weather-Warnings API."""
-        self.api.update()
-        LOGGER.debug("Update performed")
+        return self.api.data_valid

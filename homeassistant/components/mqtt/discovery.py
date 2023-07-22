@@ -54,6 +54,7 @@ SUPPORTED_COMPONENTS = [
     "device_tracker",
     "fan",
     "humidifier",
+    "image",
     "light",
     "lock",
     "number",
@@ -66,6 +67,7 @@ SUPPORTED_COMPONENTS = [
     "text",
     "update",
     "vacuum",
+    "water_heater",
 ]
 
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
@@ -113,7 +115,7 @@ async def async_start(  # noqa: C901
                         "Received message on illegal discovery topic '%s'. The topic"
                         " contains "
                         "not allowed characters. For more information see "
-                        "https://www.home-assistant.io/docs/mqtt/discovery/#discovery-topic"
+                        "https://www.home-assistant.io/integrations/mqtt/#discovery-topic"
                     ),
                     topic,
                 )

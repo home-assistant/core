@@ -12,6 +12,7 @@ from .const import (
     DATA_LAN_GET_HOSTS_LIST,
     DATA_LCD_GET_CONFIGURATION,
     DATA_STORAGE_GET_DISKS,
+    DATA_STORAGE_GET_RAIDS,
     DATA_SYSTEM_GET_CONFIG,
     WIFI_GET_GLOBAL_CONFIG,
 )
@@ -57,6 +58,7 @@ def mock_router(mock_device_registry_devices):
         # sensor
         instance.call.get_calls_log = AsyncMock(return_value=DATA_CALL_GET_CALLS_LOG)
         instance.storage.get_disks = AsyncMock(return_value=DATA_STORAGE_GET_DISKS)
+        instance.storage.get_raids = AsyncMock(return_value=DATA_STORAGE_GET_RAIDS)
         # home devices
         instance.home.get_home_nodes = AsyncMock(return_value=DATA_HOME_GET_NODES)
         instance.connection.get_status = AsyncMock(

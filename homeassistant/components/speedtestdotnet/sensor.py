@@ -44,20 +44,20 @@ class SpeedtestSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[SpeedtestSensorEntityDescription, ...] = (
     SpeedtestSensorEntityDescription(
         key="ping",
-        name="Ping",
+        translation_key="ping",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SpeedtestSensorEntityDescription(
         key="download",
-        name="Download",
+        translation_key="download",
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value / 10**6, 2),
     ),
     SpeedtestSensorEntityDescription(
         key="upload",
-        name="Upload",
+        translation_key="upload",
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value / 10**6, 2),
@@ -78,6 +78,7 @@ async def async_setup_entry(
     )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SpeedtestSensor(
     CoordinatorEntity[SpeedTestDataCoordinator], RestoreEntity, SensorEntity
 ):

@@ -22,6 +22,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.BINARY_SENSOR,
     Platform.SWITCH,
 ]
 

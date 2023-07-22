@@ -24,6 +24,7 @@ from . import (
     device_tracker as device_tracker_platform,
     fan as fan_platform,
     humidifier as humidifier_platform,
+    image as image_platform,
     light as light_platform,
     lock as lock_platform,
     number as number_platform,
@@ -35,6 +36,7 @@ from . import (
     text as text_platform,
     update as update_platform,
     vacuum as vacuum_platform,
+    water_heater as water_heater_platform,
 )
 from .const import (
     CONF_BIRTH_MESSAGE,
@@ -50,7 +52,7 @@ from .const import (
 
 DEFAULT_TLS_PROTOCOL = "auto"
 
-PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
+CONFIG_SCHEMA_BASE = vol.Schema(
     {
         Platform.ALARM_CONTROL_PANEL.value: vol.All(
             cv.ensure_list,
@@ -87,6 +89,10 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.HUMIDIFIER.value: vol.All(
             cv.ensure_list,
             [humidifier_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
+        ),
+        Platform.IMAGE.value: vol.All(
+            cv.ensure_list,
+            [image_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.LOCK.value: vol.All(
             cv.ensure_list,
@@ -131,6 +137,10 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.VACUUM.value: vol.All(
             cv.ensure_list,
             [vacuum_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
+        ),
+        Platform.WATER_HEATER.value: vol.All(
+            cv.ensure_list,
+            [water_heater_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
     }
 )

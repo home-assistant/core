@@ -31,7 +31,9 @@ async def test_pipeline(
     # Used to test that audio queue is cleared before pipeline starts
     bad_chunk = bytes([1, 2, 3, 4])
 
-    async def async_pipeline_from_audio_stream(*args, **kwargs):
+    async def async_pipeline_from_audio_stream(*args, device_id, **kwargs):
+        assert device_id == voip_device.device_id
+
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
         async for _chunk in stt_stream:
@@ -93,6 +95,7 @@ async def test_pipeline(
             listening_tone_enabled=False,
             processing_tone_enabled=False,
             error_tone_enabled=False,
+            silence_seconds=assist_pipeline.vad.VadSensitivity.to_seconds("aggressive"),
         )
         rtp_protocol.transport = Mock()
 
@@ -111,7 +114,7 @@ async def test_pipeline(
         # "speech"
         rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence
+        # silence (assumes aggressive VAD sensitivity)
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
@@ -286,6 +289,7 @@ async def test_tts_timeout(
             listening_tone_enabled=True,
             processing_tone_enabled=True,
             error_tone_enabled=True,
+            silence_seconds=assist_pipeline.vad.VadSensitivity.to_seconds("relaxed"),
         )
         rtp_protocol._tone_bytes = tone_bytes
         rtp_protocol._processing_bytes = tone_bytes
@@ -311,8 +315,8 @@ async def test_tts_timeout(
         # "speech"
         rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        # silence (assumes relaxed VAD sensitivity)
+        rtp_protocol.on_chunk(bytes(_ONE_SECOND * 4))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with async_timeout.timeout(1):

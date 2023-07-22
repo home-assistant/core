@@ -6,4 +6,4 @@ CONF_ENTRY_CODE = "code"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
-PLATFORMS = [Platform.VACUUM, Platform.SELECT]
+PLATFORMS = [Platform.VACUUM, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]

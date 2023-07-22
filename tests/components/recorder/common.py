@@ -13,6 +13,7 @@ import time
 from typing import Any, Literal, cast
 from unittest.mock import patch, sentinel
 
+from freezegun import freeze_time
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import Session
 
@@ -282,9 +283,7 @@ def record_states(hass):
     four = three + timedelta(seconds=15 * 5)
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -293,25 +292,18 @@ def record_states(hass):
         states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=one + timedelta(microseconds=1),
-    ):
+        freezer.move_to(one + timedelta(microseconds=1))
         states[mp].append(
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "15", attributes=sns4_attr))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))

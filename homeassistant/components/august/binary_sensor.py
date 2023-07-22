@@ -5,7 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import cast
 
 from yalexs.activity import (
     ACTION_DOORBELL_CALL_MISSED,
@@ -104,7 +103,16 @@ def _native_datetime() -> datetime:
 
 
 @dataclass
-class AugustRequiredKeysMixin:
+class AugustBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes August binary_sensor entity."""
+
+    # AugustBinarySensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
+
+@dataclass
+class AugustDoorbellRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[AugustData, DoorbellDetail], bool]
@@ -112,41 +120,45 @@ class AugustRequiredKeysMixin:
 
 
 @dataclass
-class AugustBinarySensorEntityDescription(
-    BinarySensorEntityDescription, AugustRequiredKeysMixin
+class AugustDoorbellBinarySensorEntityDescription(
+    BinarySensorEntityDescription, AugustDoorbellRequiredKeysMixin
 ):
     """Describes August binary_sensor entity."""
 
+    # AugustDoorbellBinarySensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
-SENSOR_TYPE_DOOR = BinarySensorEntityDescription(
+
+SENSOR_TYPE_DOOR = AugustBinarySensorEntityDescription(
     key="door_open",
     name="Open",
 )
 
 
-SENSOR_TYPES_DOORBELL: tuple[AugustBinarySensorEntityDescription, ...] = (
-    AugustBinarySensorEntityDescription(
+SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] = (
+    AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_ding",
         name="Ding",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         value_fn=_retrieve_ding_state,
         is_time_based=True,
     ),
-    AugustBinarySensorEntityDescription(
+    AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_motion",
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
         value_fn=_retrieve_motion_state,
         is_time_based=True,
     ),
-    AugustBinarySensorEntityDescription(
+    AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_image_capture",
         name="Image Capture",
         icon="mdi:file-image",
         value_fn=_retrieve_image_capture_state,
         is_time_based=True,
     ),
-    AugustBinarySensorEntityDescription(
+    AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_online",
         name="Online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
@@ -199,7 +211,10 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     def __init__(
-        self, data: AugustData, device: Lock, description: BinarySensorEntityDescription
+        self,
+        data: AugustData,
+        device: Lock,
+        description: AugustBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
@@ -207,9 +222,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._data = data
         self._device = device
         self._attr_name = f"{device.device_name} {description.name}"
-        self._attr_unique_id = (
-            f"{self._device_id}_{cast(str, description.name).lower()}"
-        )
+        self._attr_unique_id = f"{self._device_id}_{description.name.lower()}"
 
     @callback
     def _update_from_data(self):
@@ -243,13 +256,13 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
 class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
     """Representation of an August binary sensor."""
 
-    entity_description: AugustBinarySensorEntityDescription
+    entity_description: AugustDoorbellBinarySensorEntityDescription
 
     def __init__(
         self,
         data: AugustData,
         device: Doorbell,
-        description: AugustBinarySensorEntityDescription,
+        description: AugustDoorbellBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
@@ -257,9 +270,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._check_for_off_update_listener = None
         self._data = data
         self._attr_name = f"{device.device_name} {description.name}"
-        self._attr_unique_id = (
-            f"{self._device_id}_{cast(str, description.name).lower()}"
-        )
+        self._attr_unique_id = f"{self._device_id}_{description.name.lower()}"
 
     @callback
     def _update_from_data(self):

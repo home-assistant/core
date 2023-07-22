@@ -216,9 +216,8 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         if not activity or activity == PREVIOUS_ACTIVE_ACTIVITY:
             if self._last_activity:
                 activity = self._last_activity
-            else:
-                if all_activities := self._data.activity_names:
-                    activity = all_activities[0]
+            elif all_activities := self._data.activity_names:
+                activity = all_activities[0]
 
         if activity:
             await self._data.async_start_activity(activity)

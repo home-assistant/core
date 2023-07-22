@@ -28,7 +28,6 @@ from homeassistant.components.device_automation.trigger import (
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.network import MDNS_TARGET_IP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -168,7 +167,9 @@ BRIDGE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
-            vol.Optional(CONF_ADVERTISE_IP): vol.All(ipaddress.ip_address, cv.string),
+            vol.Optional(CONF_ADVERTISE_IP): vol.All(
+                cv.ensure_list, [ipaddress.ip_address], [cv.string]
+            ),
             vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
             vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
             vol.Optional(CONF_DEVICES): cv.ensure_list,
@@ -303,9 +304,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # ip_address and advertise_ip are yaml only
     ip_address = conf.get(CONF_IP_ADDRESS, [None])
-    advertise_ip = conf.get(
-        CONF_ADVERTISE_IP, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
-    )
+    advertise_ips: list[str] = conf.get(
+        CONF_ADVERTISE_IP
+    ) or await network.async_get_announce_addresses(hass)
+
     # exclude_accessory_mode is only used for config flow
     # to indicate that the config entry was setup after
     # we started creating config entries for entities that
@@ -331,7 +333,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         exclude_accessory_mode,
         entity_config,
         homekit_mode,
-        advertise_ip,
+        advertise_ips,
         entry.entry_id,
         entry.title,
         devices=devices,
@@ -508,7 +510,7 @@ class HomeKit:
         exclude_accessory_mode: bool,
         entity_config: dict,
         homekit_mode: str,
-        advertise_ip: str | None,
+        advertise_ips: list[str],
         entry_id: str,
         entry_title: str,
         devices: list[str] | None = None,
@@ -521,7 +523,7 @@ class HomeKit:
         self._filter = entity_filter
         self._config = entity_config
         self._exclude_accessory_mode = exclude_accessory_mode
-        self._advertise_ip = advertise_ip
+        self._advertise_ips = advertise_ips
         self._entry_id = entry_id
         self._entry_title = entry_title
         self._homekit_mode = homekit_mode
@@ -547,7 +549,7 @@ class HomeKit:
             address=self._ip_address,
             port=self._port,
             persist_file=persist_file,
-            advertised_address=self._advertise_ip,
+            advertised_address=self._advertise_ips,
             async_zeroconf_instance=async_zeroconf_instance,
             zeroconf_server=f"{uuid}-hap.local.",
             loader=get_loader(),

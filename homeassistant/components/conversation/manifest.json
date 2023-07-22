@@ -7,5 +7,5 @@
   "integration_type": "system",
   "iot_class": "local_push",
   "quality_scale": "internal",
-  "requirements": ["hassil==1.0.6", "home-assistant-intents==2023.4.26"]
+  "requirements": ["hassil==1.0.6", "home-assistant-intents==2023.6.28"]
 }

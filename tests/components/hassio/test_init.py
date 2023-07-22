@@ -265,6 +265,7 @@ async def test_setup_api_panel(
         "title": None,
         "url_path": "hassio",
         "require_admin": True,
+        "config_panel_domain": None,
         "config": {
             "_panel_custom": {
                 "embed_iframe": True,
@@ -483,6 +484,7 @@ async def test_service_register(hassio_env, hass: HomeAssistant) -> None:
     assert hass.services.has_service("hassio", "restore_partial")
 
 
+@pytest.mark.freeze_time("2021-11-13 11:48:00")
 async def test_service_calls(
     hassio_env,
     hass: HomeAssistant,
@@ -541,6 +543,7 @@ async def test_service_calls(
 
     assert aioclient_mock.call_count == 14
     assert aioclient_mock.mock_calls[-1][2] == {
+        "name": "2021-11-13 11:48:00",
         "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
@@ -569,6 +572,37 @@ async def test_service_calls(
         "folders": ["ssl"],
         "homeassistant": False,
         "password": "123456",
+    }
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_full",
+        {
+            "name": "backup_name",
+            "location": "backup_share",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 17
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "name": "backup_name",
+        "location": "backup_share",
+    }
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_full",
+        {
+            "location": "/backup",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "name": "2021-11-13 11:48:00",
+        "location": None,
     }
 
 

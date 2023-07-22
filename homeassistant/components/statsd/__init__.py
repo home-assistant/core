@@ -82,9 +82,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     stat = "{}.{}".format(state.entity_id, key.replace(" ", "_"))
                     statsd_client.gauge(stat, value, sample_rate)
 
-        else:
-            if isinstance(_state, (float, int)):
-                statsd_client.gauge(state.entity_id, _state, sample_rate)
+        elif isinstance(_state, (float, int)):
+            statsd_client.gauge(state.entity_id, _state, sample_rate)
 
         # Increment the count
         statsd_client.incr(state.entity_id, rate=sample_rate)

@@ -62,7 +62,6 @@ NO_IOT_CLASS = [
     "device_automation",
     "device_tracker",
     "diagnostics",
-    "discovery",
     "downloader",
     "ffmpeg",
     "file_upload",
@@ -161,8 +160,8 @@ def verify_version(value: str) -> str:
                 AwesomeVersionStrategy.PEP440,
             ],
         )
-    except AwesomeVersionException:
-        raise vol.Invalid(f"'{value}' is not a valid version.")
+    except AwesomeVersionException as err:
+        raise vol.Invalid(f"'{value}' is not a valid version.") from err
     return value
 
 

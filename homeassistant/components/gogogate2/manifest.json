@@ -1,7 +1,7 @@
 {
   "domain": "gogogate2",
   "name": "Gogogate2 and ismartgate",
-  "codeowners": ["@vangorra", "@bdraco"],
+  "codeowners": ["@vangorra"],
   "config_flow": true,
   "dhcp": [
     {

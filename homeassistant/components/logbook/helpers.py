@@ -23,7 +23,6 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
@@ -104,7 +103,7 @@ def extract_attr(source: dict[str, Any], attr: str) -> list[str]:
 @callback
 def event_forwarder_filtered(
     target: Callable[[Event], None],
-    entities_filter: EntityFilter | None,
+    entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
 ) -> Callable[[Event], None]:
@@ -159,7 +158,7 @@ def async_subscribe_events(
     subscriptions: list[CALLBACK_TYPE],
     target: Callable[[Event], None],
     event_types: tuple[str, ...],
-    entities_filter: EntityFilter | None,
+    entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
 ) -> None:
