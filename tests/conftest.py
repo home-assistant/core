@@ -1104,7 +1104,7 @@ def mock_get_source_ip() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_zeroconf() -> Generator[None, None, None]:
     """Mock zeroconf."""
-    from zeroconf._cache import DNSCache  # pylint: disable=import-outside-toplevel
+    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
     with patch(
         "homeassistant.components.zeroconf.HaZeroconf", autospec=True
@@ -1121,7 +1121,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
-    from zeroconf._cache import DNSCache  # pylint: disable=import-outside-toplevel
+    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
     with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
         zc = mock_aiozc.return_value
