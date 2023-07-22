@@ -120,11 +120,6 @@ class FreeboxLCDNumber(FreeboxNumber):
             self.async_update_state()
             self.async_write_ha_state()
         except InsufficientPermissionsError:
-            # Send update signal to restore original state
-            self._attr_value = self._router.lcd_settings.get(
-                self.entity_description.key
-            )
-
             self.async_on_demand_update()
 
             # Send notification
