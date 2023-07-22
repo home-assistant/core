@@ -54,17 +54,17 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
             or not self.config_entry.data
         ):
             return {}
-        no_ip_domain = self.config_entry.data[CONF_DOMAIN]
-        user = self.config_entry.data[CONF_USERNAME]
-        password = self.config_entry.data[CONF_PASSWORD]
+        no_ip_domain = self.config_entry.data.get(CONF_DOMAIN)
+        user = self.config_entry.data.get(CONF_USERNAME)
+        password = self.config_entry.data.get(CONF_PASSWORD)
 
-        auth_str = base64.b64encode(f"{user}:{password}".encode())
+        auth_str = base64.b64encode(f"{user}:{password}".encode()).decode("utf-8")
 
         session = aiohttp_client.async_create_clientsession(self.hass)
         params = {"hostname": no_ip_domain}
 
         headers = {
-            AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
+            AUTHORIZATION: f"Basic {auth_str}",
             USER_AGENT: HA_USER_AGENT,
         }
 
@@ -74,18 +74,20 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
             async with async_timeout.timeout(DEFAULT_TIMEOUT):
                 resp = await session.get(UPDATE_URL, params=params, headers=headers)
                 body = (await resp.text()).strip()
-                if (
-                    resp.status == 200
-                    and body.startswith("good")
-                    or body.startswith("nochg")
+                if resp.status == 200 and (
+                    body.startswith("good") or body.startswith("nochg")
                 ):
-                    ipAddress = body.split(" ")[1]
+                    ip_address = body.split(" ")[1]
                     data = {
-                        CONF_IP_ADDRESS: ipAddress,
+                        CONF_IP_ADDRESS: ip_address,
                         CONF_DOMAIN: no_ip_domain,
+                        CONF_USERNAME: user,
+                        CONF_PASSWORD: password,
                     }
                     _LOGGER.debug(
-                        "Updating No-IP.com success: %s IP: %s", no_ip_domain, ipAddress
+                        "Updating No-IP.com success: %s IP: %s",
+                        no_ip_domain,
+                        ip_address,
                     )
                 else:
                     _LOGGER.debug(
