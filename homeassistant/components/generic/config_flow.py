@@ -393,7 +393,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             translation_key="deprecated_yaml",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": "generic",
+                "integration_title": "Generic IP Camera",
             },
         )
         # abort if we've already got this one.
