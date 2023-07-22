@@ -382,6 +382,13 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle config import from yaml."""
 
+        _LOGGER.warning(
+            "Loading generic IP camera via configuration.yaml is deprecated, "
+            "it will be automatically imported.  Once you have confirmed correct "
+            "operation, please remove 'generic' (IP camera) section(s) from "
+            "configuration.yaml"
+        )
+
         async_create_issue(
             self.hass,
             HOMEASSISTANT_DOMAIN,
