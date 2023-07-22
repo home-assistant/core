@@ -77,6 +77,7 @@ class NinaWarningData:
     sender: str
     severity: str
     recommended_actions: str
+    affected_areas: str
     sent: str
     start: str
     expires: str
@@ -156,6 +157,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.sender,
                     raw_warn.severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
+                    ", ".join([str(area) for area in raw_warn.affected_areas]),
                     raw_warn.sent or "",
                     raw_warn.start or "",
                     raw_warn.expires or "",
