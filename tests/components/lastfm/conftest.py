@@ -2,7 +2,7 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
-from pylast import Track
+from pylast import Track, WSError
 import pytest
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS, DOMAIN
@@ -65,3 +65,9 @@ def mock_default_user() -> MockUser:
 def mock_first_time_user() -> MockUser:
     """Return first time mock user."""
     return MockUser(now_playing_result=None, top_tracks=[], recent_tracks=[])
+
+
+@pytest.fixture(name="not_found_user")
+def mock_not_found_user() -> MockUser:
+    """Return not found mock user."""
+    return MockUser(thrown_error=WSError("network", "status", "User not found"))
