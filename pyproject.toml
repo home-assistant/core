@@ -79,7 +79,7 @@ include = ["homeassistant*"]
 extend-exclude = "/generated/"
 
 [tool.pylint.MAIN]
-py-version = "3.11"
+py-version = "3.10"
 ignore = [
     "tests",
 ]
