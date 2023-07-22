@@ -31,6 +31,7 @@ from typing import (
     Any,
     Generic,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
     overload,
@@ -38,7 +39,6 @@ from typing import (
 from urllib.parse import urlparse
 
 import async_timeout
-from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
