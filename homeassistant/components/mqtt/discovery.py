@@ -52,6 +52,7 @@ SUPPORTED_COMPONENTS = [
     "cover",
     "device_automation",
     "device_tracker",
+    "event",
     "fan",
     "humidifier",
     "image",
