@@ -44,19 +44,21 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
             name=f"{DOMAIN}-{entry.entry_id}",
             update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
         )
-        self.config_entry = entry
+        self._entry = entry
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the data from No-IP.com."""
-        if (
-            not self.config_entry
-            or not hasattr(self.config_entry, "data")
-            or not self.config_entry.data
-        ):
-            return {}
-        no_ip_domain = self.config_entry.data.get(CONF_DOMAIN)
-        user = self.config_entry.data.get(CONF_USERNAME)
-        password = self.config_entry.data.get(CONF_PASSWORD)
+
+        data: dict[str, Any] = {
+            CONF_DOMAIN: self._entry.data.get(CONF_DOMAIN),
+            CONF_IP_ADDRESS: None,
+            CONF_USERNAME: self._entry.data.get(CONF_USERNAME),
+            CONF_PASSWORD: self._entry.data.get(CONF_PASSWORD),
+        }
+
+        no_ip_domain = self._entry.data.get(CONF_DOMAIN)
+        user = self._entry.data.get(CONF_USERNAME)
+        password = self._entry.data.get(CONF_PASSWORD)
 
         auth_str = base64.b64encode(f"{user}:{password}".encode()).decode("utf-8")
 
@@ -68,42 +70,45 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
             USER_AGENT: HA_USER_AGENT,
         }
 
-        data: dict[str, Any] = {}
-
         try:
             async with async_timeout.timeout(DEFAULT_TIMEOUT):
-                resp = await session.get(UPDATE_URL, params=params, headers=headers)
-                body = (await resp.text()).strip()
-                if resp.status == 200 and (
-                    body.startswith("good") or body.startswith("nochg")
-                ):
-                    ip_address = body.split(" ")[1]
-                    data = {
-                        CONF_IP_ADDRESS: ip_address,
-                        CONF_DOMAIN: no_ip_domain,
-                        CONF_USERNAME: user,
-                        CONF_PASSWORD: password,
-                    }
-                    _LOGGER.debug(
-                        "Updating No-IP.com success: %s IP: %s",
-                        no_ip_domain,
-                        ip_address,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "Updating No-IP.com Failed: %s => %s", no_ip_domain, body
-                    )
-                    data = {
-                        CONF_DOMAIN: no_ip_domain,
-                    }
-        except aiohttp.ClientError:
-            _LOGGER.warning("Can't connect to No-IP.com API")
-            data = {
-                CONF_DOMAIN: no_ip_domain,
-            }
+                async with session.get(
+                    UPDATE_URL, params=params, headers=headers
+                ) as resp:
+                    body = await resp.text()
+                    body = body.strip()
+                    if body.startswith("good") or body.startswith("nochg"):
+                        ip_address = body.split(" ")[1]
+                        _LOGGER.debug(
+                            "No-IP.com erfolgreich aktualisiert: %s IP: %s",
+                            no_ip_domain,
+                            ip_address,
+                        )
+                        data.update(
+                            {
+                                CONF_IP_ADDRESS: ip_address,
+                                CONF_DOMAIN: no_ip_domain,
+                                CONF_USERNAME: user,
+                                CONF_PASSWORD: password,
+                            }
+                        )
+                    else:
+                        _LOGGER.debug(
+                            "Aktualisierung von No-IP.com fehlgeschlagen: %s => %s",
+                            no_ip_domain,
+                            body,
+                        )
+        except aiohttp.ClientError as client_error:
+            _LOGGER.warning("Keine Verbindung zur No-IP.com API: %s", client_error)
+            raise
         except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout from No-IP.com API for domain: %s", no_ip_domain)
-            data = {
-                CONF_DOMAIN: no_ip_domain,
-            }
+            _LOGGER.warning(
+                "Zeitüberschreitung von der No-IP.com API für die Domain: %s",
+                no_ip_domain,
+            )
+            raise
+        except Exception as e:  # pylint: disable=broad-except
+            _LOGGER.warning("Fehler beim Aktualisieren der Daten von No-IP.com: %s", e)
+            raise
+
         return data

@@ -76,28 +76,28 @@ async def async_validate_no_ip(
 
     try:
         async with async_timeout.timeout(DEFAULT_TIMEOUT):
-            resp = await session.get(UPDATE_URL, params=params, headers=headers)
+            resp = await session.get(
+                UPDATE_URL, params=params, headers=headers, raise_for_status=True
+            )
             body = (await resp.text()).strip()
-            if (
-                resp.status == 200
-                and body.startswith("good")
-                or body.startswith("nochg")
+            if resp.status == 200 and (
+                body.startswith("good") or body.startswith("nochg")
             ):
                 ipAddress = body.split(" ")[1]
                 return {"title": MANUFACTURER, CONF_IP_ADDRESS: ipAddress}
-            if resp.status != 200:
-                no_ip_error = "cannot_connect"
-                _LOGGER.debug(body)
-            else:
+            no_ip_error = "unknown"
+            if body in NO_IP_ERRORS:
                 no_ip_error = NO_IP_ERRORS[body]
             return {"title": MANUFACTURER, "exception": no_ip_error}
-    except aiohttp.ClientError as error:
-        _LOGGER.warning("Can't connect to No-IP.com API")
-        raise aiohttp.ClientError from error
-
-    except asyncio.TimeoutError as error:
+    except (aiohttp.ClientError, aiohttp.ClientResponseError) as client_error:
+        _LOGGER.warning("Unable to connect to No-IP.com API: %s", client_error)
+        raise
+    except asyncio.TimeoutError:
         _LOGGER.warning("Timeout from No-IP.com API for domain: %s", no_ip_domain)
-        raise aiohttp.ClientError from error
+        raise
+    except Exception as error:  # pylint: disable=broad-except
+        _LOGGER.error("Error updating data from No-IP.com: %s", error)
+        raise
 
 
 class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
