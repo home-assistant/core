@@ -497,6 +497,16 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    "n_current": RpcSensorDescription(
+        key="em",
+        sub_key="n_current",
+        name="Phase N current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        available=lambda status: status["n_current"] is not None,
+        entity_registry_enabled_default=False,
+    ),
     "total_current": RpcSensorDescription(
         key="em",
         sub_key="total_current",
