@@ -11,9 +11,7 @@ import logging
 from math import ceil, floor, log10
 import re
 import sys
-from typing import Any, Final, cast, final
-
-from typing_extensions import Self
+from typing import Any, Final, Self, cast, final
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -453,7 +451,7 @@ class SensorEntity(Entity):
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration
-        if not self.unique_id and (
+        if not self.registry_entry and (
             suggested_unit_of_measurement := self.suggested_unit_of_measurement
         ):
             return suggested_unit_of_measurement

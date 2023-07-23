@@ -40,6 +40,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
+from .bluetooth.device import ESPHomeBluetoothDevice
 from .dashboard import async_get_dashboard
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
@@ -80,7 +81,7 @@ class ESPHomeStorage(Store[StoreData]):
     """ESPHome Storage."""
 
 
-@dataclass
+@dataclass(slots=True)
 class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
@@ -97,6 +98,7 @@ class RuntimeEntryData:
     available: bool = False
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
+    bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
     disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
@@ -107,11 +109,6 @@ class RuntimeEntryData:
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: StoreData | None = None
     _pending_storage: Callable[[], StoreData] | None = None
-    ble_connections_free: int = 0
-    ble_connections_limit: int = 0
-    _ble_connection_free_futures: list[asyncio.Future[int]] = field(
-        default_factory=list
-    )
     assist_pipeline_update_callbacks: list[Callable[[], None]] = field(
         default_factory=list
     )
@@ -195,37 +192,6 @@ class RuntimeEntryData:
             callbacks.remove(callback_)
 
         return _unsub
-
-    @callback
-    def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
-        """Update the BLE connection limits."""
-        _LOGGER.debug(
-            "%s [%s]: BLE connection limits: used=%s free=%s limit=%s",
-            self.name,
-            self.device_info.mac_address if self.device_info else "unknown",
-            limit - free,
-            free,
-            limit,
-        )
-        self.ble_connections_free = free
-        self.ble_connections_limit = limit
-        if not free:
-            return
-        for fut in self._ble_connection_free_futures:
-            # If wait_for_ble_connections_free gets cancelled, it will
-            # leave a future in the list. We need to check if it's done
-            # before setting the result.
-            if not fut.done():
-                fut.set_result(free)
-        self._ble_connection_free_futures.clear()
-
-    async def wait_for_ble_connections_free(self) -> int:
-        """Wait until there are free BLE connections."""
-        if self.ble_connections_free > 0:
-            return self.ble_connections_free
-        fut: asyncio.Future[int] = asyncio.Future()
-        self._ble_connection_free_futures.append(fut)
-        return await fut
 
     @callback
     def async_set_assist_pipeline_state(self, state: bool) -> None:

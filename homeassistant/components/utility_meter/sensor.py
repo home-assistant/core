@@ -5,10 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Any
+from typing import Any, Self
 
 from croniter import croniter
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (

@@ -1,6 +1,7 @@
 """The Android TV Remote integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from androidtvremote2 import (
@@ -9,6 +10,7 @@ from androidtvremote2 import (
     ConnectionClosed,
     InvalidAuth,
 )
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
@@ -43,11 +45,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.add_is_available_updated_callback(is_available_updated)
 
     try:
-        await api.async_connect()
+        async with async_timeout.timeout(5.0):
+            await api.async_connect()
     except InvalidAuth as exc:
         # The Android TV is hard reset or the certificate and key files were deleted.
         raise ConfigEntryAuthFailed from exc
-    except (CannotConnect, ConnectionClosed) as exc:
+    except (CannotConnect, ConnectionClosed, asyncio.TimeoutError) as exc:
         # The Android TV is network unreachable. Raise exception and let Home Assistant retry
         # later. If device gets a new IP address the zeroconf flow will update the config.
         raise ConfigEntryNotReady from exc

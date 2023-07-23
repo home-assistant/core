@@ -90,6 +90,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_name = None
 
     def __init__(self, slimserver: SlimServer, player: SlimClient) -> None:
         """Initialize MediaPlayer entity."""
