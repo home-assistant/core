@@ -1,12 +1,11 @@
 """Helper to create SSL contexts."""
 import contextlib
+from enum import StrEnum
 from functools import cache
 from os import environ
 import ssl
 
 import certifi
-
-from homeassistant.backports.enum import StrEnum
 
 
 class SSLCipherList(StrEnum):

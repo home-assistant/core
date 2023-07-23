@@ -1,10 +1,8 @@
 """Test Home Assistant enum utils."""
 
-from enum import auto
+from enum import StrEnum, auto
 
 import pytest
-
-from homeassistant.backports.enum import StrEnum
 
 
 def test_strenum() -> None:

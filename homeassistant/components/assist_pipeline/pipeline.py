@@ -4,12 +4,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
+from enum import StrEnum
 import logging
 from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import conversation, media_source, stt, tts, websocket_api
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
