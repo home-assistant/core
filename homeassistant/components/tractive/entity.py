@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -29,3 +30,9 @@ class TractiveEntity(Entity):
         self._user_id = user_id
         self._tracker_id = tracker_details["_id"]
         self._trackable = trackable
+
+    @callback
+    def handle_status_update(self, event: dict[str, Any]) -> None:
+        """Handle status update."""
+        self._attr_available = event[self.entity_description.key] is not None
+        self.async_write_ha_state()

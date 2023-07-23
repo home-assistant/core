@@ -75,8 +75,8 @@ class TractiveSensor(TractiveEntity, SensorEntity):
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
         self._attr_native_value = event[self.entity_description.key]
-        self._attr_available = event[self.entity_description.key] is not None
-        self.async_write_ha_state()
+
+        super().handle_status_update(event)
 
     @callback
     def handle_server_unavailable(self) -> None:

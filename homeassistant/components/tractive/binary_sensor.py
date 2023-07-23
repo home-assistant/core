@@ -45,11 +45,11 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
     @callback
-    def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
-        """Handle hardware status update."""
+    def handle_status_update(self, event: dict[str, Any]) -> None:
+        """Handle status update."""
         self._attr_is_on = event[self.entity_description.key]
-        self._attr_available = event[self.entity_description.key] is not None
-        self.async_write_ha_state()
+
+        super().handle_status_update(event)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -58,7 +58,7 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
-                self.handle_hardware_status_update,
+                self.handle_status_update,
             )
         )
 
