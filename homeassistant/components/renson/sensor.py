@@ -291,9 +291,9 @@ class RensonSensor(RensonEntity, SensorEntity):
         if self.raw_format:
             self._attr_native_value = value
         elif self.entity_description.device_class == SensorDeviceClass.ENUM:
-            self._attr_native_value = OPTIONS_MAPPING[
-                self.api.parse_value(value, self.data_type)
-            ]
+            self._attr_native_value = OPTIONS_MAPPING.get(
+                self.api.parse_value(value, self.data_type), None
+            )
         else:
             self._attr_native_value = self.api.parse_value(value, self.data_type)
 
