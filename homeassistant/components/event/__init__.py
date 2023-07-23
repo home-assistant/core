@@ -4,9 +4,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, final
-
-from typing_extensions import Self
+from typing import Any, Self, final
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry

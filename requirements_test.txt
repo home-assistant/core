@@ -32,7 +32,6 @@ pytest==7.3.1
 requests_mock==1.11.0
 respx==0.20.2
 syrupy==4.0.8
-tomli==2.0.1;python_version<"3.11"
 tqdm==4.65.0
 types-atomicwrites==1.4.5.1
 types-croniter==1.0.6
@@ -48,4 +47,3 @@ types-python-slugify==0.1.2
 types-pytz==2023.3.0.0
 types-PyYAML==6.0.12.2
 types-requests==2.31.0.1
-types-toml==0.10.8.6

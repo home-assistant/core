@@ -11,9 +11,7 @@ import logging
 from math import ceil, floor, log10
 import re
 import sys
-from typing import Any, Final, cast, final
-
-from typing_extensions import Self
+from typing import Any, Final, Self, cast, final
 
 from homeassistant.config_entries import ConfigEntry
 

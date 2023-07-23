@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import cast
-
-from typing_extensions import Self
+from typing import Self, cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
