@@ -3,9 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from types import GenericAlias
-from typing import Any, Generic, TypeVar, overload
-
-from typing_extensions import Self
+from typing import Any, Generic, Self, TypeVar, overload
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
