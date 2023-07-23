@@ -78,12 +78,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 
         super().handle_status_update(event)
 
-    @callback
-    def handle_server_unavailable(self) -> None:
-        """Handle server unavailable."""
-        self._attr_available = False
-        self.async_write_ha_state()
-
 
 class TractiveHardwareSensor(TractiveSensor):
     """Tractive hardware sensor."""

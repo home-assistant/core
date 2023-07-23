@@ -106,12 +106,6 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         self.entity_description = description
 
     @callback
-    def handle_server_unavailable(self) -> None:
-        """Handle server unavailable."""
-        self._attr_available = False
-        self.async_write_ha_state()
-
-    @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
         self._attr_is_on = event[self.entity_description.key]

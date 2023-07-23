@@ -94,11 +94,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._attr_available = True
         self.async_write_ha_state()
 
-    @callback
-    def _handle_server_unavailable(self) -> None:
-        self._attr_available = False
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 
@@ -122,6 +117,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self._handle_server_unavailable,
+                self.handle_server_unavailable,
             )
         )
