@@ -131,7 +131,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
-        translation_key="packets_per_second_received",
+        translation_key="packet_download_speed",
         value_key=PACKETS_PER_SEC_RECEIVED,
         unique_id="packets/sec_received",
         icon="mdi:server-network",
@@ -142,7 +142,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
-        translation_key="packets_per_second_sent",
+        translation_key="packet_upload_speed",
         value_key=PACKETS_PER_SEC_SENT,
         unique_id="packets/sec_sent",
         icon="mdi:server-network",

@@ -51,11 +51,11 @@
       "uptime": {
         "name": "Uptime"
       },
-      "packets_per_second_received": {
-        "name": "Packets/s received"
+      "packet_download_speed": {
+        "name": "Packet download speed"
       },
-      "packets_per_second_sent": {
-        "name": "Packets/s sent"
+      "packet_upload_speed": {
+        "name": "Packet upload speed"
       },
       "download_speed": {
         "name": "Download speed"
