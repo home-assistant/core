@@ -139,11 +139,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the supported features."""
-        if self._restricted_device:
+        if self.data.current_user["product"] != "premium":
+            return MediaPlayerEntityFeature(0)
+        if self._restricted_device or not self._currently_playing:
             return MediaPlayerEntityFeature.SELECT_SOURCE
-        if self.data.current_user["product"] == "premium":
-            return SUPPORT_SPOTIFY
-        return MediaPlayerEntityFeature(0)
+        return SUPPORT_SPOTIFY
 
     @property
     def state(self) -> MediaPlayerState:
