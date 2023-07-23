@@ -12,7 +12,9 @@ from spotipy import SpotifyException
 from yarl import URL
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -336,6 +338,10 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         """Play media."""
         media_type = media_type.removeprefix(MEDIA_PLAYER_PREFIX)
 
+        enqueue: MediaPlayerEnqueue = kwargs.get(
+            ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
+        )
+
         kwargs = {}
 
         # Spotify can't handle URI's with query strings or anchors
@@ -356,6 +362,17 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             and self.data.devices.data
         ):
             kwargs["device_id"] = self.data.devices.data[0].get("id")
+
+        if enqueue == MediaPlayerEnqueue.ADD:
+            if media_type not in {
+                MediaType.TRACK,
+                MediaType.EPISODE,
+                MediaType.MUSIC,
+            }:
+                raise ValueError(
+                    f"Media type {media_type} is not supported when enqueue is ADD"
+                )
+            return self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
 
         self.data.client.start_playback(**kwargs)
 
