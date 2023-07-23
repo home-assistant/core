@@ -8,10 +8,11 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "unifi"
 
 PLATFORMS = [
-    Platform.DEVICE_TRACKER,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.UPDATE,
+    # Platform.DEVICE_TRACKER,
+    Platform.IMAGE,
+    # Platform.SENSOR,
+    # Platform.SWITCH,
+    # Platform.UPDATE,
 ]
 
 CONF_SITE_ID = "site"
