@@ -91,6 +91,9 @@
     "ozone": {
       "name": "[%key:component::sensor::entity_component::ozone::name%]"
     },
+    "ph": {
+      "name": "[%key:component::sensor::entity_component::ph::name%]"
+    },
     "pm1": {
       "name": "[%key:component::sensor::entity_component::pm1::name%]"
     },

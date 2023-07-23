@@ -43,7 +43,6 @@ import voluptuous as vol
 import yarl
 
 from . import block_async_io, loader, util
-from .backports.enum import StrEnum
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -133,7 +132,7 @@ BLOCK_LOG_TIMEOUT = 60
 ServiceResponse = JsonObjectType | None
 
 
-class ConfigSource(StrEnum):
+class ConfigSource(enum.StrEnum):
     """Source of core configuration."""
 
     DEFAULT = "default"
@@ -1669,7 +1668,7 @@ class StateMachine:
         )
 
 
-class SupportsResponse(StrEnum):
+class SupportsResponse(enum.StrEnum):
     """Service call response configuration."""
 
     NONE = "none"
