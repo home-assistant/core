@@ -14,9 +14,10 @@ from collections.abc import Callable, Iterable, Mapping, ValuesView
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 
 import attr
+from typing_extensions import NotRequired
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -105,6 +106,15 @@ class RegistryEntryHider(StrEnum):
 
     INTEGRATION = "integration"
     USER = "user"
+
+
+class EventEntityRegistryUpdatedData(TypedDict):
+    """EventEntityRegistryUpdated data."""
+
+    action: Literal["create", "remove", "update"]
+    entity_id: str
+    changes: NotRequired[dict[str, Any]]
+    old_entity_id: NotRequired[str]
 
 
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
