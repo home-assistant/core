@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     HHCCJCY10_SERVICE_INFO,
+    MISCALE_V1_SERVICE_INFO,
     MISCALE_V2_SERVICE_INFO,
     MMC_T201_1_SERVICE_INFO,
     make_advertisement,
@@ -513,6 +514,48 @@ async def test_hhccjcy10_uuid(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+async def test_miscale_v1_uuid(hass: HomeAssistant) -> None:
+    """Test MiScale V1 UUID.
+
+    This device uses a different UUID compared to the other Xiaomi sensors.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+    mass_non_stabilized_sensor = hass.states.get(
+        "sensor.mi_smart_scale_b5dc_mass_non_stabilized"
+    )
+    mass_non_stabilized_sensor_attr = mass_non_stabilized_sensor.attributes
+    assert mass_non_stabilized_sensor.state == "86.55"
+    assert (
+        mass_non_stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Mi Smart Scale (B5DC) Mass Non Stabilized"
+    )
+    assert mass_non_stabilized_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_non_stabilized_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    mass_sensor = hass.states.get("sensor.mi_smart_scale_b5dc_mass")
+    mass_sensor_attr = mass_sensor.attributes
+    assert mass_sensor.state == "86.55"
+    assert mass_sensor_attr[ATTR_FRIENDLY_NAME] == "Mi Smart Scale (B5DC) Mass"
+    assert mass_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     """Test MiScale V2 UUID.
 
@@ -533,35 +576,34 @@ async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
-        "sensor.mi_body_composition_scale_2_b5dc_mass_non_stabilized"
+        "sensor.mi_body_composition_scale_b5dc_mass_non_stabilized"
     )
     mass_non_stabilized_sensor_attr = mass_non_stabilized_sensor.attributes
-    assert mass_non_stabilized_sensor.state == "58.85"
+    assert mass_non_stabilized_sensor.state == "85.15"
     assert (
         mass_non_stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
-        == "Mi Body Composition Scale 2 (B5DC) Mass Non Stabilized"
+        == "Mi Body Composition Scale (B5DC) Mass Non Stabilized"
     )
     assert mass_non_stabilized_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
     assert mass_non_stabilized_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
-    mass_sensor = hass.states.get("sensor.mi_body_composition_scale_2_b5dc_mass")
+    mass_sensor = hass.states.get("sensor.mi_body_composition_scale_b5dc_mass")
     mass_sensor_attr = mass_sensor.attributes
-    assert mass_sensor.state == "58.85"
+    assert mass_sensor.state == "85.15"
     assert (
-        mass_sensor_attr[ATTR_FRIENDLY_NAME]
-        == "Mi Body Composition Scale 2 (B5DC) Mass"
+        mass_sensor_attr[ATTR_FRIENDLY_NAME] == "Mi Body Composition Scale (B5DC) Mass"
     )
     assert mass_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
     assert mass_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
     impedance_sensor = hass.states.get(
-        "sensor.mi_body_composition_scale_2_b5dc_impedance"
+        "sensor.mi_body_composition_scale_b5dc_impedance"
     )
     impedance_sensor_attr = impedance_sensor.attributes
-    assert impedance_sensor.state == "543"
+    assert impedance_sensor.state == "428"
     assert (
         impedance_sensor_attr[ATTR_FRIENDLY_NAME]
-        == "Mi Body Composition Scale 2 (B5DC) Impedance"
+        == "Mi Body Composition Scale (B5DC) Impedance"
     )
     assert impedance_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
     assert impedance_sensor_attr[ATTR_STATE_CLASS] == "measurement"

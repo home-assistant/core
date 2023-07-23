@@ -215,7 +215,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
-            vol.Optional(CONF_CONFIGURATION_URL): cv.url,
+            vol.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
         }
     ),
     validate_device_has_at_least_one_identifier,
