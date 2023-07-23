@@ -1,13 +1,12 @@
 """Diagnostics support for YouTube."""
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import COORDINATOR, DOMAIN
+from .const import ATTR_DESCRIPTION, ATTR_LATEST_VIDEO, COORDINATOR, DOMAIN
 from .coordinator import YouTubeDataUpdateCoordinator
 
 
@@ -20,14 +19,6 @@ async def async_get_config_entry_diagnostics(
     ]
     sensor_data = {}
     for channel_id, channel_data in coordinator.data.items():
-        obj = {}
-        if channel_data.latest_video is not None:
-            obj = json.loads(channel_data.latest_video.json())
-            obj.get("nullable_snippet", {"description": ""}).pop("description")
-        channel_obj = json.loads(channel_data.channel.json())
-        channel_obj.get("nullable_snippet", {"description": ""}).pop("description")
-        sensor_data[channel_id] = {
-            "channel": channel_obj,
-            "latest_video": obj,
-        }
+        channel_data.get(ATTR_LATEST_VIDEO, {}).pop(ATTR_DESCRIPTION)
+        sensor_data[channel_id] = channel_data
     return sensor_data
