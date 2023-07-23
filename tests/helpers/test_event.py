@@ -21,6 +21,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackStates,
     TrackTemplate,
     TrackTemplateResult,
@@ -45,6 +46,7 @@ from homeassistant.helpers.event import (
     track_point_in_utc_time,
 )
 from homeassistant.helpers.template import Template, result_as_boolean
+from homeassistant.helpers.typing import EventType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -434,21 +436,21 @@ async def test_async_track_state_change_event(hass: HomeAssistant) -> None:
     multiple_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def multiple_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def multiple_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def callback_that_throws(event):
+    def callback_that_throws(event: EventType[EventStateChangedData]) -> None:
         raise ValueError
 
     unsub_single = async_track_state_change_event(
@@ -4302,16 +4304,16 @@ async def test_track_state_change_event_chain_multple_entity(
     tracker_unsub = []
 
     @ha.callback
-    def chained_single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def chained_single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         chained_tracker_called.append((old_state, new_state))
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         tracker_called.append((old_state, new_state))
 
@@ -4356,16 +4358,16 @@ async def test_track_state_change_event_chain_single_entity(
     tracker_unsub = []
 
     @ha.callback
-    def chained_single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def chained_single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         chained_tracker_called.append((old_state, new_state))
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         tracker_called.append((old_state, new_state))
 

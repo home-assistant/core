@@ -44,11 +44,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 KEY_ANNOUNCE = "announce"
 KEY_CLEAR_PLAYLIST = "clear_playlist"
@@ -130,11 +133,11 @@ class MediaPlayerGroup(MediaPlayerEntity):
         }
 
     @callback
-    def async_on_state_change(self, event: Event) -> None:
+    def async_on_state_change(self, event: EventType[EventStateChangedData]) -> None:
         """Update supported features and state when a new state is received."""
         self.async_set_context(event.context)
         self.async_update_supported_features(
-            event.data.get("entity_id"), event.data.get("new_state")  # type: ignore[arg-type]
+            event.data["entity_id"], event.data["new_state"]
         )
         self.async_update_state()
 
