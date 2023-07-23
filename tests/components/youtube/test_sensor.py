@@ -3,7 +3,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
+from youtubeaio.types import UnauthorizedError
 
+from homeassistant import config_entries
+from homeassistant.components.youtube.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -54,3 +57,25 @@ async def test_sensor_updating(
         == "https://i.ytimg.com/vi/hleLlcHwQLM/maxresdefault.jpg"
     )
     assert state.attributes["video_id"] == "hleLlcHwQLM"
+
+
+async def test_sensor_reauth_trigger(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test reauth is triggered after a refresh error."""
+    await setup_integration()
+
+    with patch(
+        "youtubeaio.youtube.YouTube.get_channels", side_effect=UnauthorizedError
+    ):
+        future = dt_util.utcnow() + timedelta(minutes=15)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
