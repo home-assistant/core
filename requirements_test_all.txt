@@ -2004,7 +2004,7 @@ yolink-api==0.2.9
 youless-api==1.0.1
 
 # homeassistant.components.youtube
-youtubeaio==1.1.2
+youtubeaio==1.1.3
 
 # homeassistant.components.zamg
 zamg==0.2.4
