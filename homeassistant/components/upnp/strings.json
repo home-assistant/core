@@ -33,11 +33,11 @@
       }
     },
     "sensor": {
-      "bytes_received": {
-        "name": "Bytes received"
+      "data_received": {
+        "name": "Data received"
       },
-      "bytes_sent": {
-        "name": "Bytes sent"
+      "data_sent": {
+        "name": "Data sent"
       },
       "packets_received": {
         "name": "Packets received"
@@ -57,11 +57,11 @@
       "packets_per_second_sent": {
         "name": "Packets/s sent"
       },
-      "kibibytes_per_second_received": {
-        "name": "KiB/s received"
+      "download_speed": {
+        "name": "Download speed"
       },
-      "kibibytes_per_second_sent": {
-        "name": "KiB/s sent"
+      "upload_speed": {
+        "name": "Upload speed"
       },
       "wan_status": {
         "name": "WAN status"

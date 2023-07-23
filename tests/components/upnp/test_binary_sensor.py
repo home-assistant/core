@@ -16,7 +16,7 @@ async def test_upnp_binary_sensors(
 ) -> None:
     """Test normal sensors."""
     # First poll.
-    wan_status_state = hass.states.get("binary_sensor.mock_name_connectivity")
+    wan_status_state = hass.states.get("binary_sensor.mock_name_wan_status")
     assert wan_status_state.state == "on"
 
     # Second poll.
@@ -44,5 +44,5 @@ async def test_upnp_binary_sensors(
     )
     await hass.async_block_till_done()
 
-    wan_status_state = hass.states.get("binary_sensor.mock_name_connectivity")
+    wan_status_state = hass.states.get("binary_sensor.mock_name_wan_status")
     assert wan_status_state.state == "off"

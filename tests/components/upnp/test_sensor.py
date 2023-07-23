@@ -16,14 +16,14 @@ async def test_upnp_sensors(
 ) -> None:
     """Test sensors."""
     # First poll.
-    assert hass.states.get("sensor.mock_name_bytes_received").state == "0"
-    assert hass.states.get("sensor.mock_name_bytes_sent").state == "0"
+    assert hass.states.get("sensor.mock_name_data_received").state == "0"
+    assert hass.states.get("sensor.mock_name_data_sent").state == "0"
     assert hass.states.get("sensor.mock_name_packets_received").state == "0"
     assert hass.states.get("sensor.mock_name_packets_sent").state == "0"
     assert hass.states.get("sensor.mock_name_external_ip").state == "8.9.10.11"
     assert hass.states.get("sensor.mock_name_wan_status").state == "Connected"
-    assert hass.states.get("sensor.mock_name_kib_s_received").state == "unknown"
-    assert hass.states.get("sensor.mock_name_kib_s_sent").state == "unknown"
+    assert hass.states.get("sensor.mock_name_download_speed").state == "unknown"
+    assert hass.states.get("sensor.mock_name_upload_speed").state == "unknown"
     assert hass.states.get("sensor.mock_name_packets_s_received").state == "unknown"
     assert hass.states.get("sensor.mock_name_packets_s_sent").state == "unknown"
 
@@ -51,13 +51,13 @@ async def test_upnp_sensors(
     async_fire_time_changed(hass, now + timedelta(seconds=DEFAULT_SCAN_INTERVAL))
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.mock_name_bytes_received").state == "10240"
-    assert hass.states.get("sensor.mock_name_bytes_sent").state == "20480"
+    assert hass.states.get("sensor.mock_name_data_received").state == "10240"
+    assert hass.states.get("sensor.mock_name_data_sent").state == "20480"
     assert hass.states.get("sensor.mock_name_packets_received").state == "30"
     assert hass.states.get("sensor.mock_name_packets_sent").state == "40"
     assert hass.states.get("sensor.mock_name_external_ip").state == ""
     assert hass.states.get("sensor.mock_name_wan_status").state == "Disconnected"
-    assert hass.states.get("sensor.mock_name_kib_s_received").state == "10.0"
-    assert hass.states.get("sensor.mock_name_kib_s_sent").state == "20.0"
+    assert hass.states.get("sensor.mock_name_download_speed").state == "10.0"
+    assert hass.states.get("sensor.mock_name_upload_speed").state == "20.0"
     assert hass.states.get("sensor.mock_name_packets_s_received").state == "30.0"
     assert hass.states.get("sensor.mock_name_packets_s_sent").state == "40.0"

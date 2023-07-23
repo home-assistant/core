@@ -49,7 +49,7 @@ class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription
 SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
         key=BYTES_RECEIVED,
-        translation_key="bytes_received",
+        translation_key="data_received",
         icon="mdi:server-network",
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
@@ -59,7 +59,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
-        translation_key="bytes_sent",
+        translation_key="data_sent",
         icon="mdi:server-network",
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
@@ -109,7 +109,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=BYTES_RECEIVED,
-        translation_key="kibibytes_per_second_received",
+        translation_key="download_speed",
         value_key=KIBIBYTES_PER_SEC_RECEIVED,
         unique_id="KiB/sec_received",
         icon="mdi:server-network",
@@ -120,7 +120,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
-        translation_key="kibibytes_per_second_sent",
+        translation_key="upload_speed",
         value_key=KIBIBYTES_PER_SEC_SENT,
         unique_id="KiB/sec_sent",
         icon="mdi:server-network",
