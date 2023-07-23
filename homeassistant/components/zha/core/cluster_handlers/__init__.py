@@ -62,8 +62,17 @@ def retry_request(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
     async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> Any:
         try:
             return await RETRYABLE_REQUEST_DECORATOR(func)(*args, **kwargs)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as exc:
-            raise HomeAssistantError from exc
+        except asyncio.TimeoutError as exc:
+            raise HomeAssistantError(
+                "Failed to send request: device did not respond"
+            ) from exc
+        except zigpy.exceptions.ZigbeeException as exc:
+            message = "Failed to send request"
+
+            if str(exc):
+                message = f"{message}: {exc}"
+
+            raise HomeAssistantError(message) from exc
 
     return wrapper
 
