@@ -1,6 +1,15 @@
 """Tests for the Gardena Bluetooth integration."""
 
+from unittest.mock import patch
+
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+
+from tests.common import MockConfigEntry
+from tests.components.bluetooth import (
+    inject_bluetooth_service_info,
+)
 
 WATER_TIMER_SERVICE_INFO = BluetoothServiceInfo(
     name="Timer",
@@ -59,3 +68,16 @@ UNSUPPORTED_GROUP_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
     source="local",
 )
+
+
+async def setup_entry(
+    hass: HomeAssistant, mock_entry: MockConfigEntry, platforms: list[Platform]
+) -> None:
+    """Make sure the device is available."""
+
+    inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
+
+    with patch("homeassistant.components.gardena_bluetooth.PLATFORMS", platforms):
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()

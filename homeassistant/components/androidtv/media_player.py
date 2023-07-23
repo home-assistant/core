@@ -210,6 +210,8 @@ class ADBDevice(MediaPlayerEntity):
     """Representation of an Android or Fire TV device."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -222,7 +224,6 @@ class ADBDevice(MediaPlayerEntity):
     ) -> None:
         """Initialize the Android / Fire TV device."""
         self.aftv = aftv
-        self._attr_name = name
         self._attr_unique_id = unique_id
         self._entry_id = entry_id
         self._entry_data = entry_data

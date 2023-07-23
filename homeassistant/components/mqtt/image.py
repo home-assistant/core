@@ -61,7 +61,7 @@ def validate_topic_required(config: ConfigType) -> ConfigType:
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_CONTENT_TYPE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Exclusive(CONF_URL_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Exclusive(CONF_IMAGE_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
@@ -102,6 +102,7 @@ async def _async_setup_entity(
 class MqttImage(MqttEntity, ImageEntity):
     """representation of a MQTT image."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format: str = image.ENTITY_ID_FORMAT
     _last_image: bytes | None = None
     _client: httpx.AsyncClient

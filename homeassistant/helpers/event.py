@@ -10,7 +10,7 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import Any, Concatenate, ParamSpec, cast
+from typing import Any, Concatenate, ParamSpec, TypedDict, cast
 
 import attr
 
@@ -41,7 +41,7 @@ from .entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from .ratelimit import KeyedRateLimit
 from .sun import get_astral_event_next
 from .template import RenderInfo, Template, result_as_boolean
-from .typing import TemplateVarsType
+from .typing import EventType, TemplateVarsType
 
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
 TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
@@ -117,6 +117,14 @@ class TrackTemplateResult:
     result: Any
 
 
+class EventStateChangedData(TypedDict):
+    """EventStateChanged data."""
+
+    entity_id: str
+    old_state: State | None
+    new_state: State | None
+
+
 def threaded_listener_factory(
     async_factory: Callable[Concatenate[HomeAssistant, _P], Any]
 ) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:
@@ -183,36 +191,38 @@ def async_track_state_change(
     job = HassJob(action, f"track state change {entity_ids} {from_state} {to_state}")
 
     @callback
-    def state_change_filter(event: Event) -> bool:
+    def state_change_filter(event: EventType[EventStateChangedData]) -> bool:
         """Handle specific state changes."""
         if from_state is not None:
-            if (old_state := event.data.get("old_state")) is not None:
-                old_state = old_state.state
+            old_state_str: str | None = None
+            if (old_state := event.data["old_state"]) is not None:
+                old_state_str = old_state.state
 
-            if not match_from_state(old_state):
+            if not match_from_state(old_state_str):
                 return False
 
         if to_state is not None:
-            if (new_state := event.data.get("new_state")) is not None:
-                new_state = new_state.state
+            new_state_str: str | None = None
+            if (new_state := event.data["new_state"]) is not None:
+                new_state_str = new_state.state
 
-            if not match_to_state(new_state):
+            if not match_to_state(new_state_str):
                 return False
 
         return True
 
     @callback
-    def state_change_dispatcher(event: Event) -> None:
+    def state_change_dispatcher(event: EventType[EventStateChangedData]) -> None:
         """Handle specific state changes."""
         hass.async_run_hass_job(
             job,
             event.data["entity_id"],
-            event.data.get("old_state"),
+            event.data["old_state"],
             event.data["new_state"],
         )
 
     @callback
-    def state_change_listener(event: Event) -> None:
+    def state_change_listener(event: EventType[EventStateChangedData]) -> None:
         """Handle specific state changes."""
         if not state_change_filter(event):
             return
@@ -231,7 +241,7 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter
+        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter  # type: ignore[arg-type]
     )
 
 
@@ -242,7 +252,7 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 def async_track_state_change_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
-    action: Callable[[Event], Any],
+    action: Callable[[EventType[EventStateChangedData]], Any],
 ) -> CALLBACK_TYPE:
     """Track specific state change events indexed by entity_id.
 
@@ -263,8 +273,8 @@ def async_track_state_change_event(
 @callback
 def _async_dispatch_entity_id_event(
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[Event], Any]]],
-    event: Event,
+    callbacks: dict[str, list[HassJob[[EventType[EventStateChangedData]], Any]]],
+    event: EventType[EventStateChangedData],
 ) -> None:
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["entity_id"])):
@@ -282,7 +292,9 @@ def _async_dispatch_entity_id_event(
 
 @callback
 def _async_state_change_filter(
-    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[EventType[EventStateChangedData]], Any]]],
+    event: EventType[EventStateChangedData],
 ) -> bool:
     """Filter state changes by entity_id."""
     return event.data["entity_id"] in callbacks
@@ -292,7 +304,7 @@ def _async_state_change_filter(
 def _async_track_state_change_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
-    action: Callable[[Event], Any],
+    action: Callable[[EventType[EventStateChangedData]], Any],
 ) -> CALLBACK_TYPE:
     """async_track_state_change_event without lowercasing."""
     return _async_track_event(
@@ -301,9 +313,10 @@ def _async_track_state_change_event(
         TRACK_STATE_CHANGE_CALLBACKS,
         TRACK_STATE_CHANGE_LISTENER,
         EVENT_STATE_CHANGED,
-        _async_dispatch_entity_id_event,
-        _async_state_change_filter,
-        action,
+        # Remove type ignores when _async_track_event uses EventType
+        _async_dispatch_entity_id_event,  # type: ignore[arg-type]
+        _async_state_change_filter,  # type: ignore[arg-type]
+        action,  # type: ignore[arg-type]
     )
 
 

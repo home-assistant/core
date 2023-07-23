@@ -21,7 +21,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import Coordinator, GardenaBluetoothEntity
+from .coordinator import (
+    Coordinator,
+    GardenaBluetoothDescriptorEntity,
+    GardenaBluetoothEntity,
+)
 
 
 @dataclass
@@ -90,30 +94,22 @@ async def async_setup_entry(
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]
-    entities.append(GardenaBluetoothRemainingOpenSetNumber(coordinator))
+    if Valve.remaining_open_time.uuid in coordinator.characteristics:
+        entities.append(GardenaBluetoothRemainingOpenSetNumber(coordinator))
     async_add_entities(entities)
 
 
-class GardenaBluetoothNumber(GardenaBluetoothEntity, NumberEntity):
+class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
     """Representation of a number."""
 
     entity_description: GardenaBluetoothNumberEntityDescription
 
-    def __init__(
-        self,
-        coordinator: Coordinator,
-        description: GardenaBluetoothNumberEntityDescription,
-    ) -> None:
-        """Initialize the number entity."""
-        super().__init__(coordinator, {description.key})
-        self._attr_unique_id = f"{coordinator.address}-{description.key}"
-        self.entity_description = description
-
     def _handle_coordinator_update(self) -> None:
-        if data := self.coordinator.data.get(self.entity_description.char.uuid):
-            self._attr_native_value = float(self.entity_description.char.decode(data))
-        else:
+        data = self.coordinator.get_cached(self.entity_description.char)
+        if data is None:
             self._attr_native_value = None
+        else:
+            self._attr_native_value = float(data)
         super()._handle_coordinator_update()
 
     async def async_set_native_value(self, value: float) -> None:

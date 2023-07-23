@@ -12,14 +12,13 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
-from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
