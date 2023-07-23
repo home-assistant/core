@@ -170,22 +170,25 @@ async def async_setup_entry(
             EntityParameter.VALUE_MODIFICATION
         )
 
-        entities.append(
-            ScreenLogicPushSensor(
-                coordinator,
-                ScreenLogicPushSensorDescription(
-                    subscription_code=base_data.subscription_code,
-                    **base_kwargs,
-                ),
+        if base_data.subscription_code:
+            entities.append(
+                ScreenLogicPushSensor(
+                    coordinator,
+                    ScreenLogicPushSensorDescription(
+                        subscription_code=base_data.subscription_code,
+                        **base_kwargs,
+                    ),
+                )
             )
-            if base_data.subscription_code
-            else ScreenLogicSensor(
-                coordinator,
-                ScreenLogicSensorDescription(
-                    **base_kwargs,
-                ),
+        else:
+            entities.append(
+                ScreenLogicSensor(
+                    coordinator,
+                    ScreenLogicSensorDescription(
+                        **base_kwargs,
+                    ),
+                )
             )
-        )
 
     async_add_entities(entities)
 

@@ -90,18 +90,21 @@ async def async_setup_entry(
             base_data.value_data.get(ATTR.DEVICE_TYPE)
         )
 
-        entities.append(
-            ScreenLogicPushBinarySensor(
-                coordinator,
-                ScreenLogicPushBinarySensorDescription(
-                    subscription_code=base_data.subscription_code, **base_kwargs
-                ),
+        if base_data.subscription_code:
+            entities.append(
+                ScreenLogicPushBinarySensor(
+                    coordinator,
+                    ScreenLogicPushBinarySensorDescription(
+                        subscription_code=base_data.subscription_code, **base_kwargs
+                    ),
+                )
             )
-            if base_data.subscription_code
-            else ScreenLogicBinarySensor(
-                coordinator, ScreenLogicBinarySensorDescription(**base_kwargs)
+        else:
+            entities.append(
+                ScreenLogicBinarySensor(
+                    coordinator, ScreenLogicBinarySensorDescription(**base_kwargs)
+                )
             )
-        )
 
     async_add_entities(entities)
 
