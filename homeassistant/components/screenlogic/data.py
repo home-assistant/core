@@ -173,7 +173,11 @@ def process_supported_values(
                     if not inclusion_rule.test(gateway, data_path):
                         continue
 
-                value_data = gateway.get_data(*data_path, strict=True)
+                try:
+                    value_data = gateway.get_data(*data_path, strict=True)
+                except KeyError:
+                    _LOGGER.info(f"Failed to find {data_path}")
+                    continue
 
                 sub_code = value_params.get(
                     EntityParameter.SUBSCRIPTION_CODE
@@ -189,7 +193,17 @@ def process_supported_values(
 
                 entity_key = generate_unique_id(device, group, value_key)
 
-                yield BaseScreenLogicEntityData(
+                base_kwargs = {
+                    "data_path": data_path,
+                    "key": entity_key,
+                    "entity_category": value_params.get(
+                        EntityParameter.ENTITY_CATEGORY, EntityCategory.DIAGNOSTIC
+                    ),
+                    "entity_registry_enabled_default": enabled,
+                    "name": value_data.get(ATTR.NAME),
+                }
+
+                yield base_kwargs, BaseScreenLogicEntityData(
                     data_path, enabled, entity_key, sub_code, value_data, value_params
                 )
 

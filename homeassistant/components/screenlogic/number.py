@@ -64,25 +64,16 @@ async def async_setup_entry(
     ]
     gateway = coordinator.gateway
 
-    for base_data in process_supported_values(gateway, SUPPORTED_DATA):
+    for base_kwargs, base_data in process_supported_values(gateway, SUPPORTED_DATA):
         if set_value_data := base_data.value_parameters.get(EntityParameter.SET_VALUE):
             set_value_str, set_value_params = set_value_data
             set_value_func = getattr(gateway, set_value_str)
-        base_kwargs = {
-            "data_path": base_data.data_path,
-            "key": base_data.entity_key,
-            "entity_category": base_data.value_parameters.get(
-                "entity_category", EntityCategory.DIAGNOSTIC
-            ),
-            "entity_registry_enabled_default": base_data.enabled,
-            "name": base_data.value_data.get(ATTR.NAME),
-            "native_unit_of_measurement": get_ha_unit(base_data.value_data),
-            "native_max_value": base_data.value_data.get(ATTR.MAX_SETPOINT),
-            "native_min_value": base_data.value_data.get(ATTR.MIN_SETPOINT),
-            "native_step": base_data.value_data.get(ATTR.STEP),
-            "set_value": set_value_func,
-            "set_value_params": set_value_params,
-        }
+        base_kwargs["native_unit_of_measurement"] = get_ha_unit(base_data.value_data)
+        base_kwargs["native_max_value"] = base_data.value_data.get(ATTR.MAX_SETPOINT)
+        base_kwargs["native_min_value"] = base_data.value_data.get(ATTR.MIN_SETPOINT)
+        base_kwargs["native_step"] = base_data.value_data.get(ATTR.STEP)
+        base_kwargs["set_value"] = set_value_func
+        base_kwargs["set_value_params"] = set_value_params
 
         entities.append(
             ScreenLogicNumber(

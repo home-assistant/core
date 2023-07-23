@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -158,27 +157,18 @@ async def async_setup_entry(
     ]
     gateway = coordinator.gateway
 
-    for base_data in process_supported_values(gateway, SUPPORTED_DATA):
-        base_kwargs = {
-            "data_path": base_data.data_path,
-            "key": base_data.entity_key,
-            "device_class": SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
-                base_data.value_data.get(ATTR.DEVICE_TYPE)
-            ),
-            "entity_category": base_data.value_parameters.get(
-                EntityParameter.ENTITY_CATEGORY, EntityCategory.DIAGNOSTIC
-            ),
-            "entity_registry_enabled_default": base_data.enabled,
-            "name": base_data.value_data.get(ATTR.NAME),
-            "native_unit_of_measurement": get_ha_unit(base_data.value_data),
-            "options": base_data.value_data.get(ATTR.ENUM_OPTIONS),
-            "state_class": SL_STATE_TYPE_TO_HA_STATE_CLASS.get(
-                base_data.value_data.get(ATTR.STATE_TYPE)
-            ),
-            "value_mod": base_data.value_parameters.get(
-                EntityParameter.VALUE_MODIFICATION
-            ),
-        }
+    for base_kwargs, base_data in process_supported_values(gateway, SUPPORTED_DATA):
+        base_kwargs["device_class"] = SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
+            base_data.value_data.get(ATTR.DEVICE_TYPE)
+        )
+        base_kwargs["native_unit_of_measurement"] = get_ha_unit(base_data.value_data)
+        base_kwargs["options"] = base_data.value_data.get(ATTR.ENUM_OPTIONS)
+        base_kwargs["state_class"] = SL_STATE_TYPE_TO_HA_STATE_CLASS.get(
+            base_data.value_data.get(ATTR.STATE_TYPE)
+        )
+        base_kwargs["value_mod"] = base_data.value_parameters.get(
+            EntityParameter.VALUE_MODIFICATION
+        )
 
         entities.append(
             ScreenLogicPushSensor(

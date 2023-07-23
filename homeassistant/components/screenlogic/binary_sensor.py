@@ -11,13 +11,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
-from .data import EntityParameter, SupportedDeviceDescriptions, process_supported_values
+from .data import SupportedDeviceDescriptions, process_supported_values
 from .entity import (
     ScreenlogicEntity,
     ScreenLogicEntityDescription,
@@ -86,19 +85,10 @@ async def async_setup_entry(
     ]
     gateway = coordinator.gateway
 
-    for base_data in process_supported_values(gateway, SUPPORTED_DATA):
-        base_kwargs = {
-            "data_path": base_data.data_path,
-            "key": base_data.entity_key,
-            "device_class": SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
-                base_data.value_data.get(ATTR.DEVICE_TYPE)
-            ),
-            "entity_category": base_data.value_parameters.get(
-                EntityParameter.ENTITY_CATEGORY, EntityCategory.DIAGNOSTIC
-            ),
-            "entity_registry_enabled_default": base_data.enabled,
-            "name": base_data.value_data.get(ATTR.NAME),
-        }
+    for base_kwargs, base_data in process_supported_values(gateway, SUPPORTED_DATA):
+        base_kwargs["device_class"] = SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
+            base_data.value_data.get(ATTR.DEVICE_TYPE)
+        )
 
         entities.append(
             ScreenLogicPushBinarySensor(
