@@ -82,9 +82,7 @@ class AxisCamera(AxisEntity, MjpegCamera):
         self.device.additional_diagnostics["camera_sources"] = {
             "Image": self._still_image_url,
             "MJPEG": self._mjpeg_url,
-            "Stream": self._stream_source.replace(self.device.username, "user").replace(
-                self.device.password, "pass"
-            ),
+            "Stream": f"rtsp://user:pass@{self.device.host}/axis-media/media.amp{stream_options}",
         }
 
     @property
