@@ -121,6 +121,13 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         return super().available and self.user_data is not None
 
     @property
+    def entity_picture(self) -> str | None:
+        """Return user avatar."""
+        if self.user_data and self.user_data.image is not None:
+            return self.user_data.image
+        return None
+
+    @property
     def native_value(self) -> str:
         """Return value of sensor."""
         if self.user_data and self.user_data.now_playing is not None:
