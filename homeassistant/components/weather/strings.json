@@ -71,6 +71,9 @@
         },
         "wind_speed_unit": {
           "name": "Wind speed unit"
+        },
+        "uv_index": {
+          "name": "UV index"
         }
       }
     }

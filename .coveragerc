@@ -82,6 +82,7 @@ omit =
     homeassistant/components/arwn/sensor.py
     homeassistant/components/aseko_pool_live/__init__.py
     homeassistant/components/aseko_pool_live/binary_sensor.py
+    homeassistant/components/aseko_pool_live/coordinator.py
     homeassistant/components/aseko_pool_live/entity.py
     homeassistant/components/aseko_pool_live/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
@@ -305,8 +306,6 @@ omit =
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/bluetooth/*
-    homeassistant/components/esphome/domain_data.py
-    homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/manager.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
@@ -315,12 +314,15 @@ omit =
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/__init__.py
+    homeassistant/components/ezviz/alarm_control_panel.py
     homeassistant/components/ezviz/binary_sensor.py
     homeassistant/components/ezviz/camera.py
+    homeassistant/components/ezviz/image.py
     homeassistant/components/ezviz/light.py
     homeassistant/components/ezviz/coordinator.py
     homeassistant/components/ezviz/number.py
     homeassistant/components/ezviz/entity.py
+    homeassistant/components/ezviz/select.py
     homeassistant/components/ezviz/sensor.py
     homeassistant/components/ezviz/switch.py
     homeassistant/components/ezviz/update.py
@@ -593,6 +595,7 @@ omit =
     homeassistant/components/keymitt_ble/entity.py
     homeassistant/components/keymitt_ble/switch.py
     homeassistant/components/keymitt_ble/coordinator.py
+    homeassistant/components/kitchen_sink/weather.py
     homeassistant/components/kiwi/lock.py
     homeassistant/components/kodi/__init__.py
     homeassistant/components/kodi/browse_media.py
@@ -698,13 +701,11 @@ omit =
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
-    homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minio/minio_helper.py
-    homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
     homeassistant/components/mochad/__init__.py
@@ -755,7 +756,6 @@ omit =
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
-    homeassistant/components/nest/legacy/*
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/button.py
@@ -992,6 +992,7 @@ omit =
     homeassistant/components/reolink/light.py
     homeassistant/components/reolink/number.py
     homeassistant/components/reolink/select.py
+    homeassistant/components/reolink/sensor.py
     homeassistant/components/reolink/siren.py
     homeassistant/components/reolink/switch.py
     homeassistant/components/reolink/update.py
@@ -1317,6 +1318,7 @@ omit =
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
     homeassistant/components/trafikverket_train/__init__.py
+    homeassistant/components/trafikverket_train/coordinator.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py

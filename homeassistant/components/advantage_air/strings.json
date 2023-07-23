@@ -13,7 +13,19 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "description": "Connect to the API of your Advantage Air wall mounted tablet.",
-        "title": "Connect"
+        "title": "[%key:common::action::connect%]"
+      }
+    }
+  },
+  "services": {
+    "set_time_to": {
+      "name": "Set time to",
+      "description": "Controls timers to turn the system on or off after a set number of minutes.",
+      "fields": {
+        "minutes": {
+          "name": "Minutes",
+          "description": "Minutes until action."
+        }
       }
     }
   }

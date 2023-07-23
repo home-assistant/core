@@ -55,7 +55,7 @@ class TadoSensorEntityDescription(
 HOME_SENSORS = [
     TadoSensorEntityDescription(
         key="outdoor temperature",
-        name="Outdoor temperature",
+        translation_key="outdoor_temperature",
         state_fn=lambda data: data["outsideTemperature"]["celsius"],
         attributes_fn=lambda data: {
             "time": data["outsideTemperature"]["timestamp"],
@@ -67,7 +67,7 @@ HOME_SENSORS = [
     ),
     TadoSensorEntityDescription(
         key="solar percentage",
-        name="Solar percentage",
+        translation_key="solar_percentage",
         state_fn=lambda data: data["solarIntensity"]["percentage"],
         attributes_fn=lambda data: {
             "time": data["solarIntensity"]["timestamp"],
@@ -78,28 +78,28 @@ HOME_SENSORS = [
     ),
     TadoSensorEntityDescription(
         key="weather condition",
-        name="Weather condition",
+        translation_key="weather_condition",
         state_fn=lambda data: format_condition(data["weatherState"]["value"]),
         attributes_fn=lambda data: {"time": data["weatherState"]["timestamp"]},
         data_category=SENSOR_DATA_CATEGORY_WEATHER,
     ),
     TadoSensorEntityDescription(
         key="tado mode",
-        name="Tado mode",
+        translation_key="tado_mode",
         # pylint: disable=unnecessary-lambda
         state_fn=lambda data: get_tado_mode(data),
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
     TadoSensorEntityDescription(
         key="geofencing mode",
-        name="Geofencing mode",
+        translation_key="geofencing_mode",
         # pylint: disable=unnecessary-lambda
         state_fn=lambda data: get_geofencing_mode(data),
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
     TadoSensorEntityDescription(
         key="automatic geofencing",
-        name="Automatic geofencing",
+        translation_key="automatic_geofencing",
         # pylint: disable=unnecessary-lambda
         state_fn=lambda data: get_automatic_geofencing(data),
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
@@ -108,7 +108,6 @@ HOME_SENSORS = [
 
 TEMPERATURE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="temperature",
-    name="Temperature",
     state_fn=lambda data: data.current_temp,
     attributes_fn=lambda data: {
         "time": data.current_temp_timestamp,
@@ -120,7 +119,6 @@ TEMPERATURE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
 )
 HUMIDITY_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="humidity",
-    name="Humidity",
     state_fn=lambda data: data.current_humidity,
     attributes_fn=lambda data: {"time": data.current_humidity_timestamp},
     native_unit_of_measurement=PERCENTAGE,
@@ -129,12 +127,12 @@ HUMIDITY_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
 )
 TADO_MODE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="tado mode",
-    name="Tado mode",
+    translation_key="tado_mode",
     state_fn=lambda data: data.tado_mode,
 )
 HEATING_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="heating",
-    name="Heating",
+    translation_key="heating",
     state_fn=lambda data: data.heating_power_percentage,
     attributes_fn=lambda data: {"time": data.heating_power_timestamp},
     native_unit_of_measurement=PERCENTAGE,
@@ -142,6 +140,7 @@ HEATING_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
 )
 AC_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="ac",
+    translation_key="ac",
     name="AC",
     state_fn=lambda data: data.ac_power,
     attributes_fn=lambda data: {"time": data.ac_power_timestamp},
@@ -244,8 +243,6 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
 
     entity_description: TadoSensorEntityDescription
 
-    _attr_has_entity_name = True
-
     def __init__(self, tado, entity_description: TadoSensorEntityDescription) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
@@ -297,8 +294,6 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     """Representation of a tado Sensor."""
 
     entity_description: TadoSensorEntityDescription
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
