@@ -34,8 +34,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -769,6 +769,13 @@ async def test_import(hass: HomeAssistant, fakeimg_png) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Yaml Defined Name"
     await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_generic"
+    )
+    assert issue.translation_key == "deprecated_yaml"
+
     # Any name defined in yaml should end up as the entity id.
     assert hass.states.get("camera.yaml_defined_name")
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT

@@ -11,9 +11,7 @@ import functools
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, TypeVar, cast
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
