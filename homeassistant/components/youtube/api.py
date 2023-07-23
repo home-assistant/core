@@ -5,6 +5,7 @@ from youtubeaio.youtube import YouTube
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
 class AsyncConfigEntryAuth:
@@ -32,6 +33,6 @@ class AsyncConfigEntryAuth:
     async def get_resource(self) -> YouTube:
         """Create resource."""
         token = await self.check_and_refresh_token()
-        youtube = YouTube()
+        youtube = YouTube(session=async_get_clientsession(self.hass))
         await youtube.set_user_authentication(token, [AuthScope.READ_ONLY])
         return youtube
