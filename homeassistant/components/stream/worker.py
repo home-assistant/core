@@ -8,11 +8,10 @@ import datetime
 from io import SEEK_END, BytesIO
 import logging
 from threading import Event
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import attr
 import av
-from typing_extensions import Self
 
 from homeassistant.core import HomeAssistant
 

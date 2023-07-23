@@ -249,7 +249,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.9
+aiohomekit==2.6.11
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -794,7 +794,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux-led==1.0.0
+flux-led==1.0.1
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -2105,7 +2105,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.5.2
+python-kasa[speedups]==0.5.3
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2687,7 +2687,7 @@ wyoming==1.1.0
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.19.1
+xiaomi-ble==0.20.0
 
 # homeassistant.components.knx
 xknx==2.11.1

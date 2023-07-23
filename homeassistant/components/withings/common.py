@@ -449,7 +449,7 @@ class DataManager:
             0,
             0,
             0,
-            datetime.timezone.utc,
+            datetime.UTC,
         )
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
