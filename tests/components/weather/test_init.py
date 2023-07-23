@@ -1,5 +1,6 @@
 """The test for weather entity."""
 from datetime import datetime
+from typing import Any
 
 import pytest
 
@@ -31,7 +32,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
+    DOMAIN,
     ROUNDING_PRECISION,
+    SERVICE_GET_FORECAST,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -1103,3 +1106,81 @@ async def test_forecast_twice_daily_missing_is_daytime(
     assert msg["error"] == {"code": "unknown_error", "message": "Unknown error"}
     assert not msg["success"]
     assert msg["type"] == "result"
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "extra"),
+    [
+        ("daily", {}),
+        ("hourly", {}),
+        ("twice_daily", {"is_daytime": True}),
+    ],
+)
+async def test_get_forecast(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    forecast_type: str,
+    extra: dict[str, Any],
+) -> None:
+    """Test get forecast service."""
+
+    entity0 = await create_entity(
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+        supported_features=WeatherEntityFeature.FORECAST_DAILY,
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": entity0.entity_id,
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "type": forecast_type,
+        "forecast": [
+            {
+                "cloud_coverage": None,
+                "temperature": 38.0,
+                "templow": 38.0,
+                "uv_index": None,
+                "wind_bearing": None,
+            }
+            | extra
+        ],
+    }
+
+
+async def test_get_forecast_no_forecast(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test get forecast service."""
+
+    entity0 = await create_entity(
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+        supported_features=WeatherEntityFeature.FORECAST_DAILY,
+    )
+
+    entity0.forecast_list = None
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": entity0.entity_id,
+            "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "type": "daily",
+        "forecast": None,
+    }

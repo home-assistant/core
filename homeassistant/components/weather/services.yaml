@@ -1,0 +1,17 @@
+get_forecast:
+  target:
+    entity:
+      domain: calendar
+      supported_features:
+        - weather.WeatherEntityFeature.FORECAST_DAILY
+        - weather.WeatherEntityFeature.FORECAST_HOURLY
+        - weather.WeatherEntityFeature.FORECAST_TWICE_DAILY
+  fields:
+    type:
+      example: "daily"
+      selector:
+        select:
+          options:
+            - "daily"
+            - "hourly"
+            - "twice_daily"

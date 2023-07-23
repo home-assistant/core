@@ -101,6 +101,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
+    from homeassistant.components.weather import WeatherEntityFeature
 
     return {
         "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
@@ -118,6 +119,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
+        "WeatherEntityFeature": WeatherEntityFeature,
     }
 
 
