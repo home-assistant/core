@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
+from .conftest import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -100,6 +100,7 @@ async def test_existing_entry(
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     setup_credentials: None,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Check existing entry."""
 

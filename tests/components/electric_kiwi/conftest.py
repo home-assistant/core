@@ -14,9 +14,11 @@ from homeassistant.components.electric_kiwi.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import CLIENT_ID, CLIENT_SECRET
-
 from tests.common import MockConfigEntry
+
+CLIENT_ID = "1234"
+CLIENT_SECRET = "5678"
+REDIRECT_URI = "https://example.com/auth/external/callback"
 
 
 @pytest.fixture(autouse=True)
