@@ -26,7 +26,8 @@ async def async_setup_platform(
     """Set up the Lutron fans."""
     devs = []
     for area_name, device in hass.data[LUTRON_DEVICES]["fan"]:
-        dev = LutronFan(area_name, device, hass.data[LUTRON_CONTROLLER],hass, device.uuid, device.name, FULL_SUPPORT, None)
+        dev = LutronFan(area_name, device, hass.data[LUTRON_CONTROLLER],
+                        hass, device.uuid, device.name, FULL_SUPPORT, None)
         devs.append(dev)
 
     async_add_entities(devs, True)
@@ -85,6 +86,7 @@ class LutronFan(LutronDevice, FanEntity):
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         self._percentage = percentage
+        self._prev_percentage = percentage
         self._lutron_device.level = percentage
         self._preset_mode = None
         self.schedule_update_ha_state()
