@@ -216,6 +216,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    PH = "ph"
+    """Potential hidrogen (acidity/alkalinity).
+
+    Unit of measurement: Unitless
+    """
+
     PM1 = "pm1"
     """Particulate matter <= 1 μm.
 
@@ -422,6 +428,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PH: {None},
     NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
