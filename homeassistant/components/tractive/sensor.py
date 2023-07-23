@@ -68,7 +68,15 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         super().__init__(user_id, item.trackable, item.tracker_details)
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
+        self._attr_available = False
         self.entity_description = description
+
+    @callback
+    def handle_status_update(self, event: dict[str, Any]) -> None:
+        """Handle status update."""
+        self._attr_native_value = event[self.entity_description.key]
+        self._attr_available = event[self.entity_description.key] is not None
+        self.async_write_ha_state()
 
     @callback
     def handle_server_unavailable(self) -> None:
@@ -80,15 +88,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 class TractiveHardwareSensor(TractiveSensor):
     """Tractive hardware sensor."""
 
-    @callback
-    def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
-        """Handle hardware status update."""
-        if (_state := event[self.entity_description.key]) is None:
-            return
-        self._attr_native_value = _state
-        self._attr_available = True
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 
@@ -96,7 +95,7 @@ class TractiveHardwareSensor(TractiveSensor):
             async_dispatcher_connect(
                 self.hass,
                 f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
-                self.handle_hardware_status_update,
+                self.handle_status_update,
             )
         )
 
@@ -111,13 +110,6 @@ class TractiveHardwareSensor(TractiveSensor):
 
 class TractiveActivitySensor(TractiveSensor):
     """Tractive active sensor."""
-
-    @callback
-    def handle_status_update(self, event: dict[str, Any]) -> None:
-        """Handle status update."""
-        self._attr_native_value = event[self.entity_description.key]
-        self._attr_available = True
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
