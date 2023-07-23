@@ -73,12 +73,6 @@ class SensorDeviceClass(StrEnum):
     ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
     """
 
-    DURATION = "duration"
-    """Fixed duration.
-
-    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
-    """
-
     ENUM = "enum"
     """Enumeration.
 
@@ -156,6 +150,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `LENGTH_*` units
     - SI /metric: `mm`, `cm`, `m`, `km`
     - USCS / imperial: `in`, `ft`, `yd`, `mi`
+    """
+
+    DURATION = "duration"
+    """Fixed duration.
+
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
     """
 
     ENERGY = "energy"
@@ -248,7 +248,7 @@ class SensorDeviceClass(StrEnum):
     """
 
     PM1 = "pm1"
-    """Particulate matter <= 0.1 μm.
+    """Particulate matter <= 1 μm.
 
     Unit of measurement: `µg/m³`
     """
