@@ -80,7 +80,7 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
                     if body.startswith("good") or body.startswith("nochg"):
                         ip_address = body.split(" ")[1]
                         _LOGGER.debug(
-                            "No-IP.com erfolgreich aktualisiert: %s IP: %s",
+                            "Successfully updated No-IP.com: %s IP: %s",
                             no_ip_domain,
                             ip_address,
                         )
@@ -94,21 +94,21 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
                         )
                     else:
                         _LOGGER.debug(
-                            "Aktualisierung von No-IP.com fehlgeschlagen: %s => %s",
+                            "Failed to update No-IP.com: %s => %s",
                             no_ip_domain,
                             body,
                         )
         except aiohttp.ClientError as client_error:
-            _LOGGER.warning("Keine Verbindung zur No-IP.com API: %s", client_error)
+            _LOGGER.warning("Unable to connect to No-IP.com API: %s", client_error)
             raise
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Zeitüberschreitung von der No-IP.com API für die Domain: %s",
+                "Timeout from No-IP.com API for domain: %s",
                 no_ip_domain,
             )
             raise
         except Exception as e:  # pylint: disable=broad-except
-            _LOGGER.warning("Fehler beim Aktualisieren der Daten von No-IP.com: %s", e)
+            _LOGGER.warning("Error updating data from No-IP.com: %s", e)
             raise
 
         return data
