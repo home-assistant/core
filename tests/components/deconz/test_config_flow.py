@@ -43,9 +43,7 @@ async def test_flow_discovered_bridges(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that config flow works for discovered bridges."""
-    logging.getLogger("homeassistant.components.deconz.config_flow").setLevel(
-        logging.DEBUG
-    )
+    logging.getLogger("homeassistant.components.deconz").setLevel(logging.DEBUG)
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[
@@ -146,9 +144,7 @@ async def test_flow_manual_configuration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that config flow works with manual configuration after no discovered bridges."""
-    logging.getLogger("homeassistant.components.deconz.config_flow").setLevel(
-        logging.DEBUG
-    )
+    logging.getLogger("homeassistant.components.deconz").setLevel(logging.DEBUG)
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
