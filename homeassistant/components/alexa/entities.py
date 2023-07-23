@@ -532,23 +532,18 @@ class CoverCapabilities(AlexaEntity):
 class EventCapabilities(AlexaEntity):
     """Class to represent doorbel event capabilities."""
 
-    def default_display_categories(self) -> list[str]:
+    def default_display_categories(self) -> list[str] | None:
         """Return the display categories for this entity."""
         attrs = self.entity.attributes
         device_class: event.EventDeviceClass | None = attrs.get(ATTR_DEVICE_CLASS)
-        if device_class in (
-            event.EventDeviceClass.BUTTON,
-            event.EventDeviceClass.DOORBELL,
-        ):
+        if device_class == event.EventDeviceClass.DOORBELL:
             return [DisplayCategory.DOORBELL]
-        if device_class == event.EventDeviceClass.MOTION:
-            return [DisplayCategory.MOTION_SENSOR]
-        return [DisplayCategory.OTHER]
+        return None
 
     def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
-
-        yield AlexaDoorbellEventSource(self.entity)
+        if self.default_display_categories() is not None:
+            yield AlexaDoorbellEventSource(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

@@ -2164,48 +2164,6 @@ async def test_forced_motion_sensor(hass: HomeAssistant) -> None:
             "Test Doorbell Event",
             "DOORBELL",
         ),
-        (
-            (
-                "event.test_button",
-                None,
-                {
-                    "friendly_name": "Test Button Event",
-                    "event_types": ["press"],
-                    "device_class": "button",
-                },
-            ),
-            "event#test_button",
-            "Test Button Event",
-            "DOORBELL",
-        ),
-        (
-            (
-                "event.test_motion",
-                None,
-                {
-                    "friendly_name": "Test Motion Event",
-                    "event_types": ["movement"],
-                    "device_class": "motion",
-                },
-            ),
-            "event#test_motion",
-            "Test Motion Event",
-            "MOTION_SENSOR",
-        ),
-        (
-            (
-                "event.test_other",
-                None,
-                {
-                    "friendly_name": "Test Other Event",
-                    "event_types": ["other"],
-                    "device_class": None,
-                },
-            ),
-            "event#test_other",
-            "Test Other Event",
-            "OTHER",
-        ),
     ],
 )
 async def test_doorbell_event(
