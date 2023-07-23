@@ -296,7 +296,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ): cv.ensure_list,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
@@ -597,6 +597,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 

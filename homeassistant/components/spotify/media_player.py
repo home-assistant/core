@@ -139,11 +139,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the supported features."""
-        if self._restricted_device:
+        if self.data.current_user["product"] != "premium":
+            return MediaPlayerEntityFeature(0)
+        if self._restricted_device or not self._currently_playing:
             return MediaPlayerEntityFeature.SELECT_SOURCE
-        if self.data.current_user["product"] == "premium":
-            return SUPPORT_SPOTIFY
-        return MediaPlayerEntityFeature(0)
+        return SUPPORT_SPOTIFY
 
     @property
     def state(self) -> MediaPlayerState:
@@ -398,7 +398,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
         self._currently_playing = current or {}
 
-        context = self._currently_playing.get("context", {})
+        context = self._currently_playing.get("context") or {}
 
         # For some users in some cases, the uri is formed like
         # "spotify:user:{name}:playlist:{id}" and spotipy wants
@@ -409,9 +409,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             if len(parts) == 5 and parts[1] == "user" and parts[3] == "playlist":
                 uri = ":".join([parts[0], parts[3], parts[4]])
 
-        if context is not None and (
-            self._playlist is None or self._playlist["uri"] != uri
-        ):
+        if context and (self._playlist is None or self._playlist["uri"] != uri):
             self._playlist = None
             if context["type"] == MediaType.PLAYLIST:
                 self._playlist = self.data.client.playlist(uri)

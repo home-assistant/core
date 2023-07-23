@@ -22,6 +22,7 @@ from .coordinator import Coordinator, DeviceUnavailable
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,

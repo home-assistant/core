@@ -18,13 +18,12 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.10.0"
+requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.8.4",
+    "aiohttp==3.8.5",
     "astral==2.2",
     "async-timeout==4.0.2",
     "attrs==22.2.0",
@@ -40,7 +39,7 @@ dependencies    = [
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
-    "PyJWT==2.7.0",
+    "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==41.0.2",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
@@ -80,7 +79,7 @@ include = ["homeassistant*"]
 extend-exclude = "/generated/"
 
 [tool.pylint.MAIN]
-py-version = "3.10"
+py-version = "3.11"
 ignore = [
     "tests",
 ]
