@@ -1,7 +1,5 @@
 """Provides the constants needed for component."""
-from enum import IntFlag
-
-from homeassistant.backports.enum import StrEnum
+from enum import IntFlag, StrEnum
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
