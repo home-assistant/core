@@ -602,14 +602,11 @@ class SensorEntity(Entity):
         else:
             numerical_value = value
 
-        if (
-            native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERTERS
+        if native_unit_of_measurement != unit_of_measurement and (
+            converter := UNIT_CONVERTERS.get(device_class)
         ):
             # Unit conversion needed
-            converter = UNIT_CONVERTERS[device_class]
-
-            converted_numerical_value = UNIT_CONVERTERS[device_class].convert(
+            converted_numerical_value = converter.convert(
                 float(numerical_value),
                 native_unit_of_measurement,
                 unit_of_measurement,
