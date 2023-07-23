@@ -36,6 +36,20 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture(name="imported_config_entry")
+def mock_imported_config_entry() -> MockConfigEntry:
+    """Create LastFM entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            CONF_API_KEY: API_KEY,
+            CONF_MAIN_USER: None,
+            CONF_USERS: [USERNAME_1, USERNAME_2],
+        },
+    )
+
+
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant,
@@ -54,6 +68,17 @@ async def mock_setup_integration(
 @pytest.fixture(name="default_user")
 def mock_default_user() -> MockUser:
     """Return default mock user."""
+    return MockUser(
+        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
+        top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        friends=[MockUser()],
+    )
+
+
+@pytest.fixture(name="default_user_no_friends")
+def mock_default_user_no_friends() -> MockUser:
+    """Return default mock user without friends."""
     return MockUser(
         now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
         top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
