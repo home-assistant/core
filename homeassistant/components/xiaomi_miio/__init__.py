@@ -105,7 +105,12 @@ HUMIDIFIER_PLATFORMS = [
     Platform.SWITCH,
 ]
 LIGHT_PLATFORMS = [Platform.LIGHT]
-VACUUM_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.VACUUM]
+VACUUM_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.BUTTON,
+    Platform.VACUUM,
+]
 AIR_MONITOR_PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 MODEL_TO_CLASS_MAP = {

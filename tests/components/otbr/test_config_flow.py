@@ -23,6 +23,12 @@ HASSIO_DATA = hassio.HassioServiceInfo(
     slug="otbr",
     uuid="12345",
 )
+HASSIO_DATA_2 = hassio.HassioServiceInfo(
+    config={"host": "core-silabs-multiprotocol_2", "port": 8082},
+    name="Silicon Labs Multiprotocol",
+    slug="other_addon",
+    uuid="23456",
+)
 
 
 @pytest.fixture(name="addon_info")
@@ -234,7 +240,7 @@ async def test_hassio_discovery_flow_yellow(
     addon_info.return_value = {
         "available": True,
         "hostname": None,
-        "options": {"device": "/dev/TTYAMA1"},
+        "options": {"device": "/dev/ttyAMA1"},
         "state": None,
         "update_available": False,
         "version": None,
@@ -255,7 +261,7 @@ async def test_hassio_discovery_flow_yellow(
     }
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant Yellow"
+    assert result["title"] == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -263,7 +269,7 @@ async def test_hassio_discovery_flow_yellow(
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Home Assistant Yellow"
+    assert config_entry.title == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
@@ -301,7 +307,7 @@ async def test_hassio_discovery_flow_sky_connect(
     }
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant SkyConnect"
+    assert result["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -309,7 +315,87 @@ async def test_hassio_discovery_flow_sky_connect(
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Home Assistant SkyConnect"
+    assert (
+        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    )
+    assert config_entry.unique_id == HASSIO_DATA.uuid
+
+
+async def test_hassio_discovery_flow_2x_addons(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+) -> None:
+    """Test the hassio discovery flow when the user has 2 addons with otbr support."""
+    url1 = "http://core-silabs-multiprotocol:8081"
+    url2 = "http://core-silabs-multiprotocol_2:8081"
+    aioclient_mock.get(f"{url1}/node/dataset/active", text="aa")
+    aioclient_mock.get(f"{url2}/node/dataset/active", text="bb")
+
+    async def _addon_info(hass, slug):
+        await asyncio.sleep(0)
+        if slug == "otbr":
+            return {
+                "available": True,
+                "hostname": None,
+                "options": {
+                    "device": (
+                        "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                        "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+                    )
+                },
+                "state": None,
+                "update_available": False,
+                "version": None,
+            }
+        return {
+            "available": True,
+            "hostname": None,
+            "options": {
+                "device": (
+                    "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                    "9e2adbd75b8beb119fe564a0f320645d-if00-port1"
+                )
+            },
+            "state": None,
+            "update_available": False,
+            "version": None,
+        }
+
+    addon_info.side_effect = _addon_info
+
+    with patch(
+        "homeassistant.components.otbr.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        results = await asyncio.gather(
+            hass.config_entries.flow.async_init(
+                otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+            ),
+            hass.config_entries.flow.async_init(
+                otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
+            ),
+        )
+
+    expected_data = {
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+    }
+
+    assert results[0]["type"] == FlowResultType.CREATE_ENTRY
+    assert (
+        results[0]["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    )
+    assert results[0]["data"] == expected_data
+    assert results[0]["options"] == {}
+    assert results[1]["type"] == FlowResultType.ABORT
+    assert results[1]["reason"] == "single_instance_allowed"
+    assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+    assert config_entry.options == {}
+    assert (
+        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    )
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 

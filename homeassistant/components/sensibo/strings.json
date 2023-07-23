@@ -31,25 +31,47 @@
     }
   },
   "entity": {
-    "sensor": {
-      "sensitivity": {
-        "state": {
-          "n": "Normal",
-          "s": "Sensitive"
-        }
+    "binary_sensor": {
+      "filter_clean": {
+        "name": "Filter clean required"
       },
-      "smart_type": {
-        "state": {
-          "temperature": "Temperature",
-          "feelslike": "Feels like",
-          "humidity": "Humidity"
-        }
+      "is_main_sensor": {
+        "name": "Main sensor"
+      },
+      "room_occupied": {
+        "name": "Room occupied"
+      },
+      "pure_ac_integration": {
+        "name": "Pure Boost linked with AC"
+      },
+      "pure_geo_integration": {
+        "name": "Pure Boost linked with presence"
+      },
+      "pure_measure_integration": {
+        "name": "Pure Boost linked with indoor air quality"
+      },
+      "pure_prime_integration": {
+        "name": "Pure Boost linked with outdoor air quality"
+      }
+    },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
+    "number": {
+      "calibration_temperature": {
+        "name": "Temperature calibration"
+      },
+      "calibration_humidity": {
+        "name": "Humidity calibration"
       }
     },
     "select": {
       "horizontalswing": {
+        "name": "Horizontal swing",
         "state": {
-          "stopped": "Stopped",
+          "stopped": "[%key:common::state::off%]",
           "fixedleft": "Fixed left",
           "fixedcenterleft": "Fixed center left",
           "fixedcenter": "Fixed center",
@@ -61,10 +83,363 @@
         }
       },
       "light": {
+        "name": "[%key:component::light::title%]",
         "state": {
-          "on": "On",
+          "on": "[%key:common::state::on%]",
           "dim": "Dim",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "sensor": {
+      "filter_last_reset": {
+        "name": "Filter last reset"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "sensitivity": {
+        "name": "Pure sensitivity",
+        "state": {
+          "n": "Normal",
+          "s": "Sensitive"
+        }
+      },
+      "timer_time": {
+        "name": "Timer end time"
+      },
+      "feels_like": {
+        "name": "Temperature feels like"
+      },
+      "climate_react_low": {
+        "name": "Climate React low temperature threshold",
+        "state_attributes": {
+          "fanlevel": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::name%]",
+            "state": {
+              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
+              "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
+              "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
+              "medium_high": "Medium high",
+              "quiet": "Quiet"
+            }
+          },
+          "horizontalswing": {
+            "name": "Horizontal swing",
+            "state": {
+              "stopped": "[%key:common::state::off%]",
+              "fixedleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleft%]",
+              "fixedcenterleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterleft%]",
+              "fixedcenter": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenter%]",
+              "fixedcenterright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterright%]",
+              "fixedright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedright%]",
+              "fixedleftright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleftright%]",
+              "rangecenter": "[%key:component::sensibo::entity::select::horizontalswing::state::rangecenter%]",
+              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]"
+            }
+          },
+          "light": {
+            "name": "[%key:component::light::title%]",
+            "state": {
+              "on": "[%key:common::state::on%]",
+              "dim": "[%key:component::sensibo::entity::select::light::state::dim%]",
+              "off": "[%key:common::state::off%]"
+            }
+          },
+          "mode": {
+            "name": "Mode",
+            "state": {
+              "off": "[%key:common::state::off%]",
+              "heat": "[%key:component::climate::entity_component::_::state::heat%]",
+              "cool": "[%key:component::climate::entity_component::_::state::cool%]",
+              "heat_cool": "[%key:component::climate::entity_component::_::state::heat_cool%]",
+              "auto": "[%key:component::climate::entity_component::_::state::auto%]",
+              "dry": "[%key:component::climate::entity_component::_::state::dry%]",
+              "fan_only": "[%key:component::climate::entity_component::_::state::fan_only%]"
+            }
+          },
+          "on": {
+            "name": "[%key:common::state::on%]",
+            "state": {
+              "true": "[%key:common::state::on%]",
+              "false": "[%key:common::state::off%]"
+            }
+          },
+          "swing": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::name%]",
+            "state": {
+              "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]",
+              "fixedbottom": "Fixed bottom",
+              "fixedmiddle": "Fixed middle",
+              "fixedmiddlebottom": "Fixed middle bottom",
+              "fixedmiddletop": "Fixed middle top",
+              "fixedtop": "Fixed top",
+              "horizontal": "Horizontal",
+              "rangebottom": "Range bottom",
+              "rangefull": "Range full",
+              "rangemiddle": "Range middle",
+              "rangetop": "Range top",
+              "stopped": "[%key:common::state::off%]"
+            }
+          },
+          "targettemperature": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::temperature::name%]"
+          },
+          "temperatureunit": {
+            "name": "Temperature unit",
+            "state": {
+              "c": "Celsius",
+              "f": "Fahrenheit"
+            }
+          }
+        }
+      },
+      "climate_react_high": {
+        "name": "Climate React high temperature threshold",
+        "state_attributes": {
+          "fanlevel": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::name%]",
+            "state": {
+              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
+              "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
+              "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
+              "medium_high": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_high%]",
+              "quiet": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::quiet%]"
+            }
+          },
+          "horizontalswing": {
+            "name": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::name%]",
+            "state": {
+              "stopped": "[%key:common::state::off%]",
+              "fixedleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleft%]",
+              "fixedcenterleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterleft%]",
+              "fixedcenter": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenter%]",
+              "fixedcenterright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterright%]",
+              "fixedright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedright%]",
+              "fixedleftright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleftright%]",
+              "rangecenter": "[%key:component::sensibo::entity::select::horizontalswing::state::rangecenter%]",
+              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]"
+            }
+          },
+          "light": {
+            "name": "[%key:component::light::title%]",
+            "state": {
+              "on": "[%key:common::state::on%]",
+              "dim": "[%key:component::sensibo::entity::select::light::state::dim%]",
+              "off": "[%key:common::state::off%]"
+            }
+          },
+          "mode": {
+            "name": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::mode::name%]",
+            "state": {
+              "off": "[%key:common::state::off%]",
+              "heat": "[%key:component::climate::entity_component::_::state::heat%]",
+              "cool": "[%key:component::climate::entity_component::_::state::cool%]",
+              "heat_cool": "[%key:component::climate::entity_component::_::state::heat_cool%]",
+              "auto": "[%key:component::climate::entity_component::_::state::auto%]",
+              "dry": "[%key:component::climate::entity_component::_::state::dry%]",
+              "fan_only": "[%key:component::climate::entity_component::_::state::fan_only%]"
+            }
+          },
+          "on": {
+            "name": "[%key:common::state::on%]",
+            "state": {
+              "true": "[%key:common::state::on%]",
+              "false": "[%key:common::state::off%]"
+            }
+          },
+          "swing": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::name%]",
+            "state": {
+              "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]",
+              "fixedbottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedbottom%]",
+              "fixedmiddle": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddle%]",
+              "fixedmiddlebottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddlebottom%]",
+              "fixedmiddletop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddletop%]",
+              "fixedtop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedtop%]",
+              "horizontal": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::horizontal%]",
+              "rangebottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangebottom%]",
+              "rangefull": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangefull%]",
+              "rangemiddle": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangemiddle%]",
+              "rangetop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangetop%]",
+              "stopped": "[%key:common::state::off%]"
+            }
+          },
+          "targettemperature": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::temperature::name%]"
+          },
+          "temperatureunit": {
+            "name": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::temperatureunit::name%]",
+            "state": {
+              "c": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::temperatureunit::state::c%]",
+              "f": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::temperatureunit::state::f%]"
+            }
+          }
+        }
+      },
+      "smart_type": {
+        "name": "Climate React type",
+        "state": {
+          "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+          "feelslike": "[%key:component::sensibo::entity::switch::climate_react_switch::state_attributes::type::state::feelslike%]",
+          "humidity": "[%key:component::sensor::entity_component::humidity::name%]"
+        }
+      },
+      "airq_tvoc": {
+        "name": "AirQ TVOC"
+      },
+      "airq_co2": {
+        "name": "AirQ CO2"
+      },
+      "tvoc": {
+        "name": "TVOC"
+      },
+      "ethanol": {
+        "name": "Ethanol"
+      }
+    },
+    "switch": {
+      "timer_on_switch": {
+        "name": "Timer",
+        "state_attributes": {
+          "id": { "name": "Id" },
+          "turn_on": {
+            "name": "Turns on",
+            "state": {
+              "true": "[%key:common::state::on%]",
+              "false": "[%key:common::state::off%]"
+            }
+          }
+        }
+      },
+      "climate_react_switch": {
+        "name": "Climate React",
+        "state_attributes": {
+          "type": {
+            "name": "Type",
+            "state": {
+              "feelslike": "Feels like",
+              "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+              "humidity": "[%key:component::sensor::entity_component::humidity::name%]"
+            }
+          }
+        }
+      },
+      "pure_boost_switch": {
+        "name": "Pure Boost"
+      }
+    },
+    "update": {
+      "fw_ver_available": {
+        "name": "Update available"
+      }
+    }
+  },
+  "services": {
+    "assume_state": {
+      "name": "Assume state",
+      "description": "Sets Sensibo device to external state.",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "State to set."
+        }
+      }
+    },
+    "enable_timer": {
+      "name": "Enable timer",
+      "description": "Enables the timer with custom time.",
+      "fields": {
+        "minutes": {
+          "name": "Minutes",
+          "description": "Countdown for timer (for timer state on)."
+        }
+      }
+    },
+    "enable_pure_boost": {
+      "name": "Enable pure boost",
+      "description": "Enables and configures Pure Boost settings.",
+      "fields": {
+        "ac_integration": {
+          "name": "AC integration",
+          "description": "Integrate with Air Conditioner."
+        },
+        "geo_integration": {
+          "name": "Geo integration",
+          "description": "Integrate with Presence."
+        },
+        "indoor_integration": {
+          "name": "Indoor air quality",
+          "description": "Integrate with checking indoor air quality."
+        },
+        "outdoor_integration": {
+          "name": "Outdoor air quality",
+          "description": "Integrate with checking outdoor air quality."
+        },
+        "sensitivity": {
+          "name": "Sensitivity",
+          "description": "Set the sensitivity for Pure Boost."
+        }
+      }
+    },
+    "full_state": {
+      "name": "Set full state",
+      "description": "Sets full state for Sensibo device.",
+      "fields": {
+        "mode": {
+          "name": "HVAC mode",
+          "description": "HVAC mode to set."
+        },
+        "target_temperature": {
+          "name": "Target temperature",
+          "description": "Set target temperature."
+        },
+        "fan_mode": {
+          "name": "Fan mode",
+          "description": "set fan mode."
+        },
+        "swing_mode": {
+          "name": "Swing mode",
+          "description": "Set swing mode."
+        },
+        "horizontal_swing_mode": {
+          "name": "Horizontal swing mode",
+          "description": "Set horizontal swing mode."
+        },
+        "light": {
+          "name": "Light",
+          "description": "Set light on or off."
+        }
+      }
+    },
+    "enable_climate_react": {
+      "name": "Enable climate react",
+      "description": "Enables and configures climate react.",
+      "fields": {
+        "high_temperature_threshold": {
+          "name": "Threshold high",
+          "description": "When temp/humidity goes above."
+        },
+        "high_temperature_state": {
+          "name": "State high threshold",
+          "description": "What should happen at high threshold. Requires full state."
+        },
+        "low_temperature_threshold": {
+          "name": "Threshold low",
+          "description": "When temp/humidity goes below."
+        },
+        "low_temperature_state": {
+          "name": "State low threshold",
+          "description": "What should happen at low threshold. Requires full state."
+        },
+        "smart_type": {
+          "name": "Trigger type",
+          "description": "Choose between temperature/feels like/humidity."
         }
       }
     }

@@ -33,6 +33,7 @@ from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     TrackTemplateResultInfo,
@@ -41,7 +42,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template, result_as_boolean
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import DOMAIN, PLATFORMS
 from .const import (
@@ -231,16 +232,20 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         @callback
-        def async_threshold_sensor_state_listener(event: Event) -> None:
+        def async_threshold_sensor_state_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle sensor state changes.
 
             When a state changes, we must update our list of current observations,
             then calculate the new probability.
             """
 
-            entity: str = event.data[CONF_ENTITY_ID]
+            entity_id = event.data["entity_id"]
 
-            self.current_observations.update(self._record_entity_observations(entity))
+            self.current_observations.update(
+                self._record_entity_observations(entity_id)
+            )
             self.async_set_context(event.context)
             self._recalculate_and_write_state()
 

@@ -29,6 +29,8 @@ CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
 CONF_PAYLOAD_RESET = "payload_reset"
 
+CONF_ACTION_TEMPLATE = "action_template"
+CONF_ACTION_TOPIC = "action_topic"
 CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
 CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
@@ -110,6 +112,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
@@ -136,6 +139,7 @@ RELOADABLE_PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,

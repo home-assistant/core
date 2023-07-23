@@ -12,6 +12,7 @@ import voluptuous as vol
 
 import homeassistant
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     issue_registry as ir,
@@ -122,6 +123,35 @@ def test_url() -> None:
         "http://home-assistant.io",
         "http://home-assistant.io/test/",
         "https://community.home-assistant.io/",
+    ):
+        assert schema(value)
+
+
+def test_configuration_url() -> None:
+    """Test URL."""
+    schema = vol.Schema(cv.configuration_url)
+
+    for value in (
+        "invalid",
+        None,
+        100,
+        "htp://ha.io",
+        "http//ha.io",
+        "http://??,**",
+        "https://??,**",
+        "homeassistant://??,**",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        "http://localhost",
+        "https://localhost/test/index.html",
+        "http://home-assistant.io",
+        "http://home-assistant.io/test/",
+        "https://community.home-assistant.io/",
+        "homeassistant://api",
+        "homeassistant://api/hassio_ingress/XXXXXXX",
     ):
         assert schema(value)
 
@@ -383,7 +413,7 @@ def test_service() -> None:
     schema("homeassistant.turn_on")
 
 
-def test_service_schema() -> None:
+def test_service_schema(hass: HomeAssistant) -> None:
     """Test service_schema validation."""
     options = (
         {},
@@ -1550,10 +1580,10 @@ def test_config_entry_only_schema_cant_find_module() -> None:
 def test_config_entry_only_schema_no_hass(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test if the the hass context var is not set in our context."""
+    """Test if the the hass context is not set in our context."""
     with patch(
         "homeassistant.helpers.config_validation.async_get_hass",
-        side_effect=LookupError,
+        side_effect=HomeAssistantError,
     ):
         cv.config_entry_only_config_schema("test_domain")(
             {"test_domain": {"foo": "bar"}}

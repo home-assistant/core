@@ -1,4 +1,5 @@
 """Test Subaru sensors."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +13,6 @@ from homeassistant.components.subaru.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import slugify
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .api_responses import (
@@ -25,7 +25,6 @@ from .api_responses import (
 from .conftest import (
     MOCK_API_FETCH,
     MOCK_API_GET_DATA,
-    TEST_DEVICE_NAME,
     advance_time_to_next_fetch,
     setup_subaru_config_entry,
 )
@@ -65,9 +64,9 @@ async def test_sensors_missing_vin_data(hass: HomeAssistant, ev_entry) -> None:
             {
                 "domain": SENSOR_DOMAIN,
                 "platform": SUBARU_DOMAIN,
-                "unique_id": f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].name}",
+                "unique_id": f"{TEST_VIN_2_EV}_Avg fuel consumption",
             },
-            f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].name}",
+            f"{TEST_VIN_2_EV}_Avg fuel consumption",
             f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].key}",
         ),
     ],
@@ -97,9 +96,9 @@ async def test_sensor_migrate_unique_ids(
             {
                 "domain": SENSOR_DOMAIN,
                 "platform": SUBARU_DOMAIN,
-                "unique_id": f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].name}",
+                "unique_id": f"{TEST_VIN_2_EV}_Avg fuel consumption",
             },
-            f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].name}",
+            f"{TEST_VIN_2_EV}_Avg fuel consumption",
             f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].key}",
         )
     ],
@@ -136,15 +135,17 @@ async def test_sensor_migrate_unique_ids_duplicate(
     assert entity_migrated != entity_not_changed
 
 
-def _assert_data(hass, expected_state):
+def _assert_data(hass: HomeAssistant, expected_state: dict[str, Any]) -> None:
     sensor_list = EV_SENSORS
     sensor_list.extend(API_GEN_2_SENSORS)
     sensor_list.extend(SAFETY_SENSORS)
     expected_states = {}
+    entity_registry = er.async_get(hass)
     for item in sensor_list:
-        expected_states[
-            f"sensor.{slugify(f'{TEST_DEVICE_NAME} {item.name}')}"
-        ] = expected_state[item.key]
+        entity = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, SUBARU_DOMAIN, f"{TEST_VIN_2_EV}_{item.key}"
+        )
+        expected_states[entity] = expected_state[item.key]
 
     for sensor, value in expected_states.items():
         actual = hass.states.get(sensor)

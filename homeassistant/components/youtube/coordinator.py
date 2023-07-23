@@ -65,7 +65,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
         channels = self.config_entry.options[CONF_CHANNELS]
         while received_channels < len(channels):
             # We're slicing the channels in chunks of 50 to avoid making the URI too long
-            end = min(received_channels + 50, len(channels) - 1)
+            end = min(received_channels + 50, len(channels))
             channel_request: HttpRequest = service.channels().list(
                 part="snippet,statistics",
                 id=",".join(channels[received_channels:end]),

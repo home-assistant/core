@@ -61,9 +61,3 @@ async def test_invalid_options(hass: HomeAssistant) -> None:
     assert result["errors"] == {
         "enable_subscription": "long_press_requires_subscription"
     }
-
-    # polling_interval_seconds must be larger than 10.
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"polling_interval_seconds": 1}
-    )
-    assert result["errors"] == {"polling_interval_seconds": "polling_interval_to_small"}

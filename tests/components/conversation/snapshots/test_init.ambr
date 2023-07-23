@@ -41,6 +41,8 @@
           'el',
           'en',
           'es',
+          'et',
+          'eu',
           'fa',
           'fi',
           'fr',
@@ -380,6 +382,11 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
       }),
       dict({
         'entities': dict({
@@ -391,6 +398,60 @@
         }),
         'intent': dict({
           'name': 'HassTurnOff',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+      }),
+      dict({
+        'entities': dict({
+          'area': dict({
+            'name': 'area',
+            'text': 'kitchen',
+            'value': 'kitchen',
+          }),
+          'domain': dict({
+            'name': 'domain',
+            'text': '',
+            'value': 'light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOn',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+      }),
+      dict({
+        'entities': dict({
+          'area': dict({
+            'name': 'area',
+            'text': 'kitchen',
+            'value': 'kitchen',
+          }),
+          'domain': dict({
+            'name': 'domain',
+            'text': 'lights',
+            'value': 'light',
+          }),
+          'state': dict({
+            'name': 'state',
+            'text': 'on',
+            'value': 'on',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassGetState',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': False,
+          }),
         }),
       }),
       None,

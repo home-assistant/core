@@ -110,6 +110,13 @@ UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
 
+DIMMABLE_SUPPORT_FEATURES = (
+    CoverEntityFeature.SET_POSITION
+    | FanEntityFeature.SET_SPEED
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | ClimateEntityFeature.TARGET_TEMPERATURE
+)
+
 
 class HueUnauthorizedUser(HomeAssistantView):
     """Handle requests to find the emulated hue bridge."""
@@ -801,12 +808,9 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
                 HUE_API_STATE_BRI: state_dict[STATE_BRIGHTNESS],
             }
         )
-    elif entity_features & (
-        CoverEntityFeature.SET_POSITION
-        | FanEntityFeature.SET_SPEED
-        | MediaPlayerEntityFeature.VOLUME_SET
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-    ) or light.brightness_supported(color_modes):
+    elif entity_features & DIMMABLE_SUPPORT_FEATURES or light.brightness_supported(
+        color_modes
+    ):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
