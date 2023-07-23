@@ -1,5 +1,6 @@
 """Tests for deCONZ config flow."""
 import asyncio
+import logging
 from unittest.mock import patch
 
 import pydeconz
@@ -42,6 +43,9 @@ async def test_flow_discovered_bridges(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that config flow works for discovered bridges."""
+    logging.getLogger("homeassistant.components.deconz.config_flow").setLevel(
+        logging.DEBUG
+    )
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[

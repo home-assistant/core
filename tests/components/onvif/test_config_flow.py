@@ -1,4 +1,5 @@
 """Test ONVIF config flow."""
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -103,6 +104,9 @@ def setup_mock_discovery(
 
 async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
     """Test that config flow works for discovered devices."""
+    logging.getLogger("homeassistant.components.onvif.config_flow").setLevel(
+        logging.DEBUG
+    )
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
