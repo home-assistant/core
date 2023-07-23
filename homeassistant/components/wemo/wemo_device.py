@@ -35,7 +35,7 @@ from .models import async_wemo_data
 _LOGGER = logging.getLogger(__name__)
 
 # Literal values must match options.error keys from strings.json.
-ErrorStringKey = Literal["long_press_requires_subscription"]
+ErrorStringKey = Literal["long_press_requires_subscription"]  # noqa: F821
 # Literal values must match options.step.init.data keys from strings.json.
 OptionsFieldKey = Literal["enable_subscription", "enable_long_press"]
 
