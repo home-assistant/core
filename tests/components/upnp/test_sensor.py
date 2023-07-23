@@ -24,8 +24,8 @@ async def test_upnp_sensors(
     assert hass.states.get("sensor.mock_name_wan_status").state == "Connected"
     assert hass.states.get("sensor.mock_name_download_speed").state == "unknown"
     assert hass.states.get("sensor.mock_name_upload_speed").state == "unknown"
-    assert hass.states.get("sensor.mock_name_packets_s_received").state == "unknown"
-    assert hass.states.get("sensor.mock_name_packets_s_sent").state == "unknown"
+    assert hass.states.get("sensor.mock_name_packet_download_speed").state == "unknown"
+    assert hass.states.get("sensor.mock_name_packet_upload_speed").state == "unknown"
 
     # Second poll.
     mock_igd_device: IgdDevice = mock_config_entry.igd_device
@@ -59,5 +59,5 @@ async def test_upnp_sensors(
     assert hass.states.get("sensor.mock_name_wan_status").state == "Disconnected"
     assert hass.states.get("sensor.mock_name_download_speed").state == "10.0"
     assert hass.states.get("sensor.mock_name_upload_speed").state == "20.0"
-    assert hass.states.get("sensor.mock_name_packets_s_received").state == "30.0"
-    assert hass.states.get("sensor.mock_name_packets_s_sent").state == "40.0"
+    assert hass.states.get("sensor.mock_name_packet_download_speed").state == "30.0"
+    assert hass.states.get("sensor.mock_name_packet_upload_speed").state == "40.0"
