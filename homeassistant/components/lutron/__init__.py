@@ -22,6 +22,7 @@ DOMAIN = "lutron"
 
 PLATFORMS = [
     Platform.LIGHT,
+    Platform.FAN,
     Platform.COVER,
     Platform.SWITCH,
     Platform.SCENE,
@@ -59,6 +60,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {
         "light": [],
+        "fan": [],
         "cover": [],
         "switch": [],
         "scene": [],
@@ -79,6 +81,8 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
         for output in area.outputs:
             if output.type == "SYSTEM_SHADE":
                 hass.data[LUTRON_DEVICES]["cover"].append((area.name, output))
+            elif output.type == "CEILING_FAN_TYPE":
+                hass.data[LUTRON_DEVICES]["fan"].append((area.name, output))
             elif output.is_dimmable:
                 hass.data[LUTRON_DEVICES]["light"].append((area.name, output))
             else:
