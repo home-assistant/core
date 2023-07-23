@@ -40,7 +40,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(minutes=15),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:

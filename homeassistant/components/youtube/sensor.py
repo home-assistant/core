@@ -30,6 +30,7 @@ from .entity import YouTubeChannelEntity
 class YouTubeMixin:
     """Mixin for required keys."""
 
+    available_fn: Callable[[Any], bool]
     value_fn: Callable[[Any], StateType]
     entity_picture_fn: Callable[[Any], str | None]
     attributes_fn: Callable[[Any], dict[str, Any] | None] | None
@@ -45,6 +46,7 @@ SENSOR_TYPES = [
         key="latest_upload",
         translation_key="latest_upload",
         icon="mdi:youtube",
+        available_fn=lambda channel: channel[ATTR_LATEST_VIDEO] is not None,
         value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE]
         if channel[ATTR_LATEST_VIDEO] is not None
         else None,
@@ -63,6 +65,7 @@ SENSOR_TYPES = [
         translation_key="subscribers",
         icon="mdi:youtube-subscription",
         native_unit_of_measurement="subscribers",
+        available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_SUBSCRIBER_COUNT],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
@@ -88,6 +91,13 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     """Representation of a YouTube sensor."""
 
     entity_description: YouTubeSensorEntityDescription
+
+    @property
+    def available(self):
+        """Return if the entity is available."""
+        return self.entity_description.available_fn(
+            self.coordinator.data[self._channel_id]
+        )
 
     @property
     def native_value(self) -> StateType:

@@ -29,6 +29,29 @@ async def test_sensor(
     assert state == snapshot
 
 
+async def test_sensor_without_uploaded_video(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, setup_integration: ComponentSetup
+) -> None:
+    """Test sensor when there is no video on the channel."""
+    await setup_integration()
+
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=MockYouTube(
+            playlist_items_fixture="youtube/get_no_playlist_items.json"
+        ),
+    ):
+        future = dt_util.utcnow() + timedelta(minutes=15)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.google_for_developers_latest_upload")
+    assert state == snapshot
+
+    state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state == snapshot
+
+
 async def test_sensor_updating(
     hass: HomeAssistant, setup_integration: ComponentSetup
 ) -> None:
