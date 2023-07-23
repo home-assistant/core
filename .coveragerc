@@ -82,6 +82,7 @@ omit =
     homeassistant/components/arwn/sensor.py
     homeassistant/components/aseko_pool_live/__init__.py
     homeassistant/components/aseko_pool_live/binary_sensor.py
+    homeassistant/components/aseko_pool_live/coordinator.py
     homeassistant/components/aseko_pool_live/entity.py
     homeassistant/components/aseko_pool_live/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
@@ -305,8 +306,6 @@ omit =
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/bluetooth/*
-    homeassistant/components/esphome/domain_data.py
-    homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/manager.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
@@ -315,6 +314,7 @@ omit =
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/__init__.py
+    homeassistant/components/ezviz/alarm_control_panel.py
     homeassistant/components/ezviz/binary_sensor.py
     homeassistant/components/ezviz/camera.py
     homeassistant/components/ezviz/image.py
@@ -595,6 +595,7 @@ omit =
     homeassistant/components/keymitt_ble/entity.py
     homeassistant/components/keymitt_ble/switch.py
     homeassistant/components/keymitt_ble/coordinator.py
+    homeassistant/components/kitchen_sink/weather.py
     homeassistant/components/kiwi/lock.py
     homeassistant/components/kodi/__init__.py
     homeassistant/components/kodi/browse_media.py

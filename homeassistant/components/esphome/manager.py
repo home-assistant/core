@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aioesphomeapi import (
     APIClient,
@@ -390,12 +390,12 @@ class ESPHomeManager:
 
             if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
                 entry_data.disconnect_callbacks.append(
-                    await async_connect_scanner(hass, entry, cli, entry_data)
+                    await async_connect_scanner(
+                        hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
+                    )
                 )
 
-            self.device_id = _async_setup_device_registry(
-                hass, entry, entry_data.device_info
-            )
+            self.device_id = _async_setup_device_registry(hass, entry, entry_data)
             entry_data.async_update_device_state(hass)
 
             entity_infos, services = await cli.list_entities_services()
@@ -513,9 +513,12 @@ class ESPHomeManager:
 
 @callback
 def _async_setup_device_registry(
-    hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
+    hass: HomeAssistant, entry: ConfigEntry, entry_data: RuntimeEntryData
 ) -> str:
     """Set up device registry feature for a particular config entry."""
+    device_info = entry_data.device_info
+    if TYPE_CHECKING:
+        assert device_info is not None
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
@@ -542,7 +545,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=device_info.friendly_name or device_info.name,
+        name=entry_data.friendly_name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,

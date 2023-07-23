@@ -4,9 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Any, Final
+from typing import Any, Final, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
