@@ -1,4 +1,4 @@
-"""Support for MQTT sensors."""
+"""Support for MQTT events."""
 from __future__ import annotations
 
 from collections.abc import Callable
