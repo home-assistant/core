@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 import pytest
-from youtubeaio.types import UnauthorizedError
+from youtubeaio.types import ForbiddenError
 
 from homeassistant import config_entries
 from homeassistant.components.youtube.const import CONF_CHANNELS, DOMAIN
@@ -152,27 +152,15 @@ async def test_flow_http_error(
 
     with patch(
         "homeassistant.components.youtube.config_flow.YouTube.get_user_channels",
-        side_effect=UnauthorizedError(
-            b'{"error": {"code": 403,"message": "YouTube Data API v3 has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors": [  {    "message": "YouTube Data API v3 has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",    "domain": "usageLimits",    "reason": "accessNotConfigured",    "extendedHelp": "https://console.developers.google.com"  }],"status": "PERMISSION_DENIED"\n  }\n}\n',
+        side_effect=ForbiddenError(
+            "YouTube Data API v3 has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "access_not_configured"
         assert result["description_placeholders"]["message"] == (
-            '(b\'{"error": {"code": 403,"message": "YouTube Data API v3 has not been used '
-            "in project 0 before or it is disabled. Enable it by visiting "
-            "https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 "
-            "then retry. If you enabled this API recently, wait a few minutes for the "
-            'action to propagate to our systems and retry.","errors": [  {    "message": '
-            '"YouTube Data API v3 has not been used in project 0 before or it is '
-            "disabled. Enable it by visiting "
-            "https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 "
-            "then retry. If you enabled this API recently, wait a few minutes for the "
-            'action to propagate to our systems and retry.",    "domain": '
-            '"usageLimits",    "reason": "accessNotConfigured",    "extendedHelp": '
-            '"https://console.developers.google.com"  }],"status": '
-            '"PERMISSION_DENIED"\\n  }\\n}\\n\',)'
+            "YouTube Data API v3 has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
         )
 
 
