@@ -111,7 +111,7 @@ async def websocket_run(
 
     if start_stage == PipelineStage.STT:
         # Audio pipeline that will receive audio as binary websocket messages
-        audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
+        audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:

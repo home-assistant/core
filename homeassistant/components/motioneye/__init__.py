@@ -169,10 +169,7 @@ def async_generate_motioneye_webhook(
 ) -> str | None:
     """Generate the full local URL for a webhook_id."""
     try:
-        return "{}{}".format(
-            get_url(hass, allow_cloud=False),
-            async_generate_path(webhook_id),
-        )
+        return f"{get_url(hass, allow_cloud=False)}{async_generate_path(webhook_id)}"
     except NoURLAvailableError:
         _LOGGER.warning(
             "Unable to get Home Assistant URL. Have you set the internal and/or "
