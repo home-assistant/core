@@ -1,13 +1,14 @@
 """Support for interacting with Spotify Connect."""
 from __future__ import annotations
 
-import datetime as dt
-import logging
 from asyncio import run_coroutine_threadsafe
+import datetime as dt
 from datetime import timedelta
+import logging
 from typing import Any
 
 import requests
+from spotipy import SpotifyException
 from yarl import URL
 
 from homeassistant.components.media_player import (
@@ -28,7 +29,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
-from spotipy import SpotifyException
 
 from . import HomeAssistantSpotifyData
 from .browse_media import async_browse_media_internal
