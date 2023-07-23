@@ -248,7 +248,7 @@ class SensorDeviceClass(StrEnum):
     """
 
     PH = "ph"
-    """Potential hidrogen (acidity/alkalinity).
+    """Potential hydrogen (acidity/alkalinity).
 
     Unit of measurement: Unitless
     """
