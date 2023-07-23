@@ -1,9 +1,8 @@
 """Constants used by Home Assistant components."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
-
-from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023

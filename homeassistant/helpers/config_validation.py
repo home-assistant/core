@@ -9,7 +9,7 @@ from datetime import (
     time as time_sys,
     timedelta,
 )
-from enum import Enum
+from enum import Enum, StrEnum
 import inspect
 import logging
 from numbers import Number
@@ -25,7 +25,6 @@ from uuid import UUID
 import voluptuous as vol
 import voluptuous_serialize
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,

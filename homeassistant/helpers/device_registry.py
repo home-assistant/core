@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import UserDict
 from collections.abc import Coroutine, ValuesView
+from enum import StrEnum
 import logging
 import time
 from typing import TYPE_CHECKING, Any, TypeVar, cast
@@ -10,7 +11,6 @@ from urllib.parse import urlparse
 
 import attr
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
