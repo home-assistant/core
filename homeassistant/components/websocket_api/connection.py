@@ -51,7 +51,7 @@ class ActiveConnection:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+        send_message: Callable[[str | dict[str, Any]], None],
         user: User,
         refresh_token: RefreshToken,
     ) -> None:

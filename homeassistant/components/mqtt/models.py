@@ -7,12 +7,12 @@ from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import attr
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
@@ -289,7 +289,7 @@ class MqttData:
     """Keep the MQTT entry data."""
 
     client: MQTT
-    config: ConfigType
+    config: list[ConfigType]
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict
@@ -313,4 +313,3 @@ class MqttData:
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
-    updated_config: ConfigType = field(default_factory=dict)

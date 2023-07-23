@@ -4,9 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 import logging
 from operator import attrgetter
-from typing import Any, cast
+from typing import Any, Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import config_entries
