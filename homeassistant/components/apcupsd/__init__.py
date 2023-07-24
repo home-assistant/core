@@ -100,8 +100,7 @@ class APCUPSdData:
             identifiers={(DOMAIN, self.serial_no)},
             model=self.model,
             manufacturer="APC",
-            name=self.name,
-            default_name="APC UPS",
+            name=self.name if self.name is not None else "APC UPS",
             hw_version=self.status.get("FIRMWARE"),
             sw_version=self.status.get("VERSION"),
         )
