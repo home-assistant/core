@@ -87,6 +87,7 @@
         'binary_sensor',
         'climate',
         'cover',
+        'event',
         'fan',
         'group',
         'humidifier',

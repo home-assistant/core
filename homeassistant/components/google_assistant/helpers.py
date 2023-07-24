@@ -616,6 +616,7 @@ class GoogleEntity:
             "type": get_google_type(
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
+            "notificationSupportedByAgent": True,
         }
 
         # Add aliases
