@@ -48,6 +48,7 @@ from .error import (
     SpeechToTextError,
     TextToSpeechError,
     WakeWordDetectionError,
+    WakeWordTimeoutError,
 )
 from .vad import VoiceCommandSegmenter
 
@@ -341,6 +342,17 @@ class InvalidPipelineStagesError(PipelineRunValidationError):
         )
 
 
+@dataclass(frozen=True)
+class WakeSettings:
+    """Settings for wake word detection."""
+
+    timeout_ms: int | None = None
+    """Number of milliseconds before detection times out."""
+
+    audio_chunks_to_buffer: int = 0
+    """Number of audio chunks to buffer before detection and forward to STT."""
+
+
 @dataclass
 class PipelineRun:
     """Running context for a pipeline."""
@@ -355,6 +367,7 @@ class PipelineRun:
     runner_data: Any | None = None
     intent_agent: str | None = None
     tts_audio_output: str | None = None
+    wake_settings: WakeSettings | None = None
 
     id: str = field(default_factory=ulid_util.ulid)
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
@@ -442,24 +455,45 @@ class PipelineRun:
             )
         )
 
-        chunk_buffer: deque[bytes] = deque(maxlen=5)
+        wake_settings = self.wake_settings or WakeSettings()
+
+        # Audio chunk buffer.
+        # Keeping audio right before wake word detection allows the voice
+        # command to be spoken immediately after the wake word.
+        chunk_buffer: deque[bytes] | None = None
+        if wake_settings.audio_chunks_to_buffer > 0:
+            chunk_buffer = deque(maxlen=wake_settings.audio_chunks_to_buffer)
 
         async def timestamped_stream() -> AsyncIterable[tuple[bytes, int]]:
             """Yield audio with timestamps (milliseconds since start of stream)."""
-            timestamp = 0
+            timestamp_ms = 0
             async for chunk in stream:
-                yield chunk, timestamp
-                timestamp += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
-                chunk_buffer.append(chunk)
+                yield chunk, timestamp_ms
+                timestamp_ms += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
+
+                if chunk_buffer is not None:
+                    chunk_buffer.append(chunk)
+
+                if (
+                    (wake_settings.timeout_ms is not None)
+                    and (wake_settings.timeout_ms > 0)
+                    and (timestamp_ms >= wake_settings.timeout_ms)
+                ):
+                    raise WakeWordTimeoutError(
+                        code="wake-word-timeout", message="Wake word was not detected"
+                    )
 
         try:
             # Detect wake word(s)
             result = await self.wake_provider.async_process_audio_stream(
                 timestamped_stream()
             )
+        except WakeWordTimeoutError:
+            _LOGGER.debug("Timeout during wake word detection")
+            raise
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during wake-word-detection")
-            raise SpeechToTextError(
+            raise WakeWordDetectionError(
                 code="wake-stream-failed",
                 message="Unexpected error during wake-word-detection",
             ) from src_error
@@ -469,9 +503,10 @@ class PipelineRun:
         if result is None:
             wake_output: dict[str, Any] = {"detected": False}
         else:
-            audio_buffer.extend(chunk_buffer)
+            if chunk_buffer:
+                audio_buffer.extend(chunk_buffer)
+
             wake_output = {
-                "detected": True,
                 "result": asdict(result),
             }
 
@@ -746,9 +781,6 @@ class PipelineInput:
     """Input to a pipeline run."""
 
     run: PipelineRun
-
-    # wake_stream: AsyncIterable[bytes] | None = None
-    # """Input audio for wake-word-detection. Required when start_stage = wake."""
 
     stt_metadata: stt.SpeechMetadata | None = None
     """Metadata of stt input audio. Required when start_stage = stt."""

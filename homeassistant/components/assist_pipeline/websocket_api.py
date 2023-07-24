@@ -26,10 +26,12 @@ from .pipeline import (
     PipelineInput,
     PipelineRun,
     PipelineStage,
+    WakeSettings,
     async_get_pipeline,
 )
 
 DEFAULT_TIMEOUT = 30
+DEFAULT_WAKE_TIMEOUT = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +65,12 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
             "start_stage",
             {
                 PipelineStage.WAKE: vol.Schema(
-                    {vol.Required("input"): {vol.Required("sample_rate"): int}},
+                    {
+                        vol.Required("input"): {
+                            vol.Required("sample_rate"): int,
+                            vol.Optional("timeout"): vol.Any(float, int),
+                        }
+                    },
                     extra=vol.ALLOW_EXTRA,
                 ),
                 PipelineStage.STT: vol.Schema(
@@ -105,6 +112,7 @@ async def websocket_run(
     end_stage = PipelineStage(msg["end_stage"])
     handler_id: int | None = None
     unregister_handler: Callable[[], None] | None = None
+    wake_settings: WakeSettings | None = None
 
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
@@ -116,6 +124,11 @@ async def websocket_run(
         # Audio pipeline that will receive audio as binary websocket messages
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
+
+        if start_stage == PipelineStage.WAKE:
+            wake_settings = WakeSettings(
+                timeout_ms=msg["input"].get("timeout", DEFAULT_WAKE_TIMEOUT) * 1000
+            )
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
@@ -167,6 +180,7 @@ async def websocket_run(
             "stt_binary_handler_id": handler_id,
             "timeout": timeout,
         },
+        wake_settings=wake_settings,
     )
 
     pipeline_input = PipelineInput(**input_args)
