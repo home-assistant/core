@@ -1,4 +1,5 @@
 """Tests for ScreenLogic integration init."""
+from dataclasses import dataclass
 from unittest.mock import patch
 
 import pytest
@@ -27,65 +28,80 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
+@dataclass
+class EntityMigrationData:
+    """Class to organize minimum entity data."""
+
+    old_name: str
+    old_key: str
+    new_name: str
+    new_key: str
+    domain: str
+
+
+TEST_MIGRATING_ENTITIES = [
+    EntityMigrationData(
+        "Chemistry Alarm",
+        "chem_alarm",
+        "Active Alert",
+        "active_alert",
+        BINARY_SENSOR_DOMAIN,
+    ),
+    EntityMigrationData(
+        "Pool Pump Current Watts",
+        "currentWatts_0",
+        "Pool Pump Watts Now",
+        "pump_0_watts_now",
+        SENSOR_DOMAIN,
+    ),
+    EntityMigrationData(
+        "SCG Status",
+        "scg_status",
+        "Chlorinator",
+        "scg_state",
+        BINARY_SENSOR_DOMAIN,
+    ),
+    EntityMigrationData(
+        "Non-Migrating Sensor",
+        "nonmigrating",
+        "Non-Migrating Sensor",
+        "nonmigrating",
+        SENSOR_DOMAIN,
+    ),
+    EntityMigrationData(
+        "Missing Migration Device",
+        "missing_device",
+        "Missing Migration Device",
+        "missing_device",
+        BINARY_SENSOR_DOMAIN,
+    ),
+]
+
+
 @pytest.mark.parametrize(
-    ("entity_data", "old_eid", "new_eid", "new_uid", "new_name"),
+    ("entity_def", "ent_data"),
     [
         (
             {
-                "domain": BINARY_SENSOR_DOMAIN,
+                "domain": ent_data.domain,
                 "platform": DOMAIN,
-                "unique_id": f"{MOCK_ADAPTER_MAC}_chem_alarm",
-                "suggested_object_id": f"{MOCK_ADAPTER_NAME} Chemistry Alarm",
+                "unique_id": f"{MOCK_ADAPTER_MAC}_{ent_data.old_key}",
+                "suggested_object_id": f"{MOCK_ADAPTER_NAME} {ent_data.old_name}",
                 "disabled_by": None,
                 "has_entity_name": True,
-                "original_name": "Chemistry Alarm",
+                "original_name": ent_data.old_name,
             },
-            f"binary_sensor.{slugify(MOCK_ADAPTER_NAME)}_chemistry_alarm",
-            f"binary_sensor.{slugify(MOCK_ADAPTER_NAME)}_active_alert",
-            f"{MOCK_ADAPTER_MAC}_active_alert",
-            "Active Alert",
-        ),
-        (
-            {
-                "domain": SENSOR_DOMAIN,
-                "platform": DOMAIN,
-                "unique_id": f"{MOCK_ADAPTER_MAC}_currentWatts_0",
-                "suggested_object_id": f"{MOCK_ADAPTER_NAME} Pool Pump Current Watts",
-                "disabled_by": None,
-                "has_entity_name": True,
-                "original_name": "Pool Pump Current Watts",
-            },
-            f"sensor.{slugify(MOCK_ADAPTER_NAME)}_pool_pump_current_watts",
-            f"sensor.{slugify(MOCK_ADAPTER_NAME)}_pool_pump_watts_now",
-            f"{MOCK_ADAPTER_MAC}_pump_0_watts_now",
-            "Pool Pump Watts Now",
-        ),
-        (
-            {
-                "domain": BINARY_SENSOR_DOMAIN,
-                "platform": DOMAIN,
-                "unique_id": f"{MOCK_ADAPTER_MAC}_scg_status",
-                "suggested_object_id": f"{MOCK_ADAPTER_NAME} SCG Status",
-                "disabled_by": None,
-                "has_entity_name": True,
-                "original_name": "SCG Status",
-            },
-            f"binary_sensor.{slugify(MOCK_ADAPTER_NAME)}_scg_status",
-            f"binary_sensor.{slugify(MOCK_ADAPTER_NAME)}_chlorinator",
-            f"{MOCK_ADAPTER_MAC}_scg_state",
-            "Chlorinator",
-        ),
+            ent_data,
+        )
+        for ent_data in TEST_MIGRATING_ENTITIES
     ],
 )
 async def test_async_migrate_entries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gateway,
-    entity_data: dict,
-    old_eid: str,
-    new_eid: str,
-    new_uid: str,
-    new_name: str,
+    entity_def: dict,
+    ent_data: EntityMigrationData,
 ) -> None:
     """Test migration to new entity names."""
 
@@ -100,11 +116,26 @@ async def test_async_migrate_entries(
     )
 
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
-        **entity_data, device_id=device.id, config_entry=mock_config_entry
+        **entity_def, device_id=device.id, config_entry=mock_config_entry
     )
-    assert entity.unique_id == entity_data["unique_id"]
+
+    old_eid = f"{ent_data.domain}.{slugify(f'{MOCK_ADAPTER_NAME} {ent_data.old_name}')}"
+    old_uid = f"{MOCK_ADAPTER_MAC}_{ent_data.old_key}"
+    new_eid = f"{ent_data.domain}.{slugify(f'{MOCK_ADAPTER_NAME} {ent_data.new_name}')}"
+    new_uid = f"{MOCK_ADAPTER_MAC}_{ent_data.new_key}"
+
+    assert entity.unique_id == old_uid
     assert entity.entity_id == old_eid
-    with patch(
+    with patch.dict(
+        "homeassistant.components.screenlogic.data.ENTITY_MIGRATIONS",
+        {
+            "missing_device": {
+                "new_key": "state",
+                "old_name": "Missing Migration Device",
+                "new_name": "Bad ENTITY_MIGRATIONS Entry",
+            },
+        },
+    ), patch(
         "homeassistant.components.screenlogic.async_get_connect_info",
         return_value={
             SL_GATEWAY_IP: MOCK_ADAPTER_IP,
@@ -124,4 +155,4 @@ async def test_async_migrate_entries(
     assert entity_migrated
     assert entity_migrated.entity_id == new_eid
     assert entity_migrated.unique_id == new_uid
-    assert entity_migrated.original_name == new_name
+    assert entity_migrated.original_name == ent_data.new_name
