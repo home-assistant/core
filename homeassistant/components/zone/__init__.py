@@ -37,7 +37,7 @@ from homeassistant.helpers import (
     service,
     storage,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
 from homeassistant.util.location import distance
 
@@ -155,15 +155,19 @@ def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
     hass.data[ZONE_ENTITY_IDS] = zone_entity_ids
 
     @callback
-    def _async_add_zone_entity_id(event_: Event) -> None:
+    def _async_add_zone_entity_id(
+        event_: EventType[event.EventStateChangedData],
+    ) -> None:
         """Add zone entity ID."""
-        zone_entity_ids.append(event_.data[ATTR_ENTITY_ID])
+        zone_entity_ids.append(event_.data["entity_id"])
         zone_entity_ids.sort()
 
     @callback
-    def _async_remove_zone_entity_id(event_: Event) -> None:
+    def _async_remove_zone_entity_id(
+        event_: EventType[event.EventStateChangedData],
+    ) -> None:
         """Remove zone entity ID."""
-        zone_entity_ids.remove(event_.data[ATTR_ENTITY_ID])
+        zone_entity_ids.remove(event_.data["entity_id"])
 
     event.async_track_state_added_domain(hass, DOMAIN, _async_add_zone_entity_id)
     event.async_track_state_removed_domain(hass, DOMAIN, _async_remove_zone_entity_id)
