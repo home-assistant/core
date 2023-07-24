@@ -128,7 +128,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.15
+SQLAlchemy==2.0.19
 
 # homeassistant.components.travisci
 TravisPy==0.3.5
