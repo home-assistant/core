@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from chip.clusters.Objects import ClusterAttributeDescriptor
+from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
 from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
 
@@ -122,10 +122,13 @@ class MatterEntity(Entity):
 
     @callback
     def get_matter_attribute_value(
-        self, attribute: type[ClusterAttributeDescriptor]
+        self, attribute: type[ClusterAttributeDescriptor], null_as_none: bool = True
     ) -> Any:
         """Get current value for given attribute."""
-        return self._endpoint.get_attribute_value(None, attribute)
+        value = self._endpoint.get_attribute_value(None, attribute)
+        if null_as_none and value == NullValue:
+            return None
+        return value
 
     @callback
     def get_matter_attribute_path(
