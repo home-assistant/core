@@ -62,7 +62,7 @@ class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(60):
-                if len(self.hop_intervals.intervals) == 0:
+                if not len(self.hop_intervals.intervals):
                     hop_intervals: HopIntervals = await self._ek_api.get_hop_intervals()
                     hop_intervals.intervals = OrderedDict(
                         filter(
