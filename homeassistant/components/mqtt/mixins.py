@@ -54,6 +54,7 @@ from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
+    EventType,
     UndefinedType,
 )
 from homeassistant.util.json import json_loads
@@ -616,7 +617,7 @@ async def async_remove_discovery_payload(
 async def async_clear_discovery_topic_if_entity_removed(
     hass: HomeAssistant,
     discovery_data: DiscoveryInfoType,
-    event: Event,
+    event: EventType[er.EventEntityRegistryUpdatedData],
 ) -> None:
     """Clear the discovery topic if the entity is removed."""
     if event.data["action"] == "remove":
