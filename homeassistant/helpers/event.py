@@ -416,7 +416,7 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
 ) -> None:
     """Dispatch to listeners."""
     if not (
-        callbacks_list := callbacks.get(
+        callbacks_list := callbacks.get(  # type: ignore[call-overload]  # mypy bug?
             event.data.get("old_entity_id", event.data["entity_id"])
         )
     ):
