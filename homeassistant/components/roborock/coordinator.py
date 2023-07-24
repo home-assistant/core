@@ -59,7 +59,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         except RoborockException:
             if isinstance(self.api, RoborockLocalClient):
                 _LOGGER.warning(
-                    "Using the cloud api for device %s. This is not recommend as it can lead to rate limiting. We recommend making your vacuum accessible by your HA instance",
+                    "Using the cloud API for device %s. This is not recommended as it can lead to rate limiting. We recommend making your vacuum accessible by your Home Assistant instance",
                     self.roborock_device_info.device.duid,
                 )
                 # We use the cloud api if the local api fails to connect.
