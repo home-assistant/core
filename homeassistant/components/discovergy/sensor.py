@@ -101,6 +101,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage1"],
     ),
     DiscovergySensorEntityDescription(
         key="phase2Voltage",
@@ -110,6 +111,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage2"],
     ),
     DiscovergySensorEntityDescription(
         key="phase3Voltage",
@@ -119,6 +121,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage3"],
     ),
     # energy sensors
     DiscovergySensorEntityDescription(
