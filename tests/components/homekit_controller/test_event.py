@@ -69,10 +69,10 @@ async def test_remote(hass: HomeAssistant, utcnow) -> None:
     helper = await setup_test_component(hass, create_remote)
 
     entities = [
-        ("event.testdevice_testdevice_button_1", "Button 1"),
-        ("event.testdevice_testdevice_button_2", "Button 2"),
-        ("event.testdevice_testdevice_button_3", "Button 3"),
-        ("event.testdevice_testdevice_button_4", "Button 4"),
+        ("event.testdevice_button_1", "Button 1"),
+        ("event.testdevice_button_2", "Button 2"),
+        ("event.testdevice_button_3", "Button 3"),
+        ("event.testdevice_button_4", "Button 4"),
     ]
 
     entity_registry = er.async_get(hass)
@@ -112,7 +112,7 @@ async def test_remote(hass: HomeAssistant, utcnow) -> None:
 async def test_button(hass: HomeAssistant, utcnow) -> None:
     """Test that a button is correctly enumerated."""
     helper = await setup_test_component(hass, create_button)
-    entity_id = "event.testdevice_testdevice_button_1"
+    entity_id = "event.testdevice_button_1"
 
     entity_registry = er.async_get(hass)
     button = entity_registry.async_get(entity_id)
@@ -149,7 +149,7 @@ async def test_button(hass: HomeAssistant, utcnow) -> None:
 async def test_doorbell(hass: HomeAssistant, utcnow) -> None:
     """Test that doorbell service is handled."""
     helper = await setup_test_component(hass, create_doorbell)
-    entity_id = "event.testdevice_testdevice_doorbell"
+    entity_id = "event.testdevice_doorbell"
 
     entity_registry = er.async_get(hass)
     doorbell = entity_registry.async_get(entity_id)

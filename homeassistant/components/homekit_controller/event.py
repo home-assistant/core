@@ -29,7 +29,6 @@ INPUT_EVENT_VALUES = {
 class HomeKitEventEntity(HomeKitEntity, EventEntity):
     """Representation of a Homekit event entity."""
 
-    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -46,7 +45,6 @@ class HomeKitEventEntity(HomeKitEntity, EventEntity):
                 "iid": service.iid,
             },
         )
-        self._service = service
         self._characteristic = service.characteristics_by_type[
             CharacteristicsTypes.INPUT_EVENT
         ]
