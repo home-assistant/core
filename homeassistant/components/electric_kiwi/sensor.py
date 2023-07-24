@@ -43,11 +43,11 @@ class ElectricKiwiHOPSensorEntityDescription(
     """Describes Electric Kiwi HOP sensor entity."""
 
 
-def _check_and_move_time(hop: Hop) -> datetime:
+def _check_and_move_time(hop: Hop, time: str) -> datetime:
     """Return the time a day forward if HOP end_time is in the past."""
-    time = datetime.combine(
+    date_time = datetime.combine(
         datetime.today(),
-        datetime.strptime(hop.start.start_time, "%I:%M %p").time(),
+        datetime.strptime(time, "%I:%M %p").time(),
     ).astimezone(dt_util.DEFAULT_TIME_ZONE)
 
     end_time = datetime.combine(
@@ -56,8 +56,8 @@ def _check_and_move_time(hop: Hop) -> datetime:
     ).astimezone(dt_util.DEFAULT_TIME_ZONE)
 
     if end_time < datetime.now().astimezone(dt_util.DEFAULT_TIME_ZONE):
-        return time + timedelta(days=1)
-    return time
+        return date_time + timedelta(days=1)
+    return date_time
 
 
 HOP_SENSOR_TYPE: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
@@ -65,13 +65,13 @@ HOP_SENSOR_TYPE: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
         key=ATTR_EK_HOP_START,
         translation_key="hopfreepowerstart",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_func=_check_and_move_time,
+        value_func=lambda hop: _check_and_move_time(hop, hop.start.start_time),
     ),
     ElectricKiwiHOPSensorEntityDescription(
         key=ATTR_EK_HOP_END,
         translation_key="hopfreepowerend",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_func=_check_and_move_time,
+        value_func=lambda hop: _check_and_move_time(hop, hop.end.end_time),
     ),
 )
 
