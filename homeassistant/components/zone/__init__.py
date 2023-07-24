@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_PERSONS,
@@ -378,10 +377,12 @@ class Zone(collection.CollectionEntity):
         self.async_write_ha_state()
 
     @callback
-    def _person_state_change_listener(self, evt: Event) -> None:
-        person_entity_id = evt.data[ATTR_ENTITY_ID]
+    def _person_state_change_listener(
+        self, evt: EventType[event.EventStateChangedData]
+    ) -> None:
+        person_entity_id = evt.data["entity_id"]
         cur_count = len(self._persons_in_zone)
-        if self._state_is_in_zone(evt.data.get("new_state")):
+        if self._state_is_in_zone(evt.data["new_state"]):
             self._persons_in_zone.add(person_entity_id)
         elif person_entity_id in self._persons_in_zone:
             self._persons_in_zone.remove(person_entity_id)
