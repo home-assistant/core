@@ -2090,7 +2090,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.0.1
+python-homewizard-energy==2.0.2
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
