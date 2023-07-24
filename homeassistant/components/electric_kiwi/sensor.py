@@ -112,11 +112,6 @@ class ElectricKiwiHOPEntity(
         self.entity_description = description
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.customer_number}_{str(self.connection_id)}_{self.entity_description.key}"
-
-    @property
     def native_value(self) -> datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_func(self.coordinator.data)
