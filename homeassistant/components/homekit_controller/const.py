@@ -53,9 +53,6 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     ServicesTypes.TELEVISION: "media_player",
     ServicesTypes.VALVE: "switch",
     ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT: "camera",
-    ServicesTypes.DOORBELL: "event",
-    ServicesTypes.STATELESS_PROGRAMMABLE_SWITCH: "event",
-    ServicesTypes.SERVICE_LABEL: "event",
 }
 
 CHARACTERISTIC_PLATFORMS = {
@@ -101,6 +98,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.MUTE: "switch",
     CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: "switch",
+    CharacteristicsTypes.INPUT_EVENT: "event",
 }
 
 STARTUP_EXCEPTIONS = (
