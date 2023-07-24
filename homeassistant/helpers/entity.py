@@ -45,7 +45,7 @@ from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .typing import UNDEFINED, StateType, UndefinedType
+from .typing import UNDEFINED, EventType, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
@@ -1097,7 +1097,9 @@ class Entity(ABC):
         if self.platform:
             self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
-    async def _async_registry_updated(self, event: Event) -> None:
+    async def _async_registry_updated(
+        self, event: EventType[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle entity registry update."""
         data = event.data
         if data["action"] == "remove":

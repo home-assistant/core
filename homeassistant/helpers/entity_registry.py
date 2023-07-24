@@ -108,13 +108,26 @@ class RegistryEntryHider(StrEnum):
     USER = "user"
 
 
-class EventEntityRegistryUpdatedData(TypedDict):
-    """EventEntityRegistryUpdated data."""
+class _EventEntityRegistryUpdatedData_CreateRemove(TypedDict):
+    """EventEntityRegistryUpdated data for action type 'create' and 'remove'."""
 
-    action: Literal["create", "remove", "update"]
+    action: Literal["create", "remove"]
     entity_id: str
-    changes: NotRequired[dict[str, Any]]
+
+
+class _EventEntityRegistryUpdatedData_Update(TypedDict):
+    """EventEntityRegistryUpdated data for action type 'update'."""
+
+    action: Literal["update"]
+    entity_id: str
+    changes: dict[str, Any]  # Required with action == "update"
     old_entity_id: NotRequired[str]
+
+
+EventEntityRegistryUpdatedData = (
+    _EventEntityRegistryUpdatedData_CreateRemove
+    | _EventEntityRegistryUpdatedData_Update
+)
 
 
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
