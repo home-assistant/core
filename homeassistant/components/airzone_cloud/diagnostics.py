@@ -5,8 +5,15 @@ from collections.abc import Mapping
 from typing import Any
 
 from aioairzone_cloud.const import (
+    API_CITY,
+    API_GROUP_ID,
+    API_GROUPS,
+    API_LOCATION_ID,
+    API_OLD_ID,
+    API_PIN,
     API_STAT_AP_MAC,
     API_STAT_SSID,
+    API_USER_ID,
     AZD_WIFI_MAC,
     RAW_DEVICES_STATUS,
     RAW_INSTALLATIONS,
@@ -22,14 +29,13 @@ from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
 TO_REDACT_API = [
-    "_id",
-    "city",
-    "group_id",
-    "location_id",
-    "pin",
-    "user_id",
+    API_CITY,
+    API_LOCATION_ID,
+    API_OLD_ID,
+    API_PIN,
     API_STAT_AP_MAC,
     API_STAT_SSID,
+    API_USER_ID,
 ]
 
 TO_REDACT_CONFIG = [
@@ -52,11 +58,17 @@ def gather_ids(api_data: dict[str, Any]) -> dict[str, Any]:
             ids[dev_id] = f"device{dev_idx}"
             dev_idx += 1
 
+    group_idx = 1
     inst_idx = 1
-    for inst_id in api_data[RAW_INSTALLATIONS]:
+    for inst_id, inst_data in api_data[RAW_INSTALLATIONS].items():
         if inst_id not in ids:
             ids[inst_id] = f"installation{inst_idx}"
             inst_idx += 1
+        for group in inst_data[API_GROUPS]:
+            group_id = group[API_GROUP_ID]
+            if group_id not in ids:
+                ids[group_id] = f"group{group_idx}"
+                group_idx += 1
 
     ws_idx = 1
     for ws_id in api_data[RAW_WEBSERVERS]:

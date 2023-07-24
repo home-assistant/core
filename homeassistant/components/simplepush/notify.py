@@ -10,18 +10,13 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_EVENT, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_ATTACHMENTS, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT, DOMAIN
-
-# Configuring Simplepush under the notify has been removed in 2022.9.0
-PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA
+from .const import ATTR_ATTACHMENTS, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,19 +27,9 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> SimplePushNotificationService | None:
     """Get the Simplepush notification service."""
-    if discovery_info is None:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "removed_yaml",
-            breaks_in_ha_version="2022.9.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="removed_yaml",
-        )
-        return None
-
-    return SimplePushNotificationService(discovery_info)
+    if discovery_info:
+        return SimplePushNotificationService(discovery_info)
+    return None
 
 
 class SimplePushNotificationService(BaseNotificationService):

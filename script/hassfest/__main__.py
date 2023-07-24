@@ -11,6 +11,7 @@ from . import (
     bluetooth,
     codeowners,
     config_flow,
+    config_schema,
     coverage,
     dependencies,
     dhcp,
@@ -32,6 +33,7 @@ INTEGRATION_PLUGINS = [
     application_credentials,
     bluetooth,
     codeowners,
+    config_schema,
     dependencies,
     dhcp,
     json,
@@ -43,7 +45,7 @@ INTEGRATION_PLUGINS = [
     translations,
     usb,
     zeroconf,
-    config_flow,
+    config_flow,  # This needs to run last, after translations are processed
 ]
 HASS_PLUGINS = [
     coverage,

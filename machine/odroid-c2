@@ -1,2 +1,4 @@
-ARG BUILD_VERSION
-FROM homeassistant/aarch64-homeassistant:$BUILD_VERSION
+ARG \
+    BUILD_FROM
+
+FROM $BUILD_FROM

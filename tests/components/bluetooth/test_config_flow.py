@@ -36,7 +36,7 @@ async def test_options_flow_disabled_not_setup(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "bluetooth",
         }
     )
@@ -370,7 +370,7 @@ async def test_options_flow_disabled_macos(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "bluetooth",
         }
     )
@@ -403,7 +403,7 @@ async def test_options_flow_enabled_linux(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "bluetooth",
         }
     )

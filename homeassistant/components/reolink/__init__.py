@@ -8,7 +8,6 @@ from datetime import timedelta
 import logging
 from typing import Literal
 
-from aiohttp import ClientConnectorError
 import async_timeout
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
@@ -31,6 +30,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -58,8 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await host.stop()
         raise ConfigEntryAuthFailed(err) from err
     except (
-        ClientConnectorError,
-        asyncio.TimeoutError,
         ReolinkException,
         ReolinkError,
     ) as err:

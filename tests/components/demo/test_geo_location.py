@@ -21,7 +21,7 @@ from tests.common import assert_setup_component, async_fire_time_changed
 CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
 
 
-async def test_setup_platform(hass: HomeAssistant) -> None:
+async def test_setup_platform(hass: HomeAssistant, disable_platforms) -> None:
     """Test setup of demo platform via configuration."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.

@@ -16,7 +16,7 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -168,7 +168,7 @@ async def test_number_has_value(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     state = hass.states.get("number.scb_battery_min_soc")
@@ -191,7 +191,7 @@ async def test_number_is_unavailable(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     state = hass.states.get("number.scb_battery_min_soc")
@@ -214,7 +214,7 @@ async def test_set_value(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     await hass.services.async_call(
