@@ -59,8 +59,6 @@ class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
         filters the intervals to remove ones that are not active
         """
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
             async with async_timeout.timeout(60):
                 if not len(self.hop_intervals.intervals):
                     hop_intervals: HopIntervals = await self._ek_api.get_hop_intervals()
