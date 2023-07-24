@@ -1,10 +1,10 @@
-"""Test the buienradar2 config flow."""
+"""Test the buienradar config flow."""
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.buienradar.const import DOMAIN
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -15,19 +15,19 @@ TEST_LONGITUDE = 5.4002156
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_config_flow_setup_(hass: HomeAssistant) -> None:
-    """Test setup of camera."""
+async def test_config_flow_setup(hass: HomeAssistant) -> None:
+    """Test setup of config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
+        {CONF_LOCATION: {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}},
     )
 
     assert result["type"] == "create_entry"
@@ -38,7 +38,7 @@ async def test_config_flow_setup_(hass: HomeAssistant) -> None:
     }
 
 
-async def test_config_flow_already_configured_weather(hass: HomeAssistant) -> None:
+async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
     """Test already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -56,11 +56,11 @@ async def test_config_flow_already_configured_weather(hass: HomeAssistant) -> No
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
+        {CONF_LOCATION: {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}},
     )
 
     assert result["type"] == "abort"
