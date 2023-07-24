@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import datetime
-from typing import Any
 
 from requests.exceptions import RequestException
 
@@ -26,7 +25,7 @@ async def async_setup_entry(
 
     requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
 
-    sensors: list[Any] = []
+    sensors: list[ObihaiEntity] = []
     for key in requester.services:
         sensors.append(ObihaiServiceSensor(requester, key))
 
@@ -42,11 +41,6 @@ async def async_setup_entry(
 
 class ObihaiSensor(ObihaiEntity, SensorEntity, ABC):
     """Generic Obihai Sensor."""
-
-    @property
-    @abstractmethod
-    def icon(self) -> str:
-        """Return an icon."""
 
     @abstractmethod
     def _update(self) -> None:

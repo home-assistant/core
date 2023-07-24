@@ -42,8 +42,6 @@ class ObihaiButton(ObihaiEntity, ButtonEntity):
     """Obihai Reboot button."""
 
     entity_description = BUTTON_DESCRIPTION
-    _attr_device_class = ButtonDeviceClass.RESTART
-    _attr_entity_category = EntityCategory.CONFIG
 
     def press(self) -> None:
         """Press button."""
