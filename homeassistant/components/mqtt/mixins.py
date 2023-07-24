@@ -34,7 +34,10 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    EventDeviceRegistryUpdatedData,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -54,6 +57,7 @@ from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
+    EventType,
     UndefinedType,
 )
 from homeassistant.util.json import json_loads
@@ -719,7 +723,9 @@ class MqttDiscoveryDeviceUpdate(ABC):
             )
             return
 
-    async def _async_device_removed(self, event: Event) -> None:
+    async def _async_device_removed(
+        self, event: EventType[EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle the manual removal of a device."""
         if self._skip_device_removal or not async_removed_from_device(
             self.hass, event, cast(str, self._device_id), self._config_entry_id
@@ -1177,14 +1183,16 @@ def update_device(
 
 @callback
 def async_removed_from_device(
-    hass: HomeAssistant, event: Event, mqtt_device_id: str, config_entry_id: str
+    hass: HomeAssistant,
+    event: EventType[EventDeviceRegistryUpdatedData],
+    mqtt_device_id: str,
+    config_entry_id: str,
 ) -> bool:
     """Check if the passed event indicates MQTT was removed from a device."""
-    action: str = event.data["action"]
-    if action not in ("remove", "update"):
+    if event.data["action"] not in ("remove", "update"):
         return False
 
-    if action == "update":
+    if event.data["action"] == "update":
         if "config_entries" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
