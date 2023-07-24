@@ -2,15 +2,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
-from collections.abc import AsyncGenerator, AsyncIterable, Callable
-from dataclasses import asdict
+from collections.abc import AsyncIterable
 import logging
-from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -56,8 +50,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
     component.register_shutdown()
 
-    # Register websocket API
-    websocket_api.async_register_command(hass, websocket_detect)
     return True
 
 
@@ -91,80 +83,3 @@ class WakeWordDetectionEntity(RestoreEntity):
 
         Audio must be 16Khz sample rate with 16-bit mono PCM samples.
         """
-
-
-@websocket_api.websocket_command(
-    vol.All(
-        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-            {
-                vol.Required("type"): "wake_word/detect",
-                vol.Optional("entity_id"): vol.Any(str, None),
-                vol.Optional("timestamp_start"): vol.Any(int, None),
-            },
-        ),
-    ),
-)
-@websocket_api.async_response
-async def websocket_detect(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Try to detect wake word(s) from a binary audio stream.
-
-    Audio must be 16Khz sample rate with 16-bit mono PCM samples.
-    """
-    timestamp_ms = msg.get("timestamp_start", 0)
-    entity_id = msg.get("entity_id", async_default_engine(hass))
-    _LOGGER.debug("Getting engine for %s", entity_id)
-    engine = async_get_wake_word_detection_entity(hass, entity_id)
-
-    if engine is None:
-        raise ValueError("Wake word provider not found")
-
-    handler_id: int | None = None
-    unregister_handler: Callable[[], None] | None = None
-
-    # Audio pipeline that will receive audio as binary websocket messages
-    audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
-
-    async def wwd_stream() -> AsyncGenerator[tuple[bytes, int], None]:
-        nonlocal timestamp_ms
-
-        # Yield until we receive an empty chunk
-        while chunk := await audio_queue.get():
-            chunk_ms = (len(chunk) / 2) // 16  # 16-bit mono @16KHz
-            timestamp_ms += chunk_ms
-            yield (chunk, timestamp_ms)
-
-    def handle_binary(
-        _hass: HomeAssistant,
-        _connection: websocket_api.ActiveConnection,
-        data: bytes,
-    ) -> None:
-        # Forward to WWD audio stream
-        audio_queue.put_nowait(data)
-
-    handler_id, unregister_handler = connection.async_register_binary_handler(
-        handle_binary
-    )
-
-    # Confirm subscription
-    connection.send_result(msg["id"])
-
-    run_task = hass.async_create_task(engine.async_process_audio_stream(wwd_stream()))
-
-    # Cancel pipeline if user unsubscribes
-    connection.subscriptions[msg["id"]] = run_task.cancel
-
-    # Send binary handler id
-    connection.send_event(msg["id"], {"handler_id": handler_id})
-
-    try:
-        result = await run_task
-        _LOGGER.debug(result)
-        connection.send_event(msg["id"], {} if result is None else asdict(result))
-    finally:
-        if unregister_handler is not None:
-            # Unregister binary handler
-            unregister_handler()

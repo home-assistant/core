@@ -3,7 +3,6 @@ from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -20,7 +19,6 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.typing import WebSocketGenerator
 
 TEST_DOMAIN = "test"
 
@@ -194,39 +192,6 @@ async def test_not_detected_entity(
     # Need 2 seconds to trigger
     result = await mock_provider_entity.async_process_audio_stream(one_second_stream())
     assert result is None
-
-
-async def test_ws_detect(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    tmp_path: Path,
-    mock_provider_entity: MockProviderEntity,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test wake word detection through websocket API."""
-    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
-
-    client = await hass_ws_client()
-
-    await client.send_json_auto_id({"type": "wake_word/detect"})
-
-    msg = await client.receive_json()
-    assert msg["success"]
-
-    msg = await client.receive_json()
-    assert msg["event"]
-    handler_id = bytes([msg["event"]["handler_id"]])
-
-    # Send 3 seconds of empty audio.
-    # Should trigger around 2.
-    timestamp = 0
-    while timestamp < 3000:
-        await client.send_bytes(handler_id + bytes(_BYTES_PER_CHUNK))
-        timestamp += _MS_PER_CHUNK
-
-    msg = await client.receive_json()
-    assert msg["event"]
-    assert msg == snapshot
 
 
 async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
