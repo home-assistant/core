@@ -73,6 +73,12 @@ OPTIONS_FLOW = {
     ),
 }
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_LOCATION): LocationSelector(),
+    }
+)
+
 
 class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for buienradar."""
@@ -101,22 +107,13 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=f"{lat},{lon}", data={CONF_LATITUDE: lat, CONF_LONGITUDE: lon}
             )
-        user_input = {}
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_LOCATION,
-                    default=user_input.get(
-                        CONF_LOCATION,
-                        {
-                            CONF_LATITUDE: self.hass.config.latitude,
-                            CONF_LONGITUDE: self.hass.config.longitude,
-                        },
-                    ),
-                ): LocationSelector(),
+        default_data = {
+            CONF_LOCATION: {
+                CONF_LATITUDE: self.hass.config.latitude,
+                CONF_LONGITUDE: self.hass.config.longitude,
             }
-        )
+        }
         return self.async_show_form(
             step_id="user",
-            data_schema=schema,
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, default_data),
         )
