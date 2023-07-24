@@ -11,6 +11,7 @@ from homeassistant.helpers import collection, entity_registry as er, restore_sta
 
 from .const import DOMAIN
 from .pipeline import PipelineData, PipelineStorageCollection
+from .vad import VadSensitivity
 
 OPTION_PREFERRED = "preferred"
 
@@ -36,6 +37,25 @@ def get_chosen_pipeline(
         (item.id for item in pipeline_store.async_items() if item.name == state.state),
         None,
     )
+
+
+@callback
+def get_vad_sensitivity(
+    hass: HomeAssistant, domain: str, unique_id_prefix: str
+) -> VadSensitivity:
+    """Get the chosen vad sensitivity for a domain."""
+    ent_reg = er.async_get(hass)
+    sensitivity_entity_id = ent_reg.async_get_entity_id(
+        Platform.SELECT, domain, f"{unique_id_prefix}-vad_sensitivity"
+    )
+    if sensitivity_entity_id is None:
+        return VadSensitivity.DEFAULT
+
+    state = hass.states.get(sensitivity_entity_id)
+    if state is None:
+        return VadSensitivity.DEFAULT
+
+    return VadSensitivity(state.state)
 
 
 class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
@@ -102,3 +122,34 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
 
         if self._attr_current_option not in options:
             self._attr_current_option = OPTION_PREFERRED
+
+
+class VadSensitivitySelect(SelectEntity, restore_state.RestoreEntity):
+    """Entity to represent VAD sensitivity."""
+
+    entity_description = SelectEntityDescription(
+        key="vad_sensitivity",
+        translation_key="vad_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+    )
+    _attr_should_poll = False
+    _attr_current_option = VadSensitivity.DEFAULT.value
+    _attr_options = [vs.value for vs in VadSensitivity]
+
+    def __init__(self, hass: HomeAssistant, unique_id_prefix: str) -> None:
+        """Initialize a pipeline selector."""
+        self._attr_unique_id = f"{unique_id_prefix}-vad_sensitivity"
+        self.hass = hass
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        state = await self.async_get_last_state()
+        if state is not None and state.state in self.options:
+            self._attr_current_option = state.state
+
+    async def async_select_option(self, option: str) -> None:
+        """Select an option."""
+        self._attr_current_option = option
+        self.async_write_ha_state()

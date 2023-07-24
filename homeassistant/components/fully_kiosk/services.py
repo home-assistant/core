@@ -12,9 +12,12 @@ import homeassistant.helpers.device_registry as dr
 
 from .const import (
     ATTR_APPLICATION,
+    ATTR_KEY,
     ATTR_URL,
+    ATTR_VALUE,
     DOMAIN,
     SERVICE_LOAD_URL,
+    SERVICE_SET_CONFIG,
     SERVICE_START_APPLICATION,
 )
 from .coordinator import FullyKioskDataUpdateCoordinator
@@ -62,6 +65,22 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
             await coordinator.fully.startApplication(call.data[ATTR_APPLICATION])
 
+    async def async_set_config(call: ServiceCall) -> None:
+        """Set a Fully Kiosk Browser config value on the device."""
+        for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+            # Fully API has different methods for setting string and bool values.
+            # check if call.data[ATTR_VALUE] is a bool
+            if isinstance(call.data[ATTR_VALUE], bool) or call.data[
+                ATTR_VALUE
+            ].lower() in ("true", "false"):
+                await coordinator.fully.setConfigurationBool(
+                    call.data[ATTR_KEY], call.data[ATTR_VALUE]
+                )
+            else:
+                await coordinator.fully.setConfigurationString(
+                    call.data[ATTR_KEY], call.data[ATTR_VALUE]
+                )
+
     # Register all the above services
     service_mapping = [
         (async_load_url, SERVICE_LOAD_URL, ATTR_URL),
@@ -81,3 +100,18 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 )
             ),
         )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CONFIG,
+        async_set_config,
+        schema=vol.Schema(
+            vol.All(
+                {
+                    vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
+                    vol.Required(ATTR_KEY): cv.string,
+                    vol.Required(ATTR_VALUE): vol.Any(str, bool),
+                }
+            )
+        ),
+    )

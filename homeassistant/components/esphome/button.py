@@ -9,7 +9,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeEntity, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -20,7 +23,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="button",
         info_type=ButtonInfo,
         entity_type=EsphomeButton,
         state_type=EntityState,
@@ -40,10 +42,18 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
 
     @callback
     def _on_device_update(self) -> None:
-        """Update the entity state when device info has changed."""
-        # This override the EsphomeEntity method as the button entity
-        # never gets a state update.
-        self._on_state_update()
+        """Call when device updates or entry data changes.
+
+        The default behavior is only to write entity state when the
+        device is unavailable when the device state changes.
+        This method overrides the default behavior since buttons do
+        not have a state, so we will never get a state update for a
+        button. As such, we need to write the state on every device
+        update to ensure the button goes available and unavailable
+        as the device becomes available or unavailable.
+        """
+        self._on_entry_data_changed()
+        self.async_write_ha_state()
 
     async def async_press(self) -> None:
         """Press the button."""

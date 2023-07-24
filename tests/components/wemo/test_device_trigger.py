@@ -71,7 +71,7 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "changed_states",
             "metadata": {"secondary": False},
@@ -79,7 +79,7 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_off",
             "metadata": {"secondary": False},
@@ -87,7 +87,7 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_on",
             "metadata": {"secondary": False},

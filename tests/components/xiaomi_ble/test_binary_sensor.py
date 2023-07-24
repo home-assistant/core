@@ -247,7 +247,7 @@ async def test_smoke(hass: HomeAssistant) -> None:
         hass,
         make_advertisement(
             "54:EF:44:E3:9C:BC",
-            b"XY\x97\tf\xbc\x9c\xe3D\xefT\x01" b"\x08\x12\x05\x00\x00\x00q^\xbe\x90",
+            b"XY\x97\tf\xbc\x9c\xe3D\xefT\x01\x08\x12\x05\x00\x00\x00q^\xbe\x90",
         ),
     )
     await hass.async_block_till_done()

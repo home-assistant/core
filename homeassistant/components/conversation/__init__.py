@@ -8,6 +8,7 @@ import logging
 import re
 from typing import Any, Literal
 
+from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
 from homeassistant import core
@@ -16,6 +17,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -154,12 +156,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config_intents := config.get(DOMAIN, {}).get("intents"):
         hass.data[DATA_CONFIG] = config_intents
 
-    async def handle_process(service: core.ServiceCall) -> None:
+    async def handle_process(service: core.ServiceCall) -> core.ServiceResponse:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
         try:
-            await async_converse(
+            result = await async_converse(
                 hass=hass,
                 text=text,
                 conversation_id=None,
@@ -168,7 +170,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 agent_id=service.data.get(ATTR_AGENT_ID),
             )
         except intent.IntentHandleError as err:
-            _LOGGER.error("Error processing %s: %s", text, err)
+            raise HomeAssistantError(f"Error processing {text}: {err}") from err
+
+        if service.return_response:
+            return result.as_dict()
+
+        return None
 
     async def handle_reload(service: core.ServiceCall) -> None:
         """Reload intents."""
@@ -176,7 +183,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, handle_process, schema=SERVICE_PROCESS_SCHEMA
+        DOMAIN,
+        SERVICE_PROCESS,
+        handle_process,
+        schema=SERVICE_PROCESS_SCHEMA,
+        supports_response=core.SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
@@ -184,7 +195,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(ConversationProcessView())
     websocket_api.async_register_command(hass, websocket_process)
     websocket_api.async_register_command(hass, websocket_prepare)
-    websocket_api.async_register_command(hass, websocket_get_agent_info)
     websocket_api.async_register_command(hass, websocket_list_agents)
     websocket_api.async_register_command(hass, websocket_hass_agent_debug)
 
@@ -236,29 +246,6 @@ async def websocket_prepare(
     agent = await manager.async_get_agent(msg.get("agent_id"))
     await agent.async_prepare(msg.get("language"))
     connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "conversation/agent/info",
-        vol.Optional("agent_id"): agent_id_validator,
-    }
-)
-@websocket_api.async_response
-async def websocket_get_agent_info(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Info about the agent in use."""
-    agent = await _get_agent_manager(hass).async_get_agent(msg.get("agent_id"))
-
-    connection.send_result(
-        msg["id"],
-        {
-            "attribution": agent.attribution,
-        },
-    )
 
 
 @websocket_api.websocket_command(
@@ -343,6 +330,10 @@ async def websocket_hass_agent_debug(
                         }
                         for entity_key, entity in result.entities.items()
                     },
+                    "targets": {
+                        state.entity_id: {"matched": is_matched}
+                        for state, is_matched in _get_debug_targets(hass, result)
+                    },
                 }
                 if result is not None
                 else None
@@ -350,6 +341,49 @@ async def websocket_hass_agent_debug(
             ]
         },
     )
+
+
+def _get_debug_targets(
+    hass: HomeAssistant,
+    result: RecognizeResult,
+) -> Iterable[tuple[core.State, bool]]:
+    """Yield state/is_matched pairs for a hassil recognition."""
+    entities = result.entities
+
+    name: str | None = None
+    area_name: str | None = None
+    domains: set[str] | None = None
+    device_classes: set[str] | None = None
+    state_names: set[str] | None = None
+
+    if "name" in entities:
+        name = str(entities["name"].value)
+
+    if "area" in entities:
+        area_name = str(entities["area"].value)
+
+    if "domain" in entities:
+        domains = set(cv.ensure_list(entities["domain"].value))
+
+    if "device_class" in entities:
+        device_classes = set(cv.ensure_list(entities["device_class"].value))
+
+    if "state" in entities:
+        # HassGetState only
+        state_names = set(cv.ensure_list(entities["state"].value))
+
+    states = intent.async_match_states(
+        hass,
+        name=name,
+        area_name=area_name,
+        domains=domains,
+        device_classes=device_classes,
+    )
+
+    for state in states:
+        # For queries, a target is "matched" based on its state
+        is_matched = (state_names is None) or (state.state in state_names)
+        yield state, is_matched
 
 
 class ConversationProcessView(http.HomeAssistantView):
@@ -519,12 +553,8 @@ class AgentManager:
     def async_set_agent(self, agent_id: str, agent: AbstractConversationAgent) -> None:
         """Set the agent."""
         self._agents[agent_id] = agent
-        if self.default_agent == HOME_ASSISTANT_AGENT:
-            self.default_agent = agent_id
 
     @core.callback
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
-        if self.default_agent == agent_id:
-            self.default_agent = HOME_ASSISTANT_AGENT
         self._agents.pop(agent_id, None)

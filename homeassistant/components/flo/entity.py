@@ -20,12 +20,10 @@ class FloEntity(Entity):
     def __init__(
         self,
         entity_type: str,
-        name: str,
         device: FloDeviceDataUpdateCoordinator,
         **kwargs,
     ) -> None:
         """Init Flo entity."""
-        self._attr_name = name
         self._attr_unique_id = f"{device.mac_address}_{entity_type}"
 
         self._device: FloDeviceDataUpdateCoordinator = device

@@ -6,7 +6,12 @@ from fritzconnection.core.processor import Service
 from fritzconnection.lib.fritzhosts import FritzHosts
 import pytest
 
-from .const import MOCK_FB_SERVICES, MOCK_MESH_DATA, MOCK_MODELNAME
+from .const import (
+    MOCK_FB_SERVICES,
+    MOCK_HOST_ATTRIBUTES_DATA,
+    MOCK_MESH_DATA,
+    MOCK_MODELNAME,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +48,10 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
         else:
             self.call_action = self._call_action
 
+    def override_services(self, services) -> None:
+        """Overrire services data."""
+        self._services = services
+
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
             "_call_action service: %s, action: %s, **kwargs: %s",
@@ -70,6 +79,10 @@ class FritzHostMock(FritzHosts):
     def get_mesh_topology(self, raw=False):
         """Retrurn mocked mesh data."""
         return MOCK_MESH_DATA
+
+    def get_hosts_attributes(self):
+        """Retrurn mocked host attributes data."""
+        return MOCK_HOST_ATTRIBUTES_DATA
 
 
 @pytest.fixture(name="fc_data")

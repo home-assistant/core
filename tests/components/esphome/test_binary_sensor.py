@@ -1,10 +1,23 @@
 """Test ESPHome binary sensors."""
-from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState
+from collections.abc import Awaitable, Callable
+
+from aioesphomeapi import (
+    APIClient,
+    BinarySensorInfo,
+    BinarySensorState,
+    EntityInfo,
+    EntityState,
+    UserService,
+)
 import pytest
 
 from homeassistant.components.esphome import DomainData
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+
+from .conftest import MockESPHomeDevice
+
+from tests.common import MockConfigEntry
 
 
 async def test_assist_in_progress(
@@ -37,7 +50,10 @@ async def test_binary_sensor_generic_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
     binary_state: tuple[bool, str],
-    mock_generic_device_entry,
+    mock_generic_device_entry: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockConfigEntry],
+    ],
 ) -> None:
     """Test a generic binary_sensor entity."""
     entity_info = [
@@ -57,13 +73,18 @@ async def test_binary_sensor_generic_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == hass_state
 
 
 async def test_status_binary_sensor(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockConfigEntry],
+    ],
 ) -> None:
     """Test a generic binary_sensor entity."""
     entity_info = [
@@ -83,13 +104,18 @@ async def test_status_binary_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
 
 
 async def test_binary_sensor_missing_state(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockConfigEntry],
+    ],
 ) -> None:
     """Test a generic binary_sensor that is missing state."""
     entity_info = [
@@ -108,6 +134,42 @@ async def test_binary_sensor_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_binary_sensor_has_state_false(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a generic binary_sensor where has_state is false."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+        )
+    ]
+    states = []
+    user_service = []
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    mock_device.set_state(BinarySensorState(key=1, state=True, missing_state=False))
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON

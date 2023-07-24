@@ -60,9 +60,11 @@
     "select": {
       "floodlight_mode": {
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "auto": "Auto",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "adaptive": "Adaptive",
+          "autoadaptive": "Auto adaptive"
         }
       },
       "day_night_mode": {
@@ -74,7 +76,7 @@
       },
       "auto_quick_reply_message": {
         "state": {
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "auto_track_method": {
@@ -90,6 +92,11 @@
           "auto": "Auto",
           "alwaysonatnight": "Auto & always on at night"
         }
+      }
+    },
+    "sensor": {
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
       }
     }
   }

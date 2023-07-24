@@ -22,17 +22,20 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import slugify
 
 from .const import (
     DATA_ASUSWRT,
     DOMAIN,
+    KEY_COORDINATOR,
+    KEY_SENSORS,
     SENSORS_BYTES,
     SENSORS_CONNECTED_DEVICE,
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
 )
-from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
+from .router import AsusWrtRouter
 
 
 @dataclass
@@ -40,7 +43,6 @@ class AsusWrtSensorEntityDescription(SensorEntityDescription):
     """A class that describes AsusWrt sensor entities."""
 
     factor: int | None = None
-    unique_identifier: str | None = None
 
 
 UNIT_DEVICES = "Devices"
@@ -48,16 +50,14 @@ UNIT_DEVICES = "Devices"
 CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_CONNECTED_DEVICE[0],
-        unique_identifier="Devices Connected",
-        translation_key="devices_connected",
+        name="Devices Connected",
         icon="mdi:router-network",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UNIT_DEVICES,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_RATES[0],
-        unique_identifier="Download Speed",
-        translation_key="download_speed",
+        name="Download Speed",
         icon="mdi:download-network",
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -68,8 +68,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_RATES[1],
-        unique_identifier="Upload Speed",
-        translation_key="upload_speed",
+        name="Upload Speed",
         icon="mdi:upload-network",
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -80,8 +79,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_BYTES[0],
-        unique_identifier="Download",
-        translation_key="download",
+        name="Download",
         icon="mdi:download",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
@@ -92,8 +90,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_BYTES[1],
-        unique_identifier="Upload",
-        translation_key="upload",
+        name="Upload",
         icon="mdi:upload",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
@@ -104,8 +101,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[0],
-        unique_identifier="Load Avg (1m)",
-        translation_key="load_avg_1m",
+        name="Load Avg (1m)",
         icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -114,8 +110,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[1],
-        unique_identifier="Load Avg (5m)",
-        translation_key="load_avg_5m",
+        name="Load Avg (5m)",
         icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -124,8 +119,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[2],
-        unique_identifier="Load Avg (15m)",
-        translation_key="load_avg_15m",
+        name="Load Avg (15m)",
         icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -134,8 +128,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[0],
-        unique_identifier="2.4GHz Temperature",
-        translation_key="24ghz_temperature",
+        name="2.4GHz Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -145,8 +138,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[1],
-        unique_identifier="5GHz Temperature",
-        translation_key="5ghz_temperature",
+        name="5GHz Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -156,8 +148,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[2],
-        unique_identifier="CPU Temperature",
-        translation_key="cpu_temperature",
+        name="CPU Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -192,6 +183,7 @@ async def async_setup_entry(
 class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     """Representation of a AsusWrt sensor."""
 
+    entity_description: AsusWrtSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
@@ -202,16 +194,9 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize a AsusWrt sensor."""
         super().__init__(coordinator)
-        self.entity_description: AsusWrtSensorEntityDescription = description
+        self.entity_description = description
 
-        if router.unique_id:
-            self._attr_unique_id = (
-                f"{DOMAIN} {router.unique_id} {description.unique_identifier}"
-            )
-        else:
-            self._attr_unique_id = (
-                f"{DOMAIN} {router.name} {description.unique_identifier}"
-            )
+        self._attr_unique_id = slugify(f"{router.unique_id}_{description.key}")
         self._attr_device_info = router.device_info
         self._attr_extra_state_attributes = {"hostname": router.host}
 

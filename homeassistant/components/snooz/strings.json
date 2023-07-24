@@ -23,5 +23,31 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "transition_on": {
+      "name": "Transition on",
+      "description": "Transitions to a target volume level over time.",
+      "fields": {
+        "duration": {
+          "name": "Transition duration",
+          "description": "Time it takes to reach the target volume level."
+        },
+        "volume": {
+          "name": "Target volume",
+          "description": "If not specified, the volume level is read from the device."
+        }
+      }
+    },
+    "transition_off": {
+      "name": "Transition off",
+      "description": "Transitions volume off over time.",
+      "fields": {
+        "duration": {
+          "name": "[%key:component::snooz::services::transition_on::fields::duration::name%]",
+          "description": "Time it takes to turn off."
+        }
+      }
+    }
   }
 }

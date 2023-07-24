@@ -13,8 +13,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
 from .domain_data import DomainData
+from .entity import (
+    EsphomeAssistEntity,
+    EsphomeEntity,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -25,7 +29,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="binary_sensor",
         info_type=BinarySensorInfo,
         entity_type=EsphomeBinarySensor,
         state_type=BinarySensorState,
@@ -49,10 +52,9 @@ class EsphomeBinarySensor(
             # Status binary sensors indicated connected state.
             # So in their case what's usually _availability_ is now state
             return self._entry_data.available
-        state = self._state
-        if not self._has_state or state.missing_state:
+        if not self._has_state or self._state.missing_state:
             return None
-        return state.state
+        return self._state.state
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
