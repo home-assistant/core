@@ -40,7 +40,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
-from .device_registry import DeviceEntryType
+from .device_registry import DeviceEntryType, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -1146,7 +1146,9 @@ class Entity(ABC):
         self._unsub_device_updates = None
 
     @callback
-    def _async_device_registry_updated(self, event: Event) -> None:
+    def _async_device_registry_updated(
+        self, event: EventType[EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle device registry update."""
         data = event.data
 
