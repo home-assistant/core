@@ -79,7 +79,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         name_fn=lambda _: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         supported_fn=lambda controller, obj_id: True,
-        unique_id_fn=lambda controller, obj_id: f"qr_code-{controller.api.wlans[obj_id].id}",
+        unique_id_fn=lambda controller, obj_id: f"qr_code-{obj_id}",
         image_fn=async_wlan_qr_code_image_fn,
         value_fn=lambda obj: obj.x_passphrase,
     ),
