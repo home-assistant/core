@@ -24,10 +24,6 @@ class MockYouTube:
         self._playlist_items_fixture = playlist_items_fixture
         self._subscriptions_fixture = subscriptions_fixture
 
-    def _check_if_authenticated(self) -> None:
-        if not self._authenticated:
-            raise AssertionError("User should've been authenticated")
-
     async def set_user_authentication(
         self, token: str, scopes: list[AuthScope]
     ) -> None:
@@ -36,7 +32,6 @@ class MockYouTube:
 
     async def get_user_channels(self) -> AsyncGenerator[YouTubeChannel, None]:
         """Get channels for authenticated user."""
-        self._check_if_authenticated()
         channels = json.loads(load_fixture(self._channel_fixture))
         for item in channels["items"]:
             yield YouTubeChannel(**item)
@@ -45,7 +40,6 @@ class MockYouTube:
         self, channel_ids: list[str]
     ) -> AsyncGenerator[YouTubeChannel, None]:
         """Get channels."""
-        self._check_if_authenticated()
         channels = json.loads(load_fixture(self._channel_fixture))
         for item in channels["items"]:
             yield YouTubeChannel(**item)
@@ -54,14 +48,12 @@ class MockYouTube:
         self, playlist_id: str, amount: int
     ) -> AsyncGenerator[YouTubePlaylistItem, None]:
         """Get channels."""
-        self._check_if_authenticated()
         channels = json.loads(load_fixture(self._playlist_items_fixture))
         for item in channels["items"]:
             yield YouTubePlaylistItem(**item)
 
     async def get_user_subscriptions(self) -> AsyncGenerator[YouTubeSubscription, None]:
         """Get channels for authenticated user."""
-        self._check_if_authenticated()
         channels = json.loads(load_fixture(self._subscriptions_fixture))
         for item in channels["items"]:
             yield YouTubeSubscription(**item)

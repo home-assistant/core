@@ -11,6 +11,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 class AsyncConfigEntryAuth:
     """Provide Google authentication tied to an OAuth2 based config entry."""
 
+    youtube: YouTube | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -33,6 +35,7 @@ class AsyncConfigEntryAuth:
     async def get_resource(self) -> YouTube:
         """Create resource."""
         token = await self.check_and_refresh_token()
-        youtube = YouTube(session=async_get_clientsession(self.hass))
-        await youtube.set_user_authentication(token, [AuthScope.READ_ONLY])
-        return youtube
+        if self.youtube is None:
+            self.youtube = YouTube(session=async_get_clientsession(self.hass))
+        await self.youtube.set_user_authentication(token, [AuthScope.READ_ONLY])
+        return self.youtube

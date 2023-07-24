@@ -8,6 +8,7 @@ from youtubeaio.types import UnauthorizedError
 from homeassistant import config_entries
 from homeassistant.components.youtube.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import MockYouTube
@@ -36,7 +37,7 @@ async def test_sensor_without_uploaded_video(
     await setup_integration()
 
     with patch(
-        "homeassistant.components.youtube.api.YouTube",
+        "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
         return_value=MockYouTube(
             playlist_items_fixture="youtube/get_no_playlist_items.json"
         ),
@@ -63,7 +64,7 @@ async def test_sensor_updating(
     assert state.attributes["video_id"] == "wysukDrMdqU"
 
     with patch(
-        "homeassistant.components.youtube.api.YouTube",
+        "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
         return_value=MockYouTube(
             playlist_items_fixture="youtube/get_playlist_items_2.json"
         ),
@@ -86,11 +87,11 @@ async def test_sensor_reauth_trigger(
     hass: HomeAssistant, setup_integration: ComponentSetup
 ) -> None:
     """Test reauth is triggered after a refresh error."""
-    await setup_integration()
-
     with patch(
         "youtubeaio.youtube.YouTube.get_channels", side_effect=UnauthorizedError
     ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
         future = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
