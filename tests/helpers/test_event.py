@@ -544,16 +544,16 @@ async def test_async_track_state_added_domain(hass: HomeAssistant) -> None:
     multiple_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]):
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def multiple_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def multiple_run_callback(event: EventType[EventStateChangedData]):
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
@@ -656,16 +656,16 @@ async def test_async_track_state_removed_domain(hass: HomeAssistant) -> None:
     multiple_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]):
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def multiple_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def multiple_run_callback(event: EventType[EventStateChangedData]):
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
@@ -738,16 +738,16 @@ async def test_async_track_state_removed_domain_match_all(hass: HomeAssistant) -
     match_all_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]):
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def match_all_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def match_all_run_callback(event: EventType[EventStateChangedData]):
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         match_all_entity_id_tracker.append((old_state, new_state))
 
