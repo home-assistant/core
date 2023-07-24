@@ -31,7 +31,7 @@ class RoborockEntity(Entity):
 
     @property
     def api(self) -> RoborockLocalClient:
-        """Returns the api."""
+        """Return the Api."""
         return self._api
 
     def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
@@ -39,7 +39,9 @@ class RoborockEntity(Entity):
         return self._api.cache.get(attribute)
 
     async def send(
-        self, command: RoborockCommand, params: dict[str, Any] | list[Any] | None = None
+        self,
+        command: RoborockCommand,
+        params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Send a command to a vacuum cleaner."""
         try:
@@ -87,7 +89,7 @@ class RoborockCoordinatedEntity(
     async def send(
         self,
         command: RoborockCommand,
-        params: dict[str, Any] | list[Any] | None = None,
+        params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""
         res = await super().send(command, params)

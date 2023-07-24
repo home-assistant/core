@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AccuWeatherDataUpdateCoordinator
@@ -50,7 +49,7 @@ PARALLEL_UPDATES = 1
 class AccuWeatherSensorDescriptionMixin:
     """Mixin for AccuWeather sensor."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], str | int | float | None]
 
 
 @dataclass
@@ -59,7 +58,7 @@ class AccuWeatherSensorDescription(
 ):
     """Class describing AccuWeather sensor entities."""
 
-    attr_fn: Callable[[dict[str, Any]], dict[str, StateType]] = lambda _: {}
+    attr_fn: Callable[[dict[str, Any]], dict[str, Any]] = lambda _: {}
 
 
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
@@ -428,7 +427,7 @@ class AccuWeatherSensor(
         self.forecast_day = forecast_day
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 

@@ -759,6 +759,7 @@ async def test_async_get_all_descriptions_dynamically_created_services(
         "description": "",
         "fields": {},
         "name": "",
+        "response": {"optional": True},
     }
 
 

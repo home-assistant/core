@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from collections import UserDict
 from collections.abc import Coroutine, ValuesView
+from enum import StrEnum
 import logging
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 from urllib.parse import urlparse
 
 import attr
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -94,6 +94,27 @@ DEVICE_INFO_TYPES = {
 }
 
 DEVICE_INFO_KEYS = set.union(*(itm for itm in DEVICE_INFO_TYPES.values()))
+
+
+class _EventDeviceRegistryUpdatedData_CreateRemove(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'create' and 'remove'."""
+
+    action: Literal["create", "remove"]
+    device_id: str
+
+
+class _EventDeviceRegistryUpdatedData_Update(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'update'."""
+
+    action: Literal["update"]
+    device_id: str
+    changes: dict[str, Any]
+
+
+EventDeviceRegistryUpdatedData = (
+    _EventDeviceRegistryUpdatedData_CreateRemove
+    | _EventDeviceRegistryUpdatedData_Update
+)
 
 
 class DeviceEntryType(StrEnum):

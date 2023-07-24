@@ -98,6 +98,46 @@
       "last_motion_image": {
         "name": "Last motion image"
       }
+    },
+    "binary_sensor": {
+      "alarm_schedules_enabled": {
+        "name": "Alarm schedules enabled"
+      },
+      "encrypted": {
+        "name": "Encryption"
+      }
+    },
+    "sensor": {
+      "alarm_sound_mod": {
+        "name": "Alarm sound level"
+      },
+      "last_alarm_time": {
+        "name": "Last alarm time"
+      },
+      "seconds_last_trigger": {
+        "name": "Seconds since last trigger"
+      },
+      "last_alarm_pic": {
+        "name": "Last alarm picture URL"
+      },
+      "supported_channels": {
+        "name": "Supported channels"
+      },
+      "local_ip": {
+        "name": "Local IP"
+      },
+      "wan_ip": {
+        "name": "WAN IP"
+      },
+      "pir_status": {
+        "name": "PIR status"
+      },
+      "last_alarm_type_code": {
+        "name": "Last alarm type code"
+      },
+      "last_alarm_type_name": {
+        "name": "Last alarm type name"
+      }
     }
   },
   "services": {
