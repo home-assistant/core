@@ -78,6 +78,15 @@
       }
     }
   },
+  "selector": {
+    "forecast_type": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly",
+        "twice_daily": "Twice daily"
+      }
+    }
+  },
   "services": {
     "get_forecast": {
       "name": "Get forecast",
