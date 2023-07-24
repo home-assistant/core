@@ -34,7 +34,10 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -42,6 +45,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import EventType
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -270,11 +274,13 @@ class ESPHomeManager:
         """Subscribe and forward states for requested entities."""
         hass = self.hass
 
-        async def send_home_assistant_state_event(event: Event) -> None:
+        async def send_home_assistant_state_event(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Forward Home Assistant states updates to ESPHome."""
             event_data = event.data
-            new_state: State | None = event_data.get("new_state")
-            old_state: State | None = event_data.get("old_state")
+            new_state = event_data["new_state"]
+            old_state = event_data["old_state"]
 
             if new_state is None or old_state is None:
                 return
