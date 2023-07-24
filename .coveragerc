@@ -316,6 +316,7 @@ omit =
     homeassistant/components/ezviz/__init__.py
     homeassistant/components/ezviz/alarm_control_panel.py
     homeassistant/components/ezviz/binary_sensor.py
+    homeassistant/components/ezviz/button.py
     homeassistant/components/ezviz/camera.py
     homeassistant/components/ezviz/image.py
     homeassistant/components/ezviz/light.py
