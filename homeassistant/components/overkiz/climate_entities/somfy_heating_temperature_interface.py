@@ -29,14 +29,14 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 
-OVERKIZ_TO_HVAC_MODES: dict[str, str] = {
+OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
     OverkizCommandParam.AUTO: HVACMode.AUTO,
     OverkizCommandParam.MANU: HVACMode.HEAT_COOL,
 }
 
 HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 
-OVERKIZ_TO_HVAC_ACTION: dict[str, str] = {
+OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
     OverkizCommandParam.COOLING: HVACAction.COOLING,
     OverkizCommandParam.HEATING: HVACAction.HEATING,
 }
@@ -89,7 +89,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation i.e. heat, cool mode."""
         state = self.device.states[OverkizState.CORE_ON_OFF]
         if state and state.value_as_str == OverkizCommandParam.OFF:
@@ -129,7 +129,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if (
             current_operation := self.device.states[
