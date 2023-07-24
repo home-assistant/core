@@ -3,12 +3,10 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
-from typing import Any, final
+from typing import Any, Self, final
 
-from typing_extensions import Self
-
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -177,8 +175,8 @@ class EventEntity(RestoreEntity):
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {ATTR_EVENT_TYPE: self.__last_event_type}
-        if self.__last_event_attributes:
-            attributes |= self.__last_event_attributes
+        if last_event_attributes := self.__last_event_attributes:
+            attributes |= last_event_attributes
         return attributes
 
     @final

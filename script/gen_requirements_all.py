@@ -11,13 +11,10 @@ import re
 import sys
 from typing import Any
 
+import tomllib
+
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
     "Adafruit-BBIO",
@@ -107,7 +104,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.7.0
 h11==0.14.0
-httpcore==0.17.2
+httpcore==0.17.3
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -143,10 +140,6 @@ pubnub!=6.4.0
 # Package's __init__.pyi stub has invalid syntax and breaks mypy
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
-
-# Pandas 1.4.4 has issues with wheels om armhf + Py3.10
-# Limit this to Python 3.10, to be able to install Python 3.11 wheels for now
-pandas==1.4.3;python_version<'3.11'
 
 # Matplotlib 3.6.2 has issues building wheels on armhf/armv7
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)

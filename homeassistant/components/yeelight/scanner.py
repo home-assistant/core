@@ -7,12 +7,12 @@ import contextlib
 from datetime import datetime
 from ipaddress import IPv4Address
 import logging
+from typing import Self
 from urllib.parse import urlparse
 
 import async_timeout
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
-from typing_extensions import Self
 
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
