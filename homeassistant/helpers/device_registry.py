@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 from urllib.parse import urlparse
 
 import attr
-from typing_extensions import NotRequired
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -97,12 +96,25 @@ DEVICE_INFO_TYPES = {
 DEVICE_INFO_KEYS = set.union(*(itm for itm in DEVICE_INFO_TYPES.values()))
 
 
-class EventDeviceRegistryUpdatedData(TypedDict):
-    """EventDeviceRegistryUpdated data."""
+class _EventDeviceRegistryUpdatedData_CreateRemove(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'create' and 'remove'."""
 
-    action: Literal["create", "remove", "update"]
+    action: Literal["create", "remove"]
     device_id: str
-    changes: NotRequired[dict[str, Any]]
+
+
+class _EventDeviceRegistryUpdatedData_Update(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'update'."""
+
+    action: Literal["update"]
+    device_id: str
+    changes: dict[str, Any]
+
+
+EventDeviceRegistryUpdatedData = (
+    _EventDeviceRegistryUpdatedData_CreateRemove
+    | _EventDeviceRegistryUpdatedData_Update
+)
 
 
 class DeviceEntryType(StrEnum):
