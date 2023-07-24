@@ -8,23 +8,25 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
 )
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_RADIUS, DOMAIN
 from .sensor import CONF_ALTITUDE, DEFAULT_ALTITUDE
 
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_RADIUS): vol.Coerce(float),
-        vol.Required(CONF_LATITUDE): cv.latitude,
-        vol.Required(CONF_LONGITUDE): cv.longitude,
+        vol.Required(CONF_LOCATION): LocationSelector(
+            config=LocationSelectorConfig(radius=True)
+        ),
         vol.Optional(CONF_ALTITUDE): vol.Coerce(float),
     }
 )
@@ -42,15 +44,16 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=user_input[CONF_NAME],
                 data={},
                 options={
-                    CONF_RADIUS: user_input[CONF_RADIUS],
-                    CONF_LATITUDE: user_input[CONF_LATITUDE],
-                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                    CONF_LOCATION: user_input[CONF_LOCATION],
                     CONF_ALTITUDE: user_input.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
                 },
             )
         form_data: dict[str, Any] = {
-            CONF_LATITUDE: self.hass.config.latitude,
-            CONF_LONGITUDE: self.hass.config.longitude,
+            CONF_LOCATION: {
+                CONF_LATITUDE: self.hass.config.latitude,
+                CONF_LONGITUDE: self.hass.config.longitude,
+                CONF_RADIUS: DEFAULT_RADIUS,
+            },
             CONF_ALTITUDE: DEFAULT_ALTITUDE,
         }
         return self.async_show_form(
@@ -64,17 +67,19 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         longitude = import_config.get(CONF_LONGITUDE, self.hass.config.longitude)
         for entry in self._async_current_entries():
             if (
-                entry.options[CONF_LATITUDE] == latitude
-                and entry.options[CONF_LONGITUDE] == longitude
+                entry.options[CONF_LOCATION][CONF_LATITUDE] == latitude
+                and entry.options[CONF_LOCATION][CONF_LONGITUDE] == longitude
             ):
                 return self.async_abort(reason="already_configured")
         return self.async_create_entry(
             title=import_config.get(CONF_NAME, DEFAULT_NAME),
             data={},
             options={
-                CONF_RADIUS: import_config[CONF_RADIUS],
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: latitude,
+                    CONF_LONGITUDE: longitude,
+                    CONF_RADIUS: import_config[CONF_RADIUS],
+                },
                 CONF_ALTITUDE: import_config.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
             },
         )
