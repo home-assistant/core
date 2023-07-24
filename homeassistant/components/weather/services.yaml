@@ -8,7 +8,7 @@ get_forecast:
         - weather.WeatherEntityFeature.FORECAST_TWICE_DAILY
   fields:
     type:
-      example: "daily"
+      required: true
       selector:
         select:
           options:
