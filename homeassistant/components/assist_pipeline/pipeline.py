@@ -426,7 +426,11 @@ class PipelineRun:
         """Prepare wake-word-detection."""
         # Need to add to pipeline store
         engine = wake_word.async_default_engine(self.hass)
-        assert engine is not None, "No wake word engine"
+        if engine is None:
+            raise WakeWordDetectionError(
+                code="wake-engine-missing",
+                message="No wake word engine",
+            )
 
         wake_provider = wake_word.async_get_wake_word_detection_entity(
             self.hass, engine
@@ -501,14 +505,12 @@ class PipelineRun:
         _LOGGER.debug("wake-word-detection result %s", result)
 
         if result is None:
-            wake_output: dict[str, Any] = {"detected": False}
+            wake_output: dict[str, Any] = {}
         else:
             if chunk_buffer:
                 audio_buffer.extend(chunk_buffer)
 
-            wake_output = {
-                "result": asdict(result),
-            }
+            wake_output = asdict(result)
 
         self.process_event(
             PipelineEvent(
