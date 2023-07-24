@@ -19,10 +19,18 @@ CHANNEL_2 = {
     "channelId": "ch2id",
 }
 
+MEDIA_PLAYER_APP_ID = "com.webos.app.mediadiscovery"
+
 MOCK_APPS = {
     LIVE_TV_APP_ID: {
         "title": "Live TV",
         "id": LIVE_TV_APP_ID,
+        "largeIcon": "large-icon",
+        "icon": "icon",
+    },
+    MEDIA_PLAYER_APP_ID: {
+        "title": "Media Player",
+        "id": MEDIA_PLAYER_APP_ID,
         "largeIcon": "large-icon",
         "icon": "icon",
     },

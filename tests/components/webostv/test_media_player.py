@@ -66,7 +66,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_webostv
-from .const import CHANNEL_2, ENTITY_ID, TV_NAME
+from .const import CHANNEL_2, ENTITY_ID, MEDIA_PLAYER_APP_ID, TV_NAME
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -366,7 +366,7 @@ async def test_service_entity_id_none(hass: HomeAssistant, client) -> None:
         ("20", "ch2id"),  # Perfect Match by channel number
     ],
 )
-async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
+async def test_play_media_channel(hass: HomeAssistant, client, media_id, ch_id) -> None:
     """Test play media service."""
     await setup_webostv(hass)
     await client.mock_state_update()
@@ -379,6 +379,39 @@ async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
     await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
 
     client.set_channel.assert_called_once_with(ch_id)
+
+
+@pytest.mark.parametrize(
+    ("fullPath"),
+    [
+        ("file:///tmp/usb/sda/sda1/video.mp4"),  # path
+    ],
+)
+async def test_play_media_video(hass: HomeAssistant, client, fullPath) -> None:
+    """Test play media service."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+        ATTR_MEDIA_CONTENT_ID: fullPath,
+    }
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+
+    client.launch_app_with_params.assert_called_once_with(
+        MEDIA_PLAYER_APP_ID,
+        {
+            "payload": [
+                {
+                    "fullPath": fullPath,
+                    "mediaType": "VIDEO",
+                    "deviceType": "DMR",
+                    "fileName": "video",
+                }
+            ]
+        },
+    )
 
 
 async def test_update_sources_live_tv_find(
