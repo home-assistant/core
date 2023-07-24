@@ -474,13 +474,6 @@ async def async_api_unlock(
     context: ha.Context,
 ) -> AlexaResponse:
     """Process an unlock request."""
-    if config.locale not in {"de-DE", "en-US", "ja-JP"}:
-        msg = (
-            "The unlock directive is not supported for the following locales:"
-            f" {config.locale}"
-        )
-        raise AlexaInvalidDirectiveError(msg)
-
     entity = directive.entity
     await hass.services.async_call(
         entity.domain,
