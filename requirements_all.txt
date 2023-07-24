@@ -533,12 +533,10 @@ bluetooth-adapters==0.16.0
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.2.1
 
+# homeassistant.components.bluetooth
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.6.0
-
-# homeassistant.components.bluetooth
 bluetooth-data-tools==1.6.1
 
 # homeassistant.components.bond
