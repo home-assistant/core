@@ -71,33 +71,32 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
         }
 
         try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
-                async with session.get(
-                    UPDATE_URL, params=params, headers=headers
-                ) as resp:
-                    body = await resp.text()
-                    body = body.strip()
-                    if body.startswith("good") or body.startswith("nochg"):
-                        ip_address = body.split(" ")[1]
-                        _LOGGER.debug(
-                            "Successfully updated No-IP.com: %s IP: %s",
-                            no_ip_domain,
-                            ip_address,
-                        )
-                        data.update(
-                            {
-                                CONF_IP_ADDRESS: ip_address,
-                                CONF_DOMAIN: no_ip_domain,
-                                CONF_USERNAME: user,
-                                CONF_PASSWORD: password,
-                            }
-                        )
-                    else:
-                        _LOGGER.debug(
-                            "Failed to update No-IP.com: %s => %s",
-                            no_ip_domain,
-                            body,
-                        )
+            async with async_timeout.timeout(DEFAULT_TIMEOUT), session.get(
+                UPDATE_URL, params=params, headers=headers
+            ) as resp:
+                body = await resp.text()
+                body = body.strip()
+                if body.startswith("good") or body.startswith("nochg"):
+                    ip_address = body.split(" ")[1]
+                    _LOGGER.debug(
+                        "Successfully updated No-IP.com: %s IP: %s",
+                        no_ip_domain,
+                        ip_address,
+                    )
+                    data.update(
+                        {
+                            CONF_IP_ADDRESS: ip_address,
+                            CONF_DOMAIN: no_ip_domain,
+                            CONF_USERNAME: user,
+                            CONF_PASSWORD: password,
+                        }
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Failed to update No-IP.com: %s => %s",
+                        no_ip_domain,
+                        body,
+                    )
         except aiohttp.ClientError as client_error:
             _LOGGER.warning("Unable to connect to No-IP.com API: %s", client_error)
             raise
