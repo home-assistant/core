@@ -69,6 +69,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             image = user.get_image()
             now_playing = format_track(user.get_now_playing())
             top_tracks = user.get_top_tracks(limit=1)
+            last_tracks = user.get_recent_tracks(limit=1)
         except PyLastError as exc:
             if self.last_update_success:
                 LOGGER.error("LastFM update for %s failed: %r", username, exc)
@@ -76,7 +77,6 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
         top_track = None
         if len(top_tracks) > 0:
             top_track = format_track(top_tracks[0].item)
-        last_tracks = user.get_recent_tracks(limit=1)
         last_track = None
         if len(last_tracks) > 0:
             last_track = format_track(last_tracks[0].track)
