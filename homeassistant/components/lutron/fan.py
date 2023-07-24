@@ -85,8 +85,11 @@ class LutronFan(LutronDevice, FanEntity):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
+        if percentage is None:
+            percentage = 0
+        if percentage > 0:
+            self._prev_percentage = percentage
         self._percentage = percentage
-        self._prev_percentage = percentage
         self._lutron_device.level = percentage
         self._preset_mode = None
         self.schedule_update_ha_state()
@@ -95,11 +98,14 @@ class LutronFan(LutronDevice, FanEntity):
         if preset_mode:
             self.set_preset_mode(preset_mode)
             return
-
-        if percentage is None:
-            percentage = 67
-
-        self.set_percentage(percentage)
+        if percentage is not None:
+            new_percentage = percentage
+        elif self._prev_percentage == 0:
+            # Default to medium speed
+            new_percentage = 67
+        else:
+            new_percentage = self._prev_percentage
+        self.set_percentage(new_percentage)
 
     def turn_off(self, **kwargs: Any) -> None:
         self.set_percentage(0)
