@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, PARAM_HOST, PARAM_PASSWORD, PARAM_USERNAME, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, PARAM_HOST, PARAM_PASSWORD, PARAM_USERNAME
 
 
 async def async_setup_entry(
