@@ -28,6 +28,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -1100,16 +1101,30 @@ class WeatherEntity(Entity):
                 listener(converted_forecast_list)
 
 
+def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
+    """Raise error on attempt to get an unsupported forecast."""
+    raise HomeAssistantError(
+        f"Weather entity '{entity_id}' does not support '{forecast_type}' forecast"
+    )
+
+
 async def async_get_forecast_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Get weather forecast."""
     forecast_type = service_call.data["type"]
+    supported_features = weather.supported_features or 0
     if forecast_type == "daily":
+        if (supported_features & WeatherEntityFeature.FORECAST_DAILY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
         native_forecast_list = await weather.async_forecast_daily()
     elif forecast_type == "hourly":
+        if (supported_features & WeatherEntityFeature.FORECAST_HOURLY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
         native_forecast_list = await weather.async_forecast_hourly()
     else:
+        if (supported_features & WeatherEntityFeature.FORECAST_TWICE_DAILY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
         native_forecast_list = await weather.async_forecast_twice_daily()
     if native_forecast_list is None:
         converted_forecast_list = None
