@@ -47,18 +47,12 @@ SENSOR_TYPES = [
         translation_key="latest_upload",
         icon="mdi:youtube",
         available_fn=lambda channel: channel[ATTR_LATEST_VIDEO] is not None,
-        value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE]
-        if channel[ATTR_LATEST_VIDEO] is not None
-        else None,
-        entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_THUMBNAIL]
-        if channel[ATTR_LATEST_VIDEO] is not None
-        else None,
+        value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE],
+        entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_THUMBNAIL],
         attributes_fn=lambda channel: {
             ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID],
             ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO][ATTR_PUBLISHED_AT],
-        }
-        if channel[ATTR_LATEST_VIDEO] is not None
-        else None,
+        },
     ),
     YouTubeSensorEntityDescription(
         key="subscribers",
@@ -107,6 +101,8 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the value reported by the sensor."""
+        if not self.available:
+            return None
         return self.entity_description.entity_picture_fn(
             self.coordinator.data[self._channel_id]
         )
