@@ -72,7 +72,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input.get(CONF_HOST)
 
         if host in current_hosts:
-            return self.async_abort(reason="single_instance_allowed")
+            self._async_abort_entries_match()
+            # return self.async_abort(reason="single_instance_allowed")
 
         # Get current discovered entries.
         in_progress = self._async_in_progress()
