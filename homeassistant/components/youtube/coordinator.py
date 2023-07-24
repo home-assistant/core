@@ -52,19 +52,20 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 video = await first(
                     youtube.get_playlist_items(channel.upload_playlist_id, 1)
                 )
-                res[channel.channel_id] = {
-                    ATTR_ID: channel.channel_id,
-                    ATTR_TITLE: channel.snippet.title,
-                    ATTR_ICON: channel.snippet.thumbnails.get_highest_quality().url,
-                    ATTR_LATEST_VIDEO: {
+                latest_video = None
+                if video:
+                    latest_video = {
                         ATTR_PUBLISHED_AT: video.snippet.added_at,
                         ATTR_TITLE: video.snippet.title,
                         ATTR_DESCRIPTION: video.snippet.description,
                         ATTR_THUMBNAIL: video.snippet.thumbnails.get_highest_quality().url,
                         ATTR_VIDEO_ID: video.content_details.video_id,
                     }
-                    if video is not None
-                    else None,
+                res[channel.channel_id] = {
+                    ATTR_ID: channel.channel_id,
+                    ATTR_TITLE: channel.snippet.title,
+                    ATTR_ICON: channel.snippet.thumbnails.get_highest_quality().url,
+                    ATTR_LATEST_VIDEO: latest_video,
                     ATTR_SUBSCRIBER_COUNT: channel.statistics.subscriber_count,
                 }
         except UnauthorizedError as err:
