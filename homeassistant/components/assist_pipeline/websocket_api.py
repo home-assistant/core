@@ -127,7 +127,7 @@ async def websocket_run(
 
         if start_stage == PipelineStage.WAKE:
             wake_settings = WakeSettings(
-                timeout_ms=msg["input"].get("timeout", DEFAULT_WAKE_TIMEOUT) * 1000
+                timeout=msg["input"].get("timeout", DEFAULT_WAKE_TIMEOUT)
             )
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:

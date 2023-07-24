@@ -50,7 +50,7 @@ from .error import (
     WakeWordDetectionError,
     WakeWordTimeoutError,
 )
-from .vad import VoiceCommandSegmenter
+from .vad import VoiceActivityTimeout, VoiceCommandSegmenter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -346,8 +346,8 @@ class InvalidPipelineStagesError(PipelineRunValidationError):
 class WakeSettings:
     """Settings for wake word detection."""
 
-    timeout_ms: int | None = None
-    """Number of milliseconds before detection times out."""
+    timeout: float | None = None
+    """Seconds of silence before detection times out."""
 
     audio_chunks_to_buffer: int = 0
     """Number of audio chunks to buffer before detection and forward to STT."""
@@ -461,6 +461,11 @@ class PipelineRun:
 
         wake_settings = self.wake_settings or WakeSettings()
 
+        wake_vad: VoiceActivityTimeout | None = None
+        if (wake_settings.timeout is not None) and (wake_settings.timeout > 0):
+            # Use VAD to determine timeout
+            wake_vad = VoiceActivityTimeout(wake_settings.timeout)
+
         # Audio chunk buffer.
         # Keeping audio right before wake word detection allows the voice
         # command to be spoken immediately after the wake word.
@@ -478,11 +483,7 @@ class PipelineRun:
                 if chunk_buffer is not None:
                     chunk_buffer.append(chunk)
 
-                if (
-                    (wake_settings.timeout_ms is not None)
-                    and (wake_settings.timeout_ms > 0)
-                    and (timestamp_ms >= wake_settings.timeout_ms)
-                ):
+                if (wake_vad is not None) and (not wake_vad.process(chunk)):
                     raise WakeWordTimeoutError(
                         code="wake-word-timeout", message="Wake word was not detected"
                     )
