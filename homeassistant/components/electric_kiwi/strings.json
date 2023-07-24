@@ -22,5 +22,15 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "hopfreepowerstart": {
+        "name": "Hour of free power start"
+      },
+      "hopfreepowerend": {
+        "name": "Hour of free power end"
+      }
+    }
   }
 }

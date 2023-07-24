@@ -63,13 +63,13 @@ def _check_and_move_time(hop: Hop) -> datetime:
 HOP_SENSOR_TYPE: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
     ElectricKiwiHOPSensorEntityDescription(
         key=ATTR_EK_HOP_START,
-        name="Hour of free power start",
+        translation_key="hopfreepowerstart",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_func=_check_and_move_time,
     ),
     ElectricKiwiHOPSensorEntityDescription(
         key=ATTR_EK_HOP_END,
-        name="Hour of free power end",
+        translation_key="hopfreepowerend",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_func=_check_and_move_time,
     ),
@@ -80,10 +80,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Electric Kiwi Sensor Setup."""
-    hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "hop_coordinator"
-    ]
-
+    hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id]
     hop_entities = [
         ElectricKiwiHOPEntity(hop_coordinator, description)
         for description in HOP_SENSOR_TYPE
@@ -107,7 +104,7 @@ class ElectricKiwiHOPEntity(
         """Entity object for Electric Kiwi sensor."""
         super().__init__(hop_coordinator)
 
-        self._attr_unique_id = f"{coordinator._ek_api.customer_number}_{coordinator._ek_api.connection_id}_{description.key}"
+        self._attr_unique_id = f"{self.coordinator._ek_api.customer_number}_{self.coordinator._ek_api.connection_id}_{description.key}"
         self.entity_description = description
 
     @property

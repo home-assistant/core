@@ -44,16 +44,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hop_coordinator = ElectricKiwiHOPDataCoordinator(hass, ek_api)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "hop_coordinator": hop_coordinator,
-    }
-
-    # we need to set the client number and connection id
     try:
         await ek_api.set_active_session()
         await hop_coordinator.async_config_entry_first_refresh()
     except ApiException as err:
         raise ConfigEntryNotReady from err
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hop_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

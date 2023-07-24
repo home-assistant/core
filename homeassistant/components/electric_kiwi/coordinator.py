@@ -31,14 +31,16 @@ class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
             update_interval=HOP_SCAN_INTERVAL,
         )
         self._ek_api = ek_api
-        self.hop_intervals: HopIntervals = HopIntervals("", "", OrderedDict())
+        self.hop_intervals: HopIntervals | None = None
 
     def get_hop_options(self) -> dict[str, int]:
         """Get the hop interval options for selection."""
-        return {
-            f"{v.start_time} - {v.end_time}": k
-            for k, v in self.hop_intervals.intervals.items()
-        }
+        if self.hop_intervals is not None:
+            return {
+                f"{v.start_time} - {v.end_time}": k
+                for k, v in self.hop_intervals.intervals.items()
+            }
+        return {}
 
     async def async_update_hop(self, hop_interval: int) -> Hop:
         """Update selected hop and data."""
@@ -60,7 +62,7 @@ class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
         """
         try:
             async with async_timeout.timeout(60):
-                if not len(self.hop_intervals.intervals):
+                if self.hop_intervals is None:
                     hop_intervals: HopIntervals = await self._ek_api.get_hop_intervals()
                     hop_intervals.intervals = OrderedDict(
                         filter(
