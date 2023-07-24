@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
-from pyweatherflowudp.const import DEFAULT_HOST
 from pyweatherflowudp.device import EVENT_LOAD_COMPLETE, WeatherFlowDevice
 from pyweatherflowudp.errors import ListenerError
 
@@ -27,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WeatherFlow from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    client = hass.data[DOMAIN][entry.entry_id] = WeatherFlowListener(
-        host=entry.data.get(CONF_HOST, DEFAULT_HOST)
+    client = hass.data.setdefault(DOMAIN, {}).setdefault(
+        entry.entry_id, WeatherFlowListener(host=entry.data.get(CONF_HOST))
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

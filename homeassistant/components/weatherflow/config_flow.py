@@ -20,7 +20,7 @@ from homeassistant.helpers import config_entry_flow
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST, default=DEFAULT_HOST): str})
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
