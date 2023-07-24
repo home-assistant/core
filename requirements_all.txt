@@ -953,7 +953,7 @@ hass-nabucasa==0.69.0
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.0.6
+hassil==1.2.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -986,7 +986,7 @@ holidays==0.28
 home-assistant-frontend==20230705.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.6.28
+home-assistant-intents==2023.7.24
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2090,7 +2090,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.0.1
+python-homewizard-energy==2.0.2
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
