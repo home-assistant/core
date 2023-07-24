@@ -28,7 +28,6 @@ from .pipeline import (
     PipelineStage,
     async_get_pipeline,
 )
-from .vad import VoiceCommandSegmenter
 
 DEFAULT_TIMEOUT = 30
 
@@ -63,6 +62,10 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         cv.key_value_schemas(
             "start_stage",
             {
+                PipelineStage.WAKE: vol.Schema(
+                    {vol.Required("input"): {vol.Required("sample_rate"): int}},
+                    extra=vol.ALLOW_EXTRA,
+                ),
                 PipelineStage.STT: vol.Schema(
                     {vol.Required("input"): {vol.Required("sample_rate"): int}},
                     extra=vol.ALLOW_EXTRA,
@@ -109,24 +112,19 @@ async def websocket_run(
         "device_id": msg.get("device_id"),
     }
 
-    if start_stage == PipelineStage.STT:
+    if start_stage in (PipelineStage.WAKE, PipelineStage.STT):
         # Audio pipeline that will receive audio as binary websocket messages
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
-            segmenter = VoiceCommandSegmenter()
 
             # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
                 chunk, state = audioop.ratecv(
                     chunk, 2, 1, incoming_sample_rate, 16000, state
                 )
-                if not segmenter.process(chunk):
-                    # Voice command is finished
-                    break
-
                 yield chunk
 
         def handle_binary(

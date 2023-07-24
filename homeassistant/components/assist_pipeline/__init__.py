@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterable
 
-from homeassistant.components import stt, wake_word
+from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -80,35 +80,3 @@ async def async_pipeline_from_audio_stream(
     )
     await pipeline_input.validate()
     await pipeline_input.execute()
-
-
-async def async_pipeline_detect_wake_word(
-    hass: HomeAssistant,
-    context: Context,
-    audio_stream: AsyncIterable[bytes],
-    pipeline_id: str | None = None,
-) -> wake_word.DetectionResult | None:
-    """Detect wake word for a pipeline in an audio stream.
-
-    Audio must be 16Khz mono with 16-bit PCM samples.
-    """
-    # Not added to pipeline just yet
-    # pipeline = async_get_pipeline(hass, pipeline_id)
-    # wake_engine_id = pipeline.wake_engine or wake.async_default_engine(hass)
-    wake_engine_id = wake_word.async_default_engine(hass)
-    if wake_engine_id is None:
-        raise ValueError("No wake word engine")
-
-    wake_engine = wake_word.async_get_wake_word_detection_entity(hass, wake_engine_id)
-    if wake_engine is None:
-        raise ValueError(f"Invalid wake engine id: {wake_engine_id}")
-
-    async def timestamped_stream() -> AsyncIterable[tuple[bytes, int]]:
-        """Yield audio with timestamps (milliseconds since start of stream)."""
-        timestamp = 0
-        async for chunk in audio_stream:
-            yield chunk, timestamp
-            timestamp += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
-
-    result = await wake_engine.async_process_audio_stream(timestamped_stream())
-    return result

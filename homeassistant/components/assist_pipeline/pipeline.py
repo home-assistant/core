@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Callable, Iterable
+from collections import deque
+from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
@@ -10,7 +11,14 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components import conversation, media_source, stt, tts, websocket_api
+from homeassistant.components import (
+    conversation,
+    media_source,
+    stt,
+    tts,
+    wake_word,
+    websocket_api,
+)
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
@@ -39,7 +47,9 @@ from .error import (
     PipelineNotFound,
     SpeechToTextError,
     TextToSpeechError,
+    WakeWordDetectionError,
 )
+from .vad import VoiceCommandSegmenter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -241,6 +251,8 @@ class PipelineEventType(StrEnum):
 
     RUN_START = "run-start"
     RUN_END = "run-end"
+    WAKE_START = "wake-start"
+    WAKE_END = "wake-end"
     STT_START = "stt-start"
     STT_END = "stt-end"
     INTENT_START = "intent-start"
@@ -297,12 +309,14 @@ class Pipeline:
 class PipelineStage(StrEnum):
     """Stages of a pipeline."""
 
+    WAKE = "wake"
     STT = "stt"
     INTENT = "intent"
     TTS = "tts"
 
 
 PIPELINE_STAGE_ORDER = [
+    PipelineStage.WAKE,
     PipelineStage.STT,
     PipelineStage.INTENT,
     PipelineStage.TTS,
@@ -346,12 +360,14 @@ class PipelineRun:
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
     tts_engine: str = field(init=False)
     tts_options: dict | None = field(init=False, default=None)
+    wake_engine: str = field(init=False)
+    wake_provider: wake_word.WakeWordDetectionEntity = field(init=False)
 
     def __post_init__(self) -> None:
         """Set language for pipeline."""
         self.language = self.pipeline.language or self.hass.config.language
 
-        # stt -> intent -> tts
+        # wake -> stt -> intent -> tts
         if PIPELINE_STAGE_ORDER.index(self.end_stage) < PIPELINE_STAGE_ORDER.index(
             self.start_stage
         ):
@@ -392,6 +408,81 @@ class PipelineRun:
                 PipelineEventType.RUN_END,
             )
         )
+
+    async def prepare_wake_word_detection(self) -> None:
+        """Prepare wake-word-detection."""
+        # Need to add to pipeline store
+        engine = wake_word.async_default_engine(self.hass)
+        assert engine is not None, "No wake word engine"
+
+        wake_provider = wake_word.async_get_wake_word_detection_entity(
+            self.hass, engine
+        )
+        if wake_provider is None:
+            raise WakeWordDetectionError(
+                code="wake-provider-missing",
+                message=f"No wake-word-detection provider for: {engine}",
+            )
+
+        self.wake_engine = engine
+        self.wake_provider = wake_provider
+
+    async def wake_word_detection(
+        self,
+        stream: AsyncIterable[bytes],
+        audio_buffer: list[bytes],
+    ) -> wake_word.DetectionResult | None:
+        """Run wake-word-detection portion of pipeline. Returns detection result."""
+        self.process_event(
+            PipelineEvent(
+                PipelineEventType.WAKE_START,
+                {
+                    "engine": self.wake_engine,
+                },
+            )
+        )
+
+        chunk_buffer: deque[bytes] = deque(maxlen=5)
+
+        async def timestamped_stream() -> AsyncIterable[tuple[bytes, int]]:
+            """Yield audio with timestamps (milliseconds since start of stream)."""
+            timestamp = 0
+            async for chunk in stream:
+                yield chunk, timestamp
+                timestamp += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
+                chunk_buffer.append(chunk)
+
+        try:
+            # Detect wake word(s)
+            result = await self.wake_provider.async_process_audio_stream(
+                timestamped_stream()
+            )
+        except Exception as src_error:
+            _LOGGER.exception("Unexpected error during wake-word-detection")
+            raise SpeechToTextError(
+                code="wake-stream-failed",
+                message="Unexpected error during wake-word-detection",
+            ) from src_error
+
+        _LOGGER.debug("wake-word-detection result %s", result)
+
+        if result is None:
+            wake_output: dict[str, Any] = {"detected": False}
+        else:
+            audio_buffer.extend(chunk_buffer)
+            wake_output = {
+                "detected": True,
+                "result": asdict(result),
+            }
+
+        self.process_event(
+            PipelineEvent(
+                PipelineEventType.WAKE_END,
+                {"wake_output": wake_output},
+            )
+        )
+
+        return result
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech-to-text."""
@@ -443,9 +534,21 @@ class PipelineRun:
         )
 
         try:
+            segmenter = VoiceCommandSegmenter()
+
+            async def segment_stream(
+                stream: AsyncIterable[bytes],
+            ) -> AsyncGenerator[bytes, None]:
+                """Stop stream when voice command is finished."""
+                async for chunk in stream:
+                    if not segmenter.process(chunk):
+                        break
+
+                    yield chunk
+
             # Transcribe audio stream
             result = await self.stt_provider.async_process_audio_stream(
-                metadata, stream
+                metadata, segment_stream(stream)
             )
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during speech-to-text")
@@ -644,6 +747,9 @@ class PipelineInput:
 
     run: PipelineRun
 
+    # wake_stream: AsyncIterable[bytes] | None = None
+    # """Input audio for wake-word-detection. Required when start_stage = wake."""
+
     stt_metadata: stt.SpeechMetadata | None = None
     """Metadata of stt input audio. Required when start_stage = stt."""
 
@@ -663,17 +769,45 @@ class PipelineInput:
     async def execute(self) -> None:
         """Run pipeline."""
         self.run.start()
-        current_stage = self.run.start_stage
+        current_stage: PipelineStage | None = self.run.start_stage
+        audio_buffer: list[bytes] = []
 
         try:
+            if current_stage == PipelineStage.WAKE:
+                assert self.stt_stream is not None
+                detect_result = await self.run.wake_word_detection(
+                    self.stt_stream, audio_buffer
+                )
+                if detect_result is None:
+                    # No wake word. Abort the rest of the pipeline.
+                    current_stage = None
+                else:
+                    current_stage = PipelineStage.STT
+
             # speech-to-text
             intent_input = self.intent_input
             if current_stage == PipelineStage.STT:
                 assert self.stt_metadata is not None
                 assert self.stt_stream is not None
+
+                if audio_buffer:
+
+                    async def buffered_stream() -> AsyncGenerator[bytes, None]:
+                        for chunk in audio_buffer:
+                            yield chunk
+
+                        assert self.stt_stream is not None
+                        async for chunk in self.stt_stream:
+                            yield chunk
+
+                    stt_stream = cast(AsyncIterable[bytes], buffered_stream())
+
+                else:
+                    stt_stream = self.stt_stream
+
                 intent_input = await self.run.speech_to_text(
                     self.stt_metadata,
-                    self.stt_stream,
+                    stt_stream,
                 )
                 current_stage = PipelineStage.INTENT
 
@@ -707,7 +841,13 @@ class PipelineInput:
 
     async def validate(self) -> None:
         """Validate pipeline input against start stage."""
-        if self.run.start_stage == PipelineStage.STT:
+        if self.run.start_stage in (PipelineStage.WAKE, PipelineStage.STT):
+            # if self.run.start_stage == PipelineStage.WAKE:
+            #     if self.wake_stream is None:
+            #         raise PipelineRunValidationError(
+            #             "wake_stream is required for wake-word-detection"
+            #         )
+
             if self.run.pipeline.stt_engine is None:
                 raise PipelineRunValidationError(
                     "the pipeline does not support speech-to-text"
@@ -740,6 +880,13 @@ class PipelineInput:
         end_stage_index = PIPELINE_STAGE_ORDER.index(self.run.end_stage)
 
         prepare_tasks = []
+
+        if (
+            start_stage_index
+            <= PIPELINE_STAGE_ORDER.index(PipelineStage.WAKE)
+            <= end_stage_index
+        ):
+            prepare_tasks.append(self.run.prepare_wake_word_detection())
 
         if (
             start_stage_index

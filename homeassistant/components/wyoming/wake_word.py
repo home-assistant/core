@@ -93,7 +93,11 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
                         if audio_task in done:
                             # Forward audio to wake service
-                            chunk_bytes, chunk_timestamp = audio_task.result()
+                            chunk_info = audio_task.result()
+                            if chunk_info is None:
+                                break
+
+                            chunk_bytes, chunk_timestamp = chunk_info
                             chunk = AudioChunk(
                                 rate=16000,
                                 width=2,
@@ -126,6 +130,13 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                             pending.add(wake_task)
                 finally:
                     # Clean up
+                    if audio_task in pending:
+                        # It's critical that we don't cancel the audio task or
+                        # leave it hanging. This would mess up the pipeline STT
+                        # by stopping the audio stream.
+                        await audio_task
+                        pending.remove(audio_task)
+
                     for task in pending:
                         task.cancel()
 
