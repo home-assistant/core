@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 
 from screenlogicpy import ScreenLogicGateway
@@ -9,7 +10,6 @@ from screenlogicpy.const.data import ATTR, DEVICE, VALUE
 from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EntityCategory
 
 from .const import SL_UNIT_TO_HA_UNIT, generate_unique_id
