@@ -9,13 +9,11 @@ from typing import Any
 
 from roborock.api import AttributeCache
 from roborock.command_cache import CacheableAttribute
-from roborock.local_api import RoborockLocalClient
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -121,9 +119,8 @@ async def async_setup_entry(
             valid_entities.append(
                 RoborockSwitch(
                     f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
-                    coordinator.device_info,
+                    coordinator,
                     description,
-                    coordinator.api,
                 )
             )
     async_add_entities(valid_entities)
@@ -137,13 +134,12 @@ class RoborockSwitch(RoborockEntity, SwitchEntity):
     def __init__(
         self,
         unique_id: str,
-        device_info: DeviceInfo,
-        description: RoborockSwitchDescription,
-        api: RoborockLocalClient,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: RoborockSwitchDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(unique_id, device_info, api)
-        self.entity_description = description
+        self.entity_description = entity_description
+        super().__init__(unique_id, coordinator.device_info, coordinator.api)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
