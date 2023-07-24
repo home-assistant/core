@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from mcstatus.server import MinecraftServer as MCStatus
+from mcstatus.server import JavaServer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
@@ -69,9 +69,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class MinecraftServer:
     """Representation of a Minecraft server."""
 
-    # Private constants
-    _MAX_RETRIES_STATUS = 3
-
     def __init__(
         self, hass: HomeAssistant, unique_id: str, config_data: Mapping[str, Any]
     ) -> None:
@@ -88,16 +85,16 @@ class MinecraftServer:
         self.srv_record_checked = False
 
         # 3rd party library instance
-        self._mc_status = MCStatus(self.host, self.port)
+        self._server = JavaServer(self.host, self.port)
 
         # Data provided by 3rd party library
-        self.version = None
-        self.protocol_version = None
-        self.latency_time = None
-        self.players_online = None
-        self.players_max = None
+        self.version: str | None = None
+        self.protocol_version: int | None = None
+        self.latency_time: float | None = None
+        self.players_online: int | None = None
+        self.players_max: int | None = None
         self.players_list: list[str] | None = None
-        self.motd = None
+        self.motd: str | None = None
 
         # Dispatcher signal name
         self.signal_name = f"{SIGNAL_NAME_PREFIX}_{self.unique_id}"
@@ -133,13 +130,11 @@ class MinecraftServer:
                 # with data extracted out of SRV record.
                 self.host = srv_record[CONF_HOST]
                 self.port = srv_record[CONF_PORT]
-                self._mc_status = MCStatus(self.host, self.port)
+                self._server = JavaServer(self.host, self.port)
 
         # Ping the server with a status request.
         try:
-            await self._hass.async_add_executor_job(
-                self._mc_status.status, self._MAX_RETRIES_STATUS
-            )
+            await self._server.async_status()
             self.online = True
         except OSError as error:
             _LOGGER.debug(
@@ -176,9 +171,7 @@ class MinecraftServer:
     async def _async_status_request(self) -> None:
         """Request server status and update properties."""
         try:
-            status_response = await self._hass.async_add_executor_job(
-                self._mc_status.status, self._MAX_RETRIES_STATUS
-            )
+            status_response = await self._server.async_status()
 
             # Got answer to request, update properties.
             self.version = status_response.version.name
@@ -186,7 +179,8 @@ class MinecraftServer:
             self.players_online = status_response.players.online
             self.players_max = status_response.players.max
             self.latency_time = status_response.latency
-            self.motd = (status_response.description).get("text")
+            self.motd = status_response.motd.to_plain()
+
             self.players_list = []
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
@@ -244,7 +238,7 @@ class MinecraftServerEntity(Entity):
             manufacturer=MANUFACTURER,
             model=f"Minecraft Server ({self._server.version})",
             name=self._server.name,
-            sw_version=self._server.protocol_version,
+            sw_version=str(self._server.protocol_version),
         )
         self._attr_device_class = device_class
         self._extra_state_attributes = None

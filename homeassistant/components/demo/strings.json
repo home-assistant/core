@@ -46,6 +46,17 @@
         }
       }
     },
+    "event": {
+      "push": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "pressed": "Pressed"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "speed": {
         "state": {
@@ -59,7 +70,7 @@
       "thermostat_mode": {
         "name": "Thermostat mode",
         "state": {
-          "away": "Away",
+          "away": "[%key:common::state::not_home%]",
           "comfort": "Comfort",
           "eco": "Eco",
           "sleep": "Sleep"

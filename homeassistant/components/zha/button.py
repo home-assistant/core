@@ -4,9 +4,8 @@ from __future__ import annotations
 import abc
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 

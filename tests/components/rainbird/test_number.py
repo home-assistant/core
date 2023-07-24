@@ -67,7 +67,7 @@ async def test_set_value(
     assert await setup_integration()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, SERIAL_NUMBER)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL_NUMBER)})
     assert device
     assert device.name == "Rain Bird Controller"
     assert device.model == "ST8x-WiFi"

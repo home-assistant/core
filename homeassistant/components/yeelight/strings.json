@@ -10,7 +10,7 @@
       },
       "pick_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "discovery_confirm": {
@@ -29,12 +29,27 @@
     "step": {
       "init": {
         "data": {
-          "model": "Model",
+          "model": "[%key:common::generic::model%]",
           "transition": "Transition Time (ms)",
           "use_music_mode": "Enable Music Mode",
           "save_on_change": "Save Status On Change",
           "nightlight_switch": "Use Nightlight Switch"
         }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "nightlight": {
+        "name": "[%key:component::yeelight::entity::light::nightlight::name%]"
+      }
+    },
+    "light": {
+      "nightlight": {
+        "name": "Nightlight"
+      },
+      "ambilight": {
+        "name": "Ambilight"
       }
     }
   },
@@ -44,7 +59,7 @@
       "description": "Sets a operation mode.",
       "fields": {
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Operation mode."
         }
       }
@@ -73,7 +88,7 @@
         },
         "brightness": {
           "name": "Brightness",
-          "description": "The brightness value to set."
+          "description": "[%key:component::yeelight::services::set_color_scene::fields::brightness::description%]"
         }
       }
     },
@@ -87,7 +102,7 @@
         },
         "brightness": {
           "name": "Brightness",
-          "description": "The brightness value to set."
+          "description": "[%key:component::yeelight::services::set_color_scene::fields::brightness::description%]"
         }
       }
     },
@@ -119,7 +134,7 @@
         },
         "brightness": {
           "name": "Brightness",
-          "description": "The brightness value to set."
+          "description": "[%key:component::yeelight::services::set_color_scene::fields::brightness::description%]"
         }
       }
     },
@@ -129,15 +144,15 @@
       "fields": {
         "count": {
           "name": "Count",
-          "description": "The number of times to run this flow (0 to run forever)."
+          "description": "[%key:component::yeelight::services::set_color_flow_scene::fields::count::description%]"
         },
         "action": {
           "name": "Action",
-          "description": "The action to take after the flow stops."
+          "description": "[%key:component::yeelight::services::set_color_flow_scene::fields::action::description%]"
         },
         "transitions": {
-          "name": "Transitions",
-          "description": "Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html."
+          "name": "[%key:component::yeelight::services::set_color_flow_scene::fields::transitions::name%]",
+          "description": "[%key:component::yeelight::services::set_color_flow_scene::fields::transitions::description%]"
         }
       }
     },
@@ -165,7 +180,7 @@
     },
     "action": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "recover": "Recover",
         "stay": "Stay"
       }

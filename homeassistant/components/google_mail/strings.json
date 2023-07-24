@@ -68,7 +68,7 @@
           "description": "Restrict automatic reply to domain. This only affects GSuite accounts."
         },
         "start": {
-          "name": "Start",
+          "name": "[%key:common::action::start%]",
           "description": "First day of the vacation."
         },
         "end": {
