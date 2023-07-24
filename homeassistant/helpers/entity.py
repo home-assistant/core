@@ -634,12 +634,12 @@ class Entity(ABC):
             return self.entity_description.entity_registry_visible_default
         return True
 
-    @cached_property
+    @property
     def attribution(self) -> str | None:
         """Return the attribution."""
         return self._attr_attribution
 
-    @cached_property
+    @property
     def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
@@ -648,7 +648,7 @@ class Entity(ABC):
             return self.entity_description.entity_category
         return None
 
-    @cached_property
+    @property
     def translation_key(self) -> str | None:
         """Return the translation key to translate the entity's states."""
         if hasattr(self, "_attr_translation_key"):
