@@ -450,11 +450,26 @@ class PipelineRun:
         audio_buffer: list[bytes],
     ) -> wake_word.DetectionResult | None:
         """Run wake-word-detection portion of pipeline. Returns detection result."""
+        metadata_dict = asdict(
+            stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            )
+        )
+
+        # Remove language since it doesn't apply to wake words yet
+        metadata_dict.pop("language", None)
+
         self.process_event(
             PipelineEvent(
                 PipelineEventType.WAKE_START,
                 {
                     "engine": self.wake_engine,
+                    "metadata": metadata_dict,
                 },
             )
         )
