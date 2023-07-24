@@ -5,18 +5,18 @@ from collections.abc import Callable
 from types import GenericAlias
 from typing import Any, Generic, Self, TypeVar, overload
 
-_T_co = TypeVar("_T_co", covariant=True)
+_T = TypeVar("_T")
 
 
-class cached_property(Generic[_T_co]):  # pylint: disable=invalid-name
+class cached_property(Generic[_T]):  # pylint: disable=invalid-name
     """Backport of Python 3.12's cached_property.
 
     Includes https://github.com/python/cpython/pull/101890/files
     """
 
-    def __init__(self, func: Callable[[Any], _T_co]) -> None:
+    def __init__(self, func: Callable[[Any], _T]) -> None:
         """Initialize."""
-        self.func: Callable[[Any], _T_co] = func
+        self.func: Callable[[Any], _T] = func
         self.attrname: str | None = None
         self.__doc__ = func.__doc__
 
@@ -35,12 +35,12 @@ class cached_property(Generic[_T_co]):  # pylint: disable=invalid-name
         ...
 
     @overload
-    def __get__(self, instance: Any, owner: type[Any] | None = None) -> _T_co:
+    def __get__(self, instance: Any, owner: type[Any] | None = None) -> _T:
         ...
 
     def __get__(
         self, instance: Any | None, owner: type[Any] | None = None
-    ) -> _T_co | Self:
+    ) -> _T | Self:
         """Get."""
         if instance is None:
             return self
