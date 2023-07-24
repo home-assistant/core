@@ -18,8 +18,9 @@ from .const import (
     PLATFORM_FORMAT,
     Platform,
 )
-from .core import CALLBACK_TYPE
+from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util import dt as dt_util, ensure_unique_string
 
@@ -173,7 +174,7 @@ async def _async_setup_component(
     """
     integration: loader.Integration | None = None
 
-    def log_error(msg: str) -> None:
+    def log_error(msg: str, exc_info: Exception | None = None) -> None:
         """Log helper."""
         if integration is None:
             custom = ""
@@ -181,7 +182,9 @@ async def _async_setup_component(
         else:
             custom = "" if integration.is_built_in else "custom integration "
             link = integration.documentation
-        _LOGGER.error("Setup failed for %s%s: %s", custom, domain, msg)
+        _LOGGER.error(
+            "Setup failed for %s%s: %s", custom, domain, msg, exc_info=exc_info
+        )
         async_notify_setup_error(hass, domain, link)
 
     try:
@@ -211,7 +214,7 @@ async def _async_setup_component(
     try:
         component = integration.get_component()
     except ImportError as err:
-        log_error(f"Unable to import component: {err}")
+        log_error(f"Unable to import component: {err}", err)
         return False
 
     processed_config = await conf_util.async_process_component_config(
@@ -227,6 +230,7 @@ async def _async_setup_component(
         domain in processed_config
         and not hasattr(component, "async_setup")
         and not hasattr(component, "setup")
+        and not hasattr(component, "CONFIG_SCHEMA")
     ):
         _LOGGER.error(
             (
@@ -234,6 +238,19 @@ async def _async_setup_component(
                 "your configuration"
             ),
             domain,
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"config_entry_only_{domain}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            issue_domain=domain,
+            translation_key="config_entry_only",
+            translation_placeholders={
+                "domain": domain,
+                "add_integration": f"/config/integrations/dashboard/add?domain={domain}",
+            },
         )
 
     start = timer()

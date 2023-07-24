@@ -7,6 +7,7 @@ from typing import Any
 
 from bimmer_connected.models import MyBMWAPIError
 from bimmer_connected.vehicle import MyBMWVehicle
+from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -38,15 +39,33 @@ class BMWSwitchEntityDescription(SwitchEntityDescription, BMWRequiredKeysMixin):
     dynamic_options: Callable[[MyBMWVehicle], list[str]] | None = None
 
 
+CHARGING_STATE_ON = {
+    ChargingState.CHARGING,
+    ChargingState.COMPLETE,
+    ChargingState.FULLY_CHARGED,
+    ChargingState.FINISHED_FULLY_CHARGED,
+    ChargingState.FINISHED_NOT_FULL,
+    ChargingState.TARGET_REACHED,
+}
+
 NUMBER_TYPES: list[BMWSwitchEntityDescription] = [
     BMWSwitchEntityDescription(
         key="climate",
-        name="Climate",
+        translation_key="climate",
         is_available=lambda v: v.is_remote_climate_stop_enabled,
         value_fn=lambda v: v.climate.is_climate_on,
         remote_service_on=lambda v: v.remote_services.trigger_remote_air_conditioning(),
         remote_service_off=lambda v: v.remote_services.trigger_remote_air_conditioning_stop(),
         icon="mdi:fan",
+    ),
+    BMWSwitchEntityDescription(
+        key="charging",
+        translation_key="charging",
+        is_available=lambda v: v.is_remote_charge_stop_enabled,
+        value_fn=lambda v: v.fuel_and_battery.charging_status in CHARGING_STATE_ON,
+        remote_service_on=lambda v: v.remote_services.trigger_charge_start(),
+        remote_service_off=lambda v: v.remote_services.trigger_charge_stop(),
+        icon="mdi:ev-station",
     ),
 ]
 
@@ -101,9 +120,13 @@ class BMWSwitch(BMWBaseEntity, SwitchEntity):
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
 
+        self.coordinator.async_update_listeners()
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.entity_description.remote_service_off(self.vehicle)
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
+
+        self.coordinator.async_update_listeners()

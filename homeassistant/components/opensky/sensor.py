@@ -21,41 +21,20 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-CONF_ALTITUDE = "altitude"
+from .const import (
+    ATTR_ALTITUDE,
+    ATTR_CALLSIGN,
+    ATTR_ICAO24,
+    ATTR_SENSOR,
+    CONF_ALTITUDE,
+    DEFAULT_ALTITUDE,
+    DOMAIN,
+    EVENT_OPENSKY_ENTRY,
+    EVENT_OPENSKY_EXIT,
+)
 
-ATTR_ICAO24 = "icao24"
-ATTR_CALLSIGN = "callsign"
-ATTR_ALTITUDE = "altitude"
-ATTR_ON_GROUND = "on_ground"
-ATTR_SENSOR = "sensor"
-ATTR_STATES = "states"
-
-DOMAIN = "opensky"
-
-DEFAULT_ALTITUDE = 0
-
-EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
-EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 # OpenSky free user has 400 credits, with 4 credits per API call. 100/24 = ~4 requests per hour
 SCAN_INTERVAL = timedelta(minutes=15)
-
-OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
-OPENSKY_API_FIELDS = [
-    ATTR_ICAO24,
-    ATTR_CALLSIGN,
-    "origin_country",
-    "time_position",
-    "time_velocity",
-    ATTR_LONGITUDE,
-    ATTR_LATITUDE,
-    ATTR_ALTITUDE,
-    ATTR_ON_GROUND,
-    "velocity",
-    "heading",
-    "vertical_rate",
-    "sensors",
-]
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,7 +57,7 @@ def setup_platform(
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     radius = config.get(CONF_RADIUS, 0)
-    bounding_box = OpenSky.get_bounding_box(latitude, longitude, radius)
+    bounding_box = OpenSky.get_bounding_box(latitude, longitude, radius * 1000)
     session = async_get_clientsession(hass)
     opensky = OpenSky(session=session)
     add_entities(

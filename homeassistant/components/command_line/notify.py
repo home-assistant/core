@@ -43,7 +43,7 @@ def get_service(
             hass,
             DOMAIN,
             "deprecated_yaml_notify",
-            breaks_in_ha_version="2023.8.0",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
@@ -72,7 +72,7 @@ class CommandLineNotificationService(BaseNotificationService):
             universal_newlines=True,
             stdin=subprocess.PIPE,
             close_fds=False,  # required for posix_spawn
-            shell=True,  # nosec # shell by design
+            shell=True,  # noqa: S602 # shell by design
         ) as proc:
             try:
                 proc.communicate(input=message, timeout=self._timeout)

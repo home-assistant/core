@@ -1,7 +1,7 @@
 """Config flow for YouTube integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import AsyncGenerator, Mapping
 import logging
 from typing import Any
 
@@ -22,7 +22,31 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_CHANNELS, DEFAULT_ACCESS, DOMAIN, LOGGER
+from .const import (
+    CHANNEL_CREATION_HELP_URL,
+    CONF_CHANNELS,
+    DEFAULT_ACCESS,
+    DOMAIN,
+    LOGGER,
+)
+
+
+async def _get_subscriptions(hass: HomeAssistant, resource: Resource) -> AsyncGenerator:
+    amount_of_subscriptions = 50
+    received_amount_of_subscriptions = 0
+    next_page_token = None
+    while received_amount_of_subscriptions < amount_of_subscriptions:
+        # pylint: disable=no-member
+        subscription_request: HttpRequest = resource.subscriptions().list(
+            part="snippet", mine=True, maxResults=50, pageToken=next_page_token
+        )
+        res = await hass.async_add_executor_job(subscription_request.execute)
+        amount_of_subscriptions = res["pageInfo"]["totalResults"]
+        if "nextPageToken" in res:
+            next_page_token = res["nextPageToken"]
+        for item in res["items"]:
+            received_amount_of_subscriptions += 1
+            yield item
 
 
 async def get_resource(hass: HomeAssistant, token: str) -> Resource:
@@ -99,6 +123,11 @@ class OAuth2FlowHandler(
             response = await self.hass.async_add_executor_job(
                 own_channel_request.execute
             )
+            if not response["items"]:
+                return self.async_abort(
+                    reason="no_channel",
+                    description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
+                )
             own_channel = response["items"][0]
         except HttpError as ex:
             error = ex.reason
@@ -141,17 +170,12 @@ class OAuth2FlowHandler(
         service = await get_resource(
             self.hass, self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]
         )
-        # pylint: disable=no-member
-        subscription_request: HttpRequest = service.subscriptions().list(
-            part="snippet", mine=True, maxResults=50
-        )
-        response = await self.hass.async_add_executor_job(subscription_request.execute)
         selectable_channels = [
             SelectOptionDict(
                 value=subscription["snippet"]["resourceId"]["channelId"],
                 label=subscription["snippet"]["title"],
             )
-            for subscription in response["items"]
+            async for subscription in _get_subscriptions(self.hass, service)
         ]
         return self.async_show_form(
             step_id="channels",
@@ -180,17 +204,12 @@ class YouTubeOptionsFlowHandler(OptionsFlowWithConfigEntry):
         service = await get_resource(
             self.hass, self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
         )
-        # pylint: disable=no-member
-        subscription_request: HttpRequest = service.subscriptions().list(
-            part="snippet", mine=True, maxResults=50
-        )
-        response = await self.hass.async_add_executor_job(subscription_request.execute)
         selectable_channels = [
             SelectOptionDict(
                 value=subscription["snippet"]["resourceId"]["channelId"],
                 label=subscription["snippet"]["title"],
             )
-            for subscription in response["items"]
+            async for subscription in _get_subscriptions(self.hass, service)
         ]
         return self.async_show_form(
             step_id="init",

@@ -1,6 +1,7 @@
 """The tests for the Command line sensor platform."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
@@ -9,7 +10,13 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
+from homeassistant.components.command_line.sensor import CommandSensor
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
@@ -165,7 +172,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         assert len(check_output.mock_calls) == 1
         check_output.assert_called_with(
             'echo "sensor_value" "3 4"',
-            shell=True,  # nosec # shell by design
+            shell=True,  # noqa: S604 # shell by design
             timeout=15,
             close_fds=False,
         )
@@ -530,3 +537,112 @@ async def test_unique_id(
     assert entity_registry.async_get_entity_id(
         "sensor", "command_line", "not-so-unique-anymore"
     )
+
+
+async def test_updating_to_often(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling updating when command already running."""
+    wait_till_event = asyncio.Event()
+    wait_till_event.set()
+    called = []
+
+    class MockCommandSensor(CommandSensor):
+        """Mock entity that updates."""
+
+        async def _async_update(self) -> None:
+            """Update entity."""
+            called.append(1)
+            # Wait till event is set
+            await wait_till_event.wait()
+
+    with patch(
+        "homeassistant.components.command_line.sensor.CommandSensor",
+        side_effect=MockCommandSensor,
+    ):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "sensor": {
+                            "name": "Test",
+                            "command": "echo 1",
+                            "scan_interval": 10,
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert called
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
+    wait_till_event.set()
+    asyncio.wait(0)
+
+    assert (
+        "Updating Command Line Sensor Test took longer than the scheduled update interval"
+        not in caplog.text
+    )
+
+    # Simulate update takes too long
+    wait_till_event.clear()
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    await asyncio.sleep(0)
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    wait_till_event.set()
+
+    assert (
+        "Updating Command Line Sensor Test took longer than the scheduled update interval"
+        in caplog.text
+    )
+
+
+async def test_updating_manually(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling manual updating using homeassistant udate_entity service."""
+    await setup.async_setup_component(hass, HA_DOMAIN, {})
+    called = []
+
+    class MockCommandSensor(CommandSensor):
+        """Mock entity that updates."""
+
+        async def _async_update(self) -> None:
+            """Update slow."""
+            called.append(1)
+
+    with patch(
+        "homeassistant.components.command_line.sensor.CommandSensor",
+        side_effect=MockCommandSensor,
+    ):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "sensor": {
+                            "name": "Test",
+                            "command": "echo 1",
+                            "scan_interval": 10,
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert called
+    called.clear()
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ["sensor.test"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert called

@@ -8,6 +8,7 @@ from contextvars import ContextVar
 from functools import wraps
 from typing import Any, cast
 
+from homeassistant.core import ServiceResponse
 import homeassistant.util.dt as dt_util
 
 from .typing import TemplateVarsType
@@ -15,6 +16,17 @@ from .typing import TemplateVarsType
 
 class TraceElement:
     """Container for trace data."""
+
+    __slots__ = (
+        "_child_key",
+        "_child_run_id",
+        "_error",
+        "path",
+        "_result",
+        "reuse_by_child",
+        "_timestamp",
+        "_variables",
+    )
 
     def __init__(self, variables: TemplateVarsType, path: str) -> None:
         """Container for trace data."""
@@ -207,13 +219,15 @@ class StopReason:
     """Mutable container class for script_execution."""
 
     script_execution: str | None = None
+    response: ServiceResponse = None
 
 
-def script_execution_set(reason: str) -> None:
+def script_execution_set(reason: str, response: ServiceResponse = None) -> None:
     """Set stop reason."""
     if (data := script_execution_cv.get()) is None:
         return
     data.script_execution = reason
+    data.response = response
 
 
 def script_execution_get() -> str | None:

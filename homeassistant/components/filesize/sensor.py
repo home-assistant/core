@@ -34,17 +34,17 @@ ICON = "mdi:file"
 SENSOR_TYPES = (
     SensorEntityDescription(
         key="file",
+        translation_key="size",
         icon=ICON,
-        name="Size",
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="bytes",
+        translation_key="size_bytes",
         entity_registry_enabled_default=False,
         icon=ICON,
-        name="Size bytes",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -52,9 +52,9 @@ SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="last_updated",
+        translation_key="last_updated",
         entity_registry_enabled_default=False,
         icon=ICON,
-        name="Last Updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

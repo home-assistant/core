@@ -8,7 +8,7 @@ from http import HTTPStatus
 from itertools import groupby
 import logging
 import re
-from typing import Any, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import web
 from dateutil.rrule import rrulestr
@@ -19,7 +19,12 @@ from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPOR
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -32,10 +37,12 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
     EVENT_DESCRIPTION,
+    EVENT_DURATION,
     EVENT_END,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
@@ -53,6 +60,7 @@ from .const import (
     EVENT_TIME_FIELDS,
     EVENT_TYPES,
     EVENT_UID,
+    LIST_EVENT_FIELDS,
     CalendarEntityFeature,
 )
 
@@ -250,6 +258,21 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_LIST_EVENTS: Final = "list_events"
+SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
+    cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
+    cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
+    cv.make_entity_service_schema(
+        {
+            vol.Optional(EVENT_START_DATETIME): cv.datetime,
+            vol.Optional(EVENT_END_DATETIME): cv.datetime,
+            vol.Optional(EVENT_DURATION): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+        }
+    ),
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
@@ -274,7 +297,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
-
+    component.async_register_entity_service(
+        SERVICE_LIST_EVENTS,
+        SERVICE_LIST_EVENTS_SCHEMA,
+        async_list_events_service,
+        supports_response=SupportsResponse.ONLY,
+    )
     await component.async_setup(config)
     return True
 
@@ -388,6 +416,17 @@ def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def _list_events_dict_factory(
+    obj: Iterable[tuple[str, Any]]
+) -> dict[str, JsonValueType]:
+    """Convert CalendarEvent dataclass items to dictionary of attributes."""
+    return {
+        name: value
+        for name, value in _event_dict_factory(obj).items()
+        if name in LIST_EVENT_FIELDS and value is not None
+    }
+
+
 def _get_datetime_local(
     dt_or_d: datetime.datetime | datetime.date,
 ) -> datetime.datetime:
@@ -416,7 +455,7 @@ def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.time
     if search and search.group(1):
         time = search.group(1)
         if ":" not in time:
-            if time[0] == "+" or time[0] == "-":
+            if time[0] in ("+", "-"):
                 time = f"{time[0]}0:{time[1:]}"
             else:
                 time = f"0:{time}"
@@ -743,3 +782,23 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
         EVENT_END: end,
     }
     await entity.async_create_event(**params)
+
+
+async def async_list_events_service(
+    calendar: CalendarEntity, service_call: ServiceCall
+) -> ServiceResponse:
+    """List events on a calendar during a time drange."""
+    start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
+    if EVENT_DURATION in service_call.data:
+        end = start + service_call.data[EVENT_DURATION]
+    else:
+        end = service_call.data[EVENT_END_DATETIME]
+    calendar_event_list = await calendar.async_get_events(
+        calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
+    )
+    return {
+        "events": [
+            dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
+            for event in calendar_event_list
+        ]
+    }

@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.device_registry import format_mac
 
 from .connectivity import validate_auth
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
@@ -77,7 +78,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                     device_mac = await self.hass.async_add_executor_job(
                         pyobihai.get_device_mac
                     )
-                    await self.async_set_unique_id(device_mac)
+                    await self.async_set_unique_id(format_mac(device_mac))
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
@@ -104,7 +105,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Attempt to confirm."""
         assert self._dhcp_discovery_info
-        await self.async_set_unique_id(self._dhcp_discovery_info.macaddress)
+        await self.async_set_unique_id(format_mac(self._dhcp_discovery_info.macaddress))
         self._abort_if_unique_id_configured()
 
         if user_input is None:

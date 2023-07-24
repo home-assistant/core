@@ -5,13 +5,11 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
-from functools import cached_property
 import logging
 import random
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 import zigpy.device
 import zigpy.exceptions
@@ -23,6 +21,7 @@ from zigpy.zcl.clusters.general import Groups, Identify
 from zigpy.zcl.foundation import Status as ZclStatus, ZCLCommandDef
 import zigpy.zdo.types as zdo_types
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -740,9 +739,15 @@ class ZHADevice(LogMixin):
         manufacturer=None,
     ):
         """Write a value to a zigbee attribute for a cluster in this entity."""
-        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
-        if cluster is None:
-            return None
+        try:
+            cluster: Cluster = self.async_get_cluster(
+                endpoint_id, cluster_id, cluster_type
+            )
+        except KeyError as exc:
+            raise ValueError(
+                f"Cluster {cluster_id} not found on endpoint {endpoint_id} while"
+                f" writing attribute {attribute} with value {value}"
+            ) from exc
 
         try:
             response = await cluster.write_attributes(
@@ -758,15 +763,13 @@ class ZHADevice(LogMixin):
             )
             return response
         except zigpy.exceptions.ZigbeeException as exc:
-            self.debug(
-                "failed to set attribute: %s %s %s %s %s",
-                f"{ATTR_VALUE}: {value}",
-                f"{ATTR_ATTRIBUTE}: {attribute}",
-                f"{ATTR_CLUSTER_ID}: {cluster_id}",
-                f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
-                exc,
-            )
-            return None
+            raise HomeAssistantError(
+                f"Failed to set attribute: "
+                f"{ATTR_VALUE}: {value} "
+                f"{ATTR_ATTRIBUTE}: {attribute} "
+                f"{ATTR_CLUSTER_ID}: {cluster_id} "
+                f"{ATTR_ENDPOINT_ID}: {endpoint_id}"
+            ) from exc
 
     async def issue_cluster_command(
         self,

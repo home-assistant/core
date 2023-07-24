@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
+      "no_channel": "Please create a YouTube channel to be able to use the integration. Instructions can be found at {support_url}.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -16,15 +17,19 @@
         "data": {
           "channels": "YouTube channels"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The YouTube integration needs to re-authenticate your account"
       }
     }
   },
   "options": {
     "step": {
       "init": {
-        "description": "Select the channels you want to add.",
+        "description": "[%key:component::youtube::config::step::channels::description%]",
         "data": {
-          "channels": "YouTube channels"
+          "channels": "[%key:component::youtube::config::step::channels::data::channels%]"
         }
       }
     }
@@ -32,7 +37,15 @@
   "entity": {
     "sensor": {
       "latest_upload": {
-        "name": "Latest upload"
+        "name": "Latest upload",
+        "state_attributes": {
+          "video_id": {
+            "name": "Video ID"
+          },
+          "published_at": {
+            "name": "Published at"
+          }
+        }
       },
       "subscribers": {
         "name": "Subscribers"

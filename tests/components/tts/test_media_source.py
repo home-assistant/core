@@ -52,7 +52,7 @@ async def test_browsing(hass: HomeAssistant, setup: str) -> None:
     item = await media_source.async_browse_media(hass, "media-source://tts")
 
     assert item is not None
-    assert item.title == "Text to Speech"
+    assert item.title == "Text-to-speech"
     assert item.children is not None
     assert len(item.children) == 1
     assert item.can_play is False

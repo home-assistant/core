@@ -90,6 +90,7 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
                 sw_version=self.app_version,
                 via_device=(DOMAIN, coordinator.server_id),
             )
+            self._attr_name = None
         else:
             self._attr_device_info = None
             self._attr_has_entity_name = False

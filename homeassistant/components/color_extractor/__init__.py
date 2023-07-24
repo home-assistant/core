@@ -3,10 +3,10 @@ import asyncio
 import io
 import logging
 
-from PIL import UnidentifiedImageError
 import aiohttp
 import async_timeout
 from colorthief import ColorThief
+from PIL import UnidentifiedImageError
 import voluptuous as vol
 
 from homeassistant.components.light import (
