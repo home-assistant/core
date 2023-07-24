@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 import logging
+from time import mktime
 from typing import Any, TypeVar
 
 from homeassistant.components import (
@@ -12,6 +14,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -115,6 +118,7 @@ TRAIT_LOCKUNLOCK = f"{PREFIX_TRAITS}LockUnlock"
 TRAIT_FANSPEED = f"{PREFIX_TRAITS}FanSpeed"
 TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
 TRAIT_INPUTSELECTOR = f"{PREFIX_TRAITS}InputSelector"
+TRAIT_OBJECTDETECTION = f"{PREFIX_TRAITS}ObjectDetection"
 TRAIT_OPENCLOSE = f"{PREFIX_TRAITS}OpenClose"
 TRAIT_VOLUME = f"{PREFIX_TRAITS}Volume"
 TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
@@ -333,6 +337,38 @@ class CameraStreamTrait(_Trait):
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
             "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,
         }
+
+
+@register_trait
+class ObjectDetection(_Trait):
+    """Trait to object detection.
+
+    https://developers.google.com/actions/smarthome/traits/objectdetection
+    """
+
+    name = TRAIT_OBJECTDETECTION
+    commands = []
+
+    @staticmethod
+    def supported(domain, features, device_class, _) -> bool:
+        """Test if state is supported."""
+        return domain in (event.DOMAIN,)
+
+    def sync_attributes(self):
+        """Return ObjectDetection attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return ObjectDetection query attributes."""
+        if self.state.state is not None:
+            event_time = int(
+                mktime(datetime.fromisoformat(self.state.state).timetuple())
+            )
+            return {"last_event": event_time}
+        return {}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute an ObjectDetection command."""
 
 
 @register_trait

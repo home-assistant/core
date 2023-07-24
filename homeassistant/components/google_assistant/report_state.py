@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig):
-    """Enable state reporting."""
+    """Enable state and notification reporting."""
     checker = None
     unsub_pending: CALLBACK_TYPE | None = None
     pending: deque[dict[str, Any]] = deque([{}])
@@ -44,8 +44,27 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
 
         # We will report all batches except last one because those are finalized.
         while len(pending) > 1:
+            # Turn the last_event attribute into a notification
+            # https://developers.home.google.com/cloud-to-cloud/integration/notifications
+            states_notifications = pending.popleft()
+            states = {
+                key: {attr: val for attr, val in values.items() if attr != "last_event"}
+                for key, values in states_notifications.items()
+            }
+            notifications = {
+                key: {
+                    "ObjectDetection": {
+                        "objects": {"unclassified": 1},
+                        "priority": 0,
+                        "detectionTimestamp": timestamps["last_event"],
+                    }
+                }
+                for key, timestamps in states_notifications.items()
+                if "last_event" in timestamps
+            }
+            notifications["notificationSupportedByAgent"] = True
             await google_config.async_report_state_all(
-                {"devices": {"states": pending.popleft()}}
+                {"devices": {"states": states, "notifications": notifications}}
             )
 
         # If things got queued up in last batch while we were reporting, schedule ourselves again
@@ -144,7 +163,14 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         if not entities:
             return
 
-        await google_config.async_report_state_all({"devices": {"states": entities}})
+        states = {
+            key: {attr: val for attr, val in values.items() if attr != "last_event"}
+            for key, values in entities.items()
+        }
+        notifications = {"notificationSupportedByAgent": True}
+        await google_config.async_report_state_all(
+            {"devices": {"states": states, "notifications": notifications}}
+        )
 
         unsub = async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
 
