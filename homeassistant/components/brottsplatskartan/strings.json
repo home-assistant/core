@@ -16,12 +16,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Brottsplatskartan YAML configuration is being removed",
-      "description": "Configuring Brottsplatskartan using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Brottsplatskartan YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
-  },
   "selector": {
     "areas": {
       "options": {

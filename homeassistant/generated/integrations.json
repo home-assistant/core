@@ -846,7 +846,7 @@
       "iot_class": "local_polling"
     },
     "co2signal": {
-      "name": "CO2 Signal",
+      "name": "Electricity Maps",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1884,6 +1884,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "gardena_bluetooth": {
+      "name": "Gardena Bluetooth",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "gaviota": {
       "name": "Gaviota",
       "integration_type": "virtual",
@@ -1896,7 +1902,6 @@
       "iot_class": "cloud_polling"
     },
     "generic": {
-      "name": "Generic Camera",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -3348,12 +3353,6 @@
         }
       }
     },
-    "miflora": {
-      "name": "Mi Flora",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "mijndomein_energie": {
       "name": "Mijndomein Energie",
       "integration_type": "virtual",
@@ -3382,12 +3381,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "mitemp_bt": {
-      "name": "Xiaomi Mijia BLE Temperature and Humidity Sensor",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "mjpeg": {
       "name": "MJPEG IP Camera",
@@ -5909,16 +5902,9 @@
     },
     "u_tec": {
       "name": "U-tec",
-      "integrations": {
-        "ultraloq": {
-          "integration_type": "virtual",
-          "config_flow": false,
-          "iot_standards": [
-            "zwave"
-          ],
-          "name": "Ultraloq"
-        }
-      }
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "ubiquiti": {
       "name": "Ubiquiti",
@@ -6078,7 +6064,6 @@
       "iot_class": "local_polling"
     },
     "version": {
-      "name": "Version",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -6290,7 +6275,6 @@
       "iot_class": "cloud_polling"
     },
     "workday": {
-      "name": "Workday",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6543,7 +6527,6 @@
       "iot_class": "local_polling"
     },
     "zodiac": {
-      "name": "Zodiac",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated"
@@ -6663,6 +6646,7 @@
     "emulated_roku",
     "filesize",
     "garages_amsterdam",
+    "generic",
     "google_travel_time",
     "group",
     "growatt_server",
@@ -6695,6 +6679,9 @@
     "tod",
     "uptime",
     "utility_meter",
-    "waze_travel_time"
+    "version",
+    "waze_travel_time",
+    "workday",
+    "zodiac"
   ]
 }

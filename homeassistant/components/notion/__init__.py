@@ -339,9 +339,13 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
         self._bridge_id = sensor.bridge.id
 
         device_registry = dr.async_get(self.hass)
-        this_device = device_registry.async_get_device({(DOMAIN, sensor.hardware_id)})
+        this_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, sensor.hardware_id)}
+        )
         bridge = self.coordinator.data.bridges[self._bridge_id]
-        bridge_device = device_registry.async_get_device({(DOMAIN, bridge.hardware_id)})
+        bridge_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, bridge.hardware_id)}
+        )
 
         if not bridge_device or not this_device:
             return

@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg',
+      'friendly_name': 'Google for Developers Latest upload',
+      'icon': 'mdi:youtube',
+      'published_at': '2023-05-11T00:20:46Z',
+      'video_id': 'wysukDrMdqU',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_latest_upload',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': "What's new in Google Home in less than 1 minute",
+  })
+# ---
+# name: test_sensor.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+      'friendly_name': 'Google for Developers Subscribers',
+      'icon': 'mdi:youtube-subscription',
+      'unit_of_measurement': 'subscribers',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_subscribers',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2290000',
+  })
+# ---

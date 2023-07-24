@@ -35,7 +35,7 @@ async def test_zwave_js_value_updated(
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -459,7 +459,7 @@ async def test_zwave_js_event(
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -1013,7 +1013,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     """Test zwave_js triggers bypass dynamic validation when needed."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 

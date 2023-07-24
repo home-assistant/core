@@ -137,6 +137,13 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         data_path="today_forecast:weather12H:desc",
     ),
+    MeteoFranceSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:water-percent",
+        data_path="current_forecast:humidity",
+    ),
 )
 
 SENSOR_TYPES_RAIN: tuple[MeteoFranceSensorEntityDescription, ...] = (

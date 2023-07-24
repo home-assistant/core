@@ -25,6 +25,7 @@ from .const import (
     KEY_DEVICE_TYPE,
     NOTIFICATION_HIGH_FLOW,
     NOTIFICATION_LEAK_DETECTED,
+    NOTIFICATION_LOW_BATTERY,
 )
 from .coordinator import (
     FlumeDeviceConnectionUpdateCoordinator,
@@ -66,6 +67,12 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_HIGH_FLOW,
         icon="mdi:waves",
+    ),
+    FlumeBinarySensorEntityDescription(
+        key="low_battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.BATTERY,
+        event_rule=NOTIFICATION_LOW_BATTERY,
     ),
 )
 
