@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 from homeassistant.helpers.event import (
@@ -67,7 +67,9 @@ class BaseEntity(Entity):
         )
 
     @callback
-    def async_state_changed_listener(self, event: Event | None = None) -> None:
+    def async_state_changed_listener(
+        self, event: EventType[EventStateChangedData] | None = None
+    ) -> None:
         """Handle child updates."""
         if (
             state := self.hass.states.get(self._switch_entity_id)
@@ -163,7 +165,9 @@ class BaseToggleEntity(BaseEntity, ToggleEntity):
         )
 
     @callback
-    def async_state_changed_listener(self, event: Event | None = None) -> None:
+    def async_state_changed_listener(
+        self, event: EventType[EventStateChangedData] | None = None
+    ) -> None:
         """Handle child updates."""
         super().async_state_changed_listener(event)
         if (

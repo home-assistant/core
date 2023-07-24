@@ -26,7 +26,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -131,7 +131,7 @@ class _TemplateAttribute:
     @callback
     def handle_result(
         self,
-        event: Event | None,
+        event: EventType[EventStateChangedData] | None,
         template: Template,
         last_result: str | None | TemplateError,
         result: str | TemplateError,
