@@ -107,8 +107,7 @@ class ElectricKiwiHOPEntity(
         """Entity object for Electric Kiwi sensor."""
         super().__init__(hop_coordinator)
 
-        self.customer_number = self.coordinator._ek_api.customer_number
-        self.connection_id = self.coordinator._ek_api.connection_id
+        self._attr_unique_id = f"{coordinator._ek_api.customer_number}_{coordinator._ek_api.connection_id}_{description.key}"
         self.entity_description = description
 
     @property
