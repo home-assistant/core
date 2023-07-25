@@ -77,8 +77,8 @@
           "event_type": {
             "state": {
               "double_press": "Double Press",
-               "long_press": "Long Press",
-               "single_press": "Single Press"
+              "long_press": "Long Press",
+              "single_press": "Single Press"
             }
           }
         }
