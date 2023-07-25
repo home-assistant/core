@@ -88,20 +88,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the GeoNet NZ Quakes component as config entry."""
     hass.data.setdefault(DOMAIN, {})
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
 
-    radius = entry.data[CONF_RADIUS]
+    radius = config_entry.data[CONF_RADIUS]
     if hass.config.units is US_CUSTOMARY_SYSTEM:
         radius = DistanceConverter.convert(
             radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
         )
     # Create feed entity manager for all platforms.
-    manager = GeonetnzQuakesFeedEntityManager(hass, entry, radius)
-    feeds[entry.entry_id] = manager
-    _LOGGER.debug("Feed entity manager added for %s", entry.entry_id)
+    manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius)
+    feeds[config_entry.entry_id] = manager
+    _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
 
@@ -116,7 +116,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class GeonetnzQuakesFeedEntityManager:
     """Feed Entity Manager for GeoNet NZ Quakes feed."""
 
-    def __init__(self, hass: HomeAssistant, config_entry, radius_in_km) -> None:
+    def __init__(self, hass, config_entry, radius_in_km):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._config_entry = config_entry
@@ -141,6 +141,7 @@ class GeonetnzQuakesFeedEntityManager:
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._track_time_remove_callback = None
         self._status_info = None
+        self.listeners = []
 
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
@@ -167,6 +168,9 @@ class GeonetnzQuakesFeedEntityManager:
 
     async def async_stop(self):
         """Stop this feed entity manager from refreshing."""
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
         if self._track_time_remove_callback:
             self._track_time_remove_callback()
         _LOGGER.debug("Feed entity manager stopped")

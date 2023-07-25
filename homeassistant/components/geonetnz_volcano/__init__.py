@@ -83,21 +83,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the GeoNet NZ Volcano component as config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(FEED, {})
 
-    radius = entry.data[CONF_RADIUS]
-    unit_system = entry.data[CONF_UNIT_SYSTEM]
+    radius = config_entry.data[CONF_RADIUS]
+    unit_system = config_entry.data[CONF_UNIT_SYSTEM]
     if unit_system == IMPERIAL_UNITS:
         radius = DistanceConverter.convert(
             radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
         )
     # Create feed entity manager for all platforms.
-    manager = GeonetnzVolcanoFeedEntityManager(hass, entry, radius, unit_system)
-    hass.data[DOMAIN][FEED][entry.entry_id] = manager
-    _LOGGER.debug("Feed entity manager added for %s", entry.entry_id)
+    manager = GeonetnzVolcanoFeedEntityManager(hass, config_entry, radius, unit_system)
+    hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
+    _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
 
@@ -112,9 +112,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class GeonetnzVolcanoFeedEntityManager:
     """Feed Entity Manager for GeoNet NZ Volcano feed."""
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry, radius_in_km, unit_system
-    ) -> None:
+    def __init__(self, hass, config_entry, radius_in_km, unit_system):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._config_entry = config_entry
@@ -135,6 +133,7 @@ class GeonetnzVolcanoFeedEntityManager:
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._unit_system = unit_system
         self._track_time_remove_callback = None
+        self.listeners = []
 
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
@@ -161,6 +160,9 @@ class GeonetnzVolcanoFeedEntityManager:
 
     async def async_stop(self):
         """Stop this feed entity manager from refreshing."""
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
         if self._track_time_remove_callback:
             self._track_time_remove_callback()
         _LOGGER.debug("Feed entity manager stopped")

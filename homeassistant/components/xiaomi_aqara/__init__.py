@@ -249,7 +249,7 @@ class XiaomiDevice(Entity):
 
     def __init__(self, device, device_type, xiaomi_hub, config_entry) -> None:
         """Initialize the Xiaomi device."""
-        self._state = None
+        self._state: bool = False
         self._is_available = True
         self._sid = device["sid"]
         self._model = device["model"]

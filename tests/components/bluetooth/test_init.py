@@ -92,7 +92,7 @@ async def test_setup_and_stop_passive(
     init_kwargs = None
 
     class MockPassiveBleakScanner:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             """Init the scanner."""
             nonlocal init_kwargs
             init_kwargs = kwargs
@@ -143,7 +143,7 @@ async def test_setup_and_stop_old_bluez(
     init_kwargs = None
 
     class MockBleakScanner:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             """Init the scanner."""
             nonlocal init_kwargs
             init_kwargs = kwargs
