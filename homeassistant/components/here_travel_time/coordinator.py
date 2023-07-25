@@ -144,6 +144,10 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
         mapped_destination_lon: float = last_section["arrival"]["place"]["location"][
             "lng"
         ]
+        mapped_arrival_time: str = last_section["arrival"].get("time")
+        arrival_time = (
+            datetime.fromisoformat(mapped_arrival_time) if mapped_arrival_time else None
+        )
         origin_name: str | None = None
         if (names := first_section["spans"][0].get("names")) is not None:
             origin_name = names[0]["value"]
@@ -159,6 +163,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",
             origin_name=origin_name,
             destination_name=destination_name,
+            arrival_time=arrival_time,
         )
 
 
@@ -249,6 +254,10 @@ class HERETransitDataUpdateCoordinator(
         mapped_destination_lon: float = sections[-1]["arrival"]["place"]["location"][
             "lng"
         ]
+        mapped_arrival_time: str = sections[-1]["arrival"].get("time")
+        arrival_time = (
+            datetime.fromisoformat(mapped_arrival_time) if mapped_arrival_time else None
+        )
         distance: float = DistanceConverter.convert(
             sum(section["travelSummary"]["length"] for section in sections),
             UnitOfLength.METERS,
@@ -266,6 +275,7 @@ class HERETransitDataUpdateCoordinator(
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",
             origin_name=sections[0]["departure"]["place"].get("name"),
             destination_name=sections[-1]["arrival"]["place"].get("name"),
+            arrival_time=arrival_time,
         )
 
 

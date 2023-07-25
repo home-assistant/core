@@ -18,6 +18,7 @@ from here_transit import (
     HERETransitTooManyRequestsError,
 )
 import pytest
+from datetime import datetime
 
 from homeassistant.components.here_travel_time.config_flow import DEFAULT_OPTIONS
 from homeassistant.components.here_travel_time.const import (
@@ -171,6 +172,9 @@ async def test_sensor(
         hass.states.get("sensor.test_destination").attributes.get(ATTR_LONGITUDE)
         == "-77.10014"
     )
+    assert datetime.fromisoformat(
+        hass.states.get("sensor.test_arrival_time").state
+    ) == datetime.fromisoformat("2022-10-24T06:22:36-04:00")
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -239,6 +243,9 @@ async def test_public_transport(hass: HomeAssistant) -> None:
         == "http://creativecommons.org/licenses/by/3.0/it/,Some line names used in this product or service were edited to align with official transportation maps."
     )
     assert hass.states.get("sensor.test_distance").state == "1.883"
+    assert datetime.fromisoformat(
+        hass.states.get("sensor.test_arrival_time").state
+    ) == datetime.fromisoformat("2022-07-19T17:27:00+02:00")
 
 
 @pytest.mark.usefixtures("no_attribution_response")

@@ -97,6 +97,9 @@
       "distance": {
         "name": "Distance"
       },
+      "arrival_time": {
+        "name": "Arrival time"
+      },
       "origin": {
         "name": "Origin"
       },

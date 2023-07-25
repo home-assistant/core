@@ -29,6 +29,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ATTR_ARRIVAL_TIME,
     ATTR_DESTINATION,
     ATTR_DESTINATION_NAME,
     ATTR_DISTANCE,
@@ -72,6 +73,12 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             state_class=SensorStateClass.MEASUREMENT,
             device_class=SensorDeviceClass.DISTANCE,
             native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        ),
+        SensorEntityDescription(
+            translation_key="arrival_time",
+            icon=ICONS.get(travel_mode, ICON_CAR),
+            key=ATTR_ARRIVAL_TIME,
+            device_class=SensorDeviceClass.TIMESTAMP,
         ),
     )
 

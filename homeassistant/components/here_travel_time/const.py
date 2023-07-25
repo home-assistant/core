@@ -53,6 +53,7 @@ ICONS = {
     TRAVEL_MODE_TRUCK: ICON_TRUCK,
 }
 
+ATTR_ARRIVAL_TIME: Final = "arrival_time"
 ATTR_DURATION: Final = "duration"
 ATTR_DISTANCE: Final = "distance"
 ATTR_ORIGIN: Final = "origin"

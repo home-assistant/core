@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import time
+from datetime import datetime, time
 from typing import TypedDict
 
 
@@ -17,6 +17,7 @@ class HERETravelTimeData(TypedDict):
     destination: str
     origin_name: str | None
     destination_name: str | None
+    arrival_time: datetime | None
 
 
 @dataclass
