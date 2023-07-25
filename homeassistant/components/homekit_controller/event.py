@@ -115,7 +115,10 @@ async def async_setup_entry(
                 )
             )
 
-            for idx, switch in enumerate(switches):
+            for switch in switches:
+                # The Apple docs say that if we number the buttons ourselves
+                # We do it in service label index order. `switches` is already in
+                # that order.
                 entities.append(
                     HomeKitEventEntity(
                         conn,
