@@ -39,12 +39,12 @@ class DuotecnoSwitch(DuotecnoEntity, SwitchEntity):
         """Instruct the switch to turn on."""
         try:
             await self._unit.turn_on()
-        except Exception as err:  # pylint: disable=broad-except
+        except OSError as err:
             raise HomeAssistantError("Transmit for the turn_on packet failed") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         try:
             await self._unit.turn_off()
-        except Exception as err:  # pylint: disable=broad-except
+        except OSError as err:
             raise HomeAssistantError("Transmit for the turn_off packet failed") from err
