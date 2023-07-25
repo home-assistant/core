@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
@@ -180,6 +181,12 @@ class UpdateEntityDescription(EntityDescription):
 
     device_class: UpdateDeviceClass | None = None
     entity_category: EntityCategory | None = EntityCategory.CONFIG
+
+
+@lru_cache(maxsize=256)
+def _version_is_newer(latest_version: str, installed_version: str) -> bool:
+    """Return True if version is newer."""
+    return AwesomeVersion(latest_version) > installed_version
 
 
 class UpdateEntity(RestoreEntity):
@@ -355,7 +362,7 @@ class UpdateEntity(RestoreEntity):
             return STATE_OFF
 
         try:
-            newer = AwesomeVersion(latest_version) > installed_version
+            newer = _version_is_newer(latest_version, installed_version)
             return STATE_ON if newer else STATE_OFF
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match

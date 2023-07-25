@@ -108,11 +108,13 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
+homeassistant.components.electric_kiwi.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energy.*
 homeassistant.components.esphome.*
+homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
