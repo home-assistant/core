@@ -99,7 +99,7 @@ async def test_migrate_unique_id_temperature(
     mock_config_entry.add_to_hass(hass)
 
     entity_registry = er.async_get(hass)
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity: entity_registry.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
     )
@@ -140,7 +140,7 @@ async def test_migrate_unique_id_relay(
     mock_config_entry.add_to_hass(hass)
 
     entity_registry = er.async_get(hass)
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity: entity_registry.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
     )
