@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
-from youtubeaio.types import UnauthorizedError
+from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
 from homeassistant import config_entries
 from homeassistant.components.youtube.const import DOMAIN
@@ -103,3 +103,20 @@ async def test_sensor_reauth_trigger(
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+async def test_sensor_unavailable(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test update failed."""
+    with patch(
+        "youtubeaio.youtube.YouTube.get_channels", side_effect=YouTubeBackendError
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.google_for_developers_latest_upload")
+    assert state is None
+
+    state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state is None
