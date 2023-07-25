@@ -69,7 +69,7 @@ def async_wlan_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceIn
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, wlan.id)},
         manufacturer=ATTR_MANUFACTURER,
-        model="UniFi Network",
+        model="UniFi WLAN",
         name=wlan.name,
     )
 
