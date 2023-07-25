@@ -12,7 +12,6 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_LATITUDE,
-    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
@@ -90,9 +89,9 @@ async def async_setup_entry(
 
     opensky = hass.data[DOMAIN][entry.entry_id][CLIENT]
     bounding_box = OpenSky.get_bounding_box(
-        entry.options[CONF_LOCATION][CONF_LATITUDE],
-        entry.options[CONF_LOCATION][CONF_LONGITUDE],
-        entry.options[CONF_LOCATION][CONF_RADIUS],
+        entry.options[CONF_LATITUDE],
+        entry.options[CONF_LONGITUDE],
+        entry.options[CONF_RADIUS] * 1000,
     )
     async_add_entities(
         [

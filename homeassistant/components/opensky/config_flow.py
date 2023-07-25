@@ -78,7 +78,7 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_LOCATION: {
                     CONF_LATITUDE: latitude,
                     CONF_LONGITUDE: longitude,
-                    CONF_RADIUS: import_config[CONF_RADIUS] * 1000,
+                    CONF_RADIUS: import_config[CONF_RADIUS],
                 },
                 CONF_ALTITUDE: import_config.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
             },

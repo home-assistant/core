@@ -6,12 +6,7 @@ import pytest
 from python_opensky import StatesResponse
 
 from homeassistant.components.opensky.const import CONF_ALTITUDE, DOMAIN
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LOCATION,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -28,11 +23,9 @@ def mock_config_entry() -> MockConfigEntry:
         title="OpenSky",
         data={},
         options={
-            CONF_LOCATION: {
-                CONF_RADIUS: 10000.0,
-                CONF_LATITUDE: 0.0,
-                CONF_LONGITUDE: 0.0,
-            },
+            CONF_RADIUS: 10.0,
+            CONF_LATITUDE: 0.0,
+            CONF_LONGITUDE: 0.0,
             CONF_ALTITUDE: 0.0,
         },
     )

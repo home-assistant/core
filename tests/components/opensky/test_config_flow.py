@@ -9,13 +9,7 @@ from homeassistant.components.opensky.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LOCATION,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_RADIUS,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_RADIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -36,11 +30,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={
                 CONF_NAME: "My home",
-                CONF_LOCATION: {
-                    CONF_RADIUS: 10000.0,
-                    CONF_LATITUDE: 0.0,
-                    CONF_LONGITUDE: 0.0,
-                },
+                CONF_RADIUS: 10,
+                CONF_LATITUDE: 0.0,
+                CONF_LONGITUDE: 0.0,
                 CONF_ALTITUDE: 0,
             },
         )
@@ -48,11 +40,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         assert result["title"] == "My home"
         assert result["options"] == {
             CONF_ALTITUDE: 0.0,
-            CONF_LOCATION: {
-                CONF_RADIUS: 10000.0,
-                CONF_LATITUDE: 0.0,
-                CONF_LONGITUDE: 0.0,
-            },
+            CONF_RADIUS: 10.0,
+            CONF_LATITUDE: 0.0,
+            CONF_LONGITUDE: 0.0,
         }
 
 
@@ -63,11 +53,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             {CONF_RADIUS: 10.0},
             DEFAULT_NAME,
             {
-                CONF_LOCATION: {
-                    CONF_LATITUDE: 32.87336,
-                    CONF_LONGITUDE: -117.22743,
-                    CONF_RADIUS: 10000.0,
-                },
+                CONF_LATITUDE: 32.87336,
+                CONF_LONGITUDE: -117.22743,
+                CONF_RADIUS: 10.0,
                 CONF_ALTITUDE: 0,
             },
         ),
@@ -78,11 +66,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             },
             "My home",
             {
-                CONF_LOCATION: {
-                    CONF_LATITUDE: 32.87336,
-                    CONF_LONGITUDE: -117.22743,
-                    CONF_RADIUS: 10000.0,
-                },
+                CONF_LATITUDE: 32.87336,
+                CONF_LONGITUDE: -117.22743,
+                CONF_RADIUS: 10.0,
                 CONF_ALTITUDE: 0,
             },
         ),
@@ -94,11 +80,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             },
             DEFAULT_NAME,
             {
-                CONF_LOCATION: {
-                    CONF_RADIUS: 10000.0,
-                    CONF_LATITUDE: 10.0,
-                    CONF_LONGITUDE: -100.0,
-                },
+                CONF_LATITUDE: 10.0,
+                CONF_LONGITUDE: -100.0,
+                CONF_RADIUS: 10.0,
                 CONF_ALTITUDE: 0,
             },
         ),
@@ -106,11 +90,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             {CONF_RADIUS: 10.0, CONF_ALTITUDE: 100.0},
             DEFAULT_NAME,
             {
-                CONF_LOCATION: {
-                    CONF_RADIUS: 10000.0,
-                    CONF_LATITUDE: 32.87336,
-                    CONF_LONGITUDE: -117.22743,
-                },
+                CONF_LATITUDE: 32.87336,
+                CONF_LONGITUDE: -117.22743,
+                CONF_RADIUS: 10.0,
                 CONF_ALTITUDE: 100.0,
             },
         ),
@@ -137,11 +119,9 @@ async def test_importing_already_exists_flow(hass: HomeAssistant) -> None:
         title=DEFAULT_NAME,
         data={},
         options={
-            CONF_LOCATION: {
-                CONF_RADIUS: 10000.0,
-                CONF_LATITUDE: 32.87336,
-                CONF_LONGITUDE: -117.22743,
-            },
+            CONF_LATITUDE: 32.87336,
+            CONF_LONGITUDE: -117.22743,
+            CONF_RADIUS: 10.0,
             CONF_ALTITUDE: 100.0,
         },
     ).add_to_hass(hass)
