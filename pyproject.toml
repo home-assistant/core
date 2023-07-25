@@ -18,11 +18,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.10.0"
+requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.8.5",
     "astral==2.2",
@@ -36,7 +35,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.24.1",
-    "home-assistant-bluetooth==1.10.0",
+    "home-assistant-bluetooth==1.10.1",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
@@ -51,7 +50,7 @@ dependencies    = [
     "PyYAML==6.0.1",
     "requests==2.31.0",
     "typing-extensions>=4.7.0,<5.0",
-    "ulid-transform==0.7.2",
+    "ulid-transform==0.8.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.9.2",
@@ -80,7 +79,7 @@ include = ["homeassistant*"]
 extend-exclude = "/generated/"
 
 [tool.pylint.MAIN]
-py-version = "3.10"
+py-version = "3.11"
 ignore = [
     "tests",
 ]

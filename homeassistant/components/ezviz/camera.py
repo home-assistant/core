@@ -263,6 +263,17 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_ptz(self, direction: str, speed: int) -> None:
         """Perform a PTZ action on the camera."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_ptz",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_ptz",
+        )
+
         try:
             self.coordinator.ezviz_client.ptz_control(
                 str(direction).upper(), self._serial, "START", speed
