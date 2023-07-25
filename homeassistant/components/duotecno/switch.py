@@ -20,8 +20,7 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        DuotecnoSwitch(channel)
-        for channel in cntrl.get_units("SwitchUnit")
+        DuotecnoSwitch(channel) for channel in cntrl.get_units("SwitchUnit")
     )
 
 
