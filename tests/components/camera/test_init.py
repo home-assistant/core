@@ -11,6 +11,7 @@ from homeassistant.components.camera.const import (
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
+    PREF_USE_STREAM_FOR_STILLS,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
@@ -332,7 +333,7 @@ async def test_websocket_get_prefs(
 async def test_websocket_update_preload_prefs(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_camera
 ) -> None:
-    """Test updating camera preferences."""
+    """Test updating legacy camera preferences."""
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -366,10 +367,10 @@ async def test_websocket_update_preload_prefs(
     assert msg["result"][PREF_PRELOAD_STREAM] is True
 
 
-async def test_websocket_update_orientation_prefs(
+async def test_websocket_update_er_prefs(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_camera
 ) -> None:
-    """Test updating camera preferences."""
+    """Test updating camera preferences stored in the entity registry."""
     await async_setup_component(hass, "homeassistant", {})
 
     client = await hass_ws_client(hass)
@@ -387,37 +388,30 @@ async def test_websocket_update_orientation_prefs(
     assert not response["success"]
     assert response["error"]["code"] == "update_failed"
 
-    registry = er.async_get(hass)
-    assert not registry.async_get("camera.demo_uniquecamera")
-    # Since we don't have a unique id, we need to create a registry entry
-    registry.async_get_or_create(DOMAIN, "demo", "uniquecamera")
-    registry.async_update_entity_options(
-        "camera.demo_uniquecamera",
-        DOMAIN,
-        {},
-    )
-
     await client.send_json(
         {
             "id": 11,
             "type": "camera/update_prefs",
-            "entity_id": "camera.demo_uniquecamera",
+            "entity_id": "camera.demo_camera",
             "orientation": 3,
+            "use_stream_for_stills": True,
         }
     )
     response = await client.receive_json()
     assert response["success"]
 
-    er_camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
+    registry = er.async_get(hass)
+    er_camera_prefs = registry.async_get("camera.demo_camera").options[DOMAIN]
     assert er_camera_prefs[PREF_ORIENTATION] == camera.Orientation.ROTATE_180
     assert response["result"][PREF_ORIENTATION] == er_camera_prefs[PREF_ORIENTATION]
     # Check that the preference was saved
     await client.send_json(
-        {"id": 12, "type": "camera/get_prefs", "entity_id": "camera.demo_uniquecamera"}
+        {"id": 12, "type": "camera/get_prefs", "entity_id": "camera.demo_camera"}
     )
     msg = await client.receive_json()
     # orientation entry for this camera should have been added
     assert msg["result"]["orientation"] == camera.Orientation.ROTATE_180
+    assert msg["result"]["use_stream_for_stills"] is True
 
 
 async def test_play_stream_service_no_source(
@@ -467,11 +461,11 @@ async def test_handle_play_stream_service(
 
 async def test_no_preload_stream(hass: HomeAssistant, mock_stream) -> None:
     """Test camera preload preference."""
-    demo_settings = camera.DynamicStreamSettings()
+    demo_settings = camera.CameraSettings()
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
     ) as mock_request_stream, patch(
-        "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
+        "homeassistant.components.camera.prefs.CameraPreferences.get_camera_settings",
         return_value=demo_settings,
     ), patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -486,11 +480,13 @@ async def test_no_preload_stream(hass: HomeAssistant, mock_stream) -> None:
 
 async def test_preload_stream(hass: HomeAssistant, mock_stream) -> None:
     """Test camera preload preference."""
-    demo_settings = camera.DynamicStreamSettings(preload_stream=True)
+    demo_settings = camera.CameraSettings(
+        stream_settings=camera.DynamicStreamSettings(preload_stream=True)
+    )
     with patch(
         "homeassistant.components.camera.create_stream"
     ) as mock_create_stream, patch(
-        "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
+        "homeassistant.components.camera.prefs.CameraPreferences.get_camera_settings",
         return_value=demo_settings,
     ), patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -909,3 +905,55 @@ async def test_rtsp_to_web_rtc_offer_not_accepted(
     assert mock_provider.called
 
     unsub()
+
+
+async def test_use_stream_for_stills(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera,
+) -> None:
+    """Test that the component can grab images from stream."""
+
+    # Turn on use_stream_for_stills option
+    ws_client = await hass_ws_client()
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "camera/update_prefs",
+            "entity_id": "camera.demo_camera",
+            PREF_USE_STREAM_FOR_STILLS: True,
+        }
+    )
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value=None,
+    ) as mock_stream_source:
+        # First test when there is no stream_source should fail
+        resp = await client.get("/api/camera_proxy/camera.demo_camera")
+        await hass.async_block_till_done()
+        mock_stream_source.assert_called_once()
+        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="rtsp://some_source",
+    ) as mock_stream_source, patch(
+        "homeassistant.components.camera.create_stream"
+    ) as mock_create_stream:
+        # Now test when creating the stream succeeds
+        mock_stream = Mock()
+        mock_stream.async_get_image = AsyncMock()
+        mock_stream.async_get_image.return_value = b"stream_keyframe_image"
+        mock_create_stream.return_value = mock_stream
+
+        # should start the stream and get the image
+        resp = await client.get("/api/camera_proxy/camera.demo_camera")
+        await hass.async_block_till_done()
+        mock_create_stream.assert_called_once()
+        mock_stream.async_get_image.assert_called_once()
+        assert resp.status == HTTPStatus.OK
+        assert await resp.read() == b"stream_keyframe_image"

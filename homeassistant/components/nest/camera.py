@@ -100,9 +100,7 @@ class NestCamera(Camera):
         """Flag supported features."""
         supported_features = CameraEntityFeature(0)
         if CameraLiveStreamTrait.NAME in self._device.traits:
-            supported_features |= (
-                CameraEntityFeature.STREAM | CameraEntityFeature.STREAM_SNAPSHOT
-            )
+            supported_features |= CameraEntityFeature.STREAM
         return supported_features
 
     @property
@@ -210,9 +208,6 @@ class NestCamera(Camera):
         """Return bytes of camera image."""
         # Use the thumbnail from RTSP stream, or a placeholder if stream is
         # not supported (e.g. WebRTC)
-        stream = await self.async_create_stream()
-        if stream:
-            return await stream.async_get_image(width, height, wait_for_next_keyframe)
         return await self.hass.async_add_executor_job(self.placeholder_image)
 
     @classmethod
