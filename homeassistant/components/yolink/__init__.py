@@ -129,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_pairing_mapping[parent_id] = device.device_id
 
     for device in yolink_home.get_devices():
-        paried_device: YoLinkDevice = None
+        paried_device: YoLinkDevice | None = None
         if (
             paried_device_id := device_pairing_mapping.get(device.device_id)
         ) is not None:
