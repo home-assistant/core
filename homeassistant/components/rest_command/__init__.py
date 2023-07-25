@@ -17,7 +17,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -89,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if CONF_CONTENT_TYPE in command_config:
             content_type = command_config[CONF_CONTENT_TYPE]
 
-        async def async_service_handler(service: ServiceCall) -> None:
+        async def async_service_handler(service: ServiceCall) -> ServiceResponse:
             """Execute a shell command service."""
             payload = None
             if template_payload:
@@ -139,9 +145,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             response.status,
                             payload,
                         )
+                    _json = await response.json()
+                    return {"content": _json, "status": response.status}
 
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s", request_url)
+                raise
 
             except aiohttp.ClientError as err:
                 _LOGGER.error(
@@ -149,9 +158,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     request_url,
                     err,
                 )
+                raise
 
         # register services
-        hass.services.async_register(DOMAIN, name, async_service_handler)
+        hass.services.async_register(
+            DOMAIN,
+            name,
+            async_service_handler,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
 
     for name, command_config in config[DOMAIN].items():
         async_register_rest_command(name, command_config)
