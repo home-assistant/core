@@ -214,21 +214,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if entry.data[CONF_KEY] is not None:
+    if config_entry.data[CONF_KEY] is not None:
         platforms = GATEWAY_PLATFORMS
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, platforms
+    )
     if unload_ok:
-        hass.data[DOMAIN][GATEWAYS_KEY].pop(entry.entry_id)
+        hass.data[DOMAIN][GATEWAYS_KEY].pop(config_entry.entry_id)
 
     loaded_entries = [
-        loaded_entry
-        for loaded_entry in hass.config_entries.async_entries(DOMAIN)
-        if loaded_entry.state == ConfigEntryState.LOADED
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
         # No gateways left, stop Xiaomi socket
@@ -247,9 +249,9 @@ class XiaomiDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device, device_type, xiaomi_hub, config_entry) -> None:
+    def __init__(self, device, device_type, xiaomi_hub, config_entry):
         """Initialize the Xiaomi device."""
-        self._state: bool = False
+        self._state = None
         self._is_available = True
         self._sid = device["sid"]
         self._model = device["model"]
@@ -259,7 +261,7 @@ class XiaomiDevice(Entity):
         self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
-        self._extra_state_attributes: dict[str, Any] = {}
+        self._extra_state_attributes = {}
         self._remove_unavailability_tracker = None
         self._xiaomi_hub = xiaomi_hub
         self.parse_data(device["data"], device["raw_data"])
@@ -390,7 +392,7 @@ class XiaomiDevice(Entity):
         raise NotImplementedError()
 
 
-def _add_gateway_to_schema(hass: HomeAssistant, schema):
+def _add_gateway_to_schema(hass, schema):
     """Extend a voluptuous schema with a gateway validator."""
 
     def gateway(sid):
