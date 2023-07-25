@@ -2,24 +2,25 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import komfovent_api
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, PARAM_HOST, PARAM_PASSWORD, PARAM_USERNAME
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER = "user"
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(PARAM_HOST): str,
-        vol.Required(PARAM_USERNAME, default="user"): str,
-        vol.Required(PARAM_PASSWORD): str,
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_USERNAME, default="user"): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -53,12 +54,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        conf_host = str(user_input[PARAM_HOST])
-        conf_username = str(user_input[PARAM_USERNAME])
-        conf_password = str(user_input[PARAM_PASSWORD])
-
-        await self.async_set_unique_id(conf_host)
-        self._abort_if_unique_id_configured()
+        conf_host = cast(str, user_input[CONF_USERNAME])
+        conf_username = cast(str, user_input[CONF_USERNAME])
+        conf_password = cast(str, user_input[CONF_PASSWORD])
 
         result, credentials = komfovent_api.get_credentials(
             conf_host, conf_username, conf_password
@@ -69,5 +67,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         result, settings = await komfovent_api.get_settings(credentials)
         if result != komfovent_api.KomfoventConnectionResult.SUCCESS:
             return self.__return_error(result)
+
+        await self.async_set_unique_id(settings.serial_number)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=settings.name, data=user_input)

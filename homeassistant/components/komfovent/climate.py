@@ -9,12 +9,17 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, MANUFACTURER, PARAM_HOST, PARAM_PASSWORD, PARAM_USERNAME
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -23,9 +28,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Komfovent unit control."""
-    conf_host = str(entry.data[PARAM_HOST])
-    conf_username = str(entry.data[PARAM_USERNAME])
-    conf_password = str(entry.data[PARAM_PASSWORD])
+    conf_host = str(entry.data[CONF_HOST])
+    conf_username = str(entry.data[CONF_USERNAME])
+    conf_password = str(entry.data[CONF_PASSWORD])
     _, credentials = komfovent_api.get_credentials(
         conf_host, conf_username, conf_password
     )
@@ -44,7 +49,6 @@ class KomfoventDevice(ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "ventilation_unit"
-    _attr_name = None
 
     def __init__(
         self,
@@ -61,7 +65,7 @@ class KomfoventDevice(ClimateEntity):
             model=settings.model,
             name=settings.name,
             sw_version=settings.version,
-            manufacturer=MANUFACTURER,
+            manufacturer="Komfovent",
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -76,7 +80,7 @@ class KomfoventDevice(ClimateEntity):
         result, status = await komfovent_api.get_unit_status(
             self._komfovent_credentials
         )
-        if result != komfovent_api.KomfoventConnectionResult.SUCCESS or status is None:
+        if result != komfovent_api.KomfoventConnectionResult.SUCCESS or not status:
             self._attr_available = False
             return
         self._attr_available = True

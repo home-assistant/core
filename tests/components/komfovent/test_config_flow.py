@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.komfovent.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -36,9 +37,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -46,41 +47,45 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-name"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_error_handling(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("error", "expected_response"),
+    [
+        (komfovent_api.KomfoventConnectionResult.NOT_FOUND, "cannot_connect"),
+        (komfovent_api.KomfoventConnectionResult.UNAUTHORISED, "invalid_auth"),
+        (komfovent_api.KomfoventConnectionResult.INVALID_INPUT, "invalid_input"),
+    ],
+)
+async def test_form_error_handling(
+    hass: HomeAssistant,
+    error: komfovent_api.KomfoventConnectionResult,
+    expected_response: str,
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    with patch(
+        "homeassistant.components.komfovent.config_flow.komfovent_api.get_credentials",
+        return_value=(
+            error,
+            None,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
 
-    error_code_to_expected_message = {
-        komfovent_api.KomfoventConnectionResult.NOT_FOUND: "cannot_connect",
-        komfovent_api.KomfoventConnectionResult.UNAUTHORISED: "invalid_auth",
-        komfovent_api.KomfoventConnectionResult.INVALID_INPUT: "invalid_input",
-    }
-
-    for error, expected_response in error_code_to_expected_message.items():
-        with patch(
-            "homeassistant.components.komfovent.config_flow.komfovent_api.get_credentials",
-            return_value=(
-                error,
-                None,
-            ),
-        ):
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "host": "1.1.1.1",
-                    "username": "test-username",
-                    "password": "test-password",
-                },
-            )
-
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"] == {"base": expected_response}
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": expected_response}
