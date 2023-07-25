@@ -32,8 +32,8 @@ async def test_humanify_xiaomi_ble_event(hass: HomeAssistant) -> None:
                     XiaomiBleEvent(
                         device_id=None,
                         address="DE:70:E8:B2:39:0C",
-                        event_class="button",
-                        event_type="long_press",
+                        event_class="motion",
+                        event_type="motion_detected",
                         event_properties={
                             "any": "thing",
                         },
@@ -57,7 +57,7 @@ async def test_humanify_xiaomi_ble_event(hass: HomeAssistant) -> None:
 
     assert event1["name"] == "Xiaomi BLE DE:70:E8:B2:39:0C"
     assert event1["domain"] == DOMAIN
-    assert event1["message"] == "button long_press: {'any': 'thing'}"
+    assert event1["message"] == "motion motion_detected: {'any': 'thing'}"
 
     assert event2["name"] == "Xiaomi BLE DE:70:E8:B2:39:0C"
     assert event2["domain"] == DOMAIN
