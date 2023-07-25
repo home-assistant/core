@@ -1,7 +1,7 @@
 """Support for Homekit motion sensors."""
 from __future__ import annotations
 
-from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
@@ -89,8 +89,7 @@ async def async_setup_entry(
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_characteristic(char: Characteristic) -> bool:
-        service = char.service
+    def async_add_service(service: Service) -> bool:
         entities = []
 
         if service.type == ServicesTypes.DOORBELL:
@@ -153,4 +152,4 @@ async def async_setup_entry(
 
         return False
 
-    conn.add_char_factory(async_add_characteristic)
+    conn.add_listener(async_add_service)
