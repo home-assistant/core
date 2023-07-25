@@ -2,21 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "title": "Permobil Email",
-        "description": "Enter your email",
         "data": {
-          "email": "Your permobil email"
+          "email": "Enter your permobil email"
         }
       },
       "email_code": {
-        "title": "Enter Code",
         "description": "Enter the code that was sent to your email.",
         "data": {
           "code": "Email code"
         }
       },
       "region": {
-        "title": "Select Region",
         "description": "Select the region of your account.",
         "data": {
           "code": "Region"
