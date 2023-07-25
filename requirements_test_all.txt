@@ -1219,6 +1219,9 @@ pydiscovergy==1.2.1
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
 
+# homeassistant.components.duotecno
+pyduotecno==2023.7.3
+
 # homeassistant.components.econet
 pyeconet==0.1.20
 

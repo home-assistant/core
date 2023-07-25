@@ -106,6 +106,7 @@ FLOWS = {
         "dsmr",
         "dsmr_reader",
         "dunehd",
+        "duotecno",
         "dwd_weather_warnings",
         "dynalite",
         "eafm",
