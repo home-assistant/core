@@ -2,10 +2,10 @@
 # name: test_sensor
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg',
+      'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
       'friendly_name': 'Google for Developers Latest upload',
       'icon': 'mdi:youtube',
-      'published_at': '2023-05-11T00:20:46Z',
+      'published_at': datetime.datetime(2023, 5, 11, 0, 20, 46, tzinfo=datetime.timezone.utc),
       'video_id': 'wysukDrMdqU',
     }),
     'context': <ANY>,
@@ -16,6 +16,34 @@
   })
 # ---
 # name: test_sensor.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+      'friendly_name': 'Google for Developers Subscribers',
+      'icon': 'mdi:youtube-subscription',
+      'unit_of_measurement': 'subscribers',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_subscribers',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2290000',
+  })
+# ---
+# name: test_sensor_without_uploaded_video
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Google for Developers Latest upload',
+      'icon': 'mdi:youtube',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_latest_upload',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensor_without_uploaded_video.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
