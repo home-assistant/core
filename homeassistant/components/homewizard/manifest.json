@@ -3,7 +3,6 @@
   "name": "HomeWizard Energy",
   "codeowners": ["@DCSBL"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/homewizard",
   "iot_class": "local_polling",
   "loggers": ["homewizard_energy"],
