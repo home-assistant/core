@@ -172,11 +172,18 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TractiveSensorEntityDescription(
-        # Currently, only state operational and not_reporting are used
-        # More states are available by polling the data
         key=ATTR_TRACKER_STATE,
         translation_key="tracker_state",
         entity_class=TractiveHardwareSensor,
+        icon="mdi:radar",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "not_reporting",
+            "operational",
+            "system_shutdown_user",
+            "system_startup",
+        ],
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,
