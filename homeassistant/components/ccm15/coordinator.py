@@ -171,11 +171,6 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         _LOGGER.debug("Set Temp[%s]='%s'", ac_index, temp)
         await self.async_set_state(ac_index, "temp", temp)
 
-    async def async_set_swing_mode(self, ac_index, swing_mode: int) -> None:
-        """Set the fan mode."""
-        _LOGGER.debug("Set Swing[%s]='%s'", ac_index, swing_mode)
-        await self.async_set_state(ac_index, "swing", swing_mode)
-
 
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     """Climate device for CCM15 coordinator."""
@@ -309,12 +304,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         await self.coordinator.async_set_fan_mode(self._ac_index, fan_mode)
-
-    async def async_set_swing_mode(self, swing_mode: str) -> None:
-        """Set the swing mode."""
-        await self.coordinator.async_set_swing_mode(
-            self._ac_index, 1 if swing_mode == SWING_ON else 0
-        )
 
     async def async_turn_off(self) -> None:
         """Turn off."""
