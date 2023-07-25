@@ -256,7 +256,6 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self.entity_id = f"sensor.picnic_{description.key}"
         self._service_unique_id = config_entry.unique_id
 
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
