@@ -44,7 +44,15 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def base_test_invalid(hass: HomeAssistant, test_side_effect, test_error):
+@pytest.mark.parametrize(
+    ("test_side_effect", "test_error"),
+    [
+        (InvalidPassword, "invalid_auth"),
+        (ConnectionError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_invalid(hass: HomeAssistant, test_side_effect, test_error):
     """Test all side_effects on the controller.connect via parameters."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,18 +87,3 @@ async def base_test_invalid(hass: HomeAssistant, test_side_effect, test_error):
         "port": 1234,
         "password": "test-password2",
     }
-
-
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    await base_test_invalid(hass, InvalidPassword, "invalid_auth")
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    await base_test_invalid(hass, ConnectionError, "cannot_connect")
-
-
-async def test_form_except(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    await base_test_invalid(hass, Exception, "unknown")

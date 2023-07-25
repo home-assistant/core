@@ -6,6 +6,7 @@ from duotecno.unit import SwitchUnit
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -36,8 +37,14 @@ class DuotecnoSwitch(DuotecnoEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
-        await self._unit.turn_on()
+        try:
+            await self._unit.turn_on()
+        except Exception as err:  # pylint: disable=broad-except
+            raise HomeAssistantError from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
-        await self._unit.turn_off()
+        try:
+            await self._unit.turn_off()
+        except Exception as err:  # pylint: disable=broad-except
+            raise HomeAssistantError from err
