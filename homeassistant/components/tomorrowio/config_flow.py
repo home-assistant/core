@@ -56,6 +56,10 @@ def _get_config_schema(
         vol.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
     }
 
+    api_polling_rate = {
+        vol.Required(450): int,
+    }
+
     default_location = (
         input_dict[CONF_LOCATION]
         if CONF_LOCATION in input_dict
@@ -67,6 +71,7 @@ def _get_config_schema(
     return vol.Schema(
         {
             **api_key_schema,
+            **api_polling_rate,
             vol.Required(
                 CONF_LOCATION,
                 default=default_location,
