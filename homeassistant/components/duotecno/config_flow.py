@@ -51,7 +51,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                 controller = PyDuotecno()
+                 await controller.connect(
+                     data[CONF_HOST], data[CONF_PORT], data[CONF_PASSWORD], True
+                 )
             except ConnectionError:
                 errors["base"] = "cannot_connect"
             except InvallidPassword:
