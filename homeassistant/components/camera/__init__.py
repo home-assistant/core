@@ -221,7 +221,7 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
-    if not camera.stream:
+    if not camera.stream and camera.supported_features & SUPPORT_STREAM:
         camera.stream = await camera.async_create_stream()
     if camera.stream:
         return await camera.stream.async_get_image(

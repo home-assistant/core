@@ -932,18 +932,30 @@ async def test_use_stream_for_stills(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value=None,
     ) as mock_stream_source:
-        # First test when there is no stream_source should fail
+        # First test when the integration does not support stream should fail
         resp = await client.get("/api/camera_proxy/camera.demo_camera")
         await hass.async_block_till_done()
-        mock_stream_source.assert_called_once()
+        mock_stream_source.assert_not_called()
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        # Test when the integration does not provide a stream_source should fail
+        with patch(
+            "homeassistant.components.demo.camera.DemoCamera.supported_features",
+            return_value=camera.SUPPORT_STREAM,
+        ):
+            resp = await client.get("/api/camera_proxy/camera.demo_camera")
+            await hass.async_block_till_done()
+            mock_stream_source.assert_called_once()
+            assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="rtsp://some_source",
     ) as mock_stream_source, patch(
         "homeassistant.components.camera.create_stream"
-    ) as mock_create_stream:
+    ) as mock_create_stream, patch(
+        "homeassistant.components.demo.camera.DemoCamera.supported_features",
+        return_value=camera.SUPPORT_STREAM,
+    ):
         # Now test when creating the stream succeeds
         mock_stream = Mock()
         mock_stream.async_get_image = AsyncMock()
