@@ -8,43 +8,32 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.wlan import Wlan
 
-from homeassistant.components.image import DOMAIN, ImageEntity, ImageEntityDescription
+from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
-from .entity import HandlerT, UnifiEntity, UnifiEntityDescription
+from .entity import (
+    HandlerT,
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_wlan_device_info_fn,
+)
 
 
 @callback
 def async_wlan_qr_code_image_fn(controller: UniFiController, wlan: Wlan) -> bytes:
     """Calculate receiving data transfer value."""
     return controller.api.wlans.generate_wlan_qr_code(wlan)
-
-
-@callback
-def async_wlan_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for WLAN."""
-    wlan = api.wlans[obj_id]
-    return DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, wlan.id)},
-        manufacturer=ATTR_MANUFACTURER,
-        model="UniFi Network",
-        name=wlan.name,
-    )
 
 
 @dataclass
