@@ -3,13 +3,6 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 import pytest
-from screenlogicpy.const.common import (
-    SL_GATEWAY_IP,
-    SL_GATEWAY_NAME,
-    SL_GATEWAY_PORT,
-    SL_GATEWAY_SUBTYPE,
-    SL_GATEWAY_TYPE,
-)
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.screenlogic import DOMAIN
@@ -19,10 +12,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 
 from .conftest import (
-    MOCK_ADAPTER_IP,
     MOCK_ADAPTER_MAC,
     MOCK_ADAPTER_NAME,
-    MOCK_ADAPTER_PORT,
 )
 
 from tests.common import MockConfigEntry
@@ -75,7 +66,24 @@ TEST_MIGRATING_ENTITIES = [
         "missing_device",
         BINARY_SENSOR_DOMAIN,
     ),
+    EntityMigrationData(
+        "Old Sensor",
+        "old_sensor",
+        "Old Sensor",
+        "old_sensor",
+        SENSOR_DOMAIN,
+    ),
 ]
+
+TEST_EXISTING_ENTRY = {
+    "domain": SENSOR_DOMAIN,
+    "platform": DOMAIN,
+    "unique_id": f"{MOCK_ADAPTER_MAC}_existing",
+    "suggested_object_id": f"{MOCK_ADAPTER_NAME} Existing Sensor",
+    "disabled_by": None,
+    "has_entity_name": True,
+    "original_name": "Existing Sensor",
+}
 
 
 @pytest.mark.parametrize(
@@ -115,6 +123,10 @@ async def test_async_migrate_entries(
         identifiers={(DOMAIN, MOCK_ADAPTER_MAC)},
     )
 
+    entity_registry.async_get_or_create(
+        **TEST_EXISTING_ENTRY, device_id=device.id, config_entry=mock_config_entry
+    )
+
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entity_def, device_id=device.id, config_entry=mock_config_entry
     )
@@ -134,16 +146,15 @@ async def test_async_migrate_entries(
                 "old_name": "Missing Migration Device",
                 "new_name": "Bad ENTITY_MIGRATIONS Entry",
             },
+            "old_sensor": {
+                "new_key": "existing",
+                "old_name": "Old",
+                "new_name": "Existing",
+            },
         },
     ), patch(
-        "homeassistant.components.screenlogic.async_get_connect_info",
-        return_value={
-            SL_GATEWAY_IP: MOCK_ADAPTER_IP,
-            SL_GATEWAY_PORT: MOCK_ADAPTER_PORT,
-            SL_GATEWAY_TYPE: 12,
-            SL_GATEWAY_SUBTYPE: 2,
-            SL_GATEWAY_NAME: MOCK_ADAPTER_NAME,
-        },
+        "homeassistant.components.screenlogic.async_discover_gateways_by_unique_id",
+        return_value={},
     ), patch(
         "homeassistant.components.screenlogic.ScreenLogicGateway",
         return_value=mock_gateway,

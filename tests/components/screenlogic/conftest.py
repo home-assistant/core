@@ -35,7 +35,7 @@ MOCK_DATA = {
         },
         "model": {"name": "Model", "value": "EasyTouch2 8"},
         "equipment": {
-            "flags": 60,
+            "flags": 32796,
         },
         "sensor": {
             "active_alert": {
@@ -80,6 +80,24 @@ MOCK_DATA = {
         7: {"data": 0},
     },
     "body": {},
+    "intellichem": {
+        "unknown_at_offset_00": 42,
+        "unknown_at_offset_04": 0,
+        "sensor": {
+            "ph_now": {
+                "name": "pH Now",
+                "value": 0.0,
+                "unit": "pH",
+                "state_type": "measurement",
+            },
+            "orp_now": {
+                "name": "ORP Now",
+                "value": 0,
+                "unit": "mV",
+                "state_type": "measurement",
+            },
+        },
+    },
     "scg": {
         "scg_present": 1,
         "sensor": {
@@ -193,7 +211,8 @@ def create_mock_gateway():
     type(gateway).async_connect = AsyncMock(return_value=mock_async_connect)
     type(gateway).get_data = Mock(return_value=mock_get_data)
     type(gateway).is_connected = PropertyMock(return_value=True)
-    type(gateway).equipment_flags = PropertyMock(return_value=EQUIPMENT_FLAG(60))
+    type(gateway).is_client = PropertyMock(return_value=False)
+    type(gateway).equipment_flags = PropertyMock(return_value=EQUIPMENT_FLAG(32796))
     type(gateway).name = PropertyMock(return_value=MOCK_ADAPTER_NAME)
     type(gateway).version = PropertyMock(return_value="POOL: 5.2 Build 736.0 Rel")
     type(gateway).controller_model = PropertyMock(return_value="EasyTouch2 8")
