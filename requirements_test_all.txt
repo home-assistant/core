@@ -427,7 +427,7 @@ bellows==0.35.8
 bimmer-connected==0.13.8
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.1.0
+bleak-retry-connector==3.1.1
 
 # homeassistant.components.bluetooth
 bleak==0.20.2
@@ -771,7 +771,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230705.1
+home-assistant-frontend==20230725.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.7.24
@@ -1561,6 +1561,9 @@ python-miio==0.5.12
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
+
+# homeassistant.components.opensky
+python-opensky==0.0.10
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
