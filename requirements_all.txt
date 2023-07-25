@@ -955,7 +955,7 @@ hass-nabucasa==0.69.0
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.2.0
+hassil==1.2.2
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -988,7 +988,7 @@ holidays==0.28
 home-assistant-frontend==20230725.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.7.24
+home-assistant-intents==2023.7.25
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
