@@ -21,6 +21,19 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "number": {
+      "lcd_brightness": {
+        "name": "LCD Brightness"
+      }
+    }
+  },
+  "issues": {
+    "missing_lcd_permission": {
+      "title": "Missing permission - Freebox",
+      "description": "Home Assistant does not have permission to update the LCD settings.\nYou should grant the \"Edit the Freebox's settings\" permission in the Freebox OS web interface."
+    }
+  },
   "services": {
     "reboot": {
       "name": "Reboot",

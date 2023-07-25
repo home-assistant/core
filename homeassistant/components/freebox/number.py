@@ -14,6 +14,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -35,10 +36,9 @@ class FreeboxNumberEntityDescription(
     """Class describing Freebox number entities."""
 
 
-LCD_NUMBER_DESCRIPTIONS: tuple[FreeboxNumberEntityDescription, ...] = (
+NUMBER_DESCRIPTIONS: tuple[FreeboxNumberEntityDescription, ...] = (
     FreeboxNumberEntityDescription(
         key="lcd_brightness",
-        name="LCD Brightness",
         icon="mdi:monitor",
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
@@ -52,19 +52,27 @@ LCD_NUMBER_DESCRIPTIONS: tuple[FreeboxNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the switch."""
+    """Set up the number."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-    entities = [
-        FreeboxLCDNumber(router, entity_description)
-        for entity_description in LCD_NUMBER_DESCRIPTIONS
-    ]
-    async_add_entities(entities, True)
+    async_add_entities(
+        [
+            FreeboxLCDNumber(router, entity_description)
+            for entity_description in NUMBER_DESCRIPTIONS
+        ],
+        True,
+    )
 
 
 class FreeboxNumber(NumberEntity):
     """Representation of a Freebox number entity."""
 
+    _attr_has_entity_name = True
     entity_description: FreeboxNumberEntityDescription
+
+    @property
+    def translation_key(self) -> str | None:
+        """Get translation string of Number from entity key."""
+        return self.entity_description.key
 
     def __init__(
         self,
@@ -73,7 +81,6 @@ class FreeboxNumber(NumberEntity):
     ) -> None:
         """Initialize the switch."""
         self.entity_description = entity_description
-        self._attr_name = f"Freebox {entity_description.name}"
         self._attr_unique_id = f"{router.mac}-{entity_description.key}"
         self._attr_device_info = router.device_info
         self._router = router
@@ -122,9 +129,11 @@ class FreeboxLCDNumber(FreeboxNumber):
         except InsufficientPermissionsError:
             self.async_on_demand_update()
 
-            # Send notification
-            self.hass.components.persistent_notification.async_create(
-                'Home Assistant does not have permission to update the LCD settings.\nYou should grant the "Edit the Freebox\'s settings" permission in the Freebox OS web interface.',
-                title="Missing permission - Freebox",
-                notification_id="freebox_missing_lcd_permission",
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_id="missing_lcd_permission",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="missing_lcd_permission",
             )
