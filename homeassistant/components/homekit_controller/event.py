@@ -75,6 +75,11 @@ class HomeKitEventEntity(HomeKitEntity, EventEntity):
 
     @callback
     def _handle_event(self):
+        if self._characteristic.value is None:
+            # For IP backed devices the characteristic is marked as
+            # pollable, but always returns None when polled
+            # Make sure we don't explode if we see that edge case.
+            return
         self._trigger_event(INPUT_EVENT_VALUES[self._characteristic.value])
         self.async_write_ha_state()
 
