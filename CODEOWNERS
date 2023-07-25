@@ -1052,6 +1052,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/rtsp_to_webrtc/ @allenporter
 /tests/components/rtsp_to_webrtc/ @allenporter
 /homeassistant/components/ruckus_unleashed/ @gabe565 @lanrat
+/tests/components/ruckus_unleashed/ @gabe565 @lanrat
 /homeassistant/components/ruuvi_gateway/ @akx
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx

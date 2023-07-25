@@ -1,5 +1,7 @@
 """Config flow for Ruckus Unleashed integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aioruckus import AjaxSession, SystemStat
 from aioruckus.exceptions import AuthenticationError
@@ -47,14 +49,12 @@ async def validate_input(hass: core.HomeAssistant, data):
                 SystemStat.IDENTITY,
                 SystemStat.UNLEASHED_NETWORK,
             )
-
             zd_name = system_info[API_SYS_IDENTITY][API_SYS_IDENTITY_NAME]
             zd_serial = (
                 system_info[API_SYS_UNLEASHEDNETWORK][API_SYS_UNLEASHEDNETWORK_TOKEN]
                 if API_SYS_UNLEASHEDNETWORK in system_info
                 else system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
             )
-
             return {
                 KEY_SYS_TITLE: zd_name,
                 KEY_SYS_SERIAL: zd_serial,
@@ -70,7 +70,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -93,6 +95,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=DATA_SCHEMA,
+            )
+        return await self.async_step_user()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

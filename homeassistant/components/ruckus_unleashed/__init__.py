@@ -63,8 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             manufacturer=MANUFACTURER,
             name=access_point[API_AP_DEVNAME],
             model=access_point[API_AP_MODEL],
-            sw_version=access_point[API_AP_FIRMWAREVERSION]
-            or system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_VERSION],
+            sw_version=access_point.get(
+                API_AP_FIRMWAREVERSION,
+                system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_VERSION],
+            ),
         )
 
     hass.data.setdefault(DOMAIN, {})
