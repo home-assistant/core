@@ -332,7 +332,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==49
+aiounifi==50
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -427,7 +427,7 @@ bellows==0.35.8
 bimmer-connected==0.13.8
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.1.0
+bleak-retry-connector==3.1.1
 
 # homeassistant.components.bluetooth
 bleak==0.20.2
@@ -512,7 +512,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.87.1
+dbus-fast==1.87.2
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -563,6 +563,9 @@ eagle100==0.1.1
 
 # homeassistant.components.easyenergy
 easyenergy==0.3.0
+
+# homeassistant.components.electric_kiwi
+electrickiwi-api==0.8.5
 
 # homeassistant.components.elgato
 elgato==4.0.1
@@ -689,7 +692,6 @@ goalzero==0.2.2
 goodwe==0.2.31
 
 # homeassistant.components.google_mail
-# homeassistant.components.youtube
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
@@ -748,7 +750,7 @@ habitipy==0.2.0
 hass-nabucasa==0.69.0
 
 # homeassistant.components.conversation
-hassil==1.0.6
+hassil==1.2.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -772,7 +774,7 @@ holidays==0.28
 home-assistant-frontend==20230705.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.6.28
+home-assistant-intents==2023.7.24
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1212,10 +1214,13 @@ pydeconz==113
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==1.2.1
+pydiscovergy==2.0.1
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
+
+# homeassistant.components.duotecno
+pyduotecno==2023.7.3
 
 # homeassistant.components.econet
 pyeconet==0.1.20
@@ -1537,7 +1542,7 @@ python-ecobee-api==0.2.14
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.0.1
+python-homewizard-energy==2.0.2
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1559,7 +1564,7 @@ python-mystrom==2.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.2.0
+python-otbr-api==2.3.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -1999,10 +2004,13 @@ yalexs==1.5.1
 yeelight==0.7.12
 
 # homeassistant.components.yolink
-yolink-api==0.2.9
+yolink-api==0.3.0
 
 # homeassistant.components.youless
 youless-api==1.0.1
+
+# homeassistant.components.youtube
+youtubeaio==1.1.4
 
 # homeassistant.components.zamg
 zamg==0.2.4

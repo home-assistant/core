@@ -6,7 +6,7 @@
         "description": "Login at {config_url} and: \n* Create an API-key by clicking 'Create' \n* Copy the created access token.",
         "data": {
           "name": "Name of your lock in the LOQED app.",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       }
     },
