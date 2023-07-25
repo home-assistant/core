@@ -323,3 +323,62 @@ class TestRestCommandComponent:
             == "text/json"
         )
         assert aioclient_mock.mock_calls[6][3].get("Accept") == "application/2json"
+
+    def test_rest_command_get_response_plaintext(self, aioclient_mock):
+        """Get rest_command response, text."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.get(
+            self.url, content=b"success", headers={"content-type": "text/plain"}
+        )
+
+        response = self.hass.services.call(
+            rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+        )
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert response["content"] == "success"
+        assert response["status"] == 200
+
+    def test_rest_command_get_response_json(self, aioclient_mock):
+        """Get rest_command response, json."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.get(
+            self.url,
+            json={"status": "success", "number": 42},
+            headers={"content-type": "application/json"},
+        )
+
+        response = self.hass.services.call(
+            rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+        )
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert response["content"]["status"] == "success"
+        assert response["content"]["number"] == 42
+        assert response["status"] == 200
+
+    def test_rest_command_get_response_none(self, aioclient_mock):
+        """Get rest_command response, other."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.get(
+            self.url,
+            content=b"success",
+            headers={"content-type": "some/nonsense"},
+        )
+
+        response = self.hass.services.call(
+            rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+        )
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert not response["content"]
+        assert response["status"] == 200

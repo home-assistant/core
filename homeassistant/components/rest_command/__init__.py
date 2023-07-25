@@ -145,8 +145,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             response.status,
                             payload,
                         )
-                    _json = await response.json()
-                    return {"content": _json, "status": response.status}
+
+                    _content = None
+                    if response.content_type == "application/json":
+                        _content = await response.json()
+                    elif response.content_type.startswith("text/"):
+                        _content = await response.text()
+                    return {"content": _content, "status": response.status}
 
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s", request_url)
