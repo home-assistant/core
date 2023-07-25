@@ -58,11 +58,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_ON,
     STATE_PAUSED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 
 from tests.common import async_mock_signal
 
@@ -962,3 +963,37 @@ async def test_play_media_source(hass: HomeAssistant, mock_api_object) -> None:
         position=0,
         playback_from_position=0,
     )
+
+
+async def test_delayed_init_startup(
+    hass: HomeAssistant, config_entry, get_request_return_values
+) -> None:
+    """Check that the integration has a delayed initialization when loaded at startup."""
+
+    async def get_request_side_effect(update_type):
+        if update_type == "outputs":
+            return {"outputs": get_request_return_values["outputs"]}
+        return get_request_return_values[update_type]
+
+    with patch(
+        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        mock_api.return_value.get_request.side_effect = get_request_side_effect
+        mock_api.return_value.full_url.return_value = ""
+        mock_api.return_value.get_pipes.return_value = SAMPLE_PIPES
+        mock_api.return_value.get_playlists.return_value = SAMPLE_PLAYLISTS
+        config_entry.add_to_hass(hass)
+        # Pretend HA is still starting
+        hass.state = CoreState.starting
+        # Load the config entry
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        # Check that the API is not accessed before HA has started
+        mock_api.return_value.start_websocket_handler.assert_not_called()
+        mock_api.return_value.get_request.assert_not_called()
+        # Signal that HA has started and check that the API is accessed
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        mock_api.return_value.start_websocket_handler.assert_called_once()
+        mock_api.return_value.get_request.assert_called_once()

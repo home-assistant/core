@@ -29,8 +29,13 @@ from homeassistant.components.spotify import (
     spotify_uri_from_media_browser_url,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STARTED,
+)
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -127,7 +132,14 @@ async def async_setup_entry(
     forked_daapd_updater = ForkedDaapdUpdater(
         hass, forked_daapd_api, config_entry.entry_id
     )
-    await forked_daapd_updater.async_init()
+
+    if hass.state != CoreState.running:
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, forked_daapd_updater.async_init
+        )
+    else:
+        await forked_daapd_updater.async_init()
+
     hass.data[DOMAIN][config_entry.entry_id][
         HASS_DATA_UPDATER_KEY
     ] = forked_daapd_updater
@@ -912,7 +924,7 @@ class ForkedDaapdUpdater:
         self._all_output_ids = set()
         self._entry_id = entry_id
 
-    async def async_init(self):
+    async def async_init(self, _: Event | None = None) -> None:
         """Perform async portion of class initialization."""
         server_config = await self._api.get_request("config")
         if websocket_port := server_config.get("websocket_port"):
