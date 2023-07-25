@@ -45,6 +45,23 @@
     }
   },
   "entity": {
+    "event": {
+      "push": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "switch_latched": "Switch latched",
+              "initial_press": "Button initially pressed",
+              "long_press_ongoing": "Button is being held down",
+              "short_release": "Button has been pressed shortly",
+              "long_release": "Button released after being held down",
+              "multi_press_ongoing": "Multiple buttons are being pressed",
+              "multi_press_complete": "Multiple buttons have been released"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "flow": {
         "name": "Flow"
