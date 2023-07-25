@@ -19,16 +19,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DEFAULT_NAME, DOMAIN
 from .sensor import CONF_ALTITUDE, DEFAULT_ALTITUDE
 
-CONFIG_SCHEMA: vol.Schema = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_RADIUS): vol.Coerce(float),
-        vol.Required(CONF_LATITUDE): cv.latitude,
-        vol.Required(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_ALTITUDE): vol.Coerce(float),
-    }
-)
-
 
 class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for OpenSky."""
@@ -39,42 +29,49 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize user input."""
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data={},
-                options={
-                    CONF_RADIUS: user_input[CONF_RADIUS],
+                title=DEFAULT_NAME,
+                data={
                     CONF_LATITUDE: user_input[CONF_LATITUDE],
                     CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                    CONF_ALTITUDE: user_input.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
+                },
+                options={
+                    CONF_RADIUS: user_input[CONF_RADIUS],
+                    CONF_ALTITUDE: user_input[CONF_ALTITUDE],
                 },
             )
-        form_data: dict[str, Any] = {
-            CONF_LATITUDE: self.hass.config.latitude,
-            CONF_LONGITUDE: self.hass.config.longitude,
-            CONF_ALTITUDE: DEFAULT_ALTITUDE,
-        }
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, form_data),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_RADIUS): vol.Coerce(float),
+                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                        vol.Optional(CONF_ALTITUDE): vol.Coerce(float),
+                    }
+                ),
+                {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                    CONF_ALTITUDE: DEFAULT_ALTITUDE,
+                },
+            ),
         )
 
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Import config from yaml."""
-        latitude = import_config.get(CONF_LATITUDE, self.hass.config.latitude)
-        longitude = import_config.get(CONF_LONGITUDE, self.hass.config.longitude)
-        for entry in self._async_current_entries():
-            if (
-                entry.options[CONF_LATITUDE] == latitude
-                and entry.options[CONF_LONGITUDE] == longitude
-            ):
-                return self.async_abort(reason="already_configured")
+        entry_data = {
+            CONF_LATITUDE: import_config.get(CONF_LATITUDE, self.hass.config.latitude),
+            CONF_LONGITUDE: import_config.get(
+                CONF_LONGITUDE, self.hass.config.longitude
+            ),
+        }
+        self._async_abort_entries_match(entry_data)
         return self.async_create_entry(
             title=import_config.get(CONF_NAME, DEFAULT_NAME),
-            data={},
+            data=entry_data,
             options={
-                CONF_RADIUS: import_config[CONF_RADIUS],
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
+                CONF_RADIUS: import_config[CONF_RADIUS] * 1000,
                 CONF_ALTITUDE: import_config.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
             },
         )

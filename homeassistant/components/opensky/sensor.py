@@ -89,9 +89,9 @@ async def async_setup_entry(
 
     opensky = hass.data[DOMAIN][entry.entry_id][CLIENT]
     bounding_box = OpenSky.get_bounding_box(
-        entry.options[CONF_LATITUDE],
-        entry.options[CONF_LONGITUDE],
-        entry.options[CONF_RADIUS] * 1000,
+        entry.data[CONF_LATITUDE],
+        entry.data[CONF_LONGITUDE],
+        entry.options[CONF_RADIUS],
     )
     async_add_entities(
         [

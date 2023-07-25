@@ -21,11 +21,12 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="OpenSky",
-        data={},
-        options={
-            CONF_RADIUS: 10.0,
+        data={
             CONF_LATITUDE: 0.0,
             CONF_LONGITUDE: 0.0,
+        },
+        options={
+            CONF_RADIUS: 10.0,
             CONF_ALTITUDE: 0.0,
         },
     )

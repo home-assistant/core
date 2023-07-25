@@ -29,7 +29,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_NAME: "My home",
                 CONF_RADIUS: 10,
                 CONF_LATITUDE: 0.0,
                 CONF_LONGITUDE: 0.0,
@@ -37,17 +36,19 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             },
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "My home"
+        assert result["title"] == "OpenSky"
+        assert result["data"] == {
+            CONF_LATITUDE: 0.0,
+            CONF_LONGITUDE: 0.0,
+        }
         assert result["options"] == {
             CONF_ALTITUDE: 0.0,
             CONF_RADIUS: 10.0,
-            CONF_LATITUDE: 0.0,
-            CONF_LONGITUDE: 0.0,
         }
 
 
 @pytest.mark.parametrize(
-    ("config", "title", "options"),
+    ("config", "title", "data", "options"),
     [
         (
             {CONF_RADIUS: 10.0},
@@ -55,7 +56,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             {
                 CONF_LATITUDE: 32.87336,
                 CONF_LONGITUDE: -117.22743,
-                CONF_RADIUS: 10.0,
+            },
+            {
+                CONF_RADIUS: 10000.0,
                 CONF_ALTITUDE: 0,
             },
         ),
@@ -68,7 +71,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             {
                 CONF_LATITUDE: 32.87336,
                 CONF_LONGITUDE: -117.22743,
-                CONF_RADIUS: 10.0,
+            },
+            {
+                CONF_RADIUS: 10000.0,
                 CONF_ALTITUDE: 0,
             },
         ),
@@ -82,7 +87,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             {
                 CONF_LATITUDE: 10.0,
                 CONF_LONGITUDE: -100.0,
-                CONF_RADIUS: 10.0,
+            },
+            {
+                CONF_RADIUS: 10000.0,
                 CONF_ALTITUDE: 0,
             },
         ),
@@ -92,14 +99,20 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             {
                 CONF_LATITUDE: 32.87336,
                 CONF_LONGITUDE: -117.22743,
-                CONF_RADIUS: 10.0,
+            },
+            {
+                CONF_RADIUS: 10000.0,
                 CONF_ALTITUDE: 100.0,
             },
         ),
     ],
 )
 async def test_import_flow(
-    hass: HomeAssistant, config: dict[str, Any], title: str, options: dict[str, Any]
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    title: str,
+    data: dict[str, Any],
+    options: dict[str, Any],
 ) -> None:
     """Test the import flow."""
     with patch_setup_entry():
@@ -110,6 +123,7 @@ async def test_import_flow(
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == title
         assert result["options"] == options
+        assert result["data"] == data
 
 
 async def test_importing_already_exists_flow(hass: HomeAssistant) -> None:
