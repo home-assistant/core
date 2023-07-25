@@ -323,7 +323,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
                 self.flow_manager.async_configure(flow_id=self.flow_id)
             )
 
-    async def _async_uninstall_addon(self, addon_manager: AddonManager) -> None:
+    async def _async_uninstall_addon(
+        self, addon_manager: AddonManager, *, continue_flow: bool = True
+    ) -> None:
         """Uninstall an add-on."""
         try:
             try:
@@ -340,10 +342,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
                 addon_manager, AddonState.NOT_INSTALLED
             )
         finally:
-            # Continue the flow after show progress when the task is done.
-            self.hass.async_create_task(
-                self.flow_manager.async_configure(flow_id=self.flow_id)
-            )
+            if continue_flow:
+                # Continue the flow after show progress when the task is done.
+                self.hass.async_create_task(
+                    self.flow_manager.async_configure(flow_id=self.flow_id)
+                )
 
     async def _async_start_addon(
         self, addon_manager: AddonManager, wait_until_done: bool = False
@@ -869,12 +872,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     ) -> FlowResult:
         """Finish flashing and update the config entry."""
         flasher_addon_manager: AddonManager = get_flasher_addon_manager(self.hass)
-        await self._async_uninstall_addon(flasher_addon_manager)
-
-        # Always reload entry after installing the addon.
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self.config_entry.entry_id)
-        )
+        await self._async_uninstall_addon(flasher_addon_manager, continue_flow=False)
 
         # Finish ZHA migration if needed
         if self._zha_migration_mgr:
