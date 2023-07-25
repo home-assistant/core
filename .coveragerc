@@ -230,6 +230,9 @@ omit =
     homeassistant/components/dublin_bus_transport/sensor.py
     homeassistant/components/dunehd/__init__.py
     homeassistant/components/dunehd/media_player.py
+    homeassistant/components/duotecno/__init__.py
+    homeassistant/components/duotecno/entity.py
+    homeassistant/components/duotecno/switch.py
     homeassistant/components/dwd_weather_warnings/const.py
     homeassistant/components/dwd_weather_warnings/coordinator.py
     homeassistant/components/dwd_weather_warnings/sensor.py
@@ -261,6 +264,11 @@ omit =
     homeassistant/components/eight_sleep/__init__.py
     homeassistant/components/eight_sleep/binary_sensor.py
     homeassistant/components/eight_sleep/sensor.py
+    homeassistant/components/electric_kiwi/__init__.py
+    homeassistant/components/electric_kiwi/api.py
+    homeassistant/components/electric_kiwi/oauth2.py
+    homeassistant/components/electric_kiwi/sensor.py
+    homeassistant/components/electric_kiwi/coordinator.py
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/__init__.py
     homeassistant/components/elkm1/alarm_control_panel.py
@@ -706,6 +714,9 @@ omit =
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
+    homeassistant/components/minecraft_server/binary_sensor.py
+    homeassistant/components/minecraft_server/entity.py
+    homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/minio_helper.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
