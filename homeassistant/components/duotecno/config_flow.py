@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from duotecno.controller import PyDuotecno
-from duotecno.exceptions import InvallidPassword
+from duotecno.exceptions import InvalidPassword
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -46,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except ConnectionError:
                 errors["base"] = "cannot_connect"
-            except InvallidPassword:
+            except InvalidPassword:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
