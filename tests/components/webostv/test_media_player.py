@@ -306,7 +306,12 @@ async def test_entity_attributes(
     assert attrs[ATTR_MEDIA_VOLUME_MUTED] is False
     assert attrs[ATTR_MEDIA_VOLUME_LEVEL] == 0.37
     assert attrs[ATTR_INPUT_SOURCE] == "Live TV"
-    assert attrs[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
+    assert attrs[ATTR_INPUT_SOURCE_LIST] == [
+        "Input01",
+        "Input02",
+        "Live TV",
+        "Media Player",
+    ]
     assert attrs[ATTR_MEDIA_CONTENT_TYPE] == MediaType.CHANNEL
     assert attrs[ATTR_MEDIA_TITLE] == "Channel 1"
     assert attrs[ATTR_SOUND_OUTPUT] == "speaker"
@@ -425,14 +430,14 @@ async def test_update_sources_live_tv_find(
     sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
 
     assert "Live TV" in sources
-    assert len(sources) == 3
+    assert len(sources) == 4
 
     # Live TV is current app
     apps = {
         LIVE_TV_APP_ID: {
             "title": "Live TV",
             "id": "some_id",
-        },
+        }
     }
     monkeypatch.setattr(client, "apps", apps)
     monkeypatch.setattr(client, "current_app_id", "some_id")

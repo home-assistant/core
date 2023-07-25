@@ -29,7 +29,13 @@ async def test_diagnostics(
                     "id": "com.webos.app.livetv",
                     "largeIcon": REDACTED,
                     "title": "Live TV",
-                }
+                },
+                "com.webos.app.mediadiscovery": {
+                    "title": "Media Player",
+                    "id": "com.webos.app.mediadiscovery",
+                    "largeIcon": REDACTED,
+                    "icon": REDACTED,
+                },
             },
             "inputs": {
                 "in1": {"appId": "app0", "id": "in1", "label": "Input01"},
