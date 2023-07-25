@@ -19,10 +19,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Velbus switch based on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]
-    entities = []
-    for channel in cntrl.get_units("SwitchUnit"):
-        entities.append(DuotecnoSwitch(channel))
-    async_add_entities(entities)
+    async_add_entities(
+        DuotecnoSwitch(channel)
+        for channel in cntrl.get_units("SwitchUnit")
+    )
 
 
 class DuotecnoSwitch(DuotecnoEntity, SwitchEntity):
