@@ -109,7 +109,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class GdacsFeedEntityManager:
     """Feed Entity Manager for GDACS feed."""
 
-    def __init__(self, hass, config_entry, radius_in_km):
+    def __init__(self, hass: HomeAssistant, config_entry, radius_in_km) -> None:
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._config_entry = config_entry
@@ -133,7 +133,6 @@ class GdacsFeedEntityManager:
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._track_time_remove_callback = None
         self._status_info = None
-        self.listeners = []
 
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
@@ -160,9 +159,6 @@ class GdacsFeedEntityManager:
 
     async def async_stop(self):
         """Stop this feed entity manager from refreshing."""
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
         if self._track_time_remove_callback:
             self._track_time_remove_callback()
         _LOGGER.debug("Feed entity manager stopped")

@@ -33,7 +33,6 @@ class MinecraftServerEntity(Entity):
             sw_version=str(self._server.protocol_version),
         )
         self._attr_device_class = device_class
-        self._extra_state_attributes = None
         self._disconnect_dispatcher: CALLBACK_TYPE | None = None
 
     async def async_update(self) -> None:

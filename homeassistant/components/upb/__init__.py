@@ -68,7 +68,7 @@ class UpbEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, element, unique_id, upb):
+    def __init__(self, element, unique_id, upb) -> None:
         """Initialize the base of all UPB devices."""
         self._upb = upb
         self._element = element

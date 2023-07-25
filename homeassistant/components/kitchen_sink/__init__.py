@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _create_issues(hass):
+def _create_issues(hass: HomeAssistant):
     """Create some issue registry issues."""
     async_create_issue(
         hass,

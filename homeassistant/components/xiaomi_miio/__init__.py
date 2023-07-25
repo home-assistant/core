@@ -170,7 +170,7 @@ def get_platforms(config_entry):
     return []
 
 
-def _async_update_data_default(hass, device):
+def _async_update_data_default(hass: HomeAssistant, device):
     async def update():
         """Fetch data from the device using async_add_executor_job."""
 

@@ -105,7 +105,7 @@ class EcoNetEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, econet):
+    def __init__(self, econet) -> None:
         """Initialize."""
         self._econet = econet
         self._attr_name = econet.device_name

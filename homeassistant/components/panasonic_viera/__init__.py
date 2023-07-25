@@ -129,13 +129,13 @@ class Remote:
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         host,
         port,
         on_action=None,
         app_id=None,
         encryption_key=None,
-    ):
+    ) -> None:
         """Initialize the Remote class."""
         self._hass = hass
 

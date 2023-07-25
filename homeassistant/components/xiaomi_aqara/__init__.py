@@ -247,7 +247,7 @@ class XiaomiDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device, device_type, xiaomi_hub, config_entry):
+    def __init__(self, device, device_type, xiaomi_hub, config_entry) -> None:
         """Initialize the Xiaomi device."""
         self._state = None
         self._is_available = True
@@ -259,7 +259,7 @@ class XiaomiDevice(Entity):
         self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
-        self._extra_state_attributes = {}
+        self._extra_state_attributes: dict[str, Any] = {}
         self._remove_unavailability_tracker = None
         self._xiaomi_hub = xiaomi_hub
         self.parse_data(device["data"], device["raw_data"])
@@ -390,7 +390,7 @@ class XiaomiDevice(Entity):
         raise NotImplementedError()
 
 
-def _add_gateway_to_schema(hass, schema):
+def _add_gateway_to_schema(hass: HomeAssistant, schema):
     """Extend a voluptuous schema with a gateway validator."""
 
     def gateway(sid):

@@ -113,7 +113,7 @@ MIGRATION_NAME_TO_KEY = {
 }
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
 
     @callback
@@ -122,31 +122,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> dict[str, Any] | None:
         """Update unique ID of entity entry."""
         match = re.search(
-            f"{entry.data[CONF_HOST]}-{entry.data[CONF_NAME]} (?P<name>.+)",
+            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
             entity_entry.unique_id,
         )
 
         if match and (key := MIGRATION_NAME_TO_KEY.get(match.group("name"))):
-            return {"new_unique_id": f"{entry.entry_id}-{key}"}
+            return {"new_unique_id": f"{config_entry.entry_id}-{key}"}
         return None
 
-    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
-    client = TransmissionClient(hass, entry)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
+    client = TransmissionClient(hass, config_entry)
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
     await client.async_setup()
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Transmission Entry from config_entry."""
-    client = hass.data[DOMAIN].pop(entry.entry_id)
+    client = hass.data[DOMAIN].pop(config_entry.entry_id)
     if client.unsub_timer:
         client.unsub_timer()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)

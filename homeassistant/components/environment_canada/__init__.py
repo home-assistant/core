@@ -101,7 +101,7 @@ def device_info(config_entry: ConfigEntry) -> DeviceInfo:
 class ECDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching EC data."""
 
-    def __init__(self, hass, ec_data, name, update_interval):
+    def __init__(self, hass: HomeAssistant, ec_data, name, update_interval) -> None:
         """Initialize global EC data updater."""
         super().__init__(
             hass, _LOGGER, name=f"{DOMAIN} {name}", update_interval=update_interval

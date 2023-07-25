@@ -94,9 +94,9 @@ async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
             await coordinator.ayla_api.async_sign_out()
 
 
-async def async_update_options(hass, config_entry):
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

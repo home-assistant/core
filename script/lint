@@ -1,25 +1,30 @@
 #!/bin/sh
 # Execute lint to spot code mistakes.
 
+# Make sure that errors will halt this script with the error 
+set -e
+
 cd "$(dirname "$0")/.."
 
-export files="$(git diff $(git merge-base upstream/dev HEAD) --diff-filter=d --name-only | grep -e '\.py$')"
+merge_base=$(git merge-base upstream/dev HEAD)
+changed_files=$(git diff $merge_base --diff-filter=d --name-only)
+export pyfiles=$(echo "$changed_files" | grep -e '\.py$')
 echo '================================================='
 echo '=                FILES CHANGED                  ='
 echo '================================================='
-if [ -z "$files" ] ; then
+if [ -z "$pyfiles" ] ; then
   echo "No python file changed.\n"
   exit
 fi
-printf "%s\n" $files
+printf "%s\n" $pyfiles
 echo "=============="
 echo "LINT with ruff"
 echo "=============="
-pre-commit run ruff --files $files
+pre-commit run ruff --files $pyfiles
 echo "================"
 echo "LINT with pylint"
 echo "================"
-pylint_files=$(echo "$files" | grep -v '^tests.*')
+pylint_files=$(echo "$pyfiles" | grep -v '^tests.*')
 if [ -z "$pylint_files" ] ; then
   echo "Only test files changed. Skipping\n"
   exit

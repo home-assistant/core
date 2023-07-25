@@ -218,7 +218,7 @@ CONFIGURATION_FILE = ".ios.conf"
 PLATFORMS = [Platform.SENSOR]
 
 
-def devices_with_push(hass):
+def devices_with_push(hass: HomeAssistant):
     """Return a dictionary of push enabled targets."""
     return {
         device_name: device.get(ATTR_PUSH_ID)
@@ -227,7 +227,7 @@ def devices_with_push(hass):
     }
 
 
-def enabled_push_ids(hass):
+def enabled_push_ids(hass: HomeAssistant):
     """Return a list of push enabled target push IDs."""
     return [
         device.get(ATTR_PUSH_ID)
@@ -236,12 +236,12 @@ def enabled_push_ids(hass):
     ]
 
 
-def devices(hass):
+def devices(hass: HomeAssistant):
     """Return a dictionary of all identified devices."""
     return hass.data[DOMAIN][ATTR_DEVICES]
 
 
-def device_name_for_push_id(hass, push_id):
+def device_name_for_push_id(hass: HomeAssistant, push_id):
     """Return the device name for the push ID."""
     for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is push_id:
@@ -298,7 +298,7 @@ class iOSPushConfigView(HomeAssistantView):
     url = "/api/ios/push"
     name = "api:ios:push"
 
-    def __init__(self, push_config):
+    def __init__(self, push_config) -> None:
         """Init the view."""
         self.push_config = push_config
 
@@ -314,7 +314,7 @@ class iOSConfigView(HomeAssistantView):
     url = "/api/ios/config"
     name = "api:ios:config"
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         """Init the view."""
         self.config = config
 
@@ -330,7 +330,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
     url = "/api/ios/identify"
     name = "api:ios:identify"
 
-    def __init__(self, config_path):
+    def __init__(self, config_path) -> None:
         """Initialize the view."""
         self._config_path = config_path
 

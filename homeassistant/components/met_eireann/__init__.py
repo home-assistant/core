@@ -67,12 +67,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class MetEireannWeatherData:
     """Keep data for Met Éireann weather entities."""
 
-    def __init__(self, hass, config, weather_data):
+    def __init__(self, hass: HomeAssistant, config, weather_data) -> None:
         """Initialise the weather entity data."""
         self.hass = hass
         self._config = config
         self._weather_data = weather_data
-        self.current_weather_data = {}
+        self.current_weather_data: dict = {}
         self.daily_forecast = None
         self.hourly_forecast = None
 

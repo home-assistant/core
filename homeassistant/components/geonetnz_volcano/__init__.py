@@ -112,7 +112,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class GeonetnzVolcanoFeedEntityManager:
     """Feed Entity Manager for GeoNet NZ Volcano feed."""
 
-    def __init__(self, hass, config_entry, radius_in_km, unit_system):
+    def __init__(
+        self, hass: HomeAssistant, config_entry, radius_in_km, unit_system
+    ) -> None:
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._config_entry = config_entry
@@ -133,7 +135,6 @@ class GeonetnzVolcanoFeedEntityManager:
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._unit_system = unit_system
         self._track_time_remove_callback = None
-        self.listeners = []
 
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
@@ -160,9 +161,6 @@ class GeonetnzVolcanoFeedEntityManager:
 
     async def async_stop(self):
         """Stop this feed entity manager from refreshing."""
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
         if self._track_time_remove_callback:
             self._track_time_remove_callback()
         _LOGGER.debug("Feed entity manager stopped")

@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_connect_or_timeout(hass, roomba):
+async def async_connect_or_timeout(hass: HomeAssistant, roomba):
     """Connect to vacuum."""
     try:
         name = None
@@ -107,7 +107,7 @@ async def async_connect_or_timeout(hass, roomba):
     return {ROOMBA_SESSION: roomba, CONF_NAME: name}
 
 
-async def async_disconnect_or_timeout(hass, roomba):
+async def async_disconnect_or_timeout(hass: HomeAssistant, roomba):
     """Disconnect to vacuum."""
     _LOGGER.debug("Disconnect vacuum")
     async with async_timeout.timeout(3):
