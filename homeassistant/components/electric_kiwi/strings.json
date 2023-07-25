@@ -28,8 +28,24 @@
   },
   "entity": {
     "sensor": {
-      "hopfreepowerstart": { "name": "Hour of free power start" },
-      "hopfreepowerend": { "name": "Hour of free power end" }
+      "hopfreepowerstart": {
+        "name": "Hour of free power start"
+      },
+      "hopfreepowerend": {
+        "name": "Hour of free power end"
+      },
+      "totalrunningbalance": {
+        "name": "Total running balance"
+      },
+      "totalcurrentbalance": {
+        "name": "Total current balance"
+      },
+      "nextbillingdate": {
+        "name": "Next billing date"
+      },
+      "hoppowersavings": {
+        "name": "Hour of power savings"
+      }
     },
     "select": { "hopselector": { "name": "Hour of free power" } }
   }
