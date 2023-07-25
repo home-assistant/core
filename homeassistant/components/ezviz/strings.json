@@ -81,6 +81,17 @@
           }
         }
       }
+    },
+    "service_depreciation_ptz": {
+      "title": "EZVIZ PTZ service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::ezviz::issues::service_depreciation_ptz::title%]",
+            "description": "EZVIZ PTZ service is deprecated and will be removed.\nTo move the camera, you can instead use the `button.press` service targetting the PTZ* entities.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
+          }
+        }
+      }
     }
   },
   "entity": {
@@ -99,42 +110,18 @@
         "name": "Last motion image"
       }
     },
-    "switch": {
-      "status_light": {
-        "name": "Status light"
+    "button": {
+      "ptz_up": {
+        "name": "PTZ up"
       },
-      "privacy": {
-        "name": "Privacy"
+      "ptz_down": {
+        "name": "PTZ down"
       },
-      "infrared_light": {
-        "name": "Infrared light"
+      "ptz_left": {
+        "name": "PTZ left"
       },
-      "sleep": {
-        "name": "Sleep"
-      },
-      "audio": {
-        "name": "Audio"
-      },
-      "motion_tracking": {
-        "name": "Motion tracking"
-      },
-      "all_day_video_recording": {
-        "name": "All day video recording"
-      },
-      "auto_sleep": {
-        "name": "Auto sleep"
-      },
-      "flicker_light_on_movement": {
-        "name": "Flicker light on movement"
-      },
-      "pir_motion_activated_light": {
-        "name": "PIR motion activated light"
-      },
-      "tamper_alarm": {
-        "name": "Tamper alarm"
-      },
-      "follow_movement": {
-        "name": "Follow movement"
+      "ptz_right": {
+        "name": "PTZ right"
       }
     },
     "binary_sensor": {
@@ -176,6 +163,44 @@
       "last_alarm_type_name": {
         "name": "Last alarm type name"
       }
+    },
+    "switch": {
+      "status_light": {
+        "name": "Status light"
+      },
+      "privacy": {
+        "name": "Privacy"
+      },
+      "infrared_light": {
+        "name": "Infrared light"
+      },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "audio": {
+        "name": "Audio"
+      },
+      "motion_tracking": {
+        "name": "Motion tracking"
+      },
+      "all_day_video_recording": {
+        "name": "All day video recording"
+      },
+      "auto_sleep": {
+        "name": "Auto sleep"
+      },
+      "flicker_light_on_movement": {
+        "name": "Flicker light on movement"
+      },
+      "pir_motion_activated_light": {
+        "name": "PIR motion activated light"
+      },
+      "tamper_alarm": {
+        "name": "Tamper alarm"
+      },
+      "follow_movement": {
+        "name": "Follow movement"
+       }
     }
   },
   "services": {

@@ -40,8 +40,8 @@ class ToloNumberEntityDescription(
 NUMBERS = (
     ToloNumberEntityDescription(
         key="power_timer",
+        translation_key="power_timer",
         icon="mdi:power-settings",
-        name="Power Timer",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         native_max_value=POWER_TIMER_MAX,
         getter=lambda settings: settings.power_timer,
@@ -49,8 +49,8 @@ NUMBERS = (
     ),
     ToloNumberEntityDescription(
         key="salt_bath_timer",
+        translation_key="salt_bath_timer",
         icon="mdi:shaker-outline",
-        name="Salt Bath Timer",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         native_max_value=SALT_BATH_TIMER_MAX,
         getter=lambda settings: settings.salt_bath_timer,
@@ -58,8 +58,8 @@ NUMBERS = (
     ),
     ToloNumberEntityDescription(
         key="fan_timer",
+        translation_key="fan_timer",
         icon="mdi:fan-auto",
-        name="Fan Timer",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         native_max_value=FAN_TIMER_MAX,
         getter=lambda settings: settings.fan_timer,
