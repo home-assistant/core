@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -19,18 +19,19 @@ _LOGGER = logging.getLogger(__name__)
 class KaleidescapeEntity(Entity):
     """Defines a base Kaleidescape entity."""
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
     def __init__(self, device: KaleidescapeDevice) -> None:
         """Initialize entity."""
         self._device = device
 
-        self._attr_should_poll = False
         self._attr_unique_id = device.serial_number
-        self._attr_name = f"{KALEIDESCAPE_NAME} {device.system.friendly_name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(KALEIDESCAPE_DOMAIN, self._device.serial_number)},
             # Instead of setting the device name to the entity name, kaleidescape
             # should be updated to set has_entity_name = True
-            name=cast(str | None, self.name),
+            name=f"{KALEIDESCAPE_NAME} {device.system.friendly_name}",
             model=self._device.system.type,
             manufacturer=KALEIDESCAPE_NAME,
             sw_version=f"{self._device.system.kos_version}",

@@ -12,7 +12,7 @@ class CancelOnDisconnectRequestHandler(web_protocol.RequestHandler):
         task_handler = self._task_handler
         super().connection_lost(exc)
         if task_handler is not None:
-            task_handler.cancel()
+            task_handler.cancel("aiohttp connection lost")
 
 
 def restore_original_aiohttp_cancel_behavior() -> None:

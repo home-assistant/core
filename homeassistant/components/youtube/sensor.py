@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import StateType
 from . import YouTubeDataUpdateCoordinator
 from .const import (
     ATTR_LATEST_VIDEO,
+    ATTR_PUBLISHED_AT,
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
     ATTR_TITLE,
@@ -30,7 +31,7 @@ class YouTubeMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Any], StateType]
-    entity_picture_fn: Callable[[Any], str]
+    entity_picture_fn: Callable[[Any], str | None]
     attributes_fn: Callable[[Any], dict[str, Any]] | None
 
 
@@ -47,7 +48,8 @@ SENSOR_TYPES = [
         value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE],
         entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_THUMBNAIL],
         attributes_fn=lambda channel: {
-            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID]
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO][ATTR_PUBLISHED_AT],
         },
     ),
     YouTubeSensorEntityDescription(
@@ -87,7 +89,7 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
 
     @property
-    def entity_picture(self) -> str:
+    def entity_picture(self) -> str | None:
         """Return the value reported by the sensor."""
         return self.entity_description.entity_picture_fn(
             self.coordinator.data[self._channel_id]

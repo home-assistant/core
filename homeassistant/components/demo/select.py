@@ -38,6 +38,7 @@ class DemoSelect(SelectEntity):
     """Representation of a demo select entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(

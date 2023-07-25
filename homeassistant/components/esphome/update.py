@@ -14,6 +14,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -25,6 +26,9 @@ from .domain_data import DomainData
 from .entry_data import RuntimeEntryData
 
 KEY_UPDATE_LOCK = "esphome_update_lock"
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -109,10 +113,10 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         During deep sleep the ESP will not be connectable (by design)
         and thus, even when unavailable, we'll show it as available.
         """
-        return (
-            super().available
-            and (self._entry_data.available or self._device_info.has_deep_sleep)
-            and self._device_info.name in self.coordinator.data
+        return super().available and (
+            self._entry_data.available
+            or self._entry_data.expected_disconnect
+            or self._device_info.has_deep_sleep
         )
 
     @property
@@ -133,33 +137,26 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         """URL to the full release notes of the latest version available."""
         return "https://esphome.io/changelog/"
 
+    @callback
+    def _async_static_info_updated(self, _: list[EntityInfo]) -> None:
+        """Handle static info update."""
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
-
-        @callback
-        def _static_info_updated(infos: list[EntityInfo]) -> None:
-            """Handle static info update."""
-            self.async_write_ha_state()
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 self._entry_data.signal_static_info_updated,
-                _static_info_updated,
+                self._async_static_info_updated,
             )
         )
-
-        @callback
-        def _on_device_update() -> None:
-            """Handle update of device state, like availability."""
-            self.async_write_ha_state()
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 self._entry_data.signal_device_updated,
-                _on_device_update,
+                self.async_write_ha_state,
             )
         )
 
@@ -168,16 +165,20 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     ) -> None:
         """Install an update."""
         async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
-            device = self.coordinator.data.get(self._device_info.name)
+            coordinator = self.coordinator
+            api = coordinator.api
+            device = coordinator.data.get(self._device_info.name)
             assert device is not None
-            if not await self.coordinator.api.compile(device["configuration"]):
-                logging.getLogger(__name__).error(
-                    "Error compiling %s. Try again in ESPHome dashboard for error",
-                    device["configuration"],
-                )
-            if not await self.coordinator.api.upload(device["configuration"], "OTA"):
-                logging.getLogger(__name__).error(
-                    "Error OTA updating %s. Try again in ESPHome dashboard for error",
-                    device["configuration"],
-                )
-            await self.coordinator.async_request_refresh()
+            try:
+                if not await api.compile(device["configuration"]):
+                    raise HomeAssistantError(
+                        f"Error compiling {device['configuration']}; "
+                        "Try again in ESPHome dashboard for more information."
+                    )
+                if not await api.upload(device["configuration"], "OTA"):
+                    raise HomeAssistantError(
+                        f"Error updating {device['configuration']} via OTA; "
+                        "Try again in ESPHome dashboard for more information."
+                    )
+            finally:
+                await self.coordinator.async_request_refresh()

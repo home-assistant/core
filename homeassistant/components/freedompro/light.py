@@ -20,8 +20,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -38,10 +38,12 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LightEntity):
-    """Representation of an Freedompro light."""
+    """Representation of a Freedompro light."""
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_is_on = False
+    _attr_brightness = 0
 
     def __init__(
         self,
@@ -61,8 +63,6 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LightEntity):
             model=device["type"],
             name=device["name"],
         )
-        self._attr_is_on = False
-        self._attr_brightness = 0
         color_mode = ColorMode.ONOFF
         if "hue" in device["characteristics"]:
             color_mode = ColorMode.HS

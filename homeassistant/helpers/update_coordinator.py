@@ -30,7 +30,7 @@ from .debounce import Debouncer
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
-_T = TypeVar("_T")
+_DataT = TypeVar("_DataT")
 _BaseDataUpdateCoordinatorT = TypeVar(
     "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
 )
@@ -53,7 +53,7 @@ class BaseDataUpdateCoordinatorProtocol(Protocol):
         """Listen for data updates."""
 
 
-class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
+class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     """Class to manage fetching data from single endpoint."""
 
     def __init__(
@@ -63,7 +63,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         *,
         name: str,
         update_interval: timedelta | None = None,
-        update_method: Callable[[], Awaitable[_T]] | None = None,
+        update_method: Callable[[], Awaitable[_DataT]] | None = None,
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
     ) -> None:
         """Initialize global data updater."""
@@ -80,7 +80,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         # to make sure the first update was successful.
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
-        self.data: _T = None  # type: ignore[assignment]
+        self.data: _DataT = None  # type: ignore[assignment]
 
         # Pick a random microsecond to stagger the refreshes
         # and avoid a thundering herd.
@@ -235,7 +235,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_update_data(self) -> _T:
+    async def _async_update_data(self) -> _DataT:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")
@@ -383,7 +383,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
             self.async_update_listeners()
 
     @callback
-    def async_set_updated_data(self, data: _T) -> None:
+    def async_set_updated_data(self, data: _DataT) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()

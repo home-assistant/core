@@ -56,6 +56,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                 vol.Optional("input"): dict,
                 vol.Optional("pipeline"): str,
                 vol.Optional("conversation_id"): vol.Any(str, None),
+                vol.Optional("device_id"): vol.Any(str, None),
                 vol.Optional("timeout"): vol.Any(float, int),
             },
         ),
@@ -105,11 +106,12 @@ async def websocket_run(
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
         "conversation_id": msg.get("conversation_id"),
+        "device_id": msg.get("device_id"),
     }
 
     if start_stage == PipelineStage.STT:
         # Audio pipeline that will receive audio as binary websocket messages
-        audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
+        audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:

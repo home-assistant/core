@@ -4,12 +4,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
+from enum import StrEnum
 import logging
 from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import conversation, media_source, stt, tts, websocket_api
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
@@ -512,6 +512,8 @@ class PipelineRun:
                     "engine": self.intent_agent,
                     "language": self.pipeline.conversation_language,
                     "intent_input": intent_input,
+                    "conversation_id": conversation_id,
+                    "device_id": device_id,
                 },
             )
         )
@@ -735,17 +737,30 @@ class PipelineInput:
                 )
 
         start_stage_index = PIPELINE_STAGE_ORDER.index(self.run.start_stage)
+        end_stage_index = PIPELINE_STAGE_ORDER.index(self.run.end_stage)
 
         prepare_tasks = []
 
-        if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.STT):
+        if (
+            start_stage_index
+            <= PIPELINE_STAGE_ORDER.index(PipelineStage.STT)
+            <= end_stage_index
+        ):
             # self.stt_metadata can't be None or we'd raise above
             prepare_tasks.append(self.run.prepare_speech_to_text(self.stt_metadata))  # type: ignore[arg-type]
 
-        if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.INTENT):
+        if (
+            start_stage_index
+            <= PIPELINE_STAGE_ORDER.index(PipelineStage.INTENT)
+            <= end_stage_index
+        ):
             prepare_tasks.append(self.run.prepare_recognize_intent())
 
-        if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.TTS):
+        if (
+            start_stage_index
+            <= PIPELINE_STAGE_ORDER.index(PipelineStage.TTS)
+            <= end_stage_index
+        ):
             prepare_tasks.append(self.run.prepare_text_to_speech())
 
         if prepare_tasks:

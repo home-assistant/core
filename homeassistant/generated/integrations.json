@@ -846,7 +846,7 @@
       "iot_class": "local_polling"
     },
     "co2signal": {
-      "name": "CO2 Signal",
+      "name": "Electricity Maps",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1884,6 +1884,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "gardena_bluetooth": {
+      "name": "Gardena Bluetooth",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "gaviota": {
       "name": "Gaviota",
       "integration_type": "virtual",
@@ -1896,7 +1902,6 @@
       "iot_class": "cloud_polling"
     },
     "generic": {
-      "name": "Generic Camera",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -2084,7 +2089,7 @@
         },
         "google_translate": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Google Translate text-to-speech"
         },
@@ -3010,7 +3015,6 @@
       "iot_class": "cloud_push"
     },
     "local_calendar": {
-      "name": "Local Calendar",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3081,6 +3085,12 @@
     },
     "lookin": {
       "name": "LOOKin",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "loqed": {
+      "name": "LOQED Touch Smart Lock",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -3343,12 +3353,6 @@
         }
       }
     },
-    "miflora": {
-      "name": "Mi Flora",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "mijndomein_energie": {
       "name": "Mijndomein Energie",
       "integration_type": "virtual",
@@ -3377,12 +3381,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "mitemp_bt": {
-      "name": "Xiaomi Mijia BLE Temperature and Humidity Sensor",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "mjpeg": {
       "name": "MJPEG IP Camera",
@@ -3954,7 +3952,7 @@
     "openhome": {
       "name": "Linn / OpenHome",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "opensensemap": {
@@ -4009,6 +4007,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "opower": {
+      "name": "Opower",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "opple": {
       "name": "Opple",
@@ -4387,7 +4391,7 @@
       "integrations": {
         "qnap": {
           "integration_type": "device",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "QNAP"
         },
@@ -4812,7 +4816,6 @@
       "iot_class": "local_polling"
     },
     "season": {
-      "name": "Season",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4828,12 +4831,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "senseme": {
-      "name": "SenseME",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "sensibo": {
       "name": "Sensibo",
@@ -5905,16 +5902,9 @@
     },
     "u_tec": {
       "name": "U-tec",
-      "integrations": {
-        "ultraloq": {
-          "integration_type": "virtual",
-          "config_flow": false,
-          "iot_standards": [
-            "zwave"
-          ],
-          "name": "Ultraloq"
-        }
-      }
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "ubiquiti": {
       "name": "Ubiquiti",
@@ -6074,7 +6064,6 @@
       "iot_class": "local_polling"
     },
     "version": {
-      "name": "Version",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -6286,7 +6275,6 @@
       "iot_class": "cloud_polling"
     },
     "workday": {
-      "name": "Workday",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6539,10 +6527,9 @@
       "iot_class": "local_polling"
     },
     "zodiac": {
-      "name": "Zodiac",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "calculated"
     },
     "zoneminder": {
       "name": "ZoneMinder",
@@ -6659,6 +6646,7 @@
     "emulated_roku",
     "filesize",
     "garages_amsterdam",
+    "generic",
     "google_travel_time",
     "group",
     "growatt_server",
@@ -6671,6 +6659,7 @@
     "input_text",
     "integration",
     "islamic_prayer_times",
+    "local_calendar",
     "local_ip",
     "min_max",
     "mobile_app",
@@ -6681,6 +6670,7 @@
     "proximity",
     "rpi_power",
     "schedule",
+    "season",
     "shopping_list",
     "sun",
     "switch_as_x",
@@ -6689,6 +6679,9 @@
     "tod",
     "uptime",
     "utility_meter",
-    "waze_travel_time"
+    "version",
+    "waze_travel_time",
+    "workday",
+    "zodiac"
   ]
 }

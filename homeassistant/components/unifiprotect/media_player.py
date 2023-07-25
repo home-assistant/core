@@ -98,21 +98,22 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_volume_level = float(self.device.speaker_settings.volume / 100)
+        updated_device = self.device
+        self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
 
         if (
-            self.device.talkback_stream is not None
-            and self.device.talkback_stream.is_running
+            updated_device.talkback_stream is not None
+            and updated_device.talkback_stream.is_running
         ):
             self._attr_state = MediaPlayerState.PLAYING
         else:
             self._attr_state = MediaPlayerState.IDLE
 
         is_connected = self.data.last_update_success and (
-            self.device.state == StateType.CONNECTED
-            or (not self.device.is_adopted_by_us and self.device.can_adopt)
+            updated_device.state == StateType.CONNECTED
+            or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
-        self._attr_available = is_connected and self.device.feature_flags.has_speaker
+        self._attr_available = is_connected and updated_device.feature_flags.has_speaker
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

@@ -16,7 +16,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import COORDINATOR, DOMAIN, NAME, PLATFORMS, SENSORS
+from .const import COORDINATOR, DOMAIN, NAME, PLATFORMS
+from .sensor import SENSORS
 
 SCAN_INTERVAL = timedelta(seconds=60)
 

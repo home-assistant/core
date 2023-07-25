@@ -52,7 +52,6 @@ from .const import (
     ATTR_LANGUAGE,
     ATTR_MESSAGE,
     ATTR_OPTIONS,
-    CONF_BASE_URL,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_TIME_MEMORY,
@@ -76,7 +75,6 @@ __all__ = [
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
-    "get_base_url",
     "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
     "Provider",
@@ -92,8 +90,6 @@ ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
 
 CONF_LANG = "language"
-
-BASE_URL_KEY = "tts_base_url"
 
 SERVICE_CLEAR_CACHE = "clear_cache"
 
@@ -214,15 +210,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     use_cache: bool = conf.get(CONF_CACHE, DEFAULT_CACHE)
     cache_dir: str = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
     time_memory: int = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-    base_url: str | None = conf.get(CONF_BASE_URL)
-    if base_url is not None:
-        _LOGGER.warning(
-            "TTS base_url option is deprecated. Configure internal/external URL"
-            " instead"
-        )
-    hass.data[BASE_URL_KEY] = base_url
 
-    tts = SpeechManager(hass, use_cache, cache_dir, time_memory, base_url)
+    tts = SpeechManager(hass, use_cache, cache_dir, time_memory)
 
     try:
         await tts.async_init_cache()
@@ -413,7 +402,6 @@ class SpeechManager:
         use_cache: bool,
         cache_dir: str,
         time_memory: int,
-        base_url: str | None,
     ) -> None:
         """Initialize a speech store."""
         self.hass = hass
@@ -422,7 +410,6 @@ class SpeechManager:
         self.use_cache = use_cache
         self.cache_dir = cache_dir
         self.time_memory = time_memory
-        self.base_url = base_url
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
@@ -886,7 +873,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             _LOGGER.error("Error on init tts: %s", err)
             return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
 
-        base = self.tts.base_url or get_url(self.tts.hass)
+        base = get_url(self.tts.hass)
         url = base + path
 
         return self.json({"url": url, "path": path})
@@ -912,11 +899,6 @@ class TextToSpeechView(HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
-
-
-def get_base_url(hass: HomeAssistant) -> str:
-    """Get base URL."""
-    return hass.data[BASE_URL_KEY] or get_url(hass)
 
 
 @websocket_api.websocket_command(
