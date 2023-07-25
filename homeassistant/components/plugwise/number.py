@@ -66,7 +66,7 @@ async def async_setup_entry(
     coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
- 
+
     entities: list[PlugwiseNumberEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in NUMBER_TYPES:
