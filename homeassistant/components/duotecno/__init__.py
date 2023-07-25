@@ -7,7 +7,7 @@ from duotecno.exceptions import InvalidPassword, LoadFailure
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except (OSError, InvalidPassword, LoadFailure) as err:
-        raise PlatformNotReady from err
+        raise ConfigEntryNotReady from err
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = controller
     return True
