@@ -344,14 +344,20 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
         VERSION = 5
         data = None
         task_one_done = False
+        task_two_done = False
 
         async def async_step_init(self, user_input=None):
-            if not user_input:
-                if not self.task_one_done:
+            if user_input and "task_finished" in user_input:
+                if user_input["task_finished"] == 1:
                     self.task_one_done = True
-                    progress_action = "task_one"
-                else:
-                    progress_action = "task_two"
+                elif user_input["task_finished"] == 2:
+                    self.task_two_done = True
+
+            if not self.task_one_done:
+                progress_action = "task_one"
+            elif not self.task_two_done:
+                progress_action = "task_two"
+            if not self.task_one_done or not self.task_two_done:
                 return self.async_show_progress(
                     step_id="init",
                     progress_action=progress_action,
@@ -376,7 +382,7 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
 
     # Mimic task one done and moving to task two
     # Called by integrations: `hass.config_entries.flow.async_configure(…)`
-    result = await manager.async_configure(result["flow_id"])
+    result = await manager.async_configure(result["flow_id"], {"task_finished": 1})
     assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "task_two"
 
@@ -388,13 +394,20 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
         "refresh": True,
     }
 
+    # Frontend refreshes the flow
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "task_two"
+
     # Mimic task two done and continuing step
     # Called by integrations: `hass.config_entries.flow.async_configure(…)`
-    result = await manager.async_configure(result["flow_id"], {"title": "Hello"})
+    result = await manager.async_configure(
+        result["flow_id"], {"task_finished": 2, "title": "Hello"}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
 
     await hass.async_block_till_done()
-    assert len(events) == 2
+    assert len(events) == 2  # 1 for task one and 1 for task two
     assert events[1].data == {
         "handler": "test",
         "flow_id": result["flow_id"],
