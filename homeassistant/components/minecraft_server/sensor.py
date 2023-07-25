@@ -7,7 +7,7 @@ from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MinecraftServer, MinecraftServerEntity
+from . import MinecraftServer
 from .const import (
     ATTR_PLAYERS_LIST,
     DOMAIN,
@@ -26,6 +26,7 @@ from .const import (
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
 )
+from .entity import MinecraftServerEntity
 
 
 async def async_setup_entry(
