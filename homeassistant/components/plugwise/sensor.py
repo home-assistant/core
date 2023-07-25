@@ -434,6 +434,8 @@ async def async_setup_entry(
 class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
     """Represent Plugwise Sensors."""
 
+    entity_description: PlugwiseSensorEntityDescription
+
     def __init__(
         self,
         coordinator: PlugwiseDataUpdateCoordinator,
