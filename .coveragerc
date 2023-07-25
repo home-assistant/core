@@ -706,6 +706,9 @@ omit =
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
+    homeassistant/components/minecraft_server/binary_sensor.py
+    homeassistant/components/minecraft_server/entity.py
+    homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/minio_helper.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
