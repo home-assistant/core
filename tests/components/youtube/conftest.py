@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.youtube import MockService
+from tests.components.youtube import MockYouTube
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ComponentSetup = Callable[[], Awaitable[None]]
@@ -106,7 +106,7 @@ async def mock_setup_integration(
 
     async def func() -> None:
         with patch(
-            "homeassistant.components.youtube.api.build", return_value=MockService()
+            "homeassistant.components.youtube.api.YouTube", return_value=MockYouTube()
         ):
             assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()

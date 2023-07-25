@@ -1220,6 +1220,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "duotecno": {
+      "name": "duotecno",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "dwd_weather_warnings": {
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
       "integration_type": "hub",
@@ -1324,6 +1330,12 @@
     },
     "electrasmart": {
       "name": "Electra Smart",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "electric_kiwi": {
+      "name": "Electric Kiwi",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
