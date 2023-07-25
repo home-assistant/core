@@ -82,7 +82,7 @@ async def async_setup_entry(
     entities: list[PlugwiseNumberEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in NUMBER_TYPES:
-            if (actuator := device.get(description.key)) and "setpoint" in actuator:
+            if description.key in device:
                 entities.append(
                     PlugwiseNumberEntity(coordinator, device_id, description)
                 )
