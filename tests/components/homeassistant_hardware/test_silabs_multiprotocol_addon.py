@@ -97,7 +97,9 @@ def config_flow_handler(
 ) -> Generator[FakeConfigFlow, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-    with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
+    with mock_config_flow(TEST_DOMAIN, FakeConfigFlow), patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.OptionsFlowHandler._async_wait_until_addon_state"
+    ):
         yield
 
 
@@ -408,9 +410,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
 async def test_option_flow_non_hassio(
     hass: HomeAssistant,
 ) -> None:
-    """Test installing the multi pan addon."""
-    mock_integration(hass, MockModule("hassio"))
-
+    """Test installing the multi pan addon on a Core installation, without hassio."""
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
@@ -593,6 +593,11 @@ async def test_option_flow_addon_installed_same_device_uninstall(
     addon_info,
     addon_store_info,
     addon_installed,
+    install_addon,
+    start_addon,
+    stop_addon,
+    uninstall_addon,
+    set_addon_options,
 ) -> None:
     """Test installing the multi pan addon."""
     mock_integration(hass, MockModule("hassio"))
@@ -620,9 +625,49 @@ async def test_option_flow_addon_installed_same_device_uninstall(
         {"next_step_id": "uninstall_addon"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "show_revert_guide"
+    assert result["step_id"] == "uninstall_addon"
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.OptionsFlowHandler._async_set_addon_config"
+    ):
+        addon_store_info.return_value["installed"] = None
+        addon_store_info.return_value["available"] = True
+        addon_store_info.return_value["state"] = "not_installed"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {silabs_multiprotocol_addon.CONF_DISABLE_MULTI_PAN: True}
+        )
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_flasher_addon"
+    assert result["progress_action"] == "install_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "configure_flasher_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "uninstall_multiprotocol_addon"
+    assert result["progress_action"] == "uninstall_multiprotocol_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    uninstall_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "start_flasher_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_flasher_addon"
+    assert result["progress_action"] == "start_flasher_addon"
+    assert result["description_placeholders"] == {"addon_name": "Silicon Labs Flasher"}
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    install_addon.assert_called_once_with(hass, "core_silabs_flasher")
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "flashing_complete"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
