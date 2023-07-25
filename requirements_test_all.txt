@@ -332,7 +332,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==49
+aiounifi==50
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -689,7 +689,6 @@ goalzero==0.2.2
 goodwe==0.2.31
 
 # homeassistant.components.google_mail
-# homeassistant.components.youtube
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
@@ -1562,7 +1561,7 @@ python-mystrom==2.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.2.0
+python-otbr-api==2.3.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2002,10 +2001,13 @@ yalexs==1.5.1
 yeelight==0.7.12
 
 # homeassistant.components.yolink
-yolink-api==0.2.9
+yolink-api==0.3.0
 
 # homeassistant.components.youless
 youless-api==1.0.1
+
+# homeassistant.components.youtube
+youtubeaio==1.1.4
 
 # homeassistant.components.zamg
 zamg==0.2.4
