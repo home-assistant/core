@@ -112,3 +112,19 @@ async def test_set_only_target_temp_with_convert(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 114, ENTITY_WATER_HEATER_CELSIUS)
     state = hass.states.get(ENTITY_WATER_HEATER_CELSIUS)
     assert state.attributes.get("temperature") == 114
+
+
+async def test_turn_on_off(hass: HomeAssistant) -> None:
+    """Test turn on and off."""
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("temperature") == 119
+    assert state.attributes.get("away_mode") == "off"
+    assert state.attributes.get("operation_mode") == "eco"
+
+    await common.async_turn_off(hass, ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("operation_mode") == "off"
+
+    await common.async_turn_on(hass, ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("operation_mode") == "eco"
