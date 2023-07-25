@@ -1214,7 +1214,7 @@ pydeconz==113
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==1.2.1
+pydiscovergy==2.0.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0

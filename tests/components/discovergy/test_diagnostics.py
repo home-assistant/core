@@ -16,8 +16,8 @@ async def test_entry_diagnostics(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
-    with patch("pydiscovergy.Discovergy.get_meters", return_value=GET_METERS), patch(
-        "pydiscovergy.Discovergy.get_last_reading", return_value=LAST_READING
+    with patch("pydiscovergy.Discovergy.meters", return_value=GET_METERS), patch(
+        "pydiscovergy.Discovergy.meter_last_reading", return_value=LAST_READING
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -43,18 +43,15 @@ async def test_entry_diagnostics(
     assert result["meters"] == [
         {
             "additional": {
-                "administrationNumber": REDACTED,
-                "currentScalingFactor": 1,
-                "firstMeasurementTime": 1517569090926,
-                "fullSerialNumber": REDACTED,
-                "internalMeters": 1,
-                "lastMeasurementTime": 1678430543742,
-                "loadProfileType": "SLP",
-                "manufacturerId": "TST",
-                "printedFullSerialNumber": REDACTED,
-                "scalingFactor": 1,
-                "type": "TST",
-                "voltageScalingFactor": 1,
+                "administration_number": REDACTED,
+                "current_scaling_factor": 1,
+                "first_measurement_time": 1517569090926,
+                "internal_meters": 1,
+                "last_measurement_time": 1678430543742,
+                "manufacturer_id": "TST",
+                "printed_full_serial_number": REDACTED,
+                "scaling_factor": 1,
+                "voltage_scaling_factor": 1,
             },
             "full_serial_number": REDACTED,
             "load_profile_type": "SLP",
