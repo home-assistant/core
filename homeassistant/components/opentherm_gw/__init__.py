@@ -91,26 +91,26 @@ async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     async_dispatcher_send(hass, gateway.options_update_signal, entry)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the OpenTherm Gateway component."""
     if DATA_OPENTHERM_GW not in hass.data:
         hass.data[DATA_OPENTHERM_GW] = {DATA_GATEWAYS: {}}
 
-    gateway = OpenThermGatewayDevice(hass, config_entry)
-    hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
+    gateway = OpenThermGatewayDevice(hass, entry)
+    hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]] = gateway
 
-    if config_entry.options.get(CONF_PRECISION):
-        migrate_options = dict(config_entry.options)
+    if entry.options.get(CONF_PRECISION):
+        migrate_options = dict(entry.options)
         migrate_options.update(
             {
-                CONF_READ_PRECISION: config_entry.options[CONF_PRECISION],
-                CONF_SET_PRECISION: config_entry.options[CONF_PRECISION],
+                CONF_READ_PRECISION: entry.options[CONF_PRECISION],
+                CONF_SET_PRECISION: entry.options[CONF_PRECISION],
             }
         )
         del migrate_options[CONF_PRECISION]
-        hass.config_entries.async_update_entry(config_entry, options=migrate_options)
+        hass.config_entries.async_update_entry(entry, options=migrate_options)
 
-    config_entry.add_update_listener(options_updated)
+    entry.add_update_listener(options_updated)
 
     try:
         async with async_timeout.timeout(CONNECTION_TIMEOUT):
@@ -121,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             f"Could not connect to gateway at {gateway.device_path}: {ex}"
         ) from ex
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     register_services(hass)
     return True

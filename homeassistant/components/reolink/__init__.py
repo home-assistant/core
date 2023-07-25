@@ -48,9 +48,9 @@ class ReolinkData:
     firmware_coordinator: DataUpdateCoordinator[str | Literal[False]]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Reolink from a config entry."""
-    host = ReolinkHost(hass, config_entry.data, config_entry.options)
+    host = ReolinkHost(hass, entry.data, entry.options)
 
     try:
         await host.async_init()
@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await host.stop()
         raise
 
-    config_entry.async_on_unload(
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
@@ -136,36 +136,32 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await host.stop()
         raise
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ReolinkData(
         host=host,
         device_coordinator=device_coordinator,
         firmware_coordinator=firmware_coordinator,
     )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(entry_update_listener)
-    )
+    entry.async_on_unload(entry.add_update_listener(entry_update_listener))
 
     starting = False
     return True
 
 
-async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+async def entry_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Update the configuration of the host entity."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
+    host: ReolinkHost = hass.data[DOMAIN][entry.entry_id].host
 
     await host.stop()
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

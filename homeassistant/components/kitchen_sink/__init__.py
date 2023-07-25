@@ -46,11 +46,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up demo platforms with config entry
     await hass.config_entries.async_forward_entry_setups(
-        config_entry, COMPONENTS_WITH_DEMO_PLATFORM
+        entry, COMPONENTS_WITH_DEMO_PLATFORM
     )
 
     # Create issues

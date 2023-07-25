@@ -28,29 +28,29 @@ from .model import HERETravelTimeConfig
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HERE Travel Time from a config entry."""
-    api_key = config_entry.data[CONF_API_KEY]
+    api_key = entry.data[CONF_API_KEY]
 
-    arrival = dt_util.parse_time(config_entry.options.get(CONF_ARRIVAL_TIME, ""))
-    departure = dt_util.parse_time(config_entry.options.get(CONF_DEPARTURE_TIME, ""))
+    arrival = dt_util.parse_time(entry.options.get(CONF_ARRIVAL_TIME, ""))
+    departure = dt_util.parse_time(entry.options.get(CONF_DEPARTURE_TIME, ""))
 
     here_travel_time_config = HERETravelTimeConfig(
-        destination_latitude=config_entry.data.get(CONF_DESTINATION_LATITUDE),
-        destination_longitude=config_entry.data.get(CONF_DESTINATION_LONGITUDE),
-        destination_entity_id=config_entry.data.get(CONF_DESTINATION_ENTITY_ID),
-        origin_latitude=config_entry.data.get(CONF_ORIGIN_LATITUDE),
-        origin_longitude=config_entry.data.get(CONF_ORIGIN_LONGITUDE),
-        origin_entity_id=config_entry.data.get(CONF_ORIGIN_ENTITY_ID),
-        travel_mode=config_entry.data[CONF_MODE],
-        route_mode=config_entry.options[CONF_ROUTE_MODE],
+        destination_latitude=entry.data.get(CONF_DESTINATION_LATITUDE),
+        destination_longitude=entry.data.get(CONF_DESTINATION_LONGITUDE),
+        destination_entity_id=entry.data.get(CONF_DESTINATION_ENTITY_ID),
+        origin_latitude=entry.data.get(CONF_ORIGIN_LATITUDE),
+        origin_longitude=entry.data.get(CONF_ORIGIN_LONGITUDE),
+        origin_entity_id=entry.data.get(CONF_ORIGIN_ENTITY_ID),
+        travel_mode=entry.data[CONF_MODE],
+        route_mode=entry.options[CONF_ROUTE_MODE],
         arrival=arrival,
         departure=departure,
     )
 
-    if config_entry.data[CONF_MODE] in {TRAVEL_MODE_PUBLIC, "publicTransportTimeTable"}:
+    if entry.data[CONF_MODE] in {TRAVEL_MODE_PUBLIC, "publicTransportTimeTable"}:
         hass.data.setdefault(DOMAIN, {})[
-            config_entry.entry_id
+            entry.entry_id
         ] = HERETransitDataUpdateCoordinator(
             hass,
             api_key,
@@ -58,23 +58,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     else:
         hass.data.setdefault(DOMAIN, {})[
-            config_entry.entry_id
+            entry.entry_id
         ] = HERERoutingDataUpdateCoordinator(
             hass,
             api_key,
             here_travel_time_config,
         )
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

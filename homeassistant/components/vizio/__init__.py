@@ -77,17 +77,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     # Exclude this config entry because its not unloaded yet
     if not any(
-        entry.state is ConfigEntryState.LOADED
-        and entry.entry_id != config_entry.entry_id
-        and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
-        for entry in hass.config_entries.async_entries(DOMAIN)
+        loaded_entry.state is ConfigEntryState.LOADED
+        and loaded_entry.entry_id != entry.entry_id
+        and loaded_entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
+        for loaded_entry in hass.config_entries.async_entries(DOMAIN)
     ):
         hass.data[DOMAIN].pop(CONF_APPS, None)
 

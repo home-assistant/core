@@ -158,38 +158,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Firmata board for a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
     _LOGGER.debug(
         "Setting up Firmata id %s, name %s, config %s",
-        config_entry.entry_id,
-        config_entry.data[CONF_NAME],
-        config_entry.data,
+        entry.entry_id,
+        entry.data[CONF_NAME],
+        entry.data,
     )
 
-    board = FirmataBoard(config_entry.data)
+    board = FirmataBoard(entry.data)
 
     if not await board.async_setup():
         return False
 
-    hass.data[DOMAIN][config_entry.entry_id] = board
+    hass.data[DOMAIN][entry.entry_id] = board
 
     async def handle_shutdown(event) -> None:
         """Handle shutdown of board when Home Assistant shuts down."""
         # Ensure board was not already removed previously before shutdown
-        if config_entry.entry_id in hass.data[DOMAIN]:
+        if entry.entry_id in hass.data[DOMAIN]:
             await board.async_reset()
 
-    config_entry.async_on_unload(
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
     )
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={(DOMAIN, board.name)},
         manufacturer=FIRMATA_MANUFACTURER,
@@ -198,29 +198,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     await hass.config_entries.async_forward_entry_setups(
-        config_entry,
+        entry,
         [
             platform
             for conf, platform in CONF_PLATFORM_MAP.items()
-            if conf in config_entry.data
+            if conf in entry.data
         ],
     )
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Shutdown and close a Firmata board for a config entry."""
-    _LOGGER.debug("Closing Firmata board %s", config_entry.data[CONF_NAME])
+    _LOGGER.debug("Closing Firmata board %s", entry.data[CONF_NAME])
 
     unload_entries = []
     for conf, platform in CONF_PLATFORM_MAP.items():
-        if conf in config_entry.data:
+        if conf in entry.data:
             unload_entries.append(
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                hass.config_entries.async_forward_entry_unload(entry, platform)
             )
     results = []
     if unload_entries:
         results = await asyncio.gather(*unload_entries)
-    results.append(await hass.data[DOMAIN].pop(config_entry.entry_id).async_reset())
+    results.append(await hass.data[DOMAIN].pop(entry.entry_id).async_reset())
 
     return False not in results

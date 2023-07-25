@@ -17,15 +17,15 @@ from .manager import GeoJsonFeedEntityManager
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the GeoJSON events component as config entry."""
     feeds = hass.data.setdefault(DOMAIN, {})
     # Create feed entity manager for all platforms.
-    manager = GeoJsonFeedEntityManager(hass, config_entry)
-    feeds[config_entry.entry_id] = manager
-    _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
-    await remove_orphaned_entities(hass, config_entry.entry_id)
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    manager = GeoJsonFeedEntityManager(hass, entry)
+    feeds[entry.entry_id] = manager
+    _LOGGER.debug("Feed entity manager added for %s", entry.entry_id)
+    await remove_orphaned_entities(hass, entry.entry_id)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await manager.async_init()
     return True
 

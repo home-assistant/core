@@ -159,12 +159,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
-    controller_data: ControllerData = get_controller_data(hass, config_entry)
+    controller_data: ControllerData = get_controller_data(hass, entry)
 
     tasks: list[Awaitable] = [
-        hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        hass.config_entries.async_forward_entry_unload(entry, platform)
         for platform in get_configured_platforms(controller_data)
     ]
     tasks.append(hass.async_add_executor_job(controller_data.controller.stop))

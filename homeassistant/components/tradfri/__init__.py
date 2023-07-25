@@ -46,10 +46,7 @@ SIGNAL_GW = "tradfri.gw_status"
 TIMEOUT_API = 30
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Create a gateway."""
     tradfri_data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data

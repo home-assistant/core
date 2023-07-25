@@ -24,11 +24,9 @@ MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=60)
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Use config values to set up a function enabling status retrieval."""
-    data_service = APCUPSdData(
-        config_entry.data[CONF_HOST], config_entry.data[CONF_PORT]
-    )
+    data_service = APCUPSdData(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
     try:
         await hass.async_add_executor_job(data_service.update)
@@ -38,10 +36,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Store the data service object.
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = data_service
+    hass.data[DOMAIN][entry.entry_id] = data_service
 
     # Forward the config entries to the supported platforms.
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

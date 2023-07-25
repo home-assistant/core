@@ -30,16 +30,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the UniFi Network integration."""
     hass.data.setdefault(UNIFI_DOMAIN, {})
 
     # Removal of legacy PoE control was introduced with 2022.12
-    async_remove_poe_client_entities(hass, config_entry)
+    async_remove_poe_client_entities(hass, entry)
 
     try:
-        api = await get_unifi_controller(hass, config_entry.data)
-        controller = UniFiController(hass, config_entry, api)
+        api = await get_unifi_controller(hass, entry.data)
+        controller = UniFiController(hass, entry, api)
         await controller.initialize()
 
     except CannotConnect as err:
@@ -48,8 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    hass.data[UNIFI_DOMAIN][entry.entry_id] = controller
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await controller.async_update_device_registry()
 
     if len(hass.data[UNIFI_DOMAIN]) == 1:
@@ -57,16 +57,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     api.start_websocket()
 
-    config_entry.async_on_unload(
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
     )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
+    controller: UniFiController = hass.data[UNIFI_DOMAIN].pop(entry.entry_id)
 
     if not hass.data[UNIFI_DOMAIN]:
         async_unload_services(hass)
@@ -75,17 +75,15 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 @callback
-def async_remove_poe_client_entities(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
+def async_remove_poe_client_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove PoE client entities."""
     ent_reg = er.async_get(hass)
 
     entity_ids_to_be_removed = [
-        entry.entity_id
-        for entry in ent_reg.entities.values()
-        if entry.config_entry_id == config_entry.entry_id
-        and entry.unique_id.startswith("poe-")
+        client_entry.entity_id
+        for client_entry in ent_reg.entities.values()
+        if client_entry.config_entry_id == entry.entry_id
+        and client_entry.unique_id.startswith("poe-")
     ]
 
     for entity_id in entity_ids_to_be_removed:

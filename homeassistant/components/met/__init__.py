@@ -39,11 +39,11 @@ PLATFORMS = [Platform.WEATHER]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Met as config entry."""
     # Don't setup if tracking home location and latitude or longitude isn't set.
     # Also, filters out our onboarding default location.
-    if config_entry.data.get(CONF_TRACK_HOME, False) and (
+    if entry.data.get(CONF_TRACK_HOME, False) and (
         (not hass.config.latitude and not hass.config.longitude)
         or (
             hass.config.latitude == DEFAULT_HOME_LATITUDE
@@ -55,37 +55,35 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         return False
 
-    coordinator = MetDataUpdateCoordinator(hass, config_entry)
+    coordinator = MetDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    if config_entry.data.get(CONF_TRACK_HOME, False):
+    if entry.data.get(CONF_TRACK_HOME, False):
         coordinator.track_home()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    config_entry.async_on_unload(config_entry.add_update_listener(async_update_entry))
+    entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][config_entry.entry_id].untrack_home()
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    hass.data[DOMAIN][entry.entry_id].untrack_home()
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
-async def async_update_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Reload Met component when options changed."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class CannotConnect(HomeAssistantError):

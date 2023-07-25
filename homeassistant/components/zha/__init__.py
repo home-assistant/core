@@ -99,7 +99,7 @@ def _clean_serial_port_path(path: str) -> str:
     return path
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
@@ -107,14 +107,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
     # This will be removed in 2023.11.0
-    path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    path = entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
     cleaned_path = _clean_serial_port_path(path)
-    data = copy.deepcopy(dict(config_entry.data))
+    data = copy.deepcopy(dict(entry.data))
 
     if path != cleaned_path:
         _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
         data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(entry, data=data)
 
     zha_data = hass.data.setdefault(DATA_ZHA, {})
     config = zha_data.get(DATA_ZHA_CONFIG, {})
@@ -134,12 +134,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     else:
         _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
-    zha_gateway = ZHAGateway(hass, config, config_entry)
+    zha_gateway = ZHAGateway(hass, config, entry)
     await zha_gateway.async_initialize()
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.coordinator_ieee))},
         identifiers={(DOMAIN, str(zha_gateway.coordinator_ieee))},
         name="Zigbee Coordinator",
@@ -159,12 +159,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     await zha_gateway.async_initialize_devices_and_entities()
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA].pop(DATA_ZHA_GATEWAY)
     await zha_gateway.shutdown()
@@ -175,7 +175,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     # our components don't have unload methods so no need to look at return values
     await asyncio.gather(
         *(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+            hass.config_entries.async_forward_entry_unload(entry, platform)
             for platform in PLATFORMS
         )
     )
@@ -185,31 +185,31 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if config_entry.version == 1:
+    if entry.version == 1:
         data = {
-            CONF_RADIO_TYPE: config_entry.data[CONF_RADIO_TYPE],
-            CONF_DEVICE: {CONF_DEVICE_PATH: config_entry.data[CONF_USB_PATH]},
+            CONF_RADIO_TYPE: entry.data[CONF_RADIO_TYPE],
+            CONF_DEVICE: {CONF_DEVICE_PATH: entry.data[CONF_USB_PATH]},
         }
 
         baudrate = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {}).get(CONF_BAUDRATE)
         if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        entry.version = 2
+        hass.config_entries.async_update_entry(entry, data=data)
 
-    if config_entry.version == 2:
-        data = {**config_entry.data}
+    if entry.version == 2:
+        data = {**entry.data}
 
         if data[CONF_RADIO_TYPE] == "ti_cc":
             data[CONF_RADIO_TYPE] = "znp"
 
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        entry.version = 3
+        hass.config_entries.async_update_entry(entry, data=data)
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.info("Migration to version %s successful", entry.version)
     return True

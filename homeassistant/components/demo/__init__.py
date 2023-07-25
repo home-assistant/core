@@ -184,19 +184,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up demo platforms with config entry
     await hass.config_entries.async_forward_entry_setups(
-        config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
+        entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
     )
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms(
-        config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
+        entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
     )
     return True
 

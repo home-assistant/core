@@ -64,9 +64,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an emulated roku server from a config entry."""
-    config = config_entry.data
+    config = entry.data
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}

@@ -13,7 +13,7 @@ from pylutron_caseta import BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SUGGESTED_AREA, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -110,7 +110,7 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
+                    context={"source": SOURCE_IMPORT},
                     # extract the config keys one-by-one just to be explicit
                     data={
                         CONF_HOST: config[CONF_HOST],
@@ -124,9 +124,7 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-async def _async_migrate_unique_ids(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> None:
+async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate entities since the occupancygroup were not actually unique."""
 
     dev_reg = dr.async_get(hass)
@@ -151,15 +149,13 @@ async def _async_migrate_unique_ids(
     await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a bridge from a config entry."""
-    entry_id = config_entry.entry_id
-    host = config_entry.data[CONF_HOST]
-    keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
-    certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
-    ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
+    entry_id = entry.entry_id
+    host = entry.data[CONF_HOST]
+    keyfile = hass.config.path(entry.data[CONF_KEYFILE])
+    certfile = hass.config.path(entry.data[CONF_CERTFILE])
+    ca_certs = hass.config.path(entry.data[CONF_CA_CERTS])
     bridge = None
 
     try:
@@ -184,14 +180,14 @@ async def async_setup_entry(
             raise ConfigEntryNotReady(f"Cannot connect to {host}")
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
-    await _async_migrate_unique_ids(hass, config_entry)
+    await _async_migrate_unique_ids(hass, entry)
 
     bridge_devices = bridge.get_devices()
     bridge_device = bridge_devices[BRIDGE_DEVICE_ID]
 
-    if not config_entry.unique_id:
+    if not entry.unique_id:
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=serial_to_unique_id(bridge_device["serial"])
+            entry, unique_id=serial_to_unique_id(bridge_device["serial"])
         )
 
     _async_register_bridge_device(hass, entry_id, bridge_device, bridge)
@@ -207,7 +203,7 @@ async def async_setup_entry(
         keypad_data,
     )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -495,9 +491,7 @@ def _async_subscribe_keypad_events(
         )
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the bridge from a config entry."""
     data: LutronCasetaData = hass.data[DOMAIN][entry.entry_id]
     await data.bridge.close()
@@ -604,7 +598,7 @@ def _id_to_identifier(lutron_id: str) -> tuple[str, str]:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove lutron_caseta config entry from a device."""
     data: LutronCasetaData = hass.data[DOMAIN][entry.entry_id]

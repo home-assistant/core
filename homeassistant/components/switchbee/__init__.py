@@ -91,19 +91,19 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if config_entry.version == 1:
+    if entry.version == 1:
         dev_reg = dr.async_get(hass)
         websession = async_get_clientsession(hass, verify_ssl=False)
-        old_unique_id = config_entry.unique_id
+        old_unique_id = entry.unique_id
         assert isinstance(old_unique_id, str)
         api = await get_api_object(
-            config_entry.data[CONF_HOST],
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
+            entry.data[CONF_HOST],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
             websession,
         )
         new_unique_id = api.unique_id
@@ -128,7 +128,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if new_unique_id:
             # Migrate devices
             for device_entry in dr.async_entries_for_config_entry(
-                dev_reg, config_entry.entry_id
+                dev_reg, entry.entry_id
             ):
                 assert isinstance(device_entry, dr.DeviceEntry)
                 for identifier in device_entry.identifiers:
@@ -152,12 +152,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         )
 
             # Migrate entities
-            await er.async_migrate_entries(
-                hass, config_entry.entry_id, update_unique_id
-            )
+            await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-            config_entry.version = 2
+            entry.version = 2
 
-        _LOGGER.info("Migration to version %s successful", config_entry.version)
+        _LOGGER.info("Migration to version %s successful", entry.version)
 
     return True

@@ -28,10 +28,10 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Vesync as config entry."""
-    username = config_entry.data[CONF_USERNAME]
-    password = config_entry.data[CONF_PASSWORD]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
     time_zone = str(hass.config.time_zone)
 
@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         sensors.extend(device_dict[VS_SENSORS])
         platforms.append(Platform.SENSOR)
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_switches and not switches:
             switches.extend(new_switches)
-            hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
+            hass.async_create_task(forward_setup(entry, Platform.SWITCH))
 
         fan_set = set(fan_devs)
         new_fans = list(fan_set.difference(fans))
@@ -106,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_fans and not fans:
             fans.extend(new_fans)
-            hass.async_create_task(forward_setup(config_entry, Platform.FAN))
+            hass.async_create_task(forward_setup(entry, Platform.FAN))
 
         light_set = set(light_devs)
         new_lights = list(light_set.difference(lights))
@@ -116,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_lights and not lights:
             lights.extend(new_lights)
-            hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
+            hass.async_create_task(forward_setup(entry, Platform.LIGHT))
 
         sensor_set = set(sensor_devs)
         new_sensors = list(sensor_set.difference(sensors))
@@ -126,7 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_sensors and not sensors:
             sensors.extend(new_sensors)
-            hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
+            hass.async_create_task(forward_setup(entry, Platform.SENSOR))
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery

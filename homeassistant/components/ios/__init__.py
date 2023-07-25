@@ -4,8 +4,8 @@ from http import HTTPStatus
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -273,16 +273,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if conf is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+                DOMAIN, context={"source": SOURCE_IMPORT}
             )
         )
 
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an iOS entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

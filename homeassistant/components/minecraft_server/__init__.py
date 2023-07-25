@@ -45,15 +45,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Minecraft Server config entry."""
-    unique_id = config_entry.unique_id
+    unique_id = entry.unique_id
     server = hass.data[DOMAIN][unique_id]
 
     # Unload platforms.
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Clean up.
     server.stop_periodic_update()

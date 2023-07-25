@@ -13,45 +13,45 @@ from .errors import AuthenticationRequired, CannotConnect
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Axis integration."""
     hass.data.setdefault(AXIS_DOMAIN, {})
 
     try:
-        api = await get_axis_device(hass, config_entry.data)
+        api = await get_axis_device(hass, entry.data)
     except CannotConnect as err:
         raise ConfigEntryNotReady from err
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    device = AxisNetworkDevice(hass, config_entry, api)
-    hass.data[AXIS_DOMAIN][config_entry.entry_id] = device
+    device = AxisNetworkDevice(hass, entry, api)
+    hass.data[AXIS_DOMAIN][entry.entry_id] = device
     await device.async_update_device_registry()
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     device.async_setup_events()
 
-    config_entry.add_update_listener(device.async_new_address_callback)
-    config_entry.async_on_unload(
+    entry.add_update_listener(device.async_new_address_callback)
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
     )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Axis device config entry."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
+    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN].pop(entry.entry_id)
     return await device.async_reset()
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if config_entry.version != 3:
+    if entry.version != 3:
         # Home Assistant 2023.2
-        config_entry.version = 3
+        entry.version = 3
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.info("Migration to version %s successful", entry.version)
 
     return True

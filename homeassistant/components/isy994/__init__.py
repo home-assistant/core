@@ -10,7 +10,7 @@ from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParse
 from pyisy.constants import CONFIG_NETWORKING, CONFIG_PORTAL
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -54,9 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the ISY 994 integration."""
     hass.data.setdefault(DOMAIN, {})
     isy_data = hass.data[DOMAIN][entry.entry_id] = IsyData()
@@ -176,16 +174,14 @@ async def async_setup_entry(
     return True
 
 
-async def _async_update_listener(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
 @callback
 def _async_get_or_create_isy_device_in_registry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, isy: ISY
+    hass: HomeAssistant, entry: ConfigEntry, isy: ISY
 ) -> None:
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -219,9 +215,7 @@ def _create_service_device_info(isy: ISY, name: str, unique_id: str) -> DeviceIn
     )
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -241,9 +235,7 @@ async def async_unload_entry(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    device_entry: dr.DeviceEntry,
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove ISY config entry from a device."""
     isy_data = hass.data[DOMAIN][config_entry.entry_id]

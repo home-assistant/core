@@ -47,21 +47,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
+    router: KeeneticRouter = hass.data[DOMAIN][entry.entry_id][ROUTER]
 
     await router.async_teardown()
 
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    hass.data[DOMAIN].pop(entry.entry_id)
 
-    new_tracked_interfaces: set[str] = set(config_entry.options[CONF_INTERFACES])
+    new_tracked_interfaces: set[str] = set(entry.options[CONF_INTERFACES])
 
     if router.tracked_interfaces - new_tracked_interfaces:
         _LOGGER.debug(
@@ -77,7 +75,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         }
         for entity_entry in list(ent_reg.entities.values()):
             if (
-                entity_entry.config_entry_id == config_entry.entry_id
+                entity_entry.config_entry_id == entry.entry_id
                 and entity_entry.domain == Platform.DEVICE_TRACKER
             ):
                 mac = entity_entry.unique_id.partition("_")[0]
@@ -88,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
                     if entity_entry.device_id:
                         dev_reg.async_update_device(
                             entity_entry.device_id,
-                            remove_config_entry_id=config_entry.entry_id,
+                            remove_config_entry_id=entry.entry_id,
                         )
 
         _LOGGER.debug("Finished cleaning device_tracker entities")

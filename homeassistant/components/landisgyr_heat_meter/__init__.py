@@ -43,15 +43,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug("Migrating from version %s", entry.version)
 
     # Removing domain name and config entry id from entity unique id's, replacing it with device number
-    if config_entry.version == 1:
-        config_entry.version = 2
+    if entry.version == 1:
+        entry.version = 2
 
-        device_number = config_entry.data["device_number"]
+        device_number = entry.data["device_number"]
 
         @callback
         def update_entity_unique_id(entity_entry):
@@ -64,10 +64,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     )
                 }
 
-        await async_migrate_entries(
-            hass, config_entry.entry_id, update_entity_unique_id
-        )
+        await async_migrate_entries(hass, entry.entry_id, update_entity_unique_id)
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.info("Migration to version %s successful", entry.version)
 
     return True

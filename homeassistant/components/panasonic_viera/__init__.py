@@ -71,11 +71,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Panasonic Viera from a config entry."""
     panasonic_viera_data = hass.data.setdefault(DOMAIN, {})
 
-    config = config_entry.data
+    config = entry.data
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
@@ -91,12 +91,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     remote = Remote(hass, host, port, on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
-    panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
+    panasonic_viera_data[entry.entry_id] = {ATTR_REMOTE: remote}
 
     # Add device_info to older config entries
     if ATTR_DEVICE_INFO not in config or config[ATTR_DEVICE_INFO] is None:
         device_info = await remote.async_get_device_info()
-        unique_id = config_entry.unique_id
+        unique_id = entry.unique_id
         if device_info is None:
             _LOGGER.error(
                 "Couldn't gather device info; Please restart Home Assistant with your"
@@ -105,23 +105,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         else:
             unique_id = device_info[ATTR_UDN]
         hass.config_entries.async_update_entry(
-            config_entry,
+            entry,
             unique_id=unique_id,
             data={**config, ATTR_DEVICE_INFO: device_info},
         )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

@@ -48,19 +48,19 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initialize the sharkiq platform via config entry."""
-    if CONF_REGION not in config_entry.data:
+    if CONF_REGION not in entry.data:
         hass.config_entries.async_update_entry(
-            config_entry,
-            data={**config_entry.data, CONF_REGION: SHARKIQ_REGION_DEFAULT},
+            entry,
+            data={**entry.data, CONF_REGION: SHARKIQ_REGION_DEFAULT},
         )
 
     ayla_api = get_ayla_api(
-        username=config_entry.data[CONF_USERNAME],
-        password=config_entry.data[CONF_PASSWORD],
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
-        europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
+        europe=(entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
     try:
@@ -72,14 +72,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     shark_vacs = await ayla_api.async_get_devices(False)
     device_names = ", ".join(d.name for d in shark_vacs)
     LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
-    coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
+    coordinator = SharkIqUpdateCoordinator(hass, entry, ayla_api, shark_vacs)
 
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -99,15 +99,13 @@ async def async_update_options(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        domain_data = hass.data[DOMAIN][config_entry.entry_id]
+        domain_data = hass.data[DOMAIN][entry.entry_id]
         with suppress(SharkIqAuthError):
             await async_disconnect_or_timeout(coordinator=domain_data)
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

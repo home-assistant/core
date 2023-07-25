@@ -17,11 +17,11 @@ DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.CAMERA]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Agent component."""
     hass.data.setdefault(AGENT_DOMAIN, {})
 
-    server_origin = config_entry.data[SERVER_URL]
+    server_origin = entry.data[SERVER_URL]
 
     agent_client = Agent(server_origin, async_get_clientsession(hass))
     try:
@@ -35,12 +35,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await agent_client.get_devices()
 
-    hass.data[AGENT_DOMAIN][config_entry.entry_id] = {CONNECTION: agent_client}
+    hass.data[AGENT_DOMAIN][entry.entry_id] = {CONNECTION: agent_client}
 
     device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=entry.entry_id,
         identifiers={(AGENT_DOMAIN, agent_client.unique)},
         manufacturer="iSpyConnect",
         name=f"Agent {agent_client.name}",
@@ -48,20 +48,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         sw_version=agent_client.version,
     )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    await hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION].close()
+    await hass.data[AGENT_DOMAIN][entry.entry_id][CONNECTION].close()
 
     if unload_ok:
-        hass.data[AGENT_DOMAIN].pop(config_entry.entry_id)
+        hass.data[AGENT_DOMAIN].pop(entry.entry_id)
 
     return unload_ok

@@ -163,13 +163,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DATA_UPCLOUD].coordinators.pop(config_entry.data[CONF_USERNAME])
+    hass.data[DATA_UPCLOUD].coordinators.pop(entry.data[CONF_USERNAME])
 
     return unload_ok
 

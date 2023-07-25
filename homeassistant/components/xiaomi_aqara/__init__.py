@@ -214,23 +214,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if config_entry.data[CONF_KEY] is not None:
+    if entry.data[CONF_KEY] is not None:
         platforms = GATEWAY_PLATFORMS
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, platforms
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
-        hass.data[DOMAIN][GATEWAYS_KEY].pop(config_entry.entry_id)
+        hass.data[DOMAIN][GATEWAYS_KEY].pop(entry.entry_id)
 
     loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
+        loaded_entry
+        for loaded_entry in hass.config_entries.async_entries(DOMAIN)
+        if loaded_entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
         # No gateways left, stop Xiaomi socket

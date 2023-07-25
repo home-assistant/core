@@ -7,7 +7,7 @@ import logging
 
 import pypck
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_ID,
@@ -62,40 +62,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
+                context={"source": SOURCE_IMPORT},
                 data=config_entry_data,
             )
         )
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    if config_entry.entry_id in hass.data[DOMAIN]:
+    if entry.entry_id in hass.data[DOMAIN]:
         return False
 
     settings = {
-        "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
-        "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
+        "SK_NUM_TRIES": entry.data[CONF_SK_NUM_TRIES],
+        "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[entry.data[CONF_DIM_MODE]],
     }
 
     # connect to PCHK
     lcn_connection = pypck.connection.PchkConnectionManager(
-        config_entry.data[CONF_IP_ADDRESS],
-        config_entry.data[CONF_PORT],
-        config_entry.data[CONF_USERNAME],
-        config_entry.data[CONF_PASSWORD],
+        entry.data[CONF_IP_ADDRESS],
+        entry.data[CONF_PORT],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
         settings=settings,
-        connection_id=config_entry.entry_id,
+        connection_id=entry.entry_id,
     )
     try:
         # establish connection to PCHK server
         await lcn_connection.async_connect(timeout=15)
     except pypck.connection.PchkAuthenticationError:
-        _LOGGER.warning('Authentication on PCHK "%s" failed', config_entry.title)
+        _LOGGER.warning('Authentication on PCHK "%s" failed', entry.title)
         return False
     except pypck.connection.PchkLicenseError:
         _LOGGER.warning(
@@ -103,32 +101,30 @@ async def async_setup_entry(
                 'Maximum number of connections on PCHK "%s" was '
                 "reached. An additional license key is required"
             ),
-            config_entry.title,
+            entry.title,
         )
         return False
     except TimeoutError:
-        _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
+        _LOGGER.warning('Connection to PCHK "%s" failed', entry.title)
         return False
 
-    _LOGGER.debug('LCN connected to "%s"', config_entry.title)
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    _LOGGER.debug('LCN connected to "%s"', entry.title)
+    hass.data[DOMAIN][entry.entry_id] = {
         CONNECTION: lcn_connection,
     }
     # Update config_entry with LCN device serials
-    await async_update_config_entry(hass, config_entry)
+    await async_update_config_entry(hass, entry)
 
     # register/update devices for host, modules and groups in device registry
-    register_lcn_host_device(hass, config_entry)
-    register_lcn_address_devices(hass, config_entry)
+    register_lcn_host_device(hass, entry)
+    register_lcn_address_devices(hass, entry)
 
     # forward config_entry to components
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # register for LCN bus messages
     device_registry = dr.async_get(hass)
-    input_received = partial(
-        async_host_input_received, hass, config_entry, device_registry
-    )
+    input_received = partial(async_host_input_received, hass, entry, device_registry)
     lcn_connection.register_for_inputs(input_received)
 
     # register service calls
@@ -141,17 +137,13 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
-        host = hass.data[DOMAIN].pop(config_entry.entry_id)
+    if unload_ok and entry.entry_id in hass.data[DOMAIN]:
+        host = hass.data[DOMAIN].pop(entry.entry_id)
         await host[CONNECTION].async_close()
 
     # unregister service calls
@@ -164,7 +156,7 @@ async def async_unload_entry(
 
 def async_host_input_received(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    entry: ConfigEntry,
     device_registry: dr.DeviceRegistry,
     inp: pypck.inputs.Input,
 ) -> None:
@@ -172,14 +164,14 @@ def async_host_input_received(
     if not isinstance(inp, pypck.inputs.ModInput):
         return
 
-    lcn_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
     logical_address = lcn_connection.physical_to_logical(inp.physical_source_addr)
     address = (
         logical_address.seg_id,
         logical_address.addr_id,
         logical_address.is_group,
     )
-    identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
+    identifiers = {(DOMAIN, generate_unique_id(entry.entry_id, address))}
     device = device_registry.async_get_device(identifiers=identifiers)
     if device is None:
         return

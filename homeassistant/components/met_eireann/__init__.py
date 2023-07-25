@@ -20,18 +20,18 @@ UPDATE_INTERVAL = timedelta(minutes=60)
 PLATFORMS = [Platform.WEATHER]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Met Éireann as config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     raw_weather_data = meteireann.WeatherData(
         async_get_clientsession(hass),
-        latitude=config_entry.data[CONF_LATITUDE],
-        longitude=config_entry.data[CONF_LONGITUDE],
-        altitude=config_entry.data[CONF_ELEVATION],
+        latitude=entry.data[CONF_LATITUDE],
+        longitude=entry.data[CONF_LONGITUDE],
+        altitude=entry.data[CONF_ELEVATION],
     )
 
-    weather_data = MetEireannWeatherData(hass, config_entry.data, raw_weather_data)
+    weather_data = MetEireannWeatherData(hass, entry.data, raw_weather_data)
 
     async def _async_update_data():
         """Fetch data from Met Éireann."""
@@ -49,19 +49,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     await coordinator.async_refresh()
 
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

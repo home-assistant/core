@@ -23,12 +23,12 @@ PLATFORMS = [Platform.CAMERA, Platform.SENSOR, Platform.WEATHER]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EC as config entry."""
-    lat = config_entry.data.get(CONF_LATITUDE)
-    lon = config_entry.data.get(CONF_LONGITUDE)
-    station = config_entry.data.get(CONF_STATION)
-    lang = config_entry.data.get(CONF_LANGUAGE, "English")
+    lat = entry.data.get(CONF_LATITUDE)
+    lon = entry.data.get(CONF_LONGITUDE)
+    station = entry.data.get(CONF_STATION)
+    lang = entry.data.get(CONF_LANGUAGE, "English")
 
     coordinators = {}
     errors = 0
@@ -71,20 +71,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = coordinators
+    hass.data[DOMAIN][entry.entry_id] = coordinators
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

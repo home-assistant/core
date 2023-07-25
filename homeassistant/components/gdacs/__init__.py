@@ -81,20 +81,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the GDACS component as config entry."""
     hass.data.setdefault(DOMAIN, {})
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
 
-    radius = config_entry.data[CONF_RADIUS]
+    radius = entry.data[CONF_RADIUS]
     if hass.config.units is US_CUSTOMARY_SYSTEM:
         radius = DistanceConverter.convert(
             radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
         )
     # Create feed entity manager for all platforms.
-    manager = GdacsFeedEntityManager(hass, config_entry, radius)
-    feeds[config_entry.entry_id] = manager
-    _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
+    manager = GdacsFeedEntityManager(hass, entry, radius)
+    feeds[entry.entry_id] = manager
+    _LOGGER.debug("Feed entity manager added for %s", entry.entry_id)
     await manager.async_init()
     return True
 

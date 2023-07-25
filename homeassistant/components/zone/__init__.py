@@ -8,7 +8,7 @@ from typing import Any, Self, cast
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_LATITUDE,
@@ -290,26 +290,22 @@ def _home_conf(hass: HomeAssistant) -> dict:
     }
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up zone as config entry."""
     storage_collection = cast(ZoneStorageCollection, hass.data[DOMAIN])
 
-    data = dict(config_entry.data)
+    data = dict(entry.data)
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
     data.setdefault(CONF_RADIUS, DEFAULT_RADIUS)
 
     await storage_collection.async_create_item(data)
 
-    hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
+    hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Will be called once we remove it."""
     return True
 

@@ -152,20 +152,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the Legrand Home+ Control config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         # Unsubscribe the config_entry signal dispatcher connections
-        dispatcher_removers = hass.data[DOMAIN][config_entry.entry_id].pop(
+        dispatcher_removers = hass.data[DOMAIN][entry.entry_id].pop(
             "dispatcher_removers"
         )
         for remover in dispatcher_removers:
             remover()
 
         # And finally unload the domain config entry data
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

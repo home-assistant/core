@@ -6,7 +6,6 @@ from typing import Final
 from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi
 
-from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -19,7 +18,7 @@ from .coordinator import LivisiDataUpdateCoordinator
 PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Livisi Smart Home from a config entry."""
     web_session = aiohttp_client.async_get_clientsession(hass)
     aiolivisi = AioLivisi(web_session)

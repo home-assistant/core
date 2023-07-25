@@ -12,12 +12,12 @@ from .renault_hub import RenaultHub
 from .services import SERVICE_AC_START, setup_services, unload_services
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    renault_hub = RenaultHub(hass, config_entry.data[CONF_LOCALE])
+    renault_hub = RenaultHub(hass, entry.data[CONF_LOCALE])
     try:
         login_success = await renault_hub.attempt_login(
-            config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
+            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
     except (aiohttp.ClientConnectionError, GigyaException) as exc:
         raise ConfigEntryNotReady() from exc
@@ -26,11 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryAuthFailed()
 
     hass.data.setdefault(DOMAIN, {})
-    await renault_hub.async_initialise(config_entry)
+    await renault_hub.async_initialise(entry)
 
-    hass.data[DOMAIN][config_entry.entry_id] = renault_hub
+    hass.data[DOMAIN][entry.entry_id] = renault_hub
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if not hass.services.has_service(DOMAIN, SERVICE_AC_START):
         setup_services(hass)
@@ -38,14 +38,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             unload_services(hass)
 

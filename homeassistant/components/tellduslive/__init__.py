@@ -116,14 +116,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if not hass.data[NEW_CLIENT_TASK].done():
         hass.data[NEW_CLIENT_TASK].cancel()
     interval_tracker = hass.data.pop(INTERVAL_TRACKER)
     interval_tracker()
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_IS_SETUP
+        entry, CONFIG_ENTRY_IS_SETUP
     )
     del hass.data[DOMAIN]
     del hass.data[DATA_CONFIG_ENTRY_LOCK]

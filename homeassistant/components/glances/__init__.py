@@ -17,15 +17,15 @@ PLATFORMS = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Glances from config entry."""
-    api = get_api(hass, dict(config_entry.data))
-    coordinator = GlancesDataUpdateCoordinator(hass, config_entry, api)
+    api = get_api(hass, dict(entry.data))
+    coordinator = GlancesDataUpdateCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

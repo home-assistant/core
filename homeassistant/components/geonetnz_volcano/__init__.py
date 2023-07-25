@@ -83,21 +83,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the GeoNet NZ Volcano component as config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(FEED, {})
 
-    radius = config_entry.data[CONF_RADIUS]
-    unit_system = config_entry.data[CONF_UNIT_SYSTEM]
+    radius = entry.data[CONF_RADIUS]
+    unit_system = entry.data[CONF_UNIT_SYSTEM]
     if unit_system == IMPERIAL_UNITS:
         radius = DistanceConverter.convert(
             radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
         )
     # Create feed entity manager for all platforms.
-    manager = GeonetnzVolcanoFeedEntityManager(hass, config_entry, radius, unit_system)
-    hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
-    _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
+    manager = GeonetnzVolcanoFeedEntityManager(hass, entry, radius, unit_system)
+    hass.data[DOMAIN][FEED][entry.entry_id] = manager
+    _LOGGER.debug("Feed entity manager added for %s", entry.entry_id)
     await manager.async_init()
     return True
 

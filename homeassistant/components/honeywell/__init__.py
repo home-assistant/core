@@ -43,12 +43,12 @@ def _async_migrate_data_to_options(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Honeywell thermostat."""
-    _async_migrate_data_to_options(hass, config_entry)
+    _async_migrate_data_to_options(hass, entry)
 
-    username = config_entry.data[CONF_USERNAME]
-    password = config_entry.data[CONF_PASSWORD]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
     client = aiosomecomfort.AIOSomeComfort(
         username, password, session=async_get_clientsession(hass)
@@ -70,8 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             "Failed to initialize the Honeywell client: Connection error"
         ) from ex
 
-    loc_id = config_entry.data.get(CONF_LOC_ID)
-    dev_id = config_entry.data.get(CONF_DEV_ID)
+    loc_id = entry.data.get(CONF_LOC_ID)
+    dev_id = entry.data.get(CONF_DEV_ID)
 
     devices = {}
     for location in client.locations_by_id.values():
@@ -84,26 +84,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.debug("No devices found")
         return False
 
-    data = HoneywellData(config_entry.entry_id, client, devices)
+    data = HoneywellData(entry.entry_id, client, devices)
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = data
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    hass.data[DOMAIN][entry.entry_id] = data
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
 
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config and platforms."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data.pop(DOMAIN)
     return unload_ok

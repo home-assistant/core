@@ -11,31 +11,29 @@ CONF_HUBS = "hubs"
 PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rollease Acmeda Automate hub from a config entry."""
-    hub = PulseHub(hass, config_entry)
+    hub = PulseHub(hass, entry)
 
     if not await hub.async_setup():
         return False
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hub = hass.data[DOMAIN][config_entry.entry_id]
+    hub = hass.data[DOMAIN][entry.entry_id]
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if not await hub.async_reset():
         return False
 
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

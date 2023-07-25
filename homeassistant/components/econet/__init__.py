@@ -35,11 +35,11 @@ PUSH_UPDATE = "econet.push_update"
 INTERVAL = timedelta(minutes=60)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EcoNet as config entry."""
 
-    email = config_entry.data[CONF_EMAIL]
-    password = config_entry.data[CONF_PASSWORD]
+    email = entry.data[CONF_EMAIL]
+    password = entry.data[CONF_PASSWORD]
 
     try:
         api = await EcoNetApiInterface.login(email, password=password)
@@ -57,10 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
     hass.data.setdefault(DOMAIN, {API_CLIENT: {}, EQUIPMENT: {}})
-    hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
-    hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
+    hass.data[DOMAIN][API_CLIENT][entry.entry_id] = api
+    hass.data[DOMAIN][EQUIPMENT][entry.entry_id] = equipment
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     api.subscribe()
 
@@ -83,8 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Fetch the latest changes from the API."""
         await api.refresh_equipment()
 
-    config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
-    config_entry.async_on_unload(
+    entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
+    entry.async_on_unload(
         async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
     )
 

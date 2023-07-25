@@ -23,11 +23,11 @@ PLATFORMS = [Platform.WEATHER, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IPMA station as config entry."""
 
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
+    latitude = entry.data[CONF_LATITUDE]
+    longitude = entry.data[CONF_LONGITUDE]
 
     api = IPMA_API(async_get_clientsession(hass))
 
@@ -49,9 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {DATA_API: api, DATA_LOCATION: location}
+    hass.data[DOMAIN][entry.entry_id] = {DATA_API: api, DATA_LOCATION: location}
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

@@ -16,13 +16,13 @@ from .coordinator import SpeedTestDataCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Speedtest.net component."""
     try:
         api = await hass.async_add_executor_job(
             partial(speedtest.Speedtest, secure=True)
         )
-        coordinator = SpeedTestDataCoordinator(hass, config_entry, api)
+        coordinator = SpeedTestDataCoordinator(hass, entry, api)
         await hass.async_add_executor_job(coordinator.update_servers)
     except speedtest.SpeedtestException as err:
         raise ConfigEntryNotReady from err
@@ -41,15 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data[DOMAIN] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload SpeedTest Entry from config_entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data.pop(DOMAIN)
     return unload_ok
