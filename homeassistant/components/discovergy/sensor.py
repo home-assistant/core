@@ -1,5 +1,6 @@
 """Discovergy sensor entity."""
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from pydiscovergy.models import Meter
 
@@ -11,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -152,7 +154,7 @@ async def async_setup_entry(
     data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
     meters: list[Meter] = data.meters  # always returns a list
 
-    entities: list[DiscovergySensor] = []
+    entities: list[DiscovergyBaseSensor] = []
     for meter in meters:
         sensors = None
         if meter.measurement_type == "ELECTRICITY":
@@ -160,27 +162,78 @@ async def async_setup_entry(
         elif meter.measurement_type == "GAS":
             sensors = GAS_SENSORS
 
+        coordinator: DiscovergyUpdateCoordinator = data.coordinators[meter.meter_id]
+
         if sensors is not None:
             for description in sensors:
                 # check if this meter has this data, then add this sensor
                 for key in {description.key, *description.alternative_keys}:
-                    coordinator: DiscovergyUpdateCoordinator = data.coordinators[
-                        meter.meter_id
-                    ]
                     if key in coordinator.data.values:
                         entities.append(
                             DiscovergySensor(key, description, meter, coordinator)
                         )
 
+        if coordinator.data.time:
+            entities.append(DiscovergyLastReadingTimeSensor(meter, coordinator))
+
     async_add_entities(entities, False)
 
 
-class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEntity):
+class DiscovergyBaseSensor(
+    CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEntity
+):
+    """Represents a discovergy smart meter base sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        meter: Meter,
+        coordinator: DiscovergyUpdateCoordinator,
+    ) -> None:
+        """Initialize the base sensor."""
+        super().__init__(coordinator)
+
+        self.meter = meter
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, meter.meter_id)},
+            name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
+            model=f"{meter.type} {meter.full_serial_number}",
+            manufacturer=MANUFACTURER,
+        )
+
+
+class DiscovergyLastReadingTimeSensor(DiscovergyBaseSensor):
+    """Represents a discovergy smart meter last reading time sensor."""
+
+    def __init__(
+        self,
+        meter: Meter,
+        coordinator: DiscovergyUpdateCoordinator,
+    ) -> None:
+        """Initialize the last reading time sensor."""
+        super().__init__(meter, coordinator)
+
+        self._attr_unique_id = f"{meter.full_serial_number}-last_reading"
+        self.entity_description = SensorEntityDescription(
+            key="last_reading",
+            translation_key="last_reading",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        )
+
+    @property
+    def native_value(self) -> datetime:
+        """Return the sensor state."""
+        return self.coordinator.data.time_with_timezone
+
+
+class DiscovergySensor(DiscovergyBaseSensor):
     """Represents a discovergy smart meter sensor."""
 
     entity_description: DiscovergySensorEntityDescription
     data_key: str
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -190,18 +243,11 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
         coordinator: DiscovergyUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(meter, coordinator)
 
         self.data_key = data_key
-
         self.entity_description = description
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, meter.meter_id)},
-            name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
-            model=f"{meter.type} {meter.full_serial_number}",
-            manufacturer=MANUFACTURER,
-        )
 
     @property
     def native_value(self) -> StateType:
