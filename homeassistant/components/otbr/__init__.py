@@ -24,6 +24,9 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""
     websocket_api.async_setup(hass)
+    if len(config_entries := hass.config_entries.async_entries(DOMAIN)):
+        for config_entry in config_entries[1:]:
+            await hass.config_entries.async_remove(config_entry.entry_id)
     return True
 
 

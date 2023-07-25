@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, cast
 import aiohttp
 import async_timeout
 
+from homeassistant.components import event
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -91,8 +92,10 @@ async def async_enable_proactive_mode(hass, smart_home_config):
             return
 
         if should_doorbell:
-            if new_state.state == STATE_ON and (
-                old_state is None or old_state.state != STATE_ON
+            if (
+                new_state.domain == event.DOMAIN
+                or new_state.state == STATE_ON
+                and (old_state is None or old_state.state != STATE_ON)
             ):
                 await async_send_doorbell_event_message(
                     hass, smart_home_config, alexa_changed_entity

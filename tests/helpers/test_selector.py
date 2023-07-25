@@ -581,6 +581,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
         ({}, ("abc123",), (None,)),
         ({"multiline": True}, (), ()),
         ({"multiline": False, "type": "email"}, (), ()),
+        ({"prefix": "before", "suffix": "after"}, (), ()),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -743,6 +744,11 @@ def test_icon_selector_schema(schema, valid_selections, invalid_selections) -> N
     (
         (
             {},
+            ("abc",),
+            (None,),
+        ),
+        (
+            {"include_default": True},
             ("abc",),
             (None,),
         ),
@@ -1017,3 +1023,29 @@ def test_conversation_agent_selector_schema(
 ) -> None:
     """Test conversation agent selector."""
     _test_selector("conversation_agent", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            (
+                [
+                    {
+                        "condition": "numeric_state",
+                        "entity_id": ["sensor.temperature"],
+                        "below": 20,
+                    }
+                ],
+                [],
+            ),
+            ("abc"),
+        ),
+    ),
+)
+def test_condition_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test condition sequence selector."""
+    _test_selector("condition", schema, valid_selections, invalid_selections)

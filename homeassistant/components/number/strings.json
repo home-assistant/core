@@ -91,6 +91,9 @@
     "ozone": {
       "name": "[%key:component::sensor::entity_component::ozone::name%]"
     },
+    "ph": {
+      "name": "[%key:component::sensor::entity_component::ph::name%]"
+    },
     "pm1": {
       "name": "[%key:component::sensor::entity_component::pm1::name%]"
     },
@@ -153,6 +156,18 @@
     },
     "wind_speed": {
       "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
+    }
+  },
+  "services": {
+    "set_value": {
+      "name": "Set",
+      "description": "Sets the value of a number.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The target value to set."
+        }
+      }
     }
   }
 }

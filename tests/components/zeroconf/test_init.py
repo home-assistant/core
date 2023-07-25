@@ -12,7 +12,6 @@ from zeroconf import (
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import zeroconf
-from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE, CONF_IPV6
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
@@ -231,82 +230,10 @@ async def test_setup_with_overly_long_url_and_name(
     assert "German Umlaut" in caplog.text
 
 
-async def test_setup_with_default_interface(
-    hass: HomeAssistant, mock_async_zeroconf: None
+async def test_setup_with_defaults(
+    hass: HomeAssistant, mock_zeroconf: None, mock_async_zeroconf: None
 ) -> None:
     """Test default interface config."""
-    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
-        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
-    ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_service_info_mock,
-    ):
-        assert await async_setup_component(
-            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: True}}
-        )
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    assert mock_async_zeroconf.called_with(interface_choice=InterfaceChoice.Default)
-
-
-async def test_setup_without_default_interface(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
-    """Test without default interface config."""
-    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
-        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
-    ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_service_info_mock,
-    ):
-        assert await async_setup_component(
-            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: False}}
-        )
-
-    assert mock_async_zeroconf.called_with()
-
-
-async def test_setup_without_ipv6(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
-    """Test without ipv6."""
-    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
-        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
-    ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_service_info_mock,
-    ):
-        assert await async_setup_component(
-            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: False}}
-        )
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    assert mock_async_zeroconf.called_with(ip_version=IPVersion.V4Only)
-
-
-async def test_setup_with_ipv6(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
-    """Test without ipv6."""
-    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
-        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
-    ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_service_info_mock,
-    ):
-        assert await async_setup_component(
-            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: True}}
-        )
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    assert mock_async_zeroconf.called_with()
-
-
-async def test_setup_with_ipv6_default(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
-    """Test without ipv6 as default."""
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
@@ -317,7 +244,9 @@ async def test_setup_with_ipv6_default(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert mock_async_zeroconf.called_with()
+    mock_zeroconf.assert_called_with(
+        interfaces=InterfaceChoice.Default, ip_version=IPVersion.V4Only
+    )
 
 
 async def test_zeroconf_match_macaddress(
