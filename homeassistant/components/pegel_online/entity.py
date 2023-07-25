@@ -1,16 +1,11 @@
 """The PEGELONLINE base entity."""
 from __future__ import annotations
 
-from aiopegelonline import Station
-
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .model import PegelOnlineData
+from .coordinator import PegelOnlineDataUpdateCoordinator
 
 
 class PegelOnlineEntity(CoordinatorEntity):
@@ -19,12 +14,10 @@ class PegelOnlineEntity(CoordinatorEntity):
     _attr_has_entity_name = True
     _attr_available = True
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator[PegelOnlineData], station: Station
-    ) -> None:
+    def __init__(self, coordinator: PegelOnlineDataUpdateCoordinator) -> None:
         """Initialize a PEGELONLINE entity."""
         super().__init__(coordinator)
-        self.station = station
+        self.station = coordinator.station
         self._attr_extra_state_attributes = {}
 
     @property
