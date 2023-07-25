@@ -2,7 +2,8 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aioruckus.const import CONNECT_ERROR_EOF
+from aioruckus.const import CONNECT_ERROR_EOF, LOGIN_ERROR_LOGIN_INCORRECT
+from aioruckus.exceptions import AuthenticationError
 
 from homeassistant.components.ruckus_unleashed import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
@@ -57,6 +58,24 @@ async def test_clients_update_failed(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=60)
     with RuckusAjaxApiPatchContext(
         active_clients=AsyncMock(side_effect=ConnectionError(CONNECT_ERROR_EOF))
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
+        test_client = hass.states.get(TEST_CLIENT_ENTITY_ID)
+        assert test_client.state == STATE_UNAVAILABLE
+
+
+async def test_clients_update_auth_failed(hass: HomeAssistant) -> None:
+    """Test failed update with bad auth."""
+    await init_integration(hass)
+
+    future = utcnow() + timedelta(minutes=60)
+    with RuckusAjaxApiPatchContext(
+        active_clients=AsyncMock(
+            side_effect=AuthenticationError(LOGIN_ERROR_LOGIN_INCORRECT)
+        )
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
