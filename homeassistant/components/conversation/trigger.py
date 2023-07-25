@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from hassil.recognize import PUNCTUATION
+from hassil.recognize import PUNCTUATION, RecognizeResult
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
@@ -49,12 +49,18 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    async def call_action(sentence: str) -> str | None:
+    async def call_action(sentence: str, result: RecognizeResult) -> str | None:
         """Call action with right context."""
         trigger_input: dict[str, Any] = {  # Satisfy type checker
             **trigger_data,
             "platform": DOMAIN,
             "sentence": sentence,
+        }
+
+        # Add wildcard values as extra trigger data
+        trigger_input["wildcards"] = {
+            entity_name: entity.text.strip()
+            for entity_name, entity in result.entities.items()
         }
 
         # Wait for the automation to complete

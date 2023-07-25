@@ -61,6 +61,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         "idx": "0",
         "platform": "conversation",
         "sentence": "Ha ha ha",
+        "wildcards": {},
     }
 
 
@@ -103,6 +104,7 @@ async def test_same_trigger_multiple_sentences(
         "idx": "0",
         "platform": "conversation",
         "sentence": "hello",
+        "wildcards": {},
     }
 
 
@@ -188,3 +190,48 @@ async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
                 },
             ],
         )
+
+
+async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
+    """Test wildcards in trigger sentences."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": [
+                        "play {album} by {artist}",
+                    ],
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"data": "{{ trigger }}"},
+                },
+            }
+        },
+    )
+
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "play the white album by the beatles",
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["data"] == {
+        "alias": None,
+        "id": "0",
+        "idx": "0",
+        "platform": "conversation",
+        "sentence": "play the white album by the beatles",
+        "wildcards": {
+            "album": "the white album",
+            "artist": "the beatles",
+        },
+    }
