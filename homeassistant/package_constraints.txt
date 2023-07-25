@@ -16,14 +16,14 @@ bluetooth-data-tools==1.6.1
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.2
-dbus-fast==1.87.1
-fnv-hash-fast==0.3.1
+dbus-fast==1.87.2
+fnv-hash-fast==0.4.0
 ha-av==10.1.0
 hass-nabucasa==0.69.0
-hassil==1.0.6
+hassil==1.2.0
 home-assistant-bluetooth==1.10.1
 home-assistant-frontend==20230705.1
-home-assistant-intents==2023.6.28
+home-assistant-intents==2023.7.24
 httpx==0.24.1
 ifaddr==0.2.0
 janus==1.0.0
@@ -47,7 +47,7 @@ requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.15
 typing-extensions>=4.7.0,<5.0
-ulid-transform==0.7.2
+ulid-transform==0.8.0
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
@@ -100,7 +100,7 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.7.0
+anyio==3.7.1
 h11==0.14.0
 httpcore==0.17.3
 
