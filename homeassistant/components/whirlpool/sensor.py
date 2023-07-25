@@ -229,7 +229,7 @@ class WasherDryerClass(SensorEntity):
 class WasherDryerTimeClass(RestoreSensor):
     """A timestamp class for the whirlpool/maytag washer account."""
 
-    _attr_should_poll = False
+    _attr_should_poll = True
     _attr_has_entity_name = True
 
     def __init__(
