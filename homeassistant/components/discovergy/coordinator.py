@@ -47,9 +47,7 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
     async def _async_update_data(self) -> Reading:
         """Get last reading for meter."""
         try:
-            return await self.discovergy_client.get_last_reading(
-                self.meter.get_meter_id()
-            )
+            return await self.discovergy_client.meter_last_reading(self.meter.meter_id)
         except AccessTokenExpired as err:
             raise ConfigEntryAuthFailed(
                 f"Auth expired while fetching last reading for meter {self.meter.get_meter_id()}"

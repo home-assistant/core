@@ -3,6 +3,7 @@
 Support for controlling power supply of clients which are powered over Ethernet (POE).
 Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
+Support for controlling WLAN availability.
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
+from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client, ClientBlockRequest
 from aiounifi.models.device import (
@@ -28,6 +30,7 @@ from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
+from aiounifi.models.wlan import Wlan, WlanEnableRequest
 
 from homeassistant.components.switch import (
     DOMAIN,
@@ -54,6 +57,7 @@ from .entity import (
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_wlan_device_info_fn,
 )
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
@@ -135,6 +139,13 @@ async def async_poe_port_control_fn(
     on_state = "auto" if port.raw["poe_caps"] != 8 else "passthrough"
     state = on_state if target else "off"
     await api.request(DeviceSetPoePortModeRequest.create(device, int(index), state))
+
+
+async def async_wlan_control_fn(
+    api: aiounifi.Controller, obj_id: str, target: bool
+) -> None:
+    """Control outlet relay."""
+    await api.request(WlanEnableRequest.create(obj_id, target))
 
 
 @dataclass
@@ -232,6 +243,25 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=lambda controller, obj_id: controller.api.ports[obj_id].port_poe,
         unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-poe-{obj_id.split('_', 1)[1]}",
+    ),
+    UnifiSwitchEntityDescription[Wlans, Wlan](
+        key="WLAN control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        icon="mdi:wifi-check",
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.wlans,
+        available_fn=lambda controller, _: controller.available,
+        control_fn=async_wlan_control_fn,
+        device_info_fn=async_wlan_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        is_on_fn=lambda controller, wlan: wlan.enabled,
+        name_fn=lambda wlan: None,
+        object_fn=lambda api, obj_id: api.wlans[obj_id],
+        supported_fn=lambda controller, obj_id: True,
+        unique_id_fn=lambda controller, obj_id: f"wlan-{obj_id}",
     ),
 )
 
