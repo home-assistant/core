@@ -174,7 +174,7 @@ async def async_setup_entry(
                         )
 
         if coordinator.data.time:
-            entities.append(DiscovergyLastReadingTimeSensor(meter, coordinator))
+            entities.append(DiscovergyLastTransmittedTimeSensor(meter, coordinator))
 
     async_add_entities(entities, False)
 
@@ -203,21 +203,21 @@ class DiscovergyBaseSensor(
         )
 
 
-class DiscovergyLastReadingTimeSensor(DiscovergyBaseSensor):
-    """Represents a discovergy smart meter last reading time sensor."""
+class DiscovergyLastTransmittedTimeSensor(DiscovergyBaseSensor):
+    """Represents a discovergy smart meter last transmitted time sensor."""
 
     def __init__(
         self,
         meter: Meter,
         coordinator: DiscovergyUpdateCoordinator,
     ) -> None:
-        """Initialize the last reading time sensor."""
+        """Initialize the last transmitted time sensor."""
         super().__init__(meter, coordinator)
 
-        self._attr_unique_id = f"{meter.full_serial_number}-last_reading"
+        self._attr_unique_id = f"{meter.full_serial_number}-last_transmitted"
         self.entity_description = SensorEntityDescription(
-            key="last_reading",
-            translation_key="last_reading",
+            key="last_transmitted",
+            translation_key="last_transmitted",
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,

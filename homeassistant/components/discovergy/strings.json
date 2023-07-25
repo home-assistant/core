@@ -61,8 +61,8 @@
       "phase_3_power": {
         "name": "Phase 3 power"
       },
-      "last_reading": {
-        "name": "Last reading"
+      "last_transmitted": {
+        "name": "Last transmitted"
       }
     }
   }
