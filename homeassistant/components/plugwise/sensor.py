@@ -439,7 +439,7 @@ class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
         self,
         coordinator: PlugwiseDataUpdateCoordinator,
         device_id: str,
-        description: SensorEntityDescription,
+        description: PlugwiseSensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator, device_id)
@@ -447,6 +447,6 @@ class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> int | float:
         """Return the value reported by the sensor."""
         return self.device["sensors"][self.entity_description.key]
