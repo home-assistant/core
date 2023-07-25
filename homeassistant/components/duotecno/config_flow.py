@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
@@ -38,10 +37,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                 controller = PyDuotecno()
-                 await controller.connect(
-                     data[CONF_HOST], data[CONF_PORT], data[CONF_PASSWORD], True
-                 )
+                controller = PyDuotecno()
+                await controller.connect(
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    user_input[CONF_PASSWORD],
+                    True,
+                )
             except ConnectionError:
                 errors["base"] = "cannot_connect"
             except InvallidPassword:
@@ -50,7 +52,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=f"{user_input[CONF_HOST]}", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

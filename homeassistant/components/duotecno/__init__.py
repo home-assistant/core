@@ -17,9 +17,7 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up duotecno from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
     controller = PyDuotecno()
-    hass.data[DOMAIN][entry.entry_id] = controller
     try:
         await controller.connect(
             entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_PASSWORD]
@@ -27,7 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except (OSError, InvallidPassword, LoadFailure) as err:
         raise PlatformNotReady from err
-
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = controller
     return True
 
 
