@@ -36,7 +36,7 @@
       "daily_goal": {
         "name": "Daily goal"
       },
-      "minutes_active": {
+      "activity_time": {
         "name": "Activity time"
       },
       "minutes_day_sleep": {
@@ -45,7 +45,7 @@
       "minutes_night_sleep": {
         "name": "Night sleep"
       },
-      "minutes_rest": {
+      "rest_time": {
         "name": "Rest time"
       },
       "tracker_battery_level": {
