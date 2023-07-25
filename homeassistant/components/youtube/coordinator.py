@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import AsyncConfigEntryAuth
 from .const import (
@@ -70,7 +70,8 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 }
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
-        except YouTubeBackendError:
+        except YouTubeBackendError as err:
             if self.last_update_success:
                 LOGGER.warning("Couldn't connect to YouTube")
+            raise UpdateFailed from err
         return res
