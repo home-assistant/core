@@ -25,6 +25,8 @@ from .const import (
 )
 from .entity import YouTubeChannelEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass
 class YouTubeMixin:
