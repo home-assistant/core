@@ -31,5 +31,42 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "energy_production_today": {
+        "name": "Estimated energy production - today"
+      },
+      "energy_production_today_remaining": {
+        "name": "Estimated energy production - remaining today"
+      },
+      "energy_production_tomorrow": {
+        "name": "Estimated energy production - tomorrow"
+      },
+      "power_highest_peak_time_today": {
+        "name": "Highest power peak time - today"
+      },
+      "power_highest_peak_time_tomorrow": {
+        "name": "Highest power peak time - tomorrow"
+      },
+      "power_production_now": {
+        "name": "Estimated power production - now"
+      },
+      "power_production_next_hour": {
+        "name": "Estimated power production - next hour"
+      },
+      "power_production_next_12hours": {
+        "name": "Estimated power production - next 12 hours"
+      },
+      "power_production_next_24hours": {
+        "name": "Estimated power production - next 24 hours"
+      },
+      "energy_current_hour": {
+        "name": "Estimated energy production - this hour"
+      },
+      "energy_next_hour": {
+        "name": "Estimated energy production - next hour"
+      }
+    }
   }
 }

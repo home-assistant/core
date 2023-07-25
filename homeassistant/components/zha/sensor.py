@@ -5,9 +5,8 @@ import enum
 import functools
 import numbers
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 
 from homeassistant.components.climate import HVACAction

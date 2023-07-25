@@ -703,7 +703,7 @@
     },
     "bsblan": {
       "name": "BSB-Lan",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1226,6 +1226,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "duotecno": {
+      "name": "duotecno",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "dwd_weather_warnings": {
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
       "integration_type": "hub",
@@ -1330,6 +1336,12 @@
     },
     "electrasmart": {
       "name": "Electra Smart",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "electric_kiwi": {
+      "name": "Electric Kiwi",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3359,12 +3371,6 @@
         }
       }
     },
-    "miflora": {
-      "name": "Mi Flora",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "mijndomein_energie": {
       "name": "Mijndomein Energie",
       "integration_type": "virtual",
@@ -3393,12 +3399,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "mitemp_bt": {
-      "name": "Xiaomi Mijia BLE Temperature and Humidity Sensor",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "mjpeg": {
       "name": "MJPEG IP Camera",
@@ -3982,7 +3982,7 @@
     "opensky": {
       "name": "OpenSky Network",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "opentherm_gw": {
@@ -5920,16 +5920,9 @@
     },
     "u_tec": {
       "name": "U-tec",
-      "integrations": {
-        "ultraloq": {
-          "integration_type": "virtual",
-          "config_flow": false,
-          "iot_standards": [
-            "zwave"
-          ],
-          "name": "Ultraloq"
-        }
-      }
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "ubiquiti": {
       "name": "Ubiquiti",
@@ -6089,7 +6082,6 @@
       "iot_class": "local_polling"
     },
     "version": {
-      "name": "Version",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -6705,6 +6697,7 @@
     "tod",
     "uptime",
     "utility_meter",
+    "version",
     "waze_travel_time",
     "workday",
     "zodiac"

@@ -18,11 +18,14 @@ from aiounifi.models.event import Event, EventKey
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import ATTR_MANUFACTURER
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 if TYPE_CHECKING:
     from .controller import UniFiController
@@ -55,6 +58,19 @@ def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
         name=device.name or None,
         sw_version=device.version,
         hw_version=str(device.board_revision),
+    )
+
+
+@callback
+def async_wlan_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for WLAN."""
+    wlan = api.wlans[obj_id]
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, wlan.id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi WLAN",
+        name=wlan.name,
     )
 
 

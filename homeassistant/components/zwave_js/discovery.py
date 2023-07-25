@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any, cast
 
 from awesomeversion import AwesomeVersion
@@ -47,7 +48,6 @@ from zwave_js_server.model.value import (
     Value as ZwaveValue,
 )
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
