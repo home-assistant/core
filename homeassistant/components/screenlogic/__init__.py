@@ -100,11 +100,7 @@ async def _async_migrate_entries(
     for entry in er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     ):
-        try:
-            source_mac, source_key = entry.unique_id.split("_", 1)
-        except ValueError:
-            _LOGGER.debug("Unable to parse unique_id '%s'", entry.unique_id)
-            continue
+        source_mac, source_key = entry.unique_id.split("_", 1)
 
         source_index = None
         if (
