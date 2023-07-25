@@ -26,19 +26,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    # check if there is no duplicate
-    controller = PyDuotecno()
-    await controller.connect(
-        data[CONF_HOST], data[CONF_PORT], data[CONF_PASSWORD], True
-    )
-    return {"title": f"{data[CONF_HOST]}:{data[CONF_PORT]}"}
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for duotecno."""
 
