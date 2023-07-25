@@ -102,7 +102,6 @@ async def async_setup_entry(
                         key=f"{service.accessory.aid}_{service.iid}",
                         device_class=EventDeviceClass.DOORBELL,
                         translation_key="doorbell",
-                        name="Doorbell",
                     ),
                 )
             )
@@ -125,7 +124,6 @@ async def async_setup_entry(
                             key=f"{service.accessory.aid}_{service.iid}",
                             device_class=EventDeviceClass.BUTTON,
                             translation_key="button",
-                            name=f"Button {idx}",
                         ),
                     )
                 )
@@ -142,7 +140,6 @@ async def async_setup_entry(
                             key=f"{service.accessory.aid}_{service.iid}",
                             device_class=EventDeviceClass.BUTTON,
                             translation_key="button",
-                            name="Button",
                         ),
                     )
                 )
