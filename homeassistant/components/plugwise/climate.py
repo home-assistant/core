@@ -130,13 +130,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if control_state == "off":
             return HVACAction.IDLE
 
-        hc_data = self.coordinator.data.devices[
-            self.coordinator.data.gateway["heater_id"]
-        ]
-        if hc_data["binary_sensors"]["heating_state"]:
-            return HVACAction.HEATING
-        if hc_data["binary_sensors"].get("cooling_state"):
-            return HVACAction.COOLING
+        heater: str | None = self.coordinator.data.gateway["heater_id"]
+        if heater is not None:
+            heater_data = self.coordinator.data.devices[heater]
+            if heater_data["binary_sensors"]["heating_state"]:
+                return HVACAction.HEATING
+            if heater_data["binary_sensors"].get("cooling_state", False):
+                return HVACAction.COOLING
 
         return HVACAction.IDLE
 
