@@ -7,7 +7,6 @@ import re
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -728,12 +727,12 @@ async def test_cleanup_device(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is not None
 
     # Remove MQTT from the device
@@ -752,13 +751,13 @@ async def test_cleanup_device(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -787,12 +786,12 @@ async def test_cleanup_device_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is not None
 
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", "")
@@ -800,13 +799,13 @@ async def test_cleanup_device_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -867,17 +866,17 @@ async def test_cleanup_device_multiple_config_entries(
 
     # Verify device and registry entries are created
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
     assert device_entry.config_entries == {
         mqtt_config_entry.entry_id,
         config_entry.entry_id,
     }
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is not None
 
     # Remove MQTT from the device
@@ -898,15 +897,15 @@ async def test_cleanup_device_multiple_config_entries(
 
     # Verify device is still there but entity is cleared
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -967,17 +966,17 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 
     # Verify device and registry entries are created
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
     assert device_entry.config_entries == {
         mqtt_config_entry.entry_id,
         config_entry.entry_id,
     }
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is not None
 
     # Send MQTT messages to remove
@@ -990,15 +989,15 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 
     # Verify device is still there but entity is cleared
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.none_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -1305,9 +1304,7 @@ async def test_missing_discover_abbreviations(
                     and match[0] not in ABBREVIATIONS_WHITE_LIST
                 ):
                     missing.append(
-                        "{}: no abbreviation for {} ({})".format(
-                            fil, match[1], match[0]
-                        )
+                        f"{fil}: no abbreviation for {match[1]} ({match[0]})"
                     )
 
     assert not missing
@@ -1475,13 +1472,12 @@ async def test_clear_config_topic_disabled_entity(
     mqtt_mock = await mqtt_mock_entry()
     # discover an entity that is not enabled by default
     config = {
-        "name": "sbfspot_12345",
         "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
         "unique_id": "sbfspot_12345",
         "enabled_by_default": False,
         "device": {
             "identifiers": ["sbfspot_12345"],
-            "name": "sbfspot_12345",
+            "name": "abc123",
             "sw_version": "1.0",
             "connections": [["mac", "12:34:56:AB:CD:EF"]],
         },
@@ -1513,13 +1509,13 @@ async def test_clear_config_topic_disabled_entity(
     await hass.async_block_till_done()
     assert "Platform mqtt does not generate unique IDs" in caplog.text
 
-    assert hass.states.get("sensor.sbfspot_12345") is None  # disabled
-    assert hass.states.get("sensor.sbfspot_12345_1") is not None  # enabled
-    assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
+    assert hass.states.get("sensor.abc123_sbfspot_12345") is None  # disabled
+    assert hass.states.get("sensor.abc123_sbfspot_12345_1") is not None  # enabled
+    assert hass.states.get("sensor.abc123_sbfspot_12345_2") is None  # not unique
 
     # Verify device is created
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
 
@@ -1585,7 +1581,7 @@ async def test_clean_up_registry_monitoring(
 
     # Verify device is created
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
 
@@ -1604,13 +1600,12 @@ async def test_unique_id_collission_has_priority(
     """Test the unique_id collision detection has priority over registry disabled items."""
     await mqtt_mock_entry()
     config = {
-        "name": "sbfspot_12345",
         "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
         "unique_id": "sbfspot_12345",
         "enabled_by_default": False,
         "device": {
             "identifiers": ["sbfspot_12345"],
-            "name": "sbfspot_12345",
+            "name": "abc123",
             "sw_version": "1.0",
             "connections": [["mac", "12:34:56:AB:CD:EF"]],
         },
@@ -1634,16 +1629,15 @@ async def test_unique_id_collission_has_priority(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sbfspot_12345_1") is None  # not enabled
-    assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
+    assert hass.states.get("sensor.abc123_sbfspot_12345_1") is None  # not enabled
+    assert hass.states.get("sensor.abc123_sbfspot_12345_2") is None  # not unique
 
     # Verify the first entity is created
-    assert entity_registry.async_get("sensor.sbfspot_12345_1") is not None
+    assert entity_registry.async_get("sensor.abc123_sbfspot_12345_1") is not None
     # Verify the second entity is not created because it is not unique
-    assert entity_registry.async_get("sensor.sbfspot_12345_2") is None
+    assert entity_registry.async_get("sensor.abc123_sbfspot_12345_2") is None
 
 
-@pytest.mark.xfail(raises=MultipleInvalid)
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_update_with_bad_config_not_breaks_discovery(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator

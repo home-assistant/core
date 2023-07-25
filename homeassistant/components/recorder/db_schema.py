@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -33,7 +33,6 @@ from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
-from typing_extensions import Self
 
 from homeassistant.const import (
     MAX_LENGTH_EVENT_EVENT_TYPE,
