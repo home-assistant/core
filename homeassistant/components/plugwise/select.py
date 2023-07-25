@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
 
 from plugwise import DeviceData, Smile
 
@@ -22,9 +21,9 @@ from .entity import PlugwiseEntity
 class PlugwiseSelectDescriptionMixin:
     """Mixin values for Plugwise Select entities."""
 
-    command: Callable[[Smile, str, str], Awaitable[Any]]
+    command: Callable[[Smile, str, str], Awaitable[None]]
     value_fn: Callable[[DeviceData], str]
-    options_fn: Callable[[DeviceData], list[str]]
+    options_fn: Callable[[DeviceData], list[str] | None]
 
 
 @dataclass
@@ -100,16 +99,14 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
+        self._attr_options = []
+        if options := entity_description.options_fn(self.device):
+            self._attr_options = options
 
     @property
     def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.value_fn(self.device)
-
-    @property
-    def options(self) -> list[str]:
-        """Return the selectable entity options."""
-        return self.entity_description.options_fn(self.device)
 
     async def async_select_option(self, option: str) -> None:
         """Change to the selected entity option."""
