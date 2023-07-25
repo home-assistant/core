@@ -65,7 +65,10 @@
       },
       "uninstall_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::description%]"
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::description%]",
+        "data": {
+          "disable_multi_pan": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::data::disable_multi_pan%]"
+        }
       },
       "install_flasher_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_flasher_addon::title%]"
