@@ -607,6 +607,8 @@ omit =
     homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/media_player.py
     homeassistant/components/kodi/notify.py
+    homeassistant/components/komfovent/__init__.py
+    homeassistant/components/komfovent/climate.py
     homeassistant/components/konnected/__init__.py
     homeassistant/components/konnected/panel.py
     homeassistant/components/konnected/switch.py
@@ -1546,8 +1548,6 @@ omit =
     homeassistant/components/zwave_me/switch.py
     homeassistant/components/electrasmart/climate.py
     homeassistant/components/electrasmart/__init__.py
-    homeassistant/components/komfovent/__init__.py
-    homeassistant/components/komfovent/climate.py
 
 [report]
 # Regexes for lines to exclude from consideration

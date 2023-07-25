@@ -10,9 +10,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -28,16 +25,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Komfovent unit control."""
-    conf_host = str(entry.data[CONF_HOST])
-    conf_username = str(entry.data[CONF_USERNAME])
-    conf_password = str(entry.data[CONF_PASSWORD])
-    _, credentials = komfovent_api.get_credentials(
-        conf_host, conf_username, conf_password
-    )
-
-    result, settings = await komfovent_api.get_settings(credentials)
-    if result == komfovent_api.KomfoventConnectionResult.SUCCESS:
-        async_add_entities([KomfoventDevice(credentials, settings)], True)
+    (credentials, settings) = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([KomfoventDevice(credentials, settings)], True)
 
 
 class KomfoventDevice(ClimateEntity):
