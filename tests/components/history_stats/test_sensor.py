@@ -334,7 +334,7 @@ async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) ->
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.5"
+    assert round(float(hass.states.get("sensor.sensor1").state), 3) == 0.5
     assert hass.states.get("sensor.sensor2").state == "0.0"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
@@ -413,8 +413,8 @@ async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.83"
-    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
@@ -769,7 +769,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         async_fire_time_changed(hass, next_update_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "1.53"
+    assert hass.states.get("sensor.sensor1").state == "1.53333333333333"
 
     end_time = start_time + timedelta(minutes=120)
     with freeze_time(end_time):
@@ -1011,7 +1011,7 @@ async def test_does_not_work_into_the_future(
             async_fire_time_changed(hass, in_the_window)
             await hass.async_block_till_done()
 
-        assert hass.states.get("sensor.sensor1").state == "0.08"
+        assert hass.states.get("sensor.sensor1").state == "0.0833333333333333"
 
     past_the_window = start_time + timedelta(hours=25)
     with patch(
@@ -1175,8 +1175,8 @@ async def test_measure_sliding_window(
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.83"
-    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
@@ -1188,8 +1188,8 @@ async def test_measure_sliding_window(
         async_fire_time_changed(hass, past_next_update)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.83"
-    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
@@ -1269,8 +1269,8 @@ async def test_measure_from_end_going_backwards(
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.83"
-    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
@@ -1282,8 +1282,8 @@ async def test_measure_from_end_going_backwards(
         async_fire_time_changed(hass, past_next_update)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.83"
-    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
@@ -1362,8 +1362,8 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.83"
-    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
@@ -1431,10 +1431,16 @@ async def test_end_time_with_microseconds_zeroed(
         await hass.async_block_till_done()
         await async_update_entity(hass, "sensor.heatpump_compressor_today")
         await hass.async_block_till_done()
-        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        assert (
+            hass.states.get("sensor.heatpump_compressor_today").state
+            == "1.83333333333333"
+        )
         async_fire_time_changed(hass, time_200)
         await hass.async_block_till_done()
-        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        assert (
+            hass.states.get("sensor.heatpump_compressor_today").state
+            == "1.83333333333333"
+        )
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
         await hass.async_block_till_done()
 
@@ -1442,14 +1448,20 @@ async def test_end_time_with_microseconds_zeroed(
     with freeze_time(time_400):
         async_fire_time_changed(hass, time_400)
         await hass.async_block_till_done()
-        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        assert (
+            hass.states.get("sensor.heatpump_compressor_today").state
+            == "1.83333333333333"
+        )
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "on")
         await async_wait_recording_done(hass)
     time_600 = start_of_today + timedelta(hours=6)
     with freeze_time(time_600):
         async_fire_time_changed(hass, time_600)
         await hass.async_block_till_done()
-        assert hass.states.get("sensor.heatpump_compressor_today").state == "3.83"
+        assert (
+            hass.states.get("sensor.heatpump_compressor_today").state
+            == "3.83333333333333"
+        )
 
     rolled_to_next_day = start_of_today + timedelta(days=1)
     assert rolled_to_next_day.hour == 0
@@ -1491,7 +1503,10 @@ async def test_end_time_with_microseconds_zeroed(
     with freeze_time(rolled_to_next_day_plus_18):
         async_fire_time_changed(hass, rolled_to_next_day_plus_18)
         await hass.async_block_till_done()
-        assert hass.states.get("sensor.heatpump_compressor_today").state == "16.0"
+        assert (
+            hass.states.get("sensor.heatpump_compressor_today").state
+            == "16.0002388888929"
+        )
 
 
 async def test_device_classes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
