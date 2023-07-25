@@ -12,6 +12,7 @@ class CrownstoneBaseEntity(Entity):
     """Base entity class for Crownstone devices."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device: Crownstone) -> None:
         """Initialize the device."""

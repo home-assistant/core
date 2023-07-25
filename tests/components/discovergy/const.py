@@ -1,31 +1,34 @@
 """Constants for Discovergy integration tests."""
 import datetime
 
-from pydiscovergy.models import Meter, Reading
+from pydiscovergy.models import Location, Meter, Reading
 
 GET_METERS = [
     Meter(
-        meterId="f8d610b7a8cc4e73939fa33b990ded54",
-        serialNumber="abc123",
-        fullSerialNumber="abc123",
+        meter_id="f8d610b7a8cc4e73939fa33b990ded54",
+        serial_number="abc123",
+        full_serial_number="abc123",
         type="TST",
-        measurementType="ELECTRICITY",
-        loadProfileType="SLP",
-        location={
-            "city": "Testhause",
-            "street": "Teststraße",
-            "streetNumber": "1",
-            "country": "Germany",
+        measurement_type="ELECTRICITY",
+        load_profile_type="SLP",
+        location=Location(
+            zip=12345,
+            city="Testhause",
+            street="Teststraße",
+            street_number="1",
+            country="Germany",
+        ),
+        additional={
+            "manufacturer_id": "TST",
+            "printed_full_serial_number": "abc123",
+            "administration_number": "12345",
+            "scaling_factor": 1,
+            "current_scaling_factor": 1,
+            "voltage_scaling_factor": 1,
+            "internal_meters": 1,
+            "first_measurement_time": 1517569090926,
+            "last_measurement_time": 1678430543742,
         },
-        manufacturerId="TST",
-        printedFullSerialNumber="abc123",
-        administrationNumber="12345",
-        scalingFactor=1,
-        currentScalingFactor=1,
-        voltageScalingFactor=1,
-        internalMeters=1,
-        firstMeasurementTime=1517569090926,
-        lastMeasurementTime=1678430543742,
     ),
 ]
 

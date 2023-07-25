@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 import webrtcvad
-
-from homeassistant.backports.enum import StrEnum
 
 _SAMPLE_RATE = 16000
 
