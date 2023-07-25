@@ -22,13 +22,26 @@ SUNWEG_PLANT_RESPONSE = Plant(
     0,
     12.786912,
     24.0,
+    "kWh",
     332.2,
     0.012296,
     datetime(2023, 2, 16, 14, 22, 37),
 )
 
 SUNWEG_INVERTER_RESPONSE = Inverter(
-    21255, "INVERSOR01", "J63T233018RE074", 23.2, 0.0, 0.0, 0, 0.0, 1, 0
+    21255,
+    "INVERSOR01",
+    "J63T233018RE074",
+    23.2,
+    0.0,
+    0.0,
+    "MWh",
+    0,
+    "kWh",
+    0.0,
+    1,
+    0,
+    "kW",
 )
 
 SUNWEG_PHASE_RESPONSE = Phase("PhaseA", 120.0, 3.2, 0, 0)

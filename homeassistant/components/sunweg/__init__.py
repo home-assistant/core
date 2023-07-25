@@ -110,15 +110,24 @@ class SunWEGData:
             entity_description.name,
         )
         variable = entity_description.api_variable_key
+        previous_metric = entity_description.native_unit_of_measurement
         api_value = self.get_api_value(variable, device_type, inverter_id, deep_name)
         previous_value = self.previous_values.get(variable)
         return_value = api_value
+        if entity_description.api_variable_metric is not None:
+            entity_description.native_unit_of_measurement = self.get_api_value(
+                entity_description.api_variable_metric,
+                device_type,
+                inverter_id,
+                deep_name,
+            )
 
         # If we have a 'drop threshold' specified, then check it and correct if needed
         if (
             entity_description.previous_value_drop_threshold is not None
             and previous_value is not None
             and api_value is not None
+            and previous_metric == entity_description.native_unit_of_measurement
         ):
             _LOGGER.debug(
                 (

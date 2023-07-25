@@ -19,8 +19,10 @@ TOTAL_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
         key="total_energy_today",
         name="Energy Today",
         api_variable_key="_today_energy",
+        api_variable_metric="_today_energy_metric",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SunWEGSensorEntityDescription(
         key="total_output_power",

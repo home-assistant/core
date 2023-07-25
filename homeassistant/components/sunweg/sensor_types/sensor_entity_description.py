@@ -17,6 +17,7 @@ class SunWEGRequiredKeysMixin:
 class SunWEGSensorEntityDescription(SensorEntityDescription, SunWEGRequiredKeysMixin):
     """Describes SunWEG sensor entity."""
 
+    api_variable_metric: str | None = None
     previous_value_drop_threshold: float | None = None
     never_resets: bool = False
     icon: str | None = None
