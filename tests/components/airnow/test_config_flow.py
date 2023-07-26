@@ -57,7 +57,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, config, setup_airnow) ->
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=EmptyResponseError)])
 async def test_form_empty_result(hass: HomeAssistant, config, setup_airnow) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle empty response error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
