@@ -195,8 +195,8 @@ build.json @home-assistant/supervisor
 /tests/components/camera/ @home-assistant/core
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
-/homeassistant/components/cert_expiry/ @Cereal2nd @jjlawren
-/tests/components/cert_expiry/ @Cereal2nd @jjlawren
+/homeassistant/components/cert_expiry/ @jjlawren
+/tests/components/cert_expiry/ @jjlawren
 /homeassistant/components/circuit/ @braam
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
