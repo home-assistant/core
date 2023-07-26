@@ -75,6 +75,7 @@ class PermobilSensorEntityDescription(
 
 SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
     PermobilSensorEntityDescription(
+        # Current battery as a percentage
         value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_STATE_OF_CHARGE],
         key=BATTERY_STATE_OF_CHARGE,
         translation_key="state_of_charge",
@@ -83,15 +84,16 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
+        # Current battery health as a percentage of original capacity
         value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_STATE_OF_HEALTH],
         key=BATTERY_STATE_OF_HEALTH,
         translation_key="state_of_health",
         icon="mdi:battery-heart-variant",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
+        # Time until fully charged (displays 0 if not charging)
         value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_CHARGE_TIME_LEFT],
         key=BATTERY_CHARGE_TIME_LEFT,
         translation_key="charge_time_left",
@@ -101,6 +103,7 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
+        # Distance possible on current change (km)
         value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_DISTANCE_LEFT],
         key=BATTERY_DISTANCE_LEFT,
         translation_key="distance_left",
@@ -109,6 +112,7 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
+        # Drive time possible on current charge
         value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_INDOOR_DRIVE_TIME],
         key=BATTERY_INDOOR_DRIVE_TIME,
         translation_key="indoor_drive_time",
@@ -117,24 +121,27 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
+        # Watt hours the battery can store given battery health
         value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_MAX_AMPERE_HOURS]
         * BATTERY_ASSUMED_VOLTAGE,
         key=BATTERY_MAX_AMPERE_HOURS,
         translation_key="max_watt_hours",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
+        # Current amount of watt hours in battery
         value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_AMPERE_HOURS_LEFT]
         * BATTERY_ASSUMED_VOLTAGE,
         key=BATTERY_AMPERE_HOURS_LEFT,
         translation_key="watt_hours_left",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
+        # Distance that can be traveled with full charge given battery health (km)
         value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_MAX_DISTANCE_LEFT],
         key=BATTERY_MAX_DISTANCE_LEFT,
         translation_key="max_distance_left",
@@ -143,26 +150,29 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
+        # Distance traveled today monotonically increased, resets every 24h (km)
         value_fn=lambda data: data[ENDPOINT_DAILY_USAGE][USAGE_DISTANCE],
         key=USAGE_DISTANCE,
         translation_key="usage_distance",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     PermobilSensorEntityDescription(
+        # Number of adjustments monotonically increased, resets every 24h
         value_fn=lambda data: data[ENDPOINT_DAILY_USAGE][USAGE_ADJUSTMENTS],
         key=USAGE_ADJUSTMENTS,
         translation_key="usage_adjustments",
         native_unit_of_measurement="adjustments",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     PermobilSensorEntityDescription(
+        # Largest number of adjustemnts in a single 24h period, resets never
         value_fn=lambda data: data[ENDPOINT_VA_USAGE_RECORDS][RECORDS_SEATING],
         key=RECORDS_SEATING,
         translation_key="record_adjustments",
         native_unit_of_measurement="adjustments",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
@@ -174,15 +184,15 @@ async def async_setup_entry(
 ) -> None:
     """Create sensors from a config entry created in the integrations UI."""
 
-    # create the API object from the config
+    # load the coordinator from the config
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = [
+    # create a sensor for each sensor description
+
+    async_add_entities(
         PermobilSensor(coordinator=coordinator, description=description)
         for description in SENSOR_DESCRIPTIONS
-    ]
-
-    async_add_entities(entities, update_before_add=True)
+    )
 
 
 class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
