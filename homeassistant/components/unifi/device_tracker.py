@@ -30,7 +30,7 @@ from .entity import (
     HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
-    async_client_device_info_fn,
+    async_client_device_tracker_device_info_fn,
     async_device_available_fn,
 )
 
@@ -160,7 +160,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         allowed_fn=async_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
-        device_info_fn=async_client_device_info_fn,
+        device_info_fn=async_client_device_tracker_device_info_fn,
         event_is_on=(WIRED_CONNECTION + WIRELESS_CONNECTION),
         event_to_subscribe=(
             WIRED_CONNECTION
