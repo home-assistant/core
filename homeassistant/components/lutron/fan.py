@@ -94,7 +94,11 @@ class LutronFan(LutronDevice, FanEntity):
         self._preset_mode = None
         self.schedule_update_ha_state()
 
-    def turn_on(self, percentage: int | None = None, preset_mode: str | None = None, **kwargs: Any) -> None:
+    def turn_on(
+            self, 
+            percentage: int | None = None, 
+            preset_mode: str | None = None, 
+            **kwargs: Any) -> None:
         if preset_mode:
             self.set_preset_mode(preset_mode)
             return
