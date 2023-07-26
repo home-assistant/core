@@ -55,7 +55,7 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
             name=device.name,
         )
 
-    async def _light_set_state(self, state: int):
+    async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""
         await self.coordinator.api.light_switch(self._device.index, state)
         await self.coordinator.async_request_refresh()
