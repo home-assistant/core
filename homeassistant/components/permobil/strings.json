@@ -27,5 +27,42 @@
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     }
+  },
+  "entity": {
+    "sensor": {
+      "state_of_charge": {
+        "name": "Battery charge"
+      },
+      "state_of_health": {
+        "name": "Battery health"
+      },
+      "charge_time_left": {
+        "name": "Charge time left"
+      },
+      "distance_left": {
+        "name": "Distance left"
+      },
+      "indoor_drive_time": {
+        "name": "Indoor drive time"
+      },
+      "max_watt_hours": {
+        "name": "Battery max watt hours"
+      },
+      "watt_hours_left": {
+        "name": "Watt hours left"
+      },
+      "max_distance_left": {
+        "name": "Full charge distance"
+      },
+      "usage_distance": {
+        "name": "Distance traveled"
+      },
+      "usage_adjustments": {
+        "name": "Number of adjustments"
+      },
+      "record_adjustments": {
+        "name": "Record number of adjustments"
+      }
+    }
   }
 }

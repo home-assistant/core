@@ -16,7 +16,9 @@ from mypermobil import (
     BATTERY_MAX_DISTANCE_LEFT,
     BATTERY_STATE_OF_CHARGE,
     BATTERY_STATE_OF_HEALTH,
-    ENDPOINT_LOOKUP,
+    ENDPOINT_BATTERY_INFO,
+    ENDPOINT_DAILY_USAGE,
+    ENDPOINT_VA_USAGE_RECORDS,
     RECORDS_SEATING,
     USAGE_ADJUSTMENTS,
     USAGE_DISTANCE,
@@ -62,7 +64,6 @@ class PermobilRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Any], Any]
-    item: str
 
 
 @dataclass
@@ -74,101 +75,92 @@ class PermobilSensorEntityDescription(
 
 SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=BATTERY_STATE_OF_CHARGE,
-        key="state_of_charge",
-        name="Permobil Battery Charge",
+        value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_STATE_OF_CHARGE],
+        key=BATTERY_STATE_OF_CHARGE,
+        translation_key="state_of_charge",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=BATTERY_STATE_OF_HEALTH,
-        key="state_of_health",
-        name="Permobil Battery Health",
+        value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_STATE_OF_HEALTH],
+        key=BATTERY_STATE_OF_HEALTH,
+        translation_key="state_of_health",
         icon="mdi:battery-heart-variant",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=BATTERY_CHARGE_TIME_LEFT,
-        key="charge_time_left",
-        name="Permobil Charge Time Left",
+        value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_CHARGE_TIME_LEFT],
+        key=BATTERY_CHARGE_TIME_LEFT,
+        translation_key="charge_time_left",
         icon="mdi:battery-clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=BATTERY_DISTANCE_LEFT,
-        key="distance_left",
-        name="Permobil Distance Left",
+        value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_DISTANCE_LEFT],
+        key=BATTERY_DISTANCE_LEFT,
+        translation_key="distance_left",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=BATTERY_INDOOR_DRIVE_TIME,
-        key="indoor_drive_time",
-        name="Permobil Indoor Drive Time",
+        value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_INDOOR_DRIVE_TIME],
+        key=BATTERY_INDOOR_DRIVE_TIME,
+        translation_key="indoor_drive_time",
         native_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x * BATTERY_ASSUMED_VOLTAGE,
-        item=BATTERY_MAX_AMPERE_HOURS,
-        key="max_watt_hours",
-        name="Permobil Battery Max Watt Hours",
+        value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_MAX_AMPERE_HOURS]
+        * BATTERY_ASSUMED_VOLTAGE,
+        key=BATTERY_MAX_AMPERE_HOURS,
+        translation_key="max_watt_hours",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x * BATTERY_ASSUMED_VOLTAGE,
-        item=BATTERY_AMPERE_HOURS_LEFT,
-        key="watt_hours_left",
-        name="Permobil Watt Hours Left",
+        value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_AMPERE_HOURS_LEFT]
+        * BATTERY_ASSUMED_VOLTAGE,
+        key=BATTERY_AMPERE_HOURS_LEFT,
+        translation_key="watt_hours_left",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=BATTERY_MAX_DISTANCE_LEFT,
-        key="max_distance_left",
-        name="Permobil Full Charge Distance",
+        value_fn=lambda data: data[ENDPOINT_BATTERY_INFO][BATTERY_MAX_DISTANCE_LEFT],
+        key=BATTERY_MAX_DISTANCE_LEFT,
+        translation_key="max_distance_left",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=USAGE_DISTANCE,
-        key="usage_distance",
-        name="Permobil Distance Traveled",
+        value_fn=lambda data: data[ENDPOINT_DAILY_USAGE][USAGE_DISTANCE],
+        key=USAGE_DISTANCE,
+        translation_key="usage_distance",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=USAGE_ADJUSTMENTS,
-        key="usage_adjustments",
-        name="Permobil Number of Adjustments",
+        value_fn=lambda data: data[ENDPOINT_DAILY_USAGE][USAGE_ADJUSTMENTS],
+        key=USAGE_ADJUSTMENTS,
+        translation_key="usage_adjustments",
         native_unit_of_measurement="adjustments",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PermobilSensorEntityDescription(
-        value_fn=lambda x: x,
-        item=RECORDS_SEATING,
-        key="record_adjustments",
-        name="Permobil Record Number of Adjustments",
+        value_fn=lambda data: data[ENDPOINT_VA_USAGE_RECORDS][RECORDS_SEATING],
+        key=RECORDS_SEATING,
+        translation_key="record_adjustments",
         native_unit_of_measurement="adjustments",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -199,7 +191,9 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
     This implements the common functions of all sensors.
     """
 
-    _attr_suggested_display_precision: int = 0
+    _attr_has_entity_name = True
+    _attr_suggested_display_precision = 0
+    entity_description: PermobilSensorEntityDescription
 
     def __init__(
         self,
@@ -208,17 +202,12 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator)
-        self._coordinator = coordinator
         self.entity_description = description
-        self._attr_name = str(description.name)
-        self._item = description.item
-        self._value_fn = description.value_fn
-        self._attr_unique_id = f"{coordinator.p_api.email}_{self._item}"
+        self._attr_unique_id = (
+            f"{coordinator.p_api.email}_{self.entity_description.key}"
+        )
 
     @property
     def native_value(self) -> float | None:
         """Return the value of the sensor."""
-        endpoint = ENDPOINT_LOOKUP[self._item]
-        data = self._coordinator.data.get(endpoint, {}).get(self._item)
-
-        return self._value_fn(data)
+        return self.entity_description.value_fn(self.coordinator.data)
