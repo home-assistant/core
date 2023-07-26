@@ -81,17 +81,6 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
     )
 
 
-@callback
-def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for client."""
-    client = api.clients[obj_id]
-    return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, obj_id)},
-        default_manufacturer=client.oui,
-        default_name=client.name or client.hostname,
-    )
-
-
 @dataclass
 class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
