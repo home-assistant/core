@@ -45,12 +45,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
         breaks_in_ha_version="2024.2.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Hydrawise",
+        },
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -64,7 +69,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Hydrawise from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     access_token = config_entry.data[CONF_API_KEY]
     try:
         hydrawise = await hass.async_add_executor_job(LegacyHydrawise, access_token)
@@ -74,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             f"Unable to connect to Hydrawise cloud service: {ex}"
         ) from ex
 
-    hass.data[DOMAIN][config_entry.entry_id] = HydrawiseDataUpdateCoordinator(
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = HydrawiseDataUpdateCoordinator(
         hass, hydrawise, SCAN_INTERVAL
     )
     if not hydrawise.controller_info or not hydrawise.controller_status:

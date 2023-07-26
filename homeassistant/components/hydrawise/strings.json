@@ -13,11 +13,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Hydrawise YAML configuration is being removed",
-      "description": "Configuring Hydrawise using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Hydrawise YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

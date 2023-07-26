@@ -39,8 +39,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if api.status:
                     await self.async_set_unique_id(f"hydrawise-{api.customer_id}")
+                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(title="Hydrawise", data=user_input)
-                LOGGER.error("Unable to obtain Hydrawise status")
                 errors["base"] = "unknown"
 
         return self.async_show_form(
