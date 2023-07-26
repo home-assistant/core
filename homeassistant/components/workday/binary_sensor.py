@@ -138,7 +138,7 @@ async def async_setup_entry(
 
         date_string = date_to_test.strftime("%Y-%m-%d")
 
-        return {"check_date": {"date": date_string, "workday": not holiday_date}}
+        return {"date": date_string, "workday": not holiday_date}
 
     hass.services.async_register(
         DOMAIN,
