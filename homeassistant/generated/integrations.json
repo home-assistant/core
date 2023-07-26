@@ -118,6 +118,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airtouch5": {
+      "name": "AirTouch 5",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "airvisual": {
       "name": "AirVisual",
       "integrations": {
