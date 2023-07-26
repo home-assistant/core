@@ -376,7 +376,6 @@ class ObjectDetection(_Trait):
                     "notifications": {
                         self.state.entity_id: {
                             "ObjectDetection": {
-                                "objects": {"unclassified": 1},
                                 "priority": 0,
                                 "detectionTimestamp": time_stamp,
                             }
@@ -384,7 +383,12 @@ class ObjectDetection(_Trait):
                     }
                 }
             }
-            event_id = None
+            event_id = self.state.attributes.get("event_type")
+            _LOGGER.info(
+                "Sending trigger with event_type '%s' for entity %s",
+                event_id,
+                self.state.entity_id,
+            )
             result = await self.config.async_sync_notification_all(event_id, payload)
             if result != 200:
                 raise HomeAssistantError(
