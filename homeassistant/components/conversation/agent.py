@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
 
 from homeassistant.core import Context
 from homeassistant.helpers import intent
@@ -16,6 +16,7 @@ class ConversationInput:
     text: str
     context: Context
     conversation_id: str | None
+    device_id: str | None
     language: str
 
 
@@ -34,20 +35,8 @@ class ConversationResult:
         }
 
 
-class Attribution(TypedDict):
-    """Attribution for a conversation agent."""
-
-    name: str
-    url: str
-
-
 class AbstractConversationAgent(ABC):
     """Abstract conversation agent."""
-
-    @property
-    def attribution(self) -> Attribution | None:
-        """Return the attribution."""
-        return None
 
     @property
     @abstractmethod

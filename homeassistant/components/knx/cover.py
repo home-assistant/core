@@ -163,11 +163,17 @@ class KNXCover(KnxEntity, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        await self._device.set_short_up()
+        if self._device.angle.writable:
+            await self._device.set_angle(0)
+        else:
+            await self._device.set_short_up()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        await self._device.set_short_down()
+        if self._device.angle.writable:
+            await self._device.set_angle(100)
+        else:
+            await self._device.set_short_down()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""

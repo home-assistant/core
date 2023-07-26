@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     PERCENTAGE,
     UV_INDEX,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -24,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AccuWeatherDataUpdateCoordinator
@@ -49,7 +49,7 @@ PARALLEL_UPDATES = 1
 class AccuWeatherSensorDescriptionMixin:
     """Mixin for AccuWeather sensor."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], str | int | float | None]
 
 
 @dataclass
@@ -58,7 +58,7 @@ class AccuWeatherSensorDescription(
 ):
     """Class describing AccuWeather sensor entities."""
 
-    attr_fn: Callable[[dict[str, Any]], dict[str, StateType]] = lambda _: {}
+    attr_fn: Callable[[dict[str, Any]], dict[str, Any]] = lambda _: {}
 
 
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
@@ -103,6 +103,16 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         name="Hours of sun",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: cast(float, data),
+    ),
+    AccuWeatherSensorDescription(
+        key="LongPhraseDay",
+        name="Condition day",
+        value_fn=lambda data: cast(str, data),
+    ),
+    AccuWeatherSensorDescription(
+        key="LongPhraseNight",
+        name="Condition night",
+        value_fn=lambda data: cast(str, data),
     ),
     AccuWeatherSensorDescription(
         key="Mold",
@@ -152,6 +162,22 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         name="RealFeel temperature shade min",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+    ),
+    AccuWeatherSensorDescription(
+        key="SolarIrradianceDay",
+        icon="mdi:weather-sunny",
+        name="Solar irradiance day",
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+    ),
+    AccuWeatherSensorDescription(
+        key="SolarIrradianceNight",
+        icon="mdi:weather-sunny",
+        name="Solar irradiance night",
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         value_fn=lambda data: cast(float, data[ATTR_VALUE]),
     ),
     AccuWeatherSensorDescription(
@@ -401,7 +427,7 @@ class AccuWeatherSensor(
         self.forecast_day = forecast_day
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 

@@ -12,7 +12,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -21,7 +21,10 @@ from .const import (
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
+    ATTR_API_FORECAST_CLOUDS,
     ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_FORECAST_HUMIDITY,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_API_FORECAST_PRESSURE,
@@ -41,6 +44,7 @@ from .const import (
     ATTR_API_WEATHER,
     ATTR_API_WEATHER_CODE,
     ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_GUST,
     ATTR_API_WIND_SPEED,
     CONDITION_CLASSES,
     DOMAIN,
@@ -130,6 +134,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_PRESSURE: current_weather.pressure.get("press"),
             ATTR_API_HUMIDITY: current_weather.humidity,
             ATTR_API_WIND_BEARING: current_weather.wind().get("deg"),
+            ATTR_API_WIND_GUST: current_weather.wind().get("gust"),
             ATTR_API_WIND_SPEED: current_weather.wind().get("speed"),
             ATTR_API_CLOUDS: current_weather.clouds,
             ATTR_API_RAIN: self._get_rain(current_weather.rain),
@@ -159,7 +164,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _convert_forecast(self, entry):
         """Convert the forecast data."""
         forecast = {
-            ATTR_API_FORECAST_TIME: dt.utc_from_timestamp(
+            ATTR_API_FORECAST_TIME: dt_util.utc_from_timestamp(
                 entry.reference_time("unix")
             ).isoformat(),
             ATTR_API_FORECAST_PRECIPITATION: self._calc_precipitation(
@@ -174,7 +179,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
             ),
-            ATTR_API_CLOUDS: entry.clouds,
+            ATTR_API_FORECAST_CLOUDS: entry.clouds,
+            ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE: entry.temperature("celsius").get(
+                "feels_like_day"
+            ),
+            ATTR_API_FORECAST_HUMIDITY: entry.humidity,
         }
 
         temperature_dict = entry.temperature("celsius")
@@ -252,7 +261,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get weather condition from weather data."""
         if weather_code == WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT:
             if timestamp:
-                timestamp = dt.utc_from_timestamp(timestamp)
+                timestamp = dt_util.utc_from_timestamp(timestamp)
 
             if sun.is_up(self.hass, timestamp):
                 return ATTR_CONDITION_SUNNY

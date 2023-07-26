@@ -1,95 +1,65 @@
 """Tests for the lastfm sensor."""
 from unittest.mock import patch
 
-from pylast import Track
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import sensor
-from homeassistant.components.lastfm.const import STATE_NOT_SCROBBLING
+from homeassistant.components.lastfm.const import (
+    CONF_USERS,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
+from . import API_KEY, USERNAME_1, MockUser
+from .conftest import ComponentSetup
 
-class MockNetwork:
-    """Mock _Network object for pylast."""
+from tests.common import MockConfigEntry
 
-    def __init__(self, username: str):
-        """Initialize the mock."""
-        self.username = username
-
-
-class MockUser:
-    """Mock User object for pylast."""
-
-    def __init__(self, now_playing_result):
-        """Initialize the mock."""
-        self._now_playing_result = now_playing_result
-        self.name = "test"
-
-    def get_playcount(self):
-        """Get mock play count."""
-        return 1
-
-    def get_image(self):
-        """Get mock image."""
-
-    def get_recent_tracks(self, limit):
-        """Get mock recent tracks."""
-        return []
-
-    def get_top_tracks(self, limit):
-        """Get mock top tracks."""
-        return []
-
-    def get_now_playing(self):
-        """Get mock now playing."""
-        return self._now_playing_result
+LEGACY_CONFIG = {
+    Platform.SENSOR: [
+        {CONF_PLATFORM: DOMAIN, CONF_API_KEY: API_KEY, CONF_USERS: [USERNAME_1]}
+    ]
+}
 
 
-@pytest.fixture(name="lastfm_network")
-def lastfm_network_fixture():
-    """Create fixture for LastFMNetwork."""
-    with patch(
-        "homeassistant.components.lastfm.sensor.LastFMNetwork"
-    ) as lastfm_network:
-        yield lastfm_network
+async def test_legacy_migration(hass: HomeAssistant) -> None:
+    """Test migration from yaml to config flow."""
+    with patch("pylast.User", return_value=MockUser()):
+        assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
+        await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
 
 
-async def test_update_not_playing(hass: HomeAssistant, lastfm_network) -> None:
-    """Test update when no playing song."""
+@pytest.mark.parametrize(
+    ("fixture"),
+    [
+        ("not_found_user"),
+        ("first_time_user"),
+        ("default_user"),
+    ],
+)
+async def test_sensors(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    fixture: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test sensors."""
+    user = request.getfixturevalue(fixture)
+    await setup_integration(config_entry, user)
 
-    lastfm_network.return_value.get_user.return_value = MockUser(None)
-
-    assert await async_setup_component(
-        hass,
-        sensor.DOMAIN,
-        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"]}},
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "sensor.test"
+    entity_id = "sensor.testaccount1"
 
     state = hass.states.get(entity_id)
 
-    assert state.state == STATE_NOT_SCROBBLING
-
-
-async def test_update_playing(hass: HomeAssistant, lastfm_network) -> None:
-    """Test update when song playing."""
-
-    lastfm_network.return_value.get_user.return_value = MockUser(
-        Track("artist", "title", MockNetwork("test"))
-    )
-
-    assert await async_setup_component(
-        hass,
-        sensor.DOMAIN,
-        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"]}},
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "sensor.test"
-
-    state = hass.states.get(entity_id)
-
-    assert state.state == "artist - title"
+    assert state == snapshot

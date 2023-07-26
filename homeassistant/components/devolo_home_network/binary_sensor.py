@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONNECTED_PLC_DEVICES, CONNECTED_TO_ROUTER, DOMAIN
-from .entity import DevoloEntity
+from .entity import DevoloCoordinatorEntity
 
 
 def _is_connected_to_router(entity: DevoloBinarySensorEntity) -> bool:
@@ -79,7 +79,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloBinarySensorEntity(DevoloEntity[LogicalNetwork], BinarySensorEntity):
+class DevoloBinarySensorEntity(
+    DevoloCoordinatorEntity[LogicalNetwork], BinarySensorEntity
+):
     """Representation of a devolo binary sensor."""
 
     def __init__(

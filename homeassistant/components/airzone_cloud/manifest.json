@@ -1,0 +1,10 @@
+{
+  "domain": "airzone_cloud",
+  "name": "Airzone Cloud",
+  "codeowners": ["@Noltari"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airzone_cloud",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioairzone_cloud"],
+  "requirements": ["aioairzone-cloud==0.2.1"]
+}

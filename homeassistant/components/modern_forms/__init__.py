@@ -121,12 +121,13 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
 class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
     """Defines a Modern Forms device entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        name: str,
         icon: str | None = None,
         enabled_default: bool = True,
     ) -> None:
@@ -135,7 +136,6 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
         self._attr_enabled_default = enabled_default
         self._entry_id = entry_id
         self._attr_icon = icon
-        self._attr_name = name
 
     @property
     def device_info(self) -> DeviceInfo:

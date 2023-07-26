@@ -514,8 +514,8 @@ class Camera(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.stream and not self.stream.available:
-            return self.stream.available
+        if (stream := self.stream) and not stream.available:
+            return False
         return super().available
 
     async def async_create_stream(self) -> Stream | None:
@@ -673,7 +673,10 @@ class Camera(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        await self.async_refresh_providers()
+        # Avoid calling async_refresh_providers() in here because it
+        # it will write state a second time since state is always
+        # written when an entity is added to hass.
+        self._rtsp_to_webrtc = await self._async_use_rtsp_to_webrtc()
 
     async def async_refresh_providers(self) -> None:
         """Determine if any of the registered providers are suitable for this entity.

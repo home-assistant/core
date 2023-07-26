@@ -1,9 +1,11 @@
 """Tests for the for the BMW Connected Drive integration."""
 
 from pathlib import Path
+from urllib.parse import urlparse
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.const import (
+    REMOTE_SERVICE_POSITION_URL,
     VEHICLE_CHARGING_DETAILS_URL,
     VEHICLE_STATE_URL,
     VEHICLES_URL,
@@ -13,6 +15,7 @@ import respx
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
+    CONF_GCID,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
     DOMAIN as BMW_DOMAIN,
@@ -33,6 +36,7 @@ FIXTURE_USER_INPUT = {
     CONF_REGION: "rest_of_world",
 }
 FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
+FIXTURE_GCID = "SOME_GCID"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
@@ -43,6 +47,7 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
         CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
+        CONF_GCID: FIXTURE_GCID,
     },
     "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,
@@ -112,6 +117,18 @@ def mock_vehicles() -> respx.Router:
     router.get(VEHICLE_CHARGING_DETAILS_URL).mock(
         side_effect=vehicle_charging_sideeffect
     )
+
+    # Get vehicle position after remote service
+    router.post(urlparse(REMOTE_SERVICE_POSITION_URL).netloc).mock(
+        httpx.Response(
+            200,
+            json=load_json_object_fixture(
+                FIXTURE_PATH / "remote_service" / "eventposition.json",
+                integration=BMW_DOMAIN,
+            ),
+        )
+    )
+
     return router
 
 

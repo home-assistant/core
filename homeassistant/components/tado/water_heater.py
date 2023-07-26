@@ -119,6 +119,8 @@ def create_water_heater_entity(tado, name: str, zone_id: int, zone: str):
 class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     """Representation of a Tado water heater."""
 
+    _attr_name = None
+
     def __init__(
         self,
         tado,
@@ -165,11 +167,6 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             )
         )
         self._async_update_data()
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.zone_name
 
     @property
     def unique_id(self):

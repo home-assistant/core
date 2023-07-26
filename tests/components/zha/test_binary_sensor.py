@@ -21,6 +21,8 @@ from .common import (
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
+from tests.common import async_mock_load_restore_state_from_storage
+
 DEVICE_IAS = {
     1: {
         SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
@@ -114,7 +116,7 @@ async def test_binary_sensor(
     """Test ZHA binary_sensor platform."""
     zigpy_device = zigpy_device_mock(device)
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -186,10 +188,11 @@ async def test_binary_sensor_migration_not_migrated(
 
     entity_id = "binary_sensor.fakemanufacturer_fakemodel_iaszone"
     core_rs(entity_id, state=restored_state, attributes={})  # migration sensor state
+    await async_mock_load_restore_state_from_storage(hass)
 
     zigpy_device = zigpy_device_mock(DEVICE_IAS)
     zha_device = await zha_device_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
 
     assert entity_id is not None
     assert hass.states.get(entity_id).state == restored_state
@@ -208,6 +211,7 @@ async def test_binary_sensor_migration_already_migrated(
 
     entity_id = "binary_sensor.fakemanufacturer_fakemodel_iaszone"
     core_rs(entity_id, state=STATE_OFF, attributes={"migrated_to_cache": True})
+    await async_mock_load_restore_state_from_storage(hass)
 
     zigpy_device = zigpy_device_mock(DEVICE_IAS)
 
@@ -218,7 +222,7 @@ async def test_binary_sensor_migration_already_migrated(
     update_attribute_cache(cluster)
 
     zha_device = await zha_device_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
 
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_ON  # matches attribute cache
@@ -243,10 +247,11 @@ async def test_onoff_binary_sensor_restore_state(
 
     entity_id = "binary_sensor.fakemanufacturer_fakemodel_opening"
     core_rs(entity_id, state=restored_state, attributes={})
+    await async_mock_load_restore_state_from_storage(hass)
 
     zigpy_device = zigpy_device_mock(DEVICE_ONOFF)
     zha_device = await zha_device_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
 
     assert entity_id is not None
     assert hass.states.get(entity_id).state == restored_state

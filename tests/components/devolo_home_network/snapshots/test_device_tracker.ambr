@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_device_tracker
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'band': '5 GHz',
+      'icon': 'mdi:lan-connect',
+      'mac': 'AA:BB:CC:DD:EE:FF',
+      'source_type': <SourceType.ROUTER: 'router'>,
+      'wifi': 'Main',
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.devolo_home_network_1234567890_aa_bb_cc_dd_ee_ff',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---

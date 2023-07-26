@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
@@ -25,14 +26,13 @@ from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -41,7 +41,7 @@ async def test_no_controller_triggers(hass: HomeAssistant, client, integration) 
     """Test that we do not get triggers for the controller."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, client.driver.controller.nodes[1])}
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
     )
     assert device
     assert (
@@ -58,7 +58,7 @@ async def test_get_notification_notification_triggers(
     """Test we get the expected triggers from a zwave_js device with the Notification CC."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     expected_trigger = {
@@ -82,7 +82,7 @@ async def test_if_notification_notification_fires(
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -178,7 +178,7 @@ async def test_get_trigger_capabilities_notification_notification(
     """Test we get the expected capabilities from a notification.notification trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -193,16 +193,15 @@ async def test_get_trigger_capabilities_notification_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert_lists_same(
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        ),
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == unordered(
         [
             {"name": "type.", "optional": True, "type": "string"},
             {"name": "label", "optional": True, "type": "string"},
             {"name": "event", "optional": True, "type": "string"},
             {"name": "event_label", "optional": True, "type": "string"},
-        ],
+        ]
     )
 
 
@@ -213,7 +212,7 @@ async def test_if_entry_control_notification_fires(
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -308,7 +307,7 @@ async def test_get_trigger_capabilities_entry_control_notification(
     """Test we get the expected capabilities from a notification.entry_control trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -323,14 +322,13 @@ async def test_get_trigger_capabilities_entry_control_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert_lists_same(
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        ),
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == unordered(
         [
             {"name": "event_type", "optional": True, "type": "string"},
             {"name": "data_type", "optional": True, "type": "string"},
-        ],
+        ]
     )
 
 
@@ -340,14 +338,14 @@ async def test_get_node_status_triggers(
     """Test we get the expected triggers from a device with node status sensor enabled."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     ent_reg = async_get_ent_reg(hass)
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device.id, ent_reg, dev_reg
     )
-    ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    entity = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -356,7 +354,7 @@ async def test_get_node_status_triggers(
         "domain": DOMAIN,
         "type": "state.node_status",
         "device_id": device.id,
-        "entity_id": entity_id,
+        "entity_id": entity.id,
         "metadata": {"secondary": True},
     }
     triggers = await async_get_device_automations(
@@ -366,6 +364,85 @@ async def test_get_node_status_triggers(
 
 
 async def test_if_node_status_change_fires(
+    hass: HomeAssistant, client, lock_schlage_be469, integration, calls
+) -> None:
+    """Test for node_status trigger firing."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
+    ent_reg = async_get_ent_reg(hass)
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, device.id, ent_reg, dev_reg
+    )
+    entity = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                # from
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "entity_id": entity.id,
+                        "type": "state.node_status",
+                        "from": "alive",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "state.node_status - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.from_state.state }}"
+                            )
+                        },
+                    },
+                },
+                # no from or to
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "entity_id": entity.id,
+                        "type": "state.node_status",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "state.node_status2 - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.from_state.state }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Test status change
+    event = Event(
+        "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].data["some"] == "state.node_status - device - alive"
+    assert calls[1].data["some"] == "state.node_status2 - device - alive"
+
+
+async def test_if_node_status_change_fires_legacy(
     hass: HomeAssistant, client, lock_schlage_be469, integration, calls
 ) -> None:
     """Test for node_status trigger firing."""
@@ -450,7 +527,7 @@ async def test_get_trigger_capabilities_node_status(
     """Test we get the expected capabilities from a node_status trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     ent_reg = async_get_ent_reg(hass)
@@ -508,7 +585,7 @@ async def test_get_basic_value_notification_triggers(
     """Test we get the expected triggers from a zwave_js device with the Basic CC."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, ge_in_wall_dimmer_switch)}
+        identifiers={get_device_id(client.driver, ge_in_wall_dimmer_switch)}
     )
     assert device
     expected_trigger = {
@@ -536,7 +613,7 @@ async def test_if_basic_value_notification_fires(
     node: Node = ge_in_wall_dimmer_switch
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, ge_in_wall_dimmer_switch)}
+        identifiers={get_device_id(client.driver, ge_in_wall_dimmer_switch)}
     )
     assert device
 
@@ -647,7 +724,7 @@ async def test_get_trigger_capabilities_basic_value_notification(
     """Test we get the expected capabilities from a value_notification.basic trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, ge_in_wall_dimmer_switch)}
+        identifiers={get_device_id(client.driver, ge_in_wall_dimmer_switch)}
     )
     assert device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -685,7 +762,7 @@ async def test_get_central_scene_value_notification_triggers(
     """Test we get the expected triggers from a zwave_js device with the Central Scene CC."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, wallmote_central_scene)}
+        identifiers={get_device_id(client.driver, wallmote_central_scene)}
     )
     assert device
     expected_trigger = {
@@ -713,7 +790,7 @@ async def test_if_central_scene_value_notification_fires(
     node: Node = wallmote_central_scene
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, wallmote_central_scene)}
+        identifiers={get_device_id(client.driver, wallmote_central_scene)}
     )
     assert device
 
@@ -830,7 +907,7 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
     """Test we get the expected capabilities from a value_notification.central_scene trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, wallmote_central_scene)}
+        identifiers={get_device_id(client.driver, wallmote_central_scene)}
     )
     assert device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -867,7 +944,7 @@ async def test_get_scene_activation_value_notification_triggers(
     """Test we get the expected triggers from a zwave_js device with the SceneActivation CC."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, hank_binary_switch)}
+        identifiers={get_device_id(client.driver, hank_binary_switch)}
     )
     assert device
     expected_trigger = {
@@ -895,7 +972,7 @@ async def test_if_scene_activation_value_notification_fires(
     node: Node = hank_binary_switch
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, hank_binary_switch)}
+        identifiers={get_device_id(client.driver, hank_binary_switch)}
     )
     assert device
 
@@ -1006,7 +1083,7 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
     """Test we get the expected capabilities from a value_notification.scene_activation trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, hank_binary_switch)}
+        identifiers={get_device_id(client.driver, hank_binary_switch)}
     )
     assert device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -1044,7 +1121,7 @@ async def test_get_value_updated_value_triggers(
     """Test we get the zwave_js.value_updated.value trigger from a zwave_js device."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     expected_trigger = {
@@ -1067,7 +1144,7 @@ async def test_if_value_updated_value_fires(
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -1159,7 +1236,7 @@ async def test_value_updated_value_no_driver(
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     driver = client.driver
@@ -1229,7 +1306,7 @@ async def test_get_trigger_capabilities_value_updated_value(
     """Test we get the expected capabilities from a zwave_js.value_updated.value trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -1280,7 +1357,7 @@ async def test_get_value_updated_config_parameter_triggers(
     """Test we get the zwave_js.value_updated.config_parameter trigger from a zwave_js device."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     expected_trigger = {
@@ -1292,7 +1369,7 @@ async def test_get_value_updated_config_parameter_triggers(
         "property_key": None,
         "endpoint": 0,
         "command_class": CommandClass.CONFIGURATION.value,
-        "subtype": "3 (Beeper)",
+        "subtype": "3 (Beeper) on endpoint 0",
         "metadata": {},
     }
     triggers = await async_get_device_automations(
@@ -1308,7 +1385,7 @@ async def test_if_value_updated_config_parameter_fires(
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -1378,7 +1455,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
     """Test we get the expected capabilities from a range zwave_js.value_updated.config_parameter trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -1423,7 +1500,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
     """Test we get the expected capabilities from an enumerated zwave_js.value_updated.config_parameter trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -1479,7 +1556,7 @@ async def test_failure_scenarios(
 
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
-        {get_device_id(client.driver, hank_binary_switch)}
+        identifiers={get_device_id(client.driver, hank_binary_switch)}
     )
     assert device
 

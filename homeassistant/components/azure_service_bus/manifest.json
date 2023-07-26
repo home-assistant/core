@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/azure_service_bus",
   "iot_class": "cloud_push",
   "loggers": ["azure"],
-  "requirements": ["azure-servicebus==7.8.0"]
+  "requirements": ["azure-servicebus==7.10.0"]
 }

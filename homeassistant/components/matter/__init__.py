@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 
 import async_timeout
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
-from matter_server.common.errors import MatterError, NodeCommissionFailed
+from matter_server.common.errors import MatterError, NodeCommissionFailed, NodeNotExists
 import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
@@ -207,7 +208,9 @@ async def async_remove_config_entry_device(
                 )
 
     matter = get_matter(hass)
-    await matter.matter_client.remove_node(node.node_id)
+    with suppress(NodeNotExists):
+        # ignore if the server has already removed the node.
+        await matter.matter_client.remove_node(node.node_id)
 
     return True
 

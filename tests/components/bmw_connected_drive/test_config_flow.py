@@ -15,7 +15,12 @@ from homeassistant.components.bmw_connected_drive.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import FIXTURE_CONFIG_ENTRY, FIXTURE_REFRESH_TOKEN, FIXTURE_USER_INPUT
+from . import (
+    FIXTURE_CONFIG_ENTRY,
+    FIXTURE_GCID,
+    FIXTURE_REFRESH_TOKEN,
+    FIXTURE_USER_INPUT,
+)
 
 from tests.common import MockConfigEntry
 
@@ -26,6 +31,7 @@ FIXTURE_IMPORT_ENTRY = {**FIXTURE_USER_INPUT, CONF_REFRESH_TOKEN: None}
 def login_sideeffect(self: MyBMWAuthentication):
     """Mock logging in and setting a refresh token."""
     self.refresh_token = FIXTURE_REFRESH_TOKEN
+    self.gcid = FIXTURE_GCID
 
 
 async def test_show_form(hass: HomeAssistant) -> None:

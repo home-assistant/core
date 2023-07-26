@@ -2,18 +2,60 @@
 
 from typing import Any
 
+from roborock.api import AttributeCache, RoborockClient
+from roborock.command_cache import CacheableAttribute
 from roborock.containers import Status
-from roborock.typing import RoborockCommand
+from roborock.exceptions import RoborockException
+from roborock.roborock_typing import RoborockCommand
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RoborockDataUpdateCoordinator
-from .const import DOMAIN
-from .models import RoborockHassDeviceInfo
 
 
-class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]):
+class RoborockEntity(Entity):
+    """Representation of a base Roborock Entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, unique_id: str, device_info: DeviceInfo, api: RoborockClient
+    ) -> None:
+        """Initialize the coordinated Roborock Device."""
+        self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
+        self._api = api
+
+    @property
+    def api(self) -> RoborockClient:
+        """Returns the api."""
+        return self._api
+
+    def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
+        """Get an item from the api cache."""
+        return self._api.cache.get(attribute)
+
+    async def send(
+        self,
+        command: RoborockCommand,
+        params: dict[str, Any] | list[Any] | int | None = None,
+    ) -> dict:
+        """Send a command to a vacuum cleaner."""
+        try:
+            response = await self._api.send_command(command, params)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                f"Error while calling {command.name} with {params}"
+            ) from err
+
+        return response
+
+
+class RoborockCoordinatedEntity(
+    RoborockEntity, CoordinatorEntity[RoborockDataUpdateCoordinator]
+):
     """Representation of a base a coordinated Roborock Entity."""
 
     _attr_has_entity_name = True
@@ -21,46 +63,34 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
     def __init__(
         self,
         unique_id: str,
-        device_info: RoborockHassDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
-        super().__init__(coordinator)
+        RoborockEntity.__init__(
+            self,
+            unique_id=unique_id,
+            device_info=coordinator.device_info,
+            api=coordinator.api,
+        )
+        CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
-        self._device_name = device_info.device.name
-        self._device_id = device_info.device.duid
-        self._device_model = device_info.product.model
-        self._fw_version = device_info.device.fv
 
     @property
     def _device_status(self) -> Status:
         """Return the status of the device."""
         data = self.coordinator.data
         if data:
-            device_data = data.get(self._device_id)
-            if device_data:
-                status = device_data.status
-                if status:
-                    return status
+            status = data.status
+            if status:
+                return status
         return Status({})
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            name=self._device_name,
-            identifiers={(DOMAIN, self._device_id)},
-            manufacturer="Roborock",
-            model=self._device_model,
-            sw_version=self._fw_version,
-        )
-
     async def send(
-        self, command: RoborockCommand, params: dict[str, Any] | list[Any] | None = None
+        self,
+        command: RoborockCommand,
+        params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
-        """Send a command to a vacuum cleaner."""
-        response = await self.coordinator.api.send_command(
-            self._device_id, command, params
-        )
-        await self.coordinator.async_request_refresh()
-        return response
+        """Overloads normal send command but refreshes coordinator."""
+        res = await super().send(command, params)
+        await self.coordinator.async_refresh()
+        return res

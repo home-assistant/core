@@ -232,12 +232,11 @@ class RestSwitch(TemplateEntity, SwitchEntity):
                 self._attr_is_on = False
             else:
                 self._attr_is_on = None
+        elif text == self._body_on.template:
+            self._attr_is_on = True
+        elif text == self._body_off.template:
+            self._attr_is_on = False
         else:
-            if text == self._body_on.template:
-                self._attr_is_on = True
-            elif text == self._body_off.template:
-                self._attr_is_on = False
-            else:
-                self._attr_is_on = None
+            self._attr_is_on = None
 
         return req

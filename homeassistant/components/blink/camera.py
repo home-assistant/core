@@ -38,11 +38,13 @@ async def async_setup_entry(
 class BlinkCamera(Camera):
     """An implementation of a Blink Camera."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, data, name, camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
         self._attr_device_info = DeviceInfo(

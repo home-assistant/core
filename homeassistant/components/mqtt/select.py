@@ -28,12 +28,7 @@ from .const import (
     CONF_STATE_TOPIC,
 )
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -59,16 +54,11 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Required(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-
-# Configuring MQTT Select under the select platform key was deprecated in HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(select.DOMAIN),
-)
 
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
 
@@ -99,6 +89,7 @@ async def _async_setup_entity(
 class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = select.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
