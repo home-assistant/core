@@ -31,10 +31,10 @@ class PegelOnlineDataUpdateCoordinator(DataUpdateCoordinator[PegelOnlineData]):
     async def _async_update_data(self) -> PegelOnlineData:
         """Fetch data from API endpoint."""
         try:
-            current_measurement = await self.api.async_get_station_measurement(
+            water_level = await self.api.async_get_station_measurement(
                 self.station.uuid
             )
         except CONNECT_ERRORS as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
 
-        return {"current_measurement": current_measurement}
+        return {"water_level": water_level}

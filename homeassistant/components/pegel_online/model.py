@@ -8,4 +8,4 @@ from aiopegelonline import CurrentMeasurement
 class PegelOnlineData(TypedDict):
     """TypedDict for PEGELONLINE Coordinator Data."""
 
-    current_measurement: CurrentMeasurement
+    water_level: CurrentMeasurement
