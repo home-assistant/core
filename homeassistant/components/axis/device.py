@@ -62,6 +62,8 @@ class AxisNetworkDevice:
         self.fw_version = api.vapix.firmware_version
         self.product_type = api.vapix.product_type
 
+        self.additional_diagnostics: dict[str, Any] = {}
+
     @property
     def host(self):
         """Return the host address of this device."""
@@ -218,7 +220,7 @@ class AxisNetworkDevice:
         """Stop stream."""
         if self.api.stream.state != State.STOPPED:
             self.api.stream.connection_status_callback.clear()
-            self.api.stream.stop()
+        self.api.stream.stop()
 
     async def shutdown(self, event) -> None:
         """Stop the event stream."""

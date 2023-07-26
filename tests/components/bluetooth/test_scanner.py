@@ -461,7 +461,13 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
     hass: HomeAssistant, one_adapter: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover the adapter at startup and we wait for Dbus to init."""
-
+    assert await async_setup_component(hass, "logger", {})
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.bluetooth": "DEBUG"},
+        blocking=True,
+    )
     called_start = 0
     called_stop = 0
     _callback = None

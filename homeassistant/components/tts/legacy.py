@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
-import yarl
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
@@ -25,13 +24,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.util.network import normalize_url
 from homeassistant.util.yaml import load_yaml
 
 from .const import (
@@ -39,11 +37,11 @@ from .const import (
     ATTR_LANGUAGE,
     ATTR_MESSAGE,
     ATTR_OPTIONS,
-    CONF_BASE_URL,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_FIELDS,
     CONF_TIME_MEMORY,
+    DATA_TTS_MANAGER,
     DEFAULT_CACHE,
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
@@ -51,6 +49,7 @@ from .const import (
     TtsAudioType,
 )
 from .media_source import generate_media_source_id
+from .models import Voice
 
 if TYPE_CHECKING:
     from . import SpeechManager
@@ -70,16 +69,6 @@ def _deprecated_platform(value: str) -> str:
     return value
 
 
-def _valid_base_url(value: str) -> str:
-    """Validate base url, return value."""
-    url = yarl.URL(cv.url(value))
-
-    if url.path != "/":
-        raise vol.Invalid("Path should be empty")
-
-    return normalize_url(value)
-
-
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
@@ -88,7 +77,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=57600)
         ),
-        vol.Optional(CONF_BASE_URL): _valid_base_url,
         vol.Optional(CONF_SERVICE_NAME): cv.string,
     }
 )
@@ -110,8 +98,8 @@ SCHEMA_SERVICE_SAY = vol.Schema(
 async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
-    """Set up legacy text to speech providers."""
-    tts: SpeechManager = hass.data[DOMAIN]
+    """Set up legacy text-to-speech providers."""
+    tts: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
@@ -130,7 +118,7 @@ async def async_setup_legacy(
 
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
-            _LOGGER.error("Unknown text to speech platform specified")
+            _LOGGER.error("Unknown text-to-speech platform specified")
             return
 
         try:
@@ -227,19 +215,24 @@ class Provider:
         """Return a list of supported options like voice, emotions."""
         return None
 
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
+        """Return a list of supported voices for a language."""
+        return None
+
     @property
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
         return None
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider.
 

@@ -1,4 +1,5 @@
 """Switch tests for the D-Link Smart Plug integration."""
+from unittest.mock import patch
 
 from homeassistant.components.dlink import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -10,41 +11,24 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from .conftest import ComponentSetup
+from .conftest import CONF_DATA
 
-from tests.components.repairs import get_repairs
-from tests.typing import WebSocketGenerator
+from tests.common import AsyncMock, MockConfigEntry
 
 
-async def test_switch_state(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    setup_integration: ComponentSetup,
-) -> None:
+async def test_switch_state(hass: HomeAssistant, mocked_plug: AsyncMock) -> None:
     """Test we get the switch status."""
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: {
-                "platform": DOMAIN,
-                "host": "1.2.3.4",
-                "username": "admin",
-                "password": "123456",
-                "use_legacy_protocol": True,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    issues = await get_repairs(hass, hass_ws_client)
-    assert len(issues) == 1
-    assert issues[0]["issue_id"] == "deprecated_yaml"
+    with patch(
+        "homeassistant.components.dlink.SmartPlug",
+        return_value=mocked_plug,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    await setup_integration()
-
-    entity_id = "switch.mock_title_switch"
+    entity_id = "switch.mock_title"
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
     assert state.attributes["total_consumption"] == 1040.0
@@ -66,12 +50,19 @@ async def test_switch_state(
 
 
 async def test_switch_no_value(
-    hass: HomeAssistant, setup_integration_legacy: ComponentSetup
+    hass: HomeAssistant, mocked_plug_legacy: AsyncMock
 ) -> None:
     """Test we handle 'N/A' being passed by the pypi package."""
-    await setup_integration_legacy()
+    with patch(
+        "homeassistant.components.dlink.SmartPlug",
+        return_value=mocked_plug_legacy,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("switch.mock_title_switch")
+    state = hass.states.get("switch.mock_title")
     assert state.state == STATE_OFF
     assert state.attributes["total_consumption"] is None
     assert state.attributes["temperature"] is None

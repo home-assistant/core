@@ -6,6 +6,7 @@ from meteofrance_api.model.forecast import Forecast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
@@ -109,11 +110,7 @@ class MeteoFranceWeather(
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        assert (
-            self.platform
-            and self.platform.config_entry
-            and self.platform.config_entry.unique_id
-        )
+        assert self.platform.config_entry and self.platform.config_entry.unique_id
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
@@ -175,6 +172,7 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_CONDITION: format_condition(
                             forecast["weather"]["desc"]
                         ),
+                        ATTR_FORECAST_HUMIDITY: forecast["humidity"],
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
@@ -196,6 +194,7 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_CONDITION: format_condition(
                             forecast["weather12H"]["desc"]
                         ),
+                        ATTR_FORECAST_HUMIDITY: forecast["humidity"]["max"],
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["max"],
                         ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["T"]["min"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["precipitation"][

@@ -35,7 +35,7 @@ SIREN_ENTITIES = (
         key="siren",
         name="Siren",
         icon="mdi:alarm-light",
-        supported=lambda api, ch: api.supported(ch, "siren"),
+        supported=lambda api, ch: api.supported(ch, "siren_play"),
     ),
 )
 

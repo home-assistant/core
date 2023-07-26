@@ -1,5 +1,5 @@
 """Tests for the Sonos number platform."""
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
@@ -11,6 +11,10 @@ async def test_number_entities(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test number entities."""
+    balance_number = entity_registry.entities["number.zone_a_balance"]
+    balance_state = hass.states.get(balance_number.entity_id)
+    assert balance_state.state == "39"
+
     bass_number = entity_registry.entities["number.zone_a_bass"]
     bass_state = hass.states.get(bass_number.entity_id)
     assert bass_state.state == "1"
@@ -33,24 +37,28 @@ async def test_number_entities(
     music_surround_level_state = hass.states.get(music_surround_level_number.entity_id)
     assert music_surround_level_state.state == "4"
 
-    with patch("soco.SoCo.audio_delay") as mock_audio_delay:
+    with patch.object(
+        type(soco), "audio_delay", new_callable=PropertyMock
+    ) as mock_audio_delay:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: audio_delay_number.entity_id, "value": 3},
             blocking=True,
         )
-        assert mock_audio_delay.called_with(3)
+        mock_audio_delay.assert_called_once_with(3)
 
     sub_gain_number = entity_registry.entities["number.zone_a_sub_gain"]
     sub_gain_state = hass.states.get(sub_gain_number.entity_id)
     assert sub_gain_state.state == "5"
 
-    with patch("soco.SoCo.sub_gain") as mock_sub_gain:
+    with patch.object(
+        type(soco), "sub_gain", new_callable=PropertyMock
+    ) as mock_sub_gain:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: sub_gain_number.entity_id, "value": -8},
             blocking=True,
         )
-        assert mock_sub_gain.called_with(-8)
+        mock_sub_gain.assert_called_once_with(-8)

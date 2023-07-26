@@ -1,9 +1,32 @@
 """Voice activity detection."""
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 import webrtcvad
 
 _SAMPLE_RATE = 16000
+
+
+class VadSensitivity(StrEnum):
+    """How quickly the end of a voice command is detected."""
+
+    DEFAULT = "default"
+    RELAXED = "relaxed"
+    AGGRESSIVE = "aggressive"
+
+    @staticmethod
+    def to_seconds(sensitivity: VadSensitivity | str) -> float:
+        """Return seconds of silence for sensitivity level."""
+        sensitivity = VadSensitivity(sensitivity)
+        if sensitivity == VadSensitivity.RELAXED:
+            return 2.0
+
+        if sensitivity == VadSensitivity.AGGRESSIVE:
+            return 0.5
+
+        return 1.0
 
 
 @dataclass
@@ -28,7 +51,7 @@ class VoiceCommandSegmenter:
     reset_seconds: float = 1.0
     """Seconds before reset start/stop time counters."""
 
-    _in_command: bool = False
+    in_command: bool = False
     """True if inside voice command."""
 
     _speech_seconds_left: float = 0.0
@@ -62,7 +85,7 @@ class VoiceCommandSegmenter:
         self._silence_seconds_left = self.silence_seconds
         self._timeout_seconds_left = self.timeout_seconds
         self._reset_seconds_left = self.reset_seconds
-        self._in_command = False
+        self.in_command = False
 
     def process(self, samples: bytes) -> bool:
         """Process a 16-bit 16Khz mono audio samples.
@@ -101,28 +124,27 @@ class VoiceCommandSegmenter:
         if self._timeout_seconds_left <= 0:
             return False
 
-        if not self._in_command:
+        if not self.in_command:
             if is_speech:
                 self._reset_seconds_left = self.reset_seconds
                 self._speech_seconds_left -= self._seconds_per_chunk
                 if self._speech_seconds_left <= 0:
                     # Inside voice command
-                    self._in_command = True
+                    self.in_command = True
             else:
                 # Reset if enough silence
                 self._reset_seconds_left -= self._seconds_per_chunk
                 if self._reset_seconds_left <= 0:
                     self._speech_seconds_left = self.speech_seconds
+        elif not is_speech:
+            self._reset_seconds_left = self.reset_seconds
+            self._silence_seconds_left -= self._seconds_per_chunk
+            if self._silence_seconds_left <= 0:
+                return False
         else:
-            if not is_speech:
-                self._reset_seconds_left = self.reset_seconds
-                self._silence_seconds_left -= self._seconds_per_chunk
-                if self._silence_seconds_left <= 0:
-                    return False
-            else:
-                # Reset if enough speech
-                self._reset_seconds_left -= self._seconds_per_chunk
-                if self._reset_seconds_left <= 0:
-                    self._silence_seconds_left = self.silence_seconds
+            # Reset if enough speech
+            self._reset_seconds_left -= self._seconds_per_chunk
+            if self._reset_seconds_left <= 0:
+                self._silence_seconds_left = self.silence_seconds
 
         return True

@@ -25,6 +25,7 @@
       "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
       "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
       "is_ozone": "Current {entity_name} ozone concentration level",
+      "is_ph": "Current {entity_name} pH level",
       "is_pm1": "Current {entity_name} PM1 concentration level",
       "is_pm10": "Current {entity_name} PM10 concentration level",
       "is_pm25": "Current {entity_name} PM2.5 concentration level",
@@ -41,6 +42,7 @@
       "is_temperature": "Current {entity_name} temperature",
       "is_value": "Current {entity_name} value",
       "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
+      "is_volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::condition_type::is_volatile_organic_compounds%]",
       "is_voltage": "Current {entity_name} voltage",
       "is_volume": "Current {entity_name} volume",
       "is_water": "Current {entity_name} water",
@@ -71,6 +73,7 @@
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
       "ozone": "{entity_name} ozone concentration changes",
+      "ph": "{entity_name} pH level changes",
       "pm1": "{entity_name} PM1 concentration changes",
       "pm10": "{entity_name} PM10 concentration changes",
       "pm25": "{entity_name} PM2.5 concentration changes",
@@ -87,6 +90,7 @@
       "temperature": "{entity_name} temperature changes",
       "value": "{entity_name} value changes",
       "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
+      "volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::trigger_type::volatile_organic_compounds%]",
       "voltage": "{entity_name} voltage changes",
       "volume": "{entity_name} volume changes",
       "water": "{entity_name} water changes",
@@ -196,6 +200,9 @@
     "ozone": {
       "name": "Ozone"
     },
+    "ph": {
+      "name": "pH"
+    },
     "pm1": {
       "name": "PM1"
     },
@@ -243,6 +250,9 @@
     },
     "volatile_organic_compounds": {
       "name": "VOCs"
+    },
+    "volatile_organic_compounds_parts": {
+      "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
     },
     "voltage": {
       "name": "Voltage"

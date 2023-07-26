@@ -22,7 +22,8 @@
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -45,7 +46,7 @@
     },
     "webhook_url": {
       "title": "Reolink webhook URL unreachable",
-      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL."
+      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received."
     },
     "enable_port": {
       "title": "Reolink port not enabled",
@@ -60,9 +61,11 @@
     "select": {
       "floodlight_mode": {
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "auto": "Auto",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "adaptive": "Adaptive",
+          "autoadaptive": "Auto adaptive"
         }
       },
       "day_night_mode": {
@@ -74,7 +77,7 @@
       },
       "auto_quick_reply_message": {
         "state": {
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "auto_track_method": {
@@ -83,6 +86,18 @@
           "digitalfirst": "Digital first",
           "pantiltfirst": "Pan/tilt first"
         }
+      },
+      "status_led": {
+        "state": {
+          "stayoff": "Stay off",
+          "auto": "Auto",
+          "alwaysonatnight": "Auto & always on at night"
+        }
+      }
+    },
+    "sensor": {
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
       }
     }
   }

@@ -20,7 +20,7 @@ from homeassistant.components.version.const import (
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import MOCK_VERSION, MOCK_VERSION_DATA, setup_version_integration
 
@@ -37,7 +37,9 @@ async def test_reload_config_entry(hass: HomeAssistant) -> None:
         return_value=(MOCK_VERSION, MOCK_VERSION_DATA),
     ):
         assert await hass.config_entries.async_reload(config_entry.entry_id)
-        async_fire_time_changed(hass, dt.utcnow() + UPDATE_COORDINATOR_UPDATE_INTERVAL)
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + UPDATE_COORDINATOR_UPDATE_INTERVAL
+        )
         await hass.async_block_till_done()
 
     entry = hass.config_entries.async_get_entry(config_entry.entry_id)

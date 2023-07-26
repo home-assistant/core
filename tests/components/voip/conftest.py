@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from voip_utils import CallInfo
@@ -16,6 +16,12 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass) -> None:
+    """Load the homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a config entry."""
@@ -27,7 +33,10 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 async def setup_voip(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up VoIP integration."""
-    with patch("homeassistant.components.voip._create_sip_server", return_value=Mock()):
+    with patch(
+        "homeassistant.components.voip._create_sip_server",
+        return_value=(Mock(), AsyncMock()),
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         assert config_entry.state == ConfigEntryState.LOADED
         yield

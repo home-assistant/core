@@ -4,9 +4,8 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -20,10 +19,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
-    CHANNEL_IAS_WD,
-    CHANNEL_INOVELLI,
-    CHANNEL_OCCUPANCY,
-    CHANNEL_ON_OFF,
+    CLUSTER_HANDLER_HUE_OCCUPANCY,
+    CLUSTER_HANDLER_IAS_WD,
+    CLUSTER_HANDLER_INOVELLI,
+    CLUSTER_HANDLER_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -33,7 +32,7 @@ from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
-    from .core.channels.base import ZigbeeChannel
+    from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
 
@@ -74,33 +73,35 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         self,
         unique_id: str,
         zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
+        cluster_handlers: list[ClusterHandler],
         **kwargs: Any,
     ) -> None:
         """Init this select entity."""
         self._attribute = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
-        self._channel: ZigbeeChannel = channels[0]
-        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        option = self._channel.data_cache.get(self._attribute)
+        option = self._cluster_handler.data_cache.get(self._attribute)
         if option is None:
             return None
         return option.name.replace("_", " ")
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._channel.data_cache[self._attribute] = self._enum[option.replace(" ", "_")]
+        self._cluster_handler.data_cache[self._attribute] = self._enum[
+            option.replace(" ", "_")
+        ]
         self.async_write_ha_state()
 
     @callback
     def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
         if last_state.state and last_state.state != STATE_UNKNOWN:
-            self._channel.data_cache[self._attribute] = self._enum[
+            self._cluster_handler.data_cache[self._attribute] = self._enum[
                 last_state.state.replace(" ", "_")
             ]
 
@@ -114,7 +115,7 @@ class ZHANonZCLSelectEntity(ZHAEnumSelectEntity):
         return True
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_IAS_WD)
 class ZHADefaultToneSelectEntity(
     ZHANonZCLSelectEntity, id_suffix=IasWd.Warning.WarningMode.__name__
 ):
@@ -124,7 +125,7 @@ class ZHADefaultToneSelectEntity(
     _attr_name = "Default siren tone"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_IAS_WD)
 class ZHADefaultSirenLevelSelectEntity(
     ZHANonZCLSelectEntity, id_suffix=IasWd.Warning.SirenLevel.__name__
 ):
@@ -134,7 +135,7 @@ class ZHADefaultSirenLevelSelectEntity(
     _attr_name = "Default siren level"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_IAS_WD)
 class ZHADefaultStrobeLevelSelectEntity(
     ZHANonZCLSelectEntity, id_suffix=IasWd.StrobeLevel.__name__
 ):
@@ -144,7 +145,7 @@ class ZHADefaultStrobeLevelSelectEntity(
     _attr_name = "Default strobe level"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_IAS_WD)
 class ZHADefaultStrobeSelectEntity(ZHANonZCLSelectEntity, id_suffix=Strobe.__name__):
     """Representation of a ZHA default siren strobe select entity."""
 
@@ -164,17 +165,18 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         cls,
         unique_id: str,
         zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
+        cluster_handlers: list[ClusterHandler],
         **kwargs: Any,
     ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
         """
-        channel = channels[0]
+        cluster_handler = cluster_handlers[0]
         if (
-            cls._select_attr in channel.cluster.unsupported_attributes
-            or channel.cluster.get(cls._select_attr) is None
+            cls._select_attr in cluster_handler.cluster.unsupported_attributes
+            or cls._select_attr not in cluster_handler.cluster.attributes_by_name
+            or cluster_handler.cluster.get(cls._select_attr) is None
         ):
             _LOGGER.debug(
                 "%s is not supported - skipping %s entity creation",
@@ -183,24 +185,24 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
             )
             return None
 
-        return cls(unique_id, zha_device, channels, **kwargs)
+        return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
     def __init__(
         self,
         unique_id: str,
         zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
+        cluster_handlers: list[ClusterHandler],
         **kwargs: Any,
     ) -> None:
         """Init this select entity."""
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
-        self._channel: ZigbeeChannel = channels[0]
-        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        option = self._channel.cluster.get(self._select_attr)
+        option = self._cluster_handler.cluster.get(self._select_attr)
         if option is None:
             return None
         option = self._enum(option)
@@ -208,7 +210,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._channel.cluster.write_attributes(
+        await self._cluster_handler.cluster.write_attributes(
             {self._select_attr: self._enum[option.replace(" ", "_")]}
         )
         self.async_write_ha_state()
@@ -217,16 +219,16 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+            self._cluster_handler, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
     @callback
     def async_set_state(self, attr_id: int, attr_name: str, value: Any):
-        """Handle state update from channel."""
+        """Handle state update from cluster handler."""
         self.async_write_ha_state()
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_ON_OFF)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)
 class ZHAStartupOnOffSelectEntity(
     ZCLEnumSelectEntity, id_suffix=OnOff.StartUpOnOff.__name__
 ):
@@ -246,11 +248,11 @@ class TuyaPowerOnState(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_ON_OFF,
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
     models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
 )
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_7tdtqgwv",
         "_TZE200_amp6tsvy",
@@ -287,7 +289,7 @@ class TuyaBacklightMode(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_ON_OFF,
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
     models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
 )
 class TuyaBacklightModeSelectEntity(ZCLEnumSelectEntity, id_suffix="backlight_mode"):
@@ -308,7 +310,7 @@ class MoesBacklightMode(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_7tdtqgwv",
         "_TZE200_amp6tsvy",
@@ -345,7 +347,7 @@ class AqaraMotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="opple_cluster",
+    cluster_handler_names="opple_cluster",
     models={"lumi.motion.ac01", "lumi.motion.ac02", "lumi.motion.agl04"},
 )
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
@@ -365,7 +367,7 @@ class HueV1MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_OCCUPANCY,
+    cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML001"},
 )
@@ -388,7 +390,7 @@ class HueV2MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_OCCUPANCY,
+    cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML002", "SML003", "SML004"},
 )
@@ -407,7 +409,9 @@ class AqaraMonitoringModess(types.enum8):
     Left_Right = 0x01
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.motion.ac01"}
+)
 class AqaraMonitoringMode(ZCLEnumSelectEntity, id_suffix="monitoring_mode"):
     """Representation of a ZHA monitoring mode configuration entity."""
 
@@ -424,7 +428,9 @@ class AqaraApproachDistances(types.enum8):
     Near = 0x02
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.motion.ac01"}
+)
 class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
     """Representation of a ZHA approach distance configuration entity."""
 
@@ -441,7 +447,7 @@ class AqaraE1ReverseDirection(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="window_covering", models={"lumi.curtain.agl001"}
+    cluster_handler_names="window_covering", models={"lumi.curtain.agl001"}
 )
 class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
     """Representation of a ZHA curtain mode configuration entity."""
@@ -459,7 +465,7 @@ class InovelliOutputMode(types.enum1):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_INOVELLI,
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
 class InovelliOutputModeEntity(ZCLEnumSelectEntity, id_suffix="output_mode"):
     """Inovelli output mode control."""
@@ -479,7 +485,7 @@ class InovelliSwitchType(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_INOVELLI,
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
 class InovelliSwitchTypeEntity(ZCLEnumSelectEntity, id_suffix="switch_type"):
     """Inovelli switch type control."""
@@ -497,7 +503,7 @@ class InovelliLedScalingMode(types.enum1):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_INOVELLI,
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
 class InovelliLedScalingModeEntity(ZCLEnumSelectEntity, id_suffix="led_scaling_mode"):
     """Inovelli led mode control."""
@@ -515,7 +521,7 @@ class InovelliNonNeutralOutput(types.enum1):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_INOVELLI,
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
 class InovelliNonNeutralOutputEntity(
     ZCLEnumSelectEntity, id_suffix="increased_non_neutral_output"
@@ -534,7 +540,9 @@ class AqaraFeedingMode(types.enum8):
     Schedule = 0x01
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"}
+)
 class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     """Representation of an Aqara pet feeder mode configuration entity."""
 
@@ -552,7 +560,9 @@ class AqaraThermostatPresetMode(types.enum8):
     Away = 0x02
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
+)
 class AqaraThermostatPreset(ZCLEnumSelectEntity, id_suffix="preset"):
     """Representation of an Aqara thermostat preset configuration entity."""
 

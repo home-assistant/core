@@ -5,7 +5,11 @@ from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import BaseHaRemoteScanner, HaBluetoothConnector
+from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
+    BaseHaRemoteScanner,
+    HaBluetoothConnector,
+)
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -450,6 +454,7 @@ async def test_diagnostics_remote_adapter(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     with patch(

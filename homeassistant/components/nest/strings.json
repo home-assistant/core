@@ -4,14 +4,6 @@
   },
   "config": {
     "step": {
-      "auth_upgrade": {
-        "title": "Nest: App Auth Deprecation",
-        "description": "App Auth has been deprecated by Google to improve security, and you need to take action by creating new application credentials.\n\nOpen the [documentation]({more_info_url}) to follow along as the next steps will guide you through the steps you need to take to restore access to your Nest devices."
-      },
-      "device_project_upgrade": {
-        "title": "Nest: Update Device Access Project",
-        "description": "Update the Nest Device Access Project with your new OAuth Client ID ([more info]({more_info_url}))\n1. Go to the [Device Access Console]({device_access_console_url}).\n1. Click the trash icon next to *OAuth Client ID*.\n1. Click the `...` overflow menu and *Add Client ID*.\n1. Enter your new OAuth Client ID and click **Add**.\n\nYour OAuth Client ID is: `{client_id}`"
-      },
       "create_cloud_project": {
         "title": "Nest: Create and configure Cloud Project",
         "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a US $5** one time setup fee. See documentation for [more info]({more_info_url}).\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, click **Create Project** then **New Project**.\n1. Give your Cloud Project a Name and then click **Create**.\n1. Save the Cloud Project ID e.g. *example-project-12345* as you will need it later\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and click **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and click **Enable**.\n\nProceed when your cloud project is set up."
@@ -37,33 +29,15 @@
         "title": "Configure Google Cloud",
         "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
         "data": {
-          "cloud_project_id": "Google Cloud Project ID"
+          "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nest integration needs to re-authenticate your account"
-      },
-      "init": {
-        "title": "Authentication Provider",
-        "description": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": {
-          "flow_impl": "Provider"
-        }
-      },
-      "link": {
-        "title": "Link Nest Account",
-        "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided PIN code below.",
-        "data": {
-          "code": "[%key:common::config_flow::data::pin%]"
-        }
       }
     },
     "error": {
-      "timeout": "Timeout validating code",
-      "invalid_pin": "Invalid PIN",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "internal_error": "Internal error validating code",
       "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",
       "wrong_project_id": "Please enter a valid Cloud Project ID (was same as Device Access Project ID)",
       "subscriber_error": "Unknown subscriber error, see logs"
@@ -90,22 +64,60 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "title": "The Nest YAML configuration is being removed",
-      "description": "Configuring Nest in configuration.yaml is being removed in Home Assistant 2022.10.\n\nYour existing OAuth Application Credentials and access settings have been imported into the UI automatically. Remove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    },
-    "removed_app_auth": {
-      "title": "Nest Authentication Credentials must be updated",
-      "description": "To improve security and reduce phishing risk Google has deprecated the authentication method used by Home Assistant.\n\n**This requires action by you to resolve** ([more info]({more_info_url}))\n\n1.  Visit the integrations page\n1. Click Reconfigure on the Nest integration.\n1. Home Assistant will walk you through the steps to upgrade to Web Authentication.\n\nSee the Nest [integration instructions]({documentation_url}) for troubleshooting information."
+    "legacy_nest_removed": {
+      "title": "Legacy Works With Nest has been removed",
+      "description": "Legacy Works With Nest has been removed from Home Assistant, and the API shuts down as of September 2023.\n\nYou must take action to use the SDM API. Remove all `nest` configuration from `configuration.yaml` and restart Home Assistant, then see the Nest [integration instructions]({documentation_url}) for set up instructions and supported devices."
     }
   },
-  "entity": {
-    "sensor": {
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+  "services": {
+    "set_away_mode": {
+      "name": "Set away mode",
+      "description": "Sets the away mode for a Nest structure.",
+      "fields": {
+        "away_mode": {
+          "name": "Away mode",
+          "description": "New mode to set."
+        },
+        "structure": {
+          "name": "Structure",
+          "description": "Name(s) of structure(s) to change. Defaults to all structures if not specified."
+        }
+      }
+    },
+    "set_eta": {
+      "name": "Set estimated time of arrival",
+      "description": "Sets or update the estimated time of arrival window for a Nest structure.",
+      "fields": {
+        "eta": {
+          "name": "ETA",
+          "description": "Estimated time of arrival from now."
+        },
+        "eta_window": {
+          "name": "ETA window",
+          "description": "Estimated time of arrival window."
+        },
+        "trip_id": {
+          "name": "Trip ID",
+          "description": "Unique ID for the trip. Default is auto-generated using a timestamp."
+        },
+        "structure": {
+          "name": "[%key:component::nest::services::set_away_mode::fields::structure::name%]",
+          "description": "[%key:component::nest::services::set_away_mode::fields::structure::description%]"
+        }
+      }
+    },
+    "cancel_eta": {
+      "name": "Cancel ETA",
+      "description": "Cancels an existing estimated time of arrival window for a Nest structure.",
+      "fields": {
+        "trip_id": {
+          "name": "[%key:component::nest::services::set_eta::fields::trip_id::name%]",
+          "description": "Unique ID for the trip."
+        },
+        "structure": {
+          "name": "[%key:component::nest::services::set_away_mode::fields::structure::name%]",
+          "description": "[%key:component::nest::services::set_away_mode::fields::structure::description%]"
+        }
       }
     }
   }

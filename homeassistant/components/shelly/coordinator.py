@@ -17,6 +17,7 @@ from awesomeversion import AwesomeVersion
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -41,7 +42,9 @@ from .const import (
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
     LOGGER,
+    MAX_PUSH_UPDATE_FAILURES,
     MODELS_SUPPORTING_LIGHT_EFFECTS,
+    PUSH_UPDATE_ISSUE_ID,
     REST_SENSORS_UPDATE_INTERVAL,
     RPC_INPUTS_EVENTS_TYPES,
     RPC_RECONNECT_INTERVAL,
@@ -97,7 +100,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             immediate=False,
             function=self._async_reload_entry,
         )
-        entry.async_on_unload(self._debounced_reload.async_cancel)
+        entry.async_on_unload(self._debounced_reload.async_shutdown)
 
     @property
     def model(self) -> str:
@@ -162,6 +165,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         self._last_effect: int | None = None
         self._last_input_events_count: dict = {}
         self._last_target_temp: float | None = None
+        self._push_update_failures: int = 0
 
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
@@ -195,17 +199,10 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             if block.type == "device":
                 cfg_changed = block.cfgChanged
 
+            # Shelly TRV sends information about changing the configuration for no
+            # reason, reloading the config entry is not needed for it.
             if self.model == "SHTRV-01":
-                # Reloading the entry is not needed when the target temperature changes
-                if "targetTemp" in block.sensor_ids:
-                    if self._last_target_temp != block.targetTemp:
-                        self._last_cfg_changed = None
-                    self._last_target_temp = block.targetTemp
-                # Reloading the entry is not needed when the mode changes
-                if "mode" in block.sensor_ids:
-                    if self._last_mode != block.mode:
-                        self._last_cfg_changed = None
-                    self._last_mode = block.mode
+                self._last_cfg_changed = None
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
             if self.model in DUAL_MODE_LIGHT_MODELS:
@@ -277,6 +274,25 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         else:
+            self._push_update_failures += 1
+            if self._push_update_failures > MAX_PUSH_UPDATE_FAILURES:
+                LOGGER.debug(
+                    "Creating issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=self.mac)
+                )
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
+                    is_fixable=False,
+                    is_persistent=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    learn_more_url="https://www.home-assistant.io/integrations/shelly/#shelly-device-configuration-generation-1",
+                    translation_key="push_update_failure",
+                    translation_placeholders={
+                        "device_name": self.entry.title,
+                        "ip_address": self.device.ip_address,
+                    },
+                )
             device_update_info(self.hass, self.device, self.entry)
 
     def async_setup(self) -> None:
@@ -542,7 +558,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
         if self.device.connected:
-            await async_stop_scanner(self.device)
+            try:
+                await async_stop_scanner(self.device)
+            except InvalidAuthError:
+                self.entry.async_start_reauth(self.hass)
         await self.device.shutdown()
         await self._async_disconnected()
 

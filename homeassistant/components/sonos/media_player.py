@@ -190,10 +190,13 @@ async def async_setup_entry(
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
+    _attr_name = None
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY
@@ -506,13 +509,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
         """
+        is_radio = False
+
+        if media_source.is_media_source_id(media_id):
+            is_radio = media_id.startswith("media-source://radio_browser/")
+            media_type = MediaType.MUSIC
+            media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = async_process_play_media_url(self.hass, media.url)
+
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
             volume = kwargs.get("extra", {}).get("volume")
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
                 assert self.speaker.websocket
                 response, _ = await self.speaker.websocket.play_clip(
-                    media_id,
+                    async_process_play_media_url(self.hass, media_id),
                     volume=volume,
                 )
             except SonosWebsocketError as exc:
@@ -525,16 +538,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
             media_id = spotify.spotify_uri_from_media_browser_url(media_id)
-
-        is_radio = False
-
-        if media_source.is_media_source_id(media_id):
-            is_radio = media_id.startswith("media-source://radio_browser/")
-            media_type = MediaType.MUSIC
-            media = await media_source.async_resolve_media(
-                self.hass, media_id, self.entity_id
-            )
-            media_id = media.url
 
         await self.hass.async_add_executor_job(
             partial(self._play_media, media_type, media_id, is_radio, **kwargs)

@@ -4,10 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import xmltodict
-
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -15,6 +13,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .common import (
@@ -47,31 +46,15 @@ async def _async_deflection_entities_list(
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
-    deflections_response = await avm_wrapper.async_get_ontel_num_deflections()
-    if not deflections_response:
+    if (
+        call_deflections := avm_wrapper.data.get("call_deflections")
+    ) is None or not isinstance(call_deflections, dict):
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
-
-    _LOGGER.debug(
-        "Specific %s response: GetNumberOfDeflections=%s",
-        SWITCH_TYPE_DEFLECTION,
-        deflections_response,
-    )
-
-    if deflections_response["NewNumberOfDeflections"] == 0:
-        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
-        return []
-
-    if not (deflection_list := await avm_wrapper.async_get_ontel_deflections()):
-        return []
-
-    items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
-    if not isinstance(items, list):
-        items = [items]
 
     return [
-        FritzBoxDeflectionSwitch(avm_wrapper, device_friendly_name, dict_of_deflection)
-        for dict_of_deflection in items
+        FritzBoxDeflectionSwitch(avm_wrapper, device_friendly_name, cd_id)
+        for cd_id in call_deflections
     ]
 
 
@@ -273,6 +256,60 @@ async def async_setup_entry(
     )
 
 
+class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity):
+    """Fritz switch coordinator base class."""
+
+    entity_description: SwitchEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        avm_wrapper: AvmWrapper,
+        device_name: str,
+        description: SwitchEntityDescription,
+    ) -> None:
+        """Init device info class."""
+        super().__init__(avm_wrapper)
+        self.entity_description = description
+        self._device_name = device_name
+        self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
+            configuration_url=f"http://{self.coordinator.host}",
+            connections={(CONNECTION_NETWORK_MAC, self.coordinator.mac)},
+            identifiers={(DOMAIN, self.coordinator.unique_id)},
+            manufacturer="AVM",
+            model=self.coordinator.model,
+            name=self._device_name,
+            sw_version=self.coordinator.current_firmware,
+        )
+
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return entity data from coordinator data."""
+        raise NotImplementedError()
+
+    @property
+    def available(self) -> bool:
+        """Return availability based on data availability."""
+        return super().available and bool(self.data)
+
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
+        """Handle switch state change request."""
+        raise NotImplementedError()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on switch."""
+        await self._async_handle_turn_on_off(turn_on=True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off switch."""
+        await self._async_handle_turn_on_off(turn_on=False)
+
+
 class FritzBoxBaseSwitch(FritzBoxBaseEntity):
     """Fritz switch base class."""
 
@@ -417,69 +454,51 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         return bool(resp is not None)
 
 
-class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
+class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
     """Defines a FRITZ!Box Tools PortForward switch."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
         avm_wrapper: AvmWrapper,
         device_friendly_name: str,
-        dict_of_deflection: Any,
+        deflection_id: int,
     ) -> None:
         """Init Fritxbox Deflection class."""
-        self._avm_wrapper = avm_wrapper
-
-        self.dict_of_deflection = dict_of_deflection
-        self._attributes = {}
-        self.id = int(self.dict_of_deflection["DeflectionId"])
-        self._attr_entity_category = EntityCategory.CONFIG
-
-        switch_info = SwitchInfo(
-            description=f"Call deflection {self.id}",
-            friendly_name=device_friendly_name,
+        self.deflection_id = deflection_id
+        description = SwitchEntityDescription(
+            key=f"call_deflection_{self.deflection_id}",
+            name=f"Call deflection {self.deflection_id}",
             icon="mdi:phone-forward",
-            type=SWITCH_TYPE_DEFLECTION,
-            callback_update=self._async_fetch_update,
-            callback_switch=self._async_switch_on_off_executor,
         )
-        super().__init__(self._avm_wrapper, device_friendly_name, switch_info)
+        super().__init__(avm_wrapper, device_friendly_name, description)
 
-    async def _async_fetch_update(self) -> None:
-        """Fetch updates."""
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return call deflection data."""
+        return self.coordinator.data["call_deflections"].get(self.deflection_id, {})
 
-        resp = await self._avm_wrapper.async_get_ontel_deflections()
-        if not resp:
-            self._is_available = False
-            return
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return device attributes."""
+        return {
+            "type": self.data["Type"],
+            "number": self.data["Number"],
+            "deflection_to_number": self.data["DeflectionToNumber"],
+            "mode": self.data["Mode"][1:],
+            "outgoing": self.data["Outgoing"],
+            "phonebook_id": self.data["PhonebookID"],
+        }
 
-        self.dict_of_deflection = xmltodict.parse(resp["NewDeflectionList"])["List"][
-            "Item"
-        ]
-        if isinstance(self.dict_of_deflection, list):
-            self.dict_of_deflection = self.dict_of_deflection[self.id]
+    @property
+    def is_on(self) -> bool | None:
+        """Switch status."""
+        return self.data.get("Enable") == "1"
 
-        _LOGGER.debug(
-            "Specific %s response: NewDeflectionList=%s",
-            SWITCH_TYPE_DEFLECTION,
-            self.dict_of_deflection,
-        )
-
-        self._attr_is_on = self.dict_of_deflection["Enable"] == "1"
-        self._is_available = True
-
-        self._attributes["type"] = self.dict_of_deflection["Type"]
-        self._attributes["number"] = self.dict_of_deflection["Number"]
-        self._attributes["deflection_to_number"] = self.dict_of_deflection[
-            "DeflectionToNumber"
-        ]
-        # Return mode sample: "eImmediately"
-        self._attributes["mode"] = self.dict_of_deflection["Mode"][1:]
-        self._attributes["outgoing"] = self.dict_of_deflection["Outgoing"]
-        self._attributes["phonebook_id"] = self.dict_of_deflection["PhonebookID"]
-
-    async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle deflection switch."""
-        await self._avm_wrapper.async_set_deflection_enable(self.id, turn_on)
+        await self.coordinator.async_set_deflection_enable(self.deflection_id, turn_on)
 
 
 class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
@@ -499,7 +518,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
             default_manufacturer="AVM",
             default_model="FRITZ!Box Tracked device",
             default_name=device.hostname,
-            identifiers={(DOMAIN, self._mac)},
             via_device=(
                 DOMAIN,
                 avm_wrapper.unique_id,

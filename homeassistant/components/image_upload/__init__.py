@@ -8,16 +8,16 @@ import secrets
 import shutil
 from typing import Any
 
-from PIL import Image, ImageOps, UnidentifiedImageError
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
+from PIL import Image, ImageOps, UnidentifiedImageError
 import voluptuous as vol
 
 from homeassistant.components.http.static import CACHE_HEADERS
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import collection
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -37,6 +37,8 @@ CREATE_FIELDS = {
 UPDATE_FIELDS = {
     vol.Optional("name"): vol.All(str, vol.Length(min=1)),
 }
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

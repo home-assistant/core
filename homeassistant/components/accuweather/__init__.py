@@ -121,12 +121,12 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
+        forecast: list[dict[str, Any]] = []
         try:
             async with timeout(10):
                 current = await self.accuweather.async_get_current_conditions()
-                forecast = (
-                    await self.accuweather.async_get_forecast() if self.forecast else {}
-                )
+                if self.forecast:
+                    forecast = await self.accuweather.async_get_daily_forecast()
         except (
             ApiError,
             ClientConnectorError,
