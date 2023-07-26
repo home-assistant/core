@@ -73,7 +73,6 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
     entity_description = EventEntityDescription(
         key="button",
         device_class=EventDeviceClass.BUTTON,
-        has_entity_name=False,
         translation_key="button",
     )
 
