@@ -55,12 +55,10 @@ async def async_attach_trigger(
             **trigger_data,
             "platform": DOMAIN,
             "sentence": sentence,
-        }
-
-        # Add wildcard values as extra trigger data
-        trigger_input["wildcards"] = {
-            entity_name: entity.text.strip()
-            for entity_name, entity in result.entities.items()
+            "wildcards": {  # Add wildcard values as extra trigger data
+                entity_name: entity.text.strip()
+                for entity_name, entity in result.entities.items()
+            },
         }
 
         # Wait for the automation to complete

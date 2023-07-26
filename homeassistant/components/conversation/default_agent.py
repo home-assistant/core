@@ -717,7 +717,7 @@ class DefaultAgent(AbstractConversationAgent):
             "'%s' matched %s trigger(s): %s",
             sentence,
             len(matched_triggers),
-            list(matched_triggers.keys()),
+            list(matched_triggers),
         )
 
         # Gather callback responses in parallel
