@@ -7,6 +7,7 @@ import datetime
 import functools
 import logging
 from pathlib import Path
+from typing import cast
 
 from google_nest_sdm.camera_traits import (
     CameraImageTrait,
@@ -74,10 +75,23 @@ class NestCamera(Camera):
         self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
+    def _get_rtsp_live_stream_trait(self) -> CameraLiveStreamTrait | None:
+        """Check for stream prerequisites and return a CameraLiveStreamTrait or None."""
+        if not (self.supported_features & CameraEntityFeature.STREAM):
+            return None
+        if CameraLiveStreamTrait.NAME not in self._device.traits:
+            return None
+        trait = cast(
+            CameraLiveStreamTrait, self._device.traits[CameraLiveStreamTrait.NAME]
+        )
+        if StreamingProtocol.RTSP not in trait.supported_protocols:
+            return None
+        return trait
+
     @property
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
-        return bool(self.supported_features & CameraEntityFeature.STREAM)
+        return self._get_rtsp_live_stream_trait() is not None
 
     @property
     def unique_id(self) -> str:
@@ -130,12 +144,7 @@ class NestCamera(Camera):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        if not self.supported_features & CameraEntityFeature.STREAM:
-            return None
-        if CameraLiveStreamTrait.NAME not in self._device.traits:
-            return None
-        trait = self._device.traits[CameraLiveStreamTrait.NAME]
-        if StreamingProtocol.RTSP not in trait.supported_protocols:
+        if not (trait := self._get_rtsp_live_stream_trait()):
             return None
         async with self._create_stream_url_lock:
             if not self._stream:
