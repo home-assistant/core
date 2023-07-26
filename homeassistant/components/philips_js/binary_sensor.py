@@ -3,15 +3,47 @@ from __future__ import annotations
 
 from haphilipsjs import PhilipsTV
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
+
+
+class PhilipsTVBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """A entity description for Philips TV binary sensor."""
+
+    def __init__(self, recording_entry, recording_value, *args, **kwargs) -> None:
+        """Set up a binary sensor entity description and add additional attributes."""
+        super().__init__(*args, **kwargs)
+        self.recording_entry: str = recording_entry
+        self.recording_value: str = recording_value
+
+
+DESCRIPTIONS = (
+    PhilipsTVBinarySensorEntityDescription(
+        key="recording_ongoing",
+        has_entity_name=True,
+        translation_key="recording_ongoing",
+        icon="mdi:record-rec",
+        recording_entry="RecordingType",
+        recording_value="RECORDING_ONGOING",
+    ),
+    PhilipsTVBinarySensorEntityDescription(
+        key="recording_new",
+        has_entity_name=True,
+        translation_key="recording_new",
+        icon="mdi:new-box",
+        recording_entry="RecordingType",
+        recording_value="RECORDING_NEW",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -29,7 +61,8 @@ async def async_setup_entry(
         and coordinator.api.api_version == 6
     ):
         async_add_entities(
-            [PhilipsTVRecordingOngoing(coordinator), PhilipsTVRecordingNew(coordinator)]
+            PhilipsTVBinarySensorEntityRecordingType(coordinator, description)
+            for description in DESCRIPTIONS
         )
 
 
@@ -41,69 +74,32 @@ def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     return False
 
 
-class PhilipsTVRecordingOngoing(
+class PhilipsTVBinarySensorEntityRecordingType(
     CoordinatorEntity[PhilipsTVDataUpdateCoordinator], BinarySensorEntity
 ):
-    """A Philips TV binary sensor, which shows if a recording is ongoing."""
+    """A Philips TV binary sensor class, which allows multiple entities given by a BinarySensorEntityDescription."""
 
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
+        description: PhilipsTVBinarySensorEntityDescription,
     ) -> None:
-        """Initialize entity."""
+        """Initialize entity class."""
+        self.coordinator = coordinator
+        self.description = description
+
+        self.entity_description = self.description
+        self._attr_unique_id = f"{self.coordinator.unique_id}_{self.description.key}"
+        self._attr_device_info = self.coordinator.device_info
 
         super().__init__(coordinator)
 
-        self._attr_has_entity_name = True
-        self._attr_translation_key = "recording_ongoing"
-        self._attr_icon = "mdi:record-rec"
-        self._attr_unique_id = f"{coordinator.unique_id}_recording_ongoing"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, coordinator.unique_id),
-            }
-        )
-
     def _update_from_coordinator(self):
-        """Set is_on true if at least one recording is ongoing."""
+        """Set is_on true if one specified value is available within given entry of list."""
         self._attr_is_on = _check_for_recording_entry(
-            self.coordinator.api, "RecordingType", "RECORDING_ONGOING"
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_from_coordinator()
-        super()._handle_coordinator_update()
-
-
-class PhilipsTVRecordingNew(
-    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], BinarySensorEntity
-):
-    """A Philips TV binary sensor, which shows if a new recording is available."""
-
-    def __init__(
-        self,
-        coordinator: PhilipsTVDataUpdateCoordinator,
-    ) -> None:
-        """Initialize entity."""
-
-        super().__init__(coordinator)
-
-        self._attr_has_entity_name = True
-        self._attr_translation_key = "recording_new"
-        self._attr_icon = "mdi:new-box"
-        self._attr_unique_id = f"{coordinator.unique_id}_recording_new"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, coordinator.unique_id),
-            }
-        )
-
-    def _update_from_coordinator(self):
-        """Set is_on true if at least one recording is new."""
-        self._attr_is_on = _check_for_recording_entry(
-            self.coordinator.api, "RecordingType", "RECORDING_NEW"
+            self.coordinator.api,
+            self.description.recording_entry,
+            self.description.recording_value,
         )
 
     @callback
