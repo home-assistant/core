@@ -1,6 +1,7 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -21,7 +22,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CertExpiryDataUpdateCoordinator
-from .const import DEFAULT_PORT, DOMAIN, IMPORT_DELAY
+from .const import DEFAULT_PORT, DOMAIN
 
 SCAN_INTERVAL = timedelta(hours=12)
 
@@ -44,7 +45,7 @@ async def async_setup_platform(
     @callback
     def schedule_import(_):
         """Schedule delayed import after HA is fully started."""
-        async_call_later(hass, IMPORT_DELAY, do_import)
+        async_call_later(hass, 10, do_import)
 
     @callback
     def do_import(_):
@@ -79,7 +80,7 @@ class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
     _attr_icon = "mdi:certificate"
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return additional sensor state attributes."""
         return {
             "is_valid": self.coordinator.is_cert_valid,

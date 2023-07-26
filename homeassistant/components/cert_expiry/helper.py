@@ -1,10 +1,7 @@
 """Helper functions for the Cert Expiry platform."""
-import datetime
 from functools import cache
-import logging
 import socket
 import ssl
-from typing import Any
 
 from cryptography import x509
 
@@ -19,8 +16,6 @@ from .errors import (
     ValidationFailure,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @cache
 def _get_ssl_context() -> ssl.SSLContext:
@@ -29,7 +24,7 @@ def _get_ssl_context() -> ssl.SSLContext:
     return ctx
 
 
-def get_cert(host: str, port: int) -> Any:
+def get_cert(host: str, port: int):
     """Get the certificate for the host and port combination."""
     ctx = _get_ssl_context()
     address = (host, port)
@@ -38,19 +33,19 @@ def get_cert(host: str, port: int) -> Any:
         timeout=TIMEOUT,
     ) as sock, ctx.wrap_socket(sock, server_hostname=address[0]) as ssock:
         # Request certificate in binary form as otherwise invalid cert will not be retrieved
-        _LOGGER.debug(f"Retrieving certificate for {address}")
         binary_cert = ssock.getpeercert(True)
         if binary_cert is None:
             raise ValidationFailure("Unable to retrieve peer certificate")
 
         decoded_cert = x509.load_der_x509_certificate(binary_cert)
-        _LOGGER.debug(f"Successfully retrieved certificate for {address}")
         return decoded_cert
 
 
 async def get_cert_expiry_timestamp(
-    hass: HomeAssistant, hostname: str, port: int
-) -> datetime.datetime:
+    hass: HomeAssistant,
+    hostname: str,
+    port: int,
+):
     """Return the certificate's expiration timestamp."""
     try:
         cert = await hass.async_add_executor_job(get_cert, hostname, port)
