@@ -94,6 +94,7 @@ class ElectricKiwiHOPEntity(
     """Entity object for Electric Kiwi sensor."""
 
     entity_description: ElectricKiwiHOPSensorEntityDescription
+    _attr_has_entity_name = True
     _attr_attribution = ATTRIBUTION
 
     def __init__(

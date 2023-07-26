@@ -427,7 +427,7 @@ bellows==0.35.8
 bimmer-connected==0.13.8
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.1.0
+bleak-retry-connector==3.1.1
 
 # homeassistant.components.bluetooth
 bleak==0.20.2
@@ -750,7 +750,7 @@ habitipy==0.2.0
 hass-nabucasa==0.69.0
 
 # homeassistant.components.conversation
-hassil==1.2.0
+hassil==1.2.2
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -771,10 +771,10 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230705.1
+home-assistant-frontend==20230725.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.7.24
+home-assistant-intents==2023.7.25
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1214,7 +1214,7 @@ pydeconz==113
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==1.2.1
+pydiscovergy==2.0.1
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1561,6 +1561,9 @@ python-miio==0.5.12
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
+
+# homeassistant.components.opensky
+python-opensky==0.0.10
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
@@ -2010,7 +2013,7 @@ yolink-api==0.3.0
 youless-api==1.0.1
 
 # homeassistant.components.youtube
-youtubeaio==1.1.4
+youtubeaio==1.1.5
 
 # homeassistant.components.zamg
 zamg==0.2.4
