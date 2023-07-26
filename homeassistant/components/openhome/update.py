@@ -48,6 +48,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device):
         """Initialize a Linn DS update entity."""

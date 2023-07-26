@@ -11,13 +11,10 @@ import re
 import sys
 from typing import Any
 
+import tomllib
+
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
     "Adafruit-BBIO",
@@ -33,6 +30,7 @@ COMMENT_REQUIREMENTS = (
     "face-recognition",
     "opencv-python-headless",
     "pybluez",
+    "pycocotools",
     "pycups",
     "python-eq3bt",
     "python-gammu",
@@ -104,9 +102,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.7.0
+anyio==3.7.1
 h11==0.14.0
-httpcore==0.17.2
+httpcore==0.17.3
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -143,10 +141,6 @@ pubnub!=6.4.0
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
 
-# Pandas 1.4.4 has issues with wheels om armhf + Py3.10
-# Limit this to Python 3.10, to be able to install Python 3.11 wheels for now
-pandas==1.4.3;python_version<'3.11'
-
 # Matplotlib 3.6.2 has issues building wheels on armhf/armv7
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
@@ -157,7 +151,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.23.1
+protobuf==4.23.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder

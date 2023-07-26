@@ -32,7 +32,11 @@ from homeassistant.helpers import (
     template,
     translation,
 )
-from homeassistant.helpers.event import async_track_state_added_domain
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_added_domain,
+)
+from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -95,7 +99,7 @@ def async_setup(hass: core.HomeAssistant) -> None:
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: core.Event) -> None:
+    def async_entity_state_listener(event: EventType[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 

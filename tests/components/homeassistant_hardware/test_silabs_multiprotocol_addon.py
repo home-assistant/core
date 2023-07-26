@@ -27,6 +27,7 @@ from tests.common import (
 )
 
 TEST_DOMAIN = "test"
+TEST_DOMAIN_2 = "test_2"
 
 
 class FakeConfigFlow(ConfigFlow):
@@ -456,7 +457,7 @@ async def test_option_flow_addon_installed_other_device(
 @pytest.mark.parametrize(
     ("configured_channel", "suggested_channel"), [(None, "15"), (11, "11")]
 )
-async def test_option_flow_addon_installed_same_device_reconfigure(
+async def test_option_flow_addon_installed_same_device_reconfigure_unexpected_users(
     hass: HomeAssistant,
     addon_info,
     addon_store_info,
@@ -465,7 +466,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure(
     configured_channel: int | None,
     suggested_channel: int,
 ) -> None:
-    """Test installing the multi pan addon."""
+    """Test reconfiguring the multi pan addon."""
     mock_integration(hass, MockModule("hassio"))
     addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
 
@@ -494,7 +495,11 @@ async def test_option_flow_addon_installed_same_device_reconfigure(
         {"next_step_id": "reconfigure_addon"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_addon"
+    assert result["step_id"] == "notify_unknown_multipan_user"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "change_channel"
     assert get_suggested(result["data_schema"].schema, "channel") == suggested_channel
 
     result = await hass.config_entries.options.async_configure(
@@ -508,6 +513,79 @@ async def test_option_flow_addon_installed_same_device_reconfigure(
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
     assert mock_multiprotocol_platform.change_channel_calls == [(14, 300)]
+    assert multipan_manager._channel == 14
+
+
+@pytest.mark.parametrize(
+    ("configured_channel", "suggested_channel"), [(None, "15"), (11, "11")]
+)
+async def test_option_flow_addon_installed_same_device_reconfigure_expected_users(
+    hass: HomeAssistant,
+    addon_info,
+    addon_store_info,
+    addon_installed,
+    configured_channel: int | None,
+    suggested_channel: int,
+) -> None:
+    """Test reconfiguring the multi pan addon."""
+    mock_integration(hass, MockModule("hassio"))
+    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+
+    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager._channel = configured_channel
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=TEST_DOMAIN,
+        options={},
+        title="Test HW",
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_multiprotocol_platforms = {}
+    for domain in ["otbr", "zha"]:
+        mock_multiprotocol_platform = MockMultiprotocolPlatform()
+        mock_multiprotocol_platforms[domain] = mock_multiprotocol_platform
+        mock_multiprotocol_platform.channel = configured_channel
+        mock_multiprotocol_platform.using_multipan = True
+
+        hass.config.components.add(domain)
+        mock_platform(
+            hass, f"{domain}.silabs_multiprotocol", mock_multiprotocol_platform
+        )
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        side_effect=Mock(return_value=True),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == FlowResultType.MENU
+        assert result["step_id"] == "addon_menu"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "reconfigure_addon"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "change_channel"
+    assert get_suggested(result["data_schema"].schema, "channel") == suggested_channel
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"channel": "14"}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "notify_channel_change"
+    assert result["description_placeholders"] == {"delay_minutes": "5"}
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+    for domain in ["otbr", "zha"]:
+        assert mock_multiprotocol_platforms[domain].change_channel_calls == [(14, 300)]
+    assert multipan_manager._channel == 14
 
 
 async def test_option_flow_addon_installed_same_device_uninstall(
@@ -1007,3 +1085,39 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
     await multipan_manager2.async_setup()
 
     assert multipan_manager._channel == multipan_manager2._channel
+
+
+@pytest.mark.parametrize(
+    (
+        "multipan_platforms",
+        "active_platforms",
+    ),
+    [
+        ({}, []),
+        ({TEST_DOMAIN: False}, []),
+        ({TEST_DOMAIN: True}, [TEST_DOMAIN]),
+        ({TEST_DOMAIN: True, TEST_DOMAIN_2: False}, [TEST_DOMAIN]),
+        ({TEST_DOMAIN: True, TEST_DOMAIN_2: True}, [TEST_DOMAIN, TEST_DOMAIN_2]),
+    ],
+)
+async def test_active_plaforms(
+    hass: HomeAssistant,
+    multipan_platforms: dict[str, bool],
+    active_platforms: list[str],
+) -> None:
+    """Test async_active_platforms."""
+    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+
+    for domain, platform_using_multipan in multipan_platforms.items():
+        mock_multiprotocol_platform = MockMultiprotocolPlatform()
+        mock_multiprotocol_platform.channel = 11
+        mock_multiprotocol_platform.using_multipan = platform_using_multipan
+
+        hass.config.components.add(domain)
+        mock_platform(
+            hass, f"{domain}.silabs_multiprotocol", mock_multiprotocol_platform
+        )
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+
+    await hass.async_block_till_done()
+    assert await multipan_manager.async_active_platforms() == active_platforms

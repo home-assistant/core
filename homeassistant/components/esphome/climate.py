@@ -140,6 +140,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     """A climate implementation for ESPHome."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "climate"
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:

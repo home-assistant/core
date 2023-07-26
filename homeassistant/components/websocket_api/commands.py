@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import datetime as dt
-from functools import lru_cache
+from functools import lru_cache, partial
 import json
 from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
@@ -25,6 +26,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -36,6 +38,7 @@ from homeassistant.helpers.json import (
     json_dumps,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.typing import EventType
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -88,6 +91,32 @@ def pong_message(iden: int) -> dict[str, Any]:
     return {"id": iden, "type": "pong"}
 
 
+def _forward_events_check_permissions(
+    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    user: User,
+    msg_id: int,
+    event: Event,
+) -> None:
+    """Forward state changed events to websocket."""
+    # We have to lookup the permissions again because the user might have
+    # changed since the subscription was created.
+    permissions = user.permissions
+    if not permissions.access_all_entities(
+        POLICY_READ
+    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+        return
+    send_message(messages.cached_event_message(msg_id, event))
+
+
+def _forward_events_unconditional(
+    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    msg_id: int,
+    event: Event,
+) -> None:
+    """Forward events to websocket."""
+    send_message(messages.cached_event_message(msg_id, event))
+
+
 @callback
 @decorators.websocket_command(
     {
@@ -109,26 +138,18 @@ def handle_subscribe_events(
         raise Unauthorized
 
     if event_type == EVENT_STATE_CHANGED:
-        user = connection.user
-
-        @callback
-        def forward_events(event: Event) -> None:
-            """Forward state changed events to websocket."""
-            # We have to lookup the permissions again because the user might have
-            # changed since the subscription was created.
-            permissions = user.permissions
-            if not permissions.access_all_entities(
-                POLICY_READ
-            ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
-                return
-            connection.send_message(messages.cached_event_message(msg["id"], event))
-
+        forward_events = callback(
+            partial(
+                _forward_events_check_permissions,
+                connection.send_message,
+                connection.user,
+                msg["id"],
+            )
+        )
     else:
-
-        @callback
-        def forward_events(event: Event) -> None:
-            """Forward events to websocket."""
-            connection.send_message(messages.cached_event_message(msg["id"], event))
+        forward_events = callback(
+            partial(_forward_events_unconditional, connection.send_message, msg["id"])
+        )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events, run_immediately=True
@@ -280,6 +301,27 @@ def _send_handle_get_states_response(
     connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
 
 
+def _forward_entity_changes(
+    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    entity_ids: set[str],
+    user: User,
+    msg_id: int,
+    event: Event,
+) -> None:
+    """Forward entity state changed events to websocket."""
+    entity_id = event.data["entity_id"]
+    if entity_ids and entity_id not in entity_ids:
+        return
+    # We have to lookup the permissions again because the user might have
+    # changed since the subscription was created.
+    permissions = user.permissions
+    if not permissions.access_all_entities(
+        POLICY_READ
+    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+        return
+    send_message(messages.cached_state_diff_message(msg_id, event))
+
+
 @callback
 @decorators.websocket_command(
     {
@@ -292,29 +334,22 @@ def handle_subscribe_entities(
 ) -> None:
     """Handle subscribe entities command."""
     entity_ids = set(msg.get("entity_ids", []))
-    user = connection.user
-
-    @callback
-    def forward_entity_changes(event: Event) -> None:
-        """Forward entity state changed events to websocket."""
-        entity_id = event.data["entity_id"]
-        if entity_ids and entity_id not in entity_ids:
-            return
-        # We have to lookup the permissions again because the user might have
-        # changed since the subscription was created.
-        permissions = user.permissions
-        if not permissions.access_all_entities(
-            POLICY_READ
-        ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
-            return
-        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
-
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        EVENT_STATE_CHANGED, forward_entity_changes, run_immediately=True
+        EVENT_STATE_CHANGED,
+        callback(
+            partial(
+                _forward_entity_changes,
+                connection.send_message,
+                entity_ids,
+                connection.user,
+                msg["id"],
+            )
+        ),
+        run_immediately=True,
     )
     connection.send_result(msg["id"])
 
@@ -502,7 +537,8 @@ async def handle_render_template(
 
     @callback
     def _template_listener(
-        event: Event | None, updates: list[TrackTemplateResult]
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
     ) -> None:
         nonlocal info
         track_template_result = updates.pop()
@@ -671,10 +707,12 @@ async def handle_execute_script(
     """Handle execute script command."""
     # Circular dep
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.script import Script
+    from homeassistant.helpers.script import Script, async_validate_actions_config
+
+    script_config = await async_validate_actions_config(hass, msg["sequence"])
 
     context = connection.context(msg)
-    script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
+    script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
     response = await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_result(
         msg["id"],
