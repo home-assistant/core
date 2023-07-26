@@ -77,7 +77,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.percentage import (
@@ -225,7 +225,7 @@ class _Trait(ABC):
     def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
 
-    def __init__(self, hass, state, config):
+    def __init__(self, hass: HomeAssistant, state, config) -> None:
         """Initialize a trait for a state."""
         self.hass = hass
         self.state = state
@@ -234,6 +234,10 @@ class _Trait(ABC):
     def sync_attributes(self):
         """Return attributes for a sync request."""
         raise NotImplementedError
+
+    def sync_options(self) -> dict[str, Any]:
+        """Add options for the sync request."""
+        return {}
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
@@ -358,13 +362,14 @@ class ObjectDetection(_Trait):
         """Return ObjectDetection attributes for a sync request."""
         return {}
 
+    def sync_options(self) -> dict[str, Any]:
+        """Add options for the sync request."""
+        return {"notificationSupportedByAgent": True}
+
     def query_attributes(self):
         """Return ObjectDetection query attributes."""
         if self.state.state is not None:
-            event_time = int(
-                mktime(datetime.fromisoformat(self.state.state).timetuple())
-            )
-            return {"last_event": event_time}
+            int(mktime(datetime.fromisoformat(self.state.state).timetuple()))
         return {}
 
     async def execute(self, command, data, params, challenge):

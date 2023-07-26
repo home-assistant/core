@@ -617,8 +617,6 @@ class GoogleEntity:
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
         }
-        if state.entity_id.split(".")[0] == "event":
-            device["notificationSupportedByAgent"] = True
         # Add aliases
         if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
             entity_entry and entity_entry.aliases
@@ -639,6 +637,10 @@ class GoogleEntity:
         # Add trait sync attributes
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
+
+        # Add trait options
+        for trt in traits:
+            device.update(trt.sync_options())
 
         # Add roomhint
         if room := entity_config.get(CONF_ROOM_HINT):
