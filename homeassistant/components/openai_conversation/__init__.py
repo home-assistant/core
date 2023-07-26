@@ -17,7 +17,6 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
-    callback,
 )
 from homeassistant.exceptions import (
     ConfigEntryNotReady,
@@ -25,6 +24,7 @@ from homeassistant.exceptions import (
     TemplateError,
 )
 from homeassistant.helpers import config_validation as cv, intent, selector, template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ulid
 
 from .const import (
@@ -45,41 +45,8 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_GENERATE_IMAGE = "generate_image"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up OpenAI Conversation from a config entry."""
-    try:
-        await hass.async_add_executor_job(
-            partial(
-                openai.Engine.list,
-                api_key=entry.data[CONF_API_KEY],
-                request_timeout=10,
-            )
-        )
-    except error.AuthenticationError as err:
-        _LOGGER.error("Invalid API key: %s", err)
-        return False
-    except error.OpenAIError as err:
-        raise ConfigEntryNotReady(err) from err
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data[CONF_API_KEY]
-
-    _register_services(hass)
-    conversation.async_set_agent(hass, entry, OpenAIAgent(hass, entry))
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload OpenAI."""
-    hass.data[DOMAIN].pop(entry.entry_id)
-    conversation.async_unset_agent(hass, entry)
-    return True
-
-
-@callback
-def _register_services(hass: HomeAssistant) -> None:
-    """Register services if they are not provided yet."""
-    if hass.services.has_service(DOMAIN, SERVICE_GENERATE_IMAGE):
-        return
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up OpenAI Conversation."""
 
     async def render_image(call: ServiceCall) -> ServiceResponse:
         """Render an image with dall-e."""
@@ -112,6 +79,36 @@ def _register_services(hass: HomeAssistant) -> None:
         ),
         supports_response=SupportsResponse.ONLY,
     )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up OpenAI Conversation from a config entry."""
+    try:
+        await hass.async_add_executor_job(
+            partial(
+                openai.Engine.list,
+                api_key=entry.data[CONF_API_KEY],
+                request_timeout=10,
+            )
+        )
+    except error.AuthenticationError as err:
+        _LOGGER.error("Invalid API key: %s", err)
+        return False
+    except error.OpenAIError as err:
+        raise ConfigEntryNotReady(err) from err
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data[CONF_API_KEY]
+
+    conversation.async_set_agent(hass, entry, OpenAIAgent(hass, entry))
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload OpenAI."""
+    hass.data[DOMAIN].pop(entry.entry_id)
+    conversation.async_unset_agent(hass, entry)
+    return True
 
 
 class OpenAIAgent(conversation.AbstractConversationAgent):
