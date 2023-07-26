@@ -86,7 +86,7 @@
       }
     },
     "power_command": {
-      "name": "Power Command",
+      "name": "Power command",
       "description": "Sends a power command to the system.",
       "fields": {
         "bridge": {
