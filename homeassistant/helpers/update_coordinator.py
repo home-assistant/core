@@ -115,7 +115,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             request_refresh_debouncer.function = self.async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
-        self._listeners_changed = False
 
         if self.config_entry:
             self.config_entry.async_on_unload(self.async_shutdown)
@@ -142,12 +141,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     ) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
-        self._listeners_changed = True
 
         @callback
         def remove_listener() -> None:
             """Remove update listener."""
-            self._listeners_changed = True
             self._listeners.pop(remove_listener)
             if not self._listeners:
                 self._unschedule_refresh()
@@ -163,7 +160,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     @callback
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
-        self._listeners_changed = False
         for update_callback, _ in list(self._listeners.values()):
             update_callback()
 
@@ -379,7 +375,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self._schedule_refresh()
 
         if (
-            self._listeners_changed
+            # some integrations use the coordinator
+            # to poll for data but don't use the data
+            # in the entity so we always want to update
+            # listeners in that case
+            self.data is None
             or previous_update_success != self.last_update_success
             or previous_data != self.data
         ):

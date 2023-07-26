@@ -649,30 +649,4 @@ async def test_only_callback_on_change(
     update_callback.assert_not_called()
     update_callback.reset_mock()
 
-    # Make sure adding new listeners results in the next update being called
-    # even if the data hasn't changed
-    update_callback2 = Mock()
-    remove_callbacks2 = crd.async_add_listener(update_callback2)
-    await crd.async_refresh()
-    update_callback.assert_called_once()
-    update_callback.reset_mock()
-    update_callback2.assert_called_once()
-    update_callback2.reset_mock()
-
-    await crd.async_refresh()
-    update_callback.assert_not_called()
-    update_callback.reset_mock()
-    update_callback2.assert_not_called()
-    update_callback2.reset_mock()
-
-    # Remove callbacks to avoid lingering timers
     remove_callbacks()
-    await crd.async_refresh()
-    update_callback2.assert_called_once()
-    update_callback2.reset_mock()
-
-    await crd.async_refresh()
-    update_callback2.assert_not_called()
-    update_callback2.reset_mock()
-
-    remove_callbacks2()
