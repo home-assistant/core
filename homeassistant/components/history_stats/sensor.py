@@ -163,8 +163,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         self._process_update()
         if self._type == CONF_TYPE_TIME:
             self._attr_device_class = SensorDeviceClass.DURATION
-            # Show up to second resolution
-            self._attr_suggested_display_precision = 4
+            self._attr_suggested_display_precision = 2
 
     @callback
     def _process_update(self) -> None:
