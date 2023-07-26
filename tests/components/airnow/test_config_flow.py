@@ -6,7 +6,10 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.airnow.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, config, setup_airnow) -> None:
@@ -74,3 +77,40 @@ async def test_entry_already_exists(hass: HomeAssistant, config, config_entry) -
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
+
+
+async def test_options_flow(hass: HomeAssistant, config, setup_airnow) -> None:
+    """Test that the options flow works."""
+    config_entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="AirNow",
+        data={
+            CONF_API_KEY: "1234",
+            CONF_LATITUDE: 33.6,
+            CONF_LONGITUDE: -118.1,
+            CONF_RADIUS: 10,
+        },
+        source=config_entries.SOURCE_USER,
+        options={},
+        unique_id="1234",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_RADIUS: 25},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_RADIUS: 25,
+    }
