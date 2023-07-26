@@ -47,7 +47,7 @@ async def async_setup_entry(
 class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     """Switch class for Home Connect."""
 
-    def __init__(self, device, program_name):
+    def __init__(self, device, program_name, icon: str | None) -> None:
         """Initialize the entity."""
         desc = " ".join(["Program", program_name.split(".")[-1]])
         if device.appliance.type == "WasherDryer":
@@ -56,13 +56,19 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             )
         super().__init__(device, desc)
         self.program_name = program_name
-        self._state = None
+        self._icon = icon
+        self._state: bool | None = None
         self._remote_allowed = None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the switch is on."""
         return bool(self._state)
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        return self._icon
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start the program."""
@@ -97,15 +103,20 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
-    def __init__(self, device):
+    def __init__(self, device) -> None:
         """Inititialize the entity."""
         super().__init__(device, "Power")
-        self._state = None
+        self._state: bool | None = None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the switch is on."""
         return bool(self._state)
+
+    @property
+    def icon(self) -> str:
+        """Return an icon for the power switch."""
+        return "mdi:power"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""

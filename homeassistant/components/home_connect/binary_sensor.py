@@ -1,7 +1,10 @@
 """Provides a binary sensor for Home Connect."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant
@@ -43,15 +46,20 @@ async def async_setup_entry(
 class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
     """Binary sensor for Home Connect."""
 
-    def __init__(self, device, desc, sensor_type, device_class=None):
+    def __init__(
+        self, device, desc, sensor_type, icon: str | None, device_class=None
+    ) -> None:
         """Initialize the entity."""
         super().__init__(device, desc)
-        self._state = None
+        self._state: bool | None = None
+        self._icon = icon
         self._device_class = device_class
+        self._false_value_list: list[str | bool] = []
+        self._true_value_list: list[str | bool] = []
         self._type = sensor_type
         if self._type == "door":
             self._update_key = BSH_DOOR_STATE
-            self._false_value_list = (BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED)
+            self._false_value_list = [BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED]
             self._true_value_list = [BSH_DOOR_STATE_OPEN]
         elif self._type == "remote_control":
             self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE
@@ -63,7 +71,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self._true_value_list = [True]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self._state)
 
@@ -89,6 +97,11 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         _LOGGER.debug("Updated, new state: %s", self._state)
 
     @property
-    def device_class(self):
+    def icon(self) -> str | None:
+        """Return the icon."""
+        return self._icon
+
+    @property
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the device class."""
         return self._device_class

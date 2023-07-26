@@ -140,5 +140,22 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "operation_state": {
+        "state": {
+          "inactive": "Inactive",
+          "ready": "Ready",
+          "delayedstart": "Delayed start",
+          "run": "Run",
+          "pause": "Pause",
+          "actionrequired": "Action required",
+          "finished": "Finished",
+          "error": "Error",
+          "aborting": "Aborting"
+        }
+      }
+    }
   }
 }

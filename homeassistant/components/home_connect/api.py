@@ -27,6 +27,7 @@ from .const import (
     ATTR_KEY,
     ATTR_SENSOR_TYPE,
     ATTR_SIGN,
+    ATTR_TRANSLATION_KEY,
     ATTR_UNIT,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
@@ -111,7 +112,7 @@ class HomeConnectDevice:
     # see https://developer.home-connect.com/docs/settings/power_state
     power_off_state = BSH_POWER_OFF
 
-    def __init__(self, hass, appliance):
+    def __init__(self, hass: core.HomeAssistant, appliance) -> None:
         """Initialize the device class."""
         self.hass = hass
         self.appliance = appliance
@@ -162,7 +163,10 @@ class DeviceWithPrograms(HomeConnectDevice):
         There will be one switch for each program.
         """
         programs = self.get_programs_available()
-        return [{ATTR_DEVICE: self, "program_name": p} for p in programs]
+        return [
+            {ATTR_DEVICE: self, ATTR_ICON: "mdi:file-cog-outline", "program_name": p}
+            for p in programs
+        ]
 
     def get_program_sensors(self):
         """Get a dictionary with info about program sensors.
@@ -184,6 +188,7 @@ class DeviceWithPrograms(HomeConnectDevice):
                 ATTR_ICON: icon,
                 ATTR_DEVICE_CLASS: device_class,
                 ATTR_SIGN: sign,
+                ATTR_TRANSLATION_KEY: None,
             }
             for k, (unit, icon, device_class, sign) in sensors.items()
         ]
@@ -204,6 +209,7 @@ class DeviceWithOpState(HomeConnectDevice):
                 ATTR_ICON: "mdi:state-machine",
                 ATTR_DEVICE_CLASS: None,
                 ATTR_SIGN: 1,
+                ATTR_TRANSLATION_KEY: "operation_state",
             }
         ]
 
@@ -218,6 +224,7 @@ class DeviceWithDoor(HomeConnectDevice):
             ATTR_DESC: "Door",
             ATTR_SENSOR_TYPE: "door",
             ATTR_DEVICE_CLASS: "door",
+            ATTR_ICON: None,
         }
 
 
@@ -246,6 +253,7 @@ class DeviceWithRemoteControl(HomeConnectDevice):
             ATTR_DEVICE: self,
             ATTR_DESC: "Remote Control",
             ATTR_SENSOR_TYPE: "remote_control",
+            ATTR_ICON: "mdi:remote",
         }
 
 
@@ -258,6 +266,7 @@ class DeviceWithRemoteStart(HomeConnectDevice):
             ATTR_DEVICE: self,
             ATTR_DESC: "Remote Start",
             ATTR_SENSOR_TYPE: "remote_start",
+            ATTR_ICON: "mdi:play",
         }
 
 
