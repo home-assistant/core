@@ -77,8 +77,7 @@
               "repeat": "Repeat",
               "short_release": "Short press",
               "long_release": "Long press",
-              "double_short_release": "Double press",
-              "long_press": "Long press"
+              "double_short_release": "Double press"
             }
           }
         }
