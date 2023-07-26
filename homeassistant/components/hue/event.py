@@ -73,7 +73,7 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
     entity_description = EventEntityDescription(
         key="button",
         device_class=EventDeviceClass.BUTTON,
-        has_entity_name=True,
+        has_entity_name=False,
         translation_key="button",
     )
 
@@ -93,7 +93,7 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
     @property
     def name(self) -> str:
         """Return name for the entity."""
-        return f"Button {self.resource.metadata.control_id}"
+        return f"{super().name} {self.resource.metadata.control_id}"
 
     @callback
     def _handle_event(self, event_type: EventType, resource: Button) -> None:
