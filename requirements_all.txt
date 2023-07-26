@@ -958,7 +958,7 @@ hass-nabucasa==0.69.0
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.2.3
+hassil==1.2.4
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
