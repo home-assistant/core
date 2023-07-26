@@ -30,13 +30,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up scene platform from Hue group scenes."""
+    """Set up event platform from Hue button resources."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
     if bridge.api_version == 1:
         # should not happen, but just in case
-        raise NotImplementedError("Scene support is only available for V2 bridges")
+        raise NotImplementedError("Event support is only available for V2 bridges")
 
     # add entities for all button and relative rotary resources
     @callback
