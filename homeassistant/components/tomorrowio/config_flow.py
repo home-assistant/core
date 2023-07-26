@@ -29,7 +29,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
+    CONF_MAX_REQUESTS_PER_DAY,
     CONF_TIMESTEP,
+    DEFAULT_MAX_REQUESTS_PER_DAY,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DOMAIN,
@@ -56,6 +58,12 @@ def _get_config_schema(
         vol.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
     }
 
+    api_polling_rate = {
+        vol.Required(
+            CONF_MAX_REQUESTS_PER_DAY, default=DEFAULT_MAX_REQUESTS_PER_DAY
+        ): vol.All(int, vol.Range(min=1)),
+    }
+
     default_location = (
         input_dict[CONF_LOCATION]
         if CONF_LOCATION in input_dict
@@ -67,6 +75,7 @@ def _get_config_schema(
     return vol.Schema(
         {
             **api_key_schema,
+            **api_polling_rate,
             vol.Required(
                 CONF_LOCATION,
                 default=default_location,
@@ -103,6 +112,10 @@ class TomorrowioOptionsConfigFlow(config_entries.OptionsFlow):
                 CONF_TIMESTEP,
                 default=self._config_entry.options[CONF_TIMESTEP],
             ): vol.In([1, 5, 15, 30]),
+            vol.Required(
+                CONF_MAX_REQUESTS_PER_DAY,
+                default=self._config_entry.options[CONF_MAX_REQUESTS_PER_DAY],
+            ): vol.All(int, vol.Range(min=1)),
         }
 
         return self.async_show_form(

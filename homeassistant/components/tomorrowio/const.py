@@ -23,6 +23,7 @@ from homeassistant.components.weather import (
 LOGGER = logging.getLogger(__package__)
 
 CONF_TIMESTEP = "timestep"
+CONF_MAX_REQUESTS_PER_DAY = "max_api_requests"
 FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
 
 DEFAULT_TIMESTEP = 15
@@ -32,6 +33,7 @@ INTEGRATION_NAME = "Tomorrow.io"
 DEFAULT_NAME = INTEGRATION_NAME
 ATTRIBUTION = "Powered by Tomorrow.io"
 
+DEFAULT_MAX_REQUESTS_PER_DAY = 500
 MAX_REQUESTS_PER_DAY = 100
 
 CLEAR_CONDITIONS = {"night": ATTR_CONDITION_CLEAR_NIGHT, "day": ATTR_CONDITION_SUNNY}
