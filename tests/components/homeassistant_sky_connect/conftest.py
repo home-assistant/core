@@ -9,7 +9,7 @@ import pytest
 def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
     """Mock usb serial by id."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.usb.get_serial_by_id"
+        "homeassistant.components.zha.config_flow.usb.get_serial_by_id"
     ) as mock_usb_serial_by_id:
         mock_usb_serial_by_id.side_effect = lambda x: x
         yield mock_usb_serial_by_id
