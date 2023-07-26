@@ -237,7 +237,6 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
                         },
                     },
                     "roomHint": "Living Room",
-                    "notificationSupportedByAgent": True,
                 }
             ],
         },
@@ -359,7 +358,6 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
                         "swVersion": "Some Version",
                     },
                     "roomHint": "Living Room",
-                    "notificationSupportedByAgent": True,
                 }
             ],
         },
@@ -867,7 +865,6 @@ async def test_serialize_input_boolean(hass: HomeAssistant) -> None:
         "traits": ["action.devices.traits.OnOff"],
         "type": "action.devices.types.SWITCH",
         "willReportState": False,
-        "notificationSupportedByAgent": True,
     }
 
 
@@ -947,7 +944,6 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
                             "temperatureMaxK": 6535,
                         },
                     },
-                    "notificationSupportedByAgent": True,
                 }
             ],
         },
@@ -1005,7 +1001,6 @@ async def test_device_class_switch(
                     "traits": ["action.devices.traits.OnOff"],
                     "type": google_type,
                     "willReportState": False,
-                    "notificationSupportedByAgent": True,
                 }
             ],
         },
@@ -1058,7 +1053,6 @@ async def test_device_class_binary_sensor(
                     "traits": ["action.devices.traits.OpenClose"],
                     "type": google_type,
                     "willReportState": False,
-                    "notificationSupportedByAgent": True,
                 }
             ],
         },
@@ -1112,7 +1106,6 @@ async def test_device_class_cover(
                     ],
                     "type": google_type,
                     "willReportState": False,
-                    "notificationSupportedByAgent": True,
                 }
             ],
         },
@@ -1163,7 +1156,6 @@ async def test_device_media_player(
                     ],
                     "type": google_type,
                     "willReportState": False,
-                    "notificationSupportedByAgent": True,
                 }
             ],
         },
@@ -1465,7 +1457,6 @@ async def test_sync_message_recovery(
                     ],
                     "willReportState": False,
                     "type": "action.devices.types.LIGHT",
-                    "notificationSupportedByAgent": True,
                 },
             ],
         },

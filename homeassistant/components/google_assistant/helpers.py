@@ -616,9 +616,9 @@ class GoogleEntity:
             "type": get_google_type(
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
-            "notificationSupportedByAgent": True,
         }
-
+        if state.entity_id.split(".")[0] == "event":
+            device["notificationSupportedByAgent"] = True
         # Add aliases
         if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
             entity_entry and entity_entry.aliases
