@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MinecraftServer
-from .const import DOMAIN, ICON_STATUS, KEY_STATUS, NAME_STATUS
+from .const import DOMAIN, ICON_STATUS, KEY_STATUS
 from .entity import MinecraftServerEntity
 
 
@@ -36,7 +36,7 @@ class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntit
         """Initialize status binary sensor."""
         super().__init__(
             server=server,
-            type_name=NAME_STATUS,
+            entity_type=KEY_STATUS,
             icon=ICON_STATUS,
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
         )

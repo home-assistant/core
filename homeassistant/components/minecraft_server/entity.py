@@ -1,5 +1,7 @@
 """Base entity for the Minecraft Server integration."""
 
+import logging
+
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -7,6 +9,8 @@ from homeassistant.helpers.entity import Entity
 
 from . import MinecraftServer
 from .const import DOMAIN, MANUFACTURER
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MinecraftServerEntity(Entity):
@@ -18,14 +22,15 @@ class MinecraftServerEntity(Entity):
     def __init__(
         self,
         server: MinecraftServer,
-        type_name: str,
+        entity_type: str,
         icon: str,
         device_class: str | None,
     ) -> None:
         """Initialize base entity."""
         self._server = server
         self._attr_icon = icon
-        self._attr_unique_id = f"{self._server.unique_id}-{type_name}"
+        self._attr_unique_id = f"{self._server.unique_id}-{entity_type}"
+        _LOGGER.debug("Unique ID of sensor type %s: %s", entity_type, self.unique_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._server.unique_id)},
             manufacturer=MANUFACTURER,
