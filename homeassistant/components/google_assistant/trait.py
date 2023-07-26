@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime
 import logging
-from time import mktime
+from time import mktime, time
 from typing import Any, TypeVar
 
 from homeassistant.components import (
@@ -78,6 +78,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.percentage import (
@@ -356,7 +357,7 @@ class ObjectDetection(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _) -> bool:
         """Test if state is supported."""
-        return domain in (event.DOMAIN,)
+        return domain == event.DOMAIN
 
     def sync_attributes(self):
         """Return ObjectDetection attributes for a sync request."""
@@ -368,8 +369,40 @@ class ObjectDetection(_Trait):
 
     def query_attributes(self):
         """Return ObjectDetection query attributes."""
-        if self.state.state is not None:
-            int(mktime(datetime.fromisoformat(self.state.state).timetuple()))
+
+        async def _async_send_notification(time_stamp: int) -> None:
+            payload = {
+                "devices": {
+                    "notifications": {
+                        self.state.entity_id: {
+                            "ObjectDetection": {
+                                "objects": {"unclassified": 1},
+                                "priority": 0,
+                                "detectionTimestamp": time_stamp,
+                            }
+                        }
+                    }
+                }
+            }
+            event_id = None
+            result = await self.config.async_sync_notification_all(event_id, payload)
+            if result != 200:
+                raise HomeAssistantError(
+                    f"Unable to send notification with result code: {result}, check log for more"
+                    " info."
+                )
+
+        if (
+            self.state.state is not None
+            and time()
+            - (
+                time_stamp := int(
+                    mktime(datetime.fromisoformat(self.state.state).timetuple())
+                )
+            )
+            < 30.0
+        ):
+            self.hass.async_add_job(_async_send_notification, time_stamp)
         return {}
 
     async def execute(self, command, data, params, challenge):
