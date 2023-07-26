@@ -115,6 +115,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             request_refresh_debouncer.function = self.async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
+        self._listeners_changed = False
 
         if self.config_entry:
             self.config_entry.async_on_unload(self.async_shutdown)
@@ -141,10 +142,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     ) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
+        self._listeners_changed = True
 
         @callback
         def remove_listener() -> None:
             """Remove update listener."""
+            self._listeners_changed = True
             self._listeners.pop(remove_listener)
             if not self._listeners:
                 self._unschedule_refresh()
@@ -160,6 +163,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     @callback
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
+        self._listeners_changed = False
         for update_callback, _ in list(self._listeners.values()):
             update_callback()
 
@@ -277,7 +281,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         if log_timing := self.logger.isEnabledFor(logging.DEBUG):
             start = monotonic()
+
         auth_failed = False
+        previous_update_success = self.last_update_success
+        previous_data = self.data
 
         try:
             self.data = await self._async_update_data()
@@ -371,7 +378,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
-        self.async_update_listeners()
+        if (
+            self._listeners_changed
+            or previous_update_success != self.last_update_success
+            or previous_data != self.data
+        ):
+            self.async_update_listeners()
 
     @callback
     def async_set_update_error(self, err: Exception) -> None:

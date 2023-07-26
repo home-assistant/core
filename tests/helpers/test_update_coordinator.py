@@ -594,3 +594,85 @@ async def test_async_set_update_error(
 
     # Remove callbacks to avoid lingering timers
     remove_callbacks()
+
+
+async def test_only_callback_on_change(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we do not callback listeners unless something has actually changed."""
+    update_callback = Mock()
+    remove_callbacks = crd.async_add_listener(update_callback)
+    mocked_data = 1
+    mocked_exception = None
+
+    async def _update_method() -> int:
+        nonlocal mocked_data
+        nonlocal mocked_exception
+        if mocked_exception is not None:
+            raise mocked_exception
+        return mocked_data
+
+    crd.update_method = _update_method
+
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_exception = None
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = 2
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    # Make sure adding new listeners results in the next update being called
+    # even if the data hasn't changed
+    update_callback2 = Mock()
+    remove_callbacks2 = crd.async_add_listener(update_callback2)
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+    update_callback2.assert_called_once()
+    update_callback2.reset_mock()
+
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+    update_callback2.assert_not_called()
+    update_callback2.reset_mock()
+
+    # Remove callbacks to avoid lingering timers
+    remove_callbacks()
+    await crd.async_refresh()
+    update_callback2.assert_called_once()
+    update_callback2.reset_mock()
+
+    await crd.async_refresh()
+    update_callback2.assert_not_called()
+    update_callback2.reset_mock()
+
+    remove_callbacks2()
