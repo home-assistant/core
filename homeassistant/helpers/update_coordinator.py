@@ -375,11 +375,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self._schedule_refresh()
 
         if (
-            # some integrations use the coordinator
-            # to poll for data but don't use the data
-            # in the entity so we always want to update
-            # listeners in that case
-            self.data is None
+            # If the data object is the same object we cannot tell if the data has
+            # changed so we always notify listeners.
+            previous_data is self.data
             or previous_update_success != self.last_update_success
             or previous_data != self.data
         ):
