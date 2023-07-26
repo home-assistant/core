@@ -1557,7 +1557,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.5.3
 
 # homeassistant.components.matter
-python-matter-server==3.6.3
+python-matter-server==3.7.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -1956,7 +1956,7 @@ watchdog==2.3.1
 webrtcvad==2.0.10
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.3
+whirlpool-sixth-sense==0.18.4
 
 # homeassistant.components.whois
 whois==0.9.27
