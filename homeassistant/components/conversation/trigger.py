@@ -55,8 +55,14 @@ async def async_attach_trigger(
             **trigger_data,
             "platform": DOMAIN,
             "sentence": sentence,
-            "wildcards": {  # Add wildcard values as extra trigger data
-                entity_name: entity.text.strip()
+            "entities": {  # Add slot values as extra trigger data
+                entity_name: {
+                    "name": entity_name,
+                    "text": entity.text.strip(),
+                    "value": entity.value.strip()
+                    if isinstance(entity.value, str)
+                    else entity.value,
+                }
                 for entity_name, entity in result.entities.items()
             },
         }
