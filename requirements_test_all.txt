@@ -1950,7 +1950,7 @@ watchdog==2.3.1
 webrtcvad==2.0.10
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.3
+whirlpool-sixth-sense==0.18.4
 
 # homeassistant.components.whois
 whois==0.9.27
