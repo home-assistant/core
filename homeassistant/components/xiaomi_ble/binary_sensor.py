@@ -72,6 +72,9 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=ExtendedBinarySensorDeviceClass.PRY_THE_DOOR,
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
+    ExtendedBinarySensorDeviceClass.TOOTHBRUSH: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.TOOTHBRUSH,
+    ),
 }
 
 
