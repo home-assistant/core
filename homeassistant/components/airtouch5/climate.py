@@ -138,7 +138,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         self._attr_unique_id = f"ac_{ability.ac_number}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"ac_{ability.ac_number}")},
-            name=f"AC {ability.ac_number} {ability.ac_name}",
+            name=f"AC {ability.ac_number}",
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
