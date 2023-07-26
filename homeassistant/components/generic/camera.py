@@ -172,11 +172,13 @@ class GenericCamera(Camera):
         self._last_url = None
         self._last_image = None
 
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return not self._still_image_url
+
     async def async_camera_image(
-        self,
-        width: int | None = None,
-        height: int | None = None,
-        wait_for_next_keyframe: bool = False,
+        self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if not self._still_image_url:

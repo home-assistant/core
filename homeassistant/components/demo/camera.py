@@ -36,7 +36,6 @@ class DemoCamera(Camera):
         self._attr_name = name
         self.content_type = content_type
         self._images_index = 0
-        self._unique_id = f"{name}_{content_type}"
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -47,11 +46,6 @@ class DemoCamera(Camera):
         image_path = Path(__file__).parent / f"demo_{self._images_index}.{ext}"
 
         return await self.hass.async_add_executor_job(image_path.read_bytes)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id."""
-        return self._unique_id
 
     async def async_enable_motion_detection(self) -> None:
         """Enable the Motion detection in base station (Arm)."""

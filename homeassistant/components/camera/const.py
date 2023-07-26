@@ -9,7 +9,6 @@ DATA_RTSP_TO_WEB_RTC: Final = "rtsp_to_web_rtc"
 
 PREF_PRELOAD_STREAM: Final = "preload_stream"
 PREF_ORIENTATION: Final = "orientation"
-PREF_USE_STREAM_FOR_STILLS: Final = "use_stream_for_stills"
 
 SERVICE_RECORD: Final = "record"
 

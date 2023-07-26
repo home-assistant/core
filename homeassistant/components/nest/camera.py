@@ -75,6 +75,11 @@ class NestCamera(Camera):
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
     @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return bool(self.supported_features & CameraEntityFeature.STREAM)
+
+    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
@@ -200,10 +205,7 @@ class NestCamera(Camera):
         )
 
     async def async_camera_image(
-        self,
-        width: int | None = None,
-        height: int | None = None,
-        wait_for_next_keyframe: bool = False,
+        self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
         # Use the thumbnail from RTSP stream, or a placeholder if stream is

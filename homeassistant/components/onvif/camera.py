@@ -115,6 +115,11 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._stream_uri_future: asyncio.Future[str] | None = None
 
     @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return bool(self.stream and self.stream.dynamic_stream_settings.preload_stream)
+
+    @property
     def name(self) -> str:
         """Return the name of this camera."""
         return f"{self.device.name} {self.profile.name}"
@@ -136,10 +141,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         return await self._async_get_stream_uri()
 
     async def async_camera_image(
-        self,
-        width: int | None = None,
-        height: int | None = None,
-        wait_for_next_keyframe=False,
+        self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
 

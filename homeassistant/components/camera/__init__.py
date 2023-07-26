@@ -5,7 +5,7 @@ import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import partial
@@ -69,18 +69,13 @@ from .const import (  # noqa: F401
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
-    PREF_USE_STREAM_FOR_STILLS,
     SERVICE_RECORD,
     STREAM_TYPE_HLS,
     STREAM_TYPE_WEB_RTC,
     StreamType,
 )
 from .img_util import scale_jpeg_camera_image
-from .prefs import (
-    CameraPreferences,
-    CameraSettings,
-    DynamicStreamSettings,  # noqa: F401
-)
+from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,7 +172,7 @@ async def _async_get_image(
                 await _async_get_stream_image(
                     camera, width=width, height=height, wait_for_next_keyframe=False
                 )
-                if camera.settings.use_stream_for_stills
+                if camera.use_stream_for_stills
                 else await camera.async_camera_image(width=width, height=height)
             )
             if image_bytes:
@@ -384,11 +379,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
-    async def load_settings_and_preload_stream(_event: Event) -> None:
-        """Load camera prefs and start stream if preload_stream is True."""
+    async def preload_stream(_event: Event) -> None:
+        """Load stream prefs and start stream if preload_stream is True."""
         for camera in list(component.entities):
-            camera.settings = await prefs.get_camera_settings(camera.entity_id)
-            if not camera.settings.stream_settings.preload_stream:
+            stream_prefs = await prefs.get_dynamic_stream_settings(camera.entity_id)
+            if not stream_prefs.preload_stream:
                 continue
             stream = await camera.async_create_stream()
             if not stream:
@@ -396,9 +391,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, load_settings_and_preload_stream
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(time: datetime) -> None:
@@ -479,7 +472,6 @@ class Camera(Entity):
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
         self._rtsp_to_webrtc = False
-        self.settings = CameraSettings()
 
     @property
     def entity_picture(self) -> str:
@@ -487,6 +479,11 @@ class Camera(Entity):
         if self._attr_entity_picture is not None:
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
+
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return False
 
     @property
     def supported_features(self) -> CameraEntityFeature:
@@ -561,7 +558,9 @@ class Camera(Entity):
                     self.hass,
                     source,
                     options=self.stream_options,
-                    dynamic_stream_settings=self.settings.stream_settings,
+                    dynamic_stream_settings=await self.hass.data[
+                        DATA_CAMERA_PREFS
+                    ].get_dynamic_stream_settings(self.entity_id),
                     stream_label=self.entity_id,
                 )
                 self.stream.set_update_callback(self.async_write_ha_state)
@@ -905,8 +904,8 @@ async def websocket_get_prefs(
 ) -> None:
     """Handle request for account info."""
     prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
-    camera_settings = await prefs.get_camera_settings(msg["entity_id"])
-    connection.send_result(msg["id"], camera_settings.flatten())
+    stream_prefs = await prefs.get_dynamic_stream_settings(msg["entity_id"])
+    connection.send_result(msg["id"], asdict(stream_prefs))
 
 
 @websocket_api.websocket_command(
@@ -915,7 +914,6 @@ async def websocket_get_prefs(
         vol.Required("entity_id"): cv.entity_id,
         vol.Optional(PREF_PRELOAD_STREAM): bool,
         vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
-        vol.Optional(PREF_USE_STREAM_FOR_STILLS): bool,
     }
 )
 @websocket_api.async_response
@@ -930,13 +928,12 @@ async def websocket_update_prefs(
     changes.pop("type")
     entity_id = changes.pop("entity_id")
     try:
-        camera = _get_camera_from_entity_id(hass, entity_id)
-        camera.settings = await prefs.async_update(entity_id, **changes)
+        entity_prefs = await prefs.async_update(entity_id, **changes)
     except HomeAssistantError as ex:
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))
     else:
-        connection.send_result(msg["id"], camera.settings.flatten())
+        connection.send_result(msg["id"], entity_prefs)
 
 
 async def async_handle_snapshot_service(
@@ -958,7 +955,7 @@ async def async_handle_snapshot_service(
     async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
         image = (
             await _async_get_stream_image(camera, wait_for_next_keyframe=True)
-            if camera.settings.use_stream_for_stills
+            if camera.use_stream_for_stills
             else await camera.async_camera_image()
         )
 
