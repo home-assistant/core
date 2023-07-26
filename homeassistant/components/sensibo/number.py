@@ -38,8 +38,8 @@ class SensiboNumberEntityDescription(
 DEVICE_NUMBER_TYPES = (
     SensiboNumberEntityDescription(
         key="calibration_temp",
+        translation_key="calibration_temperature",
         remote_key="temperature",
-        name="Temperature calibration",
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -50,8 +50,8 @@ DEVICE_NUMBER_TYPES = (
     ),
     SensiboNumberEntityDescription(
         key="calibration_hum",
+        translation_key="calibration_humidity",
         remote_key="humidity",
-        name="Humidity calibration",
         icon="mdi:water",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,

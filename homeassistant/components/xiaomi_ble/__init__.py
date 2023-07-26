@@ -12,15 +12,18 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
 )
-from homeassistant.components.bluetooth.active_update_processor import (
-    ActiveBluetoothProcessorCoordinator,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get
 
-from .const import DOMAIN, XIAOMI_BLE_EVENT, XiaomiBleEvent
+from .const import (
+    CONF_DISCOVERED_EVENT_CLASSES,
+    DOMAIN,
+    XIAOMI_BLE_EVENT,
+    XiaomiBleEvent,
+)
+from .coordinator import XiaomiActiveBluetoothProcessorCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -36,6 +39,10 @@ def process_service_info(
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     update = data.update(service_info)
+    coordinator: XiaomiActiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]
+    discovered_device_classes = coordinator.discovered_device_classes
     if update.events:
         address = service_info.device.address
         for device_key, event in update.events.items():
@@ -49,6 +56,16 @@ def process_service_info(
                 sw_version=sensor_device_info.sw_version,
                 hw_version=sensor_device_info.hw_version,
             )
+            event_class = event.device_key.key
+            event_type = event.event_type
+
+            if event_class not in discovered_device_classes:
+                discovered_device_classes.add(event_class)
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data
+                    | {CONF_DISCOVERED_EVENT_CLASSES: list(discovered_device_classes)},
+                )
 
             hass.bus.async_fire(
                 XIAOMI_BLE_EVENT,
@@ -56,7 +73,8 @@ def process_service_info(
                     XiaomiBleEvent(
                         device_id=device.id,
                         address=address,
-                        event_type=event.event_type,
+                        event_class=event_class,  # ie 'button'
+                        event_type=event_type,  # ie 'press'
                         event_properties=event.event_properties,
                     )
                 ),
@@ -121,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = async_get(hass)
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = ActiveBluetoothProcessorCoordinator(
+    ] = XiaomiActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,
@@ -130,6 +148,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry, data, service_info, device_registry
         ),
         needs_poll_method=_needs_poll,
+        device_data=data,
+        discovered_device_classes=set(
+            entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])
+        ),
         poll_method=_async_poll,
         # We will take advertisements from non-connectable devices
         # since we will trade the BLEDevice for a connectable one

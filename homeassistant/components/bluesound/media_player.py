@@ -694,7 +694,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         for source in [
             x
             for x in self._services_items
-            if x["type"] == "LocalMusic" or x["type"] == "RadioService"
+            if x["type"] in ("LocalMusic", "RadioService")
         ]:
             sources.append(source["title"])
 
