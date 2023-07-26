@@ -19,6 +19,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.components.camera import Camera, CameraEntityFeature, StreamType
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
@@ -75,7 +76,8 @@ class NestCamera(Camera):
         self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
-    def _get_rtsp_live_stream_trait(self) -> CameraLiveStreamTrait | None:
+    @cached_property
+    def _rtsp_live_stream_trait(self) -> CameraLiveStreamTrait | None:
         """Check for stream prerequisites and return a CameraLiveStreamTrait or None."""
         if not (self.supported_features & CameraEntityFeature.STREAM):
             return None
@@ -91,7 +93,7 @@ class NestCamera(Camera):
     @property
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
-        return self._get_rtsp_live_stream_trait() is not None
+        return self._rtsp_live_stream_trait is not None
 
     @property
     def unique_id(self) -> str:
@@ -144,13 +146,15 @@ class NestCamera(Camera):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        if not (trait := self._get_rtsp_live_stream_trait()):
+        if not self._rtsp_live_stream_trait:
             return None
         async with self._create_stream_url_lock:
             if not self._stream:
                 _LOGGER.debug("Fetching stream url")
                 try:
-                    self._stream = await trait.generate_rtsp_stream()
+                    self._stream = (
+                        await self._rtsp_live_stream_trait.generate_rtsp_stream()
+                    )
                 except ApiException as err:
                     raise HomeAssistantError(f"Nest API error: {err}") from err
                 self._schedule_stream_refresh()
