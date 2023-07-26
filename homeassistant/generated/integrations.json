@@ -4165,6 +4165,7 @@
       "name": "PECO Energy Company (PECO)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
     "pegel_online": {
       "name": "PEGELONLINE",
       "integration_type": "service",
