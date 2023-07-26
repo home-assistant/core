@@ -14,6 +14,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
@@ -48,6 +49,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 TWO_YEAR_SECONDS = 60 * 60 * 24 * 365 * 2
 WATERING_TIME_ICON = "mdi:water-pump"
+
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up a sensor for a Hydrawise device."""
+    return
 
 
 async def async_setup_entry(
