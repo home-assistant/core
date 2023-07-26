@@ -15,10 +15,42 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Dynalite YAML configuration is being removed",
-      "description": "Configuring Dynalite using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Dynalite YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "services": {
+    "request_area_preset": {
+      "name": "Request area preset",
+      "description": "Requests Dynalite to report the preset for an area.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "Host gateway IP to send to or all configured gateways if not specified."
+        },
+        "area": {
+          "name": "Area",
+          "description": "Area to request the preset reported."
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "Channel to request the preset to be reported from."
+        }
+      }
+    },
+    "request_channel_level": {
+      "name": "Request channel level",
+      "description": "Requests Dynalite to report the level of a specific channel.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "[%key:component::dynalite::services::request_area_preset::fields::host::description%]"
+        },
+        "area": {
+          "name": "[%key:component::dynalite::services::request_area_preset::fields::area::name%]",
+          "description": "Area for the requested channel."
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "Channel to request the level for."
+        }
+      }
     }
   }
 }

@@ -23,7 +23,8 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import Coordinator, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanCoordinator
 
 ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
@@ -54,13 +55,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(coordinator: Coordinator):
+    def _constructor(coordinator: FjaraskupanCoordinator):
         return [Fan(coordinator, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Fan(CoordinatorEntity[Coordinator], FanEntity):
+class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
     """Fan entity."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
@@ -69,7 +70,7 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: FjaraskupanCoordinator,
         device_info: DeviceInfo,
     ) -> None:
         """Init fan entity."""

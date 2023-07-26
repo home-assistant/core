@@ -7,7 +7,7 @@ from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MinecraftServer, MinecraftServerEntity
+from . import MinecraftServer
 from .const import (
     ATTR_PLAYERS_LIST,
     DOMAIN,
@@ -26,6 +26,7 @@ from .const import (
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
 )
+from .entity import MinecraftServerEntity
 
 
 async def async_setup_entry(
@@ -74,6 +75,8 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
 class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server version sensor."""
 
+    _attr_translation_key = "version"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize version sensor."""
         super().__init__(server=server, type_name=NAME_VERSION, icon=ICON_VERSION)
@@ -85,6 +88,8 @@ class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
 
 class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server protocol version sensor."""
+
+    _attr_translation_key = "protocol_version"
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize protocol version sensor."""
@@ -102,6 +107,8 @@ class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
 class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server latency time sensor."""
 
+    _attr_translation_key = "latency"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize latency time sensor."""
         super().__init__(
@@ -118,6 +125,8 @@ class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
 
 class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server online players sensor."""
+
+    _attr_translation_key = "players_online"
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize online players sensor."""
@@ -144,6 +153,8 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
 class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server maximum number of players sensor."""
 
+    _attr_translation_key = "players_max"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize maximum number of players sensor."""
         super().__init__(
@@ -160,6 +171,8 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
 
 class MinecraftServerMOTDSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server MOTD sensor."""
+
+    _attr_translation_key = "motd"
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize MOTD sensor."""
