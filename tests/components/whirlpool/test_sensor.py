@@ -4,13 +4,14 @@ from unittest.mock import MagicMock
 
 from whirlpool.washerdryer import MachineState
 
+from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import as_timestamp, utc_from_timestamp
+from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
 from . import init_integration
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 
 async def update_sensor_state(
@@ -131,6 +132,12 @@ async def test_washer_sensor_values(
     )
 
     await init_integration(hass)
+
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
 
     entity_id = "sensor.washer_state"
     mock_instance = mock_sensor1_api

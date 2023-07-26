@@ -95,6 +95,13 @@ class HKDevice:
         # A list of callbacks that turn HK service metadata into entities
         self.listeners: list[AddServiceCb] = []
 
+        # A list of callbacks that turn HK service metadata into triggers
+        self.trigger_factories: list[AddServiceCb] = []
+
+        # Track aid/iid pairs so we know if we already handle triggers for a HK
+        # service.
+        self._triggers: list[tuple[int, int]] = []
+
         # A list of callbacks that turn HK characteristics into entities
         self.char_factories: list[AddCharacteristicCb] = []
 
@@ -637,11 +644,33 @@ class HKDevice:
         self.listeners.append(add_entities_cb)
         self._add_new_entities([add_entities_cb])
 
+    def add_trigger_factory(self, add_triggers_cb: AddServiceCb) -> None:
+        """Add a callback to run when discovering new triggers for services."""
+        self.trigger_factories.append(add_triggers_cb)
+        self._add_new_triggers([add_triggers_cb])
+
+    def _add_new_triggers(self, callbacks: list[AddServiceCb]) -> None:
+        for accessory in self.entity_map.accessories:
+            aid = accessory.aid
+            for service in accessory.services:
+                iid = service.iid
+                entity_key = (aid, iid)
+
+                if entity_key in self._triggers:
+                    # Don't add the same trigger again
+                    continue
+
+                for add_trigger_cb in callbacks:
+                    if add_trigger_cb(service):
+                        self._triggers.append(entity_key)
+                        break
+
     def add_entities(self) -> None:
         """Process the entity map and create HA entities."""
         self._add_new_entities(self.listeners)
         self._add_new_entities_for_accessory(self.accessory_factories)
         self._add_new_entities_for_char(self.char_factories)
+        self._add_new_triggers(self.trigger_factories)
 
     def _add_new_entities(self, callbacks) -> None:
         for accessory in self.entity_map.accessories:
