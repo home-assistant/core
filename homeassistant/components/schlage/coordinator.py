@@ -22,9 +22,11 @@ class SchlageData:
 class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     """The Schlage data update coordinator."""
 
-    def __init__(self, hass: HomeAssistant, api: Schlage) -> None:
+    def __init__(self, hass: HomeAssistant, username: str, api: Schlage) -> None:
         """Initialize the class."""
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass, LOGGER, name=f"{DOMAIN} ({username})", update_interval=UPDATE_INTERVAL
+        )
         self.api = api
 
     async def _async_update_data(self) -> SchlageData:

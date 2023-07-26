@@ -16,15 +16,15 @@ PLATFORMS: list[Platform] = [Platform.LOCK]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Schlage from a config entry."""
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
     try:
-        auth = await hass.async_add_executor_job(
-            pyschlage.Auth, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
-        )
+        auth = await hass.async_add_executor_job(pyschlage.Auth, username, password)
     except WarrantException as ex:
         LOGGER.error("Schlage authentication failed: %s", ex)
         return False
 
-    coordinator = SchlageDataUpdateCoordinator(hass, pyschlage.Schlage(auth))
+    coordinator = SchlageDataUpdateCoordinator(hass, username, pyschlage.Schlage(auth))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
