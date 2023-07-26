@@ -26,8 +26,15 @@ async def async_setup_platform(
     """Set up the Lutron fans."""
     devs = []
     for area_name, device in hass.data[LUTRON_DEVICES]["fan"]:
-        dev = LutronFan(area_name, device, hass.data[LUTRON_CONTROLLER],
-                        hass, device.uuid, device.name, FULL_SUPPORT, None)
+        dev = LutronFan(
+            area_name, 
+            device, 
+            hass.data[LUTRON_CONTROLLER],
+            hass, 
+            device.uuid, 
+            device.name, 
+            FULL_SUPPORT, 
+            None)
         devs.append(dev)
 
     async_add_entities(devs, True)
@@ -118,7 +125,9 @@ class LutronFan(LutronDevice, FanEntity):
         """Call when forcing a refresh of the device."""
         # Reading the property (rather than last_level()) fetches value
         level = self._lutron_device.level
-        _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
+        _LOGGER.debug(
+            "Lutron ID: %d updated to %f",
+             self._lutron_device.id, level)
         if self._prev_percentage is None:
             self._prev_percentage = self._lutron_device.level
     
