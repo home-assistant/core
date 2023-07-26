@@ -72,6 +72,16 @@
       "name": "Clean spot",
       "description": "Tells the vacuum cleaner to do a spot clean-up."
     },
+    "clean_rooms": {
+      "name": "Clean rooms",
+      "description": "Tells the vacuum cleaner to clean specific room(s).",
+      "fields": {
+        "rooms": {
+          "name": "Rooms to clean",
+          "description": "The list of rooms to tell the vacuum to clean."
+        }
+      }
+    },
     "send_command": {
       "name": "Send command",
       "description": "Sends a command to the vacuum cleaner.",
