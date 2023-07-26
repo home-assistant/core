@@ -27,7 +27,7 @@ EVENT_TYPES_MAP = {
     # mapping from raw event id's to translation keys
     0: "switch_latched",  # clusters.Switch.Events.SwitchLatched
     1: "initial_press",  # clusters.Switch.Events.InitialPress
-    2: "long_press_ongoing",  # clusters.Switch.Events.LongPress
+    2: "long_press",  # clusters.Switch.Events.LongPress
     3: "short_release",  # clusters.Switch.Events.ShortRelease
     4: "long_release",  # clusters.Switch.Events.LongRelease
     5: "multi_press_ongoing",  # clusters.Switch.Events.MultiPressOngoing

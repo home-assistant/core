@@ -50,13 +50,13 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "switch_latched": "Latched",
-              "initial_press": "Initially pressed",
-              "long_press_ongoing": "Being held down",
-              "short_release": "Pressed shortly",
-              "long_release": "Released",
-              "multi_press_ongoing": "Multiple pressed",
-              "multi_press_complete": "Multiple released"
+              "switch_latched": "Switch latched",
+              "initial_press": "Initial press",
+              "long_press": "Lomng press",
+              "short_release": "Short release",
+              "long_release": "Long release",
+              "multi_press_ongoing": "Multi press ongoing",
+              "multi_press_complete": "Multi press complete"
             }
           }
         }
