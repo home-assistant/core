@@ -13,9 +13,11 @@ from typing import Generic
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.ports import Ports
+from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
 from aiounifi.models.port import Port
+from aiounifi.models.wlan import Wlan
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -37,6 +39,7 @@ from .entity import (
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_wlan_device_info_fn,
 )
 
 
@@ -64,6 +67,29 @@ def async_client_uptime_value_fn(
     if client.uptime < 1000000000:
         return dt_util.now() - timedelta(seconds=client.uptime)
     return dt_util.utc_from_timestamp(float(client.uptime))
+
+
+@callback
+def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
+    """Calculate the amount of clients connected to a wlan."""
+    return len(
+        [
+            client.mac
+            for client in controller.api.clients.values()
+            if client.essid == wlan.name
+        ]
+    )
+
+
+@callback
+def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for client."""
+    client = api.clients[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, obj_id)},
+        default_manufacturer=client.oui,
+        default_name=client.name or client.hostname,
+    )
 
 
 @dataclass
@@ -96,6 +122,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda _: "RX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
         unique_id_fn=lambda controller, obj_id: f"rx-{obj_id}",
         value_fn=async_client_rx_value_fn,
@@ -113,6 +140,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda _: "TX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
         unique_id_fn=lambda controller, obj_id: f"tx-{obj_id}",
         value_fn=async_client_tx_value_fn,
@@ -132,6 +160,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda port: f"{port.name} PoE Power",
         object_fn=lambda api, obj_id: api.ports[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, obj_id: controller.api.ports[obj_id].port_poe,
         unique_id_fn=lambda controller, obj_id: f"poe_power-{obj_id}",
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
@@ -150,9 +179,27 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda client: "Uptime",
         object_fn=lambda api, obj_id: api.clients[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, _: controller.option_allow_uptime_sensors,
         unique_id_fn=lambda controller, obj_id: f"uptime-{obj_id}",
         value_fn=async_client_uptime_value_fn,
+    ),
+    UnifiSensorEntityDescription[Wlans, Wlan](
+        key="WLAN clients",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=True,
+        allowed_fn=lambda controller, _: True,
+        api_handler_fn=lambda api: api.wlans,
+        available_fn=lambda controller, obj_id: controller.available,
+        device_info_fn=async_wlan_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        name_fn=lambda client: None,
+        object_fn=lambda api, obj_id: api.wlans[obj_id],
+        should_poll=True,
+        supported_fn=lambda controller, _: True,
+        unique_id_fn=lambda controller, obj_id: f"wlan_clients-{obj_id}",
+        value_fn=async_wlan_client_value_fn,
     ),
 )
 

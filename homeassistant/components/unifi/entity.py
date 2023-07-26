@@ -97,6 +97,7 @@ class UnifiDescription(Generic[HandlerT, ApiItemT]):
     event_to_subscribe: tuple[EventKey, ...] | None
     name_fn: Callable[[ApiItemT], str | None]
     object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
+    should_poll: bool
     supported_fn: Callable[[UniFiController, str], bool | None]
     unique_id_fn: Callable[[UniFiController, str], str]
 
@@ -110,8 +111,6 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
     """Representation of a UniFi entity."""
 
     entity_description: UnifiEntityDescription[HandlerT, ApiItemT]
-    _attr_should_poll = False
-
     _attr_unique_id: str
 
     def __init__(
@@ -131,6 +130,7 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
 
         self._attr_available = description.available_fn(controller, obj_id)
         self._attr_device_info = description.device_info_fn(controller.api, obj_id)
+        self._attr_should_poll = description.should_poll
         self._attr_unique_id = description.unique_id_fn(controller, obj_id)
 
         obj = description.object_fn(self.controller.api, obj_id)
@@ -219,6 +219,10 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
             er.async_get(self.hass).async_remove(self.entity_id)
         else:
             await self.async_remove(force_remove=True)
+
+    async def async_update(self) -> None:
+        """Update state if polling is configured."""
+        self.async_update_state(ItemEvent.CHANGED, self._obj_id)
 
     @callback
     def async_initiate_state(self) -> None:
