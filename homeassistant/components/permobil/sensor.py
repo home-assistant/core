@@ -40,7 +40,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import BATTERY_ASSUMED_VOLTAGE, COORDINATOR, DOMAIN
+from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN
 from .coordinator import MyPermobilCoordinator
 
 
@@ -183,7 +183,7 @@ async def async_setup_entry(
     """Create sensors from a config entry created in the integrations UI."""
 
     # create the API object from the config
-    coordinator = hass.data[DOMAIN][COORDINATOR][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
         PermobilSensor(coordinator=coordinator, description=description)

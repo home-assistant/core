@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import APPLICATION, COORDINATOR, DOMAIN
+from .const import APPLICATION, DOMAIN
 from .coordinator import MyPermobilCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -27,10 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MyPermobil from a config entry."""
-    default: dict = {
-        COORDINATOR: {},
-    }
-    hass.data.setdefault(DOMAIN, default)
 
     # create the API object from the config and save it in hass
     session = hass.helpers.aiohttp_client.async_get_clientsession()
@@ -49,10 +45,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Permobil: %s", err)
         raise ConfigEntryNotReady(f"Permobil Config error for {p_api.email}") from err
 
+    # create the coordinator with the API object
     coordinator = MyPermobilCoordinator(hass, p_api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][COORDINATOR][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -62,5 +59,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
-        hass.data[DOMAIN][COORDINATOR].pop(entry.entry_id)
+
     return unload_ok
