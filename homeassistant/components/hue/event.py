@@ -36,7 +36,7 @@ async def async_setup_entry(
 
     if bridge.api_version == 1:
         # should not happen, but just in case
-        raise NotImplementedError("Scene support is only available for V2 bridges")
+        raise NotImplementedError("Event support is only available for V2 bridges")
 
     # add entities for all button and relative rotary resources
     @callback
