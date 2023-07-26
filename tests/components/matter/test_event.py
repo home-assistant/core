@@ -27,6 +27,16 @@ async def switch_node_fixture(
     )
 
 
+@pytest.fixture(name="generic_switch_multi_node")
+async def multi_switch_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a GenericSwitch node with multiple buttons."""
+    return await setup_integration_with_node_fixture(
+        hass, "generic-switch-multi", matter_client
+    )
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_generic_switch_node(
@@ -88,3 +98,31 @@ async def test_generic_switch_node(
     state = hass.states.get("event.mock_generic_switch")
     assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_ongoing"
     assert state.attributes["NewPosition"] == 3
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_generic_switch_multi_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    generic_switch_multi_node: MatterNode,
+) -> None:
+    """Test event entity for a GenericSwitch node with multiple buttons."""
+    state_button_1 = hass.states.get("event.mock_generic_switch_button_1")
+    assert state_button_1
+    assert state_button_1.state == "unknown"
+    # name should be 'DeviceName Button 1' due to the label set to just '1'
+    assert state_button_1.name == "Mock Generic Switch Button 1"
+    # check event_types from featuremap 14
+    assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
+        "initial_press",
+        "short_release",
+        "long_press_ongoing",
+        "long_release",
+    ]
+    # check button 2
+    state_button_1 = hass.states.get("event.mock_generic_switch_fancy_button")
+    assert state_button_1
+    assert state_button_1.state == "unknown"
+    # name should be 'DeviceName Fancy Button' due to the label set to 'Fancy Button'
+    assert state_button_1.name == "Mock Generic Switch Fancy Button"
