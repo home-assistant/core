@@ -48,6 +48,7 @@ RECOMMENDED_RADIOS = (
 )
 
 CONNECT_DELAY_S = 1.0
+RETRY_DELAY_S = 1.0
 
 BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
@@ -358,10 +359,10 @@ class ZhaMultiPANMigrationHelper:
                 _LOGGER.debug(
                     "Failed to create backup %r, retrying in %s seconds",
                     err,
-                    CONNECT_DELAY_S,
+                    RETRY_DELAY_S,
                 )
 
-            await asyncio.sleep(CONNECT_DELAY_S)
+            await asyncio.sleep(RETRY_DELAY_S)
 
         # Then configure the radio manager for the new radio to use the new settings
         self._radio_mgr.chosen_backup = backup
@@ -401,10 +402,10 @@ class ZhaMultiPANMigrationHelper:
                 _LOGGER.debug(
                     "Failed to restore backup %r, retrying in %s seconds",
                     err,
-                    CONNECT_DELAY_S,
+                    RETRY_DELAY_S,
                 )
 
-            await asyncio.sleep(CONNECT_DELAY_S)
+            await asyncio.sleep(RETRY_DELAY_S)
 
         _LOGGER.debug("Restored backup after %s retries", retry)
 

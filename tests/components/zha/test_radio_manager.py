@@ -31,7 +31,9 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
-    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.0001):
+    with patch(
+        "homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.0001
+    ), patch("homeassistant.components.zha.radio_manager.RETRY_DELAY_S", 0.0001):
         yield
 
 
