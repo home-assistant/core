@@ -1136,6 +1136,8 @@ class MqttEntity(
                     "if device information is shared between multiple entities, the device "
                     "name must be included in each entity's device configuration",
                 )
+            elif config[CONF_DEVICE][CONF_NAME] == entity_name:
+                self._attr_name = None
 
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""
