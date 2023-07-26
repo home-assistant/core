@@ -37,7 +37,7 @@ class SchlageLockEntity(CoordinatorEntity[SchlageDataUpdateCoordinator], LockEnt
     ) -> None:
         """Initialize a Schlage Lock."""
         super().__init__(coordinator=coordinator)
-        self.device_id: str = device_id
+        self.device_id = device_id
         self._attr_unique_id = device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
