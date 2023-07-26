@@ -5,12 +5,13 @@ from unittest.mock import AsyncMock, patch
 from aioruckus.const import CONNECT_ERROR_TIMEOUT, LOGIN_ERROR_LOGIN_INCORRECT
 from aioruckus.exceptions import AuthenticationError
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ruckus_unleashed.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
-from . import CONFIG, DEFAULT_TITLE, RuckusAjaxApiPatchContext
+from . import CONFIG, DEFAULT_TITLE, RuckusAjaxApiPatchContext, mock_config_entry
 
 from tests.common import async_fire_time_changed
 
@@ -57,6 +58,36 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_user_reauth(hass: HomeAssistant) -> None:
+    """Test reauth."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert "flow_id" in flows[0]
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "new_name",
+            CONF_PASSWORD: "new_pass",
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "user"
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
