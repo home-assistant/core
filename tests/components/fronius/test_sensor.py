@@ -8,7 +8,7 @@ from homeassistant.components.fronius.coordinator import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import enable_all_entities, mock_responses, setup_fronius_integration
 
@@ -43,7 +43,7 @@ async def test_symo_inverter(
     # Second test at daytime when inverter is producing
     mock_responses(aioclient_mock, night=False)
     async_fire_time_changed(
-        hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
+        hass, dt_util.utcnow() + FroniusInverterUpdateCoordinator.default_interval
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 56
@@ -65,7 +65,7 @@ async def test_symo_inverter(
     # Third test at nighttime - additional AC entities default to 0
     mock_responses(aioclient_mock, night=True)
     async_fire_time_changed(
-        hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
+        hass, dt_util.utcnow() + FroniusInverterUpdateCoordinator.default_interval
     )
     await hass.async_block_till_done()
     assert_state("sensor.symo_20_ac_current", 0)
@@ -150,7 +150,7 @@ async def test_symo_power_flow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test Fronius Symo power flow entities."""
-    async_fire_time_changed(hass, dt.utcnow())
+    async_fire_time_changed(hass, dt_util.utcnow())
 
     def assert_state(entity_id, expected_state):
         state = hass.states.get(entity_id)
@@ -176,7 +176,7 @@ async def test_symo_power_flow(
     # Second test at daytime when inverter is producing
     mock_responses(aioclient_mock, night=False)
     async_fire_time_changed(
-        hass, dt.utcnow() + FroniusPowerFlowUpdateCoordinator.default_interval
+        hass, dt_util.utcnow() + FroniusPowerFlowUpdateCoordinator.default_interval
     )
     await hass.async_block_till_done()
     # 54 because power_flow `rel_SelfConsumption` and `P_PV` is not `null` anymore
@@ -193,7 +193,7 @@ async def test_symo_power_flow(
     # Third test at nighttime - default values are used
     mock_responses(aioclient_mock, night=True)
     async_fire_time_changed(
-        hass, dt.utcnow() + FroniusPowerFlowUpdateCoordinator.default_interval
+        hass, dt_util.utcnow() + FroniusPowerFlowUpdateCoordinator.default_interval
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 54

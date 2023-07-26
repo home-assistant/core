@@ -392,7 +392,7 @@ async def test_ws_list_engines(
     setup: MockProvider | MockProviderEntity,
     engine_id: str,
 ) -> None:
-    """Test listing speech to text engines."""
+    """Test listing speech-to-text engines."""
     client = await hass_ws_client()
 
     await client.send_json_auto_id({"type": "stt/engine/list"})

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine, Sequence
-from datetime import datetime, timedelta
 from typing import Any
 
 import async_timeout
@@ -31,26 +30,16 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_component,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
-from homeassistant.util import dt as dt_util
 
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
-from .const import (
-    CONF_MANUFACTURER,
-    CONF_SSDP_RENDERING_CONTROL_LOCATION,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
+from .entity import SamsungTVEntity
 from .triggers.turn_on import async_get_turn_on_trigger
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -67,12 +56,6 @@ SUPPORT_SAMSUNGTV = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
-# Since the TV will take a few seconds to go to sleep
-# and actually be seen as off, we need to wait just a bit
-# more than the next scan interval
-SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta(
-    seconds=5
-)
 
 # Max delay waiting for app_list to return, as some TVs simply ignore the request
 APP_LIST_DELAY = 3
@@ -86,7 +69,7 @@ async def async_setup_entry(
     async_add_entities([SamsungTVDevice(bridge, entry)], True)
 
 
-class SamsungTVDevice(MediaPlayerEntity):
+class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
     _attr_source_list: list[str]
@@ -97,9 +80,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the Samsung device."""
+        super().__init__(bridge=bridge, config_entry=config_entry)
         self._config_entry = config_entry
         self._host: str | None = config_entry.data[CONF_HOST]
-        self._mac: str | None = config_entry.data.get(CONF_MAC)
         self._ssdp_rendering_control_location: str | None = config_entry.data.get(
             CONF_SSDP_RENDERING_CONTROL_LOCATION
         )
@@ -107,8 +90,6 @@ class SamsungTVDevice(MediaPlayerEntity):
         # Assume that the TV is in Play mode
         self._playing: bool = True
 
-        self._attr_name: str | None = config_entry.data.get(CONF_NAME)
-        self._attr_unique_id = config_entry.unique_id
         self._attr_is_volume_muted: bool = False
         self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
@@ -123,22 +104,6 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
-        self._attr_device_info = DeviceInfo(
-            name=self.name,
-            manufacturer=config_entry.data.get(CONF_MANUFACTURER),
-            model=config_entry.data.get(CONF_MODEL),
-        )
-        if self.unique_id:
-            self._attr_device_info["identifiers"] = {(DOMAIN, self.unique_id)}
-        if self._mac:
-            self._attr_device_info["connections"] = {
-                (dr.CONNECTION_NETWORK_MAC, self._mac)
-            }
-
-        # Mark the end of a shutdown command (need to wait 15 seconds before
-        # sending the next command to avoid turning the TV back ON).
-        self._end_of_power_off: datetime | None = None
-        self._bridge = bridge
         self._auth_failed = False
         self._bridge.register_reauth_callback(self.access_denied)
         self._bridge.register_app_list_callback(self._app_list_callback)
@@ -190,7 +155,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._auth_failed or self.hass.is_stopping:
             return
         old_state = self._attr_state
-        if self._power_off_in_progress():
+        if self._bridge.power_off_in_progress:
             self._attr_state = MediaPlayerState.OFF
         else:
             self._attr_state = (
@@ -333,7 +298,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
-        if self._power_off_in_progress():
+        if self._bridge.power_off_in_progress:
             LOGGER.info("TV is powering off, not sending launch_app command")
             return
         assert isinstance(self._bridge, SamsungTVWSBridge)
@@ -342,16 +307,10 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def _async_send_keys(self, keys: list[str]) -> None:
         """Send a key to the tv and handles exceptions."""
         assert keys
-        if self._power_off_in_progress() and keys[0] != "KEY_POWEROFF":
+        if self._bridge.power_off_in_progress and keys[0] != "KEY_POWEROFF":
             LOGGER.info("TV is powering off, not sending keys: %s", keys)
             return
         await self._bridge.async_send_keys(keys)
-
-    def _power_off_in_progress(self) -> bool:
-        return (
-            self._end_of_power_off is not None
-            and self._end_of_power_off > dt_util.utcnow()
-        )
 
     @property
     def available(self) -> bool:
@@ -362,7 +321,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             self.state == MediaPlayerState.ON
             or bool(self._turn_on)
             or self._mac is not None
-            or self._power_off_in_progress()
+            or self._bridge.power_off_in_progress
         )
 
     async def async_added_to_hass(self) -> None:
@@ -378,7 +337,6 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
         await self._bridge.async_power_off()
 
     async def async_set_volume_level(self, volume: float) -> None:

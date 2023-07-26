@@ -100,7 +100,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
+        connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
 
@@ -123,7 +123,6 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers=set(),
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
@@ -683,7 +682,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_flame"},
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_tile_effect.calls) == 1
 
@@ -824,7 +823,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_move"},
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_multizone_effect.calls) == 1
 
@@ -881,6 +880,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_stop"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 0
     assert len(bulb.set_multizone_effect.calls) == 1
     call_dict = bulb.set_multizone_effect.calls[0][1]

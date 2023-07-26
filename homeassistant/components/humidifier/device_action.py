@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.device_automation import (
+    async_get_entity_registry_entry_or_raise,
+    async_validate_entity_schema,
+    toggle_entity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -26,7 +30,7 @@ from . import DOMAIN, const
 SET_HUMIDITY_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): "set_humidity",
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(const.ATTR_HUMIDITY): vol.Coerce(int),
     }
 )
@@ -34,14 +38,21 @@ SET_HUMIDITY_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 SET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): "set_mode",
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(ATTR_MODE): cv.string,
     }
 )
 
 ONOFF_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DOMAIN})
 
-ACTION_SCHEMA = vol.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
+_ACTION_SCHEMA = vol.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
 
 
 async def async_get_actions(
@@ -61,7 +72,7 @@ async def async_get_actions(
         base_action = {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
         actions.append({**base_action, CONF_TYPE: "set_humidity"})
 
@@ -108,9 +119,11 @@ async def async_get_action_capabilities(
         fields[vol.Required(const.ATTR_HUMIDITY)] = vol.Coerce(int)
     elif action_type == "set_mode":
         try:
+            entry = async_get_entity_registry_entry_or_raise(
+                hass, config[CONF_ENTITY_ID]
+            )
             available_modes = (
-                get_capability(hass, config[ATTR_ENTITY_ID], const.ATTR_AVAILABLE_MODES)
-                or []
+                get_capability(hass, entry.entity_id, const.ATTR_AVAILABLE_MODES) or []
             )
         except HomeAssistantError:
             available_modes = []

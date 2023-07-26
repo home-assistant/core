@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/doorbird",
   "iot_class": "local_push",
   "loggers": ["doorbirdpy"],
-  "requirements": ["doorbirdpy==2.1.0"],
+  "requirements": ["DoorBirdPy==2.1.0"],
   "zeroconf": [
     {
       "type": "_axis-video._tcp.local.",

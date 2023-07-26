@@ -17,7 +17,7 @@ from tests.common import async_fire_time_changed_exact, async_mock_service
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate):
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
