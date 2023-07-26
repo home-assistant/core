@@ -28,7 +28,6 @@ async def test_event(
         "initial_press",
         "repeat",
         "short_release",
-        "long_press",
         "long_release",
     ]
     # trigger firing 'initial_press' event from the device
