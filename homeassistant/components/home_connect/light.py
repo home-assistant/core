@@ -176,7 +176,10 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         else:
             self._state = None
 
-        _LOGGER.debug("Updated, new light state: %s", self._state)
+        _LOGGER.debug(
+            "Updated value for HomeConnect light, new light state: %s",
+            self._state,
+        )
 
         if self._ambient:
             color = self.device.appliance.status.get(self._custom_color_key, {})
@@ -190,7 +193,10 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 hsv = color_util.color_RGB_to_hsv(rgb[0], rgb[1], rgb[2])
                 self._hs_color = [hsv[0], hsv[1]]
                 self._brightness = ceil((hsv[2] - 10) * 255 / 90)
-                _LOGGER.debug("Updated, new brightness: %s", self._brightness)
+                _LOGGER.debug(
+                    "Updated value for HomeConnect ambient light, new brightness: %s",
+                    self._brightness,
+                )
 
         else:
             brightness = self.device.appliance.status.get(self._brightness_key, {})
@@ -198,4 +204,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self._brightness = None
             else:
                 self._brightness = ceil((brightness.get(ATTR_VALUE) - 10) * 255 / 90)
-            _LOGGER.debug("Updated, new brightness: %s", self._brightness)
+            _LOGGER.debug(
+                "Updated value for HomeConnect light, new brightness: %s",
+                self._brightness,
+            )

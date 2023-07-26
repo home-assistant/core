@@ -51,7 +51,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(device, desc)
-        self._state: str | None = None
+        self._state: StateType | datetime = None
         self._key = key
         self._unit = unit
         self._icon = icon
@@ -60,7 +60,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         self._attr_translation_key = translation_key
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return sensor value."""
         return self._state
 
@@ -75,26 +75,22 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         if self._key not in status:
             self._state = None
         elif self.device_class == SensorDeviceClass.TIMESTAMP:
-            parsed_datetime: datetime | None = None
-            if self._state is not None:
-                parsed_datetime = dt_util.parse_datetime(self._state)
-
             if ATTR_VALUE not in status[self._key]:
                 self._state = None
             elif (
                 self._state is not None
                 and self._sign == 1
-                and parsed_datetime is not None
-                and parsed_datetime < dt_util.utcnow()
+                and isinstance(self._state, datetime)
+                and self._state < dt_util.utcnow()
             ):
                 # if the date is supposed to be in the future but we're
                 # already past it, set state to None.
                 self._state = None
             else:
                 seconds = self._sign * float(status[self._key][ATTR_VALUE])
-                self._state = (
-                    dt_util.utcnow() + timedelta(seconds=seconds)
-                ).isoformat()
+                # trim the microseconds from now. The data from the api is seconds based.
+                utcnow_trimmed = dt_util.utcnow().replace(microsecond=0)
+                self._state = utcnow_trimmed + timedelta(seconds=seconds)
         else:
             self._state = status[self._key].get(ATTR_VALUE)
             if self._key == BSH_OPERATION_STATE:
@@ -103,7 +99,9 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                 # https://developer.home-connect.com/docs/status/operation_state
                 if self._state is not None and isinstance(self._state, str):
                     self._state = self._state.split(".")[-1].lower()
-        _LOGGER.debug("Updated, new state: %s", self._state)
+        _LOGGER.debug(
+            "Updated value for HomeConnect %s, new state: %s", self._key, self._state
+        )
 
     @property
     def native_unit_of_measurement(self) -> str | None:

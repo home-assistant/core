@@ -97,7 +97,11 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             self._state = True
         else:
             self._state = False
-        _LOGGER.debug("Updated, new state: %s", self._state)
+        _LOGGER.debug(
+            "Updated value for HomeConnect %s, new state: %s",
+            self.program_name,
+            self._state,
+        )
 
 
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
@@ -175,4 +179,4 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self._state = False
         else:
             self._state = None
-        _LOGGER.debug("Updated, new state: %s", self._state)
+        _LOGGER.debug("Updated value for HomeConnect Power, new state: %s", self._state)
