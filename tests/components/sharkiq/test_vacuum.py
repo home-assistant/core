@@ -27,7 +27,6 @@ from homeassistant.components.vacuum import (
     SERVICE_LOCATE,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
-    SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
@@ -67,7 +66,6 @@ EXPECTED_FEATURES = (
     | VacuumEntityFeature.STATE
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.LOCATE
-    | VacuumEntityFeature.SEND_COMMAND
 )
 
 
@@ -230,21 +228,6 @@ async def test_locate(hass: HomeAssistant) -> None:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
         await hass.services.async_call("vacuum", SERVICE_LOCATE, data, blocking=True)
         mock_locate.assert_called_once()
-
-
-async def test_clean_rooms_command(hass: HomeAssistant) -> None:
-    """Test that send command CLEAN_ROOMS works."""
-    with patch.object(SharkIqVacuum, "async_clean_rooms") as mock_clean_rooms:
-        data = {
-            ATTR_ENTITY_ID: VAC_ENTITY_ID,
-            "command": "CLEAN_ROOMS",
-            "params": ["Kitchen"],
-        }
-        await hass.services.async_call(
-            "vacuum", SERVICE_SEND_COMMAND, data, blocking=True
-        )
-        mock_clean_rooms.assert_called_once()
-        mock_clean_rooms.assert_called_with(["Kitchen"])
 
 
 @pytest.mark.parametrize(
