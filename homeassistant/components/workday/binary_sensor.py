@@ -2,17 +2,25 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from typing import Final
 
 from holidays import (
     HolidayBase,
     __version__ as python_holidays_version,
     country_holidays,
 )
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -29,6 +37,9 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+SERVICE_CHECK_DATE: Final = "check_date"
+CHECK_DATE: Final = "check_date"
 
 
 def validate_dates(holiday_list: list[str]) -> list[str]:
@@ -109,17 +120,45 @@ async def async_setup_entry(
         _holiday_string = holiday_date.strftime("%Y-%m-%d")
         LOGGER.debug("%s %s", _holiday_string, name)
 
+    entity = IsWorkdaySensor(
+        obj_holidays,
+        workdays,
+        excludes,
+        days_offset,
+        sensor_name,
+        entry.entry_id,
+    )
+
+    async def check_date(service_call: ServiceCall) -> ServiceResponse:
+        """Check if date is workday or not."""
+        date_to_test: date = service_call.data[CHECK_DATE]
+        holiday_date = (
+            date_to_test in entity._obj_holidays  # pylint: disable=protected-access
+        )
+
+        date_string = date_to_test.strftime("%Y-%m-%d")
+
+        return {"check_date": {"date": date_string, "workday": not holiday_date}}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        check_date,
+        cv.make_entity_service_schema({vol.Required(CHECK_DATE): cv.date}),
+        SupportsResponse.ONLY,
+    )
+
+    entity = IsWorkdaySensor(
+        obj_holidays,
+        workdays,
+        excludes,
+        days_offset,
+        sensor_name,
+        entry.entry_id,
+    )
+
     async_add_entities(
-        [
-            IsWorkdaySensor(
-                obj_holidays,
-                workdays,
-                excludes,
-                days_offset,
-                sensor_name,
-                entry.entry_id,
-            )
-        ],
+        [entity],
         True,
     )
 
