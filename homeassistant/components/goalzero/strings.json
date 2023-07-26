@@ -37,25 +37,25 @@
     },
     "sensor": {
       "watts_in": {
-        "name": "Watts in"
+        "name": "Power in"
       },
       "amps_in": {
-        "name": "Amps in"
+        "name": "Current in"
       },
       "watts_out": {
-        "name": "Watts out"
+        "name": "Power out"
       },
       "amps_out": {
-        "name": "Amps out"
+        "name": "Current out"
       },
       "wh_out": {
-        "name": "Wh out"
+        "name": "Energy out"
       },
       "wh_stored": {
-        "name": "Wh stored"
+        "name": "Energy stored"
       },
       "volts": {
-        "name": "Volts"
+        "name": "Voltage"
       },
       "soc_percent": {
         "name": "State of charge percent"
