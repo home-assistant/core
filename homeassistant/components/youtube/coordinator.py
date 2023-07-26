@@ -71,7 +71,5 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
         except YouTubeBackendError as err:
-            if self.last_update_success:
-                LOGGER.warning("Couldn't connect to YouTube")
-            raise UpdateFailed from err
+            raise UpdateFailed("Couldn't connect to YouTube") from err
         return res
