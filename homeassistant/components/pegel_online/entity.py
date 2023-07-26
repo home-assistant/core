@@ -8,7 +8,7 @@ from .const import DOMAIN
 from .coordinator import PegelOnlineDataUpdateCoordinator
 
 
-class PegelOnlineEntity(CoordinatorEntity):
+class PegelOnlineEntity(CoordinatorEntity[PegelOnlineDataUpdateCoordinator]):
     """Representation of a PEGELONLINE entity."""
 
     _attr_has_entity_name = True
