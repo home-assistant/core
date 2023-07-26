@@ -1,10 +1,10 @@
 """Support for departure information for public transport in Munich."""
 from __future__ import annotations
 
-import re
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
+import re
 
 from mvg import MvgApi, TransportType
 import voluptuous as vol
@@ -41,9 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 vol.Required(CONF_STATION): cv.string,
                 vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
                 vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
-                vol.Optional(
-                    CONF_PRODUCTS, default=None
-                ): cv.ensure_list_csv,
+                vol.Optional(CONF_PRODUCTS, default=None): cv.ensure_list_csv,
                 vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
                 vol.Optional(CONF_NUMBER, default=5): cv.positive_int,
                 vol.Optional(CONF_NAME): cv.string,
@@ -54,10 +52,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(
-        hass: HomeAssistant,
-        config: ConfigType,
-        add_entities: AddEntitiesCallback,
-        discovery_info: DiscoveryInfoType | None = None,
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MVGLive sensor."""
     sensors = []
@@ -102,8 +100,8 @@ class MVGLiveSensor(SensorEntity):
 
     @property
     def entity_id(self):
-        """Return the entity_id of the sensor"""
-        stripped_station = re.sub(r'\W+', '_', self._station).lower()
+        """Return the entity_id of the sensor."""
+        stripped_station = re.sub(r"\W+", "_", self._station).lower()
         return ENTITY_ID_FORMAT.format(stripped_station)
 
     @property
@@ -149,8 +147,7 @@ class MVGLiveSensor(SensorEntity):
 
 
 def _get_minutes_until_departure(departure_time: int) -> int:
-    """
-    Calculates the time difference in minutes between the current time and a given departure time.
+    """Calculate the time difference in minutes between the current time and a given departure time.
 
     Args:
         departure_time: Unix timestamp of the departure time, in seconds.
@@ -168,9 +165,7 @@ def _get_minutes_until_departure(departure_time: int) -> int:
 class MVGLiveData:
     """Pull data from the mvg-live.de web page."""
 
-    def __init__(
-        self, station, destinations, lines, products, timeoffset, number
-    ):
+    def __init__(self, station, destinations, lines, products, timeoffset, number):
         """Initialize the sensor."""
         self._station_name = station
         self._destinations = destinations
@@ -180,28 +175,35 @@ class MVGLiveData:
         self._number = number
         self._station = MvgApi.station(self._station_name)
         if self._station:
-            self.mvg = MvgApi(self._station['id'])
+            self.mvg = MvgApi(self._station["id"])
         self.departures = []
 
     def update(self):
         """Update the connection data."""
         if not self._station or not self.mvg:
             self.departures = []
-            _LOGGER.warning("Station cannot be found by name: change name or use station id, e.g. de:99232:2353")
+            _LOGGER.warning(
+                "Station cannot be found by name: change name or use station id, e.g. de:99232:2353"
+            )
             return
         try:
             _departures = self.mvg.departures(
                 offset=self._timeoffset,
                 limit=self._number,
-                transport_types=[transport_type for transport_type in TransportType
-                                 if transport_type.value[0] in self._products] if self._products else None
+                transport_types=[
+                    transport_type
+                    for transport_type in TransportType
+                    if transport_type.value[0] in self._products
+                ]
+                if self._products
+                else None,
             )
         except ValueError:
             self.departures = []
             _LOGGER.warning("Returned data not understood")
             return
         self.departures = []
-        for i, _departure in enumerate(_departures):
+        for _i, _departure in enumerate(_departures):
             # find the first departure meeting the criteria
             if (
                 "" not in self._destinations[:1]
