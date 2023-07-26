@@ -694,4 +694,18 @@ async def test_always_callback_when_force_update_is_true(
     update_callback.assert_called_once()
     update_callback.reset_mock()
 
+    # But still don't fire it if we are only getting
+    # failure over and over
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
     remove_callbacks()
