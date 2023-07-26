@@ -657,4 +657,15 @@ async def test_only_callback_on_change(
     update_callback.assert_not_called()
     update_callback.reset_mock()
 
+    mocked_data = {"a": 2, "b": 3}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    # Object is the same so we have no way to check if it changed
+    # so we always callback
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
     remove_callbacks()
