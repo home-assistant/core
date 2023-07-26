@@ -75,8 +75,9 @@
             "state": {
               "initial_press": "Initial press",
               "repeat": "Repeat",
-              "short_release": "Short release",
-              "long_release": "Long release",
+              "short_release": "Short press",
+              "long_release": "Long press",
+              "double_short_release": "Double press",
               "long_press": "Long press"
             }
           }
