@@ -44,6 +44,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 SERVICE_GENERATE_IMAGE = "generate_image"
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up OpenAI Conversation."""
