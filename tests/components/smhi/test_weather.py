@@ -58,7 +58,7 @@ async def test_setup_hass(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 2
 
     #  Testing the actual entity state for
     #  deeper testing than normal unity test
@@ -188,6 +188,9 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
         return_value=testdata,
+    ), patch(
+        "homeassistant.components.smhi.weather.Smhi.async_get_forecast_hour",
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
