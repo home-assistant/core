@@ -21,6 +21,7 @@ import attr
 from typing_extensions import NotRequired
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -232,21 +233,17 @@ class RegistryEntry:
                 display_dict["dp"] = precision
         return display_dict
 
-    @property
+    @cached_property
     def display_json_repr(self) -> str | None:
         """Return a cached partial JSON representation of the entry.
 
         This version only includes what's needed for display.
         """
-        if self._display_repr is not UNDEFINED:
-            return self._display_repr
-
+        dict_repr = self._as_display_dict
         try:
-            dict_repr = self._as_display_dict
             json_repr: str | None = JSON_DUMP(dict_repr) if dict_repr else None
-            object.__setattr__(self, "_display_repr", json_repr)
+            return json_repr
         except (ValueError, TypeError):
-            object.__setattr__(self, "_display_repr", None)
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -254,8 +251,7 @@ class RegistryEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-        # Mypy doesn't understand the __setattr__ business
-        return self._display_repr  # type: ignore[return-value]
+            return None
 
     @property
     def as_partial_dict(self) -> dict[str, Any]:
@@ -279,17 +275,13 @@ class RegistryEntry:
             "unique_id": self.unique_id,
         }
 
-    @property
+    @cached_property
     def partial_json_repr(self) -> str | None:
         """Return a cached partial JSON representation of the entry."""
-        if self._partial_repr is not UNDEFINED:
-            return self._partial_repr
-
+        dict_repr = self.as_partial_dict
         try:
-            dict_repr = self.as_partial_dict
-            object.__setattr__(self, "_partial_repr", JSON_DUMP(dict_repr))
+            return JSON_DUMP(dict_repr)
         except (ValueError, TypeError):
-            object.__setattr__(self, "_partial_repr", None)
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -297,8 +289,7 @@ class RegistryEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-        # Mypy doesn't understand the __setattr__ business
-        return self._partial_repr  # type: ignore[return-value]
+            return None
 
     @callback
     def write_unavailable_state(self, hass: HomeAssistant) -> None:
