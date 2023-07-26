@@ -1,7 +1,12 @@
 """Helper functions for the Cert Expiry platform."""
+import datetime
 from functools import cache
+import logging
 import socket
 import ssl
+from typing import Any
+
+from cryptography import x509
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -14,32 +19,38 @@ from .errors import (
     ValidationFailure,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @cache
-def _get_default_ssl_context():
-    """Return the default SSL context."""
-    return ssl.create_default_context()
+def _get_ssl_context() -> ssl.SSLContext:
+    """Return the SSL context."""
+    ctx = ssl.SSLContext()
+    return ctx
 
 
-def get_cert(
-    host: str,
-    port: int,
-):
+def get_cert(host: str, port: int) -> Any:
     """Get the certificate for the host and port combination."""
-    ctx = _get_default_ssl_context()
+    ctx = _get_ssl_context()
     address = (host, port)
-    with socket.create_connection(address, timeout=TIMEOUT) as sock, ctx.wrap_socket(
-        sock, server_hostname=address[0]
-    ) as ssock:
-        cert = ssock.getpeercert()
-        return cert
+    with socket.create_connection(
+        address,
+        timeout=TIMEOUT,
+    ) as sock, ctx.wrap_socket(sock, server_hostname=address[0]) as ssock:
+        # Request certificate in binary form as otherwise invalid cert will not be retrieved
+        _LOGGER.debug(f"Retrieving certificate for {address}")
+        binary_cert = ssock.getpeercert(True)
+        if binary_cert is None:
+            raise ValidationFailure("Unable to retrieve peer certificate")
+
+        decoded_cert = x509.load_der_x509_certificate(binary_cert)
+        _LOGGER.debug(f"Succesfully retrieved certificate for {address}")
+        return decoded_cert
 
 
 async def get_cert_expiry_timestamp(
-    hass: HomeAssistant,
-    hostname: str,
-    port: int,
-):
+    hass: HomeAssistant, hostname: str, port: int
+) -> datetime.datetime:
     """Return the certificate's expiration timestamp."""
     try:
         cert = await hass.async_add_executor_job(get_cert, hostname, port)
@@ -58,5 +69,4 @@ async def get_cert_expiry_timestamp(
     except ssl.SSLError as err:
         raise ValidationFailure(err.args[0]) from err
 
-    ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    return dt_util.utc_from_timestamp(ts_seconds)
+    return dt_util.as_utc(cert.not_valid_after)
