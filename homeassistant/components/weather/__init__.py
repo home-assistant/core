@@ -381,6 +381,31 @@ class WeatherEntity(Entity, PostInit):
                     cls.__name__,
                     report_issue,
                 )
+        if any(method in cls.__dict__ for method in ("_attr_forecast", "forecast")):
+            if _reported is False:
+                module = inspect.getmodule(cls)
+                _reported = True
+                if (
+                    module
+                    and module.__file__
+                    and "custom_components" in module.__file__
+                ):
+                    report_issue = "report it to the custom integration author."
+                else:
+                    report_issue = (
+                        "create a bug report at "
+                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                    )
+                _LOGGER.warning(
+                    (
+                        "%s::%s is using a forecast attribute on an instance of "
+                        "WeatherEntity, this is deprecated and will be unsupported "
+                        "from Home Assistant 2024.3. Please %s"
+                    ),
+                    cls.__module__,
+                    cls.__name__,
+                    report_issue,
+                )
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
