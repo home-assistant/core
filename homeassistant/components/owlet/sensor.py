@@ -26,75 +26,62 @@ from .entity import OwletBaseEntity
 
 
 @dataclass
-class OwletSensorEntityDescriptionMixin:
-    """Owlet sensor description mix in."""
-
-    element: str
-
-
-@dataclass
-class OwletSensorEntityDescription(
-    SensorEntityDescription, OwletSensorEntityDescriptionMixin
-):
+class OwletSensorEntityDescription(SensorEntityDescription):
     """Represent the owlet sensor entity description."""
 
 
 SENSORS: tuple[OwletSensorEntityDescription, ...] = (
     OwletSensorEntityDescription(
-        key="batterypercentage",
-        translation_key="batterypercent",
+        key="battery_percentage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        element="battery_percentage",
     ),
     OwletSensorEntityDescription(
-        key="oxygensaturation",
+        key="oxygen_saturation",
         translation_key="o2saturation",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        element="oxygen_saturation",
         icon="mdi:leaf",
     ),
     OwletSensorEntityDescription(
-        key="oxygensaturation10a",
+        key="oxygen_10_av",
         translation_key="o2saturation10a",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        element="oxygen_10_av",
         icon="mdi:leaf",
     ),
     OwletSensorEntityDescription(
-        key="heartrate",
+        key="heart_rate",
         translation_key="heartrate",
         native_unit_of_measurement="bpm",
         state_class=SensorStateClass.MEASUREMENT,
-        element="heart_rate",
         icon="mdi:heart-pulse",
     ),
     OwletSensorEntityDescription(
-        key="batteryminutes",
+        key="battery_minutes",
         translation_key="batterymin",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        element="battery_minutes",
     ),
     OwletSensorEntityDescription(
-        key="signalstrength",
-        translation_key="signalstrength",
+        key="signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        element="signal_strength",
     ),
     OwletSensorEntityDescription(
-        key="skintemp",
+        key="skin_temperature",
         translation_key="skintemp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        element="skin_temperature",
+    ),
+    OwletSensorEntityDescription(
+        key="sleep_state",
+        translation_key="sleepstate",
+        device_class=SensorDeviceClass.ENUM,
     ),
 )
 
@@ -116,71 +103,48 @@ async def async_setup_entry(
         for sensor in SENSORS
     )
 
-    async_add_entities(
-        OwletSleepStateSensor(coordinator) for coordinator in coordinators
-    )
-
 
 class OwletSensor(OwletBaseEntity, SensorEntity):
     """Representation of an Owlet sensor."""
 
+    entity_description: OwletSensorEntityDescription
+
     def __init__(
         self,
         coordinator: OwletCoordinator,
-        sensor_description: OwletSensorEntityDescription,
+        description: OwletSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description: OwletSensorEntityDescription = sensor_description
-        self._attr_unique_id = (
-            f"{self.sock.serial}-{self.entity_description.translation_key}"
-        )
+        self.entity_description = description
+        self._attr_unique_id = f"{self.sock.serial}-{description.key}"
 
     @property
     def native_value(self) -> StateType:
         """Return sensor value."""
 
         if (
-            self.entity_description.element
+            self.entity_description.key
             in [
                 "heart_rate",
                 "battery_minutes",
                 "oxygen_saturation",
                 "skin_temperature",
                 "oxygen_10_av",
+                "sleep_state",
             ]
             and self.sock.properties["charging"]
         ):
             return None
 
-        properties = self.sock.properties
+        if self.entity_description.key == "sleep_state":
+            return SLEEP_STATES[self.sock.properties["sleep_state"]]
 
-        return properties[self.entity_description.element]
-
-
-class OwletSleepStateSensor(OwletBaseEntity, SensorEntity):
-    """Representation of an Owlet sleep state sensor."""
-
-    def __init__(
-        self,
-        coordinator: OwletCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{self.sock.serial}-sleepstate"
-        self._attr_icon = "mdi:sleep"
-        self._attr_device_class = SensorDeviceClass.ENUM
-        self._attr_translation_key = "sleepstate"
-
-    @property
-    def native_value(self) -> str:
-        """Return sensor value."""
-        if self.sock.properties["charging"]:
-            return "unknown"
-
-        return SLEEP_STATES[self.sock.properties["sleep_state"]]
+        return self.sock.properties[self.entity_description.key]
 
     @property
     def options(self) -> list[str]:
         """Set options for sleep state."""
+        if self.entity_description.key != "sleep_state":
+            return None
         return list(SLEEP_STATES.values())

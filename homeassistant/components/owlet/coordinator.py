@@ -15,36 +15,25 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, POLLING_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class OwletCoordinator(DataUpdateCoordinator[None]):
     """Coordinator is responsible for querying the device at a specified route."""
-
-    def __init__(self, hass: HomeAssistant, sock: Sock, interval) -> None:
+    def __init__(self, hass: HomeAssistant, sock: Sock, entry: ConfigEntry) -> None:
         """Initialise a custom coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=interval),
+            update_interval=timedelta(seconds=POLLING_INTERVAL),
         )
-        assert self.config_entry is not None
-        self.config_entry: ConfigEntry
         self.sock = sock
-        self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, sock.serial)},
-            name="Owlet Baby Care Sock",
-            manufacturer=MANUFACTURER,
-            model=sock.model,
-            sw_version=sock.sw_version,
-            hw_version=sock.version,
-        )
+        self.config_entry = entry
 
     async def _async_update_data(self) -> None:
         """Fetch the data from the device."""

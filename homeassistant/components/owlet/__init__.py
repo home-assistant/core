@@ -77,9 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in devices["response"]
     }
 
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL)
     coordinators = {
-        serial: OwletCoordinator(hass, sock, scan_interval)
+        serial: OwletCoordinator(hass, sock, entry)
         for (serial, sock) in socks.items()
     }
 
