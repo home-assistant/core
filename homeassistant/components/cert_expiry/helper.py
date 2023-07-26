@@ -44,7 +44,7 @@ def get_cert(host: str, port: int) -> Any:
             raise ValidationFailure("Unable to retrieve peer certificate")
 
         decoded_cert = x509.load_der_x509_certificate(binary_cert)
-        _LOGGER.debug(f"Succesfully retrieved certificate for {address}")
+        _LOGGER.debug(f"Successfully retrieved certificate for {address}")
         return decoded_cert
 
 
