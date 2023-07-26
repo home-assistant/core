@@ -37,7 +37,8 @@
         },
         "prompt": {
           "name": "Prompt",
-          "description": "The text to turn into an image"
+          "description": "The text to turn into an image",
+          "example": "A photo of a dog"
         },
         "size": {
           "name": "Size",

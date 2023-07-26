@@ -7,7 +7,6 @@ generate_image:
           integration: openai_conversation
     prompt:
       required: true
-      example: "A photo of a dog"
       selector:
         text:
           multiline: true
