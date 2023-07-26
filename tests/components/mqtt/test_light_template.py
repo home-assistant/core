@@ -161,9 +161,9 @@ async def test_setup_fails(
                     "command_topic": "test_light_rgb/set",
                     "command_on_template": "on",
                     "command_off_template": "off",
-                    "red_template": '{{ value.split(",")[4].' 'split("-")[0] }}',
-                    "green_template": '{{ value.split(",")[4].' 'split("-")[1] }}',
-                    "blue_template": '{{ value.split(",")[4].' 'split("-")[2] }}',
+                    "red_template": '{{ value.split(",")[4].split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[4].split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[4].split("-")[2] }}',
                 }
             }
         }
@@ -416,9 +416,9 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
                     "optimistic": True,
                     "state_template": '{{ value.split(",")[0] }}',
                     "color_temp_template": '{{ value.split(",")[2] }}',
-                    "red_template": '{{ value.split(",")[3].' 'split("-")[0] }}',
-                    "green_template": '{{ value.split(",")[3].' 'split("-")[1] }}',
-                    "blue_template": '{{ value.split(",")[3].' 'split("-")[2] }}',
+                    "red_template": '{{ value.split(",")[3].split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[3].split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[3].split("-")[2] }}',
                     "effect_template": '{{ value.split(",")[4] }}',
                     "qos": 2,
                 }
@@ -1354,7 +1354,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

@@ -234,7 +234,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websession = async_get_clientsession(hass)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
-    cloud.iot.register_on_connect(client.on_cloud_connected)
 
     async def _shutdown(event: Event) -> None:
         """Shutdown event."""

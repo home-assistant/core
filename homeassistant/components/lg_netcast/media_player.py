@@ -40,6 +40,7 @@ SUPPORT_LGTV = (
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.STOP
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -239,6 +240,10 @@ class LgTVDevice(MediaPlayerEntity):
     def media_pause(self) -> None:
         """Send media pause command to media player."""
         self.send_command(LG_COMMAND.PAUSE)
+
+    def media_stop(self) -> None:
+        """Send media stop command to media player."""
+        self.send_command(LG_COMMAND.STOP)
 
     def media_next_track(self) -> None:
         """Send next track command."""

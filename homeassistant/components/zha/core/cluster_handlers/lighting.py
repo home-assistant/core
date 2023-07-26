@@ -1,13 +1,13 @@
 """Lighting cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from functools import cached_property
-
 from zigpy.zcl.clusters import lighting
 
-from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
+from homeassistant.backports.functools import cached_property
+
 from .. import registries
 from ..const import REPORT_CONFIG_DEFAULT
+from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(lighting.Ballast.cluster_id)

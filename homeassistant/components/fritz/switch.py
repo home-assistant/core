@@ -518,7 +518,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
             default_manufacturer="AVM",
             default_model="FRITZ!Box Tracked device",
             default_name=device.hostname,
-            identifiers={(DOMAIN, self._mac)},
             via_device=(
                 DOMAIN,
                 avm_wrapper.unique_id,

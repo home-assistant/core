@@ -22,8 +22,6 @@ async def test_form(hass: HomeAssistant) -> None:
             fetch_token=Mock(return_value={"access_token": "mock-token"})
         ),
     ), patch(
-        "homeassistant.components.ring.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ring.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -39,7 +37,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "username": "hello@home-assistant.io",
         "token": {"access_token": "mock-token"},
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

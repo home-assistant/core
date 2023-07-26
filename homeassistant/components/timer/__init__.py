@@ -4,8 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -336,11 +336,17 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             raise HomeAssistantError(
                 f"Timer {self.entity_id} is not running, only active timers can be changed"
             )
+        if self._remaining and (self._remaining + duration) > self._duration:
+            raise HomeAssistantError(
+                f"Not possible to change timer {self.entity_id} beyond configured duration"
+            )
+        if self._remaining and (self._remaining + duration) < timedelta():
+            raise HomeAssistantError(
+                f"Not possible to change timer {self.entity_id} to negative time remaining"
+            )
 
         self._listener()
-        self._listener = None
         self._end += duration
-        self._duration += duration
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
         self._listener = async_track_point_in_utc_time(

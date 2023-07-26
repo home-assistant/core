@@ -211,7 +211,7 @@ async def mock_config_entry_setup(
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
-        """Unload up test config entry."""
+        """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(config_entry, TTS_DOMAIN)
         return True
 

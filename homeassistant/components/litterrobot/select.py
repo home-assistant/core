@@ -50,7 +50,7 @@ class RobotSelectEntityDescription(
 ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
     LitterRobot: RobotSelectEntityDescription[LitterRobot, int](
         key="cycle_delay",
-        name="Clean cycle wait time minutes",
+        translation_key="cycle_delay",
         icon="mdi:timer-outline",
         unit_of_measurement=UnitOfTime.MINUTES,
         current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
@@ -59,7 +59,6 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
     ),
     LitterRobot4: RobotSelectEntityDescription[LitterRobot4, str](
         key="panel_brightness",
-        name="Panel brightness",
         translation_key="brightness_level",
         current_fn=lambda robot: bri.name.lower()
         if (bri := robot.panel_brightness) is not None
@@ -72,7 +71,7 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
     ),
     FeederRobot: RobotSelectEntityDescription[FeederRobot, float](
         key="meal_insert_size",
-        name="Meal insert size",
+        translation_key="meal_insert_size",
         icon="mdi:scale",
         unit_of_measurement="cups",
         current_fn=lambda robot: robot.meal_insert_size,

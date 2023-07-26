@@ -12,7 +12,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,12 +95,12 @@ class Auth:
         if not self._prefs[STORAGE_ACCESS_TOKEN]:
             return False
 
-        expire_time = dt.parse_datetime(self._prefs[STORAGE_EXPIRE_TIME])
+        expire_time = dt_util.parse_datetime(self._prefs[STORAGE_EXPIRE_TIME])
         preemptive_expire_time = expire_time - timedelta(
             seconds=PREEMPTIVE_REFRESH_TTL_IN_SECONDS
         )
 
-        return dt.utcnow() < preemptive_expire_time
+        return dt_util.utcnow() < preemptive_expire_time
 
     async def _async_request_new_token(self, lwa_params):
         try:
@@ -130,7 +130,7 @@ class Auth:
         access_token = response_json["access_token"]
         refresh_token = response_json["refresh_token"]
         expires_in = response_json["expires_in"]
-        expire_time = dt.utcnow() + timedelta(seconds=expires_in)
+        expire_time = dt_util.utcnow() + timedelta(seconds=expires_in)
 
         await self._async_update_preferences(
             access_token, refresh_token, expire_time.isoformat()

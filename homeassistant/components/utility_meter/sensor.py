@@ -5,10 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Any
+from typing import Any, Self
 
 from croniter import croniter
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -27,17 +26,23 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfEnergy,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.template import is_number
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -120,6 +125,28 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
+    source_entity = registry.async_get(source_entity_id)
+    dev_reg = dr.async_get(hass)
+    # Resolve source entity device
+    if (
+        (source_entity is not None)
+        and (source_entity.device_id is not None)
+        and (
+            (
+                device := dev_reg.async_get(
+                    device_id=source_entity.device_id,
+                )
+            )
+            is not None
+        )
+    ):
+        device_info = DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+    else:
+        device_info = None
+
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
@@ -149,6 +176,7 @@ async def async_setup_entry(
             tariff_entity=tariff_entity,
             tariff=None,
             unique_id=entry_id,
+            device_info=device_info,
         )
         meters.append(meter_sensor)
         hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -168,6 +196,7 @@ async def async_setup_entry(
                 tariff_entity=tariff_entity,
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
+                device_info=device_info,
             )
             meters.append(meter_sensor)
             hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -341,9 +370,11 @@ class UtilityMeterSensor(RestoreSensor):
         tariff,
         unique_id,
         suggested_entity_id=None,
+        device_info=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
@@ -421,7 +452,7 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @callback
-    def async_reading(self, event: Event):
+    def async_reading(self, event: EventType[EventStateChangedData]) -> None:
         """Handle the sensor state changes."""
         if (
             source_state := self.hass.states.get(self._sensor_source_id)
@@ -432,8 +463,10 @@ class UtilityMeterSensor(RestoreSensor):
 
         self._attr_available = True
 
-        old_state: State | None = event.data.get("old_state")
-        new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        if new_state is None:
+            return
 
         # First check if the new_state is valid (see discussion in PR #88446)
         if (new_state_val := self._validate_state(new_state)) is None:
@@ -462,14 +495,14 @@ class UtilityMeterSensor(RestoreSensor):
         self.async_write_ha_state()
 
     @callback
-    def async_tariff_change(self, event):
+    def async_tariff_change(self, event: EventType[EventStateChangedData]) -> None:
         """Handle tariff changes."""
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             return
 
         self._change_status(new_state.state)
 
-    def _change_status(self, tariff):
+    def _change_status(self, tariff: str) -> None:
         if self._tariff == tariff:
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
