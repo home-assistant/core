@@ -149,7 +149,7 @@
           "ready": "Ready",
           "delayedstart": "Delayed start",
           "run": "Run",
-          "pause": "Pause",
+          "pause": "[%key:common::state::paused%]",
           "actionrequired": "Action required",
           "finished": "Finished",
           "error": "Error",
