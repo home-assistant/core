@@ -133,18 +133,18 @@ SENSOR_DESCRIPTIONS = {
     ),
     # Used for e.g. consumable sensor on WX08ZM and M1S-T500
     (ExtendedSensorDeviceClass.CONSUMABLE, Units.PERCENTAGE): SensorEntityDescription(
-        key=f"{ExtendedSensorDeviceClass.CONSUMABLE}",
+        key=str(ExtendedSensorDeviceClass.CONSUMABLE),
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Used for score after brushing with a toothbrush
     (ExtendedSensorDeviceClass.SCORE, None): SensorEntityDescription(
-        key=f"{ExtendedSensorDeviceClass.SCORE}",
+        key=str(ExtendedSensorDeviceClass.SCORE),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Used for counting during brushing
     (ExtendedSensorDeviceClass.COUNTER, Units.TIME_SECONDS): SensorEntityDescription(
-        key=f"{ExtendedSensorDeviceClass.COUNTER}",
+        key=str(ExtendedSensorDeviceClass.COUNTER),
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
