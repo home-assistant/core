@@ -374,11 +374,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
+        if not self.last_update_success and not previous_update_success:
+            return
+
         if (
             # If the data object is the same object we cannot tell if the data has
             # changed so we always notify listeners.
             previous_data is self.data
-            or previous_update_success != self.last_update_success
+            or self.last_update_success != previous_update_success
             or previous_data != self.data
         ):
             self.async_update_listeners()

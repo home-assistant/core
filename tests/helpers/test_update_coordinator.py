@@ -602,7 +602,7 @@ async def test_only_callback_on_change(
     """Test we do not callback listeners unless something has actually changed."""
     update_callback = Mock()
     remove_callbacks = crd.async_add_listener(update_callback)
-    mocked_data = 1
+    mocked_data = None
     mocked_exception = None
 
     async def _update_method() -> int:
@@ -614,37 +614,45 @@ async def test_only_callback_on_change(
 
     crd.update_method = _update_method
 
+    mocked_data = {"a": 1}
     await crd.async_refresh()
     update_callback.assert_called_once()
     update_callback.reset_mock()
 
+    mocked_data = {"a": 1}
     await crd.async_refresh()
     update_callback.assert_not_called()
     update_callback.reset_mock()
 
+    mocked_data = None
     mocked_exception = aiohttp.ClientError("Client Failure #1")
     await crd.async_refresh()
     update_callback.assert_called_once()
     update_callback.reset_mock()
 
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
     await crd.async_refresh()
     update_callback.assert_not_called()
     update_callback.reset_mock()
 
     mocked_exception = None
+    mocked_data = {"a": 1}
     await crd.async_refresh()
     update_callback.assert_called_once()
     update_callback.reset_mock()
 
+    mocked_data = {"a": 1}
     await crd.async_refresh()
     update_callback.assert_not_called()
     update_callback.reset_mock()
 
-    mocked_data = 2
+    mocked_data = {"a": 2}
     await crd.async_refresh()
     update_callback.assert_called_once()
     update_callback.reset_mock()
 
+    mocked_data = {"a": 2}
     await crd.async_refresh()
     update_callback.assert_not_called()
     update_callback.reset_mock()
