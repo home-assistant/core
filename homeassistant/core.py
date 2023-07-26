@@ -16,7 +16,6 @@ from collections.abc import (
 )
 import concurrent.futures
 from contextlib import suppress
-from contextvars import ContextVar
 import datetime
 import enum
 import functools
@@ -32,6 +31,7 @@ from typing import (
     Any,
     Generic,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
     overload,
@@ -39,12 +39,10 @@ from typing import (
 from urllib.parse import urlparse
 
 import async_timeout
-from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
 from . import block_async_io, loader, util
-from .backports.enum import StrEnum
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -134,7 +132,7 @@ BLOCK_LOG_TIMEOUT = 60
 ServiceResponse = JsonObjectType | None
 
 
-class ConfigSource(StrEnum):
+class ConfigSource(enum.StrEnum):
     """Source of core configuration."""
 
     DEFAULT = "default"
@@ -154,8 +152,6 @@ TIMEOUT_EVENT_START = 15
 MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
-
-_cv_hass: ContextVar[HomeAssistant] = ContextVar("hass")
 
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
@@ -199,16 +195,27 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+class _Hass(threading.local):
+    """Container which makes a HomeAssistant instance available to the event loop."""
+
+    hass: HomeAssistant | None = None
+
+
+_hass = _Hass()
+
+
 @callback
 def async_get_hass() -> HomeAssistant:
     """Return the HomeAssistant instance.
 
-    Raises LookupError if no HomeAssistant instance is available.
+    Raises HomeAssistantError when called from the wrong thread.
 
     This should be used where it's very cumbersome or downright impossible to pass
     hass to the code which needs it.
     """
-    return _cv_hass.get()
+    if not _hass.hass:
+        raise HomeAssistantError("async_get_hass called from the wrong thread")
+    return _hass.hass
 
 
 @enum.unique
@@ -292,9 +299,9 @@ class HomeAssistant:
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
     def __new__(cls) -> HomeAssistant:
-        """Set the _cv_hass context variable."""
+        """Set the _hass thread local data."""
         hass = super().__new__(cls)
-        _cv_hass.set(hass)
+        _hass.hass = hass
         return hass
 
     def __init__(self) -> None:
@@ -756,7 +763,7 @@ class HomeAssistant:
         for task in self._background_tasks:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
-            task.cancel()
+            task.cancel("Home Assistant is stopping")
         self._cancel_cancellable_timers()
 
         self.exit_code = exit_code
@@ -806,7 +813,7 @@ class HomeAssistant:
                 "the stop event to prevent delaying shutdown",
                 task,
             )
-            task.cancel()
+            task.cancel("Home Assistant stage 2 shutdown")
             try:
                 async with async_timeout.timeout(0.1):
                     await task
@@ -1661,7 +1668,7 @@ class StateMachine:
         )
 
 
-class SupportsResponse(StrEnum):
+class SupportsResponse(enum.StrEnum):
     """Service call response configuration."""
 
     NONE = "none"
@@ -1762,7 +1769,7 @@ class ServiceRegistry:
         the context. Will return NONE if the service does not exist as there is
         other error handling when calling the service if it does not exist.
         """
-        if not (handler := self._services[domain][service]):
+        if not (handler := self._services[domain.lower()][service.lower()]):
             return SupportsResponse.NONE
         return handler.supports_response
 

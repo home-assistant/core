@@ -4,9 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 import logging
-from typing import Any, TypedDict
-
-from typing_extensions import NotRequired
+from typing import Any, NotRequired, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
