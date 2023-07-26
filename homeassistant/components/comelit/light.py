@@ -45,7 +45,10 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.api.host}-light-{device.index}"
+        assert coordinator.config_entry
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}-light-{device.index}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, self._attr_unique_id),
