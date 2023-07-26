@@ -61,17 +61,6 @@ clean_spot:
     entity:
       domain: vacuum
 
-clean_rooms:
-  target:
-    entity:
-      domain: vacuum
-  fields:
-    rooms:
-      required: true
-      example: "Kitchen"
-      selector:
-        text:
-
 send_command:
   target:
     entity:

@@ -54,7 +54,6 @@ ATTR_FAN_SPEED = "fan_speed"
 ATTR_FAN_SPEED_LIST = "fan_speed_list"
 ATTR_PARAMS = "params"
 ATTR_STATUS = "status"
-ATTR_ROOMS = "rooms"
 
 SERVICE_CLEAN_SPOT = "clean_spot"
 SERVICE_LOCATE = "locate"
@@ -65,7 +64,6 @@ SERVICE_START_PAUSE = "start_pause"
 SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_STOP = "stop"
-SERVICE_CLEAN_ROOMS = "clean_rooms"
 
 
 STATE_CLEANING = "cleaning"
@@ -95,7 +93,6 @@ class VacuumEntityFeature(IntFlag):
     MAP = 2048
     STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
-    CLEAN_ROOMS = 16384
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
@@ -196,15 +193,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_SET_FAN_SPEED,
-        {vol.Required(ATTR_FAN_SPEED): str},
+        {vol.Required(ATTR_FAN_SPEED): cv.string},
         "async_set_fan_speed",
         [VacuumEntityFeature.FAN_SPEED],
-    )
-    component.async_register_entity_service(
-        SERVICE_CLEAN_ROOMS,
-        {vol.Required(ATTR_ROOMS): cv.string},
-        "async_clean_rooms",
-        [VacuumEntityFeature.CLEAN_ROOMS],
     )
     component.async_register_entity_service(
         SERVICE_SEND_COMMAND,
@@ -344,19 +335,6 @@ class _BaseVacuum(Entity):
         """
         await self.hass.async_add_executor_job(
             partial(self.set_fan_speed, fan_speed, **kwargs)
-        )
-
-    def clean_rooms(self, rooms: str, **kwargs: Any) -> None:
-        """Set fan speed."""
-        raise NotImplementedError()
-
-    async def async_clean_rooms(self, rooms: str, **kwargs: Any) -> None:
-        """Clean Rooms.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(
-            partial(self.clean_rooms, rooms, **kwargs)
         )
 
     def send_command(

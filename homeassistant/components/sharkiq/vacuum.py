@@ -79,7 +79,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.LOCATE
-        | VacuumEntityFeature.CLEAN_ROOMS
+        | VacuumEntityFeature.SEND_COMMAND
     )
 
     def __init__(
@@ -95,22 +95,18 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Clean a spot. Not yet implemented."""
         raise NotImplementedError()
 
-    async def async_clean_rooms(self, rooms: str, **kwargs: Any) -> None:
-        """Clean the room or rooms indicated."""
-        split_rooms = rooms.split(",")
-        split_rooms = [room.strip() for room in split_rooms]
-        split_rooms.remove("")
-        await self.sharkiq.async_clean_rooms(split_rooms)
-        await self.coordinator.async_refresh()
-
-    def send_command(
+    async def async_send_command(
         self,
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        """Send a command to the vacuum. Not yet implemented."""
-        raise NotImplementedError()
+        """Send a command with params to the SharkIq library."""
+        if command == "CLEAN_ROOMS":
+            await self.sharkiq.async_clean_rooms(params)
+            await self.coordinator.async_refresh()
+        else:
+            raise NotImplementedError()
 
     @property
     def is_online(self) -> bool:
