@@ -15,7 +15,7 @@ async def test_sensors_asleep(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 8
 
     assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
+        hass.states.get("sensor.owlet_baby_care_sock_battery").state
         == "50.0"
     )
     assert (
@@ -50,7 +50,7 @@ async def test_sensors_awake(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 8
 
     assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
+        hass.states.get("sensor.owlet_baby_care_sock_battery").state
         == "80.0"
     )
     assert (
@@ -81,7 +81,7 @@ async def test_sensors_charging(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 8
 
     assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
+        hass.states.get("sensor.owlet_baby_care_sock_battery").state
         == "100.0"
     )
     assert (

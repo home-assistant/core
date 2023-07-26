@@ -11,9 +11,9 @@ from pyowletapi.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.owlet.const import DOMAIN, POLLING_INTERVAL
+from homeassistant.components.owlet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -52,7 +52,6 @@ async def test_form(hass: HomeAssistant) -> None:
             "expiry": 100,
             "refresh": "refresh_token",
         }
-        assert result["options"] == {"scan_interval": POLLING_INTERVAL}
 
 
 async def test_flow_wrong_password(hass: HomeAssistant) -> None:
@@ -70,7 +69,7 @@ async def test_flow_wrong_password(hass: HomeAssistant) -> None:
             user_input=CONF_INPUT,
         )
         assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_password"}
+        assert result["errors"] == {CONF_PASSWORD: "invalid_password"}
 
 
 async def test_flow_wrong_email(hass: HomeAssistant) -> None:
@@ -88,7 +87,7 @@ async def test_flow_wrong_email(hass: HomeAssistant) -> None:
             user_input=CONF_INPUT,
         )
         assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_email"}
+        assert result["errors"] == {CONF_USERNAME: "invalid_email"}
 
 
 async def test_flow_credentials_error(hass: HomeAssistant) -> None:
@@ -176,7 +175,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_invalid_password(hass: HomeAssistant) -> None:
-    """Test reauth with invalid password errir."""
+    """Test reauth with invalid password error."""
     entry = await async_init_integration(hass, skip_setup=True)
 
     result = await hass.config_entries.flow.async_init(
@@ -193,7 +192,7 @@ async def test_reauth_invalid_password(hass: HomeAssistant) -> None:
 
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
-        assert result["errors"] == {"base": "invalid_password"}
+        assert result["errors"] == {CONF_PASSWORD: "invalid_password"}
 
 
 async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
@@ -215,23 +214,3 @@ async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
 
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test that the form is served with no input."""
-    entry = await async_init_integration(hass, skip_setup=True)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 10},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == ""
-    assert result["data"] == {CONF_SCAN_INTERVAL: 10}

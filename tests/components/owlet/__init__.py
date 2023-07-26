@@ -39,7 +39,6 @@ async def async_init_integration(
             CONF_OWLET_EXPIRY: 100,
             CONF_OWLET_REFRESH: "refresh_token",
         },
-        options={CONF_SCAN_INTERVAL: POLLING_INTERVAL},
     )
 
     entry.add_to_hass(hass)
