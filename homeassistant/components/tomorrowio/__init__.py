@@ -72,6 +72,8 @@ from .const import (
     TMRW_ATTR_TEMPERATURE,
     TMRW_ATTR_TEMPERATURE_HIGH,
     TMRW_ATTR_TEMPERATURE_LOW,
+    TMRW_ATTR_UV_HEALTH_CONCERN,
+    TMRW_ATTR_UV_INDEX,
     TMRW_ATTR_VISIBILITY,
     TMRW_ATTR_WIND_DIRECTION,
     TMRW_ATTR_WIND_GUST,
@@ -291,6 +293,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
                         TMRW_ATTR_SOLAR_GHI,
                         TMRW_ATTR_SULPHUR_DIOXIDE,
+                        TMRW_ATTR_UV_INDEX,
+                        TMRW_ATTR_UV_HEALTH_CONCERN,
                         TMRW_ATTR_WIND_GUST,
                     ],
                     [

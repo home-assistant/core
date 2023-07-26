@@ -365,8 +365,11 @@ class TraccarScanner:
 class TraccarEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, device, latitude, longitude, battery, accuracy, attributes):
-        """Set up Geofency entity."""
+        """Set up Traccar entity."""
         self._accuracy = accuracy
         self._attributes = attributes
         self._name = device
@@ -400,11 +403,6 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
     def location_accuracy(self):
         """Return the gps accuracy of the device."""
         return self._accuracy
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def unique_id(self):
@@ -468,7 +466,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         self, device, latitude, longitude, battery, accuracy, attributes
     ):
         """Mark the device as seen."""
-        if device != self.name:
+        if device != self._name:
             return
 
         self._latitude = latitude
