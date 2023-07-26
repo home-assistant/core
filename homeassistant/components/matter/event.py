@@ -81,7 +81,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
                 if label.label == "Label":
                     label_value: str = label.value
                     # in the case the label is only the label id, prettify it a bit
-                    if len(label_value) == 1:
+                    if label_value.isnumeric():
                         self._attr_name = f"Button {label_value}"
                     else:
                         self._attr_name = label_value
