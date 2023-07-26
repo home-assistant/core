@@ -233,6 +233,7 @@ omit =
     homeassistant/components/duotecno/__init__.py
     homeassistant/components/duotecno/entity.py
     homeassistant/components/duotecno/switch.py
+    homeassistant/components/duotecno/cover.py
     homeassistant/components/dwd_weather_warnings/const.py
     homeassistant/components/dwd_weather_warnings/coordinator.py
     homeassistant/components/dwd_weather_warnings/sensor.py
