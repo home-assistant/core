@@ -19,7 +19,7 @@
   "entity": {
     "sensor": {
       "filter_life": {
-        "name": "Filter life"
+        "name": "Filter lifetime"
       },
       "air_quality": {
         "name": "Air quality"

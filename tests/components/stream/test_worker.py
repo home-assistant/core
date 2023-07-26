@@ -245,7 +245,7 @@ class FakePyAvBuffer:
         # Forward to appropriate FakeStream
         packet.stream.mux(packet)
         # Make new init/part data available to the worker
-        self.memory_file.write(b"\x00\x00\x00\x00moov")
+        self.memory_file.write(b"\x00\x00\x00\x08moov")
 
     def close(self):
         """Close the buffer."""

@@ -265,3 +265,16 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
         ), sentence
 
     assert len(callback.mock_calls) == 0
+
+
+async def test_shopping_list_add_item(
+    hass: HomeAssistant, init_components, sl_setup
+) -> None:
+    """Test adding an item to the shopping list through the default agent."""
+    result = await conversation.async_converse(
+        hass, "add apples to my shopping list", None, Context()
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech == {
+        "plain": {"speech": "Added apples", "extra_data": None}
+    }
