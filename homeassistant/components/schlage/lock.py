@@ -33,6 +33,7 @@ class SchlageLockEntity(CoordinatorEntity[SchlageDataUpdateCoordinator], LockEnt
     """Schlage lock entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: SchlageDataUpdateCoordinator, device_id: str
@@ -69,7 +70,6 @@ class SchlageLockEntity(CoordinatorEntity[SchlageDataUpdateCoordinator], LockEnt
 
     def _update_attrs(self) -> None:
         """Update our internal state attributes."""
-        self._attr_name = self._lock.name
         self._attr_is_locked = self._lock.is_locked
         self._attr_is_jammed = self._lock.is_jammed
 
