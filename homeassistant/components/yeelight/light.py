@@ -473,11 +473,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         return self._color_temp
 
     @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return self.device.name
-
-    @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._get_property(self._power_property) == "on"
@@ -892,6 +887,7 @@ class YeelightColorLightSupport(YeelightGenericLight):
 class YeelightWhiteTempLightSupport(YeelightGenericLight):
     """Representation of a White temp Yeelight light."""
 
+    _attr_name = None
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
@@ -943,6 +939,8 @@ class YeelightColorLightWithNightlightSwitch(
     It represents case when nightlight switch is set to light.
     """
 
+    _attr_name = None
+
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
@@ -954,6 +952,8 @@ class YeelightWhiteTempWithoutNightlightSwitch(
 ):
     """White temp light, when nightlight switch is not set to light."""
 
+    _attr_name = None
+
 
 class YeelightWithNightLight(
     YeelightNightLightSupport, YeelightWhiteTempLightSupport, YeelightGenericLight
@@ -962,6 +962,8 @@ class YeelightWithNightLight(
 
     It represents case when nightlight switch is set to light.
     """
+
+    _attr_name = None
 
     @property
     def is_on(self) -> bool:
@@ -975,17 +977,13 @@ class YeelightNightLightMode(YeelightGenericLight):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_icon = "mdi:weather-night"
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_translation_key = "nightlight"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         unique = super().unique_id
         return f"{unique}-nightlight"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return f"{self.device.name} Nightlight"
 
     @property
     def is_on(self) -> bool:
@@ -1030,6 +1028,8 @@ class YeelightWithAmbientWithoutNightlight(YeelightWhiteTempWithoutNightlightSwi
     And nightlight switch type is none.
     """
 
+    _attr_name = None
+
     @property
     def _power_property(self) -> str:
         return "main_power"
@@ -1041,6 +1041,8 @@ class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
     And nightlight switch type is set to light.
     """
 
+    _attr_name = None
+
     @property
     def _power_property(self) -> str:
         return "main_power"
@@ -1048,6 +1050,8 @@ class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
 
 class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
     """Representation of a Yeelight ambient light."""
+
+    _attr_translation_key = "ambilight"
 
     PROPERTIES_MAPPING = {"color_mode": "bg_lmode"}
 
@@ -1064,11 +1068,6 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
         """Return a unique ID."""
         unique = super().unique_id
         return f"{unique}-ambilight"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return f"{self.device.name} Ambilight"
 
     @property
     def _brightness_property(self) -> str:

@@ -102,7 +102,7 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.7.0
+anyio==3.7.1
 h11==0.14.0
 httpcore==0.17.3
 
@@ -122,10 +122,6 @@ python-socketio>=4.6.0,<5.0
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
-
-# Required for compatibility with point integration - ensure_active_token
-# https://github.com/home-assistant/core/pull/68176
-authlib<1.0
 
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
