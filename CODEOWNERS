@@ -195,8 +195,8 @@ build.json @home-assistant/supervisor
 /tests/components/camera/ @home-assistant/core
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
-/homeassistant/components/cert_expiry/ @Cereal2nd @jjlawren
-/tests/components/cert_expiry/ @Cereal2nd @jjlawren
+/homeassistant/components/cert_expiry/ @jjlawren
+/tests/components/cert_expiry/ @jjlawren
 /homeassistant/components/circuit/ @braam
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
@@ -922,6 +922,8 @@ build.json @home-assistant/supervisor
 /tests/components/panel_iframe/ @home-assistant/frontend
 /homeassistant/components/peco/ @IceBotYT
 /tests/components/peco/ @IceBotYT
+/homeassistant/components/pegel_online/ @mib1185
+/tests/components/pegel_online/ @mib1185
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/philips_js/ @elupus
@@ -1075,6 +1077,8 @@ build.json @home-assistant/supervisor
 /tests/components/scene/ @home-assistant/core
 /homeassistant/components/schedule/ @home-assistant/core
 /tests/components/schedule/ @home-assistant/core
+/homeassistant/components/schlage/ @dknowles2
+/tests/components/schlage/ @dknowles2
 /homeassistant/components/schluter/ @prairieapps
 /homeassistant/components/scrape/ @fabaff @gjohansson-ST @epenet
 /tests/components/scrape/ @fabaff @gjohansson-ST @epenet

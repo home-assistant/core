@@ -456,6 +456,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "atlanticcityelectric": {
+      "name": "Atlantic City Electric",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "atome": {
       "name": "Atome Linky",
       "integration_type": "hub",
@@ -554,6 +559,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "bge": {
+      "name": "Baltimore Gas and Electric (BGE)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "bitcoin": {
       "name": "Bitcoin",
@@ -862,6 +872,11 @@
       "integration_type": "hub",
       "config_flow": false
     },
+    "comed": {
+      "name": "Commonwealth Edison (ComEd)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "comed_hourly_pricing": {
       "name": "ComEd Hourly Pricing",
       "integration_type": "hub",
@@ -990,6 +1005,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "delmarva": {
+      "name": "Delmarva Power",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "deluge": {
       "name": "Deluge",
@@ -1553,6 +1573,11 @@
           "name": "EufyLife"
         }
       }
+    },
+    "evergy": {
+      "name": "Evergy",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "everlights": {
       "name": "EverLights",
@@ -4136,11 +4161,32 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "peco_opower": {
+      "name": "PECO Energy Company (PECO)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
+    "pegel_online": {
+      "name": "PEGELONLINE",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "pencom": {
       "name": "Pencom",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "pepco": {
+      "name": "Potomac Electric Power Company (Pepco)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
+    "pge": {
+      "name": "Pacific Gas & Electric (PG&E)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "philips": {
       "name": "Philips",
@@ -4314,6 +4360,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "pse": {
+      "name": "Puget Sound Energy (PSE)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "pulseaudio_loopback": {
       "name": "PulseAudio Loopback",
@@ -4797,6 +4848,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "schlage": {
+      "name": "Schlage",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "schluter": {
       "name": "Schluter",
