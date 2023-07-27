@@ -27,7 +27,7 @@ async def async_setup_entry(
     coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        ComelitLightEntity(coordinator, device)
+        ComelitLightEntity(coordinator, device, config_entry.unique_id)
         for device in coordinator.data[LIGHT].values()
     )
 
@@ -39,16 +39,16 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
     _attr_name = None
 
     def __init__(
-        self, coordinator: ComelitSerialBridge, device: ComelitSerialBridgeObject
+        self,
+        coordinator: ComelitSerialBridge,
+        device: ComelitSerialBridgeObject,
+        config_entry_unique_id: str | None,
     ) -> None:
         """Init light entity."""
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
-        assert coordinator.config_entry
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}-light-{device.index}"
-        )
+        self._attr_unique_id = f"{config_entry_unique_id}-light-{device.index}"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, self._attr_unique_id),
