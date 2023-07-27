@@ -1,7 +1,7 @@
 """Constants for the Fronius integration."""
+from enum import StrEnum
 from typing import Final, NamedTuple, TypedDict
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
 
