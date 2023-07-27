@@ -17,6 +17,7 @@ from . import InvalidAuth, WallboxCoordinator, WallboxEntity
 from .const import (
     BIDIRECTIONAL_MODEL_PREFIXES,
     CHARGER_DATA_KEY,
+    CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_PART_NUMBER_KEY,
@@ -31,6 +32,10 @@ class WallboxNumberEntityDescription(NumberEntityDescription):
 
 
 NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
+    CHARGER_ENERGY_PRICE_KEY: WallboxNumberEntityDescription(
+        key=CHARGER_ENERGY_PRICE_KEY,
+        name="Energy Price",
+    ),
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
@@ -45,6 +50,9 @@ async def async_setup_entry(
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
     # Check if the user is authorized to change current, if so, add number component:
     try:
+        await coordinator.async_set_energy_price(
+            coordinator.data[CHARGER_ENERGY_PRICE_KEY]
+        )
         await coordinator.async_set_charging_current(
             coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
         )
@@ -86,21 +94,29 @@ class WallboxNumber(WallboxEntity, NumberEntity):
 
     @property
     def native_max_value(self) -> float:
-        """Return the maximum available current."""
+        """Return the maximum available current. Return a huge monetary value per kWh for price."""
+
+        if self.entity_description.key == CHARGER_ENERGY_PRICE_KEY:
+            return 10.0
+
         return cast(float, self._coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY])
 
     @property
     def native_min_value(self) -> float:
-        """Return the minimum available current based on charger type - some chargers can discharge."""
+        """Return the minimum available current based on charger type - some chargers can discharge. Return a huge monetary value per kWh for price."""
+        if self.entity_description.key == CHARGER_ENERGY_PRICE_KEY:
+            return -10.0
+
         return (self.max_value * -1) if self._is_bidirectional else 6
 
     @property
     def native_value(self) -> float | None:
         """Return the value of the entity."""
-        return cast(
-            float | None, self._coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
-        )
+        return cast(float | None, self._coordinator.data[self.entity_description.key])
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
-        await self._coordinator.async_set_charging_current(value)
+        if self.entity_description.key == CHARGER_ENERGY_PRICE_KEY:
+            await self._coordinator.async_set_energy_price(value)
+        if self.entity_description.key == CHARGER_MAX_CHARGING_CURRENT_KEY:
+            await self._coordinator.async_set_charging_current(value)

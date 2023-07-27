@@ -101,7 +101,14 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json=json.loads(
+                json.dumps(
+                    {
+                        CHARGER_MAX_CHARGING_CURRENT_KEY: 20,
+                        CHARGER_ENERGY_PRICE_KEY: 0.3,
+                    }
+                )
+            ),
             status_code=HTTPStatus.OK,
         )
 

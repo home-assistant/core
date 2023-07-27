@@ -3,7 +3,11 @@ import json
 
 import requests_mock
 
-from homeassistant.components.wallbox import CHARGER_MAX_CHARGING_CURRENT_KEY, DOMAIN
+from homeassistant.components.wallbox import (
+    CHARGER_ENERGY_PRICE_KEY,
+    CHARGER_MAX_CHARGING_CURRENT_KEY,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -58,7 +62,14 @@ async def test_wallbox_refresh_failed_invalid_auth(
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json=json.loads(
+                json.dumps(
+                    {
+                        CHARGER_MAX_CHARGING_CURRENT_KEY: 20,
+                        CHARGER_ENERGY_PRICE_KEY: 0.3,
+                    }
+                )
+            ),
             status_code=403,
         )
 

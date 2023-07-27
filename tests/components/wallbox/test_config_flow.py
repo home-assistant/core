@@ -12,6 +12,7 @@ from homeassistant.components.wallbox.const import (
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     DOMAIN,
@@ -34,7 +35,10 @@ test_response = json.loads(
             CHARGER_CHARGING_SPEED_KEY: 0,
             CHARGER_ADDED_RANGE_KEY: "xx",
             CHARGER_ADDED_ENERGY_KEY: "44.697",
-            CHARGER_DATA_KEY: {CHARGER_MAX_CHARGING_CURRENT_KEY: 24},
+            CHARGER_DATA_KEY: {
+                CHARGER_MAX_CHARGING_CURRENT_KEY: 24,
+                CHARGER_ENERGY_PRICE_KEY: 0.4,
+            },
         }
     )
 )
