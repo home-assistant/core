@@ -3,13 +3,15 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from requests.exceptions import HTTPError
+from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant import config_entries
-from homeassistant.components.hydrawise import DOMAIN
+from homeassistant.components.hydrawise.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -50,7 +52,21 @@ async def test_form_api_error(mock_api: MagicMock, hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+@patch("hydrawiser.core.Hydrawiser", side_effect=ConnectTimeout)
+async def test_form_connect_timeout(mock_api: MagicMock, hass: HomeAssistant) -> None:
+    """Test we handle API errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_key": "abc123"}
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "timeout_connect"}
 
 
 @patch("hydrawiser.core.Hydrawiser")
@@ -86,5 +102,33 @@ async def test_flow_import_success(mock_api: MagicMock, hass: HomeAssistant) -> 
     assert result["title"] == "Hydrawise"
     assert result["data"] == {
         CONF_API_KEY: "__api_key__",
-        CONF_SCAN_INTERVAL: 120,
     }
+
+
+@patch("hydrawiser.core.Hydrawiser")
+async def test_flow_import_already_imported(
+    mock_api: MagicMock, hass: HomeAssistant
+) -> None:
+    """Test that we can handle a YAML config already imported."""
+    mock_config_entry = MockConfigEntry(
+        title="Hydrawise",
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "__api_key__",
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    mock_api.return_value.status = "All good!"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: "__api_key__",
+            CONF_SCAN_INTERVAL: 120,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"

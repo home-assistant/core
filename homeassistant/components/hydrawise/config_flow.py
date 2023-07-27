@@ -51,5 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
         """Import data from YAML."""
-        self._async_abort_entries_match(import_data)
-        return await self.async_step_user(import_data)
+        # Only the API key is passed along. All other values are ignored.
+        user_input: dict[str, Any] = {CONF_API_KEY: import_data.get(CONF_API_KEY)}
+        self._async_abort_entries_match(user_input)
+        return await self.async_step_user(user_input)
