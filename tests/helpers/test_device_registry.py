@@ -1690,7 +1690,6 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(
         (URL("http://localhost/config"), nullcontext()),
         (URL("http://localhost:8123/config"), nullcontext()),
         (URL("https://example.com/config"), nullcontext()),
-        ("homeassistant://config", nullcontext()),
         (URL("homeassistant://config"), nullcontext()),
         (None, nullcontext()),
         ("http://", pytest.raises(ValueError)),
@@ -1701,7 +1700,7 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(
         (URL("https://"), pytest.raises(ValueError)),
         (URL("gopher://localhost"), pytest.raises(ValueError)),
         (URL("homeassistant://"), pytest.raises(ValueError)),
-        # Test any string castable objects
+        # Exception implements __str__
         (Exception("https://example.com"), nullcontext()),
         (Exception("https://"), pytest.raises(ValueError)),
         (Exception(), pytest.raises(ValueError)),
