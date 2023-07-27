@@ -1,5 +1,4 @@
-binary_sensor:
-  - platform: ping
-    name: test2
-    host: 127.0.0.1
-    count: 1
+ping:
+  - host: "127.0.0.1"
+    binary_sensor:
+      name: "Test binary sensor"

@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 import logging
-from typing import Any
+from typing import Any, cast
 
 from icmplib import SocketPermissionError, ping as icmp_ping
 import voluptuous as vol
@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    CONF_UNIQUE_ID,
     SERVICE_RELOAD,
     Platform,
 )
@@ -39,18 +40,19 @@ PLATFORM_MAPPING = {
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
             min=1, max=100
         ),
         vol.Optional(
             CONF_SCAN_INTERVAL, default=BINARY_SENSOR_DEFAULT_SCAN_INTERVAL
         ): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 DEVICE_TRACKER_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
     }
 )
@@ -83,7 +85,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
             await reset_platform.async_reset()
         if not reload_config:
+            _LOGGER.debug("No reload config, exit")
             return
+        _LOGGER.debug("Reload config: %s", reload_config)
         await async_load_platforms(hass, reload_config.get(DOMAIN, []), reload_config)
 
     if not hass.services.has_service(DOMAIN, SERVICE_RELOAD):
@@ -114,6 +118,8 @@ async def async_load_platforms(
     reload_configs: list[tuple] = []
     for platform_config in ping_config:
         for platform, _config in platform_config.items():
+            if platform == CONF_HOST:
+                continue
             if (mapped_platform := PLATFORM_MAPPING[platform]) not in platforms:
                 platforms.append(mapped_platform)
             _LOGGER.debug(
@@ -124,7 +130,7 @@ async def async_load_platforms(
             reload_configs.append(
                 (
                     PLATFORM_MAPPING[platform],
-                    {**_config, CONF_HOST: platform_config[CONF_HOST]},
+                    {**cast(dict, _config), CONF_HOST: platform_config[CONF_HOST]},
                 )
             )
             load_coroutines.append(
@@ -132,7 +138,7 @@ async def async_load_platforms(
                     hass,
                     PLATFORM_MAPPING[platform],
                     DOMAIN,
-                    {**_config, CONF_HOST: platform_config[CONF_HOST]},
+                    {**cast(dict, _config), CONF_HOST: platform_config[CONF_HOST]},
                     config,
                 )
             )

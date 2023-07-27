@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
 
@@ -122,9 +122,7 @@ async def async_setup_scanner(
     if discovery_info:
         device_tracker_config = discovery_info
         ip_to_dev_id = {
-            device_tracker_config[CONF_HOST]: device_tracker_config.get(
-                CONF_NAME, f"{DEFAULT_NAME} {device_tracker_config[CONF_HOST]}"
-            )
+            device_tracker_config[CONF_HOST]: slugify(device_tracker_config[CONF_NAME])
         }
     privileged = hass.data[DOMAIN][PING_PRIVS]
 

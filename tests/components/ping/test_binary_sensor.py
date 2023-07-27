@@ -1,55 +1,21 @@
 """The test for the ping binary_sensor platform."""
-from unittest.mock import patch
 
-import pytest
+from datetime import timedelta
 
-from homeassistant import config as hass_config, setup
-from homeassistant.components.ping import DOMAIN
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
-from tests.common import get_fixture_path
-
-
-@pytest.fixture
-def mock_ping() -> None:
-    """Mock icmplib.ping."""
-    with patch("homeassistant.components.ping.icmp_ping"):
-        yield
+from tests.common import async_fire_time_changed
 
 
-async def test_reload(hass: HomeAssistant, mock_ping: None) -> None:
-    """Verify we can reload trend sensors."""
+async def test_binary_sensor(
+    hass: HomeAssistant, load_yaml_integration: None, mock_ping: None
+) -> None:
+    """Test setup from yaml."""
 
-    await setup.async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "ping",
-                "name": "test",
-                "host": "127.0.0.1",
-                "count": 1,
-            }
-        },
-    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
-
-    assert hass.states.get("binary_sensor.test")
-
-    yaml_path = get_fixture_path("configuration.yaml", "ping")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 1
-
-    assert hass.states.get("binary_sensor.test") is None
-    assert hass.states.get("binary_sensor.test2")
+    state_binary_sensor = hass.states.get("binary_sensor.test_binary_sensor")
+    assert state_binary_sensor.state == STATE_ON
