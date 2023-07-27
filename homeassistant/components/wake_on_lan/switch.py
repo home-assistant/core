@@ -63,7 +63,7 @@ async def async_setup_platform(
             translation_key="deprecated_yaml",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": "Ping",
+                "integration_title": "Wake on Lan",
             },
         )
     if discovery_info:

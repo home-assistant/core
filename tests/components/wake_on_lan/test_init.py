@@ -1,14 +1,44 @@
 """Tests for Wake On LAN component."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.wake_on_lan import DOMAIN, SERVICE_SEND_MAGIC_PACKET
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
+
+from tests.common import async_fire_time_changed
+
+
+async def test_setup_config(
+    hass: HomeAssistant, load_yaml_integration: None, mock_send_magic_packet: AsyncMock
+) -> None:
+    """Test setup from yaml."""
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    state_switch_1 = hass.states.get("switch.test_wol_1")
+    state_switch_2 = hass.states.get("switch.test_wol_2")
+
+    assert state_switch_1.state == STATE_ON
+    assert state_switch_2.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [{"wake_on_lan": None}],
+)
+async def test_setup_no_yaml(hass: HomeAssistant, load_yaml_integration: None) -> None:
+    """Test setup only register service."""
+
+    assert hass.services.has_service(DOMAIN, SERVICE_SEND_MAGIC_PACKET)
 
 
 async def test_send_magic_packet(hass: HomeAssistant) -> None:
