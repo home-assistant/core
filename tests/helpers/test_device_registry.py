@@ -173,7 +173,7 @@ async def test_loading_from_storage(
                 {
                     "area_id": "12345A",
                     "config_entries": ["1234"],
-                    "configuration_url": "configuration_url",
+                    "configuration_url": "https://example.com/config",
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "disabled_by": dr.DeviceEntryDisabler.USER,
                     "entry_type": dr.DeviceEntryType.SERVICE,
@@ -215,7 +215,7 @@ async def test_loading_from_storage(
     assert entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={"1234"},
-        configuration_url="configuration_url",
+        configuration_url="https://example.com/config",
         connections={("Zigbee", "01.23.45.67.89")},
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -918,7 +918,7 @@ async def test_update(
         updated_entry = device_registry.async_update_device(
             entry.id,
             area_id="12345A",
-            configuration_url="configuration_url",
+            configuration_url="https://example.com/config",
             disabled_by=dr.DeviceEntryDisabler.USER,
             entry_type=dr.DeviceEntryType.SERVICE,
             hw_version="hw_version",
@@ -937,7 +937,7 @@ async def test_update(
     assert updated_entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={"1234"},
-        configuration_url="configuration_url",
+        configuration_url="https://example.com/config",
         connections={("mac", "12:34:56:ab:cd:ef")},
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
