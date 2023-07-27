@@ -326,7 +326,7 @@ async def websocket_hass_agent_debug(
                         entity_key: entity.value
                         for entity_key, entity in result.entities.items()
                     },
-                    "entities": {
+                    "details": {
                         entity_key: {
                             "name": entity.name,
                             "value": entity.value,

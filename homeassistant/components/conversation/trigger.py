@@ -53,7 +53,7 @@ async def async_attach_trigger(
         """Call action with right context."""
 
         # Add slot values as extra trigger data
-        entities = {
+        details = {
             entity_name: {
                 "name": entity_name,
                 "text": entity.text.strip(),  # remove whitespace
@@ -68,9 +68,9 @@ async def async_attach_trigger(
             **trigger_data,
             "platform": DOMAIN,
             "sentence": sentence,
-            "entities": entities,
+            "details": details,
             "slots": {  # direct access to values
-                entity_name: entity["value"] for entity_name, entity in entities.items()
+                entity_name: entity["value"] for entity_name, entity in details.items()
             },
         }
 
