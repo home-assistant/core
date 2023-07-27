@@ -82,13 +82,14 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
 
         if (notifications := entity.notifications_serialize()) is not None:
             event_id = uuid4().hex
+            payload = {
+                "devices": {"notifications": {entity.state.entity_id: notifications}}
+            }
             _LOGGER.info(
                 "Sending event notification for entity %s",
                 entity.state.entity_id,
             )
-            result = await entity.config.async_sync_notification_all(
-                event_id, notifications
-            )
+            result = await entity.config.async_sync_notification_all(event_id, payload)
             if result != 200:
                 _LOGGER.error(
                     "Unable to send notification with result code: %s, check log for more"

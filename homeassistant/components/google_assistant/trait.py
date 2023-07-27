@@ -388,15 +388,9 @@ class ObjectDetection(_Trait):
             < 30.0
         ):
             return {
-                "devices": {
-                    "notifications": {
-                        self.state.entity_id: {
-                            "ObjectDetection": {
-                                "priority": 0,
-                                "detectionTimestamp": time_stamp,
-                            }
-                        }
-                    }
+                "ObjectDetection": {
+                    "priority": 0,
+                    "detectionTimestamp": time_stamp,
                 }
             }
         return None
