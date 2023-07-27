@@ -50,11 +50,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         *(mqtt_client.get_networking() for mqtt_client in mqtt_clients.values()),
         return_exceptions=True,
     )
-    network_info = {
-        device.duid: result
-        for device, result in zip(device_map.values(), network_results)
-        if result is not None and not isinstance(result, RoborockException)
-    }
+    network_info = {}
+    for device, result in zip(device_map.values(), network_results):
+        if result is not None and not isinstance(result, RoborockException):
+            network_info[device.duid] = result
+        else:
+            _LOGGER.warning(
+                "Failed to connect to get networking information about %s", device.duid
+            )
+            if isinstance(result, RoborockException):
+                _LOGGER.exception(result)
     if not network_info:
         raise ConfigEntryNotReady(
             "Could not get network information about your devices"
