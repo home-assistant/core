@@ -15,6 +15,7 @@ from timeit import default_timer as timer
 from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
 
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.backports.functools import cached_property
 from homeassistant.config import DATA_CUSTOMIZE
@@ -177,7 +178,7 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 class DeviceInfo(TypedDict, total=False):
     """Entity device information for device registry."""
 
-    configuration_url: str | None
+    configuration_url: str | URL | None
     connections: set[tuple[str, str]]
     default_manufacturer: str
     default_model: str
