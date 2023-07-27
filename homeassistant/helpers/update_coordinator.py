@@ -58,7 +58,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
     Setting :attr:`always_update` to ``False`` will cause coordinator to only
     callback listeners when data has changed. This requires that the data
-    implements ``__eq__``.
+    implements ``__eq__`` or uses a python object that already does.
     """
 
     def __init__(
