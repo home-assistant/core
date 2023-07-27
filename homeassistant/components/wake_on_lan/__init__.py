@@ -1,16 +1,30 @@
 """Support for sending Wake-On-LAN magic packets."""
+import asyncio
+from collections.abc import Coroutine
 from functools import partial
 import logging
+from typing import Any
 
 import voluptuous as vol
 import wakeonlan
 
-from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+)
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_OFF_ACTION, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +38,30 @@ WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+SWITCH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+        vol.Optional(CONF_BROADCAST_PORT): cv.port,
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+    }
+)
+COMBINED_SCHEMA = vol.Schema(
+    {
+        vol.Optional(SWITCH_DOMAIN): SWITCH_SCHEMA,
+    }
+)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Optional(DOMAIN): vol.All(
+            cv.ensure_list,
+            [COMBINED_SCHEMA],
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -60,4 +97,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA,
     )
 
+    await async_load_platforms(hass, config.get(DOMAIN, []), config)
+
     return True
+
+
+async def async_load_platforms(
+    hass: HomeAssistant,
+    wol_config: list[dict[str, dict[str, Any]]],
+    config: ConfigType,
+) -> None:
+    """Load switch platform from yaml."""
+    if not wol_config:
+        return
+
+    _LOGGER.debug("Full config loaded: %s", wol_config)
+
+    load_coroutines: list[Coroutine[Any, Any, None]] = []
+    for platform_config in wol_config:
+        for _platform, _config in platform_config.items():
+            _LOGGER.debug(
+                "Loading config %s for platform %s",
+                platform_config,
+                Platform.SWITCH,
+            )
+            load_coroutines.append(
+                discovery.async_load_platform(
+                    hass,
+                    Platform.SWITCH,
+                    DOMAIN,
+                    _config,
+                    config,
+                )
+            )
+
+    if load_coroutines:
+        await asyncio.gather(*load_coroutines)

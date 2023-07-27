@@ -8,6 +8,7 @@ from typing import Any
 import voluptuous as vol
 import wakeonlan
 
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SwitchEntity,
@@ -23,17 +24,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_OFF_ACTION = "turn_off"
-
-DEFAULT_NAME = "Wake on LAN"
-DEFAULT_PING_TIMEOUT = 1
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -47,21 +44,38 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a wake on lan switch."""
-    broadcast_address: str | None = config.get(CONF_BROADCAST_ADDRESS)
-    broadcast_port: int | None = config.get(CONF_BROADCAST_PORT)
-    host: str | None = config.get(CONF_HOST)
-    mac_address: str = config[CONF_MAC]
-    name: str = config[CONF_NAME]
-    off_action: list[Any] | None = config.get(CONF_OFF_ACTION)
+    if switch_config := config:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Ping",
+            },
+        )
+    if discovery_info:
+        switch_config = discovery_info
+    broadcast_address: str | None = switch_config.get(CONF_BROADCAST_ADDRESS)
+    broadcast_port: int | None = switch_config.get(CONF_BROADCAST_PORT)
+    host: str | None = switch_config.get(CONF_HOST)
+    mac_address: str = switch_config[CONF_MAC]
+    name: str = switch_config[CONF_NAME]
+    off_action: list[Any] | None = switch_config.get(CONF_OFF_ACTION)
 
-    add_entities(
+    async_add_entities(
         [
             WolSwitch(
                 hass,
