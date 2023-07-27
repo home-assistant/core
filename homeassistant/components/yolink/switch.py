@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from yolink.client_request import ClientRequest
 from yolink.const import (
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_MULTI_OUTLET,
@@ -160,11 +161,17 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
 
     async def call_state_change(self, state: str) -> None:
         """Call setState api to change switch state."""
-        await self.call_device(
-            OutletRequestBuilder.set_state_request(
+        client_request: ClientRequest = None
+        if self.coordinator.device.device_type in [
+            ATTR_DEVICE_OUTLET,
+            ATTR_DEVICE_MULTI_OUTLET,
+        ]:
+            client_request = OutletRequestBuilder.set_state_request(
                 state, self.entity_description.plug_index
             )
-        )
+        else:
+            client_request = ClientRequest("setState", {"state": state})
+        await self.call_device(client_request)
         self._attr_is_on = self._get_state(state, self.entity_description.plug_index)
         self.async_write_ha_state()
 

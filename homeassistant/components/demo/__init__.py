@@ -56,6 +56,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.IMAGE_PROCESSING,
     Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
+    Platform.WEATHER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
