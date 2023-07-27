@@ -54,7 +54,12 @@ class BaseDataUpdateCoordinatorProtocol(Protocol):
 
 
 class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
-    """Class to manage fetching data from single endpoint."""
+    """Class to manage fetching data from single endpoint.
+
+    Setting :attr:`always_update` to ``False`` will cause coordinator to only
+    callback listeners when data has changed. This requires that the data
+    implements ``__eq__``.
+    """
 
     def __init__(
         self,
