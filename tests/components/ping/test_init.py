@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
+from icmplib import SocketPermissionError
 import pytest
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, setup
 from homeassistant.components.ping.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_HOME, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -28,6 +30,23 @@ async def test_setup_config(
 
     assert state_binary_sensor.state == STATE_ON
     assert state_tracker.state == STATE_HOME
+
+
+async def test_load_integration_no_privilege(
+    hass: HomeAssistant, get_config: dict[str, Any], yaml_devices: None
+) -> None:
+    """Set up the ping integration in Home Assistant unprivileged."""
+    with patch(
+        "homeassistant.components.ping.icmp_ping", side_effect=SocketPermissionError
+    ), patch("homeassistant.components.ping.binary_sensor.async_ping"), patch(
+        "homeassistant.components.ping.device_tracker.async_multiping"
+    ):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            get_config,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_reload_service(
