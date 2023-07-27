@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from pycognito.exceptions import WarrantException
 from pyschlage.exceptions import Error
 
-from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
