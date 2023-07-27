@@ -65,7 +65,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
-        force_update: bool = True,
+        always_update: bool = True,
     ) -> None:
         """Initialize global data updater."""
         self.hass = hass
@@ -75,7 +75,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_interval = update_interval
         self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
-        self.force_update = force_update
+        self.always_update = always_update
 
         # It's None before the first successful update.
         # Components should call async_config_entry_first_refresh
@@ -380,7 +380,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             return
 
         if (
-            self.force_update
+            self.always_update
             or self.last_update_success != previous_update_success
             or previous_data != self.data
         ):

@@ -596,12 +596,12 @@ async def test_async_set_update_error(
     remove_callbacks()
 
 
-async def test_only_callback_on_change_when_force_update_is_false(
+async def test_only_callback_on_change_when_always_update_is_false(
     crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test we do not callback listeners unless something has actually changed when force_update is false."""
+    """Test we do not callback listeners unless something has actually changed when always_update is false."""
     update_callback = Mock()
-    crd.force_update = False
+    crd.always_update = False
     remove_callbacks = crd.async_add_listener(update_callback)
     mocked_data = None
     mocked_exception = None
@@ -666,10 +666,10 @@ async def test_only_callback_on_change_when_force_update_is_false(
     remove_callbacks()
 
 
-async def test_always_callback_when_force_update_is_true(
+async def test_always_callback_when_always_update_is_true(
     crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test we callback listeners even though the data is the same when force_update is True."""
+    """Test we callback listeners even though the data is the same when always_update is True."""
     update_callback = Mock()
     remove_callbacks = crd.async_add_listener(update_callback)
     mocked_data = None
