@@ -714,6 +714,16 @@ class GoogleEntity:
         return attrs
 
     @callback
+    def notifications_serialize(self) -> dict[str, Any] | None:
+        """Serialize the payload for notifications to be sent."""
+        notifications: dict[str, Any] = {}
+
+        for trt in self.traits():
+            deep_update(notifications, trt.query_notifications() or {})
+
+        return notifications or None
+
+    @callback
     def reachable_device_serialize(self):
         """Serialize entity for a REACHABLE_DEVICE response."""
         return {"verificationId": self.entity_id}

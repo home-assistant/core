@@ -78,7 +78,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.percentage import (
@@ -244,6 +243,9 @@ class _Trait(ABC):
         """Return the attributes of this trait for this entity."""
         raise NotImplementedError
 
+    def query_notifications(self) -> dict[str, Any] | None:
+        """Return notifications payload."""
+
     def can_execute(self, command, params):
         """Test if command can be executed."""
         return command in self.commands
@@ -369,9 +371,23 @@ class ObjectDetection(_Trait):
 
     def query_attributes(self):
         """Return ObjectDetection query attributes."""
+        return {}
 
-        async def _async_send_notification(time_stamp: int) -> None:
-            payload = {
+    def query_notifications(self) -> dict[str, Any] | None:
+        """Return notifications payload."""
+
+        # Only notify if last event was less then 30 seconds ago
+        if (
+            self.state.state is not None
+            and time()
+            - (
+                time_stamp := int(
+                    mktime(datetime.fromisoformat(self.state.state).timetuple())
+                )
+            )
+            < 30.0
+        ):
+            return {
                 "devices": {
                     "notifications": {
                         self.state.entity_id: {
@@ -383,31 +399,7 @@ class ObjectDetection(_Trait):
                     }
                 }
             }
-            event_id = self.state.attributes.get("event_type")
-            _LOGGER.info(
-                "Sending trigger with event_type '%s' for entity %s",
-                event_id,
-                self.state.entity_id,
-            )
-            result = await self.config.async_sync_notification_all(event_id, payload)
-            if result != 200:
-                raise HomeAssistantError(
-                    f"Unable to send notification with result code: {result}, check log for more"
-                    " info."
-                )
-
-        if (
-            self.state.state is not None
-            and time()
-            - (
-                time_stamp := int(
-                    mktime(datetime.fromisoformat(self.state.state).timetuple())
-                )
-            )
-            < 30.0
-        ):
-            self.hass.async_add_job(_async_send_notification, time_stamp)
-        return {}
+        return None
 
     async def execute(self, command, data, params, challenge):
         """Execute an ObjectDetection command."""
