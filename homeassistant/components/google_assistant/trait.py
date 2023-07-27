@@ -377,26 +377,23 @@ class ObjectDetection(_Trait):
         """Return notifications payload."""
 
         # Only notify if last event was less then 30 seconds ago
-        try:
-            if (
-                self.state.state not in {STATE_UNKNOWN, STATE_UNAVAILABLE}
-                and time()
-                - (
-                    time_stamp := int(
-                        mktime(datetime.fromisoformat(self.state.state).timetuple())
-                    )
+        if (
+            self.state.state not in {STATE_UNKNOWN, STATE_UNAVAILABLE}
+            and time()
+            - (
+                time_stamp := int(
+                    mktime(datetime.fromisoformat(self.state.state).timetuple())
                 )
-                < 30.0
-            ):
-                return {
-                    "ObjectDetection": {
-                        "priority": 0,
-                        "detectionTimestamp": time_stamp,
-                    }
+            )
+            < 30.0
+        ):
+            return {
+                "ObjectDetection": {
+                    "priority": 0,
+                    "detectionTimestamp": time_stamp,
                 }
-            return None
-        except ValueError:
-            return None
+            }
+        return None
 
     async def execute(self, command, data, params, challenge):
         """Execute an ObjectDetection command."""
