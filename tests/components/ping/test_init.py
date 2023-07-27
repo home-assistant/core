@@ -32,6 +32,21 @@ async def test_setup_config(
     assert state_tracker.state == STATE_HOME
 
 
+@pytest.mark.parametrize(
+    "get_config",
+    [{}],
+)
+async def test_setup_no_yaml(hass: HomeAssistant, load_yaml_integration: None) -> None:
+    """Test sensor setup."""
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    state_binary_sensor = hass.states.get("binary_sensor.test_binary_sensor")
+
+    assert not state_binary_sensor
+
+
 async def test_load_integration_no_privilege(
     hass: HomeAssistant, get_config: dict[str, Any], yaml_devices: None
 ) -> None:
