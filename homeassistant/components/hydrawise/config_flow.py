@@ -33,9 +33,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api = await self.hass.async_add_executor_job(
                     hydrawiser_core.Hydrawiser, api_key
                 )
-            except (ConnectTimeout, HTTPError) as ex:
+            except ConnectTimeout:
+                errors["base"] = "timeout_connect"
+            except HTTPError as ex:
                 LOGGER.error("Unable to connect to Hydrawise cloud service: %s", ex)
-                errors["base"] = "unknown"
+                errors["base"] = "cannot_connect"
             else:
                 if api.status:
                     await self.async_set_unique_id(f"hydrawise-{api.customer_id}")

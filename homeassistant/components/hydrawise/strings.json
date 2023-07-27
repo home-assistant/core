@@ -8,6 +8,8 @@
       }
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
