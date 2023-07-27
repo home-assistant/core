@@ -118,8 +118,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await local_client.login()
             except Exception as exception:  # pylint: disable=broad-except
-                # Remove local token when login is not successful
-                await client.delete_local_token(gateway_id, uuid)
+                try:
+                    # Remove local token when login is not successful
+                    await client.delete_local_token(gateway_id, uuid)
+                except NotSuchTokenException:
+                    LOGGER.debug("Token is invalid / has been already removed")
 
                 raise exception
 
@@ -311,8 +314,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
-            except NotSuchTokenException:
-                errors["base"] = "not_such_token"
+            # except NotSuchTokenException:
+            #     errors["base"] = "not_such_token"
             except DeveloperModeDisabled:
                 errors["base"] = "developer_mode_disabled"
             except UnknownUserException:
