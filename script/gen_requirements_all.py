@@ -123,10 +123,6 @@ python-socketio>=4.6.0,<5.0
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
 
-# Required for compatibility with point integration - ensure_active_token
-# https://github.com/home-assistant/core/pull/68176
-authlib<1.0
-
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
