@@ -29,8 +29,8 @@
       "station": {
         "name": "PM2.5 reporting station",
         "state_attributes": {
-          "lat": { "name": "Latitude" },
-          "long": { "name": "Longitude" }
+          "lat": { "name": "[%key:common::config_flow::data::latitude%]" },
+          "long": { "name": "[%key:common::config_flow::data::longitude%]" }
         }
       }
     }
