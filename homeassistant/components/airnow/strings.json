@@ -27,7 +27,11 @@
         "name": "[%key:component::sensor::entity_component::ozone::name%]"
       },
       "station": {
-        "name": "PM2.5 reporting station"
+        "name": "PM2.5 reporting station",
+        "state_attributes": {
+          "lat": { "name": "Latitude" },
+          "long": { "name": "Longitude" }
+        }
       }
     }
   }
