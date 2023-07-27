@@ -26,7 +26,7 @@ from .const import CONF_TIME, DOMAIN
 from .coordinator import TrainData, TVDataUpdateCoordinator
 
 ATTR_DEPARTURE_STATE = "departure_state"
-ATTR_CANCELLED = "cancelled"
+ATTR_CANCELED = "canceled"
 ATTR_DELAY_TIME = "number_of_minutes_delayed"
 ATTR_PLANNED_TIME = "planned_time"
 ATTR_ESTIMATED_TIME = "estimated_time"
@@ -62,7 +62,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         value_fn=lambda data: data.departure_time,
         extra_fn=lambda data: {
             ATTR_DEPARTURE_STATE: data.departure_state,
-            ATTR_CANCELLED: data.cancelled,
+            ATTR_CANCELED: data.cancelled,
             ATTR_DELAY_TIME: data.delayed_time,
             ATTR_PLANNED_TIME: data.planned_time,
             ATTR_ESTIMATED_TIME: data.estimated_time,

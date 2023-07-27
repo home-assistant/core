@@ -55,7 +55,7 @@
               "canceled": "Cancelled"
             }
           },
-          "cancelled": {
+          "canceled": {
             "name": "Cancelled"
           },
           "number_of_minutes_delayed": {
