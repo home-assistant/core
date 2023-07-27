@@ -1,14 +1,23 @@
-"""caldav session fixtures."""
-
-from unittest.mock import patch
+"""Common fixtures for the CalDav tests."""
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 
 @pytest.fixture
-def mock_connect():
-    """Mock the dav client."""
+def mock_connect() -> Generator[AsyncMock, None, None]:
+    """Override the dav client."""
     with patch(
         "homeassistant.components.caldav.caldav.DAVClient.principal",
     ):
         yield
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.caldav.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry

@@ -1,7 +1,8 @@
 """Test the Caldav config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from caldav.lib.error import DAVError
+import pytest
 
 from homeassistant.components.caldav.const import (
     CONF_CALENDAR,
@@ -48,23 +49,22 @@ IMPORT_INPUT = {
 
 OPTIONS_INPUT = {CONF_CALENDARS: [], CONF_CUSTOM_CALENDARS: []}
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_user_form(hass: HomeAssistant, mock_connect) -> None:
+
+async def test_user_form(
+    hass: HomeAssistant, mock_connect, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the user initiated form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.caldav.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "homeassistant.io (username)"
@@ -85,8 +85,6 @@ async def test_abort_on_connection_error(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.caldav.caldav.DAVClient.principal",

@@ -659,7 +659,7 @@ async def test_no_result_with_filtering(
     assert state.state == "off"
 
 
-async def _day_event_returned(hass, calendar, config, date_time):
+async def _day_event_returned(hass: HomeAssistant, calendar, config, date_time):
     with patch("homeassistant.util.dt.now", return_value=date_time):
         assert await async_setup_component(hass, "calendar", {"calendar": config})
         await hass.async_block_till_done()
