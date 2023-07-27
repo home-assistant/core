@@ -69,7 +69,6 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         extra_state_attributes_fn=lambda data: {
             ATTR_DESCR: data[ATTR_API_AQI_DESCRIPTION],
             ATTR_LEVEL: data[ATTR_API_AQI_LEVEL],
-            ATTR_STATION: f"{data[ATTR_API_STATION]} ({data[ATTR_API_STATION_LATITUDE]}, {data[ATTR_API_STATION_LONGITUDE]})",
         },
     ),
     AirNowEntityDescription(
@@ -79,9 +78,7 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
         value_fn=lambda data: data.get(ATTR_API_PM25),
-        extra_state_attributes_fn=lambda data: {
-            ATTR_STATION: f"{data[ATTR_API_STATION]} ({data[ATTR_API_STATION_LATITUDE]}, {data[ATTR_API_STATION_LONGITUDE]})",
-        },
+        extra_state_attributes_fn=None,
     ),
     AirNowEntityDescription(
         key=ATTR_API_O3,
@@ -90,8 +87,16 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.get(ATTR_API_O3),
+        extra_state_attributes_fn=None,
+    ),
+    AirNowEntityDescription(
+        key=ATTR_API_STATION,
+        translation_key="station",
+        icon="mdi:blur",
+        value_fn=lambda data: data.get(ATTR_API_STATION),
         extra_state_attributes_fn=lambda data: {
-            ATTR_STATION: f"{data[ATTR_API_STATION]} ({data[ATTR_API_STATION_LATITUDE]}, {data[ATTR_API_STATION_LONGITUDE]})",
+            "latitude": data[ATTR_API_STATION_LATITUDE],
+            "longitude": data[ATTR_API_STATION_LONGITUDE],
         },
     ),
 )

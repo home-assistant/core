@@ -25,6 +25,9 @@
     "sensor": {
       "o3": {
         "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "station": {
+        "name": "PM2.5 Reporting Station"
       }
     }
   }
