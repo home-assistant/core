@@ -753,7 +753,7 @@ habitipy==0.2.0
 hass-nabucasa==0.69.0
 
 # homeassistant.components.conversation
-hassil==1.2.2
+hassil==1.2.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
