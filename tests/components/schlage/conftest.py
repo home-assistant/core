@@ -4,6 +4,25 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.schlage.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock ConfigEntry."""
+    return MockConfigEntry(
+        title="asdf@asdf.com",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "asdf@asdf.com",
+            CONF_PASSWORD: "hunter2",
+        },
+        unique_id="abc123",
+    )
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
