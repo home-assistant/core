@@ -231,7 +231,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.14
+aioesphomeapi==15.1.15
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -249,7 +249,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.11
+aiohomekit==2.6.12
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -958,7 +958,7 @@ hass-nabucasa==0.69.0
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.2.2
+hassil==1.2.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1644,7 +1644,7 @@ pydiscovergy==2.0.1
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2023.7.0
+pydrawise==2023.7.1
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0

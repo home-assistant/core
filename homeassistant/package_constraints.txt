@@ -20,7 +20,7 @@ dbus-fast==1.87.2
 fnv-hash-fast==0.4.0
 ha-av==10.1.0
 hass-nabucasa==0.69.0
-hassil==1.2.2
+hassil==1.2.5
 home-assistant-bluetooth==1.10.2
 home-assistant-frontend==20230725.0
 home-assistant-intents==2023.7.25
@@ -59,7 +59,9 @@ zeroconf==0.71.4
 pycryptodome>=3.6.6
 
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-urllib3>=1.26.5
+# Temporary setting an upper bound, to prevent compat issues with urllib3>=2
+# https://github.com/home-assistant/core/issues/97248
+urllib3>=1.26.5,<2
 
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m

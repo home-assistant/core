@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.14
+aioesphomeapi==15.1.15
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -227,7 +227,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.11
+aiohomekit==2.6.12
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -753,7 +753,7 @@ habitipy==0.2.0
 hass-nabucasa==0.69.0
 
 # homeassistant.components.conversation
-hassil==1.2.2
+hassil==1.2.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
