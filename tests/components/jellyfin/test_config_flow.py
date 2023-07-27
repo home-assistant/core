@@ -122,54 +122,6 @@ async def test_form_invalid_auth(
     assert len(mock_client.auth.login.mock_calls) == 1
 
 
-async def test_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_jellyfin: MagicMock,
-    mock_client: MagicMock,
-) -> None:
-    """Test the Jellyfin integration handling invalid credentials."""
-    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
-        hass,
-        "auth-connect-address.json",
-    )
-    mock_client.auth.login.return_value = await async_load_json_fixture(
-        hass,
-        "auth-login-failure.json",
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=USER_INPUT,
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {}
-
-    mock_client.auth.login.return_value = await async_load_json_fixture(
-        hass,
-        "auth-login.json",
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=USER_INPUT,
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
-
-
 async def test_form_exception(
     hass: HomeAssistant, mock_jellyfin: MagicMock, mock_client: MagicMock
 ) -> None:
@@ -240,3 +192,193 @@ async def test_form_persists_device_id_on_error(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
     }
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test the Jellyfin integration handling a reauth flow."""
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass,
+        "auth-connect-address.json",
+    )
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login-failure.json",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=USER_INPUT,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login.json",
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test that we can handle an unreachable server during reauth."""
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass,
+        "auth-connect-address.json",
+    )
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login-failure.json",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=USER_INPUT,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass, "auth-connect-address-failure.json"
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+    assert len(mock_client.auth.connect_to_address.mock_calls) == 1
+
+
+async def test_reauth_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test the Jellyfin integration handling invalid credentials during reauth."""
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass,
+        "auth-connect-address.json",
+    )
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login-failure.json",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=USER_INPUT,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    assert len(mock_client.auth.connect_to_address.mock_calls) == 1
+    assert len(mock_client.auth.login.mock_calls) == 1
+
+
+async def test_reauth_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test the Jellyfin integration handling an unexpected exception during reauth."""
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass,
+        "auth-connect-address.json",
+    )
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login-failure.json",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=USER_INPUT,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    mock_client.auth.connect_to_address.side_effect = Exception("UnknownException")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+    assert len(mock_client.auth.connect_to_address.mock_calls) == 1
