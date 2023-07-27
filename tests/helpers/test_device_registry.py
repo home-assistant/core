@@ -1722,8 +1722,8 @@ async def test_device_info_configuration_url_validation(
         )
 
     update_device = device_registry.async_get_or_create(
-        config_entry_id="1234",
-        identifiers={("something", "1234")},
+        config_entry_id="5678",
+        identifiers={("something", "5678")},
         name="name",
     )
     with expectation:
