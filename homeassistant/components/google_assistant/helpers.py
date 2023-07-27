@@ -186,7 +186,7 @@ class AbstractConfig(ABC):
 
     async def async_report_state(
         self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
-    ) -> HTTPStatus:
+    ) -> HTTPStatus | None:
         """Send a state report to Google."""
         raise NotImplementedError
 
@@ -222,6 +222,7 @@ class AbstractConfig(ABC):
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
         status = await self.async_report_state(payload, agent_user_id, event_id)
+        assert status is not None
         if status == HTTPStatus.NOT_FOUND:
             await self.async_disconnect_agent_user(agent_user_id)
         return status
