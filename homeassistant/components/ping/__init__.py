@@ -39,7 +39,6 @@ PLATFORM_MAPPING = {
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
             min=1, max=100
@@ -52,12 +51,12 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
 DEVICE_TRACKER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
     }
 )
 COMBINED_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_HOST): cv.string,
         vol.Optional(BINARY_SENSOR_DOMAIN): BINARY_SENSOR_SCHEMA,
         vol.Optional(DEVICE_TRACKER_DOMAIN): DEVICE_TRACKER_SCHEMA,
     }
@@ -101,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_load_platforms(
     hass: HomeAssistant,
-    ping_config: list[dict[str, dict[str, Any]]],
+    ping_config: list[dict[str, dict[str, Any] | str]],
     config: ConfigType,
 ) -> None:
     """Load platforms from yaml."""
@@ -122,13 +121,18 @@ async def async_load_platforms(
                 platform_config,
                 PLATFORM_MAPPING[platform],
             )
-            reload_configs.append((PLATFORM_MAPPING[platform], _config))
+            reload_configs.append(
+                (
+                    PLATFORM_MAPPING[platform],
+                    {**_config, CONF_HOST: platform_config[CONF_HOST]},
+                )
+            )
             load_coroutines.append(
                 discovery.async_load_platform(
                     hass,
                     PLATFORM_MAPPING[platform],
                     DOMAIN,
-                    _config,
+                    {**_config, CONF_HOST: platform_config[CONF_HOST]},
                     config,
                 )
             )
