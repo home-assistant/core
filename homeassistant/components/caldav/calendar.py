@@ -17,6 +17,7 @@ from homeassistant.components.calendar import (
     extract_offset,
     is_offset_reached,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -31,15 +32,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
 
+from .const import (
+    CONF_CALENDAR,
+    CONF_CALENDARS,
+    CONF_CUSTOM_CALENDARS,
+    CONF_DAYS,
+    CONF_SEARCH,
+    DOMAIN,
+    OFFSET,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_CALENDARS = "calendars"
-CONF_CUSTOM_CALENDARS = "custom_calendars"
-CONF_CALENDAR = "calendar"
-CONF_SEARCH = "search"
-CONF_DAYS = "days"
-
-OFFSET = "!!"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -121,10 +124,58 @@ def setup_platform(
     add_entities(calendar_devices, True)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the WebDav Calendar entry."""
+    calendars = hass.data[DOMAIN][config_entry.entry_id]
+    days = config_entry.data[CONF_DAYS]
+
+    calendar_devices = []
+    for calendar in list(calendars):
+        # If a calendar name was given in the configuration,
+        # ignore all the others
+        if config_entry.options.get(
+            CONF_CALENDARS
+        ) and calendar.name not in config_entry.options.get(CONF_CALENDARS, []):
+            _LOGGER.debug("Ignoring calendar '%s'", calendar.name)
+            continue
+
+        # Create additional calendars based on custom filtering rules
+        for cust_calendar in config_entry.options.get(CONF_CUSTOM_CALENDARS, []):
+            # Check that the base calendar matches
+            if cust_calendar[CONF_CALENDAR] != calendar.name:
+                continue
+
+            name = cust_calendar[CONF_NAME]
+            device_id = f"{cust_calendar[CONF_CALENDAR]} {cust_calendar[CONF_NAME]}"
+            entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+            calendar_devices.append(
+                WebDavCalendarEntity(
+                    name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH]
+                )
+            )
+
+        # Create a default calendar if there was no custom one
+        if not config_entry.options.get(CONF_CUSTOM_CALENDARS, []):
+            name = calendar.name
+            device_id = calendar.name
+            entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+            calendar_devices.append(
+                WebDavCalendarEntity(name, calendar, entity_id, days)
+            )
+
+    async_add_entities(calendar_devices, True)
+
+
 class WebDavCalendarEntity(CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self, name, calendar, entity_id, days, all_day=False, search=None):
+    def __init__(
+        self, name, calendar, entity_id, days, all_day=False, search=None
+    ) -> None:
         """Create the WebDav Calendar Event Device."""
         self.data = WebDavCalendarData(calendar, days, all_day, search)
         self.entity_id = entity_id
@@ -146,19 +197,22 @@ class WebDavCalendarEntity(CalendarEntity):
         """Update event data."""
         self.data.update()
         self._event = self.data.event
-        self._attr_extra_state_attributes = {
-            "offset_reached": is_offset_reached(
+        extra_attr = {"offset_reached": False}
+        if (
+            self._event is not None
+            and self._event.start_datetime_local is not None
+            and self.data.offset is not None
+        ):
+            extra_attr["offset_reached"] = is_offset_reached(
                 self._event.start_datetime_local, self.data.offset
             )
-            if self._event
-            else False
-        }
+        self._attr_extra_state_attributes = extra_attr
 
 
 class WebDavCalendarData:
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, calendar, days, include_all_day, search):
+    def __init__(self, calendar, days, include_all_day, search) -> None:
         """Set up how we are going to search the WebDav calendar."""
         self.calendar = calendar
         self.days = days

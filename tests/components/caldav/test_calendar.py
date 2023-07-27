@@ -297,25 +297,25 @@ def set_tz(request):
 
 
 @pytest.fixture
-def utc(hass):
+def utc(hass: HomeAssistant):
     """Set the default TZ to UTC."""
     hass.config.set_time_zone("UTC")
 
 
 @pytest.fixture
-def new_york(hass):
+def new_york(hass: HomeAssistant):
     """Set the default TZ to America/New_York."""
     hass.config.set_time_zone("America/New_York")
 
 
 @pytest.fixture
-def baghdad(hass):
+def baghdad(hass: HomeAssistant):
     """Set the default TZ to Asia/Baghdad."""
     hass.config.set_time_zone("Asia/Baghdad")
 
 
 @pytest.fixture(autouse=True)
-def mock_http(hass):
+def mock_http(hass: HomeAssistant):
     """Mock the http component."""
     hass.http = Mock()
 
