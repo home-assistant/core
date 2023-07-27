@@ -6,6 +6,12 @@ from datetime import timedelta
 from io import BytesIO
 import logging
 
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleCamerasFound,
+    NoCameraFound,
+    UnknownError,
+)
 from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
 
 from homeassistant.config_entries import ConfigEntry
@@ -50,10 +56,10 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         image: bytes | None = None
         try:
             camera_data = await self._camera_api.async_get_camera(self._location)
-        except ValueError as error:
-            if "Invalid authentication" in str(error):
-                raise ConfigEntryAuthFailed from error
+        except (NoCameraFound, MultipleCamerasFound, UnknownError) as error:
             raise UpdateFailed from error
+        except InvalidAuthentication as error:
+            raise ConfigEntryAuthFailed from error
 
         if camera_data.photourl is None:
             return CameraData(data=camera_data, image=None)

@@ -14,7 +14,36 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "location": "Location"
+          "location": "[%key:common::config_flow::data::location%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "camera": {
+      "tv_camera": {
+        "state_attributes": {
+          "description": {
+            "name": "Description"
+          },
+          "direction": {
+            "name": "Direction"
+          },
+          "full_size_photo": {
+            "name": "Full size photo"
+          },
+          "location": {
+            "name": "[%key:common::config_flow::data::location%]"
+          },
+          "photo_url": {
+            "name": "Photo url"
+          },
+          "status": {
+            "name": "Status"
+          },
+          "type": {
+            "name": "Type"
+          }
         }
       }
     }

@@ -41,6 +41,7 @@ class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "tv_camera"
     coordinator: TVDataUpdateCoordinator
 
     def __init__(

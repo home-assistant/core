@@ -4,6 +4,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleCamerasFound,
+    NoCameraFound,
+    UnknownError,
+)
 from pytrafikverket.trafikverket_camera import TrafikverketCamera
 import voluptuous as vol
 
@@ -31,14 +37,14 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         camera_api = TrafikverketCamera(web_session, sensor_api)
         try:
             await camera_api.async_get_camera(location)
-        except ValueError as error:
+        except NoCameraFound:
+            errors["base"] = "invalid_location"
+        except MultipleCamerasFound:
+            errors["base"] = "more_locations"
+        except InvalidAuthentication:
+            errors["base"] = "invalid_auth"
+        except UnknownError:
             errors["base"] = "cannot_connect"
-            if "Invalid authentication" in str(error):
-                errors["base"] = "invalid_auth"
-            if "Could not find a camera with the specified name" in str(error):
-                errors["base"] = "invalid_location"
-            if "Found multiple camera with the specified name" in str(error):
-                errors["base"] = "more_locations"
 
         return errors
 
