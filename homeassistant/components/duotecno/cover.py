@@ -26,7 +26,7 @@ async def async_setup_entry(
     """Set up the duoswitch endities."""
     cntrl = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        DuotecnoCover(channel) for channel in cntrl.get_units("DuoSwitchUnit")
+        DuotecnoCover(channel) for channel in cntrl.get_units("DuoswitchUnit")
     )
 
 
