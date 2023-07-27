@@ -4,6 +4,12 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleCamerasFound,
+    NoCameraFound,
+    UnknownError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import DOMAIN
@@ -55,17 +61,22 @@ async def test_coordinator(
     ("sideeffect", "p_error", "entry_state"),
     [
         (
-            ValueError("Source: Security, message: Invalid authentication"),
+            InvalidAuthentication,
             ConfigEntryAuthFailed,
             config_entries.ConfigEntryState.SETUP_ERROR,
         ),
         (
-            ValueError("Could not find a camera with the specified name"),
+            NoCameraFound,
             UpdateFailed,
             config_entries.ConfigEntryState.SETUP_RETRY,
         ),
         (
-            Exception("Another exception"),
+            MultipleCamerasFound,
+            UpdateFailed,
+            config_entries.ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            UnknownError,
             UpdateFailed,
             config_entries.ConfigEntryState.SETUP_RETRY,
         ),
