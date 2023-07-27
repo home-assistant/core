@@ -322,6 +322,10 @@ async def websocket_hass_agent_debug(
                     "intent": {
                         "name": result.intent.name,
                     },
+                    "slots": {  # direct access to values
+                        entity_key: entity.value
+                        for entity_key, entity in result.entities.items()
+                    },
                     "entities": {
                         entity_key: {
                             "name": entity.name,

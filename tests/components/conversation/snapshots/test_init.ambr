@@ -382,6 +382,9 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'slots': dict({
+          'name': 'my cool light',
+        }),
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -398,6 +401,9 @@
         }),
         'intent': dict({
           'name': 'HassTurnOff',
+        }),
+        'slots': dict({
+          'name': 'my cool light',
         }),
         'targets': dict({
           'light.kitchen': dict({
@@ -420,6 +426,10 @@
         }),
         'intent': dict({
           'name': 'HassTurnOn',
+        }),
+        'slots': dict({
+          'area': 'kitchen',
+          'domain': 'light',
         }),
         'targets': dict({
           'light.kitchen': dict({
@@ -447,6 +457,11 @@
         }),
         'intent': dict({
           'name': 'HassGetState',
+        }),
+        'slots': dict({
+          'area': 'kitchen',
+          'domain': 'light',
+          'state': 'on',
         }),
         'targets': dict({
           'light.kitchen': dict({

@@ -51,19 +51,26 @@ async def async_attach_trigger(
     @callback
     async def call_action(sentence: str, result: RecognizeResult) -> str | None:
         """Call action with right context."""
+
+        # Add slot values as extra trigger data
+        entities = {
+            entity_name: {
+                "name": entity_name,
+                "text": entity.text.strip(),  # remove whitespace
+                "value": entity.value.strip()
+                if isinstance(entity.value, str)
+                else entity.value,
+            }
+            for entity_name, entity in result.entities.items()
+        }
+
         trigger_input: dict[str, Any] = {  # Satisfy type checker
             **trigger_data,
             "platform": DOMAIN,
             "sentence": sentence,
-            "entities": {  # Add slot values as extra trigger data
-                entity_name: {
-                    "name": entity_name,
-                    "text": entity.text.strip(),
-                    "value": entity.value.strip()
-                    if isinstance(entity.value, str)
-                    else entity.value,
-                }
-                for entity_name, entity in result.entities.items()
+            "entities": entities,
+            "slots": {  # direct access to values
+                entity_name: entity["value"] for entity_name, entity in entities.items()
             },
         }
 

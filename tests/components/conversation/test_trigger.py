@@ -61,6 +61,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         "idx": "0",
         "platform": "conversation",
         "sentence": "Ha ha ha",
+        "slots": {},
         "entities": {},
     }
 
@@ -104,6 +105,7 @@ async def test_same_trigger_multiple_sentences(
         "idx": "0",
         "platform": "conversation",
         "sentence": "hello",
+        "slots": {},
         "entities": {},
     }
 
@@ -230,6 +232,10 @@ async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
         "idx": "0",
         "platform": "conversation",
         "sentence": "play the white album by the beatles",
+        "slots": {
+            "album": "the white album",
+            "artist": "the beatles",
+        },
         "entities": {
             "album": {
                 "name": "album",
