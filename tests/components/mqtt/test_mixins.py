@@ -212,6 +212,26 @@ async def test_availability_with_shared_state_topic(
             None,
             True,
         ),
+        (  # entity_name_and_device_name_the_sane
+            {
+                mqtt.DOMAIN: {
+                    sensor.DOMAIN: {
+                        "name": "Hello world",
+                        "state_topic": "test-topic",
+                        "unique_id": "veryunique",
+                        "device_class": "humidity",
+                        "device": {
+                            "identifiers": ["helloworld"],
+                            "name": "Hello world",
+                        },
+                    }
+                }
+            },
+            "sensor.hello_world",
+            "Hello world",
+            "Hello world",
+            False,
+        ),
     ],
     ids=[
         "default_entity_name_without_device_name",
@@ -222,6 +242,7 @@ async def test_availability_with_shared_state_topic(
         "name_set_no_device_name_set",
         "none_entity_name_with_device_name",
         "none_entity_name_without_device_name",
+        "entity_name_and_device_name_the_sane",
     ],
 )
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
