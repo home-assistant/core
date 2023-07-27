@@ -1,9 +1,11 @@
 """Tests for the Device Registry."""
+from contextlib import nullcontext
 import time
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -1670,3 +1672,58 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(
 
     entry1 = device_registry.async_get(entry1.id)
     assert not entry1.disabled
+
+
+@pytest.mark.parametrize(
+    ("configuration_url", "expectation"),
+    [
+        ("http://localhost", nullcontext()),
+        ("http://localhost:8123", nullcontext()),
+        ("https://example.com", nullcontext()),
+        ("http://localhost/config", nullcontext()),
+        ("http://localhost:8123/config", nullcontext()),
+        ("https://example.com/config", nullcontext()),
+        ("homeassistant://config", nullcontext()),
+        (URL("http://localhost"), nullcontext()),
+        (URL("http://localhost:8123"), nullcontext()),
+        (URL("https://example.com"), nullcontext()),
+        (URL("http://localhost/config"), nullcontext()),
+        (URL("http://localhost:8123/config"), nullcontext()),
+        (URL("https://example.com/config"), nullcontext()),
+        ("homeassistant://config", nullcontext()),
+        (URL("homeassistant://config"), nullcontext()),
+        (None, nullcontext()),
+        ("http://", pytest.raises(ValueError)),
+        ("https://", pytest.raises(ValueError)),
+        ("gopher://localhost", pytest.raises(ValueError)),
+        ("homeassistant://", pytest.raises(ValueError)),
+        (URL("http://"), pytest.raises(ValueError)),
+        (URL("https://"), pytest.raises(ValueError)),
+        (URL("gopher://localhost"), pytest.raises(ValueError)),
+        (URL("homeassistant://"), pytest.raises(ValueError)),
+    ],
+)
+async def test_device_info_configuration_url_validation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    configuration_url: str | URL | None,
+    expectation,
+) -> None:
+    """Test configuration URL of device info is properly validated."""
+    with expectation:
+        device_registry.async_get_or_create(
+            config_entry_id="1234",
+            identifiers={("something", "1234")},
+            name="name",
+            configuration_url=configuration_url,
+        )
+
+    update_device = device_registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("something", "1234")},
+        name="name",
+    )
+    with expectation:
+        device_registry.async_update_device(
+            update_device.id, configuration_url=configuration_url
+        )
