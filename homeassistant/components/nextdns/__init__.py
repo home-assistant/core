@@ -145,7 +145,7 @@ class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStat
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
-COORDINATORS = [
+COORDINATORS: list[tuple[str, type[NextDnsUpdateCoordinator], timedelta]] = [
     (ATTR_CONNECTION, NextDnsConnectionUpdateCoordinator, UPDATE_INTERVAL_CONNECTION),
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
