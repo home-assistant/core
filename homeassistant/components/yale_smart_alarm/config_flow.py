@@ -168,9 +168,8 @@ class YaleOptionsFlowHandler(OptionsFlow):
                         CONF_LOCK_CODE_DIGITS,
                         description={
                             "suggested_value": self.entry.options.get(
-                                CONF_LOCK_CODE_DIGITS
+                                CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
                             )
-                            or DEFAULT_LOCK_CODE_DIGITS
                         },
                     ): int,
                 }
