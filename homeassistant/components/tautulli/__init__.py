@@ -61,7 +61,7 @@ class TautulliEntity(CoordinatorEntity[TautulliDataUpdateCoordinator]):
         self.entity_description = description
         self.user = user
         self._attr_device_info = DeviceInfo(
-            configuration_url=coordinator.host_configuration.base_url,
+            configuration_url=str(coordinator.host_configuration.base_url),
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, user.user_id if user else entry_id)},
             manufacturer=DEFAULT_NAME,
