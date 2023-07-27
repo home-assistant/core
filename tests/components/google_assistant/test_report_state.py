@@ -1,5 +1,6 @@
 """Test Google report state."""
-from datetime import timedelta
+from datetime import datetime, timedelta
+from time import mktime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -128,3 +129,87 @@ async def test_report_state(
         await hass.async_block_till_done()
 
     assert len(mock_report.mock_calls) == 0
+
+
+@pytest.mark.freeze_time("2023-08-01 00:00:00")
+async def test_report_notifications(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test report state works."""
+    assert await async_setup_component(hass, "event", {})
+    hass.states.async_set("event.doorbell", "unknown")
+
+    with patch.object(
+        BASIC_CONFIG, "async_report_state_all", AsyncMock()
+    ) as mock_report, patch.object(report_state, "INITIAL_REPORT_DELAY", 0):
+        report_state.async_enable_report_state(hass, BASIC_CONFIG)
+
+        async_fire_time_changed(
+            hass, datetime.fromisoformat("2023-08-01T00:01:00+00:00")
+        )
+        await hass.async_block_till_done()
+
+    # Test that enabling report state does a report on all entities
+    assert len(mock_report.mock_calls) == 1
+    assert mock_report.mock_calls[0][1][0] == {
+        "devices": {
+            "states": {
+                "event.doorbell": {"online": True},
+            },
+        }
+    }
+
+    with patch.object(
+        BASIC_CONFIG, "async_report_state_all", AsyncMock()
+    ) as mock_report, patch.object(
+        BASIC_CONFIG, "async_sync_notification_all", AsyncMock(return_value=200)
+    ) as mock_notifications_request:
+        event_time = datetime.fromisoformat("2023-08-01T00:02:57+00:00")
+        epoc_event_time = int(mktime(event_time.timetuple()))
+        hass.states.async_set("event.doorbell", "2023-08-01T00:02:57+00:00")
+        async_fire_time_changed(
+            hass, datetime.fromisoformat("2023-08-01T00:03:00+00:00")
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_report.mock_calls) == 0
+        assert len(mock_notifications_request.mock_calls) == 1
+        notifications_payload = mock_notifications_request.mock_calls[0][1][1][
+            "devices"
+        ]["notifications"]["event.doorbell"]
+        assert notifications_payload == {
+            "ObjectDetection": {"priority": 0, "detectionTimestamp": epoc_event_time}
+        }
+        assert "Sending event notification for entity event.doorbell" in caplog.text
+        assert "Unable to send notification with result code" not in caplog.text
+
+    hass.states.async_set("event.doorbell", "unknown")
+    async_fire_time_changed(hass, datetime.fromisoformat("2023-08-01T01:01:00+00:00"))
+    await hass.async_block_till_done()
+    # Test the notification request failed
+
+    caplog.clear()
+    with patch.object(
+        BASIC_CONFIG, "async_report_state_all", AsyncMock()
+    ), patch.object(
+        BASIC_CONFIG, "async_sync_notification_all", AsyncMock(return_value=500)
+    ) as mock_notifications_request:
+        event_time = datetime.fromisoformat("2023-08-01T01:02:57+00:00")
+        epoc_event_time = int(mktime(event_time.timetuple()))
+        hass.states.async_set("event.doorbell", "2023-08-01T01:02:57+00:00")
+        async_fire_time_changed(
+            hass, datetime.fromisoformat("2023-08-01T01:03:00+00:00")
+        )
+        await hass.async_block_till_done()
+        assert len(mock_notifications_request.mock_calls) == 1
+        notifications_payload = mock_notifications_request.mock_calls[0][1][1][
+            "devices"
+        ]["notifications"]["event.doorbell"]
+        assert notifications_payload == {
+            "ObjectDetection": {"priority": 0, "detectionTimestamp": epoc_event_time}
+        }
+        assert "Sending event notification for entity event.doorbell" in caplog.text
+        assert (
+            "Unable to send notification with result code: 500, check log for more info"
+            in caplog.text
+        )

@@ -89,7 +89,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
                 "Sending event notification for entity %s",
                 entity.state.entity_id,
             )
-            result = await entity.config.async_sync_notification_all(event_id, payload)
+            result = await google_config.async_sync_notification_all(event_id, payload)
             if result != 200:
                 _LOGGER.error(
                     "Unable to send notification with result code: %s, check log for more"
