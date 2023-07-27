@@ -78,9 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             f"Unable to connect to Hydrawise cloud service: {ex}"
         ) from ex
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = HydrawiseDataUpdateCoordinator(
-        hass, hydrawise, SCAN_INTERVAL
-    )
+    hass.data.setdefault(DOMAIN, {})[
+        config_entry.entry_id
+    ] = HydrawiseDataUpdateCoordinator(hass, hydrawise, SCAN_INTERVAL)
     if not hydrawise.controller_info or not hydrawise.controller_status:
         raise ConfigEntryNotReady("Hydrawise data not loaded")
 
