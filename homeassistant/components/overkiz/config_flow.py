@@ -26,6 +26,7 @@ from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
@@ -36,6 +37,10 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+
+class DeveloperModeDisabled(HomeAssistantError):
+    """Error to indicate Somfy Developer Mode is disabled."""
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -84,6 +89,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # for the main gateway.
                 if is_overkiz_gateway(gateway.id):
                     gateway_id = gateway.id
+
+            developer_mode = await client.get_setup_option(
+                f"developerMode-{gateway_id}"
+            )
+
+            if developer_mode is None:
+                raise DeveloperModeDisabled
 
             token = await client.generate_local_token(gateway_id)
             uuid = await client.activate_local_token(
@@ -301,6 +313,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "too_many_attempts"
             except NotSuchTokenException:
                 errors["base"] = "not_such_token"
+            except DeveloperModeDisabled:
+                errors["base"] = "developer_mode_disabled"
             except UnknownUserException:
                 # Somfy Protect accounts are not supported since they don't use
                 # the Overkiz API server. Login will return unknown user.
