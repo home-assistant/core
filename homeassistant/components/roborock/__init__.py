@@ -8,6 +8,7 @@ import logging
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import DeviceData, HomeDataDevice, UserData
+from roborock.exceptions import RoborockException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -29,7 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     api_client = RoborockApiClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
     _LOGGER.debug("Getting home data")
-    home_data = await api_client.get_home_data(user_data)
+    try:
+        home_data = await api_client.get_home_data(user_data)
+    except RoborockException as err:
+        raise ConfigEntryNotReady("Failed getting Roborock home_data.") from err
     _LOGGER.debug("Got home data %s", home_data)
     device_map: dict[str, HomeDataDevice] = {
         device.duid: device for device in home_data.devices + home_data.received_devices
@@ -43,12 +47,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in device_map.values()
     }
     network_results = await asyncio.gather(
-        *(mqtt_client.get_networking() for mqtt_client in mqtt_clients.values())
+        *(mqtt_client.get_networking() for mqtt_client in mqtt_clients.values()),
+        return_exceptions=True,
     )
     network_info = {
         device.duid: result
         for device, result in zip(device_map.values(), network_results)
-        if result is not None
+        if result is not None and not isinstance(result, RoborockException)
     }
     if not network_info:
         raise ConfigEntryNotReady(
