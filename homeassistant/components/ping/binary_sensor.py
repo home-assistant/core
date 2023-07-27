@@ -13,11 +13,11 @@ from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -80,13 +80,17 @@ async def async_setup_platform(
     if binary_sensor_config := config:
         async_create_issue(
             hass,
-            DOMAIN,
-            "deprecated_yaml_binary_sensor",
-            breaks_in_ha_version="2024.1.0",
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.2.0",
             is_fixable=False,
+            issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": BINARY_SENSOR_DOMAIN},
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Ping",
+            },
         )
     if discovery_info:
         binary_sensor_config = discovery_info

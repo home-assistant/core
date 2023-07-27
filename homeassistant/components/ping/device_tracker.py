@@ -11,17 +11,17 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     AsyncSeeCallback,
     SourceType,
 )
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import gather_with_concurrency
@@ -102,15 +102,19 @@ async def async_setup_scanner(
     """Set up the Host objects and return the update function."""
     ip_to_dev_id: dict[str, str] = {}
     if device_tracker_config := config:
-        create_issue(
+        async_create_issue(
             hass,
-            DOMAIN,
-            "deprecated_yaml_device_tracker",
-            breaks_in_ha_version="2024.1.0",
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.2.0",
             is_fixable=False,
+            issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": DEVICE_TRACKER_DOMAIN},
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Ping",
+            },
         )
         ip_to_dev_id = {
             ip: dev_id for (dev_id, ip) in device_tracker_config[CONF_HOSTS].items()
