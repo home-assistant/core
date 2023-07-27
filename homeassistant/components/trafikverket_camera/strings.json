@@ -42,7 +42,7 @@
             "name": "Status"
           },
           "type": {
-            "name": "Type"
+            "name": "Camera type"
           }
         }
       }
