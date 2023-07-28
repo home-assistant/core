@@ -12,7 +12,7 @@ from .const import DOMAIN
 class SunConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Sun."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

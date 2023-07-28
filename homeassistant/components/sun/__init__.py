@@ -83,6 +83,21 @@ _PHASE_UPDATES = {
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        # Remove title from configuration entry
+        config_entry.title = ""
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data={})
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track the state of the sun."""
     hass.async_create_task(
