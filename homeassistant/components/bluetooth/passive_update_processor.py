@@ -5,6 +5,9 @@ import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
@@ -341,7 +344,18 @@ class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProce
             self._attr_unique_id = f"{address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.processor.coordinator.name
-        self._attr_name = processor.entity_names.get(entity_key)
+        if not description.translation_key or (
+            description.device_class
+            and any(
+                isinstance(description, device_class_type)
+                for device_class_type in (
+                    SensorDeviceClass,
+                    BinarySensorDeviceClass,
+                    NumberDeviceClass,
+                )
+            )
+        ):
+            self._attr_name = processor.entity_names.get(entity_key)
 
     @property
     def available(self) -> bool:
