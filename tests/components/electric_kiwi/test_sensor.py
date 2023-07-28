@@ -8,8 +8,12 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.electric_kiwi.const import ATTRIBUTION
-from homeassistant.components.electric_kiwi.sensor import _check_and_move_time
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.electric_kiwi.sensor import (
+    ACCOUNT_SENSOR_TYPES,
+    ElectricKiwiAccountSensorEntityDescription,
+    _check_and_move_time,
+)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
@@ -63,6 +67,50 @@ async def test_hop_sensors(
     assert state.state == value.isoformat(timespec="seconds")
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+
+
+@pytest.mark.parametrize(
+    ("sensor", "sensor_state"),
+    [
+        ("sensor.total_running_balance", "184.09"),
+        ("sensor.total_account_balance", "-102.22"),
+        ("sensor.next_billing_date", "2020-11-03T00:00:00"),
+        ("sensor.hop_percentage", "3.5"),
+    ],
+)
+async def test_account_sensors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ek_api: YieldFixture,
+    ek_auth: YieldFixture,
+    entity_registry: EntityRegistry,
+    component_setup: ComponentSetup,
+    sensor: str,
+    sensor_state: str,
+) -> None:
+    """Test Account sensors for the Electric Kiwi integration."""
+
+    assert await component_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity = entity_registry.async_get(sensor)
+    assert entity
+
+    api = ek_api(Mock())
+    account_data = await api.get_account_balance()
+    assert account_data
+
+    AccountSensors = list(
+        filter(lambda x: entity.unique_id.endswith(x.key), ACCOUNT_SENSOR_TYPES)
+    )
+    AccountSensor: ElectricKiwiAccountSensorEntityDescription = AccountSensors[0]
+
+    state = hass.states.get(sensor)
+    assert state
+    assert state.state == sensor_state
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == AccountSensor.device_class
+    assert state.attributes.get(ATTR_STATE_CLASS) == AccountSensor.state_class
 
 
 async def test_check_and_move_time(ek_api: AsyncMock) -> None:

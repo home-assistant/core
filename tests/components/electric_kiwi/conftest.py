@@ -6,7 +6,7 @@ from time import time
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
-from electrickiwi_api.model import Hop, HopIntervals
+from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -112,5 +112,10 @@ def ek_api() -> YieldFixture:
         )
         mock_ek_api.return_value.get_hop.return_value = Hop.from_dict(
             load_json_value_fixture("get_hop.json", DOMAIN)
+        )
+        mock_ek_api.return_value.get_account_balance.return_value = (
+            AccountBalance.from_dict(
+                load_json_value_fixture("account_balance.json", DOMAIN)
+            )
         )
         yield mock_ek_api
