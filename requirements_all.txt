@@ -310,7 +310,7 @@ aiopulse==0.4.3
 aiopurpleair==2022.12.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==2.0.4
+aiopvapi==3.0.0
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==4.2.2

@@ -514,6 +514,7 @@ omit =
     homeassistant/components/hunterdouglas_powerview/coordinator.py
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/entity.py
+    homeassistant/components/hunterdouglas_powerview/number.py
     homeassistant/components/hunterdouglas_powerview/select.py
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/shade_data.py
