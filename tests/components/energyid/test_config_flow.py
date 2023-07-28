@@ -2,19 +2,14 @@
 from unittest.mock import patch
 
 import aiohttp
-from energyid_webhooks.webhookpolicy import WebhookPolicy
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import (
-    InvalidInterval,
     hass_entity_ids,
-    validate_interval,
 )
 from homeassistant.components.energyid.const import (
-    CONF_DATA_INTERVAL,
     CONF_ENTITY_ID,
-    CONF_UPLOAD_INTERVAL,
     CONF_WEBHOOK_URL,
     DOMAIN,
 )
@@ -23,11 +18,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.components.energyid.common import (
     MOCK_CONFIG_ENTRY_DATA,
-    MOCK_CONFIG_OPTIONS,
-    MockEnergyIDConfigEntry,
     MockHass,
     MockMeterCatalog,
-    MockWebhookPolicy,
 )
 
 
@@ -116,68 +108,8 @@ async def test_form__where_api_returns_error(
     assert result2["errors"] == expected_error
 
 
-async def test_validate_interval() -> None:
-    """Test validate interval."""
-    policy = WebhookPolicy(policy={"allowedInterval": "P1D"})
-    interval = "P1D"
-    assert await validate_interval(interval=interval, webhook_policy=policy) is True
-    interval = "PT15M"
-    with pytest.raises(InvalidInterval):
-        await validate_interval(interval=interval, webhook_policy=policy)
-
-
 async def test_hass_entity_ids() -> None:
     """Test hass entity ids."""
     ids = hass_entity_ids(MockHass())
     assert isinstance(ids, list)
     assert isinstance(ids[0], str)
-
-
-async def test_options_form(hass: HomeAssistant) -> None:
-    """Test we get the options form."""
-    config_entry = MockEnergyIDConfigEntry()
-
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.energyid.config_flow.WebhookClientAsync.policy",
-        MockWebhookPolicy.async_init(),
-    ):
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            MOCK_CONFIG_OPTIONS,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"] == MOCK_CONFIG_OPTIONS
-
-
-async def test_options_form_invalid_interval(hass: HomeAssistant) -> None:
-    """Test we get the options form, but with an invalid interval."""
-    config_entry = MockEnergyIDConfigEntry()
-
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    with patch(
-        "homeassistant.components.energyid.config_flow.WebhookClientAsync.policy",
-        MockWebhookPolicy.async_init(),
-    ):
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {CONF_DATA_INTERVAL: "PT5M", CONF_UPLOAD_INTERVAL: 300},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_DATA_INTERVAL: "invalid_interval"}
