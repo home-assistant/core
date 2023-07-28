@@ -15,12 +15,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
-    CONF_DATA_INTERVAL,
     CONF_ENTITY_ID,
     CONF_METRIC,
     CONF_METRIC_KIND,
     CONF_UNIT,
-    CONF_UPLOAD_INTERVAL,
     CONF_WEBHOOK_URL,
     DEFAULT_DATA_INTERVAL,
     DEFAULT_UPLOAD_INTERVAL,
@@ -53,9 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         action=dispatcher.async_handle_state_change,
     )
 
-    # Register the dispatcher for updates
-    entry.async_on_unload(entry.add_update_listener(dispatcher.update_listener))
-
     return True
 
 
@@ -79,12 +74,8 @@ class WebhookDispatcher:
         self.metric = entry.data[CONF_METRIC]
         self.metric_kind = entry.data[CONF_METRIC_KIND]
         self.unit = entry.data[CONF_UNIT]
-        self.data_interval = entry.options.get(
-            CONF_DATA_INTERVAL, DEFAULT_DATA_INTERVAL
-        )
-        self.upload_interval = dt.timedelta(
-            seconds=entry.options.get(CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL)
-        )
+        self.data_interval = DEFAULT_DATA_INTERVAL
+        self.upload_interval = dt.timedelta(seconds=DEFAULT_UPLOAD_INTERVAL)
 
         self.last_upload: dt.datetime | None = None
 
@@ -149,12 +140,3 @@ class WebhookDispatcher:
             return True
 
         return state_change_time - self.last_upload > self.upload_interval
-
-    async def update_listener(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Handle options update."""
-        self.data_interval = entry.options.get(
-            CONF_DATA_INTERVAL, DEFAULT_DATA_INTERVAL
-        )
-        self.upload_interval = dt.timedelta(
-            seconds=entry.options.get(CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL)
-        )

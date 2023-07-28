@@ -6,12 +6,10 @@ from energyid_webhooks.metercatalog import MeterCatalog
 from energyid_webhooks.webhookpolicy import WebhookPolicy
 
 from homeassistant.components.energyid.const import (
-    CONF_DATA_INTERVAL,
     CONF_ENTITY_ID,
     CONF_METRIC,
     CONF_METRIC_KIND,
     CONF_UNIT,
-    CONF_UPLOAD_INTERVAL,
     CONF_WEBHOOK_URL,
     DOMAIN,
 )
@@ -25,8 +23,6 @@ MOCK_CONFIG_ENTRY_DATA = {
     CONF_METRIC_KIND: "cumulative",
     CONF_UNIT: "test-unit",
 }
-
-MOCK_CONFIG_OPTIONS = {CONF_DATA_INTERVAL: "P1D", CONF_UPLOAD_INTERVAL: 300}
 
 
 class MockEnergyIDConfigEntry(MockConfigEntry):
