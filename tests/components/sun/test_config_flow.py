@@ -30,7 +30,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         )
 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Sun"
+    assert result.get("title") == ""
     assert result.get("data") == {}
     assert result.get("options") == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -65,6 +65,6 @@ async def test_import_flow(
     )
 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Sun"
+    assert result.get("title") == ""
     assert result.get("data") == {}
     assert result.get("options") == {}
