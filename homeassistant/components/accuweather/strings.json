@@ -171,7 +171,7 @@
         "name": "Grass pollen day 1",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -187,7 +187,7 @@
         "name": "Grass pollen day 2",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -203,7 +203,7 @@
         "name": "Grass pollen day 3",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -219,7 +219,7 @@
         "name": "Grass pollen day 4",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -250,7 +250,7 @@
         "name": "Mold pollen day 0",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -266,7 +266,7 @@
         "name": "Mold pollen day 1",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -282,7 +282,7 @@
         "name": "Mold pollen day 2",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -298,7 +298,7 @@
         "name": "Mold pollen day 3",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -314,7 +314,7 @@
         "name": "Mold pollen day 4",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -341,7 +341,7 @@
         "name": "Ragweed pollen day 0",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -357,7 +357,7 @@
         "name": "Ragweed pollen day 1",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -373,7 +373,7 @@
         "name": "Ragweed pollen day 2",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -389,7 +389,7 @@
         "name": "Ragweed pollen day 3",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -405,7 +405,7 @@
         "name": "Ragweed pollen day 4",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -547,7 +547,7 @@
         "name": "Tree pollen day 0",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -563,7 +563,7 @@
         "name": "Tree pollen day 1",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -579,7 +579,7 @@
         "name": "Tree pollen day 2",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -595,7 +595,7 @@
         "name": "Tree pollen day 3",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -611,7 +611,7 @@
         "name": "Tree pollen day 4",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -627,7 +627,7 @@
         "name": "UV index",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -643,7 +643,7 @@
         "name": "UV index day 0",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -659,7 +659,7 @@
         "name": "UV index day 1",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -675,7 +675,7 @@
         "name": "UV index day 2",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -691,7 +691,7 @@
         "name": "UV index day 3",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -707,7 +707,7 @@
         "name": "UV index day 4",
         "state_attributes": {
           "level": {
-            "name": "Level",
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
             "state": {
               "good": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::good%]",
               "hazardous": "[%key:component::accuweather::entity::sensor::air_quality_0d::state::hazardous%]",
@@ -723,13 +723,13 @@
         "name": "Wet bulb temperature"
       },
       "wind_speed": {
-        "name": "Wind speed"
+        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_speed::name%]"
       },
       "wind_chill_temperature": {
         "name": "Wind chill temperature"
       },
       "wind_gust_speed": {
-        "name": "Wind gust speed"
+        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]"
       },
       "wind_gust_speed_day_0d": {
         "name": "Wind gust speed day 0"
