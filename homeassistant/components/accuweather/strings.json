@@ -25,7 +25,7 @@
   "entity": {
     "sensor": {
       "air_quality_0d": {
-        "name": "Air quality day 0",
+        "name": "Air quality today",
         "state": {
           "good": "Good",
           "hazardous": "Hazardous",
@@ -89,7 +89,7 @@
         "name": "Cloud cover"
       },
       "cloud_cover_day_0d": {
-        "name": "Cloud cover day 0"
+        "name": "Cloud cover today"
       },
       "cloud_cover_day_1d": {
         "name": "Cloud cover day 1"
@@ -119,7 +119,7 @@
         "name": "Cloud cover night 4"
       },
       "condition_day_0d": {
-        "name": "Condition day 0"
+        "name": "Condition today"
       },
       "condition_day_1d": {
         "name": "Condition day 1"
@@ -152,7 +152,7 @@
         "name": "Dew point"
       },
       "grass_pollen_0d": {
-        "name": "Grass pollen day 0",
+        "name": "Grass pollen today",
         "state_attributes": {
           "level": {
             "name": "Level",
@@ -232,7 +232,7 @@
         }
       },
       "hours_of_sun_0d": {
-        "name": "Hours of sun day 0"
+        "name": "Hours of sun today"
       },
       "hours_of_sun_1d": {
         "name": "Hours of sun day 1"
@@ -247,7 +247,7 @@
         "name": "Hours of sun day 4"
       },
       "mold_pollen_0d": {
-        "name": "Mold pollen day 0",
+        "name": "Mold pollen today",
         "state_attributes": {
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
@@ -338,7 +338,7 @@
         }
       },
       "ragweed_pollen_0d": {
-        "name": "Ragweed pollen day 0",
+        "name": "Ragweed pollen today",
         "state_attributes": {
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
@@ -421,7 +421,7 @@
         "name": "RealFeel temperature"
       },
       "realfeel_temperature_max_0d": {
-        "name": "RealFeel temperature max day 0"
+        "name": "RealFeel temperature max today"
       },
       "realfeel_temperature_max_1d": {
         "name": "RealFeel temperature max day 1"
@@ -436,7 +436,7 @@
         "name": "RealFeel temperature max day 4"
       },
       "realfeel_temperature_min_0d": {
-        "name": "RealFeel temperature min day 0"
+        "name": "RealFeel temperature min today"
       },
       "realfeel_temperature_min_1d": {
         "name": "RealFeel temperature min day 1"
@@ -454,7 +454,7 @@
         "name": "RealFeel temperature shade"
       },
       "realfeel_temperature_shade_max_0d": {
-        "name": "RealFeel temperature shade max day 0"
+        "name": "RealFeel temperature shade max today"
       },
       "realfeel_temperature_shade_max_1d": {
         "name": "RealFeel temperature shade max day 1"
@@ -469,7 +469,7 @@
         "name": "RealFeel temperature shade max day 4"
       },
       "realfeel_temperature_shade_min_0d": {
-        "name": "RealFeel temperature shade min day 0"
+        "name": "RealFeel temperature shade min today"
       },
       "realfeel_temperature_shade_min_1d": {
         "name": "RealFeel temperature shade min day 1"
@@ -484,7 +484,7 @@
         "name": "RealFeel temperature shade min day 4"
       },
       "solar_irradiance_day_0d": {
-        "name": "Solar irradiance day 0"
+        "name": "Solar irradiance today"
       },
       "solar_irradiance_day_1d": {
         "name": "Solar irradiance day 1"
@@ -514,7 +514,7 @@
         "name": "Solar irradiance night 4"
       },
       "thunderstorm_probability_day_0d": {
-        "name": "Thunderstorm probability day 0"
+        "name": "Thunderstorm probability today"
       },
       "thunderstorm_probability_day_1d": {
         "name": "Thunderstorm probability day 1"
@@ -544,7 +544,7 @@
         "name": "Thunderstorm probability night 4"
       },
       "tree_pollen_0d": {
-        "name": "Tree pollen day 0",
+        "name": "Tree pollen today",
         "state_attributes": {
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
@@ -640,7 +640,7 @@
         }
       },
       "uv_index_0d": {
-        "name": "UV index day 0",
+        "name": "UV index today",
         "state_attributes": {
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen_0d::state_attributes::level::name%]",
@@ -732,7 +732,7 @@
         "name": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]"
       },
       "wind_gust_speed_day_0d": {
-        "name": "Wind gust speed day 0"
+        "name": "Wind gust speed today"
       },
       "wind_gust_speed_day_1d": {
         "name": "Wind gust speed day 1"
@@ -762,7 +762,7 @@
         "name": "Wind gust speed night 4"
       },
       "wind_speed_day_0d": {
-        "name": "Wind speed day 0"
+        "name": "Wind speed today"
       },
       "wind_speed_day_1d": {
         "name": "Wind speed day 1"
