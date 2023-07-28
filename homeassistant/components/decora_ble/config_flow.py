@@ -54,14 +54,13 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             api_key, error = await self._get_api_key(address)
-            if api_key is not None:
-                assert error is None
+            if api_key is not None and error is None:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data={CONF_ADDRESS: address.upper(), CONF_API_KEY: api_key},
                 )
 
-            if error is not None:
+            if api_key is None and error is not None:
                 errors["base"] = error
 
         placeholders = {"name": self._discovery_info.name}
@@ -94,14 +93,13 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             api_key, error = await self._get_api_key(address)
-            if api_key is not None:
-                assert error is None
+            if api_key is not None and error is None:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data={CONF_ADDRESS: address.upper(), CONF_API_KEY: api_key},
                 )
 
-            if error is not None:
+            if api_key is None and error is not None:
                 errors["base"] = error
 
         current_addresses = self._async_current_ids()
@@ -143,10 +141,10 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if ble_device:
-            api_key = await DecoraBLEDevice.get_api_key(ble_device)
-            if api_key is not None:
-                return api_key, None
+            return None, "cannot_connect"
 
+        api_key = await DecoraBLEDevice.get_api_key(ble_device)
+        if api_key is None:
             return None, "not_in_pairing_mode"
 
-        return None, "cannot_connect"
+        return api_key, None
