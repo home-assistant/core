@@ -18,6 +18,6 @@
   },
   "iot_class": "local_polling",
   "loggers": ["aiopvapi"],
-  "requirements": ["aiopvapi==2.0.4"],
+  "requirements": ["aiopvapi==3.0.0"],
   "zeroconf": ["_powerview._tcp.local."]
 }
