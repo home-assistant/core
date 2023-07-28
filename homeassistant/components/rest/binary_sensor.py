@@ -14,6 +14,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
+    CONF_ICON,
+    CONF_NAME,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
     CONF_UNIQUE_ID,
@@ -24,7 +26,11 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import TemplateEntity
+from homeassistant.helpers.template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+    ManualTriggerEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -74,7 +80,21 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    unique_id = conf.get(CONF_UNIQUE_ID)
+    name = conf.get(CONF_NAME)
+    if not name:
+        name = Template(DEFAULT_BINARY_SENSOR_NAME, hass)
+
+    trigger_entity_config = {
+        CONF_NAME: name,
+        CONF_DEVICE_CLASS: conf.get(CONF_DEVICE_CLASS),
+        CONF_UNIQUE_ID: conf.get(CONF_UNIQUE_ID),
+    }
+    if available := conf.get(CONF_AVAILABILITY):
+        trigger_entity_config[CONF_AVAILABILITY] = available
+    if icon := conf.get(CONF_ICON):
+        trigger_entity_config[CONF_ICON] = icon
+    if picture := conf.get(CONF_PICTURE):
+        trigger_entity_config[CONF_PICTURE] = picture
 
     async_add_entities(
         [
@@ -83,13 +103,13 @@ async def async_setup_platform(
                 coordinator,
                 rest,
                 conf,
-                unique_id,
+                trigger_entity_config,
             )
         ],
     )
 
 
-class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
+class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
     """Representation of a REST binary sensor."""
 
     def __init__(
@@ -98,9 +118,10 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
         coordinator: DataUpdateCoordinator[None] | None,
         rest: RestData,
         config: ConfigType,
-        unique_id: str | None,
+        trigger_entity_config: ConfigType,
     ) -> None:
         """Initialize a REST binary sensor."""
+        ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
         RestEntity.__init__(
             self,
             coordinator,
@@ -108,19 +129,22 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
             config.get(CONF_RESOURCE_TEMPLATE),
             config[CONF_FORCE_UPDATE],
         )
-        TemplateEntity.__init__(
-            self,
-            hass,
-            config=config,
-            fallback_name=DEFAULT_BINARY_SENSOR_NAME,
-            unique_id=unique_id,
-        )
         self._previous_data = None
         self._value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
         if (value_template := self._value_template) is not None:
             value_template.hass = hass
 
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+    async def async_added_to_hass(self) -> None:
+        """Ensure the data from the initial update is reflected in the state."""
+        await RestEntity.async_added_to_hass(self)
+        await ManualTriggerEntity.async_added_to_hass(self)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        available1 = RestEntity.available.fget(self)  # type: ignore[attr-defined]
+        available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
+        return bool(available1 and available2)
 
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
@@ -129,6 +153,8 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
             return
 
         response = self.rest.data
+
+        raw_value = response
 
         if self._value_template is not None:
             response = self._value_template.async_render_with_possible_json_value(
@@ -144,3 +170,6 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
                 "open": True,
                 "yes": True,
             }.get(response.lower(), False)
+
+        self._process_manual_data(raw_value)
+        self.async_write_ha_state()
