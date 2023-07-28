@@ -91,7 +91,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # Remove title from configuration entry
         config_entry.title = ""
         config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data={})
+        hass.config_entries.async_update_entry(config_entry)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
