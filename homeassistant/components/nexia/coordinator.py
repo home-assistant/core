@@ -29,6 +29,7 @@ class NexiaDataUpdateCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             name="Nexia update",
             update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
+            always_update=False,
         )
 
     async def _async_update_data(self) -> None:
