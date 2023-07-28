@@ -233,11 +233,9 @@ class AmbientWeatherEntity(Entity):
     def _async_update(self) -> None:
         """Update the state."""
         last_data = self._ambient.stations[self._mac_address][ATTR_LAST_DATA]
-        if self.entity_description.key == TYPE_SOLARRADIATION_LX:
-            self._attr_available = last_data[TYPE_SOLARRADIATION] is not None
-        else:
-            self._attr_available = last_data[self.entity_description.key] is not None
-
+        key = self.entity_description.key
+        available_key = TYPE_SOLARRADIATION if key == TYPE_SOLARRADIATION_LX else key
+        self._attr_available = last_data[available_key] is not None
         self.update_from_latest_data()
         self.async_write_ha_state()
 
