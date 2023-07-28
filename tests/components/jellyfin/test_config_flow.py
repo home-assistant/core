@@ -69,7 +69,7 @@ async def test_form_cannot_connect(
     mock_client: MagicMock,
     mock_client_device_id: MagicMock,
 ) -> None:
-    """Test we handle an unreachable server."""
+    """Test configuration with an unreachable server."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -98,7 +98,7 @@ async def test_form_invalid_auth(
     mock_client: MagicMock,
     mock_client_device_id: MagicMock,
 ) -> None:
-    """Test that we can handle invalid credentials."""
+    """Test configuration with invalid credentials."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -125,7 +125,7 @@ async def test_form_invalid_auth(
 async def test_form_exception(
     hass: HomeAssistant, mock_jellyfin: MagicMock, mock_client: MagicMock
 ) -> None:
-    """Test we handle an unexpected exception during server setup."""
+    """Test configuration with an unexpected exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -152,7 +152,7 @@ async def test_form_persists_device_id_on_error(
     mock_client: MagicMock,
     mock_client_device_id: MagicMock,
 ) -> None:
-    """Test that we can handle invalid credentials."""
+    """Test persisting the device id on error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -200,7 +200,7 @@ async def test_reauth(
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
 ) -> None:
-    """Test the Jellyfin integration handling a reauth flow."""
+    """Test a reauth flow."""
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass,
         "auth-connect-address.json",
@@ -248,7 +248,7 @@ async def test_reauth_cannot_connect(
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
 ) -> None:
-    """Test that we can handle an unreachable server during reauth."""
+    """Test an unreachable server during a reauth flow."""
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass,
         "auth-connect-address.json",
@@ -297,7 +297,7 @@ async def test_reauth_invalid(
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
 ) -> None:
-    """Test the Jellyfin integration handling invalid credentials during reauth."""
+    """Test invalid credentials during a reauth flow."""
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass,
         "auth-connect-address.json",
@@ -343,7 +343,7 @@ async def test_reauth_exception(
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
 ) -> None:
-    """Test the Jellyfin integration handling an unexpected exception during reauth."""
+    """Test an unexpected exception during a reauth flow."""
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
         hass,
         "auth-connect-address.json",

@@ -127,14 +127,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-        url = self._reauth_input.get(CONF_URL)
-        username = self._reauth_input.get(CONF_USERNAME)
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_URL, default=url): str,
-                vol.Required(CONF_USERNAME, default=username): str,
-                vol.Optional(CONF_PASSWORD, default=""): str,
-            }
+        data_schema = self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA, user_input
         )
 
         return self.async_show_form(
