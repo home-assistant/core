@@ -12,6 +12,8 @@ from .const import DOMAIN
 class SimpleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for local_ip."""
 
+    VERSION = 2
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -22,4 +24,4 @@ class SimpleConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        return self.async_create_entry(title=DOMAIN, data=user_input)
+        return self.async_create_entry(title="", data=user_input)

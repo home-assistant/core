@@ -1,4 +1,6 @@
 """Get the local IP address of the Home Assistant instance."""
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -6,6 +8,23 @@ import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, PLATFORMS
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        # Remove title from configuration entry
+        config_entry.title = ""
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
