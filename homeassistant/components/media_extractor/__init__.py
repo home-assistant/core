@@ -127,12 +127,12 @@ class MediaExtractor:
                 _LOGGER.error("Could not extract stream for the query: %s", query)
                 raise MEQueryException() from err
 
-            if "url" in requested_stream:
-                return requested_stream["url"]
-            best_stream = requested_stream["formats"][
-                len(requested_stream["formats"]) - 1
-            ]
-            return best_stream["url"]
+            if "formats" in requested_stream:
+                best_stream = requested_stream["formats"][
+                    len(requested_stream["formats"]) - 1
+                ]
+                return best_stream["url"]
+            return requested_stream["url"]
 
         return stream_selector
 
