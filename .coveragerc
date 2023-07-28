@@ -275,7 +275,6 @@ omit =
     homeassistant/components/electric_kiwi/__init__.py
     homeassistant/components/electric_kiwi/api.py
     homeassistant/components/electric_kiwi/oauth2.py
-    homeassistant/components/electric_kiwi/sensor.py
     homeassistant/components/electric_kiwi/coordinator.py
     homeassistant/components/electric_kiwi/select.py
     homeassistant/components/eliqonline/sensor.py

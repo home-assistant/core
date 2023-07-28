@@ -62,7 +62,7 @@ def _check_and_move_time(hop: Hop, time: str) -> datetime:
     return date_time
 
 
-HOP_SENSOR_TYPE: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
+HOP_SENSOR_TYPES: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
     ElectricKiwiHOPSensorEntityDescription(
         key=ATTR_EK_HOP_START,
         translation_key="hopfreepowerstart",
@@ -85,7 +85,7 @@ async def async_setup_entry(
     hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id]
     hop_entities = [
         ElectricKiwiHOPEntity(hop_coordinator, description)
-        for description in HOP_SENSOR_TYPE
+        for description in HOP_SENSOR_TYPES
     ]
     async_add_entities(hop_entities)
 
