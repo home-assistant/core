@@ -63,6 +63,8 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.update_cookie)
+        except VerisureLoginError as ex:
+            raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except VerisureError as ex:
             raise UpdateFailed("Unable to update cookie") from ex
         try:
