@@ -37,21 +37,24 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
-        key=OralBSensor.SECTOR,
+        key=OralBSensor.SECTOR, translation_key="sector"
     ),
     OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(
-        key=OralBSensor.NUMBER_OF_SECTORS,
+        key=OralBSensor.NUMBER_OF_SECTORS, translation_key="number_of_sectors"
     ),
     OralBSensor.SECTOR_TIMER: SensorEntityDescription(
         key=OralBSensor.SECTOR_TIMER,
         entity_registry_enabled_default=False,
+        translation_key="sector_timer",
     ),
     OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
-        key=OralBSensor.TOOTHBRUSH_STATE
+        key=OralBSensor.TOOTHBRUSH_STATE, translation_key="toothbrush_state"
     ),
-    OralBSensor.PRESSURE: SensorEntityDescription(key=OralBSensor.PRESSURE),
+    OralBSensor.PRESSURE: SensorEntityDescription(
+        key=OralBSensor.PRESSURE, translation_key="pressure"
+    ),
     OralBSensor.MODE: SensorEntityDescription(
-        key=OralBSensor.MODE,
+        key=OralBSensor.MODE, translation_key="mode"
     ),
     OralBSensor.SIGNAL_STRENGTH: SensorEntityDescription(
         key=OralBSensor.SIGNAL_STRENGTH,
