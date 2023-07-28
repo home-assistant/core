@@ -251,7 +251,7 @@ class ConfiguredDoorBird:
     def register_events(self, hass: HomeAssistant) -> None:
         """Register events on device."""
         # Get the URL of this server
-        hass_url = get_url(hass)
+        hass_url = get_url(hass, prefer_external=False)
 
         # Override url if another is specified in the configuration
         if self.custom_url is not None:

@@ -13,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 ENTITY_ID = f"{DOMAIN}.fake_name"
 
 
-async def test_async_setup_entry(hass, init_integration):
+async def test_async_setup_entry(hass: HomeAssistant, init_integration) -> None:
     """Test a successful setup entry."""
     entry = init_integration
     assert entry is not None
@@ -33,7 +33,7 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.freedompro.get_list",
+        "homeassistant.components.freedompro.coordinator.get_list",
         return_value={
             "state": False,
         },
@@ -43,7 +43,7 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass, init_integration):
+async def test_unload_entry(hass: HomeAssistant, init_integration) -> None:
     """Test successful unload of entry."""
     entry = init_integration
 

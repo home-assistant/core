@@ -131,7 +131,7 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     assert hass.states.async_all("select") == []
 
 
-async def test_templates_with_entities(hass, calls):
+async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(

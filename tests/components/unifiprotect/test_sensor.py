@@ -1,9 +1,8 @@
 """Test the UniFi Protect sensor platform."""
-
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 from pyunifiprotect.data import (
     NVR,
@@ -15,10 +14,7 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.data.nvr import EventMetadata, LicensePlateMetadata
 
-from homeassistant.components.unifiprotect.const import (
-    ATTR_EVENT_SCORE,
-    DEFAULT_ATTRIBUTION,
-)
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
@@ -27,7 +23,6 @@ from homeassistant.components.unifiprotect.sensor import (
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
-    OBJECT_TYPE_NONE,
     SENSE_SENSORS,
 )
 from homeassistant.const import (
@@ -57,21 +52,21 @@ SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
 
 async def test_sensor_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SENSOR, 25, 12)
+    assert_entity_counts(hass, Platform.SENSOR, 24, 12)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SENSOR, 25, 12)
+    assert_entity_counts(hass, Platform.SENSOR, 24, 12)
 
 
 async def test_sensor_sensor_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -85,7 +80,7 @@ async def test_sensor_sensor_remove(
 
 async def test_sensor_setup_sensor(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
-):
+) -> None:
     """Test sensor entity setup for sensor devices."""
 
     await init_entry(hass, ufp, [sensor_all])
@@ -136,7 +131,7 @@ async def test_sensor_setup_sensor(
 
 async def test_sensor_setup_sensor_none(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
-):
+) -> None:
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
     await init_entry(hass, ufp, [sensor])
@@ -170,7 +165,7 @@ async def test_sensor_setup_sensor_none(
 
 async def test_sensor_setup_nvr(
     hass: HomeAssistant, ufp: MockUFPFixture, fixed_now: datetime
-):
+) -> None:
     """Test sensor entity setup for NVR device."""
 
     reset_objects(ufp.api.bootstrap)
@@ -244,7 +239,9 @@ async def test_sensor_setup_nvr(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_sensor_nvr_missing_values(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
     """Test NVR sensor sensors if no data available."""
 
     reset_objects(ufp.api.bootstrap)
@@ -314,11 +311,11 @@ async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockUFPFixtur
 
 async def test_sensor_setup_camera(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test sensor entity setup for camera devices."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 25, 12)
+    assert_entity_counts(hass, Platform.SENSOR, 24, 12)
 
     entity_registry = er.async_get(hass)
 
@@ -397,34 +394,18 @@ async def test_sensor_setup_camera(
     assert state.state == "-50"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Detected Object
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, EVENT_SENSORS[0]
-    )
-
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.unique_id == unique_id
-
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == OBJECT_TYPE_NONE
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
 
 async def test_sensor_setup_camera_with_last_trip_time(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
-):
+) -> None:
     """Test sensor entity setup for camera devices with last trip time."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 25, 25)
+    assert_entity_counts(hass, Platform.SENSOR, 24, 24)
 
     entity_registry = er.async_get(hass)
 
@@ -446,55 +427,9 @@ async def test_sensor_setup_camera_with_last_trip_time(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_sensor_update_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
-    """Test sensor motion entity."""
-
-    await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 25, 12)
-
-    _, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, EVENT_SENSORS[0]
-    )
-
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-
-    event = Event(
-        id="test_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=1),
-        end=None,
-        score=100,
-        smart_detect_types=[SmartDetectObjectType.PERSON],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-
-    new_camera = doorbell.copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_id = event.id
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == SmartDetectObjectType.PERSON.value
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_EVENT_SCORE] == 100
-
-
 async def test_sensor_update_alarm(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
-):
+) -> None:
     """Test sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
@@ -538,11 +473,11 @@ async def test_sensor_update_alarm(
 
 async def test_sensor_update_alarm_with_last_trip_time(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
     fixed_now: datetime,
-):
+) -> None:
     """Test sensor motion entity with last trip time."""
 
     await init_entry(hass, ufp, [sensor_all])
@@ -569,7 +504,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
 
 async def test_camera_update_licenseplate(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, fixed_now: datetime
-):
+) -> None:
     """Test sensor motion entity."""
 
     camera.feature_flags.smart_detect_types.append(SmartDetectObjectType.LICENSE_PLATE)
@@ -579,10 +514,10 @@ async def test_camera_update_licenseplate(
     )
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.SENSOR, 24, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, EVENT_SENSORS[1]
+        Platform.SENSOR, camera, EVENT_SENSORS[0]
     )
 
     event_metadata = EventMetadata(
@@ -602,7 +537,9 @@ async def test_camera_update_licenseplate(
 
     new_camera = camera.copy()
     new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_id = event.id
+    new_camera.last_smart_detect_event_ids[
+        SmartDetectObjectType.LICENSE_PLATE
+    ] = event.id
 
     mock_msg = Mock()
     mock_msg.changed_data = {}

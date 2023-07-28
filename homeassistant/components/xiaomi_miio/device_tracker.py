@@ -53,7 +53,7 @@ def get_scanner(
 
 
 class XiaomiMiioDeviceScanner(DeviceScanner):
-    """This class queries a Xiaomi Mi WiFi Repeater."""
+    """Class which queries a Xiaomi Mi WiFi Repeater."""
 
     def __init__(self, device):
         """Initialize the scanner."""

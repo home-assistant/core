@@ -1,4 +1,6 @@
 """Basic checks for entity map storage."""
+from typing import Any
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -11,7 +13,9 @@ from .common import setup_platform, setup_test_component
 from tests.common import flush_store
 
 
-async def test_load_from_storage(hass, hass_storage):
+async def test_load_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test that entity map can be correctly loaded from cache."""
     hkid = "00:00:00:00:00:00"
 
@@ -24,7 +28,9 @@ async def test_load_from_storage(hass, hass_storage):
     assert hkid in hass.data[ENTITY_MAP].storage_data
 
 
-async def test_storage_is_removed(hass, hass_storage):
+async def test_storage_is_removed(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test entity map storage removal is idempotent."""
     await setup_platform(hass)
 
@@ -64,7 +70,9 @@ def create_lightbulb_service(accessory):
     on_char.value = 0
 
 
-async def test_storage_is_updated_on_add(hass, hass_storage, utcnow):
+async def test_storage_is_updated_on_add(
+    hass: HomeAssistant, hass_storage: dict[str, Any], utcnow
+) -> None:
     """Test entity map storage is cleaned up on adding an accessory."""
     await setup_test_component(hass, create_lightbulb_service)
 

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
-    "devices_response,errors",
+    ("devices_response", "errors"),
     [
         (AsyncMock(side_effect=AmbientError), {"base": "invalid_key"}),
         (AsyncMock(return_value=[]), {"base": "no_devices"}),

@@ -81,7 +81,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
 
 
 @pytest.mark.parametrize(
-    "error, reason",
+    ("error", "reason"),
     [
         (Unavailable, "cannot_connect"),
         (InvalidToken, "invalid_token"),
@@ -216,7 +216,7 @@ async def test_user_exception_user_step(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, type_in_discovery_info",
+    ("source", "type_in_discovery_info"),
     [
         (config_entries.SOURCE_HOMEKIT, "_hap._tcp.local"),
         (config_entries.SOURCE_ZEROCONF, "_nanoleafms._tcp.local"),
@@ -230,7 +230,7 @@ async def test_discovery_link_unavailable(
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "homeassistant.components.nanoleaf.config_flow.load_json_object",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -303,7 +303,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, type_in_discovery",
+    ("source", "type_in_discovery"),
     [
         (config_entries.SOURCE_HOMEKIT, "_hap._tcp.local"),
         (config_entries.SOURCE_ZEROCONF, "_nanoleafms._tcp.local"),
@@ -311,7 +311,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "nanoleaf_conf_file, remove_config",
+    ("nanoleaf_conf_file", "remove_config"),
     [
         ({TEST_DEVICE_ID: {"token": TEST_TOKEN}}, True),
         ({TEST_HOST: {"token": TEST_TOKEN}}, True),
@@ -353,7 +353,7 @@ async def test_import_discovery_integration(
     Test updating the .nanoleaf_conf file if it was not the only device in the file.
     """
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "homeassistant.components.nanoleaf.config_flow.load_json_object",
         return_value=dict(nanoleaf_conf_file),
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
@@ -381,6 +381,8 @@ async def test_import_discovery_integration(
                 type=type_in_discovery,
             ),
         )
+        await hass.async_block_till_done()
+
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -395,14 +397,13 @@ async def test_import_discovery_integration(
         mock_save_json.assert_called_once()
         mock_remove.assert_not_called()
 
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp_discovery(hass: HomeAssistant) -> None:
     """Test SSDP discovery."""
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "homeassistant.components.nanoleaf.config_flow.load_json_object",
         return_value={},
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
@@ -431,6 +432,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         assert result["step_id"] == "link"
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_NAME
@@ -439,5 +441,4 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         CONF_TOKEN: TEST_TOKEN,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1

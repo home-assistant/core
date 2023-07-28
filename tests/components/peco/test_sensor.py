@@ -16,7 +16,7 @@ INVALID_COUNTY_DATA = {"county": "INVALID"}
 
 
 @pytest.mark.parametrize(
-    "sensor,expected",
+    ("sensor", "expected"),
     [
         ("customers_out", "123"),
         ("percent_customers_out", "15"),

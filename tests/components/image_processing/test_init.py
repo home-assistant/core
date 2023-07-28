@@ -16,6 +16,12 @@ from tests.common import assert_setup_component, async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 def aiohttp_unused_port(event_loop, aiohttp_unused_port, socket_enabled):
     """Return aiohttp_unused_port and allow opening sockets."""
@@ -58,6 +64,7 @@ async def test_setup_component(hass: HomeAssistant) -> None:
 
     with assert_setup_component(1, ip.DOMAIN):
         assert await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_setup_component_with_service(hass: HomeAssistant) -> None:
@@ -66,6 +73,7 @@ async def test_setup_component_with_service(hass: HomeAssistant) -> None:
 
     with assert_setup_component(1, ip.DOMAIN):
         assert await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(ip.DOMAIN, "scan")
 
@@ -75,8 +83,11 @@ async def test_setup_component_with_service(hass: HomeAssistant) -> None:
     return_value=b"Test",
 )
 async def test_get_image_from_camera(
-    mock_camera_read, hass, aiohttp_unused_port, enable_custom_integrations
-):
+    mock_camera_read,
+    hass: HomeAssistant,
+    aiohttp_unused_port,
+    enable_custom_integrations: None,
+) -> None:
     """Grab an image from camera entity."""
     await setup_image_processing(hass, aiohttp_unused_port)
 
@@ -95,8 +106,11 @@ async def test_get_image_from_camera(
     side_effect=HomeAssistantError(),
 )
 async def test_get_image_without_exists_camera(
-    mock_image, hass, aiohttp_unused_port, enable_custom_integrations
-):
+    mock_image,
+    hass: HomeAssistant,
+    aiohttp_unused_port,
+    enable_custom_integrations: None,
+) -> None:
     """Try to get image without exists camera."""
     await setup_image_processing(hass, aiohttp_unused_port)
 
@@ -141,7 +155,9 @@ async def test_face_event_call(
     "homeassistant.components.demo.image_processing.DemoImageProcessingFace.confidence",
     new_callable=PropertyMock(return_value=None),
 )
-async def test_face_event_call_no_confidence(mock_config, hass, aioclient_mock):
+async def test_face_event_call_no_confidence(
+    mock_config, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up and scan a picture and test faces from event."""
     face_events = await setup_image_processing_face(hass)
     aioclient_mock.get(get_url(hass), content=b"image")

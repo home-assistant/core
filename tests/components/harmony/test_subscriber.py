@@ -52,11 +52,11 @@ async def test_async_callbacks(hass: HomeAssistant) -> None:
     _call_all_callbacks(subscriber)
     await hass.async_block_till_done()
 
-    for callback_name in _NO_PARAM_CALLBACKS.keys():
+    for callback_name in _NO_PARAM_CALLBACKS:
         callback_mock = callbacks[callback_name]
         callback_mock.assert_awaited_once()
 
-    for callback_name in _ACTIVITY_CALLBACKS.keys():
+    for callback_name in _ACTIVITY_CALLBACKS:
         callback_mock = callbacks[callback_name]
         callback_mock.assert_awaited_once_with(_ACTIVITY_TUPLE)
 
@@ -96,11 +96,11 @@ async def test_callbacks(hass: HomeAssistant) -> None:
     _call_all_callbacks(subscriber)
     await hass.async_block_till_done()
 
-    for callback_name in _NO_PARAM_CALLBACKS.keys():
+    for callback_name in _NO_PARAM_CALLBACKS:
         callback_mock = callbacks[callback_name]
         callback_mock.assert_called_once()
 
-    for callback_name in _ACTIVITY_CALLBACKS.keys():
+    for callback_name in _ACTIVITY_CALLBACKS:
         callback_mock = callbacks[callback_name]
         callback_mock.assert_called_once_with(_ACTIVITY_TUPLE)
 
@@ -122,12 +122,12 @@ async def test_subscribe_unsubscribe(hass: HomeAssistant) -> None:
     _call_all_callbacks(subscriber)
     await hass.async_block_till_done()
 
-    for callback_name in _NO_PARAM_CALLBACKS.keys():
+    for callback_name in _NO_PARAM_CALLBACKS:
         callback_one[callback_name].assert_not_called()
         callback_two[callback_name].assert_called_once()
         callback_three[callback_name].assert_not_called()
 
-    for callback_name in _ACTIVITY_CALLBACKS.keys():
+    for callback_name in _ACTIVITY_CALLBACKS:
         callback_one[callback_name].assert_not_called()
         callback_two[callback_name].assert_called_once_with(_ACTIVITY_TUPLE)
         callback_three[callback_name].assert_not_called()

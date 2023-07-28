@@ -1,10 +1,8 @@
 """Tests for Shelly binary sensor platform."""
-
-
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import SLEEP_PERIOD_MULTIPLIER
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_registry import async_get
 
 from . import (
@@ -21,7 +19,9 @@ RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
 
 
-async def test_block_binary_sensor(hass, mock_block_device, monkeypatch):
+async def test_block_binary_sensor(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_channel_1_overpowering"
     await init_integration(hass, 1)
@@ -35,8 +35,8 @@ async def test_block_binary_sensor(hass, mock_block_device, monkeypatch):
 
 
 async def test_block_binary_sensor_extra_state_attr(
-    hass, mock_block_device, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block binary sensor extra state attributes."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_gas"
     await init_integration(hass, 1)
@@ -53,7 +53,9 @@ async def test_block_binary_sensor_extra_state_attr(
     assert state.attributes.get("detected") == "none"
 
 
-async def test_block_rest_binary_sensor(hass, mock_block_device, monkeypatch):
+async def test_block_rest_binary_sensor(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block REST binary sensor."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
@@ -68,8 +70,8 @@ async def test_block_rest_binary_sensor(hass, mock_block_device, monkeypatch):
 
 
 async def test_block_rest_binary_sensor_connected_battery_devices(
-    hass, mock_block_device, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block REST binary sensor for connected battery devices."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
@@ -90,7 +92,9 @@ async def test_block_rest_binary_sensor_connected_battery_devices(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_block_sleeping_binary_sensor(hass, mock_block_device, monkeypatch):
+async def test_block_sleeping_binary_sensor(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_motion"
     await init_integration(hass, 1, sleep_period=1000)
@@ -111,8 +115,8 @@ async def test_block_sleeping_binary_sensor(hass, mock_block_device, monkeypatch
 
 
 async def test_block_restored_sleeping_binary_sensor(
-    hass, mock_block_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored sleeping binary sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
@@ -135,8 +139,8 @@ async def test_block_restored_sleeping_binary_sensor(
 
 
 async def test_block_restored_sleeping_binary_sensor_no_last_state(
-    hass, mock_block_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored sleeping binary sensor missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
@@ -157,7 +161,9 @@ async def test_block_restored_sleeping_binary_sensor_no_last_state(
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
-async def test_rpc_binary_sensor(hass, mock_rpc_device, monkeypatch) -> None:
+async def test_rpc_binary_sensor(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_cover_0_overpowering"
     await init_integration(hass, 2)
@@ -172,7 +178,9 @@ async def test_rpc_binary_sensor(hass, mock_rpc_device, monkeypatch) -> None:
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_rpc_binary_sensor_removal(hass, mock_rpc_device, monkeypatch):
+async def test_rpc_binary_sensor_removal(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC binary sensor is removed due to removal_condition."""
     entity_registry = async_get(hass)
     entity_id = register_entity(
@@ -188,7 +196,7 @@ async def test_rpc_binary_sensor_removal(hass, mock_rpc_device, monkeypatch):
 
 
 async def test_rpc_sleeping_binary_sensor(
-    hass, mock_rpc_device, device_reg, monkeypatch
+    hass: HomeAssistant, mock_rpc_device, device_reg, monkeypatch
 ) -> None:
     """Test RPC online sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
@@ -210,10 +218,15 @@ async def test_rpc_sleeping_binary_sensor(
 
     assert hass.states.get(entity_id).state == STATE_ON
 
+    # test external power sensor
+    state = hass.states.get("binary_sensor.test_name_external_power")
+    assert state
+    assert state.state == STATE_ON
+
 
 async def test_rpc_restored_sleeping_binary_sensor(
-    hass, mock_rpc_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_rpc_device, device_reg, monkeypatch
+) -> None:
     """Test RPC restored binary sensor."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
@@ -238,8 +251,8 @@ async def test_rpc_restored_sleeping_binary_sensor(
 
 
 async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
-    hass, mock_rpc_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_rpc_device, device_reg, monkeypatch
+) -> None:
     """Test RPC restored sleeping binary sensor missing last state."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)

@@ -1,167 +1,79 @@
 """Tests for the sensors provided by the EnergyZero integration."""
-
 from unittest.mock import MagicMock
 
 from energyzero import EnergyZeroNoDataError
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CURRENCY_EURO,
-    STATE_UNKNOWN,
-    UnitOfEnergy,
-    UnitOfVolume,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+pytestmark = [pytest.mark.freeze_time("2022-12-07 15:00:00")]
 
-@pytest.mark.freeze_time("2022-12-07 15:00:00")
-async def test_energy_today(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+
+@pytest.mark.parametrize(
+    ("entity_id", "entity_unique_id", "device_identifier"),
+    [
+        (
+            "sensor.energyzero_today_energy_current_hour_price",
+            "today_energy_current_hour_price",
+            "today_energy",
+        ),
+        (
+            "sensor.energyzero_today_energy_average_price",
+            "today_energy_average_price",
+            "today_energy",
+        ),
+        (
+            "sensor.energyzero_today_energy_max_price",
+            "today_energy_max_price",
+            "today_energy",
+        ),
+        (
+            "sensor.energyzero_today_energy_highest_price_time",
+            "today_energy_highest_price_time",
+            "today_energy",
+        ),
+        (
+            "sensor.energyzero_today_gas_current_hour_price",
+            "today_gas_current_hour_price",
+            "today_gas",
+        ),
+    ],
+)
+async def test_sensor(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+    entity_unique_id: str,
+    device_identifier: str,
 ) -> None:
     """Test the EnergyZero - Energy sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot
+    assert (entity_entry := entity_registry.async_get(entity_id))
+    assert entity_entry == snapshot(exclude=props("unique_id"))
+    assert entity_entry.unique_id == f"{entry_id}_{entity_unique_id}"
 
-    # Current energy price sensor
-    state = hass.states.get("sensor.energyzero_today_energy_current_hour_price")
-    entry = entity_registry.async_get(
-        "sensor.energyzero_today_energy_current_hour_price"
-    )
-    assert entry
-    assert state
-    assert entry.unique_id == f"{entry_id}_today_energy_current_hour_price"
-    assert state.state == "0.49"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy market price Current hour"
-    )
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
-    )
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert ATTR_DEVICE_CLASS not in state.attributes
-    assert ATTR_ICON not in state.attributes
-
-    # Average price sensor
-    state = hass.states.get("sensor.energyzero_today_energy_average_price")
-    entry = entity_registry.async_get("sensor.energyzero_today_energy_average_price")
-    assert entry
-    assert state
-    assert entry.unique_id == f"{entry_id}_today_energy_average_price"
-    assert state.state == "0.37"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Energy market price Average - today"
-    )
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
-    )
-    assert ATTR_DEVICE_CLASS not in state.attributes
-    assert ATTR_ICON not in state.attributes
-
-    # Highest price sensor
-    state = hass.states.get("sensor.energyzero_today_energy_max_price")
-    entry = entity_registry.async_get("sensor.energyzero_today_energy_max_price")
-    assert entry
-    assert state
-    assert entry.unique_id == f"{entry_id}_today_energy_max_price"
-    assert state.state == "0.55"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Energy market price Highest price - today"
-    )
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
-    )
-    assert ATTR_DEVICE_CLASS not in state.attributes
-    assert ATTR_ICON not in state.attributes
-
-    # Highest price time sensor
-    state = hass.states.get("sensor.energyzero_today_energy_highest_price_time")
-    entry = entity_registry.async_get(
-        "sensor.energyzero_today_energy_highest_price_time"
-    )
-    assert entry
-    assert state
-    assert entry.unique_id == f"{entry_id}_today_energy_highest_price_time"
-    assert state.state == "2022-12-07T16:00:00+00:00"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Energy market price Time of highest price - today"
-    )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
-    assert ATTR_ICON not in state.attributes
-
-    assert entry.device_id
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry
-    assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_today_energy")}
-    assert device_entry.manufacturer == "EnergyZero"
-    assert device_entry.name == "Energy market price"
-    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
-    assert not device_entry.model
-    assert not device_entry.sw_version
+    assert entity_entry.device_id
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    assert device_entry == snapshot(exclude=props("identifiers"))
+    assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_{device_identifier}")}
 
 
-@pytest.mark.freeze_time("2022-12-07 15:00:00")
-async def test_gas_today(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test the EnergyZero - Gas sensors."""
-    entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    # Current gas price sensor
-    state = hass.states.get("sensor.energyzero_today_gas_current_hour_price")
-    entry = entity_registry.async_get("sensor.energyzero_today_gas_current_hour_price")
-    assert entry
-    assert state
-    assert entry.unique_id == f"{entry_id}_today_gas_current_hour_price"
-    assert state.state == "1.47"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Gas market price Current hour"
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}"
-    )
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert ATTR_DEVICE_CLASS not in state.attributes
-    assert ATTR_ICON not in state.attributes
-
-    assert entry.device_id
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry
-    assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_today_gas")}
-    assert device_entry.manufacturer == "EnergyZero"
-    assert device_entry.name == "Gas market price"
-    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
-    assert not device_entry.model
-    assert not device_entry.sw_version
-
-
-@pytest.mark.freeze_time("2022-12-07 15:00:00")
-async def test_no_gas_today(
-    hass: HomeAssistant, mock_energyzero: MagicMock, init_integration: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_no_gas_today(hass: HomeAssistant, mock_energyzero: MagicMock) -> None:
     """Test the EnergyZero - No gas sensors available."""
     await async_setup_component(hass, "homeassistant", {})
 
@@ -175,6 +87,5 @@ async def test_no_gas_today(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.energyzero_today_gas_current_hour_price")
-    assert state
+    assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
     assert state.state == STATE_UNKNOWN

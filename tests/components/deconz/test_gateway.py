@@ -211,8 +211,8 @@ async def test_gateway_device_configuration_url_when_addon(
 
 
 async def test_connection_status_signalling(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Make sure that connection status triggers a dispatcher send."""
     data = {
         "sensors": {
@@ -293,7 +293,7 @@ async def test_get_deconz_session(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, raised_exception",
+    ("side_effect", "raised_exception"),
     [
         (asyncio.TimeoutError, CannotConnect),
         (pydeconz.RequestError, CannotConnect),
@@ -301,7 +301,9 @@ async def test_get_deconz_session(hass: HomeAssistant) -> None:
         (pydeconz.Unauthorized, AuthenticationRequired),
     ],
 )
-async def test_get_deconz_session_fails(hass, side_effect, raised_exception):
+async def test_get_deconz_session_fails(
+    hass: HomeAssistant, side_effect, raised_exception
+) -> None:
     """Failed call."""
     with patch(
         "pydeconz.DeconzSession.refresh_state",

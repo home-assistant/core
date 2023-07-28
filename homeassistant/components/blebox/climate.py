@@ -22,6 +22,7 @@ from .const import DOMAIN, PRODUCT
 SCAN_INTERVAL = timedelta(seconds=5)
 
 BLEBOX_TO_HVACMODE = {
+    None: None,
     0: HVACMode.OFF,
     1: HVACMode.HEAT,
     2: HVACMode.COOL,
@@ -58,13 +59,15 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
     @property
     def hvac_modes(self):
         """Return list of supported HVAC modes."""
-        return [HVACMode.OFF, self.hvac_mode]
+        return [HVACMode.OFF, BLEBOX_TO_HVACMODE[self._feature.mode]]
 
     @property
     def hvac_mode(self):
         """Return the desired HVAC mode."""
         if self._feature.is_on is None:
             return None
+        if not self._feature.is_on:
+            return HVACMode.OFF
         if self._feature.mode is not None:
             return BLEBOX_TO_HVACMODE[self._feature.mode]
         return HVACMode.HEAT if self._feature.is_on else HVACMode.OFF

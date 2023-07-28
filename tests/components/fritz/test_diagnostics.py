@@ -21,7 +21,7 @@ async def test_entry_diagnostics(
     hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
-):
+) -> None:
     """Test config entry diagnostics."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
@@ -50,7 +50,7 @@ async def test_entry_diagnostics(
                 for _, device in avm_wrapper.devices.items()
             ],
             "connection_type": "WANPPPConnection",
-            "current_firmware": "256.07.29",
+            "current_firmware": "7.29",
             "discovered_services": [
                 "DeviceInfo1",
                 "Hosts1",

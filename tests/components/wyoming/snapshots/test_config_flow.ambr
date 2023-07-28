@@ -1,0 +1,123 @@
+# serializer version: 1
+# name: test_hassio_addon_discovery
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'hassio',
+      'unique_id': '1234',
+    }),
+    'data': dict({
+      'host': 'mock-piper',
+      'port': 10200,
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'wyoming',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'host': 'mock-piper',
+        'port': 10200,
+      }),
+      'disabled_by': None,
+      'domain': 'wyoming',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'hassio',
+      'title': 'Piper',
+      'unique_id': '1234',
+      'version': 1,
+    }),
+    'title': 'Piper',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_hassio_addon_discovery[info0]
+  FlowResultSnapshot({
+    'context': dict({
+      'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'source': 'hassio',
+      'title_placeholders': dict({
+        'name': 'Piper',
+      }),
+      'unique_id': '1234',
+    }),
+    'data': dict({
+      'host': 'mock-piper',
+      'port': 10200,
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'wyoming',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'host': 'mock-piper',
+        'port': 10200,
+      }),
+      'disabled_by': None,
+      'domain': 'wyoming',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'hassio',
+      'title': 'Piper',
+      'unique_id': '1234',
+      'version': 1,
+    }),
+    'title': 'Piper',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_hassio_addon_discovery[info1]
+  FlowResultSnapshot({
+    'context': dict({
+      'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'source': 'hassio',
+      'title_placeholders': dict({
+        'name': 'Piper',
+      }),
+      'unique_id': '1234',
+    }),
+    'data': dict({
+      'host': 'mock-piper',
+      'port': 10200,
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'wyoming',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'host': 'mock-piper',
+        'port': 10200,
+      }),
+      'disabled_by': None,
+      'domain': 'wyoming',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'hassio',
+      'title': 'Piper',
+      'unique_id': '1234',
+      'version': 1,
+    }),
+    'title': 'Piper',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---

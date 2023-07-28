@@ -38,7 +38,7 @@ def create_motion_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_unload_on_stop(hass, utcnow):
+async def test_unload_on_stop(hass: HomeAssistant, utcnow) -> None:
     """Test async_unload is called on stop."""
     await setup_test_component(hass, create_motion_sensor_service)
     with patch(
@@ -50,7 +50,7 @@ async def test_unload_on_stop(hass, utcnow):
     assert async_unlock_mock.called
 
 
-async def test_async_remove_entry(hass: HomeAssistant):
+async def test_async_remove_entry(hass: HomeAssistant) -> None:
     """Test unpairing a component."""
     helper = await setup_test_component(hass, create_motion_sensor_service)
     controller = helper.pairing.controller
@@ -104,7 +104,7 @@ async def test_device_remove_devices(
     )
 
 
-async def test_offline_device_raises(hass, controller):
+async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
     """Test an offline device raises ConfigEntryNotReady."""
 
     is_connected = False
@@ -155,7 +155,9 @@ async def test_offline_device_raises(hass, controller):
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
-async def test_ble_device_only_checks_is_available(hass, controller):
+async def test_ble_device_only_checks_is_available(
+    hass: HomeAssistant, controller
+) -> None:
     """Test a BLE device only checks is_available."""
 
     is_available = False

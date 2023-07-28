@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_no_domain_config(hass: HomeAssistant):
+async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:
     """Test setup without configuration is noop."""
     result = await async_setup_component(hass, DOMAIN, {})
 
@@ -19,7 +19,7 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant):
     assert DOMAIN not in hass.data
 
 
-async def test_async_setup_imports_from_config(hass: HomeAssistant):
+async def test_async_setup_imports_from_config(hass: HomeAssistant) -> None:
     """Test that specifying config will setup an entry."""
     with patch(
         "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
@@ -44,7 +44,7 @@ async def test_async_setup_imports_from_config(hass: HomeAssistant):
     assert len(mock_async_setup_entry.mock_calls) == 1
 
 
-async def test_async_setup_entry_sets_up_light(hass: HomeAssistant):
+async def test_async_setup_entry_sets_up_light(hass: HomeAssistant) -> None:
     """Test that configuring entry sets up light domain."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -66,7 +66,7 @@ async def test_async_setup_entry_sets_up_light(hass: HomeAssistant):
     assert len(mock_light_async_setup_entry.mock_calls) == 1
 
 
-async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant):
+async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant) -> None:
     """Test that configuring entry handles Plum Cloud authentication error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -86,7 +86,7 @@ async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant):
     assert len(mock_light_async_setup_entry.mock_calls) == 0
 
 
-async def test_async_setup_entry_handles_http_error(hass: HomeAssistant):
+async def test_async_setup_entry_handles_http_error(hass: HomeAssistant) -> None:
     """Test that configuring entry handles HTTP error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

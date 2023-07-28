@@ -13,8 +13,8 @@ from homeassistant.const import CONF_COMMAND
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 CONF_ARGS = "args"
 CONF_META = "meta"
@@ -68,6 +68,7 @@ class CommandLineAuthProvider(AuthProvider):
                 *self.config[CONF_ARGS],
                 env=env,
                 stdout=asyncio.subprocess.PIPE if self.config[CONF_META] else None,
+                close_fds=False,  # required for posix_spawn
             )
             stdout, _ = await process.communicate()
         except OSError as err:

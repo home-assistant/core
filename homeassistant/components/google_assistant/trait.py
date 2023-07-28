@@ -1,6 +1,7 @@
 """Implement the Google Smart Home traits."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import logging
 from typing import Any, TypeVar
 
@@ -67,7 +68,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
-from homeassistant.util import color as color_util, dt
+from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -75,7 +76,6 @@ from homeassistant.util.percentage import (
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
-    CHALLENGE_ACK_NEEDED,
     CHALLENGE_FAILED_PIN_NEEDED,
     CHALLENGE_PIN_NEEDED,
     ERR_ALREADY_ARMED,
@@ -197,15 +197,21 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
     return items[next_item]
 
 
-class _Trait:
+class _Trait(ABC):
     """Represents a Trait inside Google Assistant skill."""
 
+    name: str
     commands: list[str] = []
 
     @staticmethod
     def might_2fa(domain, features, device_class):
         """Return if the trait might ask for 2FA."""
         return False
+
+    @staticmethod
+    @abstractmethod
+    def supported(domain, features, device_class, attributes):
+        """Test if state is supported."""
 
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
@@ -832,7 +838,7 @@ class TemperatureControlTrait(_Trait):
             "temperatureUnitForUX": _google_temp_unit(
                 self.hass.config.units.temperature_unit
             ),
-            "queryOnlyTemperatureSetting": True,
+            "queryOnlyTemperatureControl": True,
             "temperatureRange": {
                 "minThresholdCelsius": -100,
                 "maxThresholdCelsius": 100,
@@ -916,9 +922,28 @@ class TemperatureSettingTrait(_Trait):
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
         response = {}
-        response["thermostatTemperatureUnit"] = _google_temp_unit(
-            self.hass.config.units.temperature_unit
+        attrs = self.state.attributes
+        unit = self.hass.config.units.temperature_unit
+        response["thermostatTemperatureUnit"] = _google_temp_unit(unit)
+
+        min_temp = round(
+            TemperatureConverter.convert(
+                float(attrs[climate.ATTR_MIN_TEMP]),
+                unit,
+                UnitOfTemperature.CELSIUS,
+            )
         )
+        max_temp = round(
+            TemperatureConverter.convert(
+                float(attrs[climate.ATTR_MAX_TEMP]),
+                unit,
+                UnitOfTemperature.CELSIUS,
+            )
+        )
+        response["thermostatTemperatureRange"] = {
+            "minThresholdCelsius": min_temp,
+            "maxThresholdCelsius": max_temp,
+        }
 
         modes = self.climate_google_modes
 
@@ -983,24 +1008,22 @@ class TemperatureSettingTrait(_Trait):
                     ),
                     1,
                 )
-            else:
-                if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
-                    target_temp = round(
-                        TemperatureConverter.convert(
-                            target_temp, unit, UnitOfTemperature.CELSIUS
-                        ),
-                        1,
-                    )
-                    response["thermostatTemperatureSetpointHigh"] = target_temp
-                    response["thermostatTemperatureSetpointLow"] = target_temp
-        else:
-            if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
-                response["thermostatTemperatureSetpoint"] = round(
+            elif (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
+                target_temp = round(
                     TemperatureConverter.convert(
                         target_temp, unit, UnitOfTemperature.CELSIUS
                     ),
                     1,
                 )
+                response["thermostatTemperatureSetpointHigh"] = target_temp
+                response["thermostatTemperatureSetpointLow"] = target_temp
+        elif (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
+            response["thermostatTemperatureSetpoint"] = round(
+                TemperatureConverter.convert(
+                    target_temp, unit, UnitOfTemperature.CELSIUS
+                ),
+                1,
+            )
 
         return response
 
@@ -1191,9 +1214,12 @@ class HumiditySettingTrait(_Trait):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
 
         elif domain == humidifier.DOMAIN:
-            target_humidity = attrs.get(humidifier.ATTR_HUMIDITY)
+            target_humidity: int | None = attrs.get(humidifier.ATTR_HUMIDITY)
             if target_humidity is not None:
-                response["humiditySetpointPercent"] = round(float(target_humidity))
+                response["humiditySetpointPercent"] = target_humidity
+            current_humidity: int | None = attrs.get(humidifier.ATTR_CURRENT_HUMIDITY)
+            if current_humidity is not None:
+                response["humidityAmbientPercent"] = current_humidity
 
         return response
 
@@ -2131,14 +2157,6 @@ def _verify_pin_challenge(data, state, challenge):
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
 
 
-def _verify_ack_challenge(data, state, challenge):
-    """Verify an ack challenge."""
-    if not data.config.should_2fa(state):
-        return
-    if not challenge or not challenge.get("ack"):
-        raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)
-
-
 MEDIA_COMMAND_SUPPORT_MAPPING = {
     COMMAND_MEDIA_NEXT: media_player.SUPPORT_NEXT_TRACK,
     COMMAND_MEDIA_PAUSE: media_player.SUPPORT_PAUSE,
@@ -2220,7 +2238,7 @@ class TransportControlTrait(_Trait):
             rel_position = params["relativePositionMs"] / 1000
             seconds_since = 0  # Default to 0 seconds
             if self.state.state == STATE_PLAYING:
-                now = dt.utcnow()
+                now = dt_util.utcnow()
                 upd_at = self.state.attributes.get(
                     media_player.ATTR_MEDIA_POSITION_UPDATED_AT, now
                 )
@@ -2395,6 +2413,23 @@ class SensorStateTrait(_Trait):
     name = TRAIT_SENSOR_STATE
     commands: list[str] = []
 
+    def _air_quality_description_for_aqi(self, aqi):
+        if aqi is None or aqi.isnumeric() is False:
+            return "unknown"
+        aqi = int(aqi)
+        if aqi <= 50:
+            return "healthy"
+        if aqi <= 100:
+            return "moderate"
+        if aqi <= 150:
+            return "unhealthy for sensitive groups"
+        if aqi <= 200:
+            return "unhealthy"
+        if aqi <= 300:
+            return "very unhealthy"
+
+        return "hazardous"
+
     @classmethod
     def supported(cls, domain, features, device_class, _):
         """Test if state is supported."""
@@ -2403,20 +2438,44 @@ class SensorStateTrait(_Trait):
     def sync_attributes(self):
         """Return attributes for a sync request."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        if (data := self.sensor_types.get(device_class)) is not None:
-            return {
-                "sensorStatesSupported": {
-                    "name": data[0],
-                    "numericCapabilities": {"rawValueUnit": data[1]},
-                }
+        data = self.sensor_types.get(device_class)
+
+        if device_class is None or data is None:
+            return {}
+
+        sensor_state = {
+            "name": data[0],
+            "numericCapabilities": {"rawValueUnit": data[1]},
+        }
+
+        if device_class == sensor.SensorDeviceClass.AQI:
+            sensor_state["descriptiveCapabilities"] = {
+                "availableStates": [
+                    "healthy",
+                    "moderate",
+                    "unhealthy for sensitive groups",
+                    "unhealthy",
+                    "very unhealthy",
+                    "hazardous",
+                    "unknown",
+                ],
             }
+
+        return {"sensorStatesSupported": [sensor_state]}
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        if (data := self.sensor_types.get(device_class)) is not None:
-            return {
-                "currentSensorStateData": [
-                    {"name": data[0], "rawValue": self.state.state}
-                ]
-            }
+        data = self.sensor_types.get(device_class)
+
+        if device_class is None or data is None:
+            return {}
+
+        sensor_data = {"name": data[0], "rawValue": self.state.state}
+
+        if device_class == sensor.SensorDeviceClass.AQI:
+            sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
+                self.state.state
+            )
+
+        return {"currentSensorStateData": [sensor_data]}

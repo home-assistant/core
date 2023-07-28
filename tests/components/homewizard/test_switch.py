@@ -1,8 +1,7 @@
 """Test the update coordinator for HomeWizard."""
-
 from unittest.mock import AsyncMock, patch
 
-from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
 from homewizard_energy.models import State, System
 import pytest
 
@@ -18,6 +17,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
@@ -25,8 +25,8 @@ from .generator import get_mock_device
 
 
 async def test_switch_entity_not_loaded_when_not_available(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads smr version."""
 
     api = get_mock_device()
@@ -49,10 +49,12 @@ async def test_switch_entity_not_loaded_when_not_available(
     assert state_switch_lock is None
 
 
-async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_entry):
+async def test_switch_loads_entities(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads smr version."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(
         return_value=State.from_dict({"power_on": False, "switch_lock": False})
     )
@@ -102,10 +104,12 @@ async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_e
     assert ATTR_DEVICE_CLASS not in state_switch_lock.attributes
 
 
-async def test_switch_power_on_off(hass, mock_config_entry_data, mock_config_entry):
+async def test_switch_power_on_off(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity turns switch on and off."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(
         return_value=State.from_dict({"power_on": False, "switch_lock": False})
     )
@@ -156,11 +160,11 @@ async def test_switch_power_on_off(hass, mock_config_entry_data, mock_config_ent
 
 
 async def test_switch_lock_power_on_off(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity turns switch on and off."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(
         return_value=State.from_dict({"power_on": False, "switch_lock": False})
     )
@@ -220,11 +224,11 @@ async def test_switch_lock_power_on_off(
 
 
 async def test_switch_lock_sets_power_on_unavailable(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity turns switch on and off."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(
         return_value=State.from_dict({"power_on": True, "switch_lock": False})
     )
@@ -289,7 +293,9 @@ async def test_switch_lock_sets_power_on_unavailable(
         assert len(api.state_set.mock_calls) == 2
 
 
-async def test_cloud_connection_on_off(hass, mock_config_entry_data, mock_config_entry):
+async def test_cloud_connection_on_off(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity turns switch on and off."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
@@ -350,8 +356,8 @@ async def test_cloud_connection_on_off(hass, mock_config_entry_data, mock_config
 
 
 async def test_switch_handles_requesterror(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity raises HomeAssistantError when RequestError was raised."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
@@ -427,8 +433,8 @@ async def test_switch_handles_requesterror(
 
 
 async def test_switch_handles_disablederror(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity raises HomeAssistantError when Disabled was raised."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
@@ -501,3 +507,39 @@ async def test_switch_handles_disablederror(
                 {"entity_id": "switch.product_name_aabbccddeeff_cloud_connection"},
                 blocking=True,
             )
+
+
+async def test_switch_handles_unsupportedrrror(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
+    """Test entity raises HomeAssistantError when Disabled was raised."""
+
+    api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
+    api.state = AsyncMock(side_effect=UnsupportedError())
+    api.system = AsyncMock(side_effect=UnsupportedError())
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
+            == STATE_UNAVAILABLE
+        )
+
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
+            == STATE_UNAVAILABLE
+        )
+
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff").state
+            == STATE_UNAVAILABLE
+        )

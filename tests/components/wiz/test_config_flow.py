@@ -111,7 +111,7 @@ async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_base",
+    ("side_effect", "error_base"),
     [
         (WizLightTimeOutError, "bulb_time_out"),
         (WizLightConnectionError, "no_wiz_light"),
@@ -119,7 +119,9 @@ async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
         (ConnectionRefusedError, "cannot_connect"),
     ],
 )
-async def test_user_form_exceptions(hass, side_effect, error_base):
+async def test_user_form_exceptions(
+    hass: HomeAssistant, side_effect, error_base
+) -> None:
     """Test all user exceptions in the flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -163,13 +165,15 @@ async def test_form_updates_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
-async def test_discovered_by_dhcp_connection_fails(hass, source, data):
+async def test_discovered_by_dhcp_connection_fails(
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we abort on connection failure."""
     with patch(
         "homeassistant.components.wiz.wizlight.getBulbConfig",
@@ -185,7 +189,7 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data, bulb_type, extended_white_range, name",
+    ("source", "data", "bulb_type", "extended_white_range", "name"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -246,8 +250,8 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
     ],
 )
 async def test_discovered_by_dhcp_or_integration_discovery(
-    hass, source, data, bulb_type, extended_white_range, name
-):
+    hass: HomeAssistant, source, data, bulb_type, extended_white_range, name
+) -> None:
     """Test we can configure when discovered from dhcp or discovery."""
     with _patch_wizlight(
         device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
@@ -284,15 +288,15 @@ async def test_discovered_by_dhcp_or_integration_discovery(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test dhcp or discovery updates existing host."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -313,15 +317,15 @@ async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_retry(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test dhcp or discovery kicks off setup when in retry."""
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     bulb.getMac = AsyncMock(side_effect=OSError)
@@ -510,13 +514,13 @@ async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
-async def test_discovered_during_onboarding(hass, source, data):
+async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -> None:
     """Test dhcp or discovery during onboarding creates the config entry."""
     with _patch_wizlight(), patch(
         "homeassistant.components.wiz.async_setup_entry",

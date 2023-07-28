@@ -11,7 +11,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -39,7 +45,6 @@ class ElgatoSensorEntityDescription(
 SENSORS = [
     ElgatoSensorEntityDescription(
         key="battery",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
@@ -47,6 +52,57 @@ SENSORS = [
         suggested_display_precision=0,
         has_fn=lambda x: x.battery is not None,
         value_fn=lambda x: x.battery.level if x.battery else None,
+    ),
+    ElgatoSensorEntityDescription(
+        key="voltage",
+        translation_key="voltage",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=2,
+        has_fn=lambda x: x.battery is not None,
+        value_fn=lambda x: x.battery.voltage if x.battery else None,
+    ),
+    ElgatoSensorEntityDescription(
+        key="input_charge_current",
+        translation_key="input_charge_current",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        has_fn=lambda x: x.battery is not None,
+        value_fn=lambda x: x.battery.input_charge_current if x.battery else None,
+    ),
+    ElgatoSensorEntityDescription(
+        key="charge_power",
+        translation_key="charge_power",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        has_fn=lambda x: x.battery is not None,
+        value_fn=lambda x: x.battery.charge_power if x.battery else None,
+    ),
+    ElgatoSensorEntityDescription(
+        key="input_charge_voltage",
+        translation_key="input_charge_voltage",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        has_fn=lambda x: x.battery is not None,
+        value_fn=lambda x: x.battery.input_charge_voltage if x.battery else None,
     ),
 ]
 

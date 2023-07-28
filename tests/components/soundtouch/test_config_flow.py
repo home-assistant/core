@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from requests import RequestException
+import requests_mock
 from requests_mock import ANY, Mocker
 
 from homeassistant.components.soundtouch.const import DOMAIN
@@ -49,7 +50,7 @@ async def test_user_flow_create_entry(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, requests_mock: Mocker
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
     """Test a manual user flow with an invalid host."""
     requests_mock.get(ANY, exc=RequestException())

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, Protocol, cast
 
@@ -221,7 +221,7 @@ class BaseNotificationService:
     registered_targets: dict[str, Any]
 
     @property
-    def targets(self) -> dict[str, Any] | None:
+    def targets(self) -> Mapping[str, Any] | None:
         """Return a dictionary of registered targets."""
         return None
 

@@ -42,7 +42,9 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.OFF: STATE_OFF,
 }
 
-LITTER_BOX_ENTITY = StateVacuumEntityDescription("litter_box", name="Litter box")
+LITTER_BOX_ENTITY = StateVacuumEntityDescription(
+    "litter_box", translation_key="litter_box"
+)
 
 
 async def async_setup_entry(

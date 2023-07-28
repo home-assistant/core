@@ -106,12 +106,28 @@ def _safe_get_message(record: logging.LogRecord) -> str:
     """
     try:
         return record.getMessage()
-    except Exception:  # pylint: disable=broad-except
-        return f"Bad logger message: {record.msg} ({record.args})"
+    except Exception as ex:  # pylint: disable=broad-except
+        try:
+            return f"Bad logger message: {record.msg} ({record.args})"
+        except Exception:  # pylint: disable=broad-except
+            return f"Bad logger message: {ex}"
 
 
 class LogEntry:
     """Store HA log entries."""
+
+    __slots__ = (
+        "first_occurred",
+        "timestamp",
+        "name",
+        "level",
+        "message",
+        "exception",
+        "root_cause",
+        "source",
+        "count",
+        "key",
+    )
 
     def __init__(self, record: logging.LogRecord, source: tuple[str, int]) -> None:
         """Initialize a log entry."""
@@ -131,7 +147,7 @@ class LogEntry:
                 self.root_cause = str(traceback.extract_tb(tb)[-1])
         self.source = source
         self.count = 1
-        self.hash = str([self.name, *self.source, self.root_cause])
+        self.key = (self.name, source, self.root_cause)
 
     def to_dict(self):
         """Convert object into dict to maintain backward compatibility."""
@@ -157,7 +173,7 @@ class DedupStore(OrderedDict):
 
     def add_entry(self, entry: LogEntry) -> None:
         """Add a new entry."""
-        key = entry.hash
+        key = entry.key
 
         if key in self:
             # Update stored entry

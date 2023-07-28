@@ -27,6 +27,7 @@ def mock_litejet():
         mock_lj.switch_released_callbacks = {}
         mock_lj.load_activated_callbacks = {}
         mock_lj.load_deactivated_callbacks = {}
+        mock_lj.connected_changed_callbacks = []
 
         def on_switch_pressed(number, callback):
             mock_lj.switch_pressed_callbacks[number] = callback
@@ -40,10 +41,14 @@ def mock_litejet():
         def on_load_deactivated(number, callback):
             mock_lj.load_deactivated_callbacks[number] = callback
 
+        def on_connected_changed(callback):
+            mock_lj.connected_changed_callbacks.append(callback)
+
         mock_lj.on_switch_pressed.side_effect = on_switch_pressed
         mock_lj.on_switch_released.side_effect = on_switch_released
         mock_lj.on_load_activated.side_effect = on_load_activated
         mock_lj.on_load_deactivated.side_effect = on_load_deactivated
+        mock_lj.on_connected_changed.side_effect = on_connected_changed
 
         mock_lj.open = AsyncMock()
         mock_lj.close = AsyncMock()
@@ -69,5 +74,12 @@ def mock_litejet():
         mock_lj.start_time = dt_util.utcnow()
         mock_lj.last_delta = timedelta(0)
         mock_lj.connected = True
+
+        def connected_changed(connected: bool, reason: str) -> None:
+            mock_lj.connected = connected
+            for callback in mock_lj.connected_changed_callbacks:
+                callback(connected, reason)
+
+        mock_lj.connected_changed = connected_changed
 
         yield mock_lj

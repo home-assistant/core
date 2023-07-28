@@ -308,11 +308,12 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_client_control()
 
         ssids = (
-            set(self.controller.api.wlans)
+            {wlan.name for wlan in self.controller.api.wlans.values()}
             | {
                 f"{wlan.name}{wlan.name_combine_suffix}"
                 for wlan in self.controller.api.wlans.values()
                 if not wlan.name_combine_enabled
+                and wlan.name_combine_suffix is not None
             }
             | {
                 wlan["name"]

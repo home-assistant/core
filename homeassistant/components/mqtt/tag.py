@@ -20,6 +20,7 @@ from .discovery import MQTTDiscoveryPayload
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
+    async_handle_schema_error,
     async_setup_entry_helper,
     send_discovery_done,
     update_device,
@@ -54,7 +55,7 @@ async def _async_setup_tag(
     hass: HomeAssistant,
     config: ConfigType,
     config_entry: ConfigEntry,
-    discovery_data: dict,
+    discovery_data: DiscoveryInfoType,
 ) -> None:
     """Set up the MQTT tag scanner."""
     discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
@@ -119,7 +120,11 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT tag discovery updates."""
         # Update tag scanner
-        config: DiscoveryInfoType = PLATFORM_SCHEMA(discovery_data)
+        try:
+            config: DiscoveryInfoType = PLATFORM_SCHEMA(discovery_data)
+        except vol.Invalid as err:
+            async_handle_schema_error(discovery_data, err)
+            return
         self._config = config
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE),

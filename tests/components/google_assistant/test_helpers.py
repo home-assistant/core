@@ -1,6 +1,7 @@
 """Test Google Assistant helpers."""
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -16,7 +17,7 @@ from homeassistant.components.google_assistant.const import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import MockConfig
 
@@ -127,7 +128,7 @@ async def test_config_local_sdk(
     assert config.is_local_connected is True
     with patch(
         "homeassistant.components.google_assistant.helpers.utcnow",
-        return_value=dt.utcnow() + timedelta(seconds=90),
+        return_value=dt_util.utcnow() + timedelta(seconds=90),
     ):
         assert config.is_local_connected is False
 
@@ -219,7 +220,9 @@ async def test_config_local_sdk_if_ssl_enabled(
     assert await resp.read() == b""
 
 
-async def test_agent_user_id_storage(hass, hass_storage):
+async def test_agent_user_id_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test a disconnect message."""
 
     hass_storage["google_assistant"] = {
@@ -252,7 +255,7 @@ async def test_agent_user_id_storage(hass, hass_storage):
     }
 
     async def _check_after_delay(data):
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
         await hass.async_block_till_done()
 
         assert (
@@ -302,7 +305,7 @@ async def test_agent_user_id_connect() -> None:
 
 
 @pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
-async def test_report_state_all(agents):
+async def test_report_state_all(agents) -> None:
     """Test a disconnect message."""
     config = MockConfig(agent_user_ids=agents)
     data = {}
@@ -312,10 +315,10 @@ async def test_report_state_all(agents):
 
 
 @pytest.mark.parametrize(
-    "agents, result",
+    ("agents", "result"),
     [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
 )
-async def test_sync_entities_all(agents, result):
+async def test_sync_entities_all(agents, result) -> None:
     """Test sync entities ."""
     config = MockConfig(agent_user_ids=set(agents.keys()))
     with patch.object(
@@ -328,7 +331,7 @@ async def test_sync_entities_all(agents, result):
         assert res == result
 
 
-def test_supported_features_string(caplog):
+def test_supported_features_string(caplog: pytest.LogCaptureFixture) -> None:
     """Test bad supported features."""
     entity = helpers.GoogleEntity(
         None,
@@ -353,7 +356,11 @@ def test_request_data() -> None:
     assert data.is_local_request is False
 
 
-async def test_config_local_sdk_allow_min_version(hass, hass_client, caplog):
+async def test_config_local_sdk_allow_min_version(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the local SDK."""
     version = str(helpers.LOCAL_SDK_MIN_VERSION)
     assert await async_setup_component(hass, "webhook", {})
@@ -393,7 +400,12 @@ async def test_config_local_sdk_allow_min_version(hass, hass_client, caplog):
 
 
 @pytest.mark.parametrize("version", (None, "2.1.4"))
-async def test_config_local_sdk_warn_version(hass, hass_client, caplog, version):
+async def test_config_local_sdk_warn_version(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    version,
+) -> None:
     """Test the local SDK."""
     assert await async_setup_component(hass, "webhook", {})
 

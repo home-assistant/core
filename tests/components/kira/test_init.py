@@ -54,6 +54,8 @@ async def test_kira_empty_config(hass: HomeAssistant) -> None:
 async def test_kira_setup(hass: HomeAssistant) -> None:
     """Ensure platforms are loaded correctly."""
     await async_setup_component(hass, kira.DOMAIN, TEST_CONFIG)
+    await hass.async_block_till_done()
+
     assert len(hass.data[kira.DOMAIN]["sensor"]) == 2
     assert sorted(hass.data[kira.DOMAIN]["sensor"].keys()) == [
         "kira",
@@ -66,14 +68,14 @@ async def test_kira_setup(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_kira_creates_codes(work_dir):
+async def test_kira_creates_codes(work_dir) -> None:
     """Kira module should create codes file if missing."""
     code_path = os.path.join(work_dir, "codes.yaml")
     kira.load_codes(code_path)
     assert os.path.exists(code_path), "Kira component didn't create codes file"
 
 
-async def test_load_codes(work_dir):
+async def test_load_codes(work_dir) -> None:
     """Kira should ignore invalid codes."""
     code_path = os.path.join(work_dir, "codes.yaml")
     with open(code_path, "w") as code_file:

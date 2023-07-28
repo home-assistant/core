@@ -13,7 +13,7 @@ from . import com_port, patch_init_modem
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(hass: HomeAssistant):
+async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test Modem Caller ID entry setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -28,7 +28,7 @@ async def test_setup_entry(hass: HomeAssistant):
     assert entry.state == ConfigEntryState.LOADED
 
 
-async def test_async_setup_entry_not_ready(hass: HomeAssistant):
+async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -44,7 +44,7 @@ async def test_async_setup_entry_not_ready(hass: HomeAssistant):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_unload_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload."""
     entry = MockConfigEntry(
         domain=DOMAIN,

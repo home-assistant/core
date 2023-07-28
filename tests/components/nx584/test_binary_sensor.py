@@ -56,7 +56,9 @@ def client(fake_zones):
 @pytest.mark.usefixtures("client")
 @mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher")
 @mock.patch("homeassistant.components.nx584.binary_sensor.NX584ZoneSensor")
-def test_nx584_sensor_setup_defaults(mock_nx, mock_watcher, hass, fake_zones):
+def test_nx584_sensor_setup_defaults(
+    mock_nx, mock_watcher, hass: HomeAssistant, fake_zones
+) -> None:
     """Test the setup with no configuration."""
     add_entities = mock.MagicMock()
     config = DEFAULT_CONFIG
@@ -70,7 +72,9 @@ def test_nx584_sensor_setup_defaults(mock_nx, mock_watcher, hass, fake_zones):
 @pytest.mark.usefixtures("client")
 @mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher")
 @mock.patch("homeassistant.components.nx584.binary_sensor.NX584ZoneSensor")
-def test_nx584_sensor_setup_full_config(mock_nx, mock_watcher, hass, fake_zones):
+def test_nx584_sensor_setup_full_config(
+    mock_nx, mock_watcher, hass: HomeAssistant, fake_zones
+) -> None:
     """Test the setup with full configuration."""
     config = {
         "host": "foo",
@@ -107,7 +111,7 @@ async def _test_assert_graceful_fail(hass, config):
         ({"zone_types": {"notazone": "motion"}}),
     ],
 )
-async def test_nx584_sensor_setup_bad_config(hass, config):
+async def test_nx584_sensor_setup_bad_config(hass: HomeAssistant, config) -> None:
     """Test the setup with bad configuration."""
     await _test_assert_graceful_fail(hass, config)
 
@@ -120,7 +124,9 @@ async def test_nx584_sensor_setup_bad_config(hass, config):
         pytest.param(IndexError, id="no_partitions"),
     ],
 )
-async def test_nx584_sensor_setup_with_exceptions(hass, exception_type):
+async def test_nx584_sensor_setup_with_exceptions(
+    hass: HomeAssistant, exception_type
+) -> None:
     """Test the setup handles exceptions."""
     nx584_client.Client.return_value.list_zones.side_effect = exception_type
     await _test_assert_graceful_fail(hass, {})
@@ -177,7 +183,7 @@ def test_nx584_zone_sensor_bypassed() -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_process_zone_event(mock_update):
+def test_nx584_watcher_process_zone_event(mock_update) -> None:
     """Test the processing of zone events."""
     zone1 = {"number": 1, "name": "foo", "state": True}
     zone2 = {"number": 2, "name": "bar", "state": True}
@@ -192,7 +198,7 @@ def test_nx584_watcher_process_zone_event(mock_update):
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_process_zone_event_missing_zone(mock_update):
+def test_nx584_watcher_process_zone_event_missing_zone(mock_update) -> None:
     """Test the processing of zone events with missing zones."""
     watcher = nx584.NX584Watcher(None, {})
     watcher._process_zone_event({"zone": 1, "zone_state": False})
@@ -232,7 +238,7 @@ def test_nx584_watcher_run_with_zone_events() -> None:
 
 
 @mock.patch("time.sleep")
-def test_nx584_watcher_run_retries_failures(mock_sleep):
+def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
     """Test the retries with failures."""
     empty_me = [1, 2]
 

@@ -23,17 +23,18 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
+from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 from .util import async_find_existing_service_info, human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_validate_lock_or_error(
-    local_name: str, device: BLEDevice, key: str, slot: str
+    local_name: str, device: BLEDevice, key: str, slot: int
 ) -> dict[str, str]:
     """Validate the lock and return errors if any."""
     if len(key) != 32:
@@ -42,7 +43,7 @@ async def async_validate_lock_or_error(
         bytes.fromhex(key)
     except ValueError:
         return {CONF_KEY: "invalid_key_format"}
-    if not isinstance(slot, int) or slot < 0 or slot > 255:
+    if not isinstance(slot, int) or not 0 <= slot <= 255:
         return {CONF_SLOT: "invalid_key_index"}
     try:
         await PushLock(local_name, device.address, device, key, slot).validate()
@@ -184,7 +185,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_reauth_validate()
 
-    async def async_step_reauth_validate(self, user_input=None):
+    async def async_step_reauth_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle reauth and validation."""
         errors = {}
         reauth_entry = self._reauth_entry
@@ -205,7 +208,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             ):
                 self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data={**reauth_entry.data, **user_input}
+                    reauth_entry, data={**reauth_entry.data, **user_input}
                 )
                 await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
@@ -274,7 +277,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._discovered_devices[discovery.address] = discovery
 
         if not self._discovered_devices:
-            return self.async_abort(reason="no_unconfigured_devices")
+            return self.async_abort(reason="no_devices_found")
 
         data_schema = vol.Schema(
             {
@@ -294,4 +297,47 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> YaleXSBLEOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return YaleXSBLEOptionsFlowHandler(config_entry)
+
+
+class YaleXSBLEOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle YaleXSBLE options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize YaleXSBLE options flow."""
+        self.entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the YaleXSBLE options."""
+        return await self.async_step_device_options()
+
+    async def async_step_device_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the YaleXSBLE devices options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={CONF_ALWAYS_CONNECTED: user_input[CONF_ALWAYS_CONNECTED]},
+            )
+
+        return self.async_show_form(
+            step_id="device_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ALWAYS_CONNECTED,
+                        default=self.entry.options.get(CONF_ALWAYS_CONNECTED, False),
+                    ): bool,
+                }
+            ),
         )

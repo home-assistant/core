@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.rituals_perfume_genie.select import ROOM_SIZE_SUFFIX
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -16,19 +15,19 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import init_integration, mock_config_entry, mock_diffuser
 
 
-async def test_select_entity(hass: HomeAssistant) -> None:
+async def test_select_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and state of the diffuser select entity."""
     config_entry = mock_config_entry(unique_id="select_test")
     diffuser = mock_diffuser(hublot="lot123", room_size_square_meter=60)
     await init_integration(hass, config_entry, [diffuser])
-
-    registry = entity_registry.async_get(hass)
 
     state = hass.states.get("select.genie_room_size")
     assert state
@@ -36,9 +35,9 @@ async def test_select_entity(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_ICON] == "mdi:ruler-square"
     assert state.attributes[ATTR_OPTIONS] == ["15", "30", "60", "100"]
 
-    entry = registry.async_get("select.genie_room_size")
+    entry = entity_registry.async_get("select.genie_room_size")
     assert entry
-    assert entry.unique_id == f"{diffuser.hublot}{ROOM_SIZE_SUFFIX}"
+    assert entry.unique_id == f"{diffuser.hublot}-room_size_square_meter"
     assert entry.unit_of_measurement == AREA_SQUARE_METERS
     assert entry.entity_category == EntityCategory.CONFIG
 

@@ -1,14 +1,21 @@
 """Tests for the Device Registry."""
+from contextlib import nullcontext
 import time
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import RequiredParameterMissing
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from tests.common import MockConfigEntry, flush_store
 
@@ -28,8 +35,11 @@ def update_events(hass):
 
 
 async def test_get_or_create_returns_same_entry(
-    hass, device_registry, area_registry, update_events
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    update_events,
+) -> None:
     """Make sure we do not duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -87,7 +97,9 @@ async def test_get_or_create_returns_same_entry(
     }
 
 
-async def test_requirement_for_identifier_or_connection(device_registry):
+async def test_requirement_for_identifier_or_connection(
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Make sure we do require some descriptor of device."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -108,7 +120,7 @@ async def test_requirement_for_identifier_or_connection(device_registry):
     assert entry
     assert entry2
 
-    with pytest.raises(RequiredParameterMissing) as exc_info:
+    with pytest.raises(HomeAssistantError):
         device_registry.async_get_or_create(
             config_entry_id="1234",
             connections=set(),
@@ -117,10 +129,8 @@ async def test_requirement_for_identifier_or_connection(device_registry):
             model="model",
         )
 
-    assert exc_info.value.parameter_names == ["identifiers", "connections"]
 
-
-async def test_multiple_config_entries(device_registry):
+async def test_multiple_config_entries(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we do not get duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -151,7 +161,9 @@ async def test_multiple_config_entries(device_registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_loading_from_storage(hass, hass_storage):
+async def test_loading_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored devices on start."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": dr.STORAGE_VERSION_MAJOR,
@@ -161,7 +173,7 @@ async def test_loading_from_storage(hass, hass_storage):
                 {
                     "area_id": "12345A",
                     "config_entries": ["1234"],
-                    "configuration_url": "configuration_url",
+                    "configuration_url": "https://example.com/config",
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "disabled_by": dr.DeviceEntryDisabler.USER,
                     "entry_type": dr.DeviceEntryType.SERVICE,
@@ -203,7 +215,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={"1234"},
-        configuration_url="configuration_url",
+        configuration_url="https://example.com/config",
         connections={("Zigbee", "01.23.45.67.89")},
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -244,7 +256,9 @@ async def test_loading_from_storage(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1_to_1_3(hass, hass_storage):
+async def test_migration_1_1_to_1_3(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test migration from version 1.1 to 1.3."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
@@ -368,7 +382,9 @@ async def test_migration_1_1_to_1_3(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_2_to_1_3(hass, hass_storage):
+async def test_migration_1_2_to_1_3(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test migration from version 1.2 to 1.3."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
@@ -482,7 +498,9 @@ async def test_migration_1_2_to_1_3(hass, hass_storage):
     }
 
 
-async def test_removing_config_entries(hass, device_registry, update_events):
+async def test_removing_config_entries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure we do not get duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -512,8 +530,10 @@ async def test_removing_config_entries(hass, device_registry, update_events):
     assert entry2.config_entries == {"123", "456"}
 
     device_registry.async_clear_config_entry("123")
-    entry = device_registry.async_get_device({("bridgeid", "0123")})
-    entry3_removed = device_registry.async_get_device({("bridgeid", "4567")})
+    entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
+    entry3_removed = device_registry.async_get_device(
+        identifiers={("bridgeid", "4567")}
+    )
 
     assert entry.config_entries == {"456"}
     assert entry3_removed is None
@@ -539,8 +559,8 @@ async def test_removing_config_entries(hass, device_registry, update_events):
 
 
 async def test_deleted_device_removing_config_entries(
-    hass, device_registry, update_events
-):
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure we do not get duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -633,7 +653,7 @@ async def test_deleted_device_removing_config_entries(
     assert entry3.id != entry4.id
 
 
-async def test_removing_area_id(device_registry):
+async def test_removing_area_id(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we can clear area id."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -646,13 +666,13 @@ async def test_removing_area_id(device_registry):
     entry_w_area = device_registry.async_update_device(entry.id, area_id="12345A")
 
     device_registry.async_clear_area_id("12345A")
-    entry_wo_area = device_registry.async_get_device({("bridgeid", "0123")})
+    entry_wo_area = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
 
     assert not entry_wo_area.area_id
     assert entry_w_area != entry_wo_area
 
 
-async def test_specifying_via_device_create(device_registry):
+async def test_specifying_via_device_create(device_registry: dr.DeviceRegistry) -> None:
     """Test specifying a via_device and removal of the hub device."""
     via = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -674,11 +694,11 @@ async def test_specifying_via_device_create(device_registry):
     assert light.via_device_id == via.id
 
     device_registry.async_remove_device(via.id)
-    light = device_registry.async_get_device({("hue", "456")})
+    light = device_registry.async_get_device(identifiers={("hue", "456")})
     assert light.via_device_id is None
 
 
-async def test_specifying_via_device_update(device_registry):
+async def test_specifying_via_device_update(device_registry: dr.DeviceRegistry) -> None:
     """Test specifying a via_device and updating."""
     light = device_registry.async_get_or_create(
         config_entry_id="456",
@@ -711,7 +731,9 @@ async def test_specifying_via_device_update(device_registry):
     assert light.via_device_id == via.id
 
 
-async def test_loading_saving_data(hass, device_registry):
+async def test_loading_saving_data(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we load/save data correctly."""
     orig_via = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -801,9 +823,9 @@ async def test_loading_saving_data(hass, device_registry):
     assert list(device_registry.devices) == list(registry2.devices)
     assert list(device_registry.deleted_devices) == list(registry2.deleted_devices)
 
-    new_via = registry2.async_get_device({("hue", "0123")})
-    new_light = registry2.async_get_device({("hue", "456")})
-    new_light4 = registry2.async_get_device({("hue", "abc")})
+    new_via = registry2.async_get_device(identifiers={("hue", "0123")})
+    new_light = registry2.async_get_device(identifiers={("hue", "456")})
+    new_light4 = registry2.async_get_device(identifiers={("hue", "abc")})
 
     assert orig_via == new_via
     assert orig_light == new_light
@@ -819,7 +841,7 @@ async def test_loading_saving_data(hass, device_registry):
         assert old.entry_type is new.entry_type
 
     # Ensure a save/load cycle does not keep suggested area
-    new_kitchen_light = registry2.async_get_device({("hue", "999")})
+    new_kitchen_light = registry2.async_get_device(identifiers={("hue", "999")})
     assert orig_kitchen_light.suggested_area == "Kitchen"
 
     orig_kitchen_light_witout_suggested_area = device_registry.async_update_device(
@@ -829,7 +851,7 @@ async def test_loading_saving_data(hass, device_registry):
     assert orig_kitchen_light_witout_suggested_area == new_kitchen_light
 
 
-async def test_no_unnecessary_changes(device_registry):
+async def test_no_unnecessary_changes(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we do not consider devices changes."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -847,7 +869,7 @@ async def test_no_unnecessary_changes(device_registry):
     assert len(mock_save.mock_calls) == 0
 
 
-async def test_format_mac(device_registry):
+async def test_format_mac(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we normalize mac addresses."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -879,7 +901,9 @@ async def test_format_mac(device_registry):
         assert list(invalid_mac_entry.connections)[0][1] == invalid
 
 
-async def test_update(hass, device_registry, update_events):
+async def test_update(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Verify that we can update some attributes of a device."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -894,7 +918,7 @@ async def test_update(hass, device_registry, update_events):
         updated_entry = device_registry.async_update_device(
             entry.id,
             area_id="12345A",
-            configuration_url="configuration_url",
+            configuration_url="https://example.com/config",
             disabled_by=dr.DeviceEntryDisabler.USER,
             entry_type=dr.DeviceEntryType.SERVICE,
             hw_version="hw_version",
@@ -913,7 +937,7 @@ async def test_update(hass, device_registry, update_events):
     assert updated_entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={"1234"},
-        configuration_url="configuration_url",
+        configuration_url="https://example.com/config",
         connections={("mac", "12:34:56:ab:cd:ef")},
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -929,15 +953,19 @@ async def test_update(hass, device_registry, update_events):
         via_device_id="98765B",
     )
 
-    assert device_registry.async_get_device({("hue", "456")}) is None
-    assert device_registry.async_get_device({("bla", "123")}) is None
+    assert device_registry.async_get_device(identifiers={("hue", "456")}) is None
+    assert device_registry.async_get_device(identifiers={("bla", "123")}) is None
 
-    assert device_registry.async_get_device({("hue", "654")}) == updated_entry
-    assert device_registry.async_get_device({("bla", "321")}) == updated_entry
+    assert (
+        device_registry.async_get_device(identifiers={("hue", "654")}) == updated_entry
+    )
+    assert (
+        device_registry.async_get_device(identifiers={("bla", "321")}) == updated_entry
+    )
 
     assert (
         device_registry.async_get_device(
-            {}, {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
         )
         == updated_entry
     )
@@ -969,7 +997,9 @@ async def test_update(hass, device_registry, update_events):
     }
 
 
-async def test_update_remove_config_entries(hass, device_registry, update_events):
+async def test_update_remove_config_entries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure we do not get duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -1008,7 +1038,7 @@ async def test_update_remove_config_entries(hass, device_registry, update_events
     assert updated_entry.config_entries == {"456"}
     assert removed_entry is None
 
-    removed_entry = device_registry.async_get_device({("bridgeid", "4567")})
+    removed_entry = device_registry.async_get_device(identifiers={("bridgeid", "4567")})
 
     assert removed_entry is None
 
@@ -1033,8 +1063,11 @@ async def test_update_remove_config_entries(hass, device_registry, update_events
 
 
 async def test_update_suggested_area(
-    hass, device_registry, area_registry, update_events
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    update_events,
+) -> None:
     """Verify that we can update the suggested area version of a device."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -1083,7 +1116,9 @@ async def test_update_suggested_area(
     assert updated_entry.suggested_area == "Other"
 
 
-async def test_cleanup_device_registry(hass, device_registry):
+async def test_cleanup_device_registry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test cleanup works."""
     config_entry = MockConfigEntry(domain="hue")
     config_entry.add_to_hass(hass)
@@ -1108,15 +1143,15 @@ async def test_cleanup_device_registry(hass, device_registry):
 
     dr.async_cleanup(hass, device_registry, ent_reg)
 
-    assert device_registry.async_get_device({("hue", "d1")}) is not None
-    assert device_registry.async_get_device({("hue", "d2")}) is not None
-    assert device_registry.async_get_device({("hue", "d3")}) is not None
-    assert device_registry.async_get_device({("something", "d4")}) is None
+    assert device_registry.async_get_device(identifiers={("hue", "d1")}) is not None
+    assert device_registry.async_get_device(identifiers={("hue", "d2")}) is not None
+    assert device_registry.async_get_device(identifiers={("hue", "d3")}) is not None
+    assert device_registry.async_get_device(identifiers={("something", "d4")}) is None
 
 
 async def test_cleanup_device_registry_removes_expired_orphaned_devices(
-    hass, device_registry
-):
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test cleanup removes expired orphaned devices."""
     config_entry = MockConfigEntry(domain="hue")
     config_entry.add_to_hass(hass)
@@ -1197,7 +1232,9 @@ async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
         assert len(mock_call.mock_calls) == 2
 
 
-async def test_restore_device(hass, device_registry, update_events):
+async def test_restore_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure device id is stable."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -1256,7 +1293,9 @@ async def test_restore_device(hass, device_registry, update_events):
     assert "changes" not in update_events[3]
 
 
-async def test_restore_simple_device(hass, device_registry, update_events):
+async def test_restore_simple_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure device id is stable."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -1305,7 +1344,9 @@ async def test_restore_simple_device(hass, device_registry, update_events):
     assert "changes" not in update_events[3]
 
 
-async def test_restore_shared_device(hass, device_registry, update_events):
+async def test_restore_shared_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure device id is stable for shared devices."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -1416,10 +1457,13 @@ async def test_restore_shared_device(hass, device_registry, update_events):
     }
 
 
-async def test_get_or_create_empty_then_set_default_values(device_registry):
+async def test_get_or_create_empty_then_set_default_values(
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test creating an entry, then setting default name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
-        identifiers={("bridgeid", "0123")}, config_entry_id="1234"
+        config_entry_id="1234",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert entry.name is None
     assert entry.model is None
@@ -1427,7 +1471,7 @@ async def test_get_or_create_empty_then_set_default_values(device_registry):
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
         default_manufacturer="default manufacturer 1",
@@ -1438,7 +1482,7 @@ async def test_get_or_create_empty_then_set_default_values(device_registry):
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 2",
         default_model="default model 2",
         default_manufacturer="default manufacturer 2",
@@ -1448,10 +1492,13 @@ async def test_get_or_create_empty_then_set_default_values(device_registry):
     assert entry.manufacturer == "default manufacturer 1"
 
 
-async def test_get_or_create_empty_then_update(device_registry):
+async def test_get_or_create_empty_then_update(
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test creating an entry, then setting name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
-        identifiers={("bridgeid", "0123")}, config_entry_id="1234"
+        config_entry_id="1234",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert entry.name is None
     assert entry.model is None
@@ -1459,7 +1506,7 @@ async def test_get_or_create_empty_then_update(device_registry):
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         name="name 1",
         model="model 1",
         manufacturer="manufacturer 1",
@@ -1470,7 +1517,7 @@ async def test_get_or_create_empty_then_update(device_registry):
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
         default_manufacturer="default manufacturer 1",
@@ -1480,11 +1527,13 @@ async def test_get_or_create_empty_then_update(device_registry):
     assert entry.manufacturer == "manufacturer 1"
 
 
-async def test_get_or_create_sets_default_values(device_registry):
+async def test_get_or_create_sets_default_values(
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test creating an entry, then setting default name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 1",
         default_model="default model 1",
         default_manufacturer="default manufacturer 1",
@@ -1495,7 +1544,7 @@ async def test_get_or_create_sets_default_values(device_registry):
 
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
-        identifiers={("bridgeid", "0123")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         default_name="default name 2",
         default_model="default model 2",
         default_manufacturer="default manufacturer 2",
@@ -1506,8 +1555,8 @@ async def test_get_or_create_sets_default_values(device_registry):
 
 
 async def test_verify_suggested_area_does_not_overwrite_area_id(
-    device_registry, area_registry
-):
+    device_registry: dr.DeviceRegistry, area_registry: ar.AreaRegistry
+) -> None:
     """Make sure suggested area does not override a set area id."""
     game_room_area = area_registry.async_create("Game Room")
 
@@ -1539,7 +1588,9 @@ async def test_verify_suggested_area_does_not_overwrite_area_id(
     assert entry2.area_id == game_room_area.id
 
 
-async def test_disable_config_entry_disables_devices(hass, device_registry):
+async def test_disable_config_entry_disables_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we disable entities tied to a config entry."""
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
@@ -1580,8 +1631,8 @@ async def test_disable_config_entry_disables_devices(hass, device_registry):
 
 
 async def test_only_disable_device_if_all_config_entries_are_disabled(
-    hass, device_registry
-):
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we only disable device if all related config entries are disabled."""
     config_entry1 = MockConfigEntry(domain="light")
     config_entry1.add_to_hass(hass)
@@ -1621,3 +1672,61 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(
 
     entry1 = device_registry.async_get(entry1.id)
     assert not entry1.disabled
+
+
+@pytest.mark.parametrize(
+    ("configuration_url", "expectation"),
+    [
+        ("http://localhost", nullcontext()),
+        ("http://localhost:8123", nullcontext()),
+        ("https://example.com", nullcontext()),
+        ("http://localhost/config", nullcontext()),
+        ("http://localhost:8123/config", nullcontext()),
+        ("https://example.com/config", nullcontext()),
+        ("homeassistant://config", nullcontext()),
+        (URL("http://localhost"), nullcontext()),
+        (URL("http://localhost:8123"), nullcontext()),
+        (URL("https://example.com"), nullcontext()),
+        (URL("http://localhost/config"), nullcontext()),
+        (URL("http://localhost:8123/config"), nullcontext()),
+        (URL("https://example.com/config"), nullcontext()),
+        (URL("homeassistant://config"), nullcontext()),
+        (None, nullcontext()),
+        ("http://", pytest.raises(ValueError)),
+        ("https://", pytest.raises(ValueError)),
+        ("gopher://localhost", pytest.raises(ValueError)),
+        ("homeassistant://", pytest.raises(ValueError)),
+        (URL("http://"), pytest.raises(ValueError)),
+        (URL("https://"), pytest.raises(ValueError)),
+        (URL("gopher://localhost"), pytest.raises(ValueError)),
+        (URL("homeassistant://"), pytest.raises(ValueError)),
+        # Exception implements __str__
+        (Exception("https://example.com"), nullcontext()),
+        (Exception("https://"), pytest.raises(ValueError)),
+        (Exception(), pytest.raises(ValueError)),
+    ],
+)
+async def test_device_info_configuration_url_validation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    configuration_url: str | URL | None,
+    expectation,
+) -> None:
+    """Test configuration URL of device info is properly validated."""
+    with expectation:
+        device_registry.async_get_or_create(
+            config_entry_id="1234",
+            identifiers={("something", "1234")},
+            name="name",
+            configuration_url=configuration_url,
+        )
+
+    update_device = device_registry.async_get_or_create(
+        config_entry_id="5678",
+        identifiers={("something", "5678")},
+        name="name",
+    )
+    with expectation:
+        device_registry.async_update_device(
+            update_device.id, configuration_url=configuration_url
+        )

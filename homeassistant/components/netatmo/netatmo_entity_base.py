@@ -70,7 +70,7 @@ class NetatmoBase(Entity):
                 await self.data_handler.unsubscribe(signal_name, None)
 
         registry = dr.async_get(self.hass)
-        if device := registry.async_get_device({(DOMAIN, self._id)}):
+        if device := registry.async_get_device(identifiers={(DOMAIN, self._id)}):
             self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
         self.async_update_callback()
@@ -92,9 +92,11 @@ class NetatmoBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info for the sensor."""
-        manufacturer, model = DEVICE_DESCRIPTION_MAP[
-            getattr(NetatmoDeviceType, self._model)
-        ]
+        if "." in self._model:
+            netatmo_device = NetatmoDeviceType(self._model.partition(".")[2])
+        else:
+            netatmo_device = getattr(NetatmoDeviceType, self._model)
+        manufacturer, model = DEVICE_DESCRIPTION_MAP[netatmo_device]
         return DeviceInfo(
             configuration_url=self._config_url,
             identifiers={(DOMAIN, self._id)},

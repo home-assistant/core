@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import httpx
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -42,7 +43,7 @@ class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     pass
             except AqualinkServiceUnauthorizedException:
                 errors["base"] = "invalid_auth"
-            except AqualinkServiceException:
+            except (AqualinkServiceException, httpx.HTTPError):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(title=username, data=user_input)

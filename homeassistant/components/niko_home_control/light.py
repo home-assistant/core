@@ -8,8 +8,13 @@ from typing import Any
 import nikohomecontrol
 import voluptuous as vol
 
-# Import the device class from the component that you want to support
-from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
+    ColorMode,
+    LightEntity,
+    brightness_supported,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -52,36 +57,23 @@ async def async_setup_platform(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
-    _attr_color_mode = ColorMode.ONOFF
-    _attr_supported_color_modes = {ColorMode.ONOFF}
-
     def __init__(self, light, data):
         """Set up the Niko Home Control light platform."""
         self._data = data
         self._light = light
-        self._unique_id = f"light-{light.id}"
-        self._name = light.name
-        self._state = light.is_on
-
-    @property
-    def unique_id(self):
-        """Return unique ID for light."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
+        self._attr_unique_id = f"light-{light.id}"
+        self._attr_name = light.name
+        self._attr_is_on = light.is_on
+        self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
+        if light._state["type"] == 2:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
-        self._light.turn_on()
+        self._light.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
@@ -91,7 +83,10 @@ class NikoHomeControlLight(LightEntity):
     async def async_update(self) -> None:
         """Get the latest data from NikoHomeControl API."""
         await self._data.async_update()
-        self._state = self._data.get_state(self._light.id)
+        state = self._data.get_state(self._light.id)
+        self._attr_is_on = state != 0
+        if brightness_supported(self.supported_color_modes):
+            self._attr_brightness = state * 2.55
 
 
 class NikoHomeControlData:
@@ -122,5 +117,5 @@ class NikoHomeControlData:
         """Find and filter state based on action id."""
         for state in self.data:
             if state["id"] == aid:
-                return state["value1"] != 0
+                return state["value1"]
         _LOGGER.error("Failed to retrieve state off unknown light")

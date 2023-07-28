@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, USER_APP_NAME
 
 JellyfinDataT = TypeVar(
     "JellyfinDataT",
@@ -29,6 +29,7 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT], ABC):
         hass: HomeAssistant,
         api_client: JellyfinClient,
         system_info: dict[str, Any],
+        client_device_id: str,
         user_id: str,
     ) -> None:
         """Initialize the coordinator."""
@@ -42,7 +43,10 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT], ABC):
         self.server_id: str = system_info["Id"]
         self.server_name: str = system_info["Name"]
         self.server_version: str | None = system_info.get("Version")
+        self.client_device_id: str = client_device_id
         self.user_id: str = user_id
+
+        self.session_ids: set[str] = set()
 
     async def _async_update_data(self) -> JellyfinDataT:
         """Get the latest data from Jellyfin."""
@@ -65,7 +69,10 @@ class SessionsDataUpdateCoordinator(
         )
 
         sessions_by_id: dict[str, dict[str, Any]] = {
-            session["Id"]: session for session in sessions
+            session["Id"]: session
+            for session in sessions
+            if session["DeviceId"] != self.client_device_id
+            and session["Client"] != USER_APP_NAME
         }
 
         return sessions_by_id

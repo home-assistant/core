@@ -42,7 +42,7 @@ CONF_DIRECTION = "direction"
 CONF_DEPARTURE_TYPE = "departure_type"
 
 DEFAULT_NAME = "Next departure"
-ICON = "mdi:bus"
+
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -98,6 +98,7 @@ class RejseplanenTransportSensor(SensorEntity):
     """Implementation of Rejseplanen transport sensor."""
 
     _attr_attribution = "Data provided by rejseplanen.dk"
+    _attr_icon = "mdi:bus"
 
     def __init__(self, data, stop_id, route, direction, name):
         """Initialize the sensor."""
@@ -142,11 +143,6 @@ class RejseplanenTransportSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     def update(self) -> None:
         """Get the latest data from rejseplanen.dk and update the states."""

@@ -19,19 +19,24 @@ from homeassistant.components.input_datetime import (
     CONFIG_SCHEMA,
     DEFAULT_TIME,
     DOMAIN,
-    FMT_DATE,
-    FMT_DATETIME,
-    FMT_TIME,
     SERVICE_RELOAD,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_NAME,
+    FORMAT_DATE,
+    FORMAT_DATETIME,
+    FORMAT_TIME,
+)
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import mock_restore_cache
+from tests.common import MockUser, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 INITIAL_DATE = "2020-01-10"
 INITIAL_TIME = "23:45:56"
@@ -114,7 +119,7 @@ async def async_set_timestamp(hass, entity_id, timestamp):
         {"test_no_value": {"has_time": False, "has_date": False}},
     ],
 )
-def test_invalid_configs(config):
+def test_invalid_configs(config) -> None:
     """Test config."""
     with pytest.raises(vol.Invalid):
         CONFIG_SCHEMA({DOMAIN: config})
@@ -135,7 +140,7 @@ async def test_set_datetime(hass: HomeAssistant) -> None:
     await async_set_date_and_time(hass, entity_id, dt_obj)
 
     state = hass.states.get(entity_id)
-    assert state.state == dt_obj.strftime(FMT_DATETIME)
+    assert state.state == dt_obj.strftime(FORMAT_DATETIME)
     assert state.attributes["has_time"]
     assert state.attributes["has_date"]
 
@@ -163,7 +168,7 @@ async def test_set_datetime_2(hass: HomeAssistant) -> None:
     await async_set_datetime(hass, entity_id, dt_obj)
 
     state = hass.states.get(entity_id)
-    assert state.state == dt_obj.strftime(FMT_DATETIME)
+    assert state.state == dt_obj.strftime(FORMAT_DATETIME)
     assert state.attributes["has_time"]
     assert state.attributes["has_date"]
 
@@ -191,7 +196,7 @@ async def test_set_datetime_3(hass: HomeAssistant) -> None:
     await async_set_timestamp(hass, entity_id, dt_util.as_utc(dt_obj).timestamp())
 
     state = hass.states.get(entity_id)
-    assert state.state == dt_obj.strftime(FMT_DATETIME)
+    assert state.state == dt_obj.strftime(FORMAT_DATETIME)
     assert state.attributes["has_time"]
     assert state.attributes["has_date"]
 
@@ -217,7 +222,7 @@ async def test_set_datetime_time(hass: HomeAssistant) -> None:
     await async_set_date_and_time(hass, entity_id, dt_obj)
 
     state = hass.states.get(entity_id)
-    assert state.state == dt_obj.strftime(FMT_TIME)
+    assert state.state == dt_obj.strftime(FORMAT_TIME)
     assert state.attributes["has_time"]
     assert not state.attributes["has_date"]
 
@@ -336,7 +341,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                 "test_bogus_data": {
                     "has_time": True,
                     "has_date": True,
-                    "initial": initial.strftime(FMT_DATETIME),
+                    "initial": initial.strftime(FORMAT_DATETIME),
                 },
                 "test_was_time": {"has_time": False, "has_date": True},
                 "test_was_date": {"has_time": True, "has_date": False},
@@ -346,22 +351,22 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
     state_time = hass.states.get("input_datetime.test_time")
-    assert state_time.state == dt_obj.strftime(FMT_TIME)
+    assert state_time.state == dt_obj.strftime(FORMAT_TIME)
 
     state_date = hass.states.get("input_datetime.test_date")
-    assert state_date.state == dt_obj.strftime(FMT_DATE)
+    assert state_date.state == dt_obj.strftime(FORMAT_DATE)
 
     state_datetime = hass.states.get("input_datetime.test_datetime")
-    assert state_datetime.state == dt_obj.strftime(FMT_DATETIME)
+    assert state_datetime.state == dt_obj.strftime(FORMAT_DATETIME)
 
     state_bogus = hass.states.get("input_datetime.test_bogus_data")
-    assert state_bogus.state == initial.strftime(FMT_DATETIME)
+    assert state_bogus.state == initial.strftime(FORMAT_DATETIME)
 
     state_was_time = hass.states.get("input_datetime.test_was_time")
-    assert state_was_time.state == default.strftime(FMT_DATE)
+    assert state_was_time.state == default.strftime(FORMAT_DATE)
 
     state_was_date = hass.states.get("input_datetime.test_was_date")
-    assert state_was_date.state == default.strftime(FMT_TIME)
+    assert state_was_date.state == default.strftime(FORMAT_TIME)
 
 
 async def test_default_value(hass: HomeAssistant) -> None:
@@ -380,19 +385,21 @@ async def test_default_value(hass: HomeAssistant) -> None:
 
     dt_obj = datetime.datetime.combine(datetime.date.today(), DEFAULT_TIME)
     state_time = hass.states.get("input_datetime.test_time")
-    assert state_time.state == dt_obj.strftime(FMT_TIME)
+    assert state_time.state == dt_obj.strftime(FORMAT_TIME)
     assert state_time.attributes.get("timestamp") is not None
 
     state_date = hass.states.get("input_datetime.test_date")
-    assert state_date.state == dt_obj.strftime(FMT_DATE)
+    assert state_date.state == dt_obj.strftime(FORMAT_DATE)
     assert state_date.attributes.get("timestamp") is not None
 
     state_datetime = hass.states.get("input_datetime.test_datetime")
-    assert state_datetime.state == dt_obj.strftime(FMT_DATETIME)
+    assert state_datetime.state == dt_obj.strftime(FORMAT_DATETIME)
     assert state_datetime.attributes.get("timestamp") is not None
 
 
-async def test_input_datetime_context(hass, hass_admin_user):
+async def test_input_datetime_context(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test that input_datetime context works."""
     assert await async_setup_component(
         hass, "input_datetime", {"input_datetime": {"only_date": {"has_date": True}}}
@@ -415,7 +422,9 @@ async def test_input_datetime_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_reload(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -441,7 +450,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is not None
     assert state_2 is None
     assert state_3 is not None
-    assert dt_obj.strftime(FMT_DATE) == state_1.state
+    assert dt_obj.strftime(FORMAT_DATE) == state_1.state
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt2") is None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt3") == f"{DOMAIN}.dt3"
@@ -479,17 +488,17 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert state_1.state == DEFAULT_TIME.strftime(FMT_TIME)
+    assert state_1.state == DEFAULT_TIME.strftime(FORMAT_TIME)
     assert state_2.state == datetime.datetime.combine(
         datetime.date.today(), DEFAULT_TIME
-    ).strftime(FMT_DATETIME)
+    ).strftime(FORMAT_DATETIME)
 
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt2") == f"{DOMAIN}.dt2"
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt3") is None
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.datetime_from_storage")
@@ -497,7 +506,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={
@@ -521,7 +530,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes[ATTR_EDITABLE]
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(config={DOMAIN: {"from_yaml": {CONF_HAS_DATE: True}}})
 
@@ -541,7 +552,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "datetime from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -566,7 +579,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update(hass, hass_ws_client, storage_setup):
+async def test_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating min/max updates the state."""
 
     assert await storage_setup()
@@ -605,7 +620,9 @@ async def test_update(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_FRIENDLY_NAME] == "even newer name"
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
@@ -638,7 +655,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_EDITABLE]
 
 
-async def test_setup_no_config(hass, hass_admin_user):
+async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
     assert await async_setup_component(hass, DOMAIN, {})
@@ -692,7 +709,7 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     assert (
         dt_util.as_local(
             dt_util.utc_from_timestamp(state_with_tz.attributes[ATTR_TIMESTAMP])
-        ).strftime(FMT_DATETIME)
+        ).strftime(FORMAT_DATETIME)
         == "2020-12-13 01:00:00"
     )
 
@@ -706,22 +723,22 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     assert (
         dt_util.utc_from_timestamp(
             state_without_tz.attributes[ATTR_TIMESTAMP]
-        ).strftime(FMT_DATETIME)
+        ).strftime(FORMAT_DATETIME)
         == "2020-12-13 18:00:00"
     )
     assert (
         dt_util.as_local(
             dt_util.utc_from_timestamp(state_without_tz.attributes[ATTR_TIMESTAMP])
-        ).strftime(FMT_DATETIME)
+        ).strftime(FORMAT_DATETIME)
         == "2020-12-13 10:00:00"
     )
     # Use datetime.datetime.fromtimestamp
     assert (
         dt_util.as_local(
             datetime.datetime.fromtimestamp(
-                state_without_tz.attributes[ATTR_TIMESTAMP], datetime.timezone.utc
+                state_without_tz.attributes[ATTR_TIMESTAMP], datetime.UTC
             )
-        ).strftime(FMT_DATETIME)
+        ).strftime(FORMAT_DATETIME)
         == "2020-12-13 10:00:00"
     )
 
@@ -752,7 +769,7 @@ async def test_timestamp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "config, error",
+    ("config", "error"),
     [
         (
             {"has_time": True, "has_date": True, "initial": "abc"},
@@ -768,7 +785,9 @@ async def test_timestamp(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_invalid_initial(hass, caplog, config, error):
+async def test_invalid_initial(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config, error
+) -> None:
     """Test configuration is rejected if the initial value is invalid."""
     assert not await async_setup_component(
         hass,

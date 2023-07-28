@@ -68,7 +68,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow_implementation(hass, mock_pypoint):
+async def test_full_flow_implementation(hass: HomeAssistant, mock_pypoint) -> None:
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(hass, "test-other", None, None)
     flow = init_config_flow(hass)
@@ -94,7 +94,7 @@ async def test_full_flow_implementation(hass, mock_pypoint):
     assert result["data"]["token"] == {"access_token": "boo"}
 
 
-async def test_step_import(hass, mock_pypoint):
+async def test_step_import(hass: HomeAssistant, mock_pypoint) -> None:
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
@@ -104,7 +104,9 @@ async def test_step_import(hass, mock_pypoint):
 
 
 @pytest.mark.parametrize("is_authorized", [False])
-async def test_wrong_code_flow_implementation(hass, mock_pypoint):
+async def test_wrong_code_flow_implementation(
+    hass: HomeAssistant, mock_pypoint
+) -> None:
     """Test wrong code."""
     flow = init_config_flow(hass)
 

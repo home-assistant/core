@@ -11,6 +11,7 @@ from typing import Any, TypeVar
 
 import voluptuous as vol
 
+from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -56,6 +57,16 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     intents[handler.intent_type] = handler
 
 
+@callback
+@bind_hass
+def async_remove(hass: HomeAssistant, intent_type: str) -> None:
+    """Remove an intent from Home Assistant."""
+    if (intents := hass.data.get(DATA_KEY)) is None:
+        return
+
+    intents.pop(intent_type, None)
+
+
 @bind_hass
 async def async_handle(
     hass: HomeAssistant,
@@ -65,6 +76,7 @@ async def async_handle(
     text_input: str | None = None,
     context: Context | None = None,
     language: str | None = None,
+    assistant: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -79,7 +91,14 @@ async def async_handle(
         language = hass.config.language
 
     intent = Intent(
-        hass, platform, intent_type, slots or {}, text_input, context, language
+        hass,
+        platform=platform,
+        intent_type=intent_type,
+        slots=slots or {},
+        text_input=text_input,
+        context=context,
+        language=language,
+        assistant=assistant,
     )
 
     try:
@@ -208,6 +227,7 @@ def async_match_states(
     entities: entity_registry.EntityRegistry | None = None,
     areas: area_registry.AreaRegistry | None = None,
     devices: device_registry.DeviceRegistry | None = None,
+    assistant: str | None = None,
 ) -> Iterable[State]:
     """Find states that match the constraints."""
     if states is None:
@@ -257,6 +277,14 @@ def async_match_states(
             devices = device_registry.async_get(hass)
 
         states_and_entities = list(_filter_by_area(states_and_entities, area, devices))
+
+    if assistant is not None:
+        # Filter by exposure
+        states_and_entities = [
+            (state, entity)
+            for state, entity in states_and_entities
+            if async_should_expose(hass, assistant, state.entity_id)
+        ]
 
     if name is not None:
         if devices is None:
@@ -335,6 +363,10 @@ class ServiceIntentHandler(IntentHandler):
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
     }
 
+    # We use a small timeout in service calls to (hopefully) pass validation
+    # checks, but not try to wait for the call to fully complete.
+    service_timeout: float = 0.2
+
     def __init__(
         self, intent_type: str, domain: str, service: str, speech: str | None = None
     ) -> None:
@@ -383,6 +415,7 @@ class ServiceIntentHandler(IntentHandler):
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
+                assistant=intent_obj.assistant,
             )
         )
 
@@ -402,7 +435,8 @@ class ServiceIntentHandler(IntentHandler):
         area: area_registry.AreaEntry | None = None,
     ) -> IntentResponse:
         """Complete action on matched entity states."""
-        assert states
+        assert states, "No states"
+        hass = intent_obj.hass
         success_results: list[IntentResponseTarget] = []
         response = intent_obj.create_response()
 
@@ -419,21 +453,36 @@ class ServiceIntentHandler(IntentHandler):
         service_coros = []
         for state in states:
             service_coros.append(self.async_call_service(intent_obj, state))
-            success_results.append(
-                IntentResponseTarget(
-                    type=IntentResponseTargetType.ENTITY,
-                    name=state.name,
-                    id=state.entity_id,
-                ),
+
+        # Handle service calls in parallel, noting failures as they occur.
+        failed_results: list[IntentResponseTarget] = []
+        for state, service_coro in zip(states, asyncio.as_completed(service_coros)):
+            target = IntentResponseTarget(
+                type=IntentResponseTargetType.ENTITY,
+                name=state.name,
+                id=state.entity_id,
             )
 
-        # Handle service calls in parallel.
-        # We will need to handle partial failures here.
-        await asyncio.gather(*service_coros)
+            try:
+                await service_coro
+                success_results.append(target)
+            except Exception:  # pylint: disable=broad-except
+                failed_results.append(target)
+                _LOGGER.exception("Service call failed for %s", state.entity_id)
+
+        if not success_results:
+            # If no entities succeeded, raise an error.
+            failed_entity_ids = [target.id for target in failed_results]
+            raise IntentHandleError(
+                f"Failed to call {self.service} for: {failed_entity_ids}"
+            )
 
         response.async_set_results(
-            success_results=success_results,
+            success_results=success_results, failed_results=failed_results
         )
+
+        # Update all states
+        states = [hass.states.get(state.entity_id) or state for state in states]
         response.async_set_states(states)
 
         if self.speech is not None:
@@ -444,12 +493,35 @@ class ServiceIntentHandler(IntentHandler):
     async def async_call_service(self, intent_obj: Intent, state: State) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
-        await hass.services.async_call(
-            self.domain,
-            self.service,
-            {ATTR_ENTITY_ID: state.entity_id},
-            context=intent_obj.context,
+        await self._run_then_background(
+            hass.async_create_task(
+                hass.services.async_call(
+                    self.domain,
+                    self.service,
+                    {ATTR_ENTITY_ID: state.entity_id},
+                    context=intent_obj.context,
+                    blocking=True,
+                ),
+                f"intent_call_service_{self.domain}_{self.service}",
+            )
         )
+
+    async def _run_then_background(self, task: asyncio.Task) -> None:
+        """Run task with timeout to (hopefully) catch validation errors.
+
+        After the timeout the task will continue to run in the background.
+        """
+        try:
+            await asyncio.wait({task}, timeout=self.service_timeout)
+        except asyncio.TimeoutError:
+            pass
+        except asyncio.CancelledError:
+            # Task calling us was cancelled, so cancel service call task, and wait for
+            # it to be cancelled, within reason, before leaving.
+            _LOGGER.debug("Service call was cancelled: %s", task.get_name())
+            task.cancel()
+            await asyncio.wait({task}, timeout=5)
+            raise
 
 
 class IntentCategory(Enum):
@@ -474,6 +546,7 @@ class Intent:
         "context",
         "language",
         "category",
+        "assistant",
     ]
 
     def __init__(
@@ -486,6 +559,7 @@ class Intent:
         context: Context,
         language: str,
         category: IntentCategory | None = None,
+        assistant: str | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -496,6 +570,7 @@ class Intent:
         self.context = context
         self.language = language
         self.category = category
+        self.assistant = assistant
 
     @callback
     def create_response(self) -> IntentResponse:
@@ -546,7 +621,7 @@ class IntentResponseTargetType(str, Enum):
     CUSTOM = "custom"
 
 
-@dataclass
+@dataclass(slots=True)
 class IntentResponseTarget:
     """Target of the intent response."""
 

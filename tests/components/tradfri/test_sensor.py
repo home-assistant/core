@@ -1,153 +1,201 @@
 """Tradfri sensor platform tests."""
 from __future__ import annotations
 
+import json
+from typing import Any
 from unittest.mock import MagicMock, Mock
 
-from homeassistant.components import tradfri
+import pytest
+from pytradfri.const import (
+    ATTR_AIR_PURIFIER_AIR_QUALITY,
+    ATTR_DEVICE_BATTERY,
+    ATTR_DEVICE_INFO,
+    ATTR_REACHABLE_STATE,
+    ROOT_AIR_PURIFIER,
+)
+from pytradfri.device import Device
+from pytradfri.device.air_purifier import AirPurifier
+from pytradfri.device.blind import Blind
+
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.components.tradfri.const import DOMAIN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import GATEWAY_ID
-from .common import setup_integration
-from .test_fan import mock_fan
+from .common import setup_integration, trigger_observe_callback
 
-from tests.common import MockConfigEntry
-
-
-def mock_sensor(test_state: list, device_number=0):
-    """Mock a tradfri sensor."""
-    dev_info_mock = MagicMock()
-    dev_info_mock.manufacturer = "manufacturer"
-    dev_info_mock.model_number = "model"
-    dev_info_mock.firmware_version = "1.2.3"
-
-    _mock_sensor = Mock(
-        id=f"mock-sensor-id-{device_number}",
-        reachable=True,
-        observe=Mock(),
-        device_info=dev_info_mock,
-        has_light_control=False,
-        has_socket_control=False,
-        has_blind_control=False,
-        has_signal_repeater_control=False,
-        has_air_purifier_control=False,
-    )
-
-    # Set state value, eg battery_level = 50, or has_air_purifier_control=True
-    for state in test_state:
-        setattr(dev_info_mock, state["attribute"], state["value"])
-
-    _mock_sensor.name = f"tradfri_sensor_{device_number}"
-
-    return _mock_sensor
+from tests.common import MockConfigEntry, load_fixture
 
 
-async def test_battery_sensor(hass, mock_gateway, mock_api_factory):
+@pytest.fixture(scope="module")
+def remote_control_response() -> dict[str, Any]:
+    """Return a remote control response."""
+    return json.loads(load_fixture("remote_control.json", DOMAIN))
+
+
+@pytest.fixture
+def remote_control(remote_control_response: dict[str, Any]) -> Device:
+    """Return remote control."""
+    return Device(remote_control_response)
+
+
+async def test_battery_sensor(
+    hass: HomeAssistant,
+    mock_gateway: Mock,
+    mock_api_factory: MagicMock,
+    remote_control: Device,
+) -> None:
     """Test that a battery sensor is correctly added."""
-    mock_gateway.mock_devices.append(
-        mock_sensor(test_state=[{"attribute": "battery_level", "value": 60}])
-    )
+    entity_id = "sensor.test_battery"
+    device = remote_control
+    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
-    sensor_1 = hass.states.get("sensor.tradfri_sensor_0")
-    assert sensor_1 is not None
-    assert sensor_1.state == "60"
-    assert sensor_1.attributes["unit_of_measurement"] == "%"
-    assert sensor_1.attributes["device_class"] == "battery"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "87"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    await trigger_observe_callback(
+        hass, mock_gateway, device, {ATTR_DEVICE_INFO: {ATTR_DEVICE_BATTERY: 60}}
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "60"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-async def test_cover_battery_sensor(hass, mock_gateway, mock_api_factory):
+async def test_cover_battery_sensor(
+    hass: HomeAssistant,
+    mock_gateway: Mock,
+    mock_api_factory: MagicMock,
+    blind: Blind,
+) -> None:
     """Test that a battery sensor is correctly added for a cover (blind)."""
-    mock_gateway.mock_devices.append(
-        mock_sensor(
-            test_state=[
-                {"attribute": "battery_level", "value": 42, "has_blind_control": True}
-            ]
-        )
-    )
+    entity_id = "sensor.test_battery"
+    device = blind.device
+    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
-    sensor_1 = hass.states.get("sensor.tradfri_sensor_0")
-    assert sensor_1 is not None
-    assert sensor_1.state == "42"
-    assert sensor_1.attributes["unit_of_measurement"] == "%"
-    assert sensor_1.attributes["device_class"] == "battery"
-    assert sensor_1.attributes["state_class"] == "measurement"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "77"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-async def test_air_quality_sensor(hass, mock_gateway, mock_api_factory):
+async def test_air_quality_sensor(
+    hass: HomeAssistant,
+    mock_gateway: Mock,
+    mock_api_factory: MagicMock,
+    air_purifier: AirPurifier,
+) -> None:
     """Test that a battery sensor is correctly added."""
-    mock_gateway.mock_devices.append(
-        mock_fan(
-            test_state={
-                "fan_speed": 10,
-                "air_quality": 42,
-                "filter_lifetime_remaining": 120,
-            }
-        )
-    )
+    entity_id = "sensor.test_air_quality"
+    device = air_purifier.device
+    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
-    sensor_1 = hass.states.get("sensor.tradfri_fan_0_air_quality")
-    assert sensor_1 is not None
-    assert sensor_1.state == "42"
-    assert sensor_1.attributes["unit_of_measurement"] == "µg/m³"
-    assert sensor_1.attributes["state_class"] == "measurement"
-    assert "device_class" not in sensor_1.attributes
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "5"
+    assert (
+        state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
+    # The sensor returns 65535 if the fan is turned off
+    await trigger_observe_callback(
+        hass,
+        mock_gateway,
+        device,
+        {ROOT_AIR_PURIFIER: [{ATTR_AIR_PURIFIER_AIR_QUALITY: 65535}]},
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
-async def test_filter_time_left_sensor(hass, mock_gateway, mock_api_factory):
+async def test_filter_time_left_sensor(
+    hass: HomeAssistant,
+    mock_gateway: Mock,
+    mock_api_factory: MagicMock,
+    air_purifier: AirPurifier,
+) -> None:
     """Test that a battery sensor is correctly added."""
-    mock_gateway.mock_devices.append(
-        mock_fan(
-            test_state={
-                "fan_speed": 10,
-                "air_quality": 42,
-                "filter_lifetime_remaining": 120,
-            }
-        )
-    )
+    entity_id = "sensor.test_filter_time_left"
+    device = air_purifier.device
+    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
-    sensor_1 = hass.states.get("sensor.tradfri_fan_0_filter_time_left")
-    assert sensor_1 is not None
-    assert sensor_1.state == "2"
-    assert sensor_1.attributes["unit_of_measurement"] == "h"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "4320"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.HOURS
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-async def test_sensor_observed(hass, mock_gateway, mock_api_factory):
-    """Test that sensors are correctly observed."""
-    sensor = mock_sensor(test_state=[{"attribute": "battery_level", "value": 60}])
-    mock_gateway.mock_devices.append(sensor)
-    await setup_integration(hass)
-    assert len(sensor.observe.mock_calls) > 0
-
-
-async def test_sensor_available(hass, mock_gateway, mock_api_factory):
+async def test_sensor_available(
+    hass: HomeAssistant,
+    mock_gateway: Mock,
+    mock_api_factory: MagicMock,
+    air_purifier: AirPurifier,
+) -> None:
     """Test sensor available property."""
-    sensor = mock_sensor(
-        test_state=[{"attribute": "battery_level", "value": 60}], device_number=1
-    )
-    sensor.reachable = True
-
-    sensor2 = mock_sensor(
-        test_state=[{"attribute": "battery_level", "value": 60}], device_number=2
-    )
-    sensor2.reachable = False
-
-    mock_gateway.mock_devices.append(sensor)
-    mock_gateway.mock_devices.append(sensor2)
+    entity_id = "sensor.test_filter_time_left"
+    device = air_purifier.device
+    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
-    assert hass.states.get("sensor.tradfri_sensor_1").state == "60"
-    assert hass.states.get("sensor.tradfri_sensor_2").state == "unavailable"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "4320"
+
+    await trigger_observe_callback(
+        hass, mock_gateway, device, {ATTR_REACHABLE_STATE: 0}
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
-async def test_unique_id_migration(hass, mock_gateway, mock_api_factory):
+async def test_unique_id_migration(
+    hass: HomeAssistant,
+    mock_gateway: Mock,
+    mock_api_factory: MagicMock,
+    remote_control: Device,
+) -> None:
     """Test unique ID is migrated from old format to new."""
     ent_reg = er.async_get(hass)
-    old_unique_id = f"{GATEWAY_ID}-mock-sensor-id-0"
+    old_unique_id = f"{GATEWAY_ID}-65536"
     entry = MockConfigEntry(
-        domain=tradfri.DOMAIN,
+        domain=DOMAIN,
         data={
             "host": "mock-host",
             "identity": "mock-identity",
@@ -158,32 +206,30 @@ async def test_unique_id_migration(hass, mock_gateway, mock_api_factory):
     entry.add_to_hass(hass)
 
     # Version 1
-    sensor_name = "sensor.tradfri_sensor_0"
-    entity_name = sensor_name.split(".")[1]
+    entity_id = "sensor.test"
+    entity_name = entity_id.split(".")[1]
 
     entity_entry = ent_reg.async_get_or_create(
-        "sensor",
-        tradfri.DOMAIN,
+        SENSOR_DOMAIN,
+        DOMAIN,
         old_unique_id,
         suggested_object_id=entity_name,
         config_entry=entry,
         original_name=entity_name,
     )
 
-    assert entity_entry.entity_id == sensor_name
+    assert entity_entry.entity_id == entity_id
     assert entity_entry.unique_id == old_unique_id
 
     # Add a sensor to the gateway so that it populates coordinator list
-    sensor = mock_sensor(
-        test_state=[{"attribute": "battery_level", "value": 60}],
-    )
-    mock_gateway.mock_devices.append(sensor)
-
+    device = remote_control
+    mock_gateway.mock_devices.append(device)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # Check that new RegistryEntry is using new unique ID format
-    entity_entry = ent_reg.async_get(sensor_name)
-    new_unique_id = f"{GATEWAY_ID}-mock-sensor-id-0-battery_level"
-    assert entity_entry.unique_id == new_unique_id
-    assert ent_reg.async_get_entity_id("sensor", tradfri.DOMAIN, old_unique_id) is None
+    new_unique_id = f"{old_unique_id}-battery_level"
+    migrated_entity_entry = ent_reg.async_get(entity_id)
+    assert migrated_entity_entry is not None
+    assert migrated_entity_entry.unique_id == new_unique_id
+    assert ent_reg.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id) is None

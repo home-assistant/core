@@ -31,6 +31,7 @@ from . import Coordinator
 from .const import (
     DOMAIN,
     LOGGER,
+    VALUES_COOL_WITH_ROOM_SENSOR_OFF,
     VALUES_MIXING_VALVE_CLOSED_STATE,
     VALUES_PRIORITY_COOLING,
     VALUES_PRIORITY_HEATING,
@@ -139,10 +140,13 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         mode = HVACMode.OFF
         if _get_value(self._coil_use_room_sensor) == "ON":
-            if _get_value(self._coil_cooling_with_room_sensor) == "ON":
-                mode = HVACMode.HEAT_COOL
-            else:
+            if (
+                _get_value(self._coil_cooling_with_room_sensor)
+                in VALUES_COOL_WITH_ROOM_SENSOR_OFF
+            ):
                 mode = HVACMode.HEAT
+            else:
+                mode = HVACMode.HEAT_COOL
         self._attr_hvac_mode = mode
 
         setpoint_heat = _get_float(self._coil_setpoint_heat)

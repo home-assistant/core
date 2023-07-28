@@ -103,7 +103,7 @@ async def async_setup_platform(
         for next_departure in config[CONF_NEXT_DEPARTURE]
     ]
 
-    tasks = [sensor.async_update() for sensor in sensors]
+    tasks = [asyncio.create_task(sensor.async_update()) for sensor in sensors]
     if tasks:
         await asyncio.wait(tasks)
 

@@ -1,4 +1,4 @@
-"""This component provides HA sensor support for Ring Door Bell/Chimes."""
+"""Component providing HA sensor support for Ring Door Bell/Chimes."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN
 from .entity import RingEntityMixin
@@ -53,8 +52,6 @@ class RingSensor(RingEntityMixin, SensorEntity):
         """Initialize a sensor for Ring device."""
         super().__init__(config_entry_id, device)
         self.entity_description = description
-        self._extra = None
-        self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{device.id}-{description.key}"
 
     @property
@@ -66,18 +63,6 @@ class RingSensor(RingEntityMixin, SensorEntity):
 
         if sensor_type == "battery":
             return self._device.battery_life
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        if (
-            self.entity_description.key == "battery"
-            and self._device.battery_life is not None
-        ):
-            return icon_for_battery_level(
-                battery_level=self._device.battery_life, charging=False
-            )
-        return self.entity_description.icon
 
 
 class HealthDataRingSensor(RingSensor):
@@ -204,7 +189,6 @@ class RingSensorEntityDescription(SensorEntityDescription, RingRequiredKeysMixin
 SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     RingSensorEntityDescription(
         key="battery",
-        name="Battery",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -212,7 +196,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     ),
     RingSensorEntityDescription(
         key="last_activity",
-        name="Last Activity",
+        translation_key="last_activity",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:history",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -220,7 +204,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     ),
     RingSensorEntityDescription(
         key="last_ding",
-        name="Last Ding",
+        translation_key="last_ding",
         category=["doorbots", "authorized_doorbots"],
         icon="mdi:history",
         kind="ding",
@@ -229,7 +213,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     ),
     RingSensorEntityDescription(
         key="last_motion",
-        name="Last Motion",
+        translation_key="last_motion",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:history",
         kind="motion",
@@ -238,21 +222,21 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     ),
     RingSensorEntityDescription(
         key="volume",
-        name="Volume",
+        translation_key="volume",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:bell-ring",
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
         key="wifi_signal_category",
-        name="WiFi Signal Category",
+        translation_key="wifi_signal_category",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:wifi",
         cls=HealthDataRingSensor,
     ),
     RingSensorEntityDescription(
         key="wifi_signal_strength",
-        name="WiFi Signal Strength",
+        translation_key="wifi_signal_strength",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         icon="mdi:wifi",

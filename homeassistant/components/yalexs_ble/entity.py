@@ -15,6 +15,7 @@ from .models import YaleXSBLEData
 class YALEXSBLEEntity(Entity):
     """Base class for yale xs ble entities."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, data: YaleXSBLEData) -> None:
@@ -45,7 +46,7 @@ class YALEXSBLEEntity(Entity):
         self, new_state: LockState, lock_info: LockInfo, connection_info: ConnectionInfo
     ) -> None:
         """Update the state."""
-        self._attr_available = True
+        self._attr_available = bool(not new_state.auth or new_state.auth.successful)
 
     @callback
     def _async_state_changed(

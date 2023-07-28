@@ -1,7 +1,6 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from typing import Any
@@ -170,7 +169,9 @@ async def async_setup_entry(
         ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
-    asyncio.create_task(_discovery())
+    config_entry.async_create_background_task(
+        hass, _discovery(), "squeezebox.media_player.discovery"
+    )
 
     # Register entity services
     platform = entity_platform.async_get_current_platform()
@@ -203,7 +204,7 @@ async def async_setup_entry(
 
     # Start server discovery task if not already running
     if hass.is_running:
-        asyncio.create_task(start_server_discovery(hass))
+        hass.async_create_task(start_server_discovery(hass))
     else:
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
@@ -233,6 +234,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     )
 
     def __init__(self, player):
@@ -468,7 +470,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_set_power(True)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         index = None
@@ -633,7 +635,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:

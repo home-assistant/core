@@ -1,18 +1,6 @@
 # Automatically generated from .pre-commit-config.yaml by gen_requirements_all.py, do not edit
 
-autoflake==2.0.0
-bandit==1.7.4
-black==23.1.0
+black==23.7.0
 codespell==2.2.2
-flake8-comprehensions==3.10.1
-flake8-docstrings==1.6.0
-flake8-noqa==1.3.0
-flake8==6.0.0
-isort==5.12.0
-mccabe==0.7.0
-pycodestyle==2.10.0
-pydocstyle==6.2.3
-pyflakes==3.0.1
-pyupgrade==3.3.1
-ruff==0.0.241
-yamllint==1.28.0
+ruff==0.0.280
+yamllint==1.32.0

@@ -14,7 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
-from . import auth_store, models
+from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
@@ -555,9 +555,7 @@ class AuthManager:
     ) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
-            unverif_claims = jwt.decode(
-                token, algorithms=["HS256"], options={"verify_signature": False}
-            )
+            unverif_claims = jwt_wrapper.unverified_hs256_token_decode(token)
         except jwt.InvalidTokenError:
             return None
 
@@ -573,7 +571,9 @@ class AuthManager:
             issuer = refresh_token.id
 
         try:
-            jwt.decode(token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"])
+            jwt_wrapper.verify_and_decode(
+                token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
+            )
         except jwt.InvalidTokenError:
             return None
 

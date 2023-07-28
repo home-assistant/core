@@ -1,4 +1,4 @@
-"""This platform allows several sensors to be grouped into one sensor to provide numeric combinations."""
+"""Platform allowing several sensors to be grouped into one sensor to provide numeric combinations."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,11 +33,19 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    EventType,
+    StateType,
+)
 
 from . import GroupEntity
 from .const import CONF_IGNORE_NON_NUMERIC
@@ -54,6 +62,7 @@ ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
+ATTR_PRODUCT = "product"
 SENSOR_TYPES = {
     ATTR_MIN_VALUE: "min",
     ATTR_MAX_VALUE: "max",
@@ -62,6 +71,7 @@ SENSOR_TYPES = {
     ATTR_LAST: "last",
     ATTR_RANGE: "range",
     ATTR_SUM: "sum",
+    ATTR_PRODUCT: "product",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -137,7 +147,7 @@ async def async_setup_entry(
 
 def calc_min(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate min value."""
     val: float | None = None
     entity_id: str | None = None
@@ -153,7 +163,7 @@ def calc_min(
 
 def calc_max(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate max value."""
     val: float | None = None
     entity_id: str | None = None
@@ -169,7 +179,7 @@ def calc_max(
 
 def calc_mean(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate mean value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
 
@@ -179,7 +189,7 @@ def calc_mean(
 
 def calc_median(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate median value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
 
@@ -189,10 +199,11 @@ def calc_median(
 
 def calc_last(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate last value."""
     last_updated: datetime | None = None
     last_entity_id: str | None = None
+    last: float | None = None
     for entity_id, state_f, state in sensor_values:
         if last_updated is None or state.last_updated > last_updated:
             last_updated = state.last_updated
@@ -225,9 +236,22 @@ def calc_sum(
     return {}, result
 
 
+def calc_product(
+    sensor_values: list[tuple[str, float, State]]
+) -> tuple[dict[str, str | None], float]:
+    """Calculate a product of values."""
+    result = 1.0
+    for _, sensor_value, _ in sensor_values:
+        result *= sensor_value
+
+    return {}, result
+
+
 CALC_TYPES: dict[
     str,
-    Callable[[list[tuple[str, float, State]]], tuple[dict[str, str | None], float]],
+    Callable[
+        [list[tuple[str, float, State]]], tuple[dict[str, str | None], float | None]
+    ],
 ] = {
     "min": calc_min,
     "max": calc_max,
@@ -236,6 +260,7 @@ CALC_TYPES: dict[
     "last": calc_last,
     "range": calc_range,
     "sum": calc_sum,
+    "product": calc_product,
 }
 
 
@@ -282,7 +307,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(event: Event) -> None:
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle child updates."""
             self.async_set_context(event.context)
             self.async_defer_or_update_ha_state()

@@ -357,7 +357,7 @@ async def test_report_state_humidifier(
 
 
 @pytest.mark.parametrize(
-    "domain,value,unit,label",
+    ("domain", "value", "unit", "label"),
     [
         (
             "number",

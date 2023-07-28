@@ -29,8 +29,8 @@
       },
       "reauth_mfa": {
         "data": {
-          "description": "Your account has 2-step verification enabled. Please enter the verification code Verisure sends to you.",
-          "code": "Verification Code"
+          "description": "[%key:component::verisure::config::step::mfa::data::description%]",
+          "code": "[%key:component::verisure::config::step::mfa::data::code%]"
         }
       }
     },
@@ -55,6 +55,27 @@
     },
     "error": {
       "code_format_mismatch": "The default PIN code does not match the required number of digits"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet status"
+      }
+    }
+  },
+  "services": {
+    "capture_smartcam": {
+      "name": "Capture SmartCam image",
+      "description": "Captures a new image from a Verisure SmartCam."
+    },
+    "enable_autolock": {
+      "name": "Enable autolock",
+      "description": "Enables autolock of a Verisure Lockguard Smartlock."
+    },
+    "disable_autolock": {
+      "name": "Disable autolock",
+      "description": "Disables autolock of a Verisure Lockguard Smartlock."
     }
   }
 }

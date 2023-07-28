@@ -61,7 +61,7 @@ async def test_switch_available(
 
 
 @pytest.mark.parametrize(
-    "service, expected_state",
+    ("service", "expected_state"),
     [
         ("turn_on", STATE_ON),
         ("turn_off", STATE_OFF),

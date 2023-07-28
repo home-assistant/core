@@ -7,7 +7,11 @@ from typing import Any
 
 from elgato import Elgato, ElgatoError
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -36,10 +40,15 @@ class ElgatoButtonEntityDescription(
 BUTTONS = [
     ElgatoButtonEntityDescription(
         key="identify",
-        name="Identify",
-        icon="mdi:help",
+        device_class=ButtonDeviceClass.IDENTIFY,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda client: client.identify(),
+    ),
+    ElgatoButtonEntityDescription(
+        key="restart",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda client: client.restart(),
     ),
 ]
 
@@ -83,5 +92,5 @@ class ElgatoButtonEntity(ElgatoEntity, ButtonEntity):
             await self.entity_description.press_fn(self.coordinator.client)
         except ElgatoError as error:
             raise HomeAssistantError(
-                "An error occurred while identifying the Elgato Light"
+                "An error occurred while communicating with the Elgato Light"
             ) from error

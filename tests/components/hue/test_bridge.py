@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 
-async def test_bridge_setup_v1(hass, mock_api_v1):
+async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1) -> None:
     """Test a successful setup for V1 bridge."""
     config_entry = Mock()
     config_entry.data = {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1}
@@ -37,7 +37,7 @@ async def test_bridge_setup_v1(hass, mock_api_v1):
     assert forward_entries == {"light", "binary_sensor", "sensor"}
 
 
-async def test_bridge_setup_v2(hass, mock_api_v2):
+async def test_bridge_setup_v2(hass: HomeAssistant, mock_api_v2) -> None:
     """Test a successful setup for V2 bridge."""
     config_entry = Mock()
     config_entry.data = {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 2}
@@ -51,9 +51,16 @@ async def test_bridge_setup_v2(hass, mock_api_v2):
     assert hue_bridge.api is mock_api_v2
     assert isinstance(hue_bridge.api, HueBridgeV2)
     assert hue_bridge.api_version == 2
-    assert len(mock_forward.mock_calls) == 5
+    assert len(mock_forward.mock_calls) == 6
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    assert forward_entries == {"light", "binary_sensor", "sensor", "switch", "scene"}
+    assert forward_entries == {
+        "light",
+        "binary_sensor",
+        "event",
+        "sensor",
+        "switch",
+        "scene",
+    }
 
 
 async def test_bridge_setup_invalid_api_key(hass: HomeAssistant) -> None:
@@ -87,7 +94,7 @@ async def test_bridge_setup_timeout(hass: HomeAssistant) -> None:
         await hue_bridge.async_initialize_bridge()
 
 
-async def test_reset_unloads_entry_if_setup(hass, mock_api_v1):
+async def test_reset_unloads_entry_if_setup(hass: HomeAssistant, mock_api_v1) -> None:
     """Test calling reset while the entry has been setup."""
     config_entry = Mock()
     config_entry.data = {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1}
@@ -113,7 +120,7 @@ async def test_reset_unloads_entry_if_setup(hass, mock_api_v1):
     assert len(hass.services.async_services()) == 0
 
 
-async def test_handle_unauthorized(hass, mock_api_v1):
+async def test_handle_unauthorized(hass: HomeAssistant, mock_api_v1) -> None:
     """Test handling an unauthorized error on update."""
     config_entry = Mock(async_setup=AsyncMock())
     config_entry.data = {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1}

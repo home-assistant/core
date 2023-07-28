@@ -8,6 +8,7 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.components.webostv import DOMAIN, device_trigger
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
@@ -18,7 +19,7 @@ from .const import ENTITY_ID, FAKE_UUID
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
-async def test_get_triggers(hass, client):
+async def test_get_triggers(hass: HomeAssistant, client) -> None:
     """Test we get the expected triggers."""
     await setup_webostv(hass)
 
@@ -39,7 +40,7 @@ async def test_get_triggers(hass, client):
     assert turn_on_trigger in triggers
 
 
-async def test_if_fires_on_turn_on_request(hass, calls, client):
+async def test_if_fires_on_turn_on_request(hass: HomeAssistant, calls, client) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_webostv(hass)
 
@@ -98,7 +99,7 @@ async def test_if_fires_on_turn_on_request(hass, calls, client):
     assert calls[1].data["id"] == 0
 
 
-async def test_failure_scenarios(hass, client):
+async def test_failure_scenarios(hass: HomeAssistant, client) -> None:
     """Test failure scenarios."""
     await setup_webostv(hass)
 

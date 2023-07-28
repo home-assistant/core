@@ -49,6 +49,21 @@ def fixture_mock_appliances_manager_api():
         yield mock_appliances_manager
 
 
+@pytest.fixture(name="mock_appliances_manager_laundry_api")
+def fixture_mock_appliances_manager_laundry_api():
+    """Set up AppliancesManager fixture."""
+    with mock.patch(
+        "homeassistant.components.whirlpool.AppliancesManager"
+    ) as mock_appliances_manager:
+        mock_appliances_manager.return_value.fetch_appliances = AsyncMock()
+        mock_appliances_manager.return_value.aircons = None
+        mock_appliances_manager.return_value.washer_dryers = [
+            {"SAID": MOCK_SAID3, "NAME": "washer"},
+            {"SAID": MOCK_SAID4, "NAME": "dryer"},
+        ]
+        yield mock_appliances_manager
+
+
 @pytest.fixture(name="mock_backend_selector_api")
 def fixture_mock_backend_selector_api():
     """Set up BackendSelector fixture."""
@@ -115,8 +130,6 @@ def side_effect_function(*args, **kwargs):
         return "0"
     if args[0] == "WashCavity_OpStatusBulkDispense1Level":
         return "3"
-    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
-        return "4000"
 
 
 def get_sensor_mock(said):
@@ -141,13 +154,13 @@ def get_sensor_mock(said):
 
 
 @pytest.fixture(name="mock_sensor1_api", autouse=False)
-def fixture_mock_sensor1_api(mock_auth_api, mock_appliances_manager_api):
+def fixture_mock_sensor1_api(mock_auth_api, mock_appliances_manager_laundry_api):
     """Set up sensor API fixture."""
     return get_sensor_mock(MOCK_SAID3)
 
 
 @pytest.fixture(name="mock_sensor2_api", autouse=False)
-def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_api):
+def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_laundry_api):
     """Set up sensor API fixture."""
     return get_sensor_mock(MOCK_SAID4)
 
@@ -159,6 +172,8 @@ def fixture_mock_sensor_api_instances(mock_sensor1_api, mock_sensor2_api):
         "homeassistant.components.whirlpool.sensor.WasherDryer"
     ) as mock_sensor_api:
         mock_sensor_api.side_effect = [
+            mock_sensor1_api,
+            mock_sensor2_api,
             mock_sensor1_api,
             mock_sensor2_api,
         ]

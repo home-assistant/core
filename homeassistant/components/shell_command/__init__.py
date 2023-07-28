@@ -6,12 +6,19 @@ from contextlib import suppress
 import logging
 import shlex
 
+import async_timeout
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.json import JsonObjectType
 
 DOMAIN = "shell_command"
 
@@ -30,7 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     cache: dict[str, tuple[str, str | None, template.Template | None]] = {}
 
-    async def async_service_handler(service: ServiceCall) -> None:
+    async def async_service_handler(service: ServiceCall) -> ServiceResponse:
         """Execute a shell command service."""
         cmd = conf[service.service]
 
@@ -53,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)
-                return
+                raise
         else:
             rendered_args = None
 
@@ -65,6 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                close_fds=False,  # required for posix_spawn
             )
         else:
             # Template used. Break into list and use create_subprocess_exec
@@ -76,15 +84,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                close_fds=False,  # required for posix_spawn
             )
 
         process = await create_process
         try:
-            stdout_data, stderr_data = await asyncio.wait_for(
-                process.communicate(), COMMAND_TIMEOUT
-            )
+            async with async_timeout.timeout(COMMAND_TIMEOUT):
+                stdout_data, stderr_data = await process.communicate()
         except asyncio.TimeoutError:
-            _LOGGER.exception(
+            _LOGGER.error(
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
             )
             if process:
@@ -95,9 +103,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     process._transport.close()  # type: ignore[attr-defined]
                 del process
 
-            return
+            raise
+
+        service_response: JsonObjectType = {
+            "stdout": "",
+            "stderr": "",
+            "returncode": process.returncode,
+        }
 
         if stdout_data:
+            service_response["stdout"] = stdout_data.decode("utf-8").strip()
             _LOGGER.debug(
                 "Stdout of command: `%s`, return code: %s:\n%s",
                 cmd,
@@ -105,6 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 stdout_data,
             )
         if stderr_data:
+            service_response["stderr"] = stderr_data.decode("utf-8").strip()
             _LOGGER.debug(
                 "Stderr of command: `%s`, return code: %s:\n%s",
                 cmd,
@@ -116,6 +132,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
 
+        return service_response
+
     for name in conf:
-        hass.services.async_register(DOMAIN, name, async_service_handler)
+        hass.services.async_register(
+            DOMAIN,
+            name,
+            async_service_handler,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
     return True

@@ -7,13 +7,17 @@ from homewizard_energy.errors import DisabledError, HomeWizardEnergyException
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
 
 from .generator import get_mock_device
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_load_unload(aioclient_mock, hass):
+async def test_load_unload(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test loading and unloading of integration."""
 
     device = get_mock_device()
@@ -41,7 +45,9 @@ async def test_load_unload(aioclient_mock, hass):
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_load_failed_host_unavailable(aioclient_mock, hass):
+async def test_load_failed_host_unavailable(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test setup handles unreachable host."""
 
     def MockInitialize():
@@ -68,7 +74,9 @@ async def test_load_failed_host_unavailable(aioclient_mock, hass):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_load_detect_api_disabled(aioclient_mock, hass):
+async def test_load_detect_api_disabled(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test setup detects disabled API."""
 
     def MockInitialize():
@@ -106,7 +114,9 @@ async def test_load_detect_api_disabled(aioclient_mock, hass):
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_load_removes_reauth_flow(aioclient_mock, hass):
+async def test_load_removes_reauth_flow(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test setup removes reauth flow when API is enabled."""
 
     device = get_mock_device()
@@ -141,7 +151,9 @@ async def test_load_removes_reauth_flow(aioclient_mock, hass):
     assert len(flows) == 0
 
 
-async def test_load_handles_homewizardenergy_exception(aioclient_mock, hass):
+async def test_load_handles_homewizardenergy_exception(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test setup handles exception from API."""
 
     def MockInitialize():
@@ -168,7 +180,9 @@ async def test_load_handles_homewizardenergy_exception(aioclient_mock, hass):
     assert entry.state is ConfigEntryState.SETUP_RETRY or ConfigEntryState.SETUP_ERROR
 
 
-async def test_load_handles_generic_exception(aioclient_mock, hass):
+async def test_load_handles_generic_exception(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test setup handles global exception."""
 
     def MockInitialize():
@@ -195,7 +209,9 @@ async def test_load_handles_generic_exception(aioclient_mock, hass):
     assert entry.state is ConfigEntryState.SETUP_RETRY or ConfigEntryState.SETUP_ERROR
 
 
-async def test_load_handles_initialization_error(aioclient_mock, hass):
+async def test_load_handles_initialization_error(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test handles non-exception error."""
 
     device = get_mock_device()

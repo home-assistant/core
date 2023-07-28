@@ -7,7 +7,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DelugeEntity
 from .const import DOMAIN
@@ -15,9 +15,7 @@ from .coordinator import DelugeDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Deluge switch."""
     async_add_entities([DelugeSwitch(hass.data[DOMAIN][entry.entry_id])])
@@ -25,6 +23,8 @@ async def async_setup_entry(
 
 class DelugeSwitch(DelugeEntity, SwitchEntity):
     """Representation of a Deluge switch."""
+
+    _attr_name = None
 
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize the Deluge switch."""

@@ -100,7 +100,9 @@ async def test_setup_backoff(
         assert aioclient_mock.call_count == idx + 1
 
 
-async def test_service_set_txt(hass, aioclient_mock, setup_duckdns):
+async def test_service_set_txt(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_duckdns
+) -> None:
     """Test set txt service call."""
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()
@@ -116,7 +118,9 @@ async def test_service_set_txt(hass, aioclient_mock, setup_duckdns):
     assert aioclient_mock.call_count == 1
 
 
-async def test_service_clear_txt(hass, aioclient_mock, setup_duckdns):
+async def test_service_clear_txt(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_duckdns
+) -> None:
     """Test clear txt service call."""
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()

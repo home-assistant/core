@@ -38,6 +38,11 @@ async def test_entry_diagnostics(
             "unique_id": REDACTED,
             "disabled_by": None,
         },
+        "camera_sources": {
+            "Image": "http://1.2.3.4:80/axis-cgi/jpg/image.cgi",
+            "MJPEG": "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi",
+            "Stream": "rtsp://user:pass@1.2.3.4/axis-media/media.amp?videocodec=h264",
+        },
         "api_discovery": [
             {
                 "id": "api-discovery",

@@ -1,8 +1,12 @@
 """Tests for the Bluetooth integration API."""
+import time
+
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BaseHaRemoteScanner,
     BaseHaScanner,
     HaBluetoothConnector,
@@ -11,7 +15,13 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import FakeScanner, MockBleakClient, _get_manager, generate_advertisement_data
+from . import (
+    FakeScanner,
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 
 async def test_scanner_by_source(hass: HomeAssistant, enable_bluetooth: None) -> None:
@@ -23,6 +33,11 @@ async def test_scanner_by_source(hass: HomeAssistant, enable_bluetooth: None) ->
     assert async_scanner_by_source(hass, "hci2") is hci2_scanner
     cancel_hci2()
     assert async_scanner_by_source(hass, "hci2") is None
+
+
+async def test_monotonic_time() -> None:
+    """Test monotonic time."""
+    assert MONOTONIC_TIME() == pytest.approx(time.monotonic(), abs=0.1)
 
 
 async def test_async_scanner_devices_by_address_connectable(
@@ -45,6 +60,7 @@ async def test_async_scanner_devices_by_address_connectable(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -56,7 +72,7 @@ async def test_async_scanner_devices_by_address_connectable(
     )
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
@@ -89,7 +105,7 @@ async def test_async_scanner_devices_by_address_non_connectable(
 ) -> None:
     """Test getting scanner devices by address with non-connectable devices."""
     manager = _get_manager()
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},

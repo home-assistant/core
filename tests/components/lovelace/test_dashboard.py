@@ -1,4 +1,5 @@
 """Test the Lovelace initialization."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +13,9 @@ from tests.common import assert_setup_component, async_capture_events
 from tests.typing import WebSocketGenerator
 
 
-async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
+async def test_lovelace_from_storage(
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
@@ -64,8 +67,8 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
 
 
 async def test_lovelace_from_storage_save_before_load(
-    hass, hass_ws_client, hass_storage
-):
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test we can load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
     client = await hass_ws_client(hass)
@@ -81,7 +84,9 @@ async def test_lovelace_from_storage_save_before_load(
     }
 
 
-async def test_lovelace_from_storage_delete(hass, hass_ws_client, hass_storage):
+async def test_lovelace_from_storage_delete(
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test we delete lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
     client = await hass_ws_client(hass)
@@ -162,7 +167,9 @@ async def test_lovelace_from_yaml(
 
 
 @pytest.mark.parametrize("url_path", ("test-panel", "test-panel-no-sidebar"))
-async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
+async def test_dashboard_from_yaml(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, url_path
+) -> None:
     """Test we load lovelace dashboard config from yaml."""
     assert await async_setup_component(
         hass,
@@ -290,7 +297,9 @@ async def test_wrong_key_dashboard_from_yaml(hass: HomeAssistant) -> None:
         )
 
 
-async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
+async def test_storage_dashboards(
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
@@ -431,7 +440,9 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     assert dashboard.CONFIG_STORAGE_KEY.format(dashboard_id) not in hass_storage
 
 
-async def test_storage_dashboard_migrate(hass, hass_ws_client, hass_storage):
+async def test_storage_dashboard_migrate(
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test changing url path from storage config."""
     hass_storage[dashboard.DASHBOARDS_STORAGE_KEY] = {
         "key": "lovelace_dashboards",

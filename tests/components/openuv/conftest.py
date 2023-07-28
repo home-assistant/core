@@ -1,4 +1,5 @@
 """Define test fixtures for OpenUV."""
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -18,6 +19,15 @@ TEST_API_KEY = "abcde12345"
 TEST_ELEVATION = 0
 TEST_LATITUDE = 51.528308
 TEST_LONGITUDE = -0.3817765
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.openuv.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="client")

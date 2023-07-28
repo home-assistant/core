@@ -2,7 +2,6 @@
 
 https://github.com/home-assistant/core/issues/44314
 """
-
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -10,6 +9,7 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -21,7 +21,7 @@ from ..common import (
 )
 
 
-async def test_velux_cover_setup(hass):
+async def test_velux_cover_setup(hass: HomeAssistant) -> None:
     """Test that a velux gateway can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "velux_gateway.json")
     await setup_test_accessories(hass, accessories)

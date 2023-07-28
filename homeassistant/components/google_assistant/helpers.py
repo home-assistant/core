@@ -21,8 +21,13 @@ from homeassistant.const import (
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.helpers import area_registry, device_registry, entity_registry, start
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    start,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
@@ -52,15 +57,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[
-    entity_registry.RegistryEntry | None,
-    device_registry.DeviceEntry | None,
-    area_registry.AreaEntry | None,
-]:
+) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
     """Get registry entries."""
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
-    area_reg = area_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
         device_entry = dev_reg.devices.get(entity_entry.device_id)
@@ -85,19 +86,19 @@ def _get_registry_entries(
 class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
+    _store: GoogleConfigStore
     _unsub_report_state: Callable[[], None] | None = None
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize abstract config."""
         self.hass = hass
-        self._store = None
-        self._google_sync_unsub = {}
+        self._google_sync_unsub: dict[str, CALLBACK_TYPE] = {}
         self._local_sdk_active = False
         self._local_last_active: datetime | None = None
         self._local_sdk_version_warn = False
         self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
 
-    async def async_initialize(self):
+    async def async_initialize(self) -> None:
         """Perform async initialization of config."""
         self._store = GoogleConfigStore(self.hass)
         await self._store.async_initialize()
@@ -194,7 +195,7 @@ class AbstractConfig(ABC):
         await gather(*jobs)
 
     @callback
-    def async_enable_report_state(self):
+    def async_enable_report_state(self) -> None:
         """Enable proactive mode."""
         # Circular dep
         # pylint: disable-next=import-outside-toplevel
@@ -204,7 +205,7 @@ class AbstractConfig(ABC):
             self._unsub_report_state = async_enable_report_state(self.hass, self)
 
     @callback
-    def async_disable_report_state(self):
+    def async_disable_report_state(self) -> None:
         """Disable report state."""
         if self._unsub_report_state is not None:
             self._unsub_report_state()
@@ -219,7 +220,7 @@ class AbstractConfig(ABC):
             await self.async_disconnect_agent_user(agent_user_id)
         return status
 
-    async def async_sync_entities_all(self):
+    async def async_sync_entities_all(self) -> int:
         """Sync all entities to Google for all registered agents."""
         if not self._store.agent_user_ids:
             return 204
@@ -248,7 +249,7 @@ class AbstractConfig(ABC):
         )
 
     @callback
-    def async_schedule_google_sync_all(self):
+    def async_schedule_google_sync_all(self) -> None:
         """Schedule a sync for all registered agents."""
         for agent_user_id in self._store.agent_user_ids:
             self.async_schedule_google_sync(agent_user_id)
@@ -278,7 +279,7 @@ class AbstractConfig(ABC):
         self._store.pop_agent_user_id(agent_user_id)
 
     @callback
-    def async_enable_local_sdk(self):
+    def async_enable_local_sdk(self) -> None:
         """Enable the local SDK."""
         setup_successful = True
         setup_webhook_ids = []
@@ -322,7 +323,7 @@ class AbstractConfig(ABC):
         self._local_sdk_active = setup_successful
 
     @callback
-    def async_disable_local_sdk(self):
+    def async_disable_local_sdk(self) -> None:
         """Disable the local SDK."""
         if not self._local_sdk_active:
             return
@@ -499,7 +500,7 @@ class GoogleEntity:
         self.hass = hass
         self.config = config
         self.state = state
-        self._traits = None
+        self._traits: list[trait._Trait] | None = None
 
     @property
     def entity_id(self):
@@ -507,7 +508,7 @@ class GoogleEntity:
         return self.state.entity_id
 
     @callback
-    def traits(self):
+    def traits(self) -> list[trait._Trait]:
         """Return traits for entity."""
         if self._traits is not None:
             return self._traits

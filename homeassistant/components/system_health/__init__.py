@@ -14,7 +14,11 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, integration_platform
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    integration_platform,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -23,6 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "system_health"
 
 INFO_CALLBACK_TIMEOUT = 5
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass
@@ -188,7 +194,7 @@ async def handle_info(
     )
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(slots=True)
 class SystemHealthRegistration:
     """Helper class to track platform registration."""
 

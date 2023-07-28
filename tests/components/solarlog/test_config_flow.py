@@ -59,7 +59,7 @@ def init_config_flow(hass):
     return flow
 
 
-async def test_user(hass, test_connect):
+async def test_user(hass: HomeAssistant, test_connect) -> None:
     """Test user config."""
     flow = init_config_flow(hass)
 
@@ -74,7 +74,7 @@ async def test_user(hass, test_connect):
     assert result["data"][CONF_HOST] == HOST
 
 
-async def test_import(hass, test_connect):
+async def test_import(hass: HomeAssistant, test_connect) -> None:
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -97,7 +97,7 @@ async def test_import(hass, test_connect):
     assert result["data"][CONF_HOST] == HOST
 
 
-async def test_abort_if_already_setup(hass, test_connect):
+async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None:
     """Test we abort if the device is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(

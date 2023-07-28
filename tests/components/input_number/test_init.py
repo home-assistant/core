@@ -23,7 +23,8 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache
+from tests.common import MockUser, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -316,7 +317,9 @@ async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> Non
     assert float(state.state) == 0
 
 
-async def test_input_number_context(hass, hass_admin_user):
+async def test_input_number_context(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test that input_number context works."""
     assert await async_setup_component(
         hass, "input_number", {"input_number": {"b1": {"min": 0, "max": 100}}}
@@ -339,7 +342,9 @@ async def test_input_number_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_reload(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -411,7 +416,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -420,7 +425,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={
@@ -446,7 +451,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(
         config={
@@ -478,7 +485,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -503,7 +512,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update_min_max(hass, hass_ws_client, storage_setup):
+async def test_update_min_max(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating min/max updates the state."""
 
     settings = {
@@ -560,7 +571,9 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     assert float(state.state) == 5
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
@@ -593,7 +606,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert float(state.state) == 10
 
 
-async def test_setup_no_config(hass, hass_admin_user):
+async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
     assert await async_setup_component(hass, DOMAIN, {})

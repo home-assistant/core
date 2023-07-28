@@ -5,9 +5,27 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import StreamType
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import WEBRTC_ANSWER
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture(autouse=True)
+async def camera_only() -> None:
+    """Enable only the camera platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.CAMERA],
+    ):
+        yield
 
 
 @pytest.fixture(name="mock_camera")

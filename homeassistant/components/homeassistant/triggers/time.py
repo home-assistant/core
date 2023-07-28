@@ -12,15 +12,16 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
     async_track_time_change,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 import homeassistant.util.dt as dt_util
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
@@ -48,8 +49,8 @@ async def async_attach_trigger(
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
     entities: dict[str, CALLBACK_TYPE] = {}
-    removes = []
-    job = HassJob(action)
+    removes: list[CALLBACK_TYPE] = []
+    job = HassJob(action, f"time trigger {trigger_info}")
 
     @callback
     def time_automation_listener(description, now, *, entity_id=None):
@@ -68,12 +69,12 @@ async def async_attach_trigger(
         )
 
     @callback
-    def update_entity_trigger_event(event):
+    def update_entity_trigger_event(event: EventType[EventStateChangedData]) -> None:
         """update_entity_trigger from the event."""
         return update_entity_trigger(event.data["entity_id"], event.data["new_state"])
 
     @callback
-    def update_entity_trigger(entity_id, new_state=None):
+    def update_entity_trigger(entity_id: str, new_state: State | None = None) -> None:
         """Update the entity trigger for the entity_id."""
         # If a listener was already set up for entity, remove it.
         if remove := entities.pop(entity_id, None):
@@ -82,6 +83,8 @@ async def async_attach_trigger(
 
         if not new_state:
             return
+
+        trigger_dt: datetime | None
 
         # Check state of entity. If valid, set up a listener.
         if new_state.domain == "input_datetime":
@@ -155,7 +158,7 @@ async def async_attach_trigger(
         if remove:
             entities[entity_id] = remove
 
-    to_track = []
+    to_track: list[str] = []
 
     for at_time in config[CONF_AT]:
         if isinstance(at_time, str):

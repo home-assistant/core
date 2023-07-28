@@ -113,7 +113,7 @@ async def test_update(player, state) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, value",
+    ("source", "value"),
     [("PVR", SourceCodes.PVR), ("BD", SourceCodes.BD), ("INVALID", None)],
 )
 async def test_select_source(
@@ -168,7 +168,7 @@ async def test_volume_down(player, state) -> None:
 
 
 @pytest.mark.parametrize(
-    "mode, mode_enum",
+    ("mode", "mode_enum"),
     [
         ("STEREO", DecodeMode2CH.STEREO),
         ("STEREO_DOWNMIX", DecodeModeMCH.STEREO_DOWNMIX),
@@ -183,7 +183,7 @@ async def test_sound_mode(player, state, mode, mode_enum) -> None:
 
 
 @pytest.mark.parametrize(
-    "modes, modes_enum",
+    ("modes", "modes_enum"),
     [
         (["STEREO", "DOLBY_PL"], [DecodeMode2CH.STEREO, DecodeMode2CH.DOLBY_PL]),
         (["STEREO_DOWNMIX"], [DecodeModeMCH.STEREO_DOWNMIX]),
@@ -219,7 +219,7 @@ async def test_volume_level(player, state) -> None:
     assert player.volume_level is None
 
 
-@pytest.mark.parametrize("volume, call", [(0.0, 0), (0.5, 50), (1.0, 99)])
+@pytest.mark.parametrize(("volume", "call"), [(0.0, 0), (0.5, 50), (1.0, 99)])
 async def test_set_volume_level(player, state, volume, call) -> None:
     """Test setting volume."""
     await player.async_set_volume_level(volume)
@@ -227,7 +227,7 @@ async def test_set_volume_level(player, state, volume, call) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, media_content_type",
+    ("source", "media_content_type"),
     [
         (SourceCodes.DAB, MediaType.MUSIC),
         (SourceCodes.FM, MediaType.MUSIC),
@@ -242,7 +242,7 @@ async def test_media_content_type(player, state, source, media_content_type) -> 
 
 
 @pytest.mark.parametrize(
-    "source, dab, rds, channel",
+    ("source", "dab", "rds", "channel"),
     [
         (SourceCodes.DAB, "dab", "rds", "dab"),
         (SourceCodes.DAB, None, None, None),
@@ -260,7 +260,7 @@ async def test_media_channel(player, state, source, dab, rds, channel) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, dls, artist",
+    ("source", "dls", "artist"),
     [
         (SourceCodes.DAB, "dls", "dls"),
         (SourceCodes.FM, "dls", None),
@@ -275,7 +275,7 @@ async def test_media_artist(player, state, source, dls, artist) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, channel, title",
+    ("source", "channel", "title"),
     [
         (SourceCodes.DAB, "channel", "DAB - channel"),
         (SourceCodes.DAB, None, "DAB"),

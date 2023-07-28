@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import inspect
+from itertools import chain
 
 import pytest
 
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -365,6 +368,8 @@ _CONVERTED_VALUE: dict[
     ],
     UnitlessRatioConverter: [
         (5, None, 500, PERCENTAGE),
+        (5, None, 5000000000, CONCENTRATION_PARTS_PER_BILLION),
+        (5, None, 5000000, CONCENTRATION_PARTS_PER_MILLION),
         (5, PERCENTAGE, 0.05, None),
     ],
     VolumeConverter: [
@@ -444,7 +449,7 @@ def test_all_converters(converter: type[BaseUnitConverter]) -> None:
 
 
 @pytest.mark.parametrize(
-    "converter,valid_unit",
+    ("converter", "valid_unit"),
     [
         # Ensure all units are tested
         (converter, valid_unit)
@@ -458,7 +463,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
 
 
 @pytest.mark.parametrize(
-    "converter,valid_unit",
+    ("converter", "valid_unit"),
     [
         # Ensure all units are tested
         (converter, valid_unit)
@@ -478,7 +483,7 @@ def test_convert_invalid_unit(
 
 
 @pytest.mark.parametrize(
-    "converter,from_unit,to_unit",
+    ("converter", "from_unit", "to_unit"),
     [
         # Pick any two units
         (converter, valid_units[0], valid_units[1])
@@ -494,7 +499,7 @@ def test_convert_nonnumeric_value(
 
 
 @pytest.mark.parametrize(
-    "converter,from_unit,to_unit,expected",
+    ("converter", "from_unit", "to_unit", "expected"),
     [
         # Process all items in _GET_UNIT_RATIO
         (converter, item[0], item[1], item[2])
@@ -511,7 +516,7 @@ def test_get_unit_ratio(
 
 
 @pytest.mark.parametrize(
-    "converter,value,from_unit,expected,to_unit",
+    ("converter", "value", "from_unit", "expected", "to_unit"),
     [
         # Process all items in _CONVERTED_VALUE
         (converter, list_item[0], list_item[1], list_item[2], list_item[3])
@@ -531,7 +536,87 @@ def test_unit_conversion(
 
 
 @pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
+    ("converter", "value", "from_unit", "expected", "to_unit"),
+    [
+        # Process all items in _CONVERTED_VALUE
+        (converter, value, from_unit, expected, to_unit)
+        for converter, item in _CONVERTED_VALUE.items()
+        for value, from_unit, expected, to_unit in item
+    ],
+)
+def test_unit_conversion_factory(
+    converter: type[BaseUnitConverter],
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert converter.converter_factory(from_unit, to_unit)(value) == pytest.approx(
+        expected
+    )
+
+
+def test_unit_conversion_factory_allow_none_with_none() -> None:
+    """Test test_unit_conversion_factory_allow_none with None."""
+    assert (
+        SpeedConverter.converter_factory_allow_none(
+            UnitOfSpeed.FEET_PER_SECOND, UnitOfSpeed.FEET_PER_SECOND
+        )(1)
+        == 1
+    )
+    assert (
+        SpeedConverter.converter_factory_allow_none(
+            UnitOfSpeed.FEET_PER_SECOND, UnitOfSpeed.FEET_PER_SECOND
+        )(None)
+        is None
+    )
+    assert (
+        TemperatureConverter.converter_factory_allow_none(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
+        )(1)
+        == 1
+    )
+    assert (
+        TemperatureConverter.converter_factory_allow_none(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
+        )(None)
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    ("converter", "value", "from_unit", "expected", "to_unit"),
+    chain(
+        [
+            # Process all items in _CONVERTED_VALUE
+            (converter, value, from_unit, expected, to_unit)
+            for converter, item in _CONVERTED_VALUE.items()
+            for value, from_unit, expected, to_unit in item
+        ],
+        [
+            # Process all items in _CONVERTED_VALUE and replace the value with None
+            (converter, None, from_unit, None, to_unit)
+            for converter, item in _CONVERTED_VALUE.items()
+            for value, from_unit, expected, to_unit in item
+        ],
+    ),
+)
+def test_unit_conversion_factory_allow_none(
+    converter: type[BaseUnitConverter],
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert converter.converter_factory_allow_none(from_unit, to_unit)(
+        value
+    ) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("value", "from_unit", "expected", "to_unit"),
     [
         (100, UnitOfTemperature.CELSIUS, 180, UnitOfTemperature.FAHRENHEIT),
         (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),

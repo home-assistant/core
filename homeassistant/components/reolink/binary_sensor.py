@@ -1,4 +1,4 @@
-"""This component provides support for Reolink binary sensors."""
+"""Component providing support for Reolink binary sensors."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 
 @dataclass
@@ -87,7 +87,7 @@ BINARY_SENSORS = (
         icon="mdi:bell-ring-outline",
         icon_off="mdi:doorbell",
         value=lambda api, ch: api.visitor_detected(ch),
-        supported=lambda api, ch: api.is_doorbell_enabled(ch),
+        supported=lambda api, ch: api.is_doorbell(ch),
     ),
 )
 
@@ -113,10 +113,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
+class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEntity):
     """Base binary-sensor class for Reolink IP camera motion sensors."""
 
-    _attr_has_entity_name = True
     entity_description: ReolinkBinarySensorEntityDescription
 
     def __init__(

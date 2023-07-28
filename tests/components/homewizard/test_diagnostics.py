@@ -12,7 +12,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
@@ -21,7 +21,7 @@ async def test_diagnostics(
         "data": {
             "device": {
                 "product_name": "P1 Meter",
-                "product_type": "HWE-P1",
+                "product_type": "HWE-SKT",
                 "serial": REDACTED,
                 "api_version": "v1",
                 "firmware_version": "2.11",

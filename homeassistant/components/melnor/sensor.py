@@ -45,6 +45,15 @@ def watering_seconds_left(valve: Valve) -> datetime | None:
     return dt_util.utc_from_timestamp(valve.watering_end_time)
 
 
+def next_cycle(valve: Valve) -> datetime | None:
+    """Return the value of the next_cycle date, only if the cycle is enabled."""
+
+    if valve.schedule_enabled is True:
+        return valve.next_cycle
+
+    return None
+
+
 @dataclass
 class MelnorSensorEntityDescriptionMixin:
     """Mixin for required keys."""
@@ -78,7 +87,6 @@ DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         key="battery",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=lambda device: device.battery_level,
@@ -88,7 +96,7 @@ DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         key="rssi",
-        name="RSSI",
+        translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=lambda device: device.rssi,
@@ -99,8 +107,14 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneSensorEntityDescription] = [
     MelnorZoneSensorEntityDescription(
         device_class=SensorDeviceClass.TIMESTAMP,
         key="manual_cycle_end",
-        name="Manual Cycle End",
+        translation_key="manual_cycle_end",
         state_fn=watering_seconds_left,
+    ),
+    MelnorZoneSensorEntityDescription(
+        device_class=SensorDeviceClass.TIMESTAMP,
+        key="next_cycle",
+        translation_key="next_cycle",
+        state_fn=next_cycle,
     ),
 ]
 

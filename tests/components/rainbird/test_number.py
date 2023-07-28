@@ -29,7 +29,7 @@ def platforms() -> list[str]:
 
 
 @pytest.mark.parametrize(
-    "rain_delay_response,expected_state",
+    ("rain_delay_response", "expected_state"),
     [(RAIN_DELAY, "16"), (RAIN_DELAY_OFF, "0")],
 )
 async def test_number_values(
@@ -67,9 +67,11 @@ async def test_set_value(
     assert await setup_integration()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, SERIAL_NUMBER)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL_NUMBER)})
     assert device
     assert device.name == "Rain Bird Controller"
+    assert device.model == "ST8x-WiFi"
+    assert device.sw_version == "9.12"
 
     aioclient_mock.mock_calls.clear()
     responses.append(mock_response(ACK_ECHO))

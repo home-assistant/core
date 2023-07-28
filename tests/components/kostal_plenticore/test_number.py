@@ -1,5 +1,4 @@
 """Test Kostal Plenticore number."""
-
 from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
@@ -17,7 +16,7 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -63,7 +62,20 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
                     "id": "Battery:MinHomeComsumption",
                 }
             ),
-        ]
+        ],
+        "scb:network": [
+            SettingsData(
+                {
+                    "min": "1",
+                    "default": None,
+                    "access": "readwrite",
+                    "unit": None,
+                    "id": "Hostname",
+                    "type": "string",
+                    "max": "63",
+                }
+            )
+        ],
     }
 
     # this values are always retrieved by the integration on startup
@@ -90,8 +102,8 @@ async def test_setup_all_entries(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
-):
+    entity_registry_enabled_by_default: None,
+) -> None:
     """Test if all available entries are setup."""
 
     mock_config_entry.add_to_hass(hass)
@@ -109,11 +121,26 @@ async def test_setup_no_entries(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
-):
+    entity_registry_enabled_by_default: None,
+) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
-    mock_plenticore_client.get_settings.return_value = []
+    # remove all settings except hostname which is used during setup
+    mock_plenticore_client.get_settings.return_value = {
+        "scb:network": [
+            SettingsData(
+                {
+                    "min": "1",
+                    "default": None,
+                    "access": "readwrite",
+                    "unit": None,
+                    "id": "Hostname",
+                    "type": "string",
+                    "max": "63",
+                }
+            )
+        ],
+    }
 
     mock_config_entry.add_to_hass(hass)
 
@@ -130,8 +157,8 @@ async def test_number_has_value(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
-):
+    entity_registry_enabled_by_default: None,
+) -> None:
     """Test if number has a value if data is provided on update."""
 
     mock_get_setting_values.append({"devices:local": {"Battery:MinSoc": "42"}})
@@ -141,7 +168,7 @@ async def test_number_has_value(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     state = hass.states.get("number.scb_battery_min_soc")
@@ -155,8 +182,8 @@ async def test_number_is_unavailable(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
-):
+    entity_registry_enabled_by_default: None,
+) -> None:
     """Test if number is unavailable if no data is provided on update."""
 
     mock_config_entry.add_to_hass(hass)
@@ -164,7 +191,7 @@ async def test_number_is_unavailable(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     state = hass.states.get("number.scb_battery_min_soc")
@@ -176,8 +203,8 @@ async def test_set_value(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
-):
+    entity_registry_enabled_by_default: None,
+) -> None:
     """Test if a new value could be set."""
 
     mock_get_setting_values.append({"devices:local": {"Battery:MinSoc": "42"}})
@@ -187,7 +214,7 @@ async def test_set_value(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     await hass.services.async_call(

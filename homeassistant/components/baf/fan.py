@@ -33,15 +33,20 @@ async def async_setup_entry(
     """Set up SenseME fans."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     if data.device.has_fan:
-        async_add_entities([BAFFan(data.device, data.device.name)])
+        async_add_entities([BAFFan(data.device)])
 
 
 class BAFFan(BAFEntity, FanEntity):
     """BAF ceiling fan component."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.DIRECTION
+        | FanEntityFeature.PRESET_MODE
+    )
     _attr_preset_modes = [PRESET_MODE_AUTO]
     _attr_speed_count = SPEED_COUNT
+    _attr_name = None
 
     @callback
     def _async_update_attrs(self) -> None:

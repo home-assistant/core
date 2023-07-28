@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 from pysmartthings import CAPABILITIES, AppEntity, Capability
+import pytest
 
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.const import (
@@ -15,13 +16,13 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_update_app(hass, app):
+async def test_update_app(hass: HomeAssistant, app) -> None:
     """Test update_app does not save if app is current."""
     await smartapp.update_app(hass, app)
     assert app.save.call_count == 0
 
 
-async def test_update_app_updated_needed(hass, app):
+async def test_update_app_updated_needed(hass: HomeAssistant, app) -> None:
     """Test update_app updates when an app is needed."""
     mock_app = Mock(AppEntity)
     mock_app.app_name = "Test"
@@ -39,8 +40,8 @@ async def test_update_app_updated_needed(hass, app):
 
 
 async def test_smartapp_update_saves_token(
-    hass, smartthings_mock, location, device_factory
-):
+    hass: HomeAssistant, smartthings_mock, location, device_factory
+) -> None:
     """Test update saves token."""
     # Arrange
     entry = MockConfigEntry(
@@ -61,7 +62,7 @@ async def test_smartapp_update_saves_token(
     assert entry.data[CONF_REFRESH_TOKEN] == request.refresh_token
 
 
-async def test_smartapp_uninstall(hass, config_entry):
+async def test_smartapp_uninstall(hass: HomeAssistant, config_entry) -> None:
     """Test the config entry is unloaded when the app is uninstalled."""
     config_entry.add_to_hass(hass)
     app = Mock()
@@ -88,8 +89,8 @@ async def test_smartapp_webhook(hass: HomeAssistant) -> None:
 
 
 async def test_smartapp_sync_subscriptions(
-    hass, smartthings_mock, device_factory, subscription_factory
-):
+    hass: HomeAssistant, smartthings_mock, device_factory, subscription_factory
+) -> None:
     """Test synchronization adds and removes and ignores unused."""
     smartthings_mock.subscriptions.return_value = [
         subscription_factory(Capability.thermostat),
@@ -112,8 +113,8 @@ async def test_smartapp_sync_subscriptions(
 
 
 async def test_smartapp_sync_subscriptions_up_to_date(
-    hass, smartthings_mock, device_factory, subscription_factory
-):
+    hass: HomeAssistant, smartthings_mock, device_factory, subscription_factory
+) -> None:
     """Test synchronization does nothing when current."""
     smartthings_mock.subscriptions.return_value = [
         subscription_factory(Capability.battery),
@@ -136,8 +137,12 @@ async def test_smartapp_sync_subscriptions_up_to_date(
 
 
 async def test_smartapp_sync_subscriptions_limit_warning(
-    hass, smartthings_mock, device_factory, subscription_factory, caplog
-):
+    hass: HomeAssistant,
+    smartthings_mock,
+    device_factory,
+    subscription_factory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test synchronization over the limit logs a warning."""
     smartthings_mock.subscriptions.return_value = []
     devices = [
@@ -155,8 +160,8 @@ async def test_smartapp_sync_subscriptions_limit_warning(
 
 
 async def test_smartapp_sync_subscriptions_handles_exceptions(
-    hass, smartthings_mock, device_factory, subscription_factory
-):
+    hass: HomeAssistant, smartthings_mock, device_factory, subscription_factory
+) -> None:
     """Test synchronization does nothing when current."""
     smartthings_mock.delete_subscription.side_effect = Exception
     smartthings_mock.create_subscription.side_effect = Exception

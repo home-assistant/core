@@ -13,7 +13,7 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle, dt as dt_util
 
 from .const import (
     CONF_PLANT_ID,
@@ -138,6 +138,8 @@ async def async_setup_entry(
 class GrowattInverter(SensorEntity):
     """Representation of a Growatt Sensor."""
 
+    _attr_has_entity_name = True
+
     entity_description: GrowattSensorEntityDescription
 
     def __init__(
@@ -147,7 +149,6 @@ class GrowattInverter(SensorEntity):
         self.probe = probe
         self.entity_description = description
 
-        self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = unique_id
         self._attr_icon = "mdi:solar-power"
 
@@ -234,10 +235,10 @@ class GrowattData:
                 sorted_keys = sorted(mix_chart_entries)
 
                 # Create datetime from the latest entry
-                date_now = dt.now().date()
-                last_updated_time = dt.parse_time(str(sorted_keys[-1]))
+                date_now = dt_util.now().date()
+                last_updated_time = dt_util.parse_time(str(sorted_keys[-1]))
                 mix_detail["lastdataupdate"] = datetime.datetime.combine(
-                    date_now, last_updated_time, dt.DEFAULT_TIME_ZONE
+                    date_now, last_updated_time, dt_util.DEFAULT_TIME_ZONE
                 )
 
                 # Dashboard data is largely inaccurate for mix system but it is the only

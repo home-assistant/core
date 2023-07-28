@@ -23,6 +23,11 @@ from tests.typing import ClientSessionGenerator
 TEST_ENTITY_ID = "media_player.walkman"
 
 
+@pytest.fixture(autouse=True)
+def autouse_disable_platforms(disable_platforms):
+    """Auto use the disable_platforms fixture."""
+
+
 @pytest.fixture(name="mock_media_seek")
 def media_player_media_seek_fixture():
     """Mock demo YouTube player media seek."""
@@ -380,7 +385,7 @@ async def test_play_media(hass: HomeAssistant) -> None:
     assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) == "some_id"
 
 
-async def test_seek(hass, mock_media_seek):
+async def test_seek(hass: HomeAssistant, mock_media_seek) -> None:
     """Test seek."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}

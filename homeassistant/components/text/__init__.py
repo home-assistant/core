@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 import re
 from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -65,16 +65,16 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
     value = service_call.data[ATTR_VALUE]
     if len(value) < entity.min:
         raise ValueError(
-            f"Value {value} for {entity.name} is too short (minimum length"
+            f"Value {value} for {entity.entity_id} is too short (minimum length"
             f" {entity.min})"
         )
     if len(value) > entity.max:
         raise ValueError(
-            f"Value {value} for {entity.name} is too long (maximum length {entity.max})"
+            f"Value {value} for {entity.entity_id} is too long (maximum length {entity.max})"
         )
     if entity.pattern_cmp and not entity.pattern_cmp.match(value):
         raise ValueError(
-            f"Value {value} for {entity.name} doesn't match pattern {entity.pattern}"
+            f"Value {value} for {entity.entity_id} doesn't match pattern {entity.pattern}"
         )
     await entity.async_set_value(value)
 

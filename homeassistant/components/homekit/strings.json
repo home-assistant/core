@@ -24,14 +24,14 @@
         "data": {
           "entities": "Entities"
         },
-        "description": "All “{domains}” entities will be included unless specific entities are selected.",
+        "description": "Select entities from each domain in \u201c{domains}\u201d. The include will cover the entire domain if you do not select any entities for a given domain.",
         "title": "Select the entities to be included"
       },
       "exclude": {
         "data": {
           "entities": "[%key:component::homekit::options::step::include::data::entities%]"
         },
-        "description": "All “{domains}” entities will be included except for the excluded entities and categorized entities.",
+        "description": "All \u201c{domains}\u201d entities will be included except for the excluded entities and categorized entities.",
         "title": "Select the entities to be excluded"
       },
       "cameras": {
@@ -67,6 +67,20 @@
     },
     "abort": {
       "port_name_in_use": "An accessory or bridge with the same name or port is already configured."
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads homekit and re-process YAML-configuration."
+    },
+    "reset_accessory": {
+      "name": "Reset accessory",
+      "description": "Resets a HomeKit accessory."
+    },
+    "unpair": {
+      "name": "Unpair an accessory or bridge",
+      "description": "Forcefully removes all pairings from an accessory to allow re-pairing. Use this service if the accessory is no longer responsive, and you want to avoid deleting and re-adding the entry. Room locations, and accessory preferences will be lost."
     }
   }
 }

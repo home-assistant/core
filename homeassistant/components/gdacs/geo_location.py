@@ -77,7 +77,7 @@ async def async_setup_entry(
 
 
 class GdacsEvent(GeolocationEvent):
-    """This represents an external event with GDACS feed data."""
+    """Represents an external event with GDACS feed data."""
 
     _attr_should_poll = False
     _attr_source = SOURCE

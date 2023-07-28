@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -13,7 +14,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name",
+    ("entity_id", "uid", "name"),
     [
         (
             "sensor.garden_humidity_sensor",
@@ -33,8 +34,8 @@ from tests.common import async_fire_time_changed
     ],
 )
 async def test_sensor_get_state(
-    hass, init_integration, entity_id: str, uid: str, name: str
-):
+    hass: HomeAssistant, init_integration, entity_id: str, uid: str, name: str
+) -> None:
     """Test states of the sensor."""
     init_integration
     registry = er.async_get(hass)
@@ -57,7 +58,7 @@ async def test_sensor_get_state(
     elif states_response[0]["type"] == "humiditySensor":
         states_response[0]["state"]["currentRelativeHumidity"] = "1"
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

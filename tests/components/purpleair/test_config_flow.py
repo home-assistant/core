@@ -7,6 +7,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.purpleair import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_API_KEY, TEST_SENSOR_INDEX1, TEST_SENSOR_INDEX2
@@ -16,7 +17,7 @@ TEST_LONGITUDE = -0.2416796
 
 
 @pytest.mark.parametrize(
-    "check_api_key_mock,check_api_key_errors",
+    ("check_api_key_mock", "check_api_key_errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
@@ -24,7 +25,7 @@ TEST_LONGITUDE = -0.2416796
     ],
 )
 @pytest.mark.parametrize(
-    "get_nearby_sensors_mock,get_nearby_sensors_errors",
+    ("get_nearby_sensors_mock", "get_nearby_sensors_errors"),
     [
         (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
@@ -32,14 +33,14 @@ TEST_LONGITUDE = -0.2416796
     ],
 )
 async def test_create_entry_by_coordinates(
-    hass,
+    hass: HomeAssistant,
     api,
     check_api_key_errors,
     check_api_key_mock,
     get_nearby_sensors_errors,
     get_nearby_sensors_mock,
     mock_aiopurpleair,
-):
+) -> None:
     """Test creating an entry by entering a latitude/longitude (including errors)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -101,7 +102,9 @@ async def test_create_entry_by_coordinates(
     }
 
 
-async def test_duplicate_error(hass, config_entry, setup_config_entry):
+async def test_duplicate_error(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
     """Test that the proper error is shown when adding a duplicate config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data={"api_key": TEST_API_KEY}
@@ -111,7 +114,7 @@ async def test_duplicate_error(hass, config_entry, setup_config_entry):
 
 
 @pytest.mark.parametrize(
-    "check_api_key_mock,check_api_key_errors",
+    ("check_api_key_mock", "check_api_key_errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
@@ -119,13 +122,13 @@ async def test_duplicate_error(hass, config_entry, setup_config_entry):
     ],
 )
 async def test_reauth(
-    hass,
-    api,
+    hass: HomeAssistant,
+    mock_aiopurpleair,
     check_api_key_errors,
     check_api_key_mock,
     config_entry,
     setup_config_entry,
-):
+) -> None:
     """Test re-auth (including errors)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -140,7 +143,7 @@ async def test_reauth(
     assert result["step_id"] == "reauth_confirm"
 
     # Test errors that can arise when checking the API key:
-    with patch.object(api, "async_check_api_key", check_api_key_mock):
+    with patch.object(mock_aiopurpleair, "async_check_api_key", check_api_key_mock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"api_key": "new_api_key"}
         )
@@ -154,10 +157,13 @@ async def test_reauth(
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries()) == 1
+    # Unload to make sure the update does not run after the
+    # mock is removed.
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
-    "get_nearby_sensors_mock,get_nearby_sensors_errors",
+    ("get_nearby_sensors_mock", "get_nearby_sensors_errors"),
     [
         (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
@@ -165,13 +171,13 @@ async def test_reauth(
     ],
 )
 async def test_options_add_sensor(
-    hass,
-    api,
+    hass: HomeAssistant,
+    mock_aiopurpleair,
     config_entry,
     get_nearby_sensors_errors,
     get_nearby_sensors_mock,
     setup_config_entry,
-):
+) -> None:
     """Test adding a sensor via the options flow (including errors)."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
@@ -184,7 +190,9 @@ async def test_options_add_sensor(
     assert result["step_id"] == "add_sensor"
 
     # Test errors that can arise when searching for nearby sensors:
-    with patch.object(api.sensors, "async_get_nearby_sensors", get_nearby_sensors_mock):
+    with patch.object(
+        mock_aiopurpleair.sensors, "async_get_nearby_sensors", get_nearby_sensors_mock
+    ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
@@ -222,9 +230,14 @@ async def test_options_add_sensor(
         TEST_SENSOR_INDEX1,
         TEST_SENSOR_INDEX2,
     ]
+    # Unload to make sure the update does not run after the
+    # mock is removed.
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_add_sensor_duplicate(hass, config_entry, setup_config_entry):
+async def test_options_add_sensor_duplicate(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
     """Test adding a duplicate sensor via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
@@ -255,9 +268,14 @@ async def test_options_add_sensor_duplicate(hass, config_entry, setup_config_ent
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    # Unload to make sure the update does not run after the
+    # mock is removed.
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_remove_sensor(hass, config_entry, setup_config_entry):
+async def test_options_remove_sensor(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
     """Test removing a sensor via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
@@ -270,7 +288,9 @@ async def test_options_remove_sensor(hass, config_entry, setup_config_entry):
     assert result["step_id"] == "remove_sensor"
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({(DOMAIN, str(TEST_SENSOR_INDEX1))})
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, str(TEST_SENSOR_INDEX1))}
+    )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"sensor_device_id": device_entry.id},
@@ -281,3 +301,32 @@ async def test_options_remove_sensor(hass, config_entry, setup_config_entry):
     }
 
     assert config_entry.options["sensor_indices"] == []
+    # Unload to make sure the update does not run after the
+    # mock is removed.
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_settings(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
+    """Test setting settings via the options flow."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "settings"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "settings"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"show_on_map": True}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "sensor_indices": [TEST_SENSOR_INDEX1],
+        "show_on_map": True,
+    }
+
+    assert config_entry.options["show_on_map"] is True

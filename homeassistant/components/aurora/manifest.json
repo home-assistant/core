@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/aurora",
   "iot_class": "cloud_polling",
   "loggers": ["auroranoaa"],
-  "requirements": ["auroranoaa==0.0.2"]
+  "requirements": ["auroranoaa==0.0.3"]
 }

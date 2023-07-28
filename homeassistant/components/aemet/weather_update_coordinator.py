@@ -26,6 +26,7 @@ from aemet_opendata.const import (
     AEMET_ATTR_STATION_DATE,
     AEMET_ATTR_STATION_HUMIDITY,
     AEMET_ATTR_STATION_LOCATION,
+    AEMET_ATTR_STATION_PRESSURE,
     AEMET_ATTR_STATION_PRESSURE_SEA,
     AEMET_ATTR_STATION_TEMPERATURE,
     AEMET_ATTR_STORM_PROBABILITY,
@@ -318,6 +319,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                     pressure = format_float(
                         station_data[AEMET_ATTR_STATION_PRESSURE_SEA]
                     )
+                elif AEMET_ATTR_STATION_PRESSURE in station_data:
+                    pressure = format_float(station_data[AEMET_ATTR_STATION_PRESSURE])
                 if AEMET_ATTR_STATION_TEMPERATURE in station_data:
                     temperature = format_float(
                         station_data[AEMET_ATTR_STATION_TEMPERATURE]

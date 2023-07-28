@@ -14,7 +14,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
@@ -25,9 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Switchbot based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -42,6 +40,8 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     _attr_available_modes = [MODE_NORMAL, MODE_AUTO]
     _device: switchbot.SwitchbotHumidifier
     _attr_min_humidity = 1
+    _attr_translation_key = "humidifier"
+    _attr_name = None
 
     @property
     def is_on(self) -> bool | None:

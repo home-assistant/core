@@ -40,7 +40,7 @@ def setup_comp(hass):
 
 
 @patch(scanner_path, return_value=MagicMock(spec=UnifiDeviceScanner))
-async def test_get_scanner(unifi_mock, hass):
+async def test_get_scanner(unifi_mock, hass: HomeAssistant) -> None:
     """Test creating an Unifi direct scanner with a password."""
     conf_dict = {
         DOMAIN: {
@@ -62,7 +62,7 @@ async def test_get_scanner(unifi_mock, hass):
 
 
 @patch("pexpect.pxssh.pxssh")
-async def test_get_device_name(mock_ssh, hass):
+async def test_get_device_name(mock_ssh, hass: HomeAssistant) -> None:
     """Testing MAC matching."""
     conf_dict = {
         DOMAIN: {
@@ -85,7 +85,7 @@ async def test_get_device_name(mock_ssh, hass):
 
 @patch("pexpect.pxssh.pxssh.logout")
 @patch("pexpect.pxssh.pxssh.login")
-async def test_failed_to_log_in(mock_login, mock_logout, hass):
+async def test_failed_to_log_in(mock_login, mock_logout, hass: HomeAssistant) -> None:
     """Testing exception at login results in False."""
     from pexpect import exceptions
 
@@ -110,7 +110,9 @@ async def test_failed_to_log_in(mock_login, mock_logout, hass):
 @patch("pexpect.pxssh.pxssh.login", autospec=True)
 @patch("pexpect.pxssh.pxssh.prompt")
 @patch("pexpect.pxssh.pxssh.sendline")
-async def test_to_get_update(mock_sendline, mock_prompt, mock_login, mock_logout, hass):
+async def test_to_get_update(
+    mock_sendline, mock_prompt, mock_login, mock_logout, hass: HomeAssistant
+) -> None:
     """Testing exception in get_update matching."""
     conf_dict = {
         DOMAIN: {

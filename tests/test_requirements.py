@@ -95,7 +95,9 @@ async def test_install_missing_package(hass: HomeAssistant) -> None:
     assert len(mock_inst.mock_calls) == 3
 
 
-async def test_install_skipped_package(hass, caplog):
+async def test_install_skipped_package(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test an install attempt on a dependency that should be skipped."""
     with patch(
         "homeassistant.util.package.install_package", return_value=True
@@ -453,7 +455,9 @@ async def test_discovery_requirements_ssdp(hass: HomeAssistant) -> None:
     "partial_manifest",
     [{"zeroconf": ["_googlecast._tcp.local."]}, {"homekit": {"models": ["LIFX"]}}],
 )
-async def test_discovery_requirements_zeroconf(hass, partial_manifest):
+async def test_discovery_requirements_zeroconf(
+    hass: HomeAssistant, partial_manifest
+) -> None:
     """Test that we load discovery requirements."""
     hass.config.skip_pip = False
     zeroconf = await loader.async_get_integration(hass, "zeroconf")

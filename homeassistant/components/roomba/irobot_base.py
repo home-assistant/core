@@ -39,7 +39,6 @@ SUPPORT_IROBOT = (
     | VacuumEntityFeature.SEND_COMMAND
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STATE
-    | VacuumEntityFeature.STATUS
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.LOCATE
 )
@@ -62,6 +61,7 @@ class IRobotEntity(Entity):
     """Base class for iRobot Entities."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
@@ -136,6 +136,8 @@ class IRobotEntity(Entity):
 class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     """Base class for iRobot robots."""
 
+    _attr_name = None
+
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
         super().__init__(roomba, blid)
@@ -160,11 +162,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return True  # Always available, otherwise setup will fail
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def extra_state_attributes(self):

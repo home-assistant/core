@@ -70,11 +70,13 @@ MOCK_BLOCKS = [
             "inputEventCnt": 2,
             "overpower": 0,
             "power": 53.4,
+            "energy": 1234567.89,
         },
         channel="0",
         type="relay",
         overpower=0,
         power=53.4,
+        energy=1234567.89,
         description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
@@ -119,6 +121,15 @@ MOCK_BLOCKS = [
         wakeupEvent=["button"],
         description="device_0",
         type="device",
+    ),
+    Mock(
+        sensor_ids={"powerFactor": 0.98},
+        channel="0",
+        powerFactor=0.98,
+        targetTemp=4,
+        temp=22.1,
+        description="emeter_0",
+        type="emeter",
     ),
 ]
 
@@ -178,14 +189,16 @@ MOCK_STATUS_RPC = {
         "current_pos": 50,
         "apower": 85.3,
     },
+    "devicepower:0": {"external": {"present": True}},
     "temperature:0": {"tC": 22.9},
+    "illuminance:0": {"lux": 345},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
             "stable": {"version": "some_beta_version"},
         }
     },
-    "voltmeter": {"voltage": 4.3},
+    "voltmeter": {"voltage": 4.321},
     "wifi": {"rssi": -63},
 }
 

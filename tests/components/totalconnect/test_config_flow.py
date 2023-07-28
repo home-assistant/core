@@ -201,7 +201,7 @@ async def test_no_locations(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 1
 
 
-async def test_options_flow(hass: HomeAssistant):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

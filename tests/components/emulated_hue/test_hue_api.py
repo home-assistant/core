@@ -120,7 +120,7 @@ async def _async_setup_emulated_hue(hass: HomeAssistant, conf: ConfigType) -> No
             hass,
             emulated_hue.DOMAIN,
             {emulated_hue.DOMAIN: conf},
-        ),
+        )
         await hass.async_block_till_done()
 
 
@@ -135,8 +135,25 @@ async def base_setup(hass):
     )
 
 
+@pytest.fixture(autouse=True)
+async def wanted_platforms_only() -> None:
+    """Enable only the wanted demo platforms."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [
+            const.Platform.CLIMATE,
+            const.Platform.COVER,
+            const.Platform.FAN,
+            const.Platform.HUMIDIFIER,
+            const.Platform.LIGHT,
+            const.Platform.MEDIA_PLAYER,
+        ],
+    ):
+        yield
+
+
 @pytest.fixture
-async def demo_setup(hass):
+async def demo_setup(hass, wanted_platforms_only):
     """Fixture to setup demo platforms."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     setups = [
@@ -144,12 +161,7 @@ async def demo_setup(hass):
         setup.async_setup_component(
             hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
         ),
-        *[
-            setup.async_setup_component(
-                hass, comp.DOMAIN, {comp.DOMAIN: [{"platform": "demo"}]}
-            )
-            for comp in (light, climate, humidifier, media_player, fan, cover)
-        ],
+        setup.async_setup_component(hass, "demo", {}),
         setup.async_setup_component(
             hass,
             script.DOMAIN,
@@ -215,13 +227,13 @@ def _mock_hue_endpoints(
     web_app = hass.http.app
     config = Config(hass, conf, "127.0.0.1")
     config.numbers = entity_numbers
-    HueUsernameView().register(web_app, web_app.router)
-    HueAllLightsStateView(config).register(web_app, web_app.router)
-    HueOneLightStateView(config).register(web_app, web_app.router)
-    HueOneLightChangeView(config).register(web_app, web_app.router)
-    HueAllGroupsStateView(config).register(web_app, web_app.router)
-    HueFullStateView(config).register(web_app, web_app.router)
-    HueConfigView(config).register(web_app, web_app.router)
+    HueUsernameView().register(hass, web_app, web_app.router)
+    HueAllLightsStateView(config).register(hass, web_app, web_app.router)
+    HueOneLightStateView(config).register(hass, web_app, web_app.router)
+    HueOneLightChangeView(config).register(hass, web_app, web_app.router)
+    HueAllGroupsStateView(config).register(hass, web_app, web_app.router)
+    HueFullStateView(config).register(hass, web_app, web_app.router)
+    HueConfigView(config).register(hass, web_app, web_app.router)
 
 
 @pytest.fixture
@@ -264,7 +276,7 @@ async def hue_client(hass_hue, hass_client_no_auth):
     return await hass_client_no_auth()
 
 
-async def test_discover_lights(hass, hue_client):
+async def test_discover_lights(hass: HomeAssistant, hue_client) -> None:
     """Test the discovery of lights."""
     result = await hue_client.get("/api/username/lights")
 
@@ -322,7 +334,7 @@ async def test_discover_lights(hass, hue_client):
     assert device["state"][HUE_API_STATE_ON] is False
 
 
-async def test_light_without_brightness_supported(hass_hue, hue_client):
+async def test_light_without_brightness_supported(hass_hue, hue_client) -> None:
     """Test that light without brightness is supported."""
     light_without_brightness_json = await perform_get_light_state(
         hue_client, "light.no_brightness", HTTPStatus.OK
@@ -361,7 +373,7 @@ async def test_lights_all_dimmable(
     )
 
 
-async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
+async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client) -> None:
     """Test that light without brightness can be turned off."""
     hass_hue.states.async_set("light.no_brightness", "on", {})
     turn_off_calls = []
@@ -396,7 +408,7 @@ async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
 
-async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
+async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client) -> None:
     """Test that light without brightness can be turned on."""
     hass_hue.states.async_set("light.no_brightness", "off", {})
 
@@ -439,14 +451,14 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
 
 
 @pytest.mark.parametrize(
-    "state,is_reachable",
+    ("state", "is_reachable"),
     [
         (const.STATE_UNAVAILABLE, False),
         (const.STATE_OK, True),
         (const.STATE_UNKNOWN, True),
     ],
 )
-async def test_reachable_for_state(hass_hue, hue_client, state, is_reachable):
+async def test_reachable_for_state(hass_hue, hue_client, state, is_reachable) -> None:
     """Test that an entity is reported as unreachable if in unavailable state."""
     entity_id = "light.ceiling_lights"
 
@@ -457,7 +469,7 @@ async def test_reachable_for_state(hass_hue, hue_client, state, is_reachable):
     assert state_json["state"]["reachable"] == is_reachable, state_json
 
 
-async def test_discover_full_state(hue_client):
+async def test_discover_full_state(hue_client) -> None:
     """Test the discovery of full state."""
     result = await hue_client.get(f"/api/{HUE_API_USERNAME}")
 
@@ -508,7 +520,7 @@ async def test_discover_full_state(hue_client):
     assert config_json["linkbutton"] is True
 
 
-async def test_discover_config(hue_client):
+async def test_discover_config(hue_client) -> None:
     """Test the discovery of configuration."""
     result = await hue_client.get(f"/api/{HUE_API_USERNAME}/config")
 
@@ -566,7 +578,7 @@ async def test_discover_config(hue_client):
     assert "error" not in config_json
 
 
-async def test_get_light_state(hass_hue, hue_client):
+async def test_get_light_state(hass_hue, hue_client) -> None:
     """Test the getting of light state."""
     # Turn ceiling lights on and set to 127 brightness, and set light color
     await hass_hue.services.async_call(
@@ -627,7 +639,7 @@ async def test_get_light_state(hass_hue, hue_client):
     )
 
 
-async def test_put_light_state(hass, hass_hue, hue_client):
+async def test_put_light_state(hass: HomeAssistant, hass_hue, hue_client) -> None:
     """Test the setting of light states."""
     await perform_put_test_on_ceiling_lights(hass_hue, hue_client)
 
@@ -796,7 +808,9 @@ async def test_put_light_state(hass, hass_hue, hue_client):
     assert call_turn_on[0].data[light.ATTR_TRANSITION] == 6
 
 
-async def test_put_light_state_script(hass, hass_hue, hue_client):
+async def test_put_light_state_script(
+    hass: HomeAssistant, hass_hue, hue_client
+) -> None:
     """Test the setting of script variables."""
     # Turn the kitchen light off first
     await hass_hue.services.async_call(
@@ -828,7 +842,7 @@ async def test_put_light_state_script(hass, hass_hue, hue_client):
     )
 
 
-async def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
+async def test_put_light_state_climate_set_temperature(hass_hue, hue_client) -> None:
     """Test setting climate temperature."""
     brightness = 19
     temperature = round(brightness / 254 * 100)
@@ -853,7 +867,7 @@ async def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
     assert ecobee_result.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_put_light_state_humidifier_set_humidity(hass_hue, hue_client):
+async def test_put_light_state_humidifier_set_humidity(hass_hue, hue_client) -> None:
     """Test setting humidifier target humidity."""
     # Turn the humidifier off first
     await hass_hue.services.async_call(
@@ -886,7 +900,7 @@ async def test_put_light_state_humidifier_set_humidity(hass_hue, hue_client):
     assert hygrostat_result.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_put_light_state_media_player(hass_hue, hue_client):
+async def test_put_light_state_media_player(hass_hue, hue_client) -> None:
     """Test turning on media player and setting volume."""
     # Turn the music player off first
     await hass_hue.services.async_call(
@@ -914,7 +928,7 @@ async def test_put_light_state_media_player(hass_hue, hue_client):
     assert walkman.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL] == level
 
 
-async def test_open_cover_without_position(hass_hue, hue_client):
+async def test_open_cover_without_position(hass_hue, hue_client) -> None:
     """Test opening cover ."""
     cover_id = "cover.living_room_window"
     # Close cover first
@@ -977,7 +991,7 @@ async def test_open_cover_without_position(hass_hue, hue_client):
     assert cover_test_2.attributes.get("current_position") == 0
 
 
-async def test_set_position_cover(hass_hue, hue_client):
+async def test_set_position_cover(hass_hue, hue_client) -> None:
     """Test setting position cover ."""
     cover_id = "cover.living_room_window"
     cover_number = ENTITY_NUMBERS_BY_ID[cover_id]
@@ -1028,7 +1042,7 @@ async def test_set_position_cover(hass_hue, hue_client):
     assert cover_test_2.attributes.get("current_position") == level
 
 
-async def test_put_light_state_fan(hass_hue, hue_client):
+async def test_put_light_state_fan(hass_hue, hue_client) -> None:
     """Test turning on fan and setting speed."""
     # Turn the fan off first
     await hass_hue.services.async_call(
@@ -1117,7 +1131,7 @@ async def test_put_light_state_fan(hass_hue, hue_client):
 
 
 # pylint: disable=invalid-name
-async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client):
+async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client) -> None:
     """Test the form with urlencoded content."""
     entity_number = ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
     # Needed for Alexa
@@ -1136,7 +1150,7 @@ async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client):
     assert result.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_entity_not_found(hue_client):
+async def test_entity_not_found(hue_client) -> None:
     """Test for entity which are not found."""
     result = await hue_client.get("/api/username/lights/98")
 
@@ -1147,7 +1161,7 @@ async def test_entity_not_found(hue_client):
     assert result.status == HTTPStatus.NOT_FOUND
 
 
-async def test_allowed_methods(hue_client):
+async def test_allowed_methods(hue_client) -> None:
     """Test the allowed methods."""
     result = await hue_client.get(
         "/api/username/lights/ENTITY_NUMBERS_BY_ID[light.ceiling_lights]/state"
@@ -1166,7 +1180,7 @@ async def test_allowed_methods(hue_client):
     assert result.status == HTTPStatus.METHOD_NOT_ALLOWED
 
 
-async def test_proper_put_state_request(hue_client):
+async def test_proper_put_state_request(hue_client) -> None:
     """Test the request to set the state."""
     # Test proper on value parsing
     result = await hue_client.put(
@@ -1189,7 +1203,7 @@ async def test_proper_put_state_request(hue_client):
     assert result.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_get_empty_groups_state(hue_client):
+async def test_get_empty_groups_state(hue_client) -> None:
     """Test the request to get groups endpoint."""
     # Test proper on value parsing
     result = await hue_client.get("/api/username/groups")
@@ -1305,7 +1319,7 @@ async def perform_put_light_state(
     return result
 
 
-async def test_external_ip_blocked(hue_client):
+async def test_external_ip_blocked(hue_client) -> None:
     """Test external IP blocked."""
     getUrls = [
         "/api/username/groups",
@@ -1333,7 +1347,7 @@ async def test_external_ip_blocked(hue_client):
             assert result.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_unauthorized_user_blocked(hue_client):
+async def test_unauthorized_user_blocked(hue_client) -> None:
     """Test unauthorized_user blocked."""
     getUrls = [
         "/api/wronguser",
@@ -1346,7 +1360,9 @@ async def test_unauthorized_user_blocked(hue_client):
         assert result_json[0]["error"]["description"] == "unauthorized user"
 
 
-async def test_put_then_get_cached_properly(hass, hass_hue, hue_client):
+async def test_put_then_get_cached_properly(
+    hass: HomeAssistant, hass_hue, hue_client
+) -> None:
     """Test the setting of light states and an immediate readback reads the same values."""
 
     # Turn the bedroom light on first
@@ -1469,7 +1485,9 @@ async def test_put_then_get_cached_properly(hass, hass_hue, hue_client):
         assert ceiling_json["state"][HUE_API_STATE_BRI] == 127
 
 
-async def test_put_than_get_when_service_call_fails(hass, hass_hue, hue_client):
+async def test_put_than_get_when_service_call_fails(
+    hass: HomeAssistant, hass_hue, hue_client
+) -> None:
     """Test putting and getting the light state when the service call fails."""
 
     # Turn the bedroom light off first
@@ -1519,14 +1537,14 @@ async def test_put_than_get_when_service_call_fails(hass, hass_hue, hue_client):
     assert ceiling_json["state"][HUE_API_STATE_ON] is False
 
 
-async def test_get_invalid_entity(hass, hass_hue, hue_client):
+async def test_get_invalid_entity(hass: HomeAssistant, hass_hue, hue_client) -> None:
     """Test the setting of light states and an immediate readback reads the same values."""
 
     # Check that we get an error with an invalid entity number.
     await perform_get_light_state_by_number(hue_client, 999, HTTPStatus.NOT_FOUND)
 
 
-async def test_put_light_state_scene(hass, hass_hue, hue_client):
+async def test_put_light_state_scene(hass: HomeAssistant, hass_hue, hue_client) -> None:
     """Test the setting of scene variables."""
     # Turn the kitchen lights off first
     await hass_hue.services.async_call(
@@ -1568,7 +1586,7 @@ async def test_put_light_state_scene(hass, hass_hue, hue_client):
     assert hass_hue.states.get("light.kitchen_lights").state == STATE_OFF
 
 
-async def test_only_change_contrast(hass, hass_hue, hue_client):
+async def test_only_change_contrast(hass: HomeAssistant, hass_hue, hue_client) -> None:
     """Test when only changing the contrast of a light state."""
 
     # Turn the kitchen lights off first
@@ -1597,7 +1615,9 @@ async def test_only_change_contrast(hass, hass_hue, hue_client):
     assert ceiling_lights.attributes[light.ATTR_BRIGHTNESS] == 255
 
 
-async def test_only_change_hue_or_saturation(hass, hass_hue, hue_client):
+async def test_only_change_hue_or_saturation(
+    hass: HomeAssistant, hass_hue, hue_client
+) -> None:
     """Test setting either the hue or the saturation but not both."""
 
     # TODO: The handling of this appears wrong, as setting only one will set the other to 0.
@@ -1634,7 +1654,9 @@ async def test_only_change_hue_or_saturation(hass, hass_hue, hue_client):
     ] == (0, 3)
 
 
-async def test_specificly_exposed_entities(hass, base_setup, hass_client_no_auth):
+async def test_specificly_exposed_entities(
+    hass: HomeAssistant, base_setup, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test specific entities with expose by default off."""
     conf = {
         emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,

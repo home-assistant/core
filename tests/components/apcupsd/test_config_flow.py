@@ -117,21 +117,21 @@ async def test_flow_works(hass: HomeAssistant) -> None:
             context={CONF_SOURCE: SOURCE_USER},
         )
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONF_DATA
         )
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == MOCK_STATUS["MODEL"]
+        assert result["title"] == MOCK_STATUS["UPSNAME"]
         assert result["data"] == CONF_DATA
 
         mock_setup.assert_called_once()
 
 
 @pytest.mark.parametrize(
-    "extra_status,expected_title",
+    ("extra_status", "expected_title"),
     [
         ({"UPSNAME": "Friendly Name"}, "Friendly Name"),
         ({"MODEL": "MODEL X"}, "MODEL X"),

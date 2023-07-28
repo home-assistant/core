@@ -1,6 +1,8 @@
 """Define tests for the Freedompro config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.freedompro.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,6 +15,8 @@ VALID_CONFIG = {
     CONF_API_KEY: "ksdjfgslkjdfksjdfksjgfksjd",
 }
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
@@ -21,7 +25,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
 
 async def test_invalid_auth(hass: HomeAssistant) -> None:

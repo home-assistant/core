@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.melcloud.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +45,7 @@ def mock_request_info():
         yield mock_ri
 
 
-async def test_form(hass, mock_login, mock_get_devices):
+async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,10 +75,12 @@ async def test_form(hass, mock_login, mock_get_devices):
 
 
 @pytest.mark.parametrize(
-    "error,reason",
+    ("error", "reason"),
     [(ClientError(), "cannot_connect"), (asyncio.TimeoutError(), "cannot_connect")],
 )
-async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
+async def test_form_errors(
+    hass: HomeAssistant, mock_login, mock_get_devices, error, reason
+) -> None:
     """Test we handle cannot connect error."""
     mock_login.side_effect = error
 
@@ -93,7 +96,7 @@ async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
 
 
 @pytest.mark.parametrize(
-    "error,message",
+    ("error", "message"),
     [
         (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
         (HTTPStatus.FORBIDDEN, "invalid_auth"),
@@ -101,8 +104,8 @@ async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
     ],
 )
 async def test_form_response_errors(
-    hass, mock_login, mock_get_devices, mock_request_info, error, message
-):
+    hass: HomeAssistant, mock_login, mock_get_devices, mock_request_info, error, message
+) -> None:
     """Test we handle response errors."""
     mock_login.side_effect = ClientResponseError(mock_request_info(), (), status=error)
 
@@ -116,7 +119,9 @@ async def test_form_response_errors(
     assert result["reason"] == message
 
 
-async def test_import_with_token(hass, mock_login, mock_get_devices):
+async def test_import_with_token(
+    hass: HomeAssistant, mock_login, mock_get_devices
+) -> None:
     """Test successful import."""
     with patch(
         "homeassistant.components.melcloud.async_setup", return_value=True
@@ -140,7 +145,7 @@ async def test_import_with_token(hass, mock_login, mock_get_devices):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_token_refresh(hass, mock_login, mock_get_devices):
+async def test_token_refresh(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     """Re-configuration with existing username should refresh token."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

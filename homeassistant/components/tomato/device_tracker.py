@@ -49,7 +49,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> TomatoDeviceScanner:
 
 
 class TomatoDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running Tomato firmware."""
+    """Class which queries a wireless router running Tomato firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""

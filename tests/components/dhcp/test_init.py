@@ -796,8 +796,8 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(
 
 
 async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missing(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test matching based on hostname and macaddress after start but missing hostname."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:

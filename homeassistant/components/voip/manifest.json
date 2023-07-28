@@ -1,0 +1,11 @@
+{
+  "domain": "voip",
+  "name": "Voice over IP",
+  "codeowners": ["@balloob", "@synesthesiam"],
+  "config_flow": true,
+  "dependencies": ["assist_pipeline"],
+  "documentation": "https://www.home-assistant.io/integrations/voip",
+  "iot_class": "local_push",
+  "quality_scale": "internal",
+  "requirements": ["voip-utils==0.1.0"]
+}

@@ -35,6 +35,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity[_CoordinatorT]):
     entity_description: SynologyDSMEntityDescription
     unique_id: str
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -47,7 +48,6 @@ class SynologyDSMBaseEntity(CoordinatorEntity[_CoordinatorT]):
         self.entity_description = description
 
         self._api = api
-        self._attr_name = f"{api.network.hostname} {description.name}"
         self._attr_unique_id: str = (
             f"{api.information.serial}_{description.api_key}:{description.key}"
         )
@@ -110,9 +110,6 @@ class SynologyDSMDeviceEntity(
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
 
-        self._attr_name = (
-            f"{self._api.network.hostname} ({self._device_name}) {description.name}"
-        )
         self._attr_unique_id += f"_{self._device_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._api.information.serial}_{self._device_id}")},

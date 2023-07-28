@@ -126,7 +126,7 @@ async def test_all_optional_config(hass: HomeAssistant) -> None:
     _verify(hass, 4, 1, 3, 5)
 
 
-async def test_templates_with_entities(hass, calls):
+async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(4, "input_number"):
         assert await setup.async_setup_component(

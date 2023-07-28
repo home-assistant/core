@@ -1,7 +1,7 @@
 """Make sure that an Arlo Baby can be setup."""
-
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -13,7 +13,7 @@ from ..common import (
 )
 
 
-async def test_arlo_baby_setup(hass):
+async def test_arlo_baby_setup(hass: HomeAssistant) -> None:
     """Test that an Arlo Baby can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "arlo_baby.json")
     await setup_test_accessories(hass, accessories)

@@ -1,7 +1,6 @@
 """Support for IPMA weather service."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 import async_timeout
@@ -10,21 +9,6 @@ from pyipma.forecast import Forecast
 from pyipma.location import Location
 
 from homeassistant.components.weather import (
-    ATTR_CONDITION_CLEAR_NIGHT,
-    ATTR_CONDITION_CLOUDY,
-    ATTR_CONDITION_EXCEPTIONAL,
-    ATTR_CONDITION_FOG,
-    ATTR_CONDITION_HAIL,
-    ATTR_CONDITION_LIGHTNING,
-    ATTR_CONDITION_LIGHTNING_RAINY,
-    ATTR_CONDITION_PARTLYCLOUDY,
-    ATTR_CONDITION_POURING,
-    ATTR_CONDITION_RAINY,
-    ATTR_CONDITION_SNOWY,
-    ATTR_CONDITION_SNOWY_RAINY,
-    ATTR_CONDITION_SUNNY,
-    ATTR_CONDITION_WINDY,
-    ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
@@ -43,38 +27,22 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
 
-from .const import DATA_API, DATA_LOCATION, DOMAIN
+from .const import (
+    ATTRIBUTION,
+    CONDITION_CLASSES,
+    DATA_API,
+    DATA_LOCATION,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
+from .entity import IPMADevice
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Instituto Português do Mar e Atmosfera"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-
-CONDITION_CLASSES = {
-    ATTR_CONDITION_CLOUDY: [4, 5, 24, 25, 27],
-    ATTR_CONDITION_FOG: [16, 17, 26],
-    ATTR_CONDITION_HAIL: [21, 22],
-    ATTR_CONDITION_LIGHTNING: [19],
-    ATTR_CONDITION_LIGHTNING_RAINY: [20, 23],
-    ATTR_CONDITION_PARTLYCLOUDY: [2, 3],
-    ATTR_CONDITION_POURING: [8, 11],
-    ATTR_CONDITION_RAINY: [6, 7, 9, 10, 12, 13, 14, 15],
-    ATTR_CONDITION_SNOWY: [18],
-    ATTR_CONDITION_SNOWY_RAINY: [],
-    ATTR_CONDITION_SUNNY: [1],
-    ATTR_CONDITION_WINDY: [],
-    ATTR_CONDITION_WINDY_VARIANT: [],
-    ATTR_CONDITION_EXCEPTIONAL: [],
-    ATTR_CONDITION_CLEAR_NIGHT: [-1],
-}
-
-FORECAST_MODE = ["hourly", "daily"]
 
 
 async def async_setup_entry(
@@ -89,7 +57,7 @@ async def async_setup_entry(
 
     # Migrate old unique_id
     @callback
-    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+    def _async_migrator(entity_entry: er.RegistryEntry):
         # Reject if new unique_id
         if entity_entry.unique_id.count(",") == 2:
             return None
@@ -105,14 +73,12 @@ async def async_setup_entry(
         )
         return {"new_unique_id": new_unique_id}
 
-    await entity_registry.async_migrate_entries(
-        hass, config_entry.entry_id, _async_migrator
-    )
+    await er.async_migrate_entries(hass, config_entry.entry_id, _async_migrator)
 
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
 
 
-class IPMAWeather(WeatherEntity):
+class IPMAWeather(WeatherEntity, IPMADevice):
     """Representation of a weather condition."""
 
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -123,13 +89,14 @@ class IPMAWeather(WeatherEntity):
 
     def __init__(self, location: Location, api: IPMA_API, config) -> None:
         """Initialise the platform with a data instance and station name."""
+        IPMADevice.__init__(self, location)
         self._api = api
-        self._location_name = config.get(CONF_NAME, location.name)
+        self._attr_name = config.get(CONF_NAME, location.name)
         self._mode = config.get(CONF_MODE)
         self._period = 1 if config.get(CONF_MODE) == "hourly" else 24
-        self._location = location
         self._observation = None
         self._forecast: list[Forecast] = []
+        self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
@@ -154,19 +121,6 @@ class IPMAWeather(WeatherEntity):
                 self._location.station,
                 self._observation,
             )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id."""
-        return (
-            f"{self._location.station_latitude}, {self._location.station_longitude},"
-            f" {self._mode}"
-        )
-
-    @property
-    def name(self):
-        """Return the name of the station."""
-        return self._location_name
 
     def _condition_conversion(self, identifier, forecast_dt):
         """Convert from IPMA weather_type id to HA."""

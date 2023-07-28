@@ -79,6 +79,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -357,6 +358,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -376,6 +378,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -396,6 +399,7 @@ async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -412,6 +416,7 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )

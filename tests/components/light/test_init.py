@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
-from tests.common import async_mock_service
+from tests.common import MockUser, async_mock_service
 
 orig_Profiles = light.Profiles
 
@@ -106,7 +106,9 @@ async def test_methods(hass: HomeAssistant) -> None:
     assert call.data[light.ATTR_TRANSITION] == "transition_val"
 
 
-async def test_services(hass, mock_light_profiles, enable_custom_integrations):
+async def test_services(
+    hass: HomeAssistant, mock_light_profiles, enable_custom_integrations: None
+) -> None:
     """Test the provided services."""
     platform = getattr(hass.components, "test.light")
 
@@ -431,7 +433,7 @@ async def test_services(hass, mock_light_profiles, enable_custom_integrations):
 
 
 @pytest.mark.parametrize(
-    "profile_name, last_call, expected_data",
+    ("profile_name", "last_call", "expected_data"),
     (
         (
             "test",
@@ -498,13 +500,13 @@ async def test_services(hass, mock_light_profiles, enable_custom_integrations):
     ),
 )
 async def test_light_profiles(
-    hass,
+    hass: HomeAssistant,
     mock_light_profiles,
     profile_name,
     expected_data,
     last_call,
-    enable_custom_integrations,
-):
+    enable_custom_integrations: None,
+) -> None:
     """Test light profiles."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -550,8 +552,8 @@ async def test_light_profiles(
 
 
 async def test_default_profiles_group(
-    hass, mock_light_profiles, enable_custom_integrations
-):
+    hass: HomeAssistant, mock_light_profiles, enable_custom_integrations: None
+) -> None:
     """Test default turn-on light profile for all lights."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -580,7 +582,11 @@ async def test_default_profiles_group(
 
 
 @pytest.mark.parametrize(
-    "extra_call_params, expected_params_state_was_off, expected_params_state_was_on",
+    (
+        "extra_call_params",
+        "expected_params_state_was_off",
+        "expected_params_state_was_on",
+    ),
     (
         (
             # No turn on params, should apply profile
@@ -767,13 +773,13 @@ async def test_default_profiles_group(
     ),
 )
 async def test_default_profiles_light(
-    hass,
+    hass: HomeAssistant,
     mock_light_profiles,
     extra_call_params,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     expected_params_state_was_off,
     expected_params_state_was_on,
-):
+) -> None:
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -839,7 +845,9 @@ async def test_default_profiles_light(
     }
 
 
-async def test_light_context(hass, hass_admin_user, enable_custom_integrations):
+async def test_light_context(
+    hass: HomeAssistant, hass_admin_user: MockUser, enable_custom_integrations: None
+) -> None:
     """Test that light context works."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -863,7 +871,9 @@ async def test_light_context(hass, hass_admin_user, enable_custom_integrations):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_light_turn_on_auth(hass, hass_admin_user, enable_custom_integrations):
+async def test_light_turn_on_auth(
+    hass: HomeAssistant, hass_read_only_user: MockUser, enable_custom_integrations: None
+) -> None:
     """Test that light context works."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -873,7 +883,7 @@ async def test_light_turn_on_auth(hass, hass_admin_user, enable_custom_integrati
     state = hass.states.get("light.ceiling")
     assert state is not None
 
-    hass_admin_user.mock_policy({})
+    hass_read_only_user.mock_policy({})
 
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
@@ -881,11 +891,13 @@ async def test_light_turn_on_auth(hass, hass_admin_user, enable_custom_integrati
             "turn_on",
             {"entity_id": state.entity_id},
             blocking=True,
-            context=core.Context(user_id=hass_admin_user.id),
+            context=core.Context(user_id=hass_read_only_user.id),
         )
 
 
-async def test_light_brightness_step(hass, enable_custom_integrations):
+async def test_light_brightness_step(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test that light context works."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -947,7 +959,9 @@ async def test_light_brightness_step(hass, enable_custom_integrations):
     assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
 
 
-async def test_light_brightness_pct_conversion(hass, enable_custom_integrations):
+async def test_light_brightness_pct_conversion(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test that light brightness percent conversion."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -1103,8 +1117,8 @@ invalid_no_brightness_no_color_no_transition,,,
 
 @pytest.mark.parametrize("light_state", (STATE_ON, STATE_OFF))
 async def test_light_backwards_compatibility_supported_color_modes(
-    hass, light_state, enable_custom_integrations
-):
+    hass: HomeAssistant, light_state, enable_custom_integrations: None
+) -> None:
     """Test supported_color_modes if not implemented by the entity."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -1174,8 +1188,8 @@ async def test_light_backwards_compatibility_supported_color_modes(
 
 
 async def test_light_backwards_compatibility_color_mode(
-    hass, enable_custom_integrations
-):
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test color_mode if not implemented by the entity."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -1238,7 +1252,9 @@ async def test_light_backwards_compatibility_color_mode(
     assert state.attributes["color_mode"] == light.ColorMode.HS
 
 
-async def test_light_service_call_rgbw(hass, enable_custom_integrations):
+async def test_light_service_call_rgbw(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test rgbw functionality in service calls."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -1269,7 +1285,9 @@ async def test_light_service_call_rgbw(hass, enable_custom_integrations):
     assert data == {"brightness": 255, "rgbw_color": (10, 20, 30, 40)}
 
 
-async def test_light_state_rgbw(hass, enable_custom_integrations):
+async def test_light_state_rgbw(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test rgbw color conversion in state updates."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -1301,7 +1319,9 @@ async def test_light_state_rgbw(hass, enable_custom_integrations):
     }
 
 
-async def test_light_state_rgbww(hass, enable_custom_integrations):
+async def test_light_state_rgbww(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test rgbww color conversion in state updates."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -1333,7 +1353,9 @@ async def test_light_state_rgbww(hass, enable_custom_integrations):
     }
 
 
-async def test_light_service_call_color_conversion(hass, enable_custom_integrations):
+async def test_light_service_call_color_conversion(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test color conversion in service calls."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -1737,8 +1759,8 @@ async def test_light_service_call_color_conversion(hass, enable_custom_integrati
 
 
 async def test_light_service_call_color_conversion_named_tuple(
-    hass, enable_custom_integrations
-):
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test a named tuple (RGBColor) is handled correctly."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -1814,8 +1836,8 @@ async def test_light_service_call_color_conversion_named_tuple(
 
 
 async def test_light_service_call_color_temp_emulation(
-    hass, enable_custom_integrations
-):
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test color conversion in service calls."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -1874,8 +1896,8 @@ async def test_light_service_call_color_temp_emulation(
 
 
 async def test_light_service_call_color_temp_conversion(
-    hass, enable_custom_integrations
-):
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test color temp conversion in service calls."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -2006,7 +2028,9 @@ async def test_light_service_call_color_temp_conversion(
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 66, 189)}
 
 
-async def test_light_mired_color_temp_conversion(hass, enable_custom_integrations):
+async def test_light_mired_color_temp_conversion(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test color temp conversion from K to legacy mired."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -2052,7 +2076,9 @@ async def test_light_mired_color_temp_conversion(hass, enable_custom_integration
     assert state.attributes["color_temp_kelvin"] == 3500
 
 
-async def test_light_service_call_white_mode(hass, enable_custom_integrations):
+async def test_light_service_call_white_mode(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test color_mode white in service calls."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -2133,8 +2159,30 @@ async def test_light_service_call_white_mode(hass, enable_custom_integrations):
     _, data = entity0.last_call("turn_off")
     assert data == {}
 
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "white": True},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"white": 100}
 
-async def test_light_state_color_conversion(hass, enable_custom_integrations):
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "brightness_pct": 50, "white": True},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"white": 128}
+
+
+async def test_light_state_color_conversion(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test color conversion in state updates."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
@@ -2198,8 +2246,8 @@ async def test_light_state_color_conversion(hass, enable_custom_integrations):
 
 
 async def test_services_filter_parameters(
-    hass, mock_light_profiles, enable_custom_integrations
-):
+    hass: HomeAssistant, mock_light_profiles, enable_custom_integrations: None
+) -> None:
     """Test turn_on and turn_off filters unsupported parameters."""
     platform = getattr(hass.components, "test.light")
 

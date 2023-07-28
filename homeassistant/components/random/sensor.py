@@ -24,7 +24,6 @@ DEFAULT_NAME = "Random Sensor"
 DEFAULT_MIN = 0
 DEFAULT_MAX = 20
 
-ICON = "mdi:hanger"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -54,6 +53,8 @@ async def async_setup_platform(
 class RandomSensor(SensorEntity):
     """Representation of a Random number sensor."""
 
+    _attr_icon = "mdi:hanger"
+
     def __init__(self, name, minimum, maximum, unit_of_measurement):
         """Initialize the Random sensor."""
         self._name = name
@@ -71,11 +72,6 @@ class RandomSensor(SensorEntity):
     def native_value(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def native_unit_of_measurement(self):

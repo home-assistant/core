@@ -154,7 +154,7 @@ MELACHA_TEST_IDS = [
 
 
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "candle_lighting",
         "havdalah",
@@ -163,12 +163,12 @@ MELACHA_TEST_IDS = [
         "latitude",
         "longitude",
         "result",
-    ],
+    ),
     MELACHA_PARAMS,
     ids=MELACHA_TEST_IDS,
 )
 async def test_issur_melacha_sensor(
-    hass,
+    hass: HomeAssistant,
     now,
     candle_lighting,
     havdalah,
@@ -177,7 +177,7 @@ async def test_issur_melacha_sensor(
     latitude,
     longitude,
     result,
-):
+) -> None:
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
@@ -237,7 +237,7 @@ async def test_issur_melacha_sensor(
 
 
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "candle_lighting",
         "havdalah",
@@ -246,7 +246,7 @@ async def test_issur_melacha_sensor(
         "latitude",
         "longitude",
         "result",
-    ],
+    ),
     [
         make_nyc_test_params(
             dt(2020, 10, 23, 17, 44, 59, 999999), [STATE_OFF, STATE_ON]
@@ -258,7 +258,7 @@ async def test_issur_melacha_sensor(
     ids=["before_candle_lighting", "before_havdalah"],
 )
 async def test_issur_melacha_sensor_update(
-    hass,
+    hass: HomeAssistant,
     now,
     candle_lighting,
     havdalah,
@@ -267,7 +267,7 @@ async def test_issur_melacha_sensor_update(
     latitude,
     longitude,
     result,
-):
+) -> None:
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)

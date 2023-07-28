@@ -11,8 +11,14 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    selector,
+    template,
+)
 
 
 def test_boolean() -> None:
@@ -121,6 +127,35 @@ def test_url() -> None:
         assert schema(value)
 
 
+def test_configuration_url() -> None:
+    """Test URL."""
+    schema = vol.Schema(cv.configuration_url)
+
+    for value in (
+        "invalid",
+        None,
+        100,
+        "htp://ha.io",
+        "http//ha.io",
+        "http://??,**",
+        "https://??,**",
+        "homeassistant://??,**",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        "http://localhost",
+        "https://localhost/test/index.html",
+        "http://home-assistant.io",
+        "http://home-assistant.io/test/",
+        "https://community.home-assistant.io/",
+        "homeassistant://api",
+        "homeassistant://api/hassio_ingress/XXXXXXX",
+    ):
+        assert schema(value)
+
+
 def test_url_no_path() -> None:
     """Test URL."""
     schema = vol.Schema(cv.url_no_path)
@@ -174,7 +209,7 @@ def test_entity_id() -> None:
 
 
 @pytest.mark.parametrize("validator", [cv.entity_ids, cv.entity_ids_or_uuids])
-def test_entity_ids(validator):
+def test_entity_ids(validator) -> None:
     """Test entity ID validation."""
     schema = vol.Schema(validator)
 
@@ -378,7 +413,7 @@ def test_service() -> None:
     schema("homeassistant.turn_on")
 
 
-def test_service_schema() -> None:
+def test_service_schema(hass: HomeAssistant) -> None:
     """Test service_schema validation."""
     options = (
         {},
@@ -561,11 +596,16 @@ def test_x10_address() -> None:
     schema("C11")
 
 
-def test_template() -> None:
+def test_template(hass: HomeAssistant) -> None:
     """Test template validator."""
     schema = vol.Schema(cv.template)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello", ["test"]):
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+    ):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -574,12 +614,43 @@ def test_template() -> None:
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
 
 
-def test_dynamic_template() -> None:
+async def test_template_no_hass(hass: HomeAssistant) -> None:
+    """Test template validator."""
+    schema = vol.Schema(cv.template)
+
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        1,
+        "Hello",
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
+
+
+def test_dynamic_template(hass: HomeAssistant) -> None:
     """Test dynamic template validator."""
     schema = vol.Schema(cv.dynamic_template)
 
@@ -597,9 +668,40 @@ def test_dynamic_template() -> None:
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
+
+
+async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
 
 
 def test_template_complex() -> None:
@@ -751,7 +853,7 @@ def version(monkeypatch):
     monkeypatch.setattr(homeassistant.const, "__version__", "0.5.0")
 
 
-def test_deprecated_with_no_optionals(caplog, schema):
+def test_deprecated_with_no_optionals(caplog: pytest.LogCaptureFixture, schema) -> None:
     """Test deprecation behaves correctly when optional params are None.
 
     Expected behavior:
@@ -782,7 +884,9 @@ def test_deprecated_with_no_optionals(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_or_removed_param_and_raise(caplog, schema):
+def test_deprecated_or_removed_param_and_raise(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
     """Test removed or deprecation options and fail the config validation by raising an exception.
 
     Expected behavior:
@@ -821,7 +925,9 @@ def test_deprecated_or_removed_param_and_raise(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_replacement_key(caplog, schema):
+def test_deprecated_with_replacement_key(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
     """Test deprecation behaves correctly when only a replacement key is provided.
 
     Expected behavior:
@@ -858,7 +964,7 @@ def test_deprecated_with_replacement_key(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_default(caplog, schema):
+def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> None:
     """Test deprecation behaves correctly with a default value.
 
     This is likely a scenario that would never occur.
@@ -886,7 +992,9 @@ def test_deprecated_with_default(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_replacement_key_and_default(caplog, schema):
+def test_deprecated_with_replacement_key_and_default(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
     """Test deprecation with a replacement key and default.
 
     Expected behavior:
@@ -960,7 +1068,9 @@ def test_deprecated_cant_find_module() -> None:
         )
 
 
-def test_deprecated_or_removed_logger_with_config_attributes(caplog):
+def test_deprecated_or_removed_logger_with_config_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if the line and file attribute is available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -973,7 +1083,10 @@ def test_deprecated_or_removed_logger_with_config_attributes(caplog):
     setattr(config, "__config_file__", file)
     setattr(config, "__line__", line)
 
-    cv.deprecated("mars", replacement_key=replacement_key, default=False)(config)
+    validated = cv.deprecated("mars", replacement_key=replacement_key, default=False)(
+        config
+    )
+    assert "mars" not in validated  # Removed because a replacement_key is defined
 
     assert len(caplog.records) == 1
     assert replacement in caplog.text
@@ -988,7 +1101,8 @@ def test_deprecated_or_removed_logger_with_config_attributes(caplog):
     setattr(config, "__config_file__", file)
     setattr(config, "__line__", line)
 
-    cv.removed("mars", default=False, raise_if_present=False)(config)
+    validated = cv.removed("mars", default=False, raise_if_present=False)(config)
+    assert "mars" not in validated  # Removed because by cv.removed
 
     assert len(caplog.records) == 1
     assert replacement in caplog.text
@@ -997,7 +1111,9 @@ def test_deprecated_or_removed_logger_with_config_attributes(caplog):
     assert len(caplog.records) == 0
 
 
-def test_deprecated_logger_with_one_config_attribute(caplog):
+def test_deprecated_logger_with_one_config_attribute(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if only one of line and file attribute is available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -1031,7 +1147,9 @@ def test_deprecated_logger_with_one_config_attribute(caplog):
     assert len(caplog.records) == 0
 
 
-def test_deprecated_logger_without_config_attributes(caplog):
+def test_deprecated_logger_without_config_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if the line and file attribute is not available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -1166,7 +1284,7 @@ def test_comp_entity_ids() -> None:
             schema(invalid)
 
 
-def test_uuid4_hex(caplog):
+def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = vol.Schema(cv.uuid4_hex)
 
@@ -1262,9 +1380,9 @@ def test_key_value_schemas_with_default() -> None:
     schema({"mode": "{{ 1 + 1}}"})
 
 
-def test_script(caplog):
-    """Test script validation is user friendly."""
-    for data, msg in (
+@pytest.mark.parametrize(
+    ("config", "error"),
+    (
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
@@ -1278,20 +1396,33 @@ def test_script(caplog):
             {"condition": "not", "conditions": "not a dynamic template"},
             "Expected a dictionary",
         ),
-        ({"event": None}, "string value is None for dictionary value @ data['event']"),
+        (
+            {"event": None},
+            r"string value is None for dictionary value @ data\['event'\]",
+        ),
         (
             {"device_id": None},
-            "string value is None for dictionary value @ data['device_id']",
+            r"string value is None for dictionary value @ data\['device_id'\]",
         ),
         (
             {"scene": "light.kitchen"},
             "Entity ID 'light.kitchen' does not belong to domain 'scene'",
         ),
-    ):
-        with pytest.raises(vol.Invalid) as excinfo:
-            cv.script_action(data)
-
-        assert msg in str(excinfo.value)
+        (
+            {
+                "alias": "stop step",
+                "stop": "In the name of love",
+                "error": True,
+                "response_variable": "response-value",
+            },
+            "not allowed to add a response to an error stop action",
+        ),
+    ),
+)
+def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
+    """Test script validation is user friendly."""
+    with pytest.raises(vol.Invalid, match=error):
+        cv.script_action(config)
 
 
 def test_whitespace() -> None:
@@ -1300,7 +1431,7 @@ def test_whitespace() -> None:
 
     for value in (
         None,
-        "" "T",
+        "T",
         "negative",
         "lock",
         "tr  ue",
@@ -1364,3 +1495,128 @@ def test_language() -> None:
 
     for value in ("en", "sv"):
         assert schema(value)
+
+
+def test_positive_time_period_template() -> None:
+    """Test positive time period template validation."""
+    schema = vol.Schema(cv.positive_time_period_template)
+
+    with pytest.raises(vol.MultipleInvalid):
+        schema({})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({5: 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({"invalid": 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema("invalid")
+
+    # Time periods pass
+    schema("00:01")
+    schema("00:00:01")
+    schema("00:00:00.500")
+    schema({"minutes": 5})
+
+    # Templates are not evaluated and will pass
+    schema("{{ 'invalid' }}")
+    schema({"{{ 'invalid' }}": 5})
+    schema({"minutes": "{{ 'invalid' }}"})
+
+
+def test_empty_schema(caplog: pytest.LogCaptureFixture) -> None:
+    """Test empty_config_schema."""
+    expected_message = (
+        "The test_domain integration does not support any configuration parameters"
+    )
+
+    cv.empty_config_schema("test_domain")({})
+    assert expected_message not in caplog.text
+
+    cv.empty_config_schema("test_domain")({"test_domain": {}})
+    assert expected_message not in caplog.text
+
+    cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    assert expected_message in caplog.text
+
+
+def test_empty_schema_cant_find_module() -> None:
+    """Test if the current module cannot be inspected."""
+    with patch("inspect.getmodule", return_value=None):
+        cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+
+
+def test_config_entry_only_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config_entry_only_config_schema."""
+    expected_issue = "config_entry_only_test_domain"
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+    issue_registry = ir.async_get(hass)
+
+    cv.config_entry_only_config_schema("test_domain")({})
+    assert expected_message not in caplog.text
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.config_entry_only_config_schema("test_domain")({"test_domain": {}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+    issue_registry.async_delete(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.config_entry_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+
+def test_config_entry_only_schema_cant_find_module() -> None:
+    """Test if the current module cannot be inspected."""
+    with patch("inspect.getmodule", return_value=None):
+        cv.config_entry_only_config_schema("test_domain")(
+            {"test_domain": {"foo": "bar"}}
+        )
+
+
+def test_config_entry_only_schema_no_hass(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if the the hass context is not set in our context."""
+    with patch(
+        "homeassistant.helpers.config_validation.async_get_hass",
+        side_effect=HomeAssistantError,
+    ):
+        cv.config_entry_only_config_schema("test_domain")(
+            {"test_domain": {"foo": "bar"}}
+        )
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+    assert expected_message in caplog.text
+    issue_registry = ir.async_get(hass)
+    assert not issue_registry.issues
+
+
+def test_platform_only_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config_entry_only_config_schema."""
+    expected_issue = "platform_only_test_domain"
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+    issue_registry = ir.async_get(hass)
+
+    cv.platform_only_config_schema("test_domain")({})
+    assert expected_message not in caplog.text
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.platform_only_config_schema("test_domain")({"test_domain": {}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+    issue_registry.async_delete(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.platform_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)

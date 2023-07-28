@@ -38,7 +38,7 @@ async def test_ventilator_min_on_away_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
 
 
-async def test_set_min_time_home(hass: HomeAssistant):
+async def test_set_min_time_home(hass: HomeAssistant) -> None:
     """Test the number can set min time home."""
     target_value = 40
     with patch(

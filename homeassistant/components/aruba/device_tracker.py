@@ -42,7 +42,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> ArubaDeviceScanner |
 
 
 class ArubaDeviceScanner(DeviceScanner):
-    """This class queries a Aruba Access Point for connected devices."""
+    """Class which queries a Aruba Access Point for connected devices."""
 
     def __init__(self, config):
         """Initialize the scanner."""

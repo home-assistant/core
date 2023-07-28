@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from pyfronius import BadStatusError, FroniusError
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,6 +24,7 @@ from .sensor import (
     OHMPILOT_ENTITY_DESCRIPTIONS,
     POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
+    FroniusSensorEntityDescription,
 )
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class FroniusCoordinatorBase(
 
     default_interval: timedelta
     error_interval: timedelta
-    valid_descriptions: list[SensorEntityDescription]
+    valid_descriptions: list[FroniusSensorEntityDescription]
 
     MAX_FAILED_UPDATES = 3
 

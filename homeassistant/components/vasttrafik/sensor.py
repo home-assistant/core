@@ -32,7 +32,6 @@ CONF_SECRET = "secret"
 
 DEFAULT_DELAY = 0
 
-ICON = "mdi:train"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
@@ -83,6 +82,7 @@ class VasttrafikDepartureSensor(SensorEntity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
     _attr_attribution = "Data provided by Västtrafik"
+    _attr_icon = "mdi:train"
 
     def __init__(self, planner, name, departure, heading, lines, delay):
         """Initialize the sensor."""
@@ -109,11 +109,6 @@ class VasttrafikDepartureSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
 
     @property
     def extra_state_attributes(self):

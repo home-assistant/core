@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta
 
 from async_timeout import timeout
 from sharkiq import (
@@ -60,6 +61,13 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
     async def _async_update_data(self) -> bool:
         """Update data device by device."""
         try:
+            if self.ayla_api.token_expiring_soon:
+                await self.ayla_api.async_refresh_auth()
+            elif datetime.now() > self.ayla_api.auth_expiration - timedelta(
+                seconds=600
+            ):
+                await self.ayla_api.async_refresh_auth()
+
             all_vacuums = await self.ayla_api.async_list_devices()
             self._online_dsns = {
                 v["dsn"]
@@ -78,7 +86,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
             LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
             raise ConfigEntryAuthFailed from err
         except Exception as err:
-            LOGGER.exception("Unexpected error updating SharkIQ")
+            LOGGER.exception("Unexpected error updating SharkIQ.  Attempting re-auth")
             raise UpdateFailed(err) from err
 
         return True

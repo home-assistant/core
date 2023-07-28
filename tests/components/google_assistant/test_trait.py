@@ -82,7 +82,7 @@ PIN_DATA = helpers.RequestData(
 @pytest.mark.parametrize(
     "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
 )
-async def test_brightness_light(hass, supported_color_modes):
+async def test_brightness_light(hass: HomeAssistant, supported_color_modes) -> None:
     """Test brightness trait support for light domain."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert trait.BrightnessTrait.supported(
@@ -563,7 +563,9 @@ async def test_startstop_cover_assumed(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
-async def test_color_setting_color_light(hass, supported_color_modes):
+async def test_color_setting_color_light(
+    hass: HomeAssistant, supported_color_modes
+) -> None:
     """Test ColorSpectrum trait support for light domain."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None, {})
@@ -774,7 +776,7 @@ async def test_light_modes(hass: HomeAssistant) -> None:
     "component",
     [button, input_button],
 )
-async def test_scene_button(hass, component):
+async def test_scene_button(hass: HomeAssistant, component) -> None:
     """Test Scene trait support for the (input) button domain."""
     assert helpers.get_google_type(component.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(component.DOMAIN, 0, None, None)
@@ -852,14 +854,18 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
                     climate.HVACMode.HEAT,
                     climate.HVACMode.HEAT_COOL,
                 ],
-                climate.ATTR_MIN_TEMP: None,
-                climate.ATTR_MAX_TEMP: None,
+                climate.ATTR_MIN_TEMP: 45,
+                climate.ATTR_MAX_TEMP: 95,
             },
         ),
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "cool", "heat", "heatcool", "on"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": 7,
+            "maxThresholdCelsius": 35,
+        },
         "thermostatTemperatureUnit": "F",
     }
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
@@ -891,14 +897,18 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
             climate.HVACMode.AUTO,
             {
                 climate.ATTR_HVAC_MODES: [],
-                climate.ATTR_MIN_TEMP: None,
-                climate.ATTR_MAX_TEMP: None,
+                climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
+                climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
             },
         ),
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["heat"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": climate.DEFAULT_MIN_TEMP,
+            "maxThresholdCelsius": climate.DEFAULT_MAX_TEMP,
+        },
         "thermostatTemperatureUnit": "C",
     }
 
@@ -935,6 +945,10 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "cool", "heat", "auto", "on"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": 10,
+            "maxThresholdCelsius": 27,
+        },
         "thermostatTemperatureUnit": "F",
     }
     assert trt.query_attributes() == {
@@ -976,12 +990,40 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
 
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(
-            trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
+            trait.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
             BASIC_DATA,
-            {"thermostatTemperatureSetpoint": -100},
+            {
+                "thermostatTemperatureSetpointHigh": 26,
+                "thermostatTemperatureSetpointLow": -100,
+            },
             {},
         )
     assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(
+            trait.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
+            BASIC_DATA,
+            {
+                "thermostatTemperatureSetpointHigh": 100,
+                "thermostatTemperatureSetpointLow": 18,
+            },
+            {},
+        )
+    assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
+
+    calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
+    await trt.execute(
+        trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
+        BASIC_DATA,
+        {"thermostatTemperatureSetpoint": 23.9},
+        {},
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "climate.bla",
+        climate.ATTR_TEMPERATURE: 75,
+    }
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
@@ -998,9 +1040,11 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
             "climate.bla",
             climate.HVACMode.COOL,
             {
+                ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE,
                 climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVACMode.COOL],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
+                climate.ATTR_PRESET_MODE: climate.PRESET_ECO,
                 ATTR_TEMPERATURE: 18,
                 climate.ATTR_CURRENT_TEMPERATURE: 20,
             },
@@ -1009,10 +1053,14 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "cool", "on"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": 10,
+            "maxThresholdCelsius": 30,
+        },
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
-        "thermostatMode": "cool",
+        "thermostatMode": "eco",
         "thermostatTemperatureAmbient": 20,
         "thermostatTemperatureSetpoint": 18,
     }
@@ -1020,7 +1068,6 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
 
     calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
-
     with pytest.raises(helpers.SmartHomeError):
         await trt.execute(
             trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
@@ -1037,6 +1084,32 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
     )
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 19}
+
+    calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_PRESET_MODE)
+    await trt.execute(
+        trait.COMMAND_THERMOSTAT_SET_MODE,
+        BASIC_DATA,
+        {"thermostatMode": "eco"},
+        {},
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "climate.bla",
+        climate.ATTR_PRESET_MODE: "eco",
+    }
+
+    calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
+    await trt.execute(
+        trait.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
+        BASIC_DATA,
+        {
+            "thermostatTemperatureSetpointHigh": 15,
+            "thermostatTemperatureSetpointLow": 22,
+        },
+        {},
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 18.5}
 
 
 async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) -> None:
@@ -1066,6 +1139,10 @@ async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) ->
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "heatcool", "on"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": 10,
+            "maxThresholdCelsius": 30,
+        },
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
@@ -1099,7 +1176,7 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "queryOnlyTemperatureSetting": True,
+        "queryOnlyTemperatureControl": True,
         "temperatureUnitForUX": "C",
         "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
     }
@@ -1126,6 +1203,7 @@ async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None
                 humidifier.ATTR_MIN_HUMIDITY: 20,
                 humidifier.ATTR_MAX_HUMIDITY: 90,
                 humidifier.ATTR_HUMIDITY: 38,
+                humidifier.ATTR_CURRENT_HUMIDITY: 30,
             },
         ),
         BASIC_CONFIG,
@@ -1135,6 +1213,7 @@ async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None
     }
     assert trt.query_attributes() == {
         "humiditySetpointPercent": 38,
+        "humidityAmbientPercent": 30,
     }
     assert trt.can_execute(trait.COMMAND_SET_HUMIDITY, {})
 
@@ -1645,7 +1724,7 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "percentage,percentage_step, speed, speeds, percentage_result",
+    ("percentage", "percentage_step", "speed", "speeds", "percentage_result"),
     [
         (
             33,
@@ -1756,14 +1835,16 @@ async def test_fan_speed_ordered(
 
 
 @pytest.mark.parametrize(
-    "direction_state,direction_call",
+    ("direction_state", "direction_call"),
     [
         (fan.DIRECTION_FORWARD, fan.DIRECTION_REVERSE),
         (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD),
         (None, fan.DIRECTION_FORWARD),
     ],
 )
-async def test_fan_reverse(hass, direction_state, direction_call):
+async def test_fan_reverse(
+    hass: HomeAssistant, direction_state, direction_call
+) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_DIRECTION)
@@ -1931,14 +2012,16 @@ async def test_inputselector(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sources,source,source_next,source_prev",
+    ("sources", "source", "source_next", "source_prev"),
     [
         (["a"], "a", "a", "a"),
         (["a", "b"], "a", "b", "b"),
         (["a", "b", "c"], "a", "b", "c"),
     ],
 )
-async def test_inputselector_nextprev(hass, sources, source, source_next, source_prev):
+async def test_inputselector_nextprev(
+    hass: HomeAssistant, sources, source, source_next, source_prev
+) -> None:
     """Test input selector trait."""
     trt = trait.InputSelectorTrait(
         hass,
@@ -1984,9 +2067,11 @@ async def test_inputselector_nextprev(hass, sources, source, source_next, source
 
 
 @pytest.mark.parametrize(
-    "sources,source", [(None, "a"), (["a", "b"], None), (["a", "b"], "c")]
+    ("sources", "source"), [(None, "a"), (["a", "b"], None), (["a", "b"], "c")]
 )
-async def test_inputselector_nextprev_invalid(hass, sources, source):
+async def test_inputselector_nextprev_invalid(
+    hass: HomeAssistant, sources, source
+) -> None:
     """Test input selector trait."""
     trt = trait.InputSelectorTrait(
         hass,
@@ -2606,7 +2691,7 @@ async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
         cover.CoverDeviceClass.GATE,
     ),
 )
-async def test_openclose_cover_secure(hass, device_class):
+async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(
@@ -2674,7 +2759,7 @@ async def test_openclose_cover_secure(hass, device_class):
         binary_sensor.BinarySensorDeviceClass.WINDOW,
     ),
 )
-async def test_openclose_binary_sensor(hass, device_class):
+async def test_openclose_binary_sensor(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for binary_sensor domain."""
     assert helpers.get_google_type(binary_sensor.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(binary_sensor.DOMAIN, 0, device_class, None)
@@ -2908,7 +2993,7 @@ async def test_temperature_control_sensor(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "unit_in,unit_out,state,ambient",
+    ("unit_in", "unit_out", "state", "ambient"),
     [
         (UnitOfTemperature.FAHRENHEIT, "F", "70", 21.1),
         (UnitOfTemperature.CELSIUS, "C", "21.1", 21.1),
@@ -2916,7 +3001,9 @@ async def test_temperature_control_sensor(hass: HomeAssistant) -> None:
         (UnitOfTemperature.FAHRENHEIT, "F", "unknown", None),
     ],
 )
-async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, ambient):
+async def test_temperature_control_sensor_data(
+    hass: HomeAssistant, unit_in, unit_out, state, ambient
+) -> None:
     """Test TemperatureControl trait support for temperature sensor."""
     hass.config.units.temperature_unit = unit_in
 
@@ -2931,7 +3018,7 @@ async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, a
     )
 
     assert trt.sync_attributes() == {
-        "queryOnlyTemperatureSetting": True,
+        "queryOnlyTemperatureControl": True,
         "temperatureUnitForUX": unit_out,
         "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
     }
@@ -2961,9 +3048,11 @@ async def test_humidity_setting_sensor(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "state,ambient", [("70", 70), ("unavailable", None), ("unknown", None)]
+    ("state", "ambient"), [("70", 70), ("unavailable", None), ("unknown", None)]
 )
-async def test_humidity_setting_sensor_data(hass, state, ambient):
+async def test_humidity_setting_sensor_data(
+    hass: HomeAssistant, state, ambient
+) -> None:
     """Test HumiditySetting trait support for humidity sensor."""
     trt = trait.HumiditySettingTrait(
         hass,
@@ -3116,7 +3205,7 @@ async def test_transport_control(hass: HomeAssistant) -> None:
         STATE_UNKNOWN,
     ),
 )
-async def test_media_state(hass, state):
+async def test_media_state(hass: HomeAssistant, state) -> None:
     """Test the MediaStateTrait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
 
@@ -3202,6 +3291,50 @@ async def test_channel(hass: HomeAssistant) -> None:
     assert len(media_player_calls) == 1
 
 
+async def test_air_quality_description_for_aqi(hass: HomeAssistant) -> None:
+    """Test air quality description for a given AQI value."""
+    trt = trait.SensorStateTrait(
+        hass,
+        State(
+            "sensor.test",
+            100.0,
+            {
+                "device_class": sensor.SensorDeviceClass.AQI,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt._air_quality_description_for_aqi("0") == "healthy"
+    assert trt._air_quality_description_for_aqi("75") == "moderate"
+    assert (
+        trt._air_quality_description_for_aqi("125") == "unhealthy for sensitive groups"
+    )
+    assert trt._air_quality_description_for_aqi("175") == "unhealthy"
+    assert trt._air_quality_description_for_aqi("250") == "very unhealthy"
+    assert trt._air_quality_description_for_aqi("350") == "hazardous"
+    assert trt._air_quality_description_for_aqi("-1") == "unknown"
+    assert trt._air_quality_description_for_aqi("non-numeric") == "unknown"
+
+
+async def test_null_device_class(hass: HomeAssistant) -> None:
+    """Test handling a null device_class in sync_attributes and query_attributes."""
+    trt = trait.SensorStateTrait(
+        hass,
+        State(
+            "sensor.test",
+            100.0,
+            {
+                "device_class": None,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {}
+
+
 async def test_sensorstate(hass: HomeAssistant) -> None:
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
@@ -3235,16 +3368,52 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
         name = sensor_types[sensor_type][0]
         unit = sensor_types[sensor_type][1]
 
-        assert trt.sync_attributes() == {
-            "sensorStatesSupported": {
-                "name": name,
-                "numericCapabilities": {"rawValueUnit": unit},
+        if sensor_type == sensor.SensorDeviceClass.AQI:
+            assert trt.sync_attributes() == {
+                "sensorStatesSupported": [
+                    {
+                        "name": name,
+                        "numericCapabilities": {"rawValueUnit": unit},
+                        "descriptiveCapabilities": {
+                            "availableStates": [
+                                "healthy",
+                                "moderate",
+                                "unhealthy for sensitive groups",
+                                "unhealthy",
+                                "very unhealthy",
+                                "hazardous",
+                                "unknown",
+                            ],
+                        },
+                    }
+                ]
             }
-        }
+        else:
+            assert trt.sync_attributes() == {
+                "sensorStatesSupported": [
+                    {
+                        "name": name,
+                        "numericCapabilities": {"rawValueUnit": unit},
+                    }
+                ]
+            }
 
-        assert trt.query_attributes() == {
-            "currentSensorStateData": [{"name": name, "rawValue": "100.0"}]
-        }
+        if sensor_type == sensor.SensorDeviceClass.AQI:
+            assert trt.query_attributes() == {
+                "currentSensorStateData": [
+                    {
+                        "name": name,
+                        "currentSensorState": trt._air_quality_description_for_aqi(
+                            trt.state.state
+                        ),
+                        "rawValue": trt.state.state,
+                    },
+                ]
+            }
+        else:
+            assert trt.query_attributes() == {
+                "currentSensorStateData": [{"name": name, "rawValue": trt.state.state}]
+            }
 
     assert helpers.get_google_type(sensor.DOMAIN, None) is not None
     assert (

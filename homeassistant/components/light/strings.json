@@ -4,25 +4,389 @@
     "action_type": {
       "brightness_decrease": "Decrease {entity_name} brightness",
       "brightness_increase": "Increase {entity_name} brightness",
-      "toggle": "Toggle {entity_name}",
-      "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}",
+      "toggle": "[%key:common::device_automation::action_type::toggle%]",
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]",
       "flash": "Flash {entity_name}"
     },
     "condition_type": {
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
     "trigger_type": {
-      "changed_states": "{entity_name} turned on or off",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::light::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "brightness": {
+          "name": "Brightness"
+        },
+        "color_mode": {
+          "name": "Color mode",
+          "state": {
+            "brightness": "Brightness only",
+            "color_temp": "Color temperature",
+            "hs": "HS",
+            "onoff": "On/Off",
+            "rgb": "RGB",
+            "rgbw": "RGBW",
+            "rgbww": "RGBWW",
+            "unknown": "Unknown",
+            "white": "White",
+            "xy": "XY"
+          }
+        },
+        "color_temp": {
+          "name": "Color temperature (mireds)"
+        },
+        "color_temp_kelvin": {
+          "name": "Color temperature (Kelvin)"
+        },
+        "effect": {
+          "name": "Effect"
+        },
+        "effect_list": {
+          "name": "Available effects"
+        },
+        "max_color_temp_kelvin": {
+          "name": "Maximum color temperature (Kelvin)"
+        },
+        "min_color_temp_kelvin": {
+          "name": "Minimum color temperature (Kelvin)"
+        },
+        "max_mireds": {
+          "name": "Maximum color temperature (mireds)"
+        },
+        "min_mireds": {
+          "name": "Minimum color temperature (mireds)"
+        },
+        "supported_color_modes": {
+          "name": "Available color modes",
+          "state": {
+            "brightness": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::brightness%]",
+            "color_temp": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::color_temp%]",
+            "hs": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::hs%]",
+            "onoff": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::onoff%]",
+            "rgb": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgb%]",
+            "rgbw": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgbw%]",
+            "rgbww": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgbww%]",
+            "unknown": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::unknown%]",
+            "white": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::white%]",
+            "xy": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::xy%]"
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "color_name": {
+      "options": {
+        "homeassistant": "Home Assistant",
+        "aliceblue": "Alice blue",
+        "antiquewhite": "Antique white",
+        "aqua": "Aqua",
+        "aquamarine": "Aquamarine",
+        "azure": "Azure",
+        "beige": "Beige",
+        "bisque": "Bisque",
+        "blanchedalmond": "Blanched almond",
+        "blue": "Blue",
+        "blueviolet": "Blue violet",
+        "brown": "Brown",
+        "burlywood": "Burlywood",
+        "cadetblue": "Cadet blue",
+        "chartreuse": "Chartreuse",
+        "chocolate": "Chocolate",
+        "coral": "Coral",
+        "cornflowerblue": "Cornflower blue",
+        "cornsilk": "Cornsilk",
+        "crimson": "Crimson",
+        "cyan": "Cyan",
+        "darkblue": "Dark blue",
+        "darkcyan": "Dark cyan",
+        "darkgoldenrod": "Dark goldenrod",
+        "darkgray": "Dark gray",
+        "darkgreen": "Dark green",
+        "darkgrey": "Dark grey",
+        "darkkhaki": "Dark khaki",
+        "darkmagenta": "Dark magenta",
+        "darkolivegreen": "Dark olive green",
+        "darkorange": "Dark orange",
+        "darkorchid": "Dark orchid",
+        "darkred": "Dark red",
+        "darksalmon": "Dark salmon",
+        "darkseagreen": "Dark sea green",
+        "darkslateblue": "Dark slate blue",
+        "darkslategray": "Dark slate gray",
+        "darkslategrey": "Dark slate grey",
+        "darkturquoise": "Dark turquoise",
+        "darkviolet": "Dark violet",
+        "deeppink": "Deep pink",
+        "deepskyblue": "Deep sky blue",
+        "dimgray": "Dim gray",
+        "dimgrey": "Dim grey",
+        "dodgerblue": "Dodger blue",
+        "firebrick": "Fire brick",
+        "floralwhite": "Floral white",
+        "forestgreen": "Forest green",
+        "fuchsia": "Fuchsia",
+        "gainsboro": "Gainsboro",
+        "ghostwhite": "Ghost white",
+        "gold": "Gold",
+        "goldenrod": "Goldenrod",
+        "gray": "Gray",
+        "green": "Green",
+        "greenyellow": "Green yellow",
+        "grey": "Grey",
+        "honeydew": "Honeydew",
+        "hotpink": "Hot pink",
+        "indianred": "Indian red",
+        "indigo": "Indigo",
+        "ivory": "Ivory",
+        "khaki": "Khaki",
+        "lavender": "Lavender",
+        "lavenderblush": "Lavender blush",
+        "lawngreen": "Lawn green",
+        "lemonchiffon": "Lemon chiffon",
+        "lightblue": "Light blue",
+        "lightcoral": "Light coral",
+        "lightcyan": "Light cyan",
+        "lightgoldenrodyellow": "Light goldenrod yellow",
+        "lightgray": "Light gray",
+        "lightgreen": "Light green",
+        "lightgrey": "Light grey",
+        "lightpink": "Light pink",
+        "lightsalmon": "Light salmon",
+        "lightseagreen": "Light sea green",
+        "lightskyblue": "Light sky blue",
+        "lightslategray": "Light slate gray",
+        "lightslategrey": "Light slate grey",
+        "lightsteelblue": "Light steel blue",
+        "lightyellow": "Light yellow",
+        "lime": "Lime",
+        "limegreen": "Lime green",
+        "linen": "Linen",
+        "magenta": "Magenta",
+        "maroon": "Maroon",
+        "mediumaquamarine": "Medium aquamarine",
+        "mediumblue": "Medium blue",
+        "mediumorchid": "Medium orchid",
+        "mediumpurple": "Medium purple",
+        "mediumseagreen": "Medium sea green",
+        "mediumslateblue": "Medium slate blue",
+        "mediumspringgreen": "Medium spring green",
+        "mediumturquoise": "Medium turquoise",
+        "mediumvioletred": "Medium violet red",
+        "midnightblue": "Midnight blue",
+        "mintcream": "Mint cream",
+        "mistyrose": "Misty rose",
+        "moccasin": "Moccasin",
+        "navajowhite": "Navajo white",
+        "navy": "Navy",
+        "navyblue": "Navy blue",
+        "oldlace": "Old lace",
+        "olive": "Olive",
+        "olivedrab": "Olive drab",
+        "orange": "Orange",
+        "orangered": "Orange red",
+        "orchid": "Orchid",
+        "palegoldenrod": "Pale goldenrod",
+        "palegreen": "Pale green",
+        "paleturquoise": "Pale turquoise",
+        "palevioletred": "Pale violet red",
+        "papayawhip": "Papaya whip",
+        "peachpuff": "Peach puff",
+        "peru": "Peru",
+        "pink": "Pink",
+        "plum": "Plum",
+        "powderblue": "Powder blue",
+        "purple": "Purple",
+        "red": "Red",
+        "rosybrown": "Rosy brown",
+        "royalblue": "Royal blue",
+        "saddlebrown": "Saddle brown",
+        "salmon": "Salmon",
+        "sandybrown": "Sandy brown",
+        "seagreen": "Sea green",
+        "seashell": "Seashell",
+        "sienna": "Sienna",
+        "silver": "Silver",
+        "skyblue": "Sky blue",
+        "slateblue": "Slate blue",
+        "slategray": "Slate gray",
+        "slategrey": "Slate grey",
+        "snow": "Snow",
+        "springgreen": "Spring green",
+        "steelblue": "Steel blue",
+        "tan": "Tan",
+        "teal": "Teal",
+        "thistle": "Thistle",
+        "tomato": "Tomato",
+        "turquoise": "Turquoise",
+        "violet": "Violet",
+        "wheat": "Wheat",
+        "white": "White",
+        "whitesmoke": "White smoke",
+        "yellow": "Yellow",
+        "yellowgreen": "Yellow green"
+      }
+    }
+  },
+  "services": {
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turn on one or more lights and adjust properties of the light, even when they are turned on already.",
+      "fields": {
+        "transition": {
+          "name": "Transition",
+          "description": "Duration it takes to get to next state."
+        },
+        "rgb_color": {
+          "name": "Color",
+          "description": "The color in RGB format. A list of three integers between 0 and 255 representing the values of red, green, and blue."
+        },
+        "rgbw_color": {
+          "name": "RGBW-color",
+          "description": "The color in RGBW format. A list of four integers between 0 and 255 representing the values of red, green, blue, and white."
+        },
+        "rgbww_color": {
+          "name": "RGBWW-color",
+          "description": "The color in RGBWW format. A list of five integers between 0 and 255 representing the values of red, green, blue, cold white, and warm white."
+        },
+        "color_name": {
+          "name": "Color name",
+          "description": "A human readable color name."
+        },
+        "hs_color": {
+          "name": "Hue/Sat color",
+          "description": "Color in hue/sat format. A list of two integers. Hue is 0-360 and Sat is 0-100."
+        },
+        "xy_color": {
+          "name": "XY-color",
+          "description": "Color in XY-format. A list of two decimal numbers between 0 and 1."
+        },
+        "color_temp": {
+          "name": "Color temperature",
+          "description": "Color temperature in mireds."
+        },
+        "kelvin": {
+          "name": "Color temperature",
+          "description": "Color temperature in Kelvin."
+        },
+        "brightness": {
+          "name": "Brightness value",
+          "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness."
+        },
+        "brightness_pct": {
+          "name": "Brightness",
+          "description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness."
+        },
+        "brightness_step": {
+          "name": "Brightness step value",
+          "description": "Change brightness by an amount."
+        },
+        "brightness_step_pct": {
+          "name": "Brightness step",
+          "description": "Change brightness by a percentage."
+        },
+        "white": {
+          "name": "White",
+          "description": "Set the light to white mode."
+        },
+        "profile": {
+          "name": "Profile",
+          "description": "Name of a light profile to use."
+        },
+        "flash": {
+          "name": "Flash",
+          "description": "If the light should flash."
+        },
+        "effect": {
+          "name": "Effect",
+          "description": "Light effect."
+        }
+      }
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turn off one or more lights.",
+      "fields": {
+        "transition": {
+          "name": "[%key:component::light::services::turn_on::fields::transition::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::transition::description%]"
+        },
+        "flash": {
+          "name": "[%key:component::light::services::turn_on::fields::flash::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::flash::description%]"
+        }
+      }
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles one or more lights, from on to off, or, off to on, based on their current state.",
+      "fields": {
+        "transition": {
+          "name": "[%key:component::light::services::turn_on::fields::transition::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::transition::description%]"
+        },
+        "rgb_color": {
+          "name": "[%key:component::light::services::turn_on::fields::rgb_color::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::rgb_color::description%]"
+        },
+        "color_name": {
+          "name": "[%key:component::light::services::turn_on::fields::color_name::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::color_name::description%]"
+        },
+        "hs_color": {
+          "name": "[%key:component::light::services::turn_on::fields::hs_color::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::hs_color::description%]"
+        },
+        "xy_color": {
+          "name": "[%key:component::light::services::turn_on::fields::xy_color::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::xy_color::description%]"
+        },
+        "color_temp": {
+          "name": "[%key:component::light::services::turn_on::fields::color_temp::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::color_temp::description%]"
+        },
+        "kelvin": {
+          "name": "[%key:component::light::services::turn_on::fields::kelvin::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::kelvin::description%]"
+        },
+        "brightness": {
+          "name": "[%key:component::light::services::turn_on::fields::brightness::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::brightness::description%]"
+        },
+        "brightness_pct": {
+          "name": "[%key:component::light::services::turn_on::fields::brightness_pct::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::brightness_pct::description%]"
+        },
+        "white": {
+          "name": "[%key:component::light::services::turn_on::fields::white::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::white::description%]"
+        },
+        "profile": {
+          "name": "[%key:component::light::services::turn_on::fields::profile::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::profile::description%]"
+        },
+        "flash": {
+          "name": "[%key:component::light::services::turn_on::fields::flash::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::flash::description%]"
+        },
+        "effect": {
+          "name": "[%key:component::light::services::turn_on::fields::effect::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::effect::description%]"
+        }
+      }
     }
   }
 }

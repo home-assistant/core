@@ -3,7 +3,6 @@
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
-
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -15,6 +14,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -117,7 +117,7 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
 
 
 @pytest.mark.parametrize(
-    "device_type,device_traits,event_trait,expected_model,expected_type",
+    ("device_type", "device_traits", "event_trait", "expected_model", "expected_type"),
     [
         (
             "sdm.devices.types.DOORBELL",
@@ -150,8 +150,14 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
     ],
 )
 async def test_event(
-    hass, auth, setup_platform, subscriber, event_trait, expected_model, expected_type
-):
+    hass: HomeAssistant,
+    auth,
+    setup_platform,
+    subscriber,
+    event_trait,
+    expected_model,
+    expected_type,
+) -> None:
     """Test a pubsub message for a doorbell event."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
@@ -187,7 +193,9 @@ async def test_event(
         ["sdm.devices.traits.CameraMotion", "sdm.devices.traits.CameraPerson"],
     ],
 )
-async def test_camera_multiple_event(hass, subscriber, setup_platform):
+async def test_camera_multiple_event(
+    hass: HomeAssistant, subscriber, setup_platform
+) -> None:
     """Test a pubsub message for a camera person event."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
@@ -224,7 +232,7 @@ async def test_camera_multiple_event(hass, subscriber, setup_platform):
     }
 
 
-async def test_unknown_event(hass, subscriber, setup_platform):
+async def test_unknown_event(hass: HomeAssistant, subscriber, setup_platform) -> None:
     """Test a pubsub message for an unknown event type."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
@@ -234,7 +242,9 @@ async def test_unknown_event(hass, subscriber, setup_platform):
     assert len(events) == 0
 
 
-async def test_unknown_device_id(hass, subscriber, setup_platform):
+async def test_unknown_device_id(
+    hass: HomeAssistant, subscriber, setup_platform
+) -> None:
     """Test a pubsub message for an unknown event type."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
@@ -246,7 +256,9 @@ async def test_unknown_device_id(hass, subscriber, setup_platform):
     assert len(events) == 0
 
 
-async def test_event_message_without_device_event(hass, subscriber, setup_platform):
+async def test_event_message_without_device_event(
+    hass: HomeAssistant, subscriber, setup_platform
+) -> None:
     """Test a pubsub message for an unknown event type."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
@@ -270,7 +282,9 @@ async def test_event_message_without_device_event(hass, subscriber, setup_platfo
         ["sdm.devices.traits.CameraClipPreview", "sdm.devices.traits.CameraPerson"],
     ],
 )
-async def test_doorbell_event_thread(hass, subscriber, setup_platform):
+async def test_doorbell_event_thread(
+    hass: HomeAssistant, subscriber, setup_platform
+) -> None:
     """Test a series of pubsub messages in the same thread."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
@@ -339,7 +353,9 @@ async def test_doorbell_event_thread(hass, subscriber, setup_platform):
         ],
     ],
 )
-async def test_doorbell_event_session_update(hass, subscriber, setup_platform):
+async def test_doorbell_event_session_update(
+    hass: HomeAssistant, subscriber, setup_platform
+) -> None:
     """Test a pubsub message with updates to an existing session."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
@@ -401,7 +417,9 @@ async def test_doorbell_event_session_update(hass, subscriber, setup_platform):
     }
 
 
-async def test_structure_update_event(hass, subscriber, setup_platform):
+async def test_structure_update_event(
+    hass: HomeAssistant, subscriber, setup_platform
+) -> None:
     """Test a pubsub message for a new device being added."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
@@ -463,7 +481,7 @@ async def test_structure_update_event(hass, subscriber, setup_platform):
         ["sdm.devices.traits.CameraMotion"],
     ],
 )
-async def test_event_zones(hass, subscriber, setup_platform):
+async def test_event_zones(hass: HomeAssistant, subscriber, setup_platform) -> None:
     """Test events published with zone information."""
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()

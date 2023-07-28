@@ -37,13 +37,13 @@ async def test_form(hass: HomeAssistant) -> None:
                 "id": "test",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Test airport"
     assert result2["data"] == {
         "id": "test",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 

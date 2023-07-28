@@ -8,6 +8,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.location as location_util
 
 from tests.common import load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 # Paris
 COORDINATES_PARIS = (48.864716, 2.349014)
@@ -73,7 +74,9 @@ def test_get_miles() -> None:
     assert round(miles, 2) == DISTANCE_MILES
 
 
-async def test_detect_location_info_whoami(aioclient_mock, session):
+async def test_detect_location_info_whoami(
+    aioclient_mock: AiohttpClientMocker, session
+) -> None:
     """Test detect location info using services.home-assistant.io/whoami."""
     aioclient_mock.get(location_util.WHOAMI_URL, text=load_fixture("whoami.json"))
 
@@ -95,7 +98,7 @@ async def test_detect_location_info_whoami(aioclient_mock, session):
     assert info.use_metric
 
 
-async def test_dev_url(aioclient_mock, session):
+async def test_dev_url(aioclient_mock: AiohttpClientMocker, session) -> None:
     """Test usage of dev URL."""
     aioclient_mock.get(location_util.WHOAMI_URL_DEV, text=load_fixture("whoami.json"))
     with patch("homeassistant.util.location.HA_VERSION", "1.0.dev0"):
@@ -106,7 +109,7 @@ async def test_dev_url(aioclient_mock, session):
     assert info.currency == "XXX"
 
 
-async def test_whoami_query_raises(raising_session):
+async def test_whoami_query_raises(raising_session) -> None:
     """Test whoami query when the request to API fails."""
     info = await location_util._get_whoami(raising_session)
     assert info is None

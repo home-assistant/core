@@ -6,11 +6,12 @@ from aiowebostv import WebOsTvPairError
 from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 
 from . import setup_webostv
 
 
-async def test_reauth_setup_entry(hass, client, monkeypatch):
+async def test_reauth_setup_entry(hass: HomeAssistant, client, monkeypatch) -> None:
     """Test reauth flow triggered by setup entry."""
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
     monkeypatch.setattr(client, "connect", Mock(side_effect=WebOsTvPairError))
@@ -30,7 +31,7 @@ async def test_reauth_setup_entry(hass, client, monkeypatch):
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_key_update_setup_entry(hass, client, monkeypatch):
+async def test_key_update_setup_entry(hass: HomeAssistant, client, monkeypatch) -> None:
     """Test key update from setup entry."""
     monkeypatch.setattr(client, "client_key", "new_key")
     entry = await setup_webostv(hass)

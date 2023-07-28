@@ -23,7 +23,7 @@ RELAY_BLOCK_ID = 0
 
 async def test_block_config_entry_diagnostics(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_block_device
-):
+) -> None:
     """Test config entry diagnostics for block device."""
     await init_integration(hass, 1)
 
@@ -53,7 +53,7 @@ async def test_rpc_config_entry_diagnostics(
     hass_client: ClientSessionGenerator,
     mock_rpc_device,
     monkeypatch,
-):
+) -> None:
     """Test config entry diagnostics for rpc device."""
     await init_integration(
         hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}

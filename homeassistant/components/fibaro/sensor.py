@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import Any
+
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -125,7 +126,9 @@ class FibaroSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(
-        self, fibaro_device: Any, entity_description: SensorEntityDescription | None
+        self,
+        fibaro_device: DeviceModel,
+        entity_description: SensorEntityDescription | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(fibaro_device)
@@ -138,20 +141,21 @@ class FibaroSensor(FibaroDevice, SensorEntity):
         with suppress(KeyError, ValueError):
             if not self.native_unit_of_measurement:
                 self._attr_native_unit_of_measurement = FIBARO_TO_HASS_UNIT.get(
-                    fibaro_device.properties.unit, fibaro_device.properties.unit
+                    fibaro_device.unit, fibaro_device.unit
                 )
 
     def update(self) -> None:
         """Update the state."""
-        with suppress(KeyError, ValueError):
-            self._attr_native_value = float(self.fibaro_device.properties.value)
+        super().update()
+        with suppress(TypeError):
+            self._attr_native_value = self.fibaro_device.value.float_value()
 
 
 class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Additional Sensor."""
 
     def __init__(
-        self, fibaro_device: Any, entity_description: SensorEntityDescription
+        self, fibaro_device: DeviceModel, entity_description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(fibaro_device)
@@ -167,6 +171,7 @@ class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
 
     def update(self) -> None:
         """Update the state."""
+        super().update()
         with suppress(KeyError, ValueError):
             self._attr_native_value = convert(
                 self.fibaro_device.properties[self.entity_description.key],
