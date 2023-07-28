@@ -25,6 +25,20 @@ async def test_pipeline_selector(
     assert state.state == "preferred"
 
 
+async def test_vad_sensitivity_select(
+    hass: HomeAssistant,
+    mock_voice_assistant_v1_entry,
+) -> None:
+    """Test VAD sensitivity select.
+
+    Functionality is tested in assist_pipeline/test_select.py.
+    This test is only to ensure it is set up.
+    """
+    state = hass.states.get("select.test_finished_speaking_detection")
+    assert state is not None
+    assert state.state == "default"
+
+
 async def test_select_generic_entity(
     hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
 ) -> None:
@@ -46,14 +60,14 @@ async def test_select_generic_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("select.test_my_select")
+    state = hass.states.get("select.test_myselect")
     assert state is not None
     assert state.state == "a"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_my_select", ATTR_OPTION: "b"},
+        {ATTR_ENTITY_ID: "select.test_myselect", ATTR_OPTION: "b"},
         blocking=True,
     )
     mock_client.select_command.assert_has_calls([call(1, "b")])

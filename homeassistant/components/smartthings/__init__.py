@@ -452,9 +452,11 @@ class SmartThingsEntity(Entity):
         return DeviceInfo(
             configuration_url="https://account.smartthings.com",
             identifiers={(DOMAIN, self._device.device_id)},
-            manufacturer="Unavailable",
-            model=self._device.device_type_name,
+            manufacturer=self._device.status.ocf_manufacturer_name,
+            model=self._device.status.ocf_model_number,
             name=self._device.label,
+            hw_version=self._device.status.ocf_hardware_version,
+            sw_version=self._device.status.ocf_firmware_version,
         )
 
     @property

@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+        }
+      },
+      "confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: {error}"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "valve_connected_state": {
+        "name": "Valve connection"
+      }
+    },
+    "button": {
+      "factory_reset": {
+        "name": "Factory reset"
+      }
+    },
+    "number": {
+      "remaining_open_time": {
+        "name": "Remaining open time"
+      },
+      "remaining_open_set": {
+        "name": "Open for"
+      },
+      "manual_watering_time": {
+        "name": "Manual watering time"
+      },
+      "rain_pause": {
+        "name": "Rain pause"
+      },
+      "season_pause": {
+        "name": "Season pause"
+      }
+    },
+    "sensor": {
+      "activation_reason": {
+        "name": "Activation reason"
+      },
+      "remaining_open_timestamp": {
+        "name": "Valve closing"
+      }
+    },
+    "switch": {
+      "state": {
+        "name": "[%key:common::state::open%]"
+      }
+    }
+  }
+}

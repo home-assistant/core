@@ -2,6 +2,7 @@
   "domain": "qnap",
   "name": "QNAP",
   "codeowners": ["@disforw"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/qnap",
   "integration_type": "device",
   "iot_class": "local_polling",

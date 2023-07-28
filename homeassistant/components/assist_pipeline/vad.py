@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 import webrtcvad
-
-from homeassistant.backports.enum import StrEnum
 
 _SAMPLE_RATE = 16000
 
@@ -137,16 +136,15 @@ class VoiceCommandSegmenter:
                 self._reset_seconds_left -= self._seconds_per_chunk
                 if self._reset_seconds_left <= 0:
                     self._speech_seconds_left = self.speech_seconds
+        elif not is_speech:
+            self._reset_seconds_left = self.reset_seconds
+            self._silence_seconds_left -= self._seconds_per_chunk
+            if self._silence_seconds_left <= 0:
+                return False
         else:
-            if not is_speech:
-                self._reset_seconds_left = self.reset_seconds
-                self._silence_seconds_left -= self._seconds_per_chunk
-                if self._silence_seconds_left <= 0:
-                    return False
-            else:
-                # Reset if enough speech
-                self._reset_seconds_left -= self._seconds_per_chunk
-                if self._reset_seconds_left <= 0:
-                    self._silence_seconds_left = self.silence_seconds
+            # Reset if enough speech
+            self._reset_seconds_left -= self._seconds_per_chunk
+            if self._reset_seconds_left <= 0:
+                self._silence_seconds_left = self.silence_seconds
 
         return True

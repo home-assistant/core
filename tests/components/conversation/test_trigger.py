@@ -1,7 +1,9 @@
 """Test conversation triggers."""
 import pytest
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -59,6 +61,8 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         "idx": "0",
         "platform": "conversation",
         "sentence": "Ha ha ha",
+        "slots": {},
+        "details": {},
     }
 
 
@@ -101,6 +105,8 @@ async def test_same_trigger_multiple_sentences(
         "idx": "0",
         "platform": "conversation",
         "sentence": "hello",
+        "slots": {},
+        "details": {},
     }
 
 
@@ -164,4 +170,82 @@ async def test_same_sentence_multiple_triggers(
     assert call_datas == {
         ("trigger1", "conversation", "hello"),
         ("trigger2", "conversation", "hello"),
+    }
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["hello?", "hello!", "4 a.m."],
+)
+async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
+    """Test that validation fails when sentences contain punctuation."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": [
+                        command,
+                    ],
+                },
+            ],
+        )
+
+
+async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
+    """Test wildcards in trigger sentences."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": [
+                        "play {album} by {artist}",
+                    ],
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"data": "{{ trigger }}"},
+                },
+            }
+        },
+    )
+
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "play the white album by the beatles",
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["data"] == {
+        "alias": None,
+        "id": "0",
+        "idx": "0",
+        "platform": "conversation",
+        "sentence": "play the white album by the beatles",
+        "slots": {
+            "album": "the white album",
+            "artist": "the beatles",
+        },
+        "details": {
+            "album": {
+                "name": "album",
+                "text": "the white album",
+                "value": "the white album",
+            },
+            "artist": {
+                "name": "artist",
+                "text": "the beatles",
+                "value": "the beatles",
+            },
+        },
     }

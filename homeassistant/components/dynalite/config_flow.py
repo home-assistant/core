@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -31,12 +32,18 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Raise an issue that this is deprecated and has been imported
         async_create_issue(
             self.hass,
-            DOMAIN,
-            "deprecated_yaml",
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=False,
             is_persistent=False,
+            issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Dynalite",
+            },
         )
 
         host = import_info[CONF_HOST]

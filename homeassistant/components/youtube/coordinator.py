@@ -4,13 +4,14 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from googleapiclient.discovery import Resource
-from googleapiclient.http import HttpRequest
+from youtubeaio.helper import first
+from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import AsyncConfigEntryAuth
 from .const import (
@@ -27,16 +28,7 @@ from .const import (
 )
 
 
-def get_upload_playlist_id(channel_id: str) -> str:
-    """Return the playlist id with the uploads of the channel.
-
-    Replacing the UC in the channel id (UCxxxxxxxxxxxx) with UU is
-    the way to do it without extra request (UUxxxxxxxxxxxx).
-    """
-    return channel_id.replace("UC", "UU", 1)
-
-
-class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
+class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """A YouTube Data Update Coordinator."""
 
     config_entry: ConfigEntry
@@ -52,49 +44,32 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        service = await self._auth.get_resource()
-        channels = self.config_entry.options[CONF_CHANNELS]
-        channel_request: HttpRequest = service.channels().list(
-            part="snippet,statistics", id=",".join(channels), maxResults=50
-        )
-        response: dict = await self.hass.async_add_executor_job(channel_request.execute)
-
-        return await self.hass.async_add_executor_job(
-            self._get_channel_data, service, response["items"]
-        )
-
-    def _get_channel_data(
-        self, service: Resource, channels: list[dict[str, Any]]
-    ) -> dict[str, Any]:
-        data: dict[str, Any] = {}
-        for channel in channels:
-            playlist_id = get_upload_playlist_id(channel["id"])
-            response = (
-                service.playlistItems()
-                .list(
-                    part="snippet,contentDetails", playlistId=playlist_id, maxResults=1
+        youtube = await self._auth.get_resource()
+        res = {}
+        channel_ids = self.config_entry.options[CONF_CHANNELS]
+        try:
+            async for channel in youtube.get_channels(channel_ids):
+                video = await first(
+                    youtube.get_playlist_items(channel.upload_playlist_id, 1)
                 )
-                .execute()
-            )
-            video = response["items"][0]
-            data[channel["id"]] = {
-                ATTR_ID: channel["id"],
-                ATTR_TITLE: channel["snippet"]["title"],
-                ATTR_ICON: channel["snippet"]["thumbnails"]["high"]["url"],
-                ATTR_LATEST_VIDEO: {
-                    ATTR_PUBLISHED_AT: video["snippet"]["publishedAt"],
-                    ATTR_TITLE: video["snippet"]["title"],
-                    ATTR_DESCRIPTION: video["snippet"]["description"],
-                    ATTR_THUMBNAIL: self._get_thumbnail(video),
-                    ATTR_VIDEO_ID: video["contentDetails"]["videoId"],
-                },
-                ATTR_SUBSCRIBER_COUNT: int(channel["statistics"]["subscriberCount"]),
-            }
-        return data
-
-    def _get_thumbnail(self, video: dict[str, Any]) -> str | None:
-        thumbnails = video["snippet"]["thumbnails"]
-        for size in ("standard", "high", "medium", "default"):
-            if size in thumbnails:
-                return thumbnails[size]["url"]
-        return None
+                latest_video = None
+                if video:
+                    latest_video = {
+                        ATTR_PUBLISHED_AT: video.snippet.added_at,
+                        ATTR_TITLE: video.snippet.title,
+                        ATTR_DESCRIPTION: video.snippet.description,
+                        ATTR_THUMBNAIL: video.snippet.thumbnails.get_highest_quality().url,
+                        ATTR_VIDEO_ID: video.content_details.video_id,
+                    }
+                res[channel.channel_id] = {
+                    ATTR_ID: channel.channel_id,
+                    ATTR_TITLE: channel.snippet.title,
+                    ATTR_ICON: channel.snippet.thumbnails.get_highest_quality().url,
+                    ATTR_LATEST_VIDEO: latest_video,
+                    ATTR_SUBSCRIBER_COUNT: channel.statistics.subscriber_count,
+                }
+        except UnauthorizedError as err:
+            raise ConfigEntryAuthFailed from err
+        except YouTubeBackendError as err:
+            raise UpdateFailed("Couldn't connect to YouTube") from err
+        return res

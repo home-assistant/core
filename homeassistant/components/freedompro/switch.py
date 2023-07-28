@@ -13,8 +13,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -26,12 +26,12 @@ async def async_setup_entry(
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
-        if device["type"] == "switch" or device["type"] == "outlet"
+        if device["type"] in ("switch", "outlet")
     )
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SwitchEntity):
-    """Representation of an Freedompro switch."""
+    """Representation of a Freedompro switch."""
 
     _attr_has_entity_name = True
     _attr_name = None

@@ -22,8 +22,10 @@ from . import (
     climate as climate_platform,
     cover as cover_platform,
     device_tracker as device_tracker_platform,
+    event as event_platform,
     fan as fan_platform,
     humidifier as humidifier_platform,
+    image as image_platform,
     light as light_platform,
     lock as lock_platform,
     number as number_platform,
@@ -51,7 +53,7 @@ from .const import (
 
 DEFAULT_TLS_PROTOCOL = "auto"
 
-PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
+CONFIG_SCHEMA_BASE = vol.Schema(
     {
         Platform.ALARM_CONTROL_PANEL.value: vol.All(
             cv.ensure_list,
@@ -81,6 +83,10 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
             cv.ensure_list,
             [device_tracker_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
+        Platform.EVENT.value: vol.All(
+            cv.ensure_list,
+            [event_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
+        ),
         Platform.FAN.value: vol.All(
             cv.ensure_list,
             [fan_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
@@ -88,6 +94,10 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.HUMIDIFIER.value: vol.All(
             cv.ensure_list,
             [humidifier_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
+        ),
+        Platform.IMAGE.value: vol.All(
+            cv.ensure_list,
+            [image_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.LOCK.value: vol.All(
             cv.ensure_list,

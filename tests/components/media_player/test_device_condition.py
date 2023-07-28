@@ -49,7 +49,7 @@ async def test_get_conditions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     expected_conditions = [
@@ -58,7 +58,7 @@ async def test_get_conditions(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for condition in [
@@ -99,7 +99,7 @@ async def test_get_conditions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -113,7 +113,7 @@ async def test_get_conditions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for condition in [
@@ -131,9 +131,13 @@ async def test_get_conditions_hidden_auxiliary(
     assert conditions == unordered(expected_conditions)
 
 
-async def test_if_state(hass: HomeAssistant, calls) -> None:
+async def test_if_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set("media_player.entity", STATE_ON)
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    hass.states.async_set(entry.entity_id, STATE_ON)
 
     assert await async_setup_component(
         hass,
@@ -147,7 +151,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "media_player.entity",
+                            "entity_id": entry.id,
                             "type": "is_on",
                         }
                     ],
@@ -165,7 +169,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "media_player.entity",
+                            "entity_id": entry.id,
                             "type": "is_off",
                         }
                     ],
@@ -183,7 +187,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "media_player.entity",
+                            "entity_id": entry.id,
                             "type": "is_idle",
                         }
                     ],
@@ -201,7 +205,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "media_player.entity",
+                            "entity_id": entry.id,
                             "type": "is_paused",
                         }
                     ],
@@ -219,7 +223,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "media_player.entity",
+                            "entity_id": entry.id,
                             "type": "is_playing",
                         }
                     ],
@@ -237,7 +241,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "media_player.entity",
+                            "entity_id": entry.id,
                             "type": "is_buffering",
                         }
                     ],
@@ -261,7 +265,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_on - event - test_event1"
 
-    hass.states.async_set("media_player.entity", STATE_OFF)
+    hass.states.async_set(entry.entity_id, STATE_OFF)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -272,7 +276,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_off - event - test_event2"
 
-    hass.states.async_set("media_player.entity", STATE_IDLE)
+    hass.states.async_set(entry.entity_id, STATE_IDLE)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -283,7 +287,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_idle - event - test_event3"
 
-    hass.states.async_set("media_player.entity", STATE_PAUSED)
+    hass.states.async_set(entry.entity_id, STATE_PAUSED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -294,7 +298,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 4
     assert calls[3].data["some"] == "is_paused - event - test_event4"
 
-    hass.states.async_set("media_player.entity", STATE_PLAYING)
+    hass.states.async_set(entry.entity_id, STATE_PLAYING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -305,7 +309,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 5
     assert calls[4].data["some"] == "is_playing - event - test_event5"
 
-    hass.states.async_set("media_player.entity", STATE_BUFFERING)
+    hass.states.async_set(entry.entity_id, STATE_BUFFERING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -315,3 +319,43 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 6
     assert calls[5].data["some"] == "is_buffering - event - test_event6"
+
+
+async def test_if_state_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
+    """Test for turn_on and turn_off conditions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    hass.states.async_set(entry.entity_id, STATE_ON)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": entry.id,
+                            "type": "is_on",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "is_on - event - test_event1"

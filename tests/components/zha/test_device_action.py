@@ -113,7 +113,22 @@ async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
     ieee_address = str(device_ias[0].ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={(DOMAIN, ieee_address)}
+    )
+    ha_entity_registry = er.async_get(hass)
+    siren_level_select = ha_entity_registry.async_get(
+        "select.fakemanufacturer_fakemodel_default_siren_level"
+    )
+    siren_tone_select = ha_entity_registry.async_get(
+        "select.fakemanufacturer_fakemodel_default_siren_tone"
+    )
+    strobe_level_select = ha_entity_registry.async_get(
+        "select.fakemanufacturer_fakemodel_default_strobe_level"
+    )
+    strobe_select = ha_entity_registry.async_get(
+        "select.fakemanufacturer_fakemodel_default_strobe"
+    )
 
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, reg_device.id
@@ -145,10 +160,10 @@ async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
                 "select_previous",
             ]
             for entity_id in [
-                "select.fakemanufacturer_fakemodel_default_siren_level",
-                "select.fakemanufacturer_fakemodel_default_siren_tone",
-                "select.fakemanufacturer_fakemodel_default_strobe_level",
-                "select.fakemanufacturer_fakemodel_default_strobe",
+                siren_level_select.id,
+                siren_tone_select.id,
+                strobe_level_select.id,
+                strobe_select.id,
             ]
         ]
     )
@@ -162,9 +177,10 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
     inovelli_ieee_address = str(device_inovelli[0].ieee)
     ha_device_registry = dr.async_get(hass)
     inovelli_reg_device = ha_device_registry.async_get_device(
-        {(DOMAIN, inovelli_ieee_address)}
+        identifiers={(DOMAIN, inovelli_ieee_address)}
     )
     ha_entity_registry = er.async_get(hass)
+    inovelli_button = ha_entity_registry.async_get("button.inovelli_vzm31_sn_identify")
     inovelli_light = ha_entity_registry.async_get("light.inovelli_vzm31_sn_light")
 
     actions = await async_get_device_automations(
@@ -187,7 +203,7 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.BUTTON,
-            "entity_id": "button.inovelli_vzm31_sn_identify",
+            "entity_id": inovelli_button.id,
             "metadata": {"secondary": True},
             "type": "press",
         },
@@ -215,21 +231,21 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "brightness_increase",
         },
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "brightness_decrease",
         },
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "flash",
         },
@@ -251,9 +267,11 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
     inovelli_ieee_address = str(inovelli_zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={(DOMAIN, ieee_address)}
+    )
     inovelli_reg_device = ha_device_registry.async_get_device(
-        {(DOMAIN, inovelli_ieee_address)}
+        identifiers={(DOMAIN, inovelli_ieee_address)}
     )
 
     cluster = inovelli_zigpy_device.endpoints[1].in_clusters[0xFC31]

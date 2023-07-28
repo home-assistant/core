@@ -58,7 +58,7 @@ async def test_sensor_get_state(
     elif states_response[0]["type"] == "humiditySensor":
         states_response[0]["state"]["currentRelativeHumidity"] = "1"
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

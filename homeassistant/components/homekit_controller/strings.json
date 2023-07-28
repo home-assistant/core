@@ -1,18 +1,18 @@
 {
-  "title": "HomeKit Controller",
+  "title": "HomeKit Device",
   "config": {
     "flow_title": "{name} ({category})",
     "step": {
       "user": {
         "title": "Device selection",
-        "description": "HomeKit Controller communicates over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Select the device you want to pair with:",
+        "description": "HomeKit Device communicates over the local area network using a secure encrypted connection without a separate HomeKit Controller or iCloud. Select the device you want to pair with:",
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "pair": {
         "title": "Pair with a device via HomeKit Accessory Protocol",
-        "description": "HomeKit Controller communicates with {name} ({category}) over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging.",
+        "description": "HomeKit Device communicates with {name} ({category}) over the local area network using a secure encrypted connection without a separate HomeKit Controller or iCloud. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging.",
         "data": {
           "pairing_code": "Pairing Code",
           "allow_insecure_setup_codes": "Allow pairing with insecure setup codes."
@@ -71,11 +71,35 @@
     }
   },
   "entity": {
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "double_press": "Double press",
+              "long_press": "Long press",
+              "single_press": "Single press"
+            }
+          }
+        }
+      },
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "double_press": "[%key:component::homekit_controller::entity::event::doorbell::state_attributes::event_type::state::double_press%]",
+              "long_press": "[%key:component::homekit_controller::entity::event::doorbell::state_attributes::event_type::state::long_press%]",
+              "single_press": "[%key:component::homekit_controller::entity::event::doorbell::state_attributes::event_type::state::single_press%]"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "ecobee_mode": {
         "state": {
-          "away": "Away",
-          "home": "Home",
+          "away": "[%key:common::state::not_home%]",
+          "home": "[%key:common::state::home%]",
           "sleep": "Sleep"
         }
       }
@@ -96,7 +120,7 @@
           "border_router": "Border Router",
           "child": "Child",
           "detached": "Detached",
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "joining": "Joining",
           "leader": "Leader",
           "router": "Router"

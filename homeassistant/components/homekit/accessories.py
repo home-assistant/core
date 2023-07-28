@@ -41,13 +41,16 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
-    Event,
     HomeAssistant,
     State,
     callback as ha_callback,
     split_entity_id,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -281,7 +284,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             display_name=cleanup_name_for_homekit(name),
             aid=aid,
             iid_manager=HomeIIDManager(driver.iid_storage),
-            *args,
+            *args,  # noqa: B026
             **kwargs,
         )
         self.config = config or {}
@@ -450,9 +453,11 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             self.async_update_battery(battery_state, battery_charging_state)
 
     @ha_callback
-    def async_update_event_state_callback(self, event: Event) -> None:
+    def async_update_event_state_callback(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle state change event listener callback."""
-        self.async_update_state_callback(event.data.get("new_state"))
+        self.async_update_state_callback(event.data["new_state"])
 
     @ha_callback
     def async_update_state_callback(self, new_state: State | None) -> None:
@@ -477,9 +482,11 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self.async_update_state(new_state)
 
     @ha_callback
-    def async_update_linked_battery_callback(self, event: Event) -> None:
+    def async_update_linked_battery_callback(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle linked battery sensor state change listener callback."""
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             return
         if self.linked_battery_charging_sensor:
             battery_charging_state = None
@@ -488,9 +495,11 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self.async_update_battery(new_state.state, battery_charging_state)
 
     @ha_callback
-    def async_update_linked_battery_charging_callback(self, event: Event) -> None:
+    def async_update_linked_battery_charging_callback(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle linked battery charging sensor state change listener callback."""
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             return
         self.async_update_battery(None, new_state.state == STATE_ON)
 

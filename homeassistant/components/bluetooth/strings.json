@@ -5,7 +5,7 @@
       "user": {
         "description": "Choose a device to set up",
         "data": {
-          "address": "Device"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
