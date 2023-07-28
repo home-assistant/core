@@ -57,8 +57,8 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # Home Assistant will call your migrate method if the version changes
     VERSION = 1
     p_api: MyPermobil = None
-    region_names = {"Failed to load regions": ""}
-    data = {
+    region_names: dict[str, str] = {"Failed to load regions": ""}
+    data: dict[str, str] = {
         CONF_EMAIL: "",
         CONF_REGION: "",
         CONF_CODE: "",
@@ -70,9 +70,6 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
-        # IDEA: in the future allow for multiple accounts
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
         errors: dict[str, str] = {}
         if not self.p_api:
             # create the api instance to use for validation of the user input
@@ -89,6 +86,9 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.p_api, user_input)  # ClientException
                 self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
                 _LOGGER.debug("Permobil: email %s", self.p_api.email)
+
+                await self.async_set_unique_id(self.data[CONF_EMAIL])
+                self._abort_if_unique_id_configured()
         except MyPermobilClientException as err:
             # the email did not pass validation by the api client
             _LOGGER.error("Permobil: %s", err)
@@ -220,5 +220,4 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # the entire flow finished successfully
-        # IDEA: in the future make the title unique for each account
-        return self.async_create_entry(title="Token", data=self.data)
+        return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)

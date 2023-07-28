@@ -164,7 +164,7 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     PermobilSensorEntityDescription(
-        # Largest number of adjustemnts in a single 24h period, resets never
+        # Largest number of adjustemnts in a single 24h period, never resets
         value_fn=lambda data: data.records[RECORDS_SEATING],
         key=RECORDS_SEATING,
         translation_key="record_adjustments",
@@ -182,7 +182,7 @@ async def async_setup_entry(
     """Create sensors from a config entry created in the integrations UI."""
 
     # load the coordinator from the config
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: MyPermobilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # create a sensor for each sensor description
 
