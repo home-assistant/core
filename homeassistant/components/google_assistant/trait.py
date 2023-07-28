@@ -389,9 +389,12 @@ class ObjectDetection(_Trait):
         ):
             return {
                 "ObjectDetection": {
+                    "objects": {
+                        "unclassified": 1,
+                    },
                     "priority": 0,
                     "detectionTimestamp": time_stamp,
-                }
+                },
             }
         return None
 
