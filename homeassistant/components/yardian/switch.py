@@ -53,6 +53,8 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
         super().__init__(coordinator)
         self.coordinator = coordinator
         self._zone_id = zone_id
+        self._attr_icon = "mdi:water"
+        self._attr_has_entity_name = True
         self._attr_unique_id = f"{config['data']['yid']}-{zone_id}"
         self._attr_device_info = coordinator.device_info
 
@@ -60,11 +62,6 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
     def name(self) -> str:
         """Return state attributes."""
         return self.coordinator.data.zones[self._zone_id][0]
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to display."""
-        return "mdi:water"
 
     @property
     def is_on(self) -> bool:
