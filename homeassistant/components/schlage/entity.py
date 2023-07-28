@@ -32,7 +32,7 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
     @property
     def _lock(self) -> Lock:
         """Fetch the Schlage lock from our coordinator."""
-        return self.coordinator.data.locks[self.device_id]
+        return self.coordinator.data.locks[self.device_id].lock
 
     @property
     def available(self) -> bool:
