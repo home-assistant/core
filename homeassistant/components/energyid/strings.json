@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "data": {
-          "webhook_url": "EnergyID Webhook URL",
-          "entity_id": "Home Assistant Entity ID",
-          "metric": "EnergyID Metric",
-          "metric_kind": "EnergyID Metric Kind",
-          "unit": "Unit of Measurement"
+          "webhook_url": "EnergyID webhook url",
+          "entity_id": "Home Assistant entity id",
+          "metric": "EnergyID metric",
+          "metric_kind": "EnergyID metric kind",
+          "unit": "Unit of measurement"
         }
       }
     },
@@ -21,8 +21,8 @@
     "step": {
       "init": {
         "data": {
-          "data_interval": "EnergyID Data Interval",
-          "upload_interval": "Upload Interval (seconds)"
+          "data_interval": "EnergyID data interval",
+          "upload_interval": "Upload interval (seconds)"
         }
       }
     },
