@@ -18,7 +18,9 @@ from homeassistant.components.switch import (
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
+    CONF_ICON,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PARAMS,
     CONF_PASSWORD,
     CONF_RESOURCE,
@@ -33,8 +35,10 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
     TEMPLATE_ENTITY_BASE_SCHEMA,
-    TemplateEntity,
+    ManualTriggerEntity,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -71,6 +75,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 
@@ -83,10 +88,24 @@ async def async_setup_platform(
 ) -> None:
     """Set up the RESTful switch."""
     resource: str = config[CONF_RESOURCE]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    name = config.get(CONF_NAME)
+    if not name:
+        name = template.Template(DEFAULT_NAME, hass)
+
+    trigger_entity_config = {
+        CONF_NAME: name,
+        CONF_DEVICE_CLASS: config.get(CONF_DEVICE_CLASS),
+        CONF_UNIQUE_ID: config.get(CONF_UNIQUE_ID),
+    }
+    if available := config.get(CONF_AVAILABILITY):
+        trigger_entity_config[CONF_AVAILABILITY] = available
+    if icon := config.get(CONF_ICON):
+        trigger_entity_config[CONF_ICON] = icon
+    if picture := config.get(CONF_PICTURE):
+        trigger_entity_config[CONF_PICTURE] = picture
 
     try:
-        switch = RestSwitch(hass, config, unique_id)
+        switch = RestSwitch(hass, config, trigger_entity_config)
 
         req = await switch.get_device_state(hass)
         if req.status_code >= HTTPStatus.BAD_REQUEST:
@@ -102,23 +121,17 @@ async def async_setup_platform(
         raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
 
 
-class RestSwitch(TemplateEntity, SwitchEntity):
+class RestSwitch(ManualTriggerEntity, SwitchEntity):
     """Representation of a switch that can be toggled using REST."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         config: ConfigType,
-        unique_id: str | None,
+        trigger_entity_config: ConfigType,
     ) -> None:
         """Initialize the REST switch."""
-        TemplateEntity.__init__(
-            self,
-            hass,
-            config=config,
-            fallback_name=DEFAULT_NAME,
-            unique_id=unique_id,
-        )
+        ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
 
         auth: httpx.BasicAuth | None = None
         username: str | None = None
@@ -138,8 +151,6 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         self._timeout: int = config[CONF_TIMEOUT]
         self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-
         self._body_on.hass = hass
         self._body_off.hass = hass
         if (is_on_template := self._is_on_template) is not None:
@@ -147,6 +158,10 @@ class RestSwitch(TemplateEntity, SwitchEntity):
 
         template.attach(hass, self._headers)
         template.attach(hass, self._params)
+
+    async def async_added_to_hass(self) -> None:
+        """Ensure the data from the initial update is reflected in the state."""
+        await ManualTriggerEntity.async_added_to_hass(self)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -198,12 +213,17 @@ class RestSwitch(TemplateEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Get the current state, catching errors."""
+        req = None
         try:
-            await self.get_device_state(self.hass)
+            req = await self.get_device_state(self.hass)
         except asyncio.TimeoutError:
             _LOGGER.exception("Timed out while fetching data")
         except httpx.RequestError as err:
             _LOGGER.exception("Error while fetching data: %s", err)
+
+        if req:
+            self._process_manual_data(req.text)
+            self.async_write_ha_state()
 
     async def get_device_state(self, hass: HomeAssistant) -> httpx.Response:
         """Get the latest data from REST API and update the state."""
