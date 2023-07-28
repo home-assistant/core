@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -11,6 +15,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
+
+_SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -21,29 +34,33 @@ async def async_setup_entry(
     """Set up sensors based on a config entry."""
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [
-            SchlageBatterySensor(coordinator=coordinator, device_id=device_id)
-            for device_id in coordinator.data.locks
-        ]
+        SchlageBatterySensor(
+            coordinator=coordinator,
+            description=description,
+            device_id=device_id,
+        )
+        for description in _SENSOR_DESCRIPTIONS
+        for device_id in coordinator.data.locks
     )
 
 
 class SchlageBatterySensor(SchlageEntity, SensorEntity):
     """Schlage battery sensor entity."""
 
-    _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_native_unit_of_measurement = PERCENTAGE
-
     def __init__(
-        self, coordinator: SchlageDataUpdateCoordinator, device_id: str
+        self,
+        coordinator: SchlageDataUpdateCoordinator,
+        description: SensorEntityDescription,
+        device_id: str,
     ) -> None:
         """Initialize a Schlage battery sensor."""
         super().__init__(coordinator=coordinator, device_id=device_id)
-        self._attr_native_value = self._lock.battery_level
+        self.entity_description = description
+        self._attr_unique_id = f"{device_id}_{description.key}"
+        self._attr_native_value = getattr(self._lock, self.entity_description.key)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self._lock.battery_level
+        self._attr_native_value = getattr(self._lock, self.entity_description.key)
         return super()._handle_coordinator_update()
