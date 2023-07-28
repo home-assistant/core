@@ -4,13 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyyardian import AsyncYardianClient
+from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -43,13 +42,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input["access_token"],
                 )
                 device_info = await yarcli.fetch_device_info()
-                if "iCode" in device_info and device_info["iCode"] == -1000:
-                    raise InvalidAuth
-            except InvalidAuth:
+            except NotAuthorizedException:
                 errors["base"] = "invalid_auth"
+            except NetworkException:
+                errors["base"] = "cannot_connect"
             except Exception as e:  # pylint: disable=broad-except
                 _LOGGER.exception(e)
-                errors["base"] = "cannot_connect"
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device_info["yid"])
                 self._abort_if_unique_id_configured()
@@ -61,11 +60,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
