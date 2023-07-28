@@ -1258,7 +1258,7 @@ nettigo-air-monitor==2.1.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.0.6
+nexia==2.0.7
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.4.0
