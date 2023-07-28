@@ -46,14 +46,12 @@ async def test_hop_sensors(
     sensor,
     sensor_state,
 ) -> None:
-    """Test sensors for the Electric Kiwi integration."""
+    """Test HOP sensors for the Electric Kiwi integration."""
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
         return_value=AsyncMock(),
     ):
-        # mock out HOP api call and Account API call
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -99,14 +97,12 @@ async def test_account_sensors(
     sensor,
     sensor_state,
 ) -> None:
-    """Test sensors for the Electric Kiwi integration."""
+    """Test Account sensors for the Electric Kiwi integration."""
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
         return_value=AsyncMock(),
     ):
-        # mock out HOP api call and Account API call
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
