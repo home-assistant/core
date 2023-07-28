@@ -1,6 +1,5 @@
 """Tests for the EnergyID integration."""
 
-import datetime as dt
 from unittest.mock import patch
 
 import aiohttp
@@ -11,11 +10,7 @@ from homeassistant.components.energyid.__init__ import (
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.components.energyid.const import (
-    CONF_DATA_INTERVAL,
-    CONF_UPLOAD_INTERVAL,
-    CONF_WEBHOOK_URL,
-)
+from homeassistant.components.energyid.const import CONF_WEBHOOK_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -98,16 +93,3 @@ async def test_dispatcher(hass: HomeAssistant) -> None:
     # Since the last event was less than 5 minutes ago, this should return None already
     event = MockEvent()
     assert await dispatcher.async_handle_state_change(event=event) is False
-
-
-async def test_dispatcher_update_listener(hass: HomeAssistant) -> None:
-    """Test dispatcher update listener."""
-    dispatcher = WebhookDispatcher(hass, MockEnergyIDConfigEntry(options={}))
-
-    update_entry = MockEnergyIDConfigEntry(
-        options={CONF_DATA_INTERVAL: "PT15M", CONF_UPLOAD_INTERVAL: 420}
-    )
-    await dispatcher.update_listener(hass, update_entry)
-
-    assert dispatcher.data_interval == "PT15M"
-    assert dispatcher.upload_interval == dt.timedelta(seconds=420)
