@@ -3,28 +3,40 @@ from __future__ import annotations
 
 import logging
 import ssl
+from typing import Any
 
 from jsonpath import jsonpath
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
+    SensorEntity,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
+    CONF_ICON,
+    CONF_NAME,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template_entity import TemplateSensor
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+    ManualTriggerEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.json import json_loads
@@ -75,7 +87,24 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    unique_id: str | None = conf.get(CONF_UNIQUE_ID)
+    unit_of_measurement = conf.get(CONF_UNIT_OF_MEASUREMENT)
+    state_class = conf.get(CONF_STATE_CLASS)
+
+    name = conf.get(CONF_NAME)
+    if not name:
+        name = Template(DEFAULT_SENSOR_NAME, hass)
+
+    trigger_entity_config = {
+        CONF_NAME: name,
+        CONF_DEVICE_CLASS: conf.get(CONF_DEVICE_CLASS),
+        CONF_UNIQUE_ID: conf.get(CONF_UNIQUE_ID),
+    }
+    if available := conf.get(CONF_AVAILABILITY):
+        trigger_entity_config[CONF_AVAILABILITY] = available
+    if icon := conf.get(CONF_ICON):
+        trigger_entity_config[CONF_ICON] = icon
+    if picture := conf.get(CONF_PICTURE):
+        trigger_entity_config[CONF_PICTURE] = picture
 
     async_add_entities(
         [
@@ -84,13 +113,15 @@ async def async_setup_platform(
                 coordinator,
                 rest,
                 conf,
-                unique_id,
+                trigger_entity_config,
+                unit_of_measurement,
+                state_class,
             )
         ],
     )
 
 
-class RestSensor(RestEntity, TemplateSensor):
+class RestSensor(ManualTriggerEntity, RestEntity, SensorEntity):
     """Implementation of a REST sensor."""
 
     def __init__(
@@ -99,9 +130,12 @@ class RestSensor(RestEntity, TemplateSensor):
         coordinator: DataUpdateCoordinator[None] | None,
         rest: RestData,
         config: ConfigType,
-        unique_id: str | None,
+        trigger_entity_config: ConfigType,
+        unit_of_measurement: str | None,
+        state_class: str | None,
     ) -> None:
         """Initialize the REST sensor."""
+        ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
         RestEntity.__init__(
             self,
             coordinator,
@@ -109,25 +143,37 @@ class RestSensor(RestEntity, TemplateSensor):
             config.get(CONF_RESOURCE_TEMPLATE),
             config[CONF_FORCE_UPDATE],
         )
-        TemplateSensor.__init__(
-            self,
-            hass,
-            config=config,
-            fallback_name=DEFAULT_SENSOR_NAME,
-            unique_id=unique_id,
-        )
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_state_class = state_class
         self._value_template = config.get(CONF_VALUE_TEMPLATE)
         if (value_template := self._value_template) is not None:
             value_template.hass = hass
         self._json_attrs = config.get(CONF_JSON_ATTRS)
         self._json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
+        self._attr_extra_state_attributes = {}
+
+    async def async_added_to_hass(self) -> None:
+        """Ensure the data from the initial update is reflected in the state."""
+        await RestEntity.async_added_to_hass(self)
+        await ManualTriggerEntity.async_added_to_hass(self)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        available1 = RestEntity.available.fget(self)  # type: ignore[attr-defined]
+        available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
+        return bool(available1 and available2)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra attributes."""
+        return dict(self._attr_extra_state_attributes)
 
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
         value = self.rest.data_without_xml()
 
         if self._json_attrs:
-            self._attr_extra_state_attributes = {}
             if value:
                 try:
                     json_dict = json_loads(value)
@@ -155,6 +201,8 @@ class RestSensor(RestEntity, TemplateSensor):
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
 
+        raw_value = value
+
         if value is not None and self._value_template is not None:
             value = self._value_template.async_render_with_possible_json_value(
                 value, None
@@ -165,8 +213,13 @@ class RestSensor(RestEntity, TemplateSensor):
             SensorDeviceClass.TIMESTAMP,
         ):
             self._attr_native_value = value
+            self._process_manual_data(raw_value)
+            self.async_write_ha_state()
             return
 
         self._attr_native_value = async_parse_date_datetime(
             value, self.entity_id, self.device_class
         )
+
+        self._process_manual_data(raw_value)
+        self.async_write_ha_state()
