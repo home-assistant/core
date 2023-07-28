@@ -8,6 +8,25 @@ from homeassistant.core import HomeAssistant
 from . import async_load_json_fixture
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
+
+
+async def remove_device(
+    ws_client: aiohttp.ClientWebSocketResponse,
+    device_id: str,
+    config_entry_id: str
+) -> bool:
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
 
 
 async def test_config_entry_not_ready(
@@ -66,3 +85,42 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
     assert mock_config_entry.entry_id not in hass.data[DOMAIN]
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_device_remove_devices(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+) -> None:
+    """Test we can only remove a device that no longer exists."""
+    assert await async_setup_component(hass, "config", {})
+
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    device_registry = dr.async_get(hass)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={
+            (
+                DOMAIN,
+                "TEST-UUID",
+            )
+        },
+    )
+    assert (
+        await remove_device(await hass_ws_client(hass), device_entry.id, mock_config_entry.entry_id)
+        is False
+    )
+    old_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "OLD-DEVICE-UUID")},
+    )
+    assert (
+        await remove_device(
+            await hass_ws_client(hass), old_device_entry.id, mock_config_entry.entry_id
+        )
+        is True
+    )
