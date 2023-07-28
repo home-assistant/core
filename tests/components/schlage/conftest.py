@@ -77,7 +77,7 @@ def mock_lock():
         model_name="<model-name>",
         is_locked=False,
         is_jammed=False,
-        battery_level=0,
+        battery_level=20,
         firmware_version="1.0",
     )
     return mock_lock
