@@ -29,6 +29,8 @@ async def async_setup_entry(
 class SchlageLockEntity(SchlageEntity, LockEntity):
     """Schlage lock entity."""
 
+    _attr_name = None
+
     def __init__(
         self, coordinator: SchlageDataUpdateCoordinator, device_id: str
     ) -> None:
