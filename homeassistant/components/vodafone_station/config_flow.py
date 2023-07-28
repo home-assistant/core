@@ -4,17 +4,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-import aiovodafone
+from aiovodafone import VodafoneStationApi, exceptions as aiovodafone_exceptions
 import voluptuous as vol
 
 from homeassistant import core, exceptions
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_SSL, DEFAULT_USERNAME, DOMAIN
-from .coordinator import VodafoneStationRouter
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -38,18 +36,18 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    coordinator = VodafoneStationRouter(
-        data[CONF_HOST], data[CONF_SSL], data[CONF_USERNAME], data[CONF_PASSWORD], hass
+    api = VodafoneStationApi(
+        data[CONF_HOST], data[CONF_SSL], data[CONF_USERNAME], data[CONF_PASSWORD]
     )
 
     try:
-        await coordinator.api.login()
-    except aiovodafone.exceptions.CannotConnect as err:
+        await api.login()
+    except aiovodafone_exceptions.CannotConnect as err:
         raise CannotConnect from err
-    except aiovodafone.exceptions.CannotAuthenticate as err:
+    except aiovodafone_exceptions.CannotAuthenticate as err:
         raise InvalidAuth from err
 
-    await coordinator.api.logout()
+    await api.logout()
     return {"title": data[CONF_HOST]}
 
 
@@ -58,7 +56,6 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     entry: ConfigEntry | None = None
-    hassio_discovery: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -134,40 +131,6 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
-
-    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
-        """Handle the discovery step via hassio."""
-        await self.async_set_unique_id("hassio")
-        self._abort_if_unique_id_configured(discovery_info.config)
-
-        self.hassio_discovery = discovery_info.config
-        self.context["title_placeholders"] = {"host": discovery_info.config[CONF_HOST]}
-        return await self.async_step_hassio_confirm()
-
-    async def async_step_hassio_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Confirm Supervisor discovery."""
-        assert self.hassio_discovery
-        if user_input is None:
-            return self.async_show_form(
-                step_id="hassio_confirm",
-                description_placeholders={"addon": self.hassio_discovery["addon"]},
-            )
-
-        self.hassio_discovery.pop("addon")
-
-        try:
-            info = await validate_input(self.hass, self.hassio_discovery)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except InvalidAuth:
-            return self.async_abort(reason="invalid_auth")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        return self.async_create_entry(title=info["title"], data=self.hassio_discovery)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

@@ -1,14 +1,15 @@
 """Support for Vodafone Station."""
 import asyncio
-from collections.abc import Callable
 from datetime import datetime, timedelta
+from typing import Any, TypedDict
 
 import aiohttp
 from aiovodafone.api import VodafoneStationApi, VodafoneStationDevice
 
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -91,20 +92,32 @@ class VodafoneStationDeviceInfo:
         return self._wifi
 
 
+class UpdateCoordinatorDataType(TypedDict):
+    """Update coordinator data type."""
+
+    devices: dict[str, VodafoneStationDeviceInfo]
+    sensors: dict[str, Any]
+
+
 class VodafoneStationRouter(DataUpdateCoordinator):
     """Queries router running Vodafone Station firmware."""
 
     def __init__(
-        self, host: str, ssl: bool, username: str, password: str, hass: HomeAssistant
+        self,
+        hass: HomeAssistant,
+        host: str,
+        ssl: bool,
+        username: str,
+        password: str,
+        config_entry_unique_id: str | None,
     ) -> None:
         """Initialize the scanner."""
 
         self._host = host
-        self._devices: dict[str, VodafoneStationDeviceInfo] = {}
-        self._data: dict[str, str] = {}
-        self._on_close: list[Callable] = []
-
         self.api = VodafoneStationApi(host, ssl, username, password)
+
+        # Last resort as no MAC or S/N can be retrieved via API
+        self._id = config_entry_unique_id
 
         super().__init__(
             hass=hass,
@@ -113,18 +126,7 @@ class VodafoneStationRouter(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
 
-    @callback
-    def async_listener(self) -> None:
-        """Fetch data from the router."""
-
-        asyncio.run_coroutine_threadsafe(self._async_update_data(), self.hass.loop)
-
-    @callback
-    def async_on_close(self, func: CALLBACK_TYPE) -> None:
-        """Add a function to call when router is closed."""
-        self._on_close.append(func)
-
-    async def _async_update_data(self) -> bool:
+    async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update router data."""
         _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
         try:
@@ -136,29 +138,34 @@ class VodafoneStationRouter(DataUpdateCoordinator):
         if not logged:
             raise ConfigEntryAuthFailed
 
-        devices = await self.api.get_all_devices()
+        data: UpdateCoordinatorDataType = {
+            "devices": {},
+            "sensors": {},
+        }
+        list_devices = await self.api.get_all_devices()
         dev_info: VodafoneStationDevice
-        for _, dev_info in devices.items():
+        for _, dev_info in list_devices.items():
             dev = VodafoneStationDeviceInfo(dev_info.mac, dev_info.name)
             dev.update(dev_info)
-            self._devices[dev_info.mac] = dev
-        self._data = await self.api.get_user_data()
+            data["devices"][dev_info.mac] = dev
+        data["sensors"] = await self.api.get_user_data()
 
         await self.api.logout()
 
-        return True
+        return data
 
-    @property
-    def devices(self) -> dict[str, VodafoneStationDeviceInfo]:
-        """Return a list of devices."""
-        return self._devices
+    async def async_send_signal_device_update(self, new_device: bool) -> None:
+        """Signal device data updated."""
+        async_dispatcher_send(self.hass, self.signal_device_update)
+        if new_device:
+            async_dispatcher_send(self.hass, self.signal_device_new)
 
     @property
     def signal_device_new(self) -> str:
         """Event specific per Vodafone Station entry to signal new device."""
-        return f"{DOMAIN}-device-new-{self._host}"
+        return f"{DOMAIN}-device-new-{self._id}"
 
     @property
     def signal_device_update(self) -> str:
         """Event specific per Vodafone Station entry to signal updates in devices."""
-        return f"{DOMAIN}-device-update-{self._host}"
+        return f"{DOMAIN}-device-update-{self._id}"

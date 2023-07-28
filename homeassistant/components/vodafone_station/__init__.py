@@ -6,12 +6,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN
 from .coordinator import VodafoneStationRouter
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
@@ -19,27 +18,18 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Vodafone Station platform."""
-    _LOGGER.debug("Setting up Vodafone Station component")
     coordinator = VodafoneStationRouter(
+        hass,
         entry.data[CONF_HOST],
         entry.data[CONF_SSL],
         entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        hass=hass,
+        entry.data[CONF_PASSWORD],
+        entry.unique_id,
     )
+
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
-    async def async_close_connection(event: Event) -> None:
-        """Close Vodafone connection on HA Stop."""
-        await coordinator.api.logout()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
-    )
-
-    coordinator.async_add_listener(coordinator.async_listener)
-    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
