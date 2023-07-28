@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import datetime
 import logging
-from dataclasses import dataclass
 
 import async_timeout
 from pyyardian import AsyncYardianClient
@@ -37,7 +37,6 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
         hass: HomeAssistant,
         entry: ConfigEntry,
         controller: AsyncYardianClient,
-        user_config: dict | None,
     ) -> None:
         super().__init__(
             hass,
@@ -52,7 +51,6 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
         self._model = entry.data["model"]
         self._yid = entry.data["yid"]
         self._amount_of_zones = entry.data["zones"]
-        self.user_config = user_config if user_config is not None else {}
 
     @property
     def controller(self) -> AsyncYardianClient:
@@ -75,9 +73,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
 
     def getZoneDefaultWateringDuration(self, zone_id) -> int:
         """Return default watering duration for a given zone."""
-        return self.user_config.get("duration", {}).get(
-            zone_id + 1, DEFAULT_WATERING_DURATION
-        )
+        return DEFAULT_WATERING_DURATION
 
     async def _async_update_data(self) -> YardianDeviceState:
         """Fetch data from Yardian device."""
