@@ -22,7 +22,7 @@ CONF_MULTISELECT = "multi"
 class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Demo configuration flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -34,7 +34,7 @@ class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Set the config entry up from yaml."""
-        return self.async_create_entry(title="Demo", data=import_info)
+        return self.async_create_entry(title="", data=import_info)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
