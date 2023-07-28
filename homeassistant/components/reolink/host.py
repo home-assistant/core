@@ -457,7 +457,7 @@ class ReolinkHost:
 
             self._long_poll_error = False
 
-            if not self._long_poll_received and channels != []:
+            if not self._long_poll_received:
                 self._long_poll_received = True
                 ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
