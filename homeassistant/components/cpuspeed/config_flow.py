@@ -14,9 +14,7 @@ from .const import DOMAIN
 class CPUSpeedFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for CPU Speed."""
 
-    VERSION = 1
-
-    _imported_name: str | None = None
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -32,6 +30,6 @@ class CPUSpeedFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_compatible")
 
         return self.async_create_entry(
-            title=self._imported_name or "CPU Speed",
+            title="",
             data={},
         )

@@ -29,7 +29,7 @@ async def test_full_user_flow(
     )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "CPU Speed"
+    assert result2.get("title") == ""
     assert result2.get("data") == {}
 
     assert len(mock_setup_entry.mock_calls) == 1
