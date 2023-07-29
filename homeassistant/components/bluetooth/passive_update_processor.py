@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.entity_platform import async_get_current_platform
 
 from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
@@ -86,6 +87,20 @@ class PassiveBluetoothProcessorCoordinator(
         return super().available and self.last_update_success
 
     @callback
+    def _async_start(self) -> None:
+        """Start the callbacks."""
+        super()._async_start()
+        # TODO: Register coordinator to have its processors data
+        # restored
+
+    @callback
+    def _async_stop(self) -> None:
+        """Stop the callbacks."""
+        super()._async_stop()
+        # TODO: Unregister coordinator to have its processors data
+        # restored
+
+    @callback
     def async_register_processor(
         self, processor: PassiveBluetoothDataProcessor
     ) -> Callable[[], None]:
@@ -155,7 +170,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
     The processor will call the update_method every time the bluetooth device
     receives a new advertisement data from the coordinator with the data
-    returned by he update_method of the coordinator.
+    returned by the update_method of the coordinator.
 
     As the size of each advertisement is limited, the update_method should
     return a PassiveBluetoothDataUpdate object that contains only data that
@@ -172,6 +187,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     ) -> None:
         """Initialize the coordinator."""
         self.coordinator: PassiveBluetoothProcessorCoordinator
+        self._restore_key = async_get_current_platform().domain
         self._listeners: list[
             Callable[[PassiveBluetoothDataUpdate[_T] | None], None]
         ] = []
