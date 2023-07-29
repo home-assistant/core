@@ -76,8 +76,8 @@ from tests.common import MockConfigEntry
                     "8.4",
                     "mg/l",
                 ),
-                "sensor.wurzburg_main_ph_value": (
-                    "WÜRZBURG MAIN pH value",
+                "sensor.wurzburg_main_ph": (
+                    "WÜRZBURG MAIN pH",
                     "8.1",
                     None,
                 ),

@@ -35,9 +35,6 @@
       "oxygen_level": {
         "name": "Oxygen level"
       },
-      "ph_value": {
-        "name": "pH value"
-      },
       "water_speed": {
         "name": "Water flow speed"
       },
