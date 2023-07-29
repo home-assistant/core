@@ -79,7 +79,7 @@ from tests.common import MockConfigEntry
                 "sensor.wurzburg_main_ph_value": (
                     "WÜRZBURG MAIN pH value",
                     "8.1",
-                    "--",
+                    None,
                 ),
                 "sensor.wurzburg_main_water_flow_speed": (
                     "WÜRZBURG MAIN Water flow speed",

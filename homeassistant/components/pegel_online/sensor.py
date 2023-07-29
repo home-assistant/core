@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from aiopegelonline.models import CurrentMeasurement
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -40,6 +41,7 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="air_temperature",
         measurement_key="air_temperature",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer-lines",
         entity_registry_enabled_default=False,
     ),
@@ -48,6 +50,7 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="clearance_height",
         measurement_key="clearance_height",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:bridge",
     ),
     PegelOnlineSensorEntityDescription(
@@ -63,6 +66,7 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="ph_value",
         measurement_key="ph_value",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PH,
         icon="mdi:ph",
         entity_registry_enabled_default=False,
     ),
@@ -71,6 +75,7 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="water_speed",
         measurement_key="water_speed",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:waves-arrow-right",
         entity_registry_enabled_default=False,
     ),
@@ -94,6 +99,7 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="water_temperature",
         measurement_key="water_temperature",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer-water",
         entity_registry_enabled_default=False,
     ),
@@ -129,7 +135,9 @@ class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{self.station.uuid}_{description.key}"
-        self._attr_native_unit_of_measurement = self.measurement.uom
+
+        if description.device_class != SensorDeviceClass.PH:
+            self._attr_native_unit_of_measurement = self.measurement.uom
 
         if self.station.latitude and self.station.longitude:
             self._attr_extra_state_attributes.update(
