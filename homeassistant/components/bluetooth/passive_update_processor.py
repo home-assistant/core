@@ -203,9 +203,11 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         self,
         entity_class: type[PassiveBluetoothProcessorEntity],
         async_add_entites: AddEntitiesCallback,
+        created: set[PassiveBluetoothEntityKey] | None = None,
     ) -> Callable[[], None]:
         """Add a listener for new entities."""
-        created: set[PassiveBluetoothEntityKey] = set()
+        if not created:
+            created = set()
 
         @callback
         def _async_add_or_update_entities(
@@ -301,6 +303,18 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         self.entity_data.update(new_data.entity_data)
         self.entity_names.update(new_data.entity_names)
         self.async_update_listeners(new_data)
+
+
+def passive_bluetooth_entity_key_from_unique_id(
+    unique_id: str,
+) -> PassiveBluetoothEntityKey:
+    """Create a PassiveBluetoothEntityKey from a unique_id."""
+    device_id = None
+    unique_parts = unique_id.split("-", 1)
+    key = unique_parts[1]
+    if len(unique_parts) == 3:
+        device_id = unique_parts[2]
+    return PassiveBluetoothEntityKey(key, device_id)
 
 
 class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProcessorT]):

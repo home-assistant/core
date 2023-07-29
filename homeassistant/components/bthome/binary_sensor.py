@@ -8,19 +8,24 @@ from bthome_ble import (
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataUpdate,
+    PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorEntity,
+    passive_bluetooth_entity_key_from_unique_id,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
 from .coordinator import (
@@ -173,6 +178,12 @@ def sensor_update_to_bluetooth_data_update(
     )
 
 
+HASS_DEVICE_CLASS_TO_BTHOME = {
+    description.device_class: bthome_device_class
+    for bthome_device_class, description in BINARY_SENSOR_DESCRIPTIONS.items()
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
@@ -185,6 +196,32 @@ async def async_setup_entry(
     processor = BTHomePassiveBluetoothDataProcessor(
         sensor_update_to_bluetooth_data_update
     )
+
+    restore_entities: list[BTHomeBluetoothBinarySensorEntity] = []
+    ent_reg = er.async_get(hass)
+    created: set[PassiveBluetoothEntityKey] = set()
+
+    for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        if entity_entry.domain != BINARY_SENSOR_DOMAIN:
+            continue
+        entity_key = passive_bluetooth_entity_key_from_unique_id(entity_entry.unique_id)
+        device_class_enum = try_parse_enum(
+            BinarySensorDeviceClass, entity_entry.device_class
+        )
+        if not (
+            bthome_device_class := HASS_DEVICE_CLASS_TO_BTHOME.get(device_class_enum)
+        ):
+            continue
+        if not (description := BINARY_SENSOR_DESCRIPTIONS.get(bthome_device_class)):
+            continue
+        created.add(entity_key)
+        restore_entities.append(
+            BTHomeBluetoothBinarySensorEntity(processor, entity_key, description)
+        )
+
+    if restore_entities:
+        async_add_entities(restore_entities)
+
     entry.async_on_unload(
         processor.async_add_entities_listener(
             BTHomeBluetoothBinarySensorEntity, async_add_entities

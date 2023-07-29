@@ -9,9 +9,12 @@ from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdat
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataUpdate,
+    PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorEntity,
+    passive_bluetooth_entity_key_from_unique_id,
 )
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntityDescription,
@@ -39,9 +42,11 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
 from .coordinator import (
@@ -342,6 +347,15 @@ SENSOR_DESCRIPTIONS = {
     ),
 }
 
+HASS_DEVICE_CLASS_TO_BTHOME = {
+    description.device_class: bthome_device_class_uom[0]
+    for bthome_device_class_uom, description in SENSOR_DESCRIPTIONS.items()
+}
+HASS_UOM_TO_BTHOME = {
+    description.native_unit_of_measurement: bthome_device_class_uom[1]
+    for bthome_device_class_uom, description in SENSOR_DESCRIPTIONS.items()
+}
+
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
@@ -379,12 +393,38 @@ async def async_setup_entry(
     coordinator: BTHomePassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
+
     processor = BTHomePassiveBluetoothDataProcessor(
         sensor_update_to_bluetooth_data_update
     )
+    restore_entities: list[BTHomeBluetoothSensorEntity] = []
+    ent_reg = er.async_get(hass)
+    created: set[PassiveBluetoothEntityKey] = set()
+
+    for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        if entity_entry.domain != SENSOR_DOMAIN:
+            continue
+        entity_key = passive_bluetooth_entity_key_from_unique_id(entity_entry.unique_id)
+        device_class_enum = try_parse_enum(SensorDeviceClass, entity_entry.device_class)
+        if not (
+            bthome_device_class := HASS_DEVICE_CLASS_TO_BTHOME.get(device_class_enum)
+        ):
+            continue
+        bthome_uom = HASS_UOM_TO_BTHOME.get(entity_entry.unit_of_measurement)
+        description_tuple = (bthome_device_class, bthome_uom)
+        if not (description := SENSOR_DESCRIPTIONS.get(description_tuple)):
+            continue
+        restore_entities.append(
+            BTHomeBluetoothSensorEntity(processor, entity_key, description)
+        )
+        created.add(entity_key)
+
+    if restore_entities:
+        async_add_entities(restore_entities)
+
     entry.async_on_unload(
         processor.async_add_entities_listener(
-            BTHomeBluetoothSensorEntity, async_add_entities
+            BTHomeBluetoothSensorEntity, async_add_entities, created
         )
     )
     entry.async_on_unload(coordinator.async_register_processor(processor))
