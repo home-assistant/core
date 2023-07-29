@@ -149,7 +149,7 @@ class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
 
     @property
     def measurement(self) -> CurrentMeasurement:
-        """Return the state of the device."""
+        """Return the measurement data of the entity."""
         return getattr(self.coordinator.data, self.entity_description.measurement_key)
 
     @property
