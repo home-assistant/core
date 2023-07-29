@@ -336,7 +336,8 @@ class ReolinkHost:
                     # To prevent 5 minute request timeout
                     await self._async_stop_long_polling()
                     await self._async_start_long_polling()
-                await self._renew(SubType.long_poll)
+                else:
+                    await self._renew(SubType.long_poll)
         except SubscriptionError as err:
             if not self._lost_subscription:
                 self._lost_subscription = True
