@@ -61,30 +61,27 @@ class SubaruDeviceTracker(
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return entity specific state attributes."""
-        extra_attributes = None
         if self.vin in self.coordinator.data:
-            extra_attributes = {
+            return {
                 "Position timestamp": self.coordinator.data[self.vin][
                     VEHICLE_STATUS
                 ].get(TIMESTAMP)
             }
-        return extra_attributes
+        return None
 
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the vehicle."""
-        latitude = None
         if self.vin in self.coordinator.data:
-            latitude = self.coordinator.data[self.vin][VEHICLE_STATUS].get(LATITUDE)
-        return latitude
+            return self.coordinator.data[self.vin][VEHICLE_STATUS].get(LATITUDE)
+        return None
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the vehicle."""
-        longitude = None
         if self.vin in self.coordinator.data:
-            longitude = self.coordinator.data[self.vin][VEHICLE_STATUS].get(LONGITUDE)
-        return longitude
+            return self.coordinator.data[self.vin][VEHICLE_STATUS].get(LONGITUDE)
+        return None
 
     @property
     def source_type(self) -> SourceType:
