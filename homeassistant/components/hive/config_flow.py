@@ -164,6 +164,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 translation_key="import_error",
                 translation_placeholders={"error": str(error)},
             )
+            raise
         async_create_issue(
             self.hass,
             HOMEASSISTANT_DOMAIN,
