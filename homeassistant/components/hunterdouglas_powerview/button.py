@@ -7,6 +7,8 @@ from typing import Any, Final
 
 from aiopvapi.helpers.constants import (
     ATTR_NAME,
+    FUNCTION_IDENTIFY,
+    FUNCTION_REBOOT,
     MOTION_CALIBRATE,
     MOTION_FAVORITE,
     MOTION_JOG,
@@ -22,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import PowerviewShadeUpdateCoordinator
-from .entity import ShadeEntity
+from .entity import HDEntity, ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
@@ -68,6 +70,25 @@ BUTTONS_SHADE: Final = [
     ),
 ]
 
+BUTTONS_HUB: Final = [
+    PowerviewButtonDescription(
+        key="reboot",
+        name="Reboot",
+        icon="mdi:restart",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        create_entity_fn=lambda hub: hub.is_supported(FUNCTION_REBOOT),
+        press_action=lambda hub: hub.reboot(),
+    ),
+    PowerviewButtonDescription(
+        key="identify",
+        name="Identify",
+        icon="mdi:crosshairs-question",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        create_entity_fn=lambda hub: hub.is_supported(FUNCTION_IDENTIFY),
+        press_action=lambda hub: hub.identify(),
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -94,6 +115,21 @@ async def async_setup_entry(
                     )
                 )
 
+    hub = pv_entry.coordinator.hub
+    for description in BUTTONS_HUB:
+        room_name = ""  # hubs have no location
+        if description.create_entity_fn(hub):
+            entities.append(
+                PowerviewHubButton(
+                    pv_entry.coordinator,
+                    pv_entry.device_info,
+                    room_name,
+                    hub,
+                    hub.name,
+                    description,
+                )
+            )
+
     async_add_entities(entities)
 
 
@@ -118,3 +154,27 @@ class PowerviewShadeButton(ShadeEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.press_action(self._shade)
+
+
+class PowerviewHubButton(HDEntity, ButtonEntity):
+    """Representation of an advanced feature button."""
+
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        hub: Hub,
+        name: str,
+        description: PowerviewButtonDescription,
+    ) -> None:
+        """Initialize the button entity."""
+        super().__init__(coordinator, device_info, room_name, name)
+        self._hub = hub
+        self.entity_description: PowerviewButtonDescription = description
+        self._attr_name = f"{self._hub.name} {description.name}"
+        self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self.entity_description.press_action(self._hub)
