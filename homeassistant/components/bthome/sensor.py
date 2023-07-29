@@ -347,12 +347,11 @@ SENSOR_DESCRIPTIONS = {
     ),
 }
 
-HASS_DEVICE_CLASS_TO_BTHOME = {
-    description.device_class: bthome_device_class_uom[0]
-    for bthome_device_class_uom, description in SENSOR_DESCRIPTIONS.items()
-}
-HASS_UOM_TO_BTHOME = {
-    description.native_unit_of_measurement: bthome_device_class_uom[1]
+HASS_DEVICE_CLASS_UOM_TO_BTHOME = {
+    (
+        description.device_class,
+        description.native_unit_of_measurement,
+    ): bthome_device_class_uom
     for bthome_device_class_uom, description in SENSOR_DESCRIPTIONS.items()
 }
 
@@ -397,6 +396,8 @@ async def async_setup_entry(
     processor = BTHomePassiveBluetoothDataProcessor(
         sensor_update_to_bluetooth_data_update
     )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
+
     restore_entities: list[BTHomeBluetoothSensorEntity] = []
     ent_reg = er.async_get(hass)
     created: set[PassiveBluetoothEntityKey] = set()
@@ -405,13 +406,15 @@ async def async_setup_entry(
         if entity_entry.domain != SENSOR_DOMAIN:
             continue
         entity_key = passive_bluetooth_entity_key_from_unique_id(entity_entry.unique_id)
-        device_class_enum = try_parse_enum(SensorDeviceClass, entity_entry.device_class)
+        device_class_enum = try_parse_enum(
+            SensorDeviceClass, entity_entry.original_device_class
+        )
         if not (
-            bthome_device_class := HASS_DEVICE_CLASS_TO_BTHOME.get(device_class_enum)
+            description_tuple := HASS_DEVICE_CLASS_UOM_TO_BTHOME.get(
+                (device_class_enum, entity_entry.unit_of_measurement)
+            )
         ):
             continue
-        bthome_uom = HASS_UOM_TO_BTHOME.get(entity_entry.unit_of_measurement)
-        description_tuple = (bthome_device_class, bthome_uom)
         if not (description := SENSOR_DESCRIPTIONS.get(description_tuple)):
             continue
         restore_entities.append(
@@ -427,7 +430,6 @@ async def async_setup_entry(
             BTHomeBluetoothSensorEntity, async_add_entities, created
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
 class BTHomeBluetoothSensorEntity(

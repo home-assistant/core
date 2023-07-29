@@ -196,6 +196,7 @@ async def async_setup_entry(
     processor = BTHomePassiveBluetoothDataProcessor(
         sensor_update_to_bluetooth_data_update
     )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
 
     restore_entities: list[BTHomeBluetoothBinarySensorEntity] = []
     ent_reg = er.async_get(hass)
@@ -206,7 +207,7 @@ async def async_setup_entry(
             continue
         entity_key = passive_bluetooth_entity_key_from_unique_id(entity_entry.unique_id)
         device_class_enum = try_parse_enum(
-            BinarySensorDeviceClass, entity_entry.device_class
+            BinarySensorDeviceClass, entity_entry.original_device_class
         )
         if not (
             bthome_device_class := HASS_DEVICE_CLASS_TO_BTHOME.get(device_class_enum)
@@ -227,7 +228,6 @@ async def async_setup_entry(
             BTHomeBluetoothBinarySensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
 class BTHomeBluetoothBinarySensorEntity(
