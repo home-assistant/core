@@ -467,7 +467,7 @@ class ReolinkHost:
                 await asyncio.sleep(LONG_POLL_ERROR_COOLDOWN)
                 continue
             except Exception as ex:
-                _LOGGER.exception("Error while requesting ONVIF pull point: %s", ex)
+                _LOGGER.exception("Unexpected exception while requesting ONVIF pull point: %s", ex)
                 await self._api.unsubscribe(sub_type=SubType.long_poll)
                 raise ex
 
