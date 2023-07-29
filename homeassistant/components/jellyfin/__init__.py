@@ -71,5 +71,8 @@ async def async_remove_config_entry_device(
     coordinator = data.coordinators["sessions"]
 
     return not device_entry.identifiers.intersection(
-        (DOMAIN, id) for id in coordinator.device_ids
+        (
+            (DOMAIN, coordinator.server_id),
+            *((DOMAIN, id) for id in coordinator.device_ids),
+        )
     )
