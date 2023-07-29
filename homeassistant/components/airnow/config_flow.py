@@ -79,6 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         f" {user_input[CONF_LONGITUDE]}"
                     ),
                     data=user_input,
+                    options={CONF_RADIUS: user_input[CONF_RADIUS]},
                 )
 
         return self.async_show_form(
@@ -92,7 +93,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
-                    vol.Optional(CONF_RADIUS, default=150): int,
+                    vol.Optional(CONF_RADIUS, default=150): vol.All(
+                        int, vol.Range(min=5)
+                    ),
                 }
             ),
             errors=errors,
@@ -110,7 +113,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle an options flow for AirNow."""
 
-
     async def async_step_init(self, user_input):
         """Manage the options."""
         if user_input is not None:
@@ -118,15 +120,19 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_RADIUS,
-                        default=self.config_entry.options.get(
-                            CONF_RADIUS, self.config_entry.data.get(CONF_RADIUS)
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_RADIUS,
+                            default=self.config_entry.options.get(CONF_RADIUS),
+                        ): vol.All(
+                            int,
+                            vol.Range(min=5),
                         ),
-                    ): int,
-                }
+                    }
+                ),
+                {CONF_RADIUS: self.config_entry.options[CONF_RADIUS]},
             ),
         )
 

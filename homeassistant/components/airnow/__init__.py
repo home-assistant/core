@@ -44,12 +44,19 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AirNow from a config entry."""
-    api_key = entry.data.get(CONF_API_KEY)
-    latitude = entry.data.get(CONF_LATITUDE)
-    longitude = entry.data.get(CONF_LONGITUDE)
+    api_key = entry.data[CONF_API_KEY]
+    latitude = entry.data[CONF_LATITUDE]
+    longitude = entry.data[CONF_LONGITUDE]
 
-    # Station Radius can come from configuration or options
-    distance = entry.options.get(CONF_RADIUS, entry.data.get(CONF_RADIUS))
+    # Initialize the options parameter if the integration was first set up
+    # before OptionsFlow was added
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_RADIUS: entry.data[CONF_RADIUS]}
+        )
+
+    # Station Radius is a user-configurable option
+    distance = entry.options[CONF_RADIUS]
 
     # Reports are published hourly but update twice per hour
     update_interval = datetime.timedelta(minutes=30)
@@ -87,9 +94,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    await hass.data[DOMAIN][entry.entry_id].update_radius(
-        entry.options.get(CONF_RADIUS)
-    )
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
@@ -106,10 +111,6 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
         self.airnow = WebServiceAPI(api_key, session=session)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
-
-    async def update_radius(self, radius: int) -> None:
-        """Update the maximum station distance."""
-        self.distance = radius
 
     async def _async_update_data(self):
         """Update data via library."""
