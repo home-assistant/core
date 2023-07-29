@@ -1,6 +1,9 @@
 """Support for BTHome sensors."""
 from __future__ import annotations
 
+from datetime import date, datetime
+from decimal import Decimal
+
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
 
 from homeassistant import config_entries
@@ -9,8 +12,8 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -38,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import (
@@ -387,15 +391,18 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor],
-    SensorEntity,
+    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor], RestoreSensor
 ):
     """Representation of a BTHome BLE sensor."""
 
+    _restored_native_value: StateType | date | datetime | Decimal | None = None
+
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> StateType | date | datetime | Decimal | None:
         """Return the native value."""
-        return self.processor.entity_data.get(self.entity_key)
+        return self.processor.entity_data.get(
+            self.entity_key, self._restored_native_value
+        )
 
     @property
     def available(self) -> bool:
@@ -404,3 +411,9 @@ class BTHomeBluetoothSensorEntity(
             self.processor.coordinator
         )
         return coordinator.device_data.sleepy_device or super().available
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if last_sensor_data := await self.async_get_last_sensor_data():
+            self._restored_native_value = last_sensor_data.native_value

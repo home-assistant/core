@@ -16,8 +16,10 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataUpdate,
     PassiveBluetoothProcessorEntity,
 )
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
@@ -26,6 +28,8 @@ from .coordinator import (
     BTHomePassiveBluetoothProcessorCoordinator,
 )
 from .device import device_key_to_bluetooth_entity_key
+
+RESTORABLE_STATES = {STATE_ON, STATE_OFF}
 
 BINARY_SENSOR_DESCRIPTIONS = {
     BTHomeBinarySensorDeviceClass.BATTERY: BinarySensorEntityDescription(
@@ -192,13 +196,16 @@ async def async_setup_entry(
 class BTHomeBluetoothBinarySensorEntity(
     PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor],
     BinarySensorEntity,
+    RestoreEntity,
 ):
     """Representation of a BTHome binary sensor."""
+
+    _restored_is_on: bool | None = None
 
     @property
     def is_on(self) -> bool | None:
         """Return the native value."""
-        return self.processor.entity_data.get(self.entity_key)
+        return self.processor.entity_data.get(self.entity_key, self._restored_is_on)
 
     @property
     def available(self) -> bool:
@@ -207,3 +214,11 @@ class BTHomeBluetoothBinarySensorEntity(
             self.processor.coordinator
         )
         return coordinator.device_data.sleepy_device or super().available
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) and (
+            last_state.state in RESTORABLE_STATES
+        ):
+            self._restored_is_on = last_state.state == STATE_ON
