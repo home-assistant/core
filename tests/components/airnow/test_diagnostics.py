@@ -22,7 +22,7 @@ async def test_entry_diagnostics(
                 "longitude": REDACTED,
                 "radius": 75,
             },
-            "options": {},
+            "options": {"radius": 75},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
