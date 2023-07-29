@@ -3,14 +3,15 @@ from __future__ import annotations
 
 from collections import UserDict
 from collections.abc import Coroutine, ValuesView
+from enum import StrEnum
 import logging
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 from urllib.parse import urlparse
 
 import attr
+from yarl import URL
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -47,6 +48,8 @@ CONNECTION_ZIGBEE = "zigbee"
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 RUNTIME_ONLY_ATTRS = {"suggested_area"}
+
+CONFIGURATION_URL_SCHEMES = {"http", "https", "homeassistant"}
 
 
 class DeviceEntryDisabler(StrEnum):
@@ -94,6 +97,27 @@ DEVICE_INFO_TYPES = {
 }
 
 DEVICE_INFO_KEYS = set.union(*(itm for itm in DEVICE_INFO_TYPES.values()))
+
+
+class _EventDeviceRegistryUpdatedData_CreateRemove(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'create' and 'remove'."""
+
+    action: Literal["create", "remove"]
+    device_id: str
+
+
+class _EventDeviceRegistryUpdatedData_Update(TypedDict):
+    """EventDeviceRegistryUpdated data for action type 'update'."""
+
+    action: Literal["update"]
+    device_id: str
+    changes: dict[str, Any]
+
+
+EventDeviceRegistryUpdatedData = (
+    _EventDeviceRegistryUpdatedData_CreateRemove
+    | _EventDeviceRegistryUpdatedData_Update
+)
 
 
 class DeviceEntryType(StrEnum):
@@ -147,19 +171,25 @@ def _validate_device_info(
             ),
         )
 
-    if (config_url := device_info.get("configuration_url")) is not None:
-        if type(config_url) is not str or urlparse(config_url).scheme not in [
-            "http",
-            "https",
-            "homeassistant",
-        ]:
-            raise DeviceInfoError(
-                config_entry.domain if config_entry else "unknown",
-                device_info,
-                f"invalid configuration_url '{config_url}'",
-            )
-
     return device_info_type
+
+
+def _validate_configuration_url(value: Any) -> str | None:
+    """Validate and convert configuration_url."""
+    if value is None:
+        return None
+    if (
+        isinstance(value, URL)
+        and (value.scheme not in CONFIGURATION_URL_SCHEMES or not value.host)
+    ) or (
+        (parsed_url := urlparse(str(value)))
+        and (
+            parsed_url.scheme not in CONFIGURATION_URL_SCHEMES
+            or not parsed_url.hostname
+        )
+    ):
+        raise ValueError(f"invalid configuration_url '{value}'")
+    return str(value)
 
 
 @attr.s(slots=True, frozen=True)
@@ -168,7 +198,9 @@ class DeviceEntry:
 
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
-    configuration_url: str | None = attr.ib(default=None)
+    configuration_url: str | URL | None = attr.ib(
+        converter=_validate_configuration_url, default=None
+    )
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
@@ -432,7 +464,7 @@ class DeviceRegistry:
         self,
         *,
         config_entry_id: str,
-        configuration_url: str | None | UndefinedType = UNDEFINED,
+        configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         connections: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
         default_manufacturer: str | None | UndefinedType = UNDEFINED,
         default_model: str | None | UndefinedType = UNDEFINED,
@@ -561,7 +593,7 @@ class DeviceRegistry:
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
-        configuration_url: str | None | UndefinedType = UNDEFINED,
+        configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         hw_version: str | None | UndefinedType = UNDEFINED,

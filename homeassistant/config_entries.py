@@ -6,7 +6,7 @@ from collections import ChainMap
 from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
 from contextvars import ContextVar
 from copy import deepcopy
-from enum import Enum
+from enum import Enum, StrEnum
 import functools
 import logging
 from random import randint
@@ -14,7 +14,6 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 
 from . import data_entry_flow, loader
-from .backports.enum import StrEnum
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HassJob, HomeAssistant, callback
