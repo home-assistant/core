@@ -2,7 +2,6 @@
 
 DOMAIN = "flux"
 CONF_START_TIME = "start_time"
-CONF_SUNSET_TIME = "sunset_time"
 CONF_STOP_TIME = "stop_time"
 CONF_START_CT = "start_colortemp"
 CONF_SUNSET_CT = "sunset_colortemp"

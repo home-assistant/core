@@ -37,7 +37,6 @@ from .const import (
     CONF_STOP_CT,
     CONF_STOP_TIME,
     CONF_SUNSET_CT,
-    CONF_SUNSET_TIME,
     DEFAULT_MODE,
     DEFAULT_START_COLOR_TEMP_KELVIN,
     DEFAULT_STOP_COLOR_TEMP_KELVIN,
@@ -174,10 +173,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_START_TIME,
                         default=settings.get(CONF_START_TIME, UNDEFINED),
-                    ): TimeSelector(),
-                    vol.Optional(
-                        CONF_SUNSET_TIME,
-                        default=settings.get(CONF_SUNSET_TIME, UNDEFINED),
                     ): TimeSelector(),
                     vol.Optional(
                         CONF_STOP_TIME, default=settings.get(CONF_STOP_TIME, UNDEFINED)

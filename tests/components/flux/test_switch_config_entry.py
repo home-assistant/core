@@ -347,42 +347,6 @@ async def test_flux_after_sunrise_before_sunset(
 
 
 # pylint: disable=invalid-name
-async def test_flux_after_sunrise_before_custom_sunset(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
-    """Test the flux switch after sunrise and before a configured sunset."""
-    ent1 = (await setup_test_light_entities(hass, 1))[0]
-
-    # Choose a test time after the ordinary sunset but before the custom sunset
-    test_time = dt_util.utcnow().replace(hour=18, minute=30, second=0)
-    sunset_time = test_time.replace(hour=17, minute=0, second=0)
-    sunrise_time = test_time.replace(hour=5, minute=0, second=0)
-
-    def event_date(_, event, now=None):
-        if event == SUN_EVENT_SUNRISE:
-            return sunrise_time
-        return sunset_time
-
-    await hass.async_block_till_done()
-    config_settings = default_settings()
-    config_settings.update(
-        {
-            "name": "flux",
-            "lights": [ent1.entity_id],
-            "sunset_time": "21:00",
-            "start_colortemp": 4000,
-            "sunset_colortemp": 4000,
-        }
-    )
-
-    turn_on_calls = await update_lights(hass, config_settings, test_time, event_date)
-
-    call = turn_on_calls[-1]
-    assert call.data[light.ATTR_BRIGHTNESS] == 182
-    assert call.data[light.ATTR_XY_COLOR] == [0.42, 0.365]
-
-
-# pylint: disable=invalid-name
 async def test_flux_after_sunset_before_stop(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:

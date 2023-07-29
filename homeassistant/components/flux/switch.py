@@ -56,7 +56,6 @@ from .const import (
     CONF_STOP_CT,
     CONF_STOP_TIME,
     CONF_SUNSET_CT,
-    CONF_SUNSET_TIME,
     DEFAULT_MODE,
     MODE_MIRED,
     MODE_RGB,
@@ -165,7 +164,6 @@ async def async_setup_platform(
         hass,
         lights,
         start_time,
-        None,
         stop_time,
         start_colortemp,
         sunset_colortemp,
@@ -196,7 +194,6 @@ async def async_setup_entry(
     lights = entry.data.get(CONF_LIGHTS)
 
     start_time = parse_time(entry.data.get(CONF_START_TIME))  # type: ignore[arg-type]
-    sunset_time = parse_time(entry.data.get(CONF_SUNSET_TIME))  # type: ignore[arg-type]
     stop_time = parse_time(entry.data.get(CONF_STOP_TIME))  # type: ignore[arg-type]
 
     start_colortemp = entry.data.get(CONF_START_CT)
@@ -214,7 +211,6 @@ async def async_setup_entry(
         hass,
         lights,
         start_time,
-        sunset_time,
         stop_time,
         start_colortemp,
         sunset_colortemp,
@@ -250,7 +246,6 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         hass: HomeAssistant,
         lights,
         start_time: time | None,
-        sunset_time: time | None,
         stop_time: time | None,
         start_colortemp,
         sunset_colortemp,
@@ -266,7 +261,6 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self.hass = hass
         self._lights = lights
         self._start_time = start_time
-        self._sunset_time = sunset_time
         self._stop_time = stop_time
         self._start_colortemp = start_colortemp
         self._sunset_colortemp = sunset_colortemp
@@ -329,7 +323,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
         now = as_local(utcnow)
 
-        sunset_time = self.find_sunset_time(now)
+        sunset = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, now.date())
         start_time = self.find_start_time(now)
         stop_time = self.find_stop_time(now)
 
@@ -342,11 +336,11 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             # stop_time was yesterday since the new start_time is not reached
             stop_time -= timedelta(days=1)
 
-        if start_time < now < sunset_time:
+        if start_time < now < sunset:
             # Daytime
             time_state = "day"
             temp_range = abs(self._start_colortemp - self._sunset_colortemp)
-            day_length = int(sunset_time.timestamp() - start_time.timestamp())
+            day_length = int(sunset.timestamp() - start_time.timestamp())
             seconds_from_start = int(now.timestamp() - start_time.timestamp())
             percentage_complete = seconds_from_start / day_length
             temp_offset = temp_range * percentage_complete
@@ -359,9 +353,11 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             time_state = "night"
 
             if now < stop_time:
-                if stop_time < start_time and stop_time.day == sunset_time.day:
+                if stop_time < start_time and stop_time.day == sunset.day:
                     # we need to use yesterday's sunset time
-                    sunset_time = sunset_time - timedelta(days=1)
+                    sunset_time = sunset - timedelta(days=1)
+                else:
+                    sunset_time = sunset
 
                 night_length = int(stop_time.timestamp() - sunset_time.timestamp())
                 seconds_from_sunset = int(now.timestamp() - sunset_time.timestamp())
@@ -432,16 +428,6 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 self.hass, SUN_EVENT_SUNRISE, now.date()
             )  # type: ignore[assignment]
         return sunrise
-
-    def find_sunset_time(self, now: datetime):
-        """Return sunset or sunset_time if given."""
-        if self._sunset_time:
-            sunset = datetime.combine(now.date(), self._sunset_time, now.tzinfo)
-        else:
-            sunset = get_astral_event_date(
-                self.hass, SUN_EVENT_SUNSET, now.date()
-            )  # type: ignore[assignment]
-        return sunset
 
     def find_stop_time(self, now: datetime):
         """Return dusk or stop_time if given."""

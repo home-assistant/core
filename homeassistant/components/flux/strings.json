@@ -25,7 +25,6 @@
           "name": "A name for your flux configuration",
           "lights": "Select the lights you want controlled by Flux",
           "start_time": "Start time. If left empty this will be automatically calculated based on the location. To reset this value set it to 13:37",
-          "sunset_time": "Sunset time. If left empty this will be automatically calculated based on the location. To reset this value set it to 13:37",
           "stop_time": "Stop time. If left empty this will be automatically calculated based on the location. To reset this value set it to 13:37",
           "start_colortemp": "Start color temperature",
           "sunset_colortemp": "Sunset color temperature",
