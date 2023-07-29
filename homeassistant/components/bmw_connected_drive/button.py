@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from . import BMWBaseEntity
 from .const import DOMAIN
@@ -132,6 +133,16 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
                 " reload. See"
                 " https://www.home-assistant.io/integrations/bmw_connected_drive/#update-the-state--refresh-from-api"
                 " for details"
+            )
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "refresh_from_cloud_button",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="refresh_from_cloud_button",
             )
             try:
                 await self.entity_description.account_function(self.coordinator)
