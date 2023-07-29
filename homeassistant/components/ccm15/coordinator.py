@@ -200,9 +200,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def temperature_unit(self) -> UnitOfTemperature:
         """Return temperature unit."""
-        data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
-        _LOGGER.debug("unit[%s]=%s", self._ac_index, str(data.unit))
-        return data.unit
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> int:
