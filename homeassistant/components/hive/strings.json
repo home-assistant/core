@@ -114,5 +114,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "import_error": {
+      "title": "YAML import failed for Hive",
+      "description": "Trying to import your YAML configuration is has failed\n\n Error {error}\n\nPlease remove your YAML configuration for Hive and [set up the integration](/config/integrations/dashboard/add?domain=hive)"
+    }
   }
 }

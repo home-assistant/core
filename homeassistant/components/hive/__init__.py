@@ -60,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
 
     if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
+        task = hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
@@ -70,6 +70,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 },
             )
         )
+        await task
+        try:
+            task.result()
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "import_error",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="import_error",
+                translation_placeholders={"error": str(error)},
+            )
         async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
