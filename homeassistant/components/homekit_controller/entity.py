@@ -58,7 +58,9 @@ class HomeKitEntity(Entity):
                 self.all_characteristics, self._async_write_ha_state
             )
         )
-
+        self.async_on_remove(
+            self._accessory.async_subscribe_availability(self._async_write_ha_state)
+        )
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
         await self._accessory.add_watchable_characteristics(
             self.watchable_characteristics

@@ -84,7 +84,11 @@ async def async_setup_platform(
     if value_template is not None:
         value_template.hass = hass
 
-    trigger_entity_config = {CONF_NAME: name, CONF_DEVICE_CLASS: device_class}
+    trigger_entity_config = {
+        CONF_NAME: name,
+        CONF_DEVICE_CLASS: device_class,
+        CONF_UNIQUE_ID: unique_id,
+    }
     if availability:
         trigger_entity_config[CONF_AVAILABILITY] = availability
     if icon:
@@ -132,7 +136,11 @@ async def async_setup_entry(
             value_template.hass = hass
 
     name_template = Template(name, hass)
-    trigger_entity_config = {CONF_NAME: name_template, CONF_DEVICE_CLASS: device_class}
+    trigger_entity_config = {
+        CONF_NAME: name_template,
+        CONF_DEVICE_CLASS: device_class,
+        CONF_UNIQUE_ID: entry.entry_id,
+    }
 
     await async_setup_sensor(
         hass,
@@ -269,7 +277,6 @@ async def async_setup_sensor(
                 column_name,
                 unit,
                 value_template,
-                unique_id,
                 yaml,
                 state_class,
                 use_database_executor,
@@ -322,7 +329,6 @@ class SQLSensor(ManualTriggerEntity, SensorEntity):
         column: str,
         unit: str | None,
         value_template: Template | None,
-        unique_id: str | None,
         yaml: bool,
         state_class: SensorStateClass | None,
         use_database_executor: bool,
@@ -336,14 +342,16 @@ class SQLSensor(ManualTriggerEntity, SensorEntity):
         self._column_name = column
         self.sessionmaker = sessmaker
         self._attr_extra_state_attributes = {}
-        self._attr_unique_id = unique_id
         self._use_database_executor = use_database_executor
         self._lambda_stmt = _generate_lambda_stmt(query)
+        self._attr_name = (
+            None if not yaml else trigger_entity_config[CONF_NAME].template
+        )
         self._attr_has_entity_name = not yaml
-        if not yaml and unique_id:
+        if not yaml and trigger_entity_config.get(CONF_UNIQUE_ID):
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
-                identifiers={(DOMAIN, unique_id)},
+                identifiers={(DOMAIN, trigger_entity_config[CONF_UNIQUE_ID])},
                 manufacturer="SQL",
                 name=trigger_entity_config[CONF_NAME].template,
             )

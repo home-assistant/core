@@ -8,7 +8,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==22.2.0
 awesomeversion==22.9.0
 bcrypt==4.0.1
-bleak-retry-connector==3.1.0
+bleak-retry-connector==3.1.1
 bleak==0.20.2
 bluetooth-adapters==0.16.0
 bluetooth-auto-recovery==1.2.1
@@ -20,10 +20,10 @@ dbus-fast==1.87.2
 fnv-hash-fast==0.4.0
 ha-av==10.1.0
 hass-nabucasa==0.69.0
-hassil==1.2.0
-home-assistant-bluetooth==1.10.1
-home-assistant-frontend==20230705.1
-home-assistant-intents==2023.7.24
+hassil==1.2.5
+home-assistant-bluetooth==1.10.2
+home-assistant-frontend==20230725.0
+home-assistant-intents==2023.7.25
 httpx==0.24.1
 ifaddr==0.2.0
 janus==1.0.0
@@ -59,7 +59,9 @@ zeroconf==0.71.4
 pycryptodome>=3.6.6
 
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-urllib3>=1.26.5
+# Temporary setting an upper bound, to prevent compat issues with urllib3>=2
+# https://github.com/home-assistant/core/issues/97248
+urllib3>=1.26.5,<2
 
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
@@ -120,10 +122,6 @@ python-socketio>=4.6.0,<5.0
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
-
-# Required for compatibility with point integration - ensure_active_token
-# https://github.com/home-assistant/core/pull/68176
-authlib<1.0
 
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0

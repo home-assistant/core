@@ -272,8 +272,6 @@ class WeatherEntity(Entity):
                 "visibility_unit",
                 "_attr_precipitation_unit",
                 "precipitation_unit",
-                "_attr_forecast",
-                "forecast",
             )
         ):
             if _reported is False:
