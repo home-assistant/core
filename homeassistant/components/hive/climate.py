@@ -18,6 +18,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from . import HiveEntity, refresh_system
 from .const import (
@@ -140,8 +141,18 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     async def async_heating_boost(self, time_period, temperature):
         """Handle boost heating service call."""
         _LOGGER.warning(
-            "Hive Service heating_boost will be removed in 2021.7.0, please update to"
+            "Hive Service heating_boost will be removed in 2024.2.0, please update to"
             " heating_boost_on"
+        )
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "heating_boost",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="heating_boost",
         )
         await self.async_heating_boost_on(time_period, temperature)
 
