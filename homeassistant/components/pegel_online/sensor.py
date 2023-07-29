@@ -66,7 +66,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="ph_value",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PH,
-        icon="mdi:ph",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
