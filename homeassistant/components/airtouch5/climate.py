@@ -47,7 +47,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, FAN_INTELLIGENT_AUTO, FAN_TURBO
 from .entity import Airtouch5Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,8 +109,13 @@ AC_FAN_SPEED_TO_FAN_SPEED = {
     AcFanSpeed.MEDIUM: FAN_MEDIUM,
     AcFanSpeed.HIGH: FAN_HIGH,
     AcFanSpeed.POWERFUL: FAN_FOCUS,
-    AcFanSpeed.TURBO: "turbo",
-    # When Intelligent Auto releases, support it here
+    AcFanSpeed.TURBO: FAN_TURBO,
+    AcFanSpeed.INTELLIGENT_AUTO_1: FAN_INTELLIGENT_AUTO,
+    AcFanSpeed.INTELLIGENT_AUTO_2: FAN_INTELLIGENT_AUTO,
+    AcFanSpeed.INTELLIGENT_AUTO_3: FAN_INTELLIGENT_AUTO,
+    AcFanSpeed.INTELLIGENT_AUTO_4: FAN_INTELLIGENT_AUTO,
+    AcFanSpeed.INTELLIGENT_AUTO_5: FAN_INTELLIGENT_AUTO,
+    AcFanSpeed.INTELLIGENT_AUTO_6: FAN_INTELLIGENT_AUTO,
 }
 FAN_MODE_TO_SET_AC_FAN_SPEED = {
     FAN_AUTO: SetAcFanSpeed.SET_TO_AUTO,
@@ -119,8 +124,8 @@ FAN_MODE_TO_SET_AC_FAN_SPEED = {
     FAN_MEDIUM: SetAcFanSpeed.SET_TO_MEDIUM,
     FAN_HIGH: SetAcFanSpeed.SET_TO_HIGH,
     FAN_FOCUS: SetAcFanSpeed.SET_TO_POWERFUL,
-    "turbo": SetAcFanSpeed.SET_TO_TURBO,
-    # When Intelligent Auto releases, support it here
+    FAN_TURBO: SetAcFanSpeed.SET_TO_TURBO,
+    FAN_INTELLIGENT_AUTO: SetAcFanSpeed.SET_TO_INTELLIGENT_AUTO,
 }
 
 
@@ -166,10 +171,11 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         if ability.supports_fan_speed_powerful:
             self._attr_fan_modes.append(FAN_FOCUS)
         if ability.supports_fan_speed_turbo:
-            self._attr_fan_modes.append("turbo")
+            self._attr_fan_modes.append(FAN_TURBO)
         if ability.supports_fan_speed_auto:
             self._attr_fan_modes.append(FAN_AUTO)
-        # When Intelligent Auto releases, add it here ability.supports_fan_speed_intelligent_auto
+        if ability.supports_fan_speed_intelligent_auto:
+            self._attr_fan_modes.append(FAN_INTELLIGENT_AUTO)
 
         # We can have different setpoints for heat cool, we expose the lowest low and highest high
         self._attr_target_temperature_low = min(
@@ -218,6 +224,8 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             set_ac_mode = SetAcMode.KEEP_AC_MODE
         else:
             set_power_setting = SetPowerSetting.SET_TO_ON
+            if hvac_mode not in HVAC_MODE_TO_SET_AC_MODE:
+                raise ValueError(f"Unsupported hvac mode: {hvac_mode}")
             set_ac_mode = HVAC_MODE_TO_SET_AC_MODE[hvac_mode]
 
         control = AcControl(
@@ -233,6 +241,8 @@ class Airtouch5AC(Airtouch5ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
+        if fan_mode not in FAN_MODE_TO_SET_AC_FAN_SPEED:
+            raise ValueError(f"Unsupported fan mode: {fan_mode}")
         fan_speed = FAN_MODE_TO_SET_AC_FAN_SPEED[fan_mode]
         control = AcControl(
             SetPowerSetting.KEEP_POWER_SETTING,
