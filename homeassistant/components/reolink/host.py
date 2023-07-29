@@ -332,7 +332,8 @@ class ReolinkHost:
             await self._renew(SubType.push)
             if self._long_poll_task is not None:
                 if not self._api.subscribed(SubType.long_poll):
-                    # restart long_polling to prevent 5 minute request timeout
+                    _LOGGER.debug("restarting long polling task")
+                    # To prevent 5 minute request timeout
                     await self._async_stop_long_polling()
                     await self._async_start_long_polling()
                 await self._renew(SubType.long_poll)
