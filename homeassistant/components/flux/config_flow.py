@@ -140,9 +140,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # apply the rest of the remaining options
         entry_data.update(yaml_config)
 
-        if CONF_NAME not in entry_data:
-            entry_data[CONF_NAME] = DEFAULT_NAME
-
         self._async_abort_entries_match(entry_data)
 
         return self.async_create_entry(title=entry_data[CONF_NAME], data=entry_data)
