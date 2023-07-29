@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 from tests.components.youtube import MockYouTube
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ComponentSetup = Callable[[], Awaitable[None]]
+ComponentSetup = Callable[[], Awaitable[MockYouTube]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -92,7 +92,7 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Callable[[], Coroutine[Any, Any, None]]:
+) -> Callable[[], Coroutine[Any, Any, MockYouTube]]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
@@ -104,11 +104,11 @@ async def mock_setup_integration(
         DOMAIN,
     )
 
-    async def func() -> None:
-        with patch(
-            "homeassistant.components.youtube.api.YouTube", return_value=MockYouTube()
-        ):
+    async def func() -> MockYouTube:
+        mock = MockYouTube()
+        with patch("homeassistant.components.youtube.api.YouTube", return_value=mock):
             assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()
+        return mock
 
     return func

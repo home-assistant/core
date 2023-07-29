@@ -84,6 +84,8 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
+    _attr_name = None
+
     def __init__(
         self,
         device: SmartDevice,
