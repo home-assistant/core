@@ -5,8 +5,14 @@ import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
+from homeassistant import config_entries
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    Event,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import async_get_current_platform
 
@@ -36,6 +42,8 @@ class PassiveBluetoothEntityKey:
 
 _T = TypeVar("_T")
 
+PASSIVE_UPDATE_PROCESSOR_COORDINATORS = "passive_update_processor_coordinators"
+
 
 @dataclasses.dataclass(slots=True, frozen=True)
 class PassiveBluetoothDataUpdate(Generic[_T]):
@@ -50,6 +58,51 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     )
     entity_data: dict[PassiveBluetoothEntityKey, _T] = dataclasses.field(
         default_factory=dict
+    )
+
+    def async_restore_data(self) -> dict[str, Any]:
+        return {
+            "devices": self.devices,
+            "entity_descriptions": self.entity_descriptions,
+            "entity_names": self.entity_names,
+            "entity_data": self.entity_data,
+        }
+
+
+def register_coordinator(
+    hass: HomeAssistant, coordinator: PassiveBluetoothProcessorCoordinator
+) -> None:
+    """Register a coordinator to have its processors data restored."""
+    coordinators: set[PassiveBluetoothProcessorCoordinator] = hass.data[
+        PASSIVE_UPDATE_PROCESSOR_COORDINATORS
+    ]
+    coordinators.add(coordinator)
+
+
+def unregister_coordinator(
+    hass: HomeAssistant, coordinator: PassiveBluetoothProcessorCoordinator
+) -> None:
+    """Unregister a coordinator to have its processors data restored."""
+    coordinators: set[PassiveBluetoothProcessorCoordinator] = hass.data[
+        PASSIVE_UPDATE_PROCESSOR_COORDINATORS
+    ]
+    coordinators.remove(coordinator)
+
+
+async def async_setup(hass: HomeAssistant) -> None:
+    """Setup the passive update processor coordinators."""
+    coordinators: set[PassiveBluetoothProcessorCoordinator] = set()
+    hass.data[PASSIVE_UPDATE_PROCESSOR_COORDINATORS]: set[
+        PassiveBluetoothProcessorCoordinator
+    ] = coordinators
+
+    async def _async_save_processor_data(_event: Event) -> None:
+        """Save the processor data."""
+        for coordinator in coordinators:
+            coordinator.async_save_data()
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_FINAL_WRITE, _async_save_processor_data
     )
 
 
@@ -80,6 +133,9 @@ class PassiveBluetoothProcessorCoordinator(
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._update_method = update_method
         self.last_update_success = True
+        self.restore_key = None
+        if config_entry := config_entries.current_entry.get():
+            self.restore_key = config_entry.entry_id
 
     @property
     def available(self) -> bool:
@@ -87,18 +143,25 @@ class PassiveBluetoothProcessorCoordinator(
         return super().available and self.last_update_success
 
     @callback
+    def async_restore_data(self) -> tuple[str, dict[str, Any]] | None:
+        """Restore the data."""
+        if self.restore_key is None:
+            return None
+        return self.restore_key, {
+            processor.async_restore_data() for processor in self._processors
+        }
+
+    @callback
     def _async_start(self) -> None:
         """Start the callbacks."""
         super()._async_start()
-        # TODO: Register coordinator to have its processors data
-        # restored
+        register_coordinator(self.hass, self)
 
     @callback
     def _async_stop(self) -> None:
         """Stop the callbacks."""
         super()._async_stop()
-        # TODO: Unregister coordinator to have its processors data
-        # restored
+        unregister_coordinator(self.hass, self)
 
     @callback
     def async_register_processor(
@@ -187,7 +250,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     ) -> None:
         """Initialize the coordinator."""
         self.coordinator: PassiveBluetoothProcessorCoordinator
-        self._restore_key = async_get_current_platform().domain
+        self.restore_key = async_get_current_platform().domain
         self._listeners: list[
             Callable[[PassiveBluetoothDataUpdate[_T] | None], None]
         ] = []
@@ -208,6 +271,13 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     def available(self) -> bool:
         """Return if the device is available."""
         return self.coordinator.available and self.last_update_success
+
+    @callback
+    def async_restore_data(self) -> tuple[str, dict[str, Any]] | None:
+        """Restore the data."""
+        if self.restore_key is None:
+            return None
+        return self.restore_key, self.data.async_restore_data()
 
     @callback
     def async_handle_unavailable(self) -> None:

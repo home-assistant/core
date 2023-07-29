@@ -38,7 +38,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.loader import async_get_bluetooth
 
-from . import models
+from . import models, passive_update_processor
 from .api import (
     _get_manager,
     async_address_present,
@@ -132,6 +132,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await bluetooth_storage.async_setup()
     slot_manager = BleakSlotManager()
     await slot_manager.async_setup()
+    await passive_update_processor.async_setup()
     manager = BluetoothManager(
         hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
     )
