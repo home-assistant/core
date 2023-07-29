@@ -70,7 +70,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "title": "The timer start service duration parameter is being removed",
+            "title": "[%key:component::timer::issues::deprecated_duration_in_start::title%]",
             "description": "The timer service `timer.start` optional duration parameter is being removed and use of it has been detected. To change the duration please create a new timer.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
           }
         }
