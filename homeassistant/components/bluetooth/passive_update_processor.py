@@ -13,7 +13,7 @@ from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Callable
 
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -41,13 +41,13 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
     devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
-    entity_descriptions: Mapping[
+    entity_descriptions: dict[
         PassiveBluetoothEntityKey, EntityDescription
     ] = dataclasses.field(default_factory=dict)
-    entity_names: Mapping[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
+    entity_names: dict[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
         default_factory=dict
     )
-    entity_data: Mapping[PassiveBluetoothEntityKey, _T] = dataclasses.field(
+    entity_data: dict[PassiveBluetoothEntityKey, _T] = dataclasses.field(
         default_factory=dict
     )
 
@@ -180,12 +180,12 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
             list[Callable[[PassiveBluetoothDataUpdate[_T] | None], None]],
         ] = {}
         self.update_method = update_method
-        self.entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
-        self.entity_data: dict[PassiveBluetoothEntityKey, _T] = {}
-        self.entity_descriptions: dict[
-            PassiveBluetoothEntityKey, EntityDescription
-        ] = {}
-        self.devices: dict[str | None, DeviceInfo] = {}
+        data: PassiveBluetoothDataUpdate[_T] = PassiveBluetoothDataUpdate()
+        self.data = data  # This is the combined data from all the updates
+        self.entity_names = data.entity_names
+        self.entity_data = data.entity_data
+        self.entity_descriptions = data.entity_descriptions
+        self.devices = data.devices
         self.last_update_success = True
 
     @property
