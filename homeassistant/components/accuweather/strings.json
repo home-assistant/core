@@ -104,7 +104,7 @@
         "name": "Cloud cover day 4"
       },
       "cloud_cover_night_0d": {
-        "name": "Cloud cover night 0"
+        "name": "Cloud cover tonight"
       },
       "cloud_cover_night_1d": {
         "name": "Cloud cover night 1"
@@ -134,7 +134,7 @@
         "name": "Condition day 4"
       },
       "condition_night_0d": {
-        "name": "Condition night 0"
+        "name": "Condition tonight"
       },
       "condition_night_1d": {
         "name": "Condition night 1"
@@ -499,7 +499,7 @@
         "name": "Solar irradiance day 4"
       },
       "solar_irradiance_night_0d": {
-        "name": "Solar irradiance night 0"
+        "name": "Solar irradiance tonight"
       },
       "solar_irradiance_night_1d": {
         "name": "Solar irradiance night 1"
@@ -529,7 +529,7 @@
         "name": "Thunderstorm probability day 4"
       },
       "thunderstorm_probability_night_0d": {
-        "name": "Thunderstorm probability night 0"
+        "name": "Thunderstorm probability tonight"
       },
       "thunderstorm_probability_night_1d": {
         "name": "Thunderstorm probability night 1"
@@ -747,7 +747,7 @@
         "name": "Wind gust speed day 4"
       },
       "wind_gust_speed_night_0d": {
-        "name": "Wind gust speed night 0"
+        "name": "Wind gust speed tonight"
       },
       "wind_gust_speed_night_1d": {
         "name": "Wind gust speed night 1"
@@ -777,7 +777,7 @@
         "name": "Wind speed day 4"
       },
       "wind_speed_night_0d": {
-        "name": "Wind speed night 0"
+        "name": "Wind speed tonight"
       },
       "wind_speed_night_1d": {
         "name": "Wind speed night 1"

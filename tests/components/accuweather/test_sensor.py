@@ -279,7 +279,7 @@ async def test_sensor_with_forecast(
     assert entry
     assert entry.unique_id == "0123456-thunderstormprobabilityday-0"
 
-    state = hass.states.get("sensor.home_thunderstorm_probability_night_0")
+    state = hass.states.get("sensor.home_thunderstorm_probability_tonight")
     assert state
     assert state.state == "40"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -287,7 +287,7 @@ async def test_sensor_with_forecast(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
-    entry = registry.async_get("sensor.home_thunderstorm_probability_night_0")
+    entry = registry.async_get("sensor.home_thunderstorm_probability_tonight")
     assert entry
     assert entry.unique_id == "0123456-thunderstormprobabilitynight-0"
 
@@ -331,7 +331,7 @@ async def test_sensor_with_forecast(
     assert entry
     assert entry.unique_id == "0123456-cloudcoverday-0"
 
-    state = hass.states.get("sensor.home_cloud_cover_night_0")
+    state = hass.states.get("sensor.home_cloud_cover_tonight")
     assert state
     assert state.state == "65"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -339,7 +339,7 @@ async def test_sensor_with_forecast(
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-cloudy"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
-    entry = registry.async_get("sensor.home_cloud_cover_night_0")
+    entry = registry.async_get("sensor.home_cloud_cover_tonight")
     assert entry
 
     state = hass.states.get("sensor.home_grass_pollen_today")
@@ -443,7 +443,7 @@ async def test_sensor_with_forecast(
     assert entry
     assert entry.unique_id == "0123456-windday-0"
 
-    state = hass.states.get("sensor.home_wind_speed_night_0")
+    state = hass.states.get("sensor.home_wind_speed_tonight")
     assert state
     assert state.state == "7.4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -456,7 +456,7 @@ async def test_sensor_with_forecast(
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
 
-    entry = registry.async_get("sensor.home_wind_speed_night_0")
+    entry = registry.async_get("sensor.home_wind_speed_tonight")
     assert entry
     assert entry.unique_id == "0123456-windnight-0"
 
@@ -477,7 +477,7 @@ async def test_sensor_with_forecast(
     assert entry
     assert entry.unique_id == "0123456-windgustday-0"
 
-    state = hass.states.get("sensor.home_wind_gust_speed_night_0")
+    state = hass.states.get("sensor.home_wind_gust_speed_tonight")
     assert state
     assert state.state == "18.5"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -490,7 +490,7 @@ async def test_sensor_with_forecast(
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
 
-    entry = registry.async_get("sensor.home_wind_gust_speed_night_0")
+    entry = registry.async_get("sensor.home_wind_gust_speed_tonight")
     assert entry
     assert entry.unique_id == "0123456-windgustnight-0"
 
@@ -512,7 +512,7 @@ async def test_sensor_with_forecast(
     assert entry
     assert entry.unique_id == "0123456-solarirradianceday-0"
 
-    state = hass.states.get("sensor.home_solar_irradiance_night_0")
+    state = hass.states.get("sensor.home_solar_irradiance_tonight")
     assert state
     assert state.state == "271.6"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -522,7 +522,7 @@ async def test_sensor_with_forecast(
         == UnitOfIrradiance.WATTS_PER_SQUARE_METER
     )
 
-    entry = registry.async_get("sensor.home_solar_irradiance_night_0")
+    entry = registry.async_get("sensor.home_solar_irradiance_tonight")
     assert entry
     assert entry.unique_id == "0123456-solarirradiancenight-0"
 
@@ -538,12 +538,12 @@ async def test_sensor_with_forecast(
     assert entry
     assert entry.unique_id == "0123456-longphraseday-0"
 
-    state = hass.states.get("sensor.home_condition_night_0")
+    state = hass.states.get("sensor.home_condition_tonight")
     assert state
     assert state.state == "Partly cloudy"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
 
-    entry = registry.async_get("sensor.home_condition_night_0")
+    entry = registry.async_get("sensor.home_condition_tonight")
     assert entry
     assert entry.unique_id == "0123456-longphrasenight-0"
 
