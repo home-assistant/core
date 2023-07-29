@@ -9,7 +9,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import async_load_json_fixture
-from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME, USER_INPUT
+from .const import REAUTH_INPUT, TEST_PASSWORD, TEST_URL, TEST_USERNAME, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -234,7 +234,7 @@ async def test_reauth(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=USER_INPUT,
+        user_input=REAUTH_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -281,7 +281,7 @@ async def test_reauth_cannot_connect(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=USER_INPUT,
+        user_input=REAUTH_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -326,7 +326,7 @@ async def test_reauth_invalid(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=USER_INPUT,
+        user_input=REAUTH_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -374,7 +374,7 @@ async def test_reauth_exception(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=USER_INPUT,
+        user_input=REAUTH_INPUT,
     )
     await hass.async_block_till_done()
 
