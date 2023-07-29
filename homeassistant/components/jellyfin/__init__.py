@@ -67,4 +67,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove device from a config entry."""
-    return True
+    data: JellyfinData = hass.data[DOMAIN][config_entry.entry_id]
+    device_ids = data.get_device_ids()
+
+    return not device_entry.identifiers.intersection((DOMAIN, id) for id in device_ids)

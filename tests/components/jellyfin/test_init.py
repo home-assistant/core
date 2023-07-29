@@ -4,17 +4,17 @@ from unittest.mock import MagicMock
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import async_load_json_fixture
 
 from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 async def remove_device(
-    ws_client: aiohttp.ClientWebSocketResponse,
-    device_id: str,
-    config_entry_id: str
+    ws_client: MockHAClientWebSocket, device_id: str, config_entry_id: str
 ) -> bool:
     """Remove config entry from a device."""
     await ws_client.send_json(
@@ -92,6 +92,7 @@ async def test_device_remove_devices(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     mock_jellyfin: MagicMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
@@ -100,18 +101,19 @@ async def test_device_remove_devices(
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    device_registry = dr.async_get(hass)
 
     device_entry = device_registry.async_get_device(
         identifiers={
             (
                 DOMAIN,
-                "TEST-UUID",
+                "DEVICE-UUID",
             )
         },
     )
     assert (
-        await remove_device(await hass_ws_client(hass), device_entry.id, mock_config_entry.entry_id)
+        await remove_device(
+            await hass_ws_client(hass), device_entry.id, mock_config_entry.entry_id
+        )
         is False
     )
     old_device_entry = device_registry.async_get_or_create(
