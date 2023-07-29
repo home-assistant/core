@@ -1005,7 +1005,7 @@ async def test_node_removed(
     event = {
         "source": "controller",
         "event": "node added",
-        "node": node.data,
+        "node": multisensor_6_state,
         "result": {},
     }
 
@@ -1139,8 +1139,8 @@ async def test_replace_different_node(
     """Test when a node is replaced with a different node."""
     dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
-    hank_binary_switch_state = deepcopy(hank_binary_switch_state)
-    hank_binary_switch_state["nodeId"] = node_id
+    state = deepcopy(hank_binary_switch_state)
+    state["nodeId"] = node_id
 
     device_id = f"{client.driver.controller.home_id}-{node_id}"
     multisensor_6_device_id = (
@@ -1148,9 +1148,9 @@ async def test_replace_different_node(
         f"{multisensor_6.product_type}:{multisensor_6.product_id}"
     )
     hank_device_id = (
-        f"{device_id}-{hank_binary_switch_state['manufacturerId']}:"
-        f"{hank_binary_switch_state['productType']}:"
-        f"{hank_binary_switch_state['productId']}"
+        f"{device_id}-{state['manufacturerId']}:"
+        f"{state['productType']}:"
+        f"{state['productId']}"
     )
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
@@ -1228,7 +1228,7 @@ async def test_replace_different_node(
             "source": "node",
             "event": "ready",
             "nodeId": node_id,
-            "nodeState": hank_binary_switch_state,
+            "nodeState": state,
         },
     )
     client.driver.receive_event(event)

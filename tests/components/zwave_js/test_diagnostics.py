@@ -125,7 +125,11 @@ async def test_device_diagnostics(
         entity["entity_id"] == "test.unrelated_entity"
         for entity in diagnostics_data["entities"]
     )
-    assert diagnostics_data["state"] == multisensor_6.data
+    assert diagnostics_data["state"] == {
+        **multisensor_6.data,
+        "values": [val.data for val in multisensor_6.values.values()],
+        "endpoints": [endpoint.data for endpoint in multisensor_6.endpoints.values()],
+    }
 
 
 async def test_device_diagnostics_error(hass: HomeAssistant, integration) -> None:

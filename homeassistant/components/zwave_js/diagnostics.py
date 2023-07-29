@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, cast
 
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
@@ -129,8 +129,8 @@ async def async_get_config_entry_diagnostics(
     handshake_msgs = msgs[:-1]
     network_state = msgs[-1]
     network_state["result"]["state"]["nodes"] = [
-        redact_node_state(async_redact_data(node, KEYS_TO_REDACT))
-        for node in network_state["result"]["state"]["nodes"]
+        redact_node_state(async_redact_data(node_data, KEYS_TO_REDACT))
+        for node_data in network_state["result"]["state"]["nodes"]
     ]
     return {"messages": [*handshake_msgs, network_state]}
 
@@ -148,7 +148,21 @@ async def async_get_device_diagnostics(
     node = driver.controller.nodes[node_id]
     entities = get_device_entities(hass, node, config_entry, device)
     assert client.version
-    node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
+    node_state = redact_node_state(
+        async_redact_data(
+            cast(
+                NodeDataType,
+                {
+                    **node.data,
+                    "values": [value.data for value in node.values.values()],
+                    "endpoints": [
+                        endpoint.data for endpoint in node.endpoints.values()
+                    ],
+                },
+            ),
+            KEYS_TO_REDACT,
+        )
+    )
     return {
         "versionInfo": {
             "driverVersion": client.version.driver_version,
