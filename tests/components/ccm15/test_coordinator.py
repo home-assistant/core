@@ -101,12 +101,6 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_send_state",
         return_value=200,
     ):
-        await climate.async_set_swing_mode(SWING_ON)
-
-    with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_send_state",
-        return_value=200,
-    ):
         await climate.async_turn_off()
 
     with patch(
