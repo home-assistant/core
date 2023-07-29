@@ -49,7 +49,7 @@ class SubaruDeviceTracker(
 
     _attr_icon = "mdi:car"
     _attr_has_entity_name = True
-    name = None
+    _attr_name = None
 
     def __init__(self, vehicle_info: dict, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the device tracker."""
