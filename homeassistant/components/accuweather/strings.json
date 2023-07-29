@@ -327,7 +327,7 @@
         }
       },
       "precipitation": {
-        "name": "Precipitation"
+        "name": "[%key:component::sensor::entity_component::precipitation::name%]"
       },
       "pressure_tendency": {
         "name": "Pressure tendency",
