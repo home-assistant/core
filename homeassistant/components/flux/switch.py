@@ -21,7 +21,8 @@ from homeassistant.components.light import (
     VALID_TRANSITION,
     is_on,
 )
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_BRIGHTNESS,
@@ -34,13 +35,17 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+)
 from homeassistant.helpers import config_validation as cv, entity_platform, event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired,
@@ -57,6 +62,7 @@ from .const import (
     CONF_STOP_TIME,
     CONF_SUNSET_CT,
     DEFAULT_MODE,
+    DOMAIN,
     MODE_MIRED,
     MODE_RGB,
     MODE_XY,
@@ -145,43 +151,28 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Flux switches."""
-    name = config.get(CONF_NAME)
-    lights = config.get(CONF_LIGHTS)
-    start_time = config.get(CONF_START_TIME)
-    stop_time = config.get(CONF_STOP_TIME)
-    start_colortemp = config.get(CONF_START_CT)
-    sunset_colortemp = config.get(CONF_SUNSET_CT)
-    stop_colortemp = config.get(CONF_STOP_CT)
-    brightness = config.get(CONF_BRIGHTNESS)
-    disable_brightness_adjust = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST)
-    mode = config.get(CONF_MODE)
-    interval = timedelta(seconds=float(config.get(CONF_INTERVAL)))  # type: ignore[arg-type]
-    transition = timedelta(seconds=float(config.get(ATTR_TRANSITION)))  # type: ignore[arg-type]
+    """Old method of loading Flux from yaml configuration."""
 
-    flux = FluxSwitch(
-        name,  # type: ignore[arg-type]
+    async_create_issue(
         hass,
-        lights,
-        start_time,
-        stop_time,
-        start_colortemp,
-        sunset_colortemp,
-        stop_colortemp,
-        brightness,
-        disable_brightness_adjust,
-        mode,
-        interval,
-        transition,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.11.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Flux",
+        },
     )
-    async_add_entities([flux])
 
-    async def async_update(call: ServiceCall | None = None) -> None:
-        """Update lights."""
-        await flux.async_flux_update()
-
-    service_name = slugify(f"{name} update")
-    hass.services.async_register(DOMAIN, service_name, async_update)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def async_setup_entry(

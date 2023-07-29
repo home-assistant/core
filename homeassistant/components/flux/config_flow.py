@@ -8,7 +8,13 @@ from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant import config_entries
 from homeassistant.components.light import ATTR_TRANSITION
-from homeassistant.const import CONF_LIGHTS, CONF_MODE, CONF_NAME, Platform
+from homeassistant.const import (
+    CONF_BRIGHTNESS,
+    CONF_LIGHTS,
+    CONF_MODE,
+    CONF_NAME,
+    Platform,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
@@ -24,6 +30,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TimeSelector,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
@@ -38,6 +45,7 @@ from .const import (
     CONF_STOP_TIME,
     CONF_SUNSET_CT,
     DEFAULT_MODE,
+    DEFAULT_NAME,
     DEFAULT_START_COLOR_TEMP_KELVIN,
     DEFAULT_STOP_COLOR_TEMP_KELVIN,
     DEFAULT_SUNSET_COLOR_TEMP_KELVIN,
@@ -46,12 +54,13 @@ from .const import (
     MODE_RGB,
     MODE_XY,
 )
+from .switch import CONF_DISABLE_BRIGHTNESS_ADJUST
 
 _LOGGER = logging.getLogger(__name__)
 
 MINIMAL_FLUX_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default="Flux"): str,
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_LIGHTS): EntitySelector(
             EntitySelectorConfig(domain=Platform.LIGHT, multiple=True)
         ),
@@ -101,6 +110,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=MINIMAL_FLUX_SCHEMA,
         )
+
+    async def async_step_import(self, yaml_config: ConfigType) -> FlowResult:
+        """Handle import from configuration.yaml."""
+        # start with the same default settings as in the UI
+        entry_data = default_settings()
+
+        # remove the old two very similar options
+        brightness = yaml_config.pop(CONF_BRIGHTNESS, False)
+        disable_brightness_adjust = yaml_config.pop(
+            CONF_DISABLE_BRIGHTNESS_ADJUST, False
+        )
+
+        # combine them into the "new" option
+        if brightness or disable_brightness_adjust:
+            entry_data[CONF_ADJUST_BRIGHTNESS] = False
+
+        entry_data[CONF_INTERVAL] = {"seconds": yaml_config.pop(CONF_INTERVAL)}
+        entry_data[ATTR_TRANSITION] = {"seconds": yaml_config.pop(ATTR_TRANSITION)}
+
+        if CONF_START_TIME in yaml_config:
+            entry_data[CONF_START_TIME] = str(yaml_config.pop(CONF_START_TIME))
+
+        if CONF_STOP_TIME in yaml_config:
+            entry_data[CONF_STOP_TIME] = str(yaml_config.pop(CONF_STOP_TIME))
+
+        yaml_config.pop("platform")
+
+        # apply the rest of the remaining options
+        entry_data.update(yaml_config)
+
+        if CONF_NAME not in entry_data:
+            entry_data[CONF_NAME] = DEFAULT_NAME
+
+        self._async_abort_entries_match(entry_data)
+
+        return self.async_create_entry(title=entry_data[CONF_NAME], data=entry_data)
 
 
 class OptionsFlow(config_entries.OptionsFlow):
