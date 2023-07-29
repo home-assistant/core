@@ -84,7 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_key="import_error",
                 translation_placeholders={"error": str(error)},
             )
-            raise
+            return True
         async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
