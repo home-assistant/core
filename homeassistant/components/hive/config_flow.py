@@ -15,8 +15,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
@@ -150,7 +151,34 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Import user."""
-        return await self.async_step_user(user_input)
+        try:
+            result = await self.async_step_user(user_input)
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "import_error",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="import_error",
+                translation_placeholders={"error": str(error)},
+            )
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Hive",
+            },
+        )
+        return result
 
     @staticmethod
     @callback
