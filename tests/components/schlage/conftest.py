@@ -3,6 +3,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 from pyschlage.lock import Lock
+from pyschlage.user import User
 import pytest
 
 from homeassistant.components.schlage.const import DOMAIN
@@ -36,6 +37,7 @@ async def mock_added_config_entry(
 ) -> MockConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
     mock_schlage.locks.return_value = [mock_lock]
+    mock_schlage.users.return_value = []
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -80,4 +82,18 @@ def mock_lock():
         battery_level=20,
         firmware_version="1.0",
     )
+    mock_lock.access_codes.return_value = []
+    mock_lock.logs.return_value = []
     return mock_lock
+
+
+@pytest.fixture
+def mock_user():
+    """Mock User fixture."""
+    mock_user = create_autospec(User)
+    mock_user.configure_mock(
+        name="robot",
+        email="robot@cyb.org",
+        user_id="__user-id__",
+    )
+    return mock_user

@@ -90,4 +90,5 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
             logs = lock.logs()
         except SchlageError as ex:
             LOGGER.warning('Failed to read logs for lock "%s": %s', lock.name, ex)
+
         return LockData(lock=lock, access_codes=access_codes, logs=logs)

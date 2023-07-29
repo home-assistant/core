@@ -48,6 +48,32 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         """Update our internal state attributes."""
         self._attr_is_locked = self._lock.is_locked
         self._attr_is_jammed = self._lock.is_jammed
+        # Only update changed_by if we get a valid value. This way a previous
+        # value will stay intact if the latest log message isn't related to a
+        # lock state change.
+        if changed_by := self._get_changed_by():
+            self._attr_changed_by = changed_by
+
+    def _get_changed_by(self):
+        if not (logs := self._lock_data.logs):
+            return None
+
+        want_prefix = "Locked by " if self._lock.is_locked else "Unlocked by "
+        want_prefix_len = len(want_prefix)
+        for log in sorted(logs, reverse=True, key=lambda log: log.created_at):
+            if not log.message.startswith(want_prefix):
+                continue
+            match message := log.message[want_prefix_len:]:
+                case "keypad":
+                    access_codes = self._lock_data.access_codes
+                    if code := access_codes.get(log.access_code_id, None):
+                        return f"{message} - {code.name}"
+                case "mobile device":
+                    users = self.coordinator.data.users
+                    if user := users.get(log.accessor_id, None):
+                        return f"{message} - {user.name}"
+            return message
+        return None
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
