@@ -1,6 +1,7 @@
 """The Hunter Douglas PowerView integration."""
 import logging
 
+from aiopvapi.automations import Automations
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
 from aiopvapi.resources.model import PowerviewData
@@ -32,6 +33,7 @@ PLATFORMS = [
     Platform.SCENE,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,6 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             scene_data: PowerviewData = await scenes.get_scenes()
 
         async with async_timeout.timeout(10):
+            automations = Automations(pv_request)
+            automation_data: PowerviewData = await automations.get_automations()
+
+        async with async_timeout.timeout(10):
             shades = Shades(pv_request)
             shade_data: PowerviewData = await shades.get_shades()
 
@@ -87,6 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = PowerviewEntryData(
         api=pv_request,
+        automation_data=automation_data.processed,
         room_data=room_data.processed,
         scene_data=scene_data.processed,
         shade_data=shade_data.processed,

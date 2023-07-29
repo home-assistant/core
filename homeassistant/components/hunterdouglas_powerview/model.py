@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from aiopvapi.helpers.aiorequest import AioRequest
+from aiopvapi.resources.automation import Automation
 from aiopvapi.resources.room import Room
 from aiopvapi.resources.scene import Scene
 from aiopvapi.resources.shade import BaseShade
@@ -16,6 +17,7 @@ class PowerviewEntryData:
     """Define class for main domain information."""
 
     api: AioRequest
+    automation_data: dict[str, Automation]
     room_data: dict[str, Room]
     scene_data: dict[str, Scene]
     shade_data: dict[str, BaseShade]
