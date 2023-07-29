@@ -25,6 +25,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD, default=""): str,
+    }
+)
+
 
 def _generate_client_device_id() -> str:
     """Generate a random UUID4 string to identify ourselves."""
@@ -106,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             client = create_client(device_id=self.client_device_id)
             try:
-                await validate_input(self.hass, user_input, client)
+                await validate_input(self.hass, self._reauth_input, client)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -128,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         data_schema = self.add_suggested_values_to_schema(
-            STEP_USER_DATA_SCHEMA, user_input
+            REAUTH_DATA_SCHEMA, self._reauth_input
         )
 
         return self.async_show_form(
