@@ -92,9 +92,9 @@ async def test_get_triggers(
             }
             for event_type in (
                 ButtonEvent.INITIAL_PRESS,
-                ButtonEvent.LONG_PRESS,
                 ButtonEvent.LONG_RELEASE,
                 ButtonEvent.REPEAT,
+                ButtonEvent.LONG_PRESS,
                 ButtonEvent.SHORT_RELEASE,
             )
             for control_id, resource_id in (
