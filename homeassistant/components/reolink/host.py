@@ -24,7 +24,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
-DEFAULT_TIMEOUT = 30
+DEFAULT_TIMEOUT = 60
 FIRST_ONVIF_TIMEOUT = 10
 SUBSCRIPTION_RENEW_THRESHOLD = 300
 POLL_INTERVAL_NO_PUSH = 5
