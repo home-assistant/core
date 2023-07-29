@@ -5,6 +5,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import light, switch
+from homeassistant.components.flux.switch import CONF_DISABLE_BRIGHTNESS_ADJUST
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -916,6 +917,69 @@ async def test_flux_with_custom_colortemps(
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 159
     assert call.data[light.ATTR_XY_COLOR] == [0.469, 0.378]
+
+
+# pylint: disable=invalid-name
+async def test_flux_brightness_adjust_option_migration(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test if the old yaml config setting (CONF_DISABLE_BRIGHTNESS_ADJUST) is successfully changed to the new option(CONF_ADJUST_BRIGHTNESS)."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    ent1 = platform.ENTITIES[0]
+
+    # Verify initial state of light
+    state = hass.states.get(ent1.entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes.get("xy_color") is None
+    assert state.attributes.get("brightness") is None
+
+    test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
+    sunset_time = test_time.replace(hour=17, minute=0, second=0)
+    sunrise_time = test_time.replace(hour=5, minute=0, second=0)
+
+    def event_date(hass, event, now=None):
+        if event == SUN_EVENT_SUNRISE:
+            return sunrise_time
+        return sunset_time
+
+    with freeze_time(test_time), patch(
+        "homeassistant.components.flux.switch.get_astral_event_date",
+        side_effect=event_date,
+    ):
+        assert await async_setup_component(
+            hass,
+            switch.DOMAIN,
+            {
+                switch.DOMAIN: {
+                    "platform": "flux",
+                    "name": "flux",
+                    "lights": [ent1.entity_id],
+                    CONF_DISABLE_BRIGHTNESS_ADJUST: True,
+                    "stop_time": "22:00",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
+        async_fire_time_changed(hass, test_time)
+        await hass.async_block_till_done()
+
+    call = turn_on_calls[-1]
+    # Assume that no brightness means that it was not adjusted.
+    assert light.ATTR_BRIGHTNESS not in call.data
+    assert call.data[light.ATTR_XY_COLOR] == [0.506, 0.385]
 
 
 async def test_flux_with_multiple_lights(
