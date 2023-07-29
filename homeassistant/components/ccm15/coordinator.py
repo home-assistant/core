@@ -111,14 +111,13 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Test the connection to the CCM15 device."""
         url = f"http://{self._host}:{self._port}/{CONF_URL_STATUS}"
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=10) as response:
-                    if response.status == 200:
-                        return True
-                    _LOGGER.debug(
-                        "Test connection: Cannot connect : %s", response.status
-                    )
-                    return False
+            async with aiohttp.ClientSession() as session, session.get(
+                url, timeout=10
+            ) as response:
+                if response.status == 200:
+                    return True
+                _LOGGER.debug("Test connection: Cannot connect : %s", response.status)
+                return False
         except (aiohttp.ClientError, asyncio.TimeoutError):
             _LOGGER.debug("Test connection: Timeout")
             return False
