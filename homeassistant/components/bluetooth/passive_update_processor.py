@@ -93,6 +93,10 @@ def register_coordinator(
     """Register a coordinator to have its processors data restored."""
     data: PassiveBluetoothProcessorData = hass.data[PASSIVE_UPDATE_PROCESSOR]
     data.coordinators.add(coordinator)
+    if (restore_key := coordinator.restore_key) and (
+        coordinator_restored_data := data.restore_data.get(restore_key)
+    ):
+        coordinator.restored_data = coordinator_restored_data
 
 
 def unregister_coordinator(
@@ -154,6 +158,7 @@ class PassiveBluetoothProcessorCoordinator(
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._update_method = update_method
         self.last_update_success = True
+        self.restored_data: dict[str, dict[str, Any]] | None = None
         self.restore_key = None
         if config_entry := config_entries.current_entry.get():
             self.restore_key = config_entry.entry_id
@@ -191,6 +196,12 @@ class PassiveBluetoothProcessorCoordinator(
     ) -> Callable[[], None]:
         """Register a processor that subscribes to updates."""
         processor.coordinator = self
+        if (restored_coordinator_data := self.restored_data) and (
+            restored_processor_data := restored_coordinator_data.get(
+                processor.restore_key
+            )
+        ):
+            processor.async_set_restored_data(restored_processor_data)
 
         @callback
         def remove_processor() -> None:
@@ -288,6 +299,14 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         self.entity_descriptions = data.entity_descriptions
         self.devices = data.devices
         self.last_update_success = True
+
+    @callback
+    def async_set_restored_data(self, restored_data: dict[str, Any]) -> None:
+        """Set the restored data."""
+        self.devices.update(restored_data["devices"])
+        self.entity_descriptions.update(restored_data["entity_descriptions"])
+        self.entity_data.update(restored_data["entity_data"])
+        self.entity_names.update(restored_data["entity_names"])
 
     @property
     def available(self) -> bool:
