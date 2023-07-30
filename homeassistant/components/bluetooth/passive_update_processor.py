@@ -153,6 +153,9 @@ def register_coordinator(
 
     def _unregister_coordinator() -> None:
         """Unregister a coordinator."""
+        # TODO: FIXME: make sure to save the updated data
+        # before removing the coordinator so if they reload
+        # its still there
         data.coordinators.remove(coordinator)
 
     return _unregister_coordinator
