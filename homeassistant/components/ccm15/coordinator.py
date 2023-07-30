@@ -154,6 +154,9 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Get ac data from the ac_index."""
         if ac_index < 0 or ac_index >= len(self.data.devices):
             # Index is out of bounds or not an integer
+            _LOGGER.warning(
+                "Data is not available for AC id %s.%s", self._host, ac_index
+            )
             return None
         data = self.data.devices[ac_index]
         return data
@@ -210,8 +213,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return current temperature."""
         data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
         if data is None:
-            # Data is not available for the given AC index
-            _LOGGER.warning("Data is not available for AC index %s", self._ac_index)
             return None
 
         _LOGGER.debug("temp[%s]=%s", self._ac_index, data.temperature)
@@ -222,8 +223,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return target temperature."""
         data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
         if data is None:
-            # Data is not available for the given AC index
-            _LOGGER.warning("Data is not available for AC index %s", self._ac_index)
             return None
 
         _LOGGER.debug("set_temp[%s]=%s", self._ac_index, data.temperature_setpoint)
@@ -239,8 +238,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return hvac mode."""
         data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
         if data is None:
-            # Data is not available for the given AC index
-            _LOGGER.warning("Data is not available for AC index %s", self._ac_index)
             return None
 
         mode = data.ac_mode
@@ -257,8 +254,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return fan mode."""
         data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
         if data is None:
-            # Data is not available for the given AC index
-            _LOGGER.warning("Data is not available for AC index %s", self._ac_index)
             return None
         mode = data.fan_mode
         _LOGGER.debug("fan_mode[%s]=%s", self._ac_index, mode)
@@ -274,8 +269,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return swing mode."""
         data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
         if data is None:
-            # Data is not available for the given AC index
-            _LOGGER.warning("Data is not available for AC index %s", self._ac_index)
             return None
         _LOGGER.debug("is_swing_on[%s]=%s", self._ac_index, data.is_swing_on)
         return SWING_ON if data.is_swing_on else SWING_OFF
@@ -312,8 +305,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return the optional state attributes."""
         data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
         if data is None:
-            # Data is not available for the given AC index
-            _LOGGER.warning("Data is not available for AC index %s", self._ac_index)
             return {}
         return {"error_code": data.error_code}
 

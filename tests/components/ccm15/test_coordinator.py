@@ -109,6 +109,14 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     ):
         await climate.async_turn_on()
 
+    coordinator.data.devices[0] = None
+    assert climate.hvac_mode is None
+    assert climate.current_temperature is None
+    assert climate.temperature_unit == UnitOfTemperature.CELSIUS
+    assert climate.target_temperature is None
+    assert climate.fan_mode is None
+    assert climate.swing_mode is None
+
 
 if __name__ == "__main__":
     unittest.main()
