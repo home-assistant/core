@@ -129,14 +129,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     dev_reg = async_get(hass)
-    assert eight.data
+    assert eight.device_data
     device_data = {
         ATTR_MANUFACTURER: "Eight Sleep",
-        ATTR_MODEL: eight.data.get("modelString", UNDEFINED),
-        ATTR_HW_VERSION: eight.data.get("sensorInfo", {}).get(
+        ATTR_MODEL: eight.device_data.get("modelString", UNDEFINED),
+        ATTR_HW_VERSION: eight.device_data.get("sensorInfo", {}).get(
             "hwRevision", UNDEFINED
         ),
-        ATTR_SW_VERSION: eight.data.get("firmwareVersion", UNDEFINED),
+        ATTR_SW_VERSION: eight.device_data.get("firmwareVersion", UNDEFINED),
     }
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,

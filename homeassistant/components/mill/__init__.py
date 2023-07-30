@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
             websession=async_get_clientsession(hass),
         )
-        update_interval = timedelta(seconds=60)
+        update_interval = timedelta(seconds=30)
         key = entry.data[CONF_USERNAME]
         conn_type = CLOUD
 
