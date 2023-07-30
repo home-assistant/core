@@ -15,11 +15,25 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
+
+
+async def async_import_error(hass: HomeAssistant, error: str) -> None:
+    """Create import error issue."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "import_error",
+        breaks_in_ha_version="2024.2.0",
+        is_fixable=False,
+        severity=IssueSeverity.ERROR,
+        translation_key="import_error",
+        translation_placeholders={"error": error},
+    )
 
 
 class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -101,6 +115,9 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_configuration()
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
+        if self.context["source"] == config_entries.SOURCE_IMPORT and errors:
+            error = errors["base"]
+            async_import_error(self.hass, error)
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
 
     async def async_step_configuration(self, user_input=None):
@@ -154,16 +171,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             result = await self.async_step_user(user_input)
         except Exception as error:  # pylint: disable=broad-exception-caught
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "import_error",
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="import_error",
-                translation_placeholders={"error": str(error)},
-            )
+            async_import_error(self.hass, str(error))
             raise
         async_create_issue(
             self.hass,
