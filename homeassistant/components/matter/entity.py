@@ -78,6 +78,9 @@ class MatterEntity(Entity):
         sub_paths: list[str] = []
         for attr_cls in self._entity_info.attributes_to_watch:
             attr_path = self.get_matter_attribute_path(attr_cls)
+            if attr_path in sub_paths:
+                # prevent duplicate subscriptions
+                continue
             self._attributes_map[attr_cls] = attr_path
             sub_paths.append(attr_path)
             self._unsubscribes.append(

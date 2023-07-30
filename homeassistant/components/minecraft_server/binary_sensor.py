@@ -7,8 +7,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MinecraftServer, MinecraftServerEntity
+from . import MinecraftServer
 from .const import DOMAIN, ICON_STATUS, NAME_STATUS
+from .entity import MinecraftServerEntity
 
 
 async def async_setup_entry(

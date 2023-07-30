@@ -172,15 +172,22 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TractiveSensorEntityDescription(
-        # Currently, only state operational and not_reporting are used
-        # More states are available by polling the data
         key=ATTR_TRACKER_STATE,
         translation_key="tracker_state",
         entity_class=TractiveHardwareSensor,
+        icon="mdi:radar",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "not_reporting",
+            "operational",
+            "system_shutdown_user",
+            "system_startup",
+        ],
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,
-        translation_key="minutes_active",
+        translation_key="activity_time",
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveActivitySensor,
@@ -188,7 +195,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_REST,
-        translation_key="minutes_rest",
+        translation_key="rest_time",
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveWellnessSensor,
