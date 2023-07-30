@@ -62,7 +62,7 @@ class PassiveBluetoothProcessorData:
 class RestoredPassiveBluetoothDataUpdate(TypedDict):
     """Restored PassiveBluetoothDataUpdate."""
 
-    devices: dict[str | None, DeviceInfo]
+    devices: dict[str, DeviceInfo]
     entity_descriptions: dict[str, dict[str, Any]]
     entity_names: dict[str, str | None]
     entity_data: dict[str, Any]
@@ -81,6 +81,18 @@ def deserialize_passive_bluetooth_entity_key(
     """Deserialize a passive bluetooth entity key."""
     key, device_id = seralized_entity_key.split("___")
     return PassiveBluetoothEntityKey(key, device_id or None)
+
+
+def serialize_device_key(device_key: str | None) -> str:
+    """Serialize a device key."""
+    return device_key or ""
+
+
+def deserialize_device_key(
+    seralized_device_key: str,
+) -> str | None:
+    """Deserialize a device key."""
+    return seralized_device_key or None
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
@@ -108,7 +120,10 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     def async_get_restore_data(self) -> dict[str, Any]:
         """Serialize restore data to storage."""
         return {
-            "devices": self.devices,
+            "devices": {
+                serialize_device_key(key): device_info
+                for key, device_info in self.devices.items()
+            },
             "entity_descriptions": {
                 serialize_passive_bluetooth_entity_key(key): description
                 for key, description in self.entity_descriptions.items()
@@ -130,24 +145,32 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         entity_description_class: type[EntityDescription],
     ) -> None:
         """Set the restored data from storage."""
-        self.devices.update(restore_data["devices"])
-        restored_entity_descriptions = {
-            deserialize_passive_bluetooth_entity_key(key): entity_description_class(
-                **description
-            )
-            for key, description in restore_data["entity_descriptions"].items()
-        }
-        self.entity_descriptions.update(restored_entity_descriptions)
-        restored_entity_names = {
-            deserialize_passive_bluetooth_entity_key(key): name
-            for key, name in restore_data["entity_names"].items()
-        }
-        self.entity_names.update(restored_entity_names)
-        restored_entity_data = {
-            deserialize_passive_bluetooth_entity_key(key): cast(_T, data)
-            for key, data in restore_data["entity_data"].items()
-        }
-        self.entity_data.update(restored_entity_data)
+        self.devices.update(
+            {
+                deserialize_device_key(key): device_info
+                for key, device_info in restore_data["devices"].items()
+            }
+        )
+        self.entity_descriptions.update(
+            {
+                deserialize_passive_bluetooth_entity_key(key): entity_description_class(
+                    **description
+                )
+                for key, description in restore_data["entity_descriptions"].items()
+            }
+        )
+        self.entity_names.update(
+            {
+                deserialize_passive_bluetooth_entity_key(key): name
+                for key, name in restore_data["entity_names"].items()
+            }
+        )
+        self.entity_data.update(
+            {
+                deserialize_passive_bluetooth_entity_key(key): cast(_T, data)
+                for key, data in restore_data["entity_data"].items()
+            }
+        )
 
 
 def async_register_coordinator_for_restore(
