@@ -363,6 +363,10 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         ):
             data.async_set_restored_data(restored_processor_data)
         self.data = data
+        self.entity_names = data.entity_names
+        self.entity_data = data.entity_data
+        self.entity_descriptions = data.entity_descriptions
+        self.devices = data.devices
 
     @property
     def available(self) -> bool:
