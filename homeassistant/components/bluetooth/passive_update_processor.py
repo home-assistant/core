@@ -109,41 +109,37 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
             "entity_data": self.entity_data,
         }
 
-    @classmethod
-    def from_storage(cls, restored_data: RestoredData) -> PassiveBluetoothDataUpdate:
-        """Restore data from storage."""
-        return cls(
-            devices=restored_data["devices"],
-            entity_descriptions={
-                PassiveBluetoothEntityKey(
-                    **passive_bluetooth_entity_key
-                ): EntityDescription(**description)
-                for passive_bluetooth_entity_key, description in restored_data[
-                    "entity_descriptions"
-                ].items()
-            },
-            entity_names={
-                PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): name
-                for passive_bluetooth_entity_key, name in restored_data[
-                    "entity_names"
-                ].items()
-            },
-            entity_data={
-                PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): cast(
-                    _T, data
-                )
-                for passive_bluetooth_entity_key, data in restored_data[
-                    "entity_data"
-                ].items()
-            },
-        )
-
     @callback
-    def async_set_restored_data(self, restored_data: dict[str, Any]) -> None:
+    def async_set_restored_data(
+        self,
+        restored_data: RestoredData,
+        entity_description_class: type[EntityDescription],
+    ) -> None:
         """Set the restored data from storage."""
-        self.update(
-            PassiveBluetoothDataUpdate.from_storage(cast(RestoredData, restored_data))
-        )
+        self.devices.update(restored_data["devices"])
+        restored_entity_descriptions = {
+            PassiveBluetoothEntityKey(
+                **passive_bluetooth_entity_key
+            ): entity_description_class(**description)
+            for passive_bluetooth_entity_key, description in restored_data[
+                "entity_descriptions"
+            ].items()
+        }
+        self.entity_descriptions.update(restored_entity_descriptions)
+        restored_entity_names = {
+            PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): name
+            for passive_bluetooth_entity_key, name in restored_data[
+                "entity_names"
+            ].items()
+        }
+        self.entity_names.update(restored_entity_names)
+        restored_entity_data = {
+            PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): cast(_T, data)
+            for passive_bluetooth_entity_key, data in restored_data[
+                "entity_data"
+            ].items()
+        }
+        self.entity_data.update(restored_entity_data)
 
 
 def register_coordinator(
@@ -251,10 +247,12 @@ class PassiveBluetoothProcessorCoordinator(
 
     @callback
     def async_register_processor(
-        self, processor: PassiveBluetoothDataProcessor
+        self,
+        processor: PassiveBluetoothDataProcessor,
+        entity_description_class: type[EntityDescription] | None = None,
     ) -> Callable[[], None]:
         """Register a processor that subscribes to updates."""
-        processor.async_register_coordinator(self)
+        processor.async_register_coordinator(self, entity_description_class)
 
         @callback
         def remove_processor() -> None:
@@ -353,15 +351,25 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
     @callback
     def async_register_coordinator(
-        self, coordinator: PassiveBluetoothProcessorCoordinator
+        self,
+        coordinator: PassiveBluetoothProcessorCoordinator,
+        entity_description_class: type[EntityDescription] | None,
     ) -> None:
         """Register a coordinator."""
         self.coordinator = coordinator
         data: PassiveBluetoothDataUpdate[_T] = PassiveBluetoothDataUpdate()
-        if (restored_coordinator_data := coordinator.restored_data) and (
-            restored_processor_data := restored_coordinator_data.get(self.restore_key)
+        if (
+            entity_description_class
+            and (restored_coordinator_data := coordinator.restored_data)
+            and (
+                restored_processor_data := restored_coordinator_data.get(
+                    self.restore_key
+                )
+            )
         ):
-            data.async_set_restored_data(restored_processor_data)
+            data.async_set_restored_data(
+                cast(RestoredData, restored_processor_data), entity_description_class
+            )
         self.data = data
         self.entity_names = data.entity_names
         self.entity_data = data.entity_data
