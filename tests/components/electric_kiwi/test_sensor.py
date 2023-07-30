@@ -15,7 +15,6 @@ from homeassistant.components.electric_kiwi import (
 from homeassistant.components.electric_kiwi.const import ATTRIBUTION
 from homeassistant.components.electric_kiwi.sensor import (
     ACCOUNT_SENSOR_TYPES,
-    HOP_SENSOR_TYPES,
     ElectricKiwiAccountSensorEntityDescription,
     _check_and_move_time,
 )
@@ -66,18 +65,13 @@ async def test_hop_sensors(
         assert entry
 
         state = hass.states.get(sensor)
+        assert state
         value = _check_and_move_time(hop_coordinator.data, sensor_state)
         if value.tzinfo != timezone.utc:
             value = value.astimezone(timezone.utc)
         assert state.state == value.isoformat(timespec="seconds")
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
         assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
-
-        HOPSensors = list(
-            filter(lambda x: entry.unique_id.endswith(x.key), HOP_SENSOR_TYPES)
-        )
-        HOPSensor: ElectricKiwiAccountSensorEntityDescription = HOPSensors[0]
-        assert HOPSensor
 
 
 @pytest.mark.parametrize(
@@ -123,6 +117,7 @@ async def test_account_sensors(
         assert AccountSensor
 
         state = hass.states.get(sensor)
+        assert state
         assert state.state == sensor_state
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
         assert state.attributes.get(ATTR_DEVICE_CLASS) == AccountSensor.device_class
