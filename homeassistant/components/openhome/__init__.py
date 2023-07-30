@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.UPDATE]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

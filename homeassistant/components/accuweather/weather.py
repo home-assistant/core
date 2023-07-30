@@ -14,6 +14,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
     WeatherEntity,
@@ -148,6 +149,11 @@ class AccuWeatherEntity(
         return cast(float, self.coordinator.data["Visibility"][API_METRIC][ATTR_VALUE])
 
     @property
+    def uv_index(self) -> float:
+        """Return the UV index."""
+        return cast(float, self.coordinator.data["UVIndex"])
+
+    @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if not self.coordinator.forecast:
@@ -172,6 +178,7 @@ class AccuWeatherEntity(
                 ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: item["WindGustDay"][ATTR_SPEED][
                     ATTR_VALUE
                 ],
+                ATTR_FORECAST_UV_INDEX: item["UVIndex"][ATTR_VALUE],
                 ATTR_FORECAST_WIND_BEARING: item["WindDay"][ATTR_DIRECTION]["Degrees"],
                 ATTR_FORECAST_CONDITION: [
                     k for k, v in CONDITION_CLASSES.items() if item["IconDay"] in v

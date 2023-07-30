@@ -6,13 +6,18 @@ from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 from functools import partial
+import inspect
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
+from bleak.backends.scanner import (
+    AdvertisementData,
+    AdvertisementDataCallback,
+    BaseBleakScanner,
+)
 from bleak_retry_connector import (
     NO_RSSI_VALUE,
     ble_device_description,
@@ -58,6 +63,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
         self._advertisement_data_callback: AdvertisementDataCallback | None = None
+        self._background_tasks: set[asyncio.Task] = set()
         remapped_kwargs = {
             "detection_callback": detection_callback,
             "service_uuids": service_uuids or [],
@@ -128,12 +134,24 @@ class HaBleakScannerWrapper(BaseBleakScanner):
         """Set up the detection callback."""
         if self._advertisement_data_callback is None:
             return
+        callback = self._advertisement_data_callback
         self._cancel_callback()
         super().register_detection_callback(self._advertisement_data_callback)
         assert models.MANAGER is not None
-        assert self._callback is not None
+
+        if not inspect.iscoroutinefunction(callback):
+            detection_callback = callback
+        else:
+
+            def detection_callback(
+                ble_device: BLEDevice, advertisement_data: AdvertisementData
+            ) -> None:
+                task = asyncio.create_task(callback(ble_device, advertisement_data))
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
+
         self._detection_cancel = models.MANAGER.async_register_bleak_callback(
-            self._callback, self._mapped_filters
+            detection_callback, self._mapped_filters
         )
 
     def __del__(self) -> None:

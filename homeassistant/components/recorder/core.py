@@ -553,10 +553,10 @@ class Recorder(threading.Thread):
         If the number of entities has increased, increase the size of the LRU
         cache to avoid thrashing.
         """
-        new_size = self.hass.states.async_entity_ids_count() * 2
-        self.state_attributes_manager.adjust_lru_size(new_size)
-        self.states_meta_manager.adjust_lru_size(new_size)
-        self.statistics_meta_manager.adjust_lru_size(new_size)
+        if new_size := self.hass.states.async_entity_ids_count() * 2:
+            self.state_attributes_manager.adjust_lru_size(new_size)
+            self.states_meta_manager.adjust_lru_size(new_size)
+            self.statistics_meta_manager.adjust_lru_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
