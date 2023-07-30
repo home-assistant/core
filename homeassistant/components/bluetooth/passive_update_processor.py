@@ -97,10 +97,26 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     def from_storage(cls, restored_data: dict[str, Any]) -> PassiveBluetoothDataUpdate:
         """Restore data from storage."""
         return cls(
-            devices=restored_data["devices"],
-            entity_descriptions=restored_data["entity_descriptions"],
-            entity_names=restored_data["entity_names"],
-            entity_data=restored_data["entity_data"],
+            devices={
+                device_id: DeviceInfo(device_info)  # type: ignore[misc]
+                for device_id, device_info in restored_data["devices"].items()
+            },
+            entity_descriptions={
+                PassiveBluetoothEntityKey(
+                    **passive_bluetooth_entity_key
+                ): EntityDescription(**description)
+                for passive_bluetooth_entity_key, description in restored_data[
+                    "entity_descriptions"
+                ]
+            },
+            entity_names={
+                PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): name
+                for passive_bluetooth_entity_key, name in restored_data["entity_names"]
+            },
+            entity_data={
+                PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): data
+                for passive_bluetooth_entity_key, data in restored_data["entity_data"]
+            },
         )
 
     @callback
