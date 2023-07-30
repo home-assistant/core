@@ -94,16 +94,12 @@ class PhilipsTVBinarySensorEntityRecordingType(
 
         super().__init__(coordinator)
 
-    def _update_from_coordinator(self):
-        """Set is_on true if one specified value is available within given entry of list."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator and set is_on true if one specified value is available within given entry of list."""
         self._attr_is_on = _check_for_recording_entry(
             self.coordinator.api,
             self.description.recording_entry,
             self.description.recording_value,
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_from_coordinator()
         super()._handle_coordinator_update()
