@@ -372,7 +372,7 @@
   dict({
     'results': list([
       dict({
-        'entities': dict({
+        'details': dict({
           'name': dict({
             'name': 'name',
             'text': 'my cool light',
@@ -382,6 +382,9 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'slots': dict({
+          'name': 'my cool light',
+        }),
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -389,7 +392,7 @@
         }),
       }),
       dict({
-        'entities': dict({
+        'details': dict({
           'name': dict({
             'name': 'name',
             'text': 'my cool light',
@@ -399,6 +402,9 @@
         'intent': dict({
           'name': 'HassTurnOff',
         }),
+        'slots': dict({
+          'name': 'my cool light',
+        }),
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -406,7 +412,7 @@
         }),
       }),
       dict({
-        'entities': dict({
+        'details': dict({
           'area': dict({
             'name': 'area',
             'text': 'kitchen',
@@ -421,6 +427,10 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'slots': dict({
+          'area': 'kitchen',
+          'domain': 'light',
+        }),
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -428,7 +438,7 @@
         }),
       }),
       dict({
-        'entities': dict({
+        'details': dict({
           'area': dict({
             'name': 'area',
             'text': 'kitchen',
@@ -447,6 +457,11 @@
         }),
         'intent': dict({
           'name': 'HassGetState',
+        }),
+        'slots': dict({
+          'area': 'kitchen',
+          'domain': 'light',
+          'state': 'on',
         }),
         'targets': dict({
           'light.kitchen': dict({
