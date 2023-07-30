@@ -160,6 +160,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
                     **description
                 )
                 for key, description in restore_data["entity_descriptions"].items()
+                if description
             }
         )
         self.entity_names.update(
