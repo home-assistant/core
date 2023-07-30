@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import dataclasses
+from datetime import timedelta
 import logging
 from typing import Any, Generic, TypedDict, TypeVar, cast
 
@@ -10,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_NAME,
-    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
     Event,
@@ -22,6 +23,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -45,6 +47,7 @@ class PassiveBluetoothEntityKey:
 _T = TypeVar("_T")
 
 STORAGE_KEY = "bluetooth.passive_update_processor"
+STORAGE_SAVE_INTERVAL = timedelta(minutes=15)
 PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
 
 
@@ -169,7 +172,7 @@ async def async_setup(hass: HomeAssistant) -> None:
         data.restore_data = restore_data
     coordinators = data.coordinators
 
-    async def _async_save_processor_data(_event: Event) -> None:
+    async def _async_save_processor_data(_: Any) -> None:
         """Save the processor data."""
         await storage.async_save(
             {
@@ -179,8 +182,17 @@ async def async_setup(hass: HomeAssistant) -> None:
             }
         )
 
+    cancel_interval = async_track_time_interval(
+        hass, _async_save_processor_data, STORAGE_SAVE_INTERVAL
+    )
+
+    async def _async_save_processor_data_at_stop(_event: Event) -> None:
+        """Save the processor data at shutdown."""
+        cancel_interval()
+        await _async_save_processor_data(None)
+
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_FINAL_WRITE, _async_save_processor_data
+        EVENT_HOMEASSISTANT_STOP, _async_save_processor_data_at_stop
     )
 
 
@@ -225,7 +237,7 @@ class PassiveBluetoothProcessorCoordinator(
     def async_get_restore_data(
         self,
     ) -> dict[str, dict[str, Any]]:
-        """Generate restore the data."""
+        """Generate the restore data."""
         return {
             processor.restore_key: processor.data.async_get_restore_data()
             for processor in self._processors
