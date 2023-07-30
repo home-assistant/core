@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from time import time
 from unittest.mock import AsyncMock, patch
+import zoneinfo
 
 from electrickiwi_api.model import Hop, HopIntervals
 import pytest
@@ -21,6 +22,9 @@ from tests.common import MockConfigEntry, load_json_value_fixture
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 REDIRECT_URI = "https://example.com/auth/external/callback"
+
+TZ_NAME = "Pacific/Auckland"
+TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
 
 
 @pytest.fixture(autouse=True)

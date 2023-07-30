@@ -1,8 +1,9 @@
 """The tests for Electric Kiwi sensors."""
 
 from datetime import timezone
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.electric_kiwi import (
@@ -20,6 +21,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
+import homeassistant.util.dt as dt_util
+
+from .conftest import TIMEZONE
 
 from tests.common import MockConfigEntry
 
@@ -66,3 +70,25 @@ async def test_hop_sensors(
         assert state.state == value.isoformat(timespec="seconds")
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
         assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+
+
+async def test_check_and_move_time(ek_api: AsyncMock) -> None:
+    """Test correct time is returned for the hop time depending on time of day."""
+    hop = await ek_api(Mock()).get_hop()
+
+    test_time = dt_util.now(TIMEZONE).replace(
+        hour=18, minute=0, second=0, day=21, month=6, year=2023
+    )
+    dt_util.set_default_time_zone(TIMEZONE)
+
+    with freeze_time(test_time):
+        value = _check_and_move_time(hop, "4:00 PM")
+        assert str(value) == "2023-06-22 16:00:00+12:00"
+
+    test_time = dt_util.now(TIMEZONE).replace(
+        hour=10, minute=0, second=0, day=21, month=6, year=2023
+    )
+
+    with freeze_time(test_time):
+        value = _check_and_move_time(hop, "4:00 PM")
+        assert str(value) == "2023-06-21 16:00:00+12:00"
