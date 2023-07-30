@@ -418,6 +418,13 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         """Register a coordinator."""
         self.coordinator = coordinator
         data: PassiveBluetoothDataUpdate[_T] = PassiveBluetoothDataUpdate()
+        self.data = data
+        # These attributes to access the data in
+        # self.data are for backwards compatibility.
+        self.entity_names = data.entity_names
+        self.entity_data = data.entity_data
+        self.entity_descriptions = data.entity_descriptions
+        self.devices = data.devices
         if (
             entity_description_class
             and (restore_key := self.restore_key)
@@ -428,13 +435,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 cast(RestoredPassiveBluetoothDataUpdate, restored_processor_data),
                 entity_description_class,
             )
-        self.data = data
-        # These attributes to access the data in
-        # self.data are for backwards compatibility.
-        self.entity_names = data.entity_names
-        self.entity_data = data.entity_data
-        self.entity_descriptions = data.entity_descriptions
-        self.devices = data.devices
+            self.async_update_listeners(data)
 
     @property
     def available(self) -> bool:
