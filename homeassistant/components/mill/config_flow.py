@@ -1,5 +1,5 @@
 """Adds config flow for Mill integration."""
-from .mill_lib import Mill
+from mill import Mill
 from mill_local import Mill as MillLocal
 import voluptuous as vol
 
