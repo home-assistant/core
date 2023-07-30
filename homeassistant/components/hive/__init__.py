@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -23,7 +23,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
@@ -60,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
 
     if not hass.config_entries.async_entries(DOMAIN):
-        task = hass.async_create_task(
+        hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
@@ -69,35 +68,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     CONF_PASSWORD: conf[CONF_PASSWORD],
                 },
             )
-        )
-        await task
-        try:
-            task.result()
-        except Exception as error:  # pylint: disable=broad-exception-caught
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "import_error",
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="import_error",
-                translation_placeholders={"error": str(error)},
-            )
-            return True
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Hive",
-            },
         )
     return True
 
