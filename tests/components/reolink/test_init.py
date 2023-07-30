@@ -1,17 +1,25 @@
 """Test the Reolink init."""
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from reolink_aio.exceptions import ReolinkError
 
-from homeassistant.components.reolink import const
+from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL, const
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry
+from .conftest import TEST_NVR_NAME
+
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
 
@@ -73,18 +81,21 @@ async def test_firmware_error_twice(
     reolink_connect.check_new_firmware = AsyncMock(
         side_effect=ReolinkError("Test error")
     )
-    assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.LOADED
 
-    firmware_coordinator = hass.data[const.DOMAIN][
-        config_entry.entry_id
-    ].firmware_coordinator
+    entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_update"
+    assert hass.states.is_state(entity_id, STATE_OFF)
 
-    assert firmware_coordinator.last_update_success is True
-    await firmware_coordinator.async_refresh()
-    assert firmware_coordinator.last_update_success is False
+    async_fire_time_changed(
+        hass, utcnow() + FIRMWARE_UPDATE_INTERVAL + timedelta(minutes=1)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
 
 async def test_entry_reloading(
