@@ -15,6 +15,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
 
+RECORDINGS_LIST = "recordings"
+RECORDINGS_API_VERSION = 6
+
 
 class PhilipsTVBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A entity description for Philips TV binary sensor."""
@@ -57,8 +60,8 @@ async def async_setup_entry(
     ]
 
     if (
-        coordinator.api.json_feature_supported("recordings", "List")
-        and coordinator.api.api_version == 6
+        coordinator.api.json_feature_supported(RECORDINGS_LIST, "List")
+        and coordinator.api.api_version == RECORDINGS_API_VERSION
     ):
         async_add_entities(
             PhilipsTVBinarySensorEntityRecordingType(coordinator, description)
@@ -68,7 +71,7 @@ async def async_setup_entry(
 
 def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     """Return True if at least one specified value is available within entry of list."""
-    for rec in api.recordings_list["recordings"]:
+    for rec in api.recordings_list[RECORDINGS_LIST]:
         if rec[entry] == value:
             return True
     return False
