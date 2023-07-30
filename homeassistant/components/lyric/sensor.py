@@ -9,7 +9,13 @@ from typing import cast
 from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
+from aiolyric.objects.priority import LyricRoom
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -19,12 +25,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import LyricDeviceEntity
+from . import LyricDeviceEntity, LyricRoomEntity
 from .const import (
     DOMAIN,
     PRESET_HOLD_UNTIL,
@@ -49,6 +56,20 @@ class LyricSensorEntityDescription(SensorEntityDescription):
     value: Callable[[LyricDevice], StateType | datetime] = round
 
 
+@dataclass
+class LyricRoomSensorEntityDescription(SensorEntityDescription):
+    """Class describing Honeywell Lyric sensor entities."""
+
+    value: Callable[[LyricRoom], StateType | datetime] = round
+
+
+@dataclass
+class LyricRoomBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Honeywell Lyric sensor entities."""
+
+    is_on: Callable[[LyricRoom], StateType | datetime] = round
+
+
 def get_datetime_from_future_time(time_str: str) -> datetime:
     """Get datetime from future time provided."""
     time = dt_util.parse_time(time_str)
@@ -66,7 +87,7 @@ async def async_setup_entry(
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
     coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
+    entities: list[Entity] = []
 
     def get_setpoint_status(status: str, time: str) -> str | None:
         if status == PRESET_HOLD_UNTIL:
@@ -107,6 +128,7 @@ async def async_setup_entry(
                         device,
                     )
                 )
+
             if device.outdoorTemperature:
                 entities.append(
                     LyricSensor(
@@ -174,6 +196,58 @@ async def async_setup_entry(
                         )
                     )
 
+            if device.macID in coordinator.data.rooms_dict:
+                for room in coordinator.data.rooms_dict[device.macID].values():
+                    if hasattr(room, "roomAvgTemp"):
+                        entities.append(
+                            LyricRoomSensor(
+                                coordinator,
+                                LyricRoomSensorEntityDescription(
+                                    key=f"{device.macID}_room{room.id}_temperature",
+                                    name=f"{room.roomName} Average Temperature",
+                                    device_class=SensorDeviceClass.TEMPERATURE,
+                                    state_class=SensorStateClass.MEASUREMENT,
+                                    native_unit_of_measurement=hass.config.units.temperature_unit,
+                                    value=lambda room: room.roomAvgTemp,
+                                ),
+                                location,
+                                device,
+                                room,
+                            )
+                        )
+                    if hasattr(room, "roomAvgHumidity"):
+                        entities.append(
+                            LyricRoomSensor(
+                                coordinator,
+                                LyricRoomSensorEntityDescription(
+                                    key=f"{device.macID}_room{room.id}_humidity",
+                                    name=f"{room.roomName} Average Humidity",
+                                    device_class=SensorDeviceClass.HUMIDITY,
+                                    state_class=SensorStateClass.MEASUREMENT,
+                                    native_unit_of_measurement=PERCENTAGE,
+                                    value=lambda room: room.roomAvgHumidity,
+                                ),
+                                location,
+                                device,
+                                room,
+                            )
+                        )
+                    if hasattr(room, "overallMotion"):
+                        entities.append(
+                            LyricRoomBinarySensor(
+                                coordinator,
+                                LyricRoomBinarySensorEntityDescription(
+                                    key=f"{device.macID}_room{room.id}_motion",
+                                    name=f"{room.roomName} Overall Motion",
+                                    device_class=BinarySensorDeviceClass.MOTION,
+                                    is_on=lambda room: room.overallMotion,
+                                ),
+                                location,
+                                device,
+                                room,
+                            )
+                        )
+
     async_add_entities(entities, True)
 
 
@@ -205,5 +279,73 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
         device: LyricDevice = self.device
         try:
             return cast(StateType, self.entity_description.value(device))
+        except TypeError:
+            return None
+
+
+class LyricRoomSensor(LyricRoomEntity, SensorEntity):
+    """Define a Honeywell Lyric sensor."""
+
+    coordinator: DataUpdateCoordinator[Lyric]
+    entity_description: LyricRoomSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Lyric],
+        description: LyricRoomSensorEntityDescription,
+        location: LyricLocation,
+        device: LyricDevice,
+        room: LyricRoom,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator,
+            location,
+            device,
+            room,
+            description.key,
+        )
+        self.entity_description = description
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state."""
+        room: LyricRoom = self.room
+        try:
+            return cast(StateType, self.entity_description.value(room))
+        except TypeError:
+            return None
+
+
+class LyricRoomBinarySensor(LyricRoomEntity, BinarySensorEntity):
+    """Define a Honeywell Lyric sensor."""
+
+    coordinator: DataUpdateCoordinator[Lyric]
+    entity_description: LyricRoomBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Lyric],
+        description: LyricRoomBinarySensorEntityDescription,
+        location: LyricLocation,
+        device: LyricDevice,
+        room: LyricRoom,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator,
+            location,
+            device,
+            room,
+            description.key,
+        )
+        self.entity_description = description
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the state."""
+        room: LyricRoom = self.room
+        try:
+            return cast(bool, self.entity_description.is_on(room))
         except TypeError:
             return None
