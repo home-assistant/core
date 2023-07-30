@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
+from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, NAME, TAG_ID, TAG_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,10 +118,17 @@ async def async_scan_tag(
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("tag component has not been set up.")
 
-    hass.bus.async_fire(
-        EVENT_TAG_SCANNED, {TAG_ID: tag_id, DEVICE_ID: device_id}, context=context
-    )
     helper = hass.data[DOMAIN][TAGS]
+
+    # Get name from helper
+    tag_name = helper.data[tag_id][NAME]
+
+    hass.bus.async_fire(
+        EVENT_TAG_SCANNED,
+        {TAG_ID: tag_id, TAG_NAME: tag_name, DEVICE_ID: device_id},
+        context=context,
+    )
+
     if tag_id in helper.data:
         await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
     else:
