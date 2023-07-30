@@ -163,11 +163,10 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Fan Mode."""
-        mode = (
-            ADVANTAGE_AIR_MYFAN
-            if fan_mode == FAN_AUTO and self._ac.get(ADVANTAGE_AIR_AUTOFAN_ENABLED)
-            else fan_mode
-        )
+        if fan_mode == FAN_AUTO and self._ac.get(ADVANTAGE_AIR_AUTOFAN_ENABLED):
+            mode = ADVANTAGE_AIR_MYFAN
+        else:
+            mode = fan_mode
         await self.async_update_ac({"fan": mode})
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
