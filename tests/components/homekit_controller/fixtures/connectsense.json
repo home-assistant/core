@@ -167,7 +167,7 @@
             "ev": false,
             "format": "float",
             "minValue": 0.0,
-            "maxValue": 34028234663852885981170418348,
+            "maxValue": 18446744073709551615,
             "minStep": 0.1,
             "description": "Kilowatt-hours"
           },
@@ -282,7 +282,7 @@
             "ev": false,
             "format": "float",
             "minValue": 0.0,
-            "maxValue": 34028234663852885981170418348,
+            "maxValue": 18446744073709551615,
             "minStep": 0.1,
             "description": "Kilowatt-hours"
           },
