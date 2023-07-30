@@ -1130,6 +1130,7 @@ class MqttEntity(
             # Assign the default name
             self._attr_name = self._default_name
         if CONF_DEVICE in config:
+            device_name: str
             if CONF_NAME not in config[CONF_DEVICE]:
                 _LOGGER.info(
                     "MQTT device information always needs to include a name, got %s, "
@@ -1137,7 +1138,7 @@ class MqttEntity(
                     "name must be included in each entity's device configuration",
                     config,
                 )
-            elif config[CONF_DEVICE][CONF_NAME] == entity_name:
+            elif (device_name := config[CONF_DEVICE][CONF_NAME]) == entity_name:
                 _LOGGER.warning(
                     "MQTT device name is equal to entity name in your config %s, "
                     "this is not expected. Please correct your configuration. "
@@ -1145,6 +1146,17 @@ class MqttEntity(
                     config,
                 )
                 self._attr_name = None
+            elif isinstance(entity_name, str) and entity_name.startswith(device_name):
+                new_entity_name = entity_name[len(device_name) :].lstrip()
+                _LOGGER.warning(
+                    "MQTT entity name starts with the device name in your config %s, "
+                    "this is not expected. Please correct your configuration. "
+                    "The device name prefix will be stripped off the entity name "
+                    "and becomes '%s'",
+                    config,
+                    new_entity_name,
+                )
+                self._attr_name = new_entity_name
 
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""
