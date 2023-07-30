@@ -13,11 +13,7 @@ from homeassistant.const import (
     ATTR_NAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    Event,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -145,7 +141,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
 
 def register_coordinator(
     hass: HomeAssistant, coordinator: PassiveBluetoothProcessorCoordinator
-) -> None:
+) -> CALLBACK_TYPE:
     """Register a coordinator to have its processors data restored."""
     data: PassiveBluetoothProcessorData = hass.data[PASSIVE_UPDATE_PROCESSOR]
     data.coordinators.add(coordinator)
@@ -154,13 +150,11 @@ def register_coordinator(
     ):
         coordinator.restored_data = coordinator_restored_data
 
+    def _unregister_coordinator() -> None:
+        """Unregister a coordinator."""
+        data.coordinators.remove(coordinator)
 
-def unregister_coordinator(
-    hass: HomeAssistant, coordinator: PassiveBluetoothProcessorCoordinator
-) -> None:
-    """Unregister a coordinator to have its processors data restored."""
-    data: PassiveBluetoothProcessorData = hass.data[PASSIVE_UPDATE_PROCESSOR]
-    data.coordinators.remove(coordinator)
+    return _unregister_coordinator
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -247,13 +241,7 @@ class PassiveBluetoothProcessorCoordinator(
     def _async_start(self) -> None:
         """Start the callbacks."""
         super()._async_start()
-        register_coordinator(self.hass, self)
-
-    @callback
-    def _async_stop(self) -> None:
-        """Stop the callbacks."""
-        super()._async_stop()
-        unregister_coordinator(self.hass, self)
+        self._on_stop.append(register_coordinator(self.hass, self))
 
     @callback
     def async_register_processor(
