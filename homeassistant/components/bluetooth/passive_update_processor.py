@@ -22,7 +22,6 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
 
-from .api import async_last_service_info
 from .const import DOMAIN
 from .models import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .update_coordinator import BasePassiveBluetoothCoordinator
@@ -275,23 +274,6 @@ class PassiveBluetoothProcessorCoordinator(
             for processor in self._processors
             if processor.restore_key
         }
-
-    @callback
-    def _async_start(self) -> None:
-        """Start the callbacks."""
-        super()._async_start()
-        hass = self.hass
-        # If Home Assistant is already running we need to restore the
-        # last service info as well since the startup restore has already
-        # happened.
-        if hass.is_running and (
-            last_service_info := async_last_service_info(
-                hass, self.address, self.connectable
-            )
-        ):
-            self._async_handle_bluetooth_event(
-                last_service_info, BluetoothChange.ADVERTISEMENT
-            )
 
     @callback
     def async_register_processor(
