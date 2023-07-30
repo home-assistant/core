@@ -11,6 +11,7 @@ from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
+from aiolyric.objects.priority import LyricRoom
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -76,6 +77,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             async with asyncio.timeout(60):
                 await lyric.get_locations()
+                for location in lyric.locations:
+                    for device in location.devices:
+                        if device.deviceClass == "Thermostat":
+                            await lyric.get_thermostat_rooms(
+                                location.locationID, device.deviceID
+                            )
             return lyric
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
@@ -162,3 +169,24 @@ class LyricDeviceEntity(LyricEntity):
             model=self.device.deviceModel,
             name=self.device.name,
         )
+
+
+class LyricRoomEntity(LyricEntity):
+    """Defines a Honeywell Lyric room entity."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Lyric],
+        location: LyricLocation,
+        device: LyricDevice,
+        room: LyricRoom,
+        key: str,
+    ) -> None:
+        """Initialize the Honeywell Lyric room entity."""
+        super().__init__(coordinator, location, device, key)
+        self._roomID = room.id
+
+    @property
+    def room(self) -> LyricRoom:
+        """Get the Lyric Device."""
+        return self.coordinator.data.rooms_dict[self.device.macID][self._roomID]
