@@ -140,7 +140,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         self.entity_data.update(restored_entity_data)
 
 
-def register_coordinator(
+def async_register_coordinator_for_restore(
     hass: HomeAssistant, coordinator: PassiveBluetoothProcessorCoordinator
 ) -> CALLBACK_TYPE:
     """Register a coordinator to have its processors data restored."""
@@ -151,14 +151,12 @@ def register_coordinator(
     ):
         coordinator.restored_data = coordinator_restored_data
 
-    def _unregister_coordinator() -> None:
+    @callback
+    def _unregister_coordinator_for_restore() -> None:
         """Unregister a coordinator."""
-        # TODO: FIXME: make sure to save the updated data
-        # before removing the coordinator so if they reload
-        # its still there
         data.coordinators.remove(coordinator)
 
-    return _unregister_coordinator
+    return _unregister_coordinator_for_restore
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -221,7 +219,7 @@ class PassiveBluetoothProcessorCoordinator(
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._update_method = update_method
         self.last_update_success = True
-        self.restored_data: dict[str, dict[str, Any]] | None = None
+        self.restored_data: dict[str, dict[str, Any]] = {}
         self.restore_key = None
         if config_entry := config_entries.current_entry.get():
             self.restore_key = config_entry.entry_id
@@ -246,7 +244,7 @@ class PassiveBluetoothProcessorCoordinator(
     def _async_start(self) -> None:
         """Start the callbacks."""
         super()._async_start()
-        self._on_stop.append(register_coordinator(self.hass, self))
+        self._on_stop.append(async_register_coordinator_for_restore(self.hass, self))
 
     @callback
     def async_register_processor(
@@ -265,6 +263,12 @@ class PassiveBluetoothProcessorCoordinator(
         @callback
         def remove_processor() -> None:
             """Remove a processor."""
+            # Save the data before removing the processor
+            # so if they reload its still there
+            if restore_key := processor.restore_key:
+                self.restored_data[
+                    restore_key
+                ] = processor.data.async_get_restore_data()
             self._processors.remove(processor)
 
         self._processors.append(processor)
