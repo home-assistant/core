@@ -211,7 +211,7 @@ async def async_setup_triggers_for_entry(
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(service):
+    def async_add_characteristic(service: Service):
         aid = service.accessory.aid
         service_type = service.type
 
@@ -238,7 +238,7 @@ async def async_setup_triggers_for_entry(
 
         return True
 
-    conn.add_listener(async_add_service)
+    conn.add_trigger_factory(async_add_characteristic)
 
 
 @callback

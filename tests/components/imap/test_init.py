@@ -235,6 +235,48 @@ async def test_initial_invalid_folder_error(
     assert (state is not None) == success
 
 
+@patch("homeassistant.components.imap.coordinator.MAX_ERRORS", 1)
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+async def test_late_authentication_retry(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_imap_protocol: MagicMock,
+) -> None:
+    """Test retrying authentication after a search was failed."""
+
+    # Mock an error in waiting for a pushed update
+    mock_imap_protocol.wait_server_push.side_effect = AioImapException(
+        "Something went wrong"
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    # Mock that the search fails, this will trigger
+    # that the connection will be restarted
+    # Then fail selecting the folder
+    mock_imap_protocol.search.return_value = Response(*BAD_RESPONSE)
+    mock_imap_protocol.login.side_effect = Response(*BAD_RESPONSE)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+    assert "Authentication failed, retrying" in caplog.text
+
+    # we still should have an entity with an unavailable state
+    state = hass.states.get("sensor.imap_email_email_com")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@patch("homeassistant.components.imap.coordinator.MAX_ERRORS", 0)
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 async def test_late_authentication_error(
     hass: HomeAssistant,

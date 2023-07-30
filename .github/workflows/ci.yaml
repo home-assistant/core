@@ -32,9 +32,9 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.8
-  DEFAULT_PYTHON: "3.10"
-  ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
+  HA_SHORT_VERSION: 2023.9
+  DEFAULT_PYTHON: "3.11"
+  ALL_PYTHON_VERSIONS: "['3.11']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -492,9 +492,9 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.3.1,<23.3" setuptools wheel
-          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
-          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
+          PIP_CACHE_DIR=$PIP_CACHE pip install -U "pip>=21.3.1" setuptools wheel
+          PIP_CACHE_DIR=$PIP_CACHE pip install -r requirements_all.txt
+          PIP_CACHE_DIR=$PIP_CACHE pip install -r requirements_test.txt
           pip install -e . --config-settings editable_mode=compat
 
   hassfest:
