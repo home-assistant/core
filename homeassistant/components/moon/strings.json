@@ -13,6 +13,7 @@
   "entity": {
     "sensor": {
       "phase": {
+        "name": "Phase",
         "state": {
           "first_quarter": "First quarter",
           "full_moon": "Full moon",
