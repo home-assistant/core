@@ -374,8 +374,8 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 cast(RestoredData, restored_processor_data), entity_description_class
             )
         self.data = data
-        # These are convenience attributes to access the data in
-        # self.data for backwards compatibility.
+        # These attributes to access the data in
+        # self.data are for backwards compatibility.
         self.entity_names = data.entity_names
         self.entity_data = data.entity_data
         self.entity_descriptions = data.entity_descriptions
