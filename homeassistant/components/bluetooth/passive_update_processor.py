@@ -110,30 +110,30 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     @callback
     def async_set_restore_data(
         self,
-        restored_data: RestoredPassiveBluetoothDataUpdate,
+        restore_data: RestoredPassiveBluetoothDataUpdate,
         entity_description_class: type[EntityDescription],
     ) -> None:
         """Set the restored data from storage."""
-        self.devices.update(restored_data["devices"])
+        self.devices.update(restore_data["devices"])
         restored_entity_descriptions = {
             PassiveBluetoothEntityKey(
                 **passive_bluetooth_entity_key
             ): entity_description_class(**description)
-            for passive_bluetooth_entity_key, description in restored_data[
+            for passive_bluetooth_entity_key, description in restore_data[
                 "entity_descriptions"
             ].items()
         }
         self.entity_descriptions.update(restored_entity_descriptions)
         restored_entity_names = {
             PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): name
-            for passive_bluetooth_entity_key, name in restored_data[
+            for passive_bluetooth_entity_key, name in restore_data[
                 "entity_names"
             ].items()
         }
         self.entity_names.update(restored_entity_names)
         restored_entity_data = {
             PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): cast(_T, data)
-            for passive_bluetooth_entity_key, data in restored_data[
+            for passive_bluetooth_entity_key, data in restore_data[
                 "entity_data"
             ].items()
         }
@@ -147,9 +147,9 @@ def async_register_coordinator_for_restore(
     data: PassiveBluetoothProcessorData = hass.data[PASSIVE_UPDATE_PROCESSOR]
     data.coordinators.add(coordinator)
     if (restore_key := coordinator.restore_key) and (
-        coordinator_restored_data := data.restore_data.get(restore_key)
+        coordinator_restore_data := data.restore_data.get(restore_key)
     ):
-        coordinator.restored_data = coordinator_restored_data
+        coordinator.restore_data = coordinator_restore_data
 
     @callback
     def _unregister_coordinator_for_restore() -> None:
@@ -219,7 +219,7 @@ class PassiveBluetoothProcessorCoordinator(
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._update_method = update_method
         self.last_update_success = True
-        self.restored_data: dict[str, dict[str, Any]] = {}
+        self.restore_data: dict[str, dict[str, Any]] = {}
         self.restore_key = None
         if config_entry := config_entries.current_entry.get():
             self.restore_key = config_entry.entry_id
@@ -266,9 +266,7 @@ class PassiveBluetoothProcessorCoordinator(
             # Save the data before removing the processor
             # so if they reload its still there
             if restore_key := processor.restore_key:
-                self.restored_data[
-                    restore_key
-                ] = processor.data.async_get_restore_data()
+                self.restore_data[restore_key] = processor.data.async_get_restore_data()
             self._processors.remove(processor)
 
         self._processors.append(processor)
@@ -378,8 +376,8 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         if (
             entity_description_class
             and (restore_key := self.restore_key)
-            and (restored_data := coordinator.restored_data)
-            and (restored_processor_data := restored_data.get(restore_key))
+            and (restore_data := coordinator.restore_data)
+            and (restored_processor_data := restore_data.get(restore_key))
         ):
             data.async_set_restore_data(
                 cast(RestoredPassiveBluetoothDataUpdate, restored_processor_data),
