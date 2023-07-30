@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -62,6 +62,22 @@ class PassiveBluetoothProcessorData:
     )
 
 
+class PassiveBluetoothEntityKeyDict(TypedDict):
+    """Passive bluetooth entity key dict."""
+
+    key: str
+    device_id: str | None
+
+
+class RestoredData(TypedDict):
+    """Restored data."""
+
+    devices: dict[str | None, DeviceInfo]
+    entity_descriptions: dict[PassiveBluetoothEntityKeyDict, dict[str, Any]]
+    entity_names: dict[PassiveBluetoothEntityKeyDict, str | None]
+    entity_data: dict[PassiveBluetoothEntityKeyDict, Any]
+
+
 @dataclasses.dataclass(slots=True, frozen=True)
 class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
@@ -94,35 +110,40 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         }
 
     @classmethod
-    def from_storage(cls, restored_data: dict[str, Any]) -> PassiveBluetoothDataUpdate:
+    def from_storage(cls, restored_data: RestoredData) -> PassiveBluetoothDataUpdate:
         """Restore data from storage."""
         return cls(
-            devices={
-                device_id: DeviceInfo(device_info)  # type: ignore[misc]
-                for device_id, device_info in restored_data["devices"].items()
-            },
+            devices=restored_data["devices"],
             entity_descriptions={
                 PassiveBluetoothEntityKey(
                     **passive_bluetooth_entity_key
                 ): EntityDescription(**description)
                 for passive_bluetooth_entity_key, description in restored_data[
                     "entity_descriptions"
-                ]
+                ].items()
             },
             entity_names={
                 PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): name
-                for passive_bluetooth_entity_key, name in restored_data["entity_names"]
+                for passive_bluetooth_entity_key, name in restored_data[
+                    "entity_names"
+                ].items()
             },
             entity_data={
-                PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): data
-                for passive_bluetooth_entity_key, data in restored_data["entity_data"]
+                PassiveBluetoothEntityKey(**passive_bluetooth_entity_key): cast(
+                    _T, data
+                )
+                for passive_bluetooth_entity_key, data in restored_data[
+                    "entity_data"
+                ].items()
             },
         )
 
     @callback
     def async_set_restored_data(self, restored_data: dict[str, Any]) -> None:
         """Set the restored data from storage."""
-        self.update(PassiveBluetoothDataUpdate.from_storage(restored_data))
+        self.update(
+            PassiveBluetoothDataUpdate.from_storage(cast(RestoredData, restored_data))
+        )
 
 
 def register_coordinator(
