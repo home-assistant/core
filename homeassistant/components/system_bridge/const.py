@@ -8,6 +8,7 @@ MODULES = [
     "disk",
     "display",
     "gpu",
+    "media",
     "memory",
     "system",
 ]
