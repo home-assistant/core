@@ -235,6 +235,7 @@ class PassiveBluetoothProcessorCoordinator(
         return {
             processor.restore_key: processor.data.async_get_restore_data()
             for processor in self._processors
+            if processor.restore_key
         }
 
     @callback
@@ -335,13 +336,18 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     entity_data: dict[PassiveBluetoothEntityKey, _T]
     entity_descriptions: dict[PassiveBluetoothEntityKey, EntityDescription]
     devices: dict[str | None, DeviceInfo]
+    restore_key: str | None
 
     def __init__(
         self,
         update_method: Callable[[_T], PassiveBluetoothDataUpdate[_T]],
+        restore_key: str | None = None,
     ) -> None:
         """Initialize the coordinator."""
-        self.restore_key = async_get_current_platform().domain
+        try:
+            self.restore_key = restore_key or async_get_current_platform().domain
+        except RuntimeError:
+            self.restore_key = None
         self._listeners: list[
             Callable[[PassiveBluetoothDataUpdate[_T] | None], None]
         ] = []
@@ -363,12 +369,9 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         data: PassiveBluetoothDataUpdate[_T] = PassiveBluetoothDataUpdate()
         if (
             entity_description_class
-            and (restored_coordinator_data := coordinator.restored_data)
-            and (
-                restored_processor_data := restored_coordinator_data.get(
-                    self.restore_key
-                )
-            )
+            and (restore_key := self.restore_key)
+            and (restored_data := coordinator.restored_data)
+            and (restored_processor_data := restored_data.get(restore_key))
         ):
             data.async_set_restore_data(
                 cast(RestoredPassiveBluetoothDataUpdate, restored_processor_data),
