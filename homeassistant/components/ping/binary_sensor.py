@@ -10,33 +10,39 @@ from typing import TYPE_CHECKING, Any
 
 from icmplib import NameLookupError, async_ping
 import voluptuous as vol
+from voluptuous import Schema
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
+from .const import (
+    CONF_PING_COUNT,
+    DEFAULT_PING_COUNT,
+    DOMAIN,
+    ICMP_TIMEOUT,
+    PING_PRIVS,
+    PING_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
 
 ATTR_ROUND_TRIP_TIME_AVG = "round_trip_time_avg"
 ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
 ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
-CONF_PING_COUNT = "count"
-
 DEFAULT_NAME = "Ping"
-DEFAULT_PING_COUNT = 5
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -52,14 +58,20 @@ PING_MATCHER_BUSYBOX = re.compile(
 
 WIN32_PING_MATCHER = re.compile(r"(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms")
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
-            min=1, max=100
+
+PLATFORM_SCHEMA = Schema(
+    vol.All(
+        cv.deprecated(DOMAIN),
+        PARENT_PLATFORM_SCHEMA.extend(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
+                    min=1, max=100
+                ),
+            }
         ),
-    }
+    )
 )
 
 
@@ -70,9 +82,36 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Ping Binary sensor."""
-    host: str = config[CONF_HOST]
-    count: int = config[CONF_PING_COUNT]
-    name: str = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.1.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Ping",
+        },
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up a Ping config entry."""
+    host: str = entry.options[CONF_HOST]
+    count: int = int(entry.options[CONF_PING_COUNT])
+    name: str = entry.options[CONF_NAME]
     privileged: bool | None = hass.data[DOMAIN][PING_PRIVS]
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:
@@ -81,7 +120,11 @@ async def async_setup_platform(
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [PingBinarySensor(name, ping_cls(hass, host, count, privileged))]
+        [
+            PingBinarySensor(
+                name, ping_cls(hass, host, count, privileged), entry.entry_id
+            )
+        ]
     )
 
 
@@ -90,11 +133,17 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
-    def __init__(self, name: str, ping: PingDataSubProcess | PingDataICMPLib) -> None:
+    def __init__(
+        self,
+        name: str,
+        ping: PingDataSubProcess | PingDataICMPLib,
+        entry_id: str | None,
+    ) -> None:
         """Initialize the Ping Binary sensor."""
         self._attr_available = False
         self._attr_name = name
         self._ping = ping
+        self._attr_unique_id = f"{entry_id}_ping"
 
     @property
     def is_on(self) -> bool:

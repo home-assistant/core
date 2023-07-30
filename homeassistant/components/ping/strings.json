@@ -4,5 +4,36 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads ping sensors from the YAML-configuration."
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Ping",
+        "description": "Ping allows you to check the availability of a host.",
+        "menu_options": {
+          "binary_sensor": "Binary sensor",
+          "device_tracker": "Device tracker"
+        }
+      },
+      "binary_sensor": {
+        "title": "[%key:component::ping::config::step::user::menu_options::binary_sensor%]",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "count": "Ping Count"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "binary_sensor": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "count": "[%key:component::ping::config::step::binary_sensor::data::count%]"
+        }
+      }
+    }
   }
 }
