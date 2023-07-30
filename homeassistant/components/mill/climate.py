@@ -1,8 +1,7 @@
 """Support for mill wifi-enabled home heaters."""
 from typing import Any
 
-# import mill
-from . import mill_lib as mill
+import mill
 import voluptuous as vol
 
 from homeassistant.components.climate import (

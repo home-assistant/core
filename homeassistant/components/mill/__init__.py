@@ -4,8 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-# from mill import Mill
-from .mill_lib import Mill
+from mill import Mill
 from mill_local import Mill as MillLocal
 
 from homeassistant.config_entries import ConfigEntry

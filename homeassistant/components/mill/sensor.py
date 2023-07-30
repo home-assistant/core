@@ -1,6 +1,8 @@
 """Support for mill wifi-enabled home heaters."""
 from __future__ import annotations
 
+import mill
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,8 +27,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-# import mill
-from . import mill_lib as mill
 from .const import (
     BATTERY,
     CLOUD,

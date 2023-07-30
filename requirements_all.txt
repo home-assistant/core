@@ -1199,7 +1199,7 @@ micloud==0.5
 mill-local==0.2.0
 
 # homeassistant.components.mill
-millheater==0.10.0
+millheater==0.11.0
 
 # homeassistant.components.minio
 minio==7.1.12
