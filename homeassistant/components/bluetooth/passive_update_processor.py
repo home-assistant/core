@@ -67,8 +67,8 @@ class PassiveBluetoothEntityKeyDict(TypedDict):
     device_id: str | None
 
 
-class RestoredData(TypedDict):
-    """Restored data."""
+class RestoredPassiveBluetoothDataUpdate(TypedDict):
+    """Restored PassiveBluetoothDataUpdate."""
 
     devices: dict[str | None, DeviceInfo]
     entity_descriptions: dict[PassiveBluetoothEntityKeyDict, dict[str, Any]]
@@ -98,7 +98,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         self.entity_data.update(new_data.entity_data)
         self.entity_names.update(new_data.entity_names)
 
-    def async_restore_data(self) -> dict[str, Any]:
+    def async_get_restore_data(self) -> dict[str, Any]:
         """Serialize restore data to storage."""
         return {
             "devices": self.devices,
@@ -108,9 +108,9 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         }
 
     @callback
-    def async_set_restored_data(
+    def async_set_restore_data(
         self,
-        restored_data: RestoredData,
+        restored_data: RestoredPassiveBluetoothDataUpdate,
         entity_description_class: type[EntityDescription],
     ) -> None:
         """Set the restored data from storage."""
@@ -173,7 +173,7 @@ async def async_setup(hass: HomeAssistant) -> None:
         """Save the processor data."""
         await storage.async_save(
             {
-                coordinator.restore_key: coordinator.async_restore_data()
+                coordinator.restore_key: coordinator.async_get_restore_data()
                 for coordinator in coordinators
                 if coordinator.restore_key
             }
@@ -222,12 +222,12 @@ class PassiveBluetoothProcessorCoordinator(
         return super().available and self.last_update_success
 
     @callback
-    def async_restore_data(
+    def async_get_restore_data(
         self,
     ) -> dict[str, dict[str, Any]]:
         """Generate restore the data."""
         return {
-            processor.restore_key: processor.data.async_restore_data()
+            processor.restore_key: processor.data.async_get_restore_data()
             for processor in self._processors
         }
 
@@ -370,8 +370,9 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 )
             )
         ):
-            data.async_set_restored_data(
-                cast(RestoredData, restored_processor_data), entity_description_class
+            data.async_set_restore_data(
+                cast(RestoredPassiveBluetoothDataUpdate, restored_processor_data),
+                entity_description_class,
             )
         self.data = data
         # These attributes to access the data in
