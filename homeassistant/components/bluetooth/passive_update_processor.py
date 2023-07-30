@@ -101,6 +101,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         """Serialize restore data to storage."""
         return {
             "devices": self.devices,
+            # FIXME: PassiveBluetoothEntityKey is not json serializable
             "entity_descriptions": self.entity_descriptions,
             "entity_names": self.entity_names,
             "entity_data": self.entity_data,
