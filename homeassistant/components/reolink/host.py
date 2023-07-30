@@ -267,7 +267,19 @@ class ReolinkHost:
     async def _async_start_long_polling(self):
         """Start ONVIF long polling task."""
         if self._long_poll_task is None:
-            await self._api.subscribe(sub_type=SubType.long_poll)
+            try:
+                await self._api.subscribe(sub_type=SubType.long_poll)
+            except ReolinkError as err:
+                # make sure the long_poll_task is always created to try again later
+                if not self._lost_subscription:
+                    self._lost_subscription = True
+                    _LOGGER.error(
+                        "Reolink %s event long polling subscription lost: %s",
+                        self._api.nvr_name,
+                        str(err),
+                    )
+            else:
+                self._lost_subscription = False
             self._long_poll_task = asyncio.create_task(self._async_long_polling())
 
     async def _async_stop_long_polling(self):
@@ -319,7 +331,13 @@ class ReolinkHost:
         try:
             await self._renew(SubType.push)
             if self._long_poll_task is not None:
-                await self._renew(SubType.long_poll)
+                if not self._api.subscribed(SubType.long_poll):
+                    _LOGGER.debug("restarting long polling task")
+                    # To prevent 5 minute request timeout
+                    await self._async_stop_long_polling()
+                    await self._async_start_long_polling()
+                else:
+                    await self._renew(SubType.long_poll)
         except SubscriptionError as err:
             if not self._lost_subscription:
                 self._lost_subscription = True
@@ -457,7 +475,7 @@ class ReolinkHost:
 
             self._long_poll_error = False
 
-            if not self._long_poll_received and channels != []:
+            if not self._long_poll_received:
                 self._long_poll_received = True
                 ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 

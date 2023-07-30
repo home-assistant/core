@@ -140,7 +140,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = True
     _static_info: _InfoT
     _state: _StateT
     _has_state: bool
@@ -169,6 +168,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
         self._entry_id = entry_data.entry_id
+        self._attr_has_entity_name = bool(device_info.friendly_name)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
