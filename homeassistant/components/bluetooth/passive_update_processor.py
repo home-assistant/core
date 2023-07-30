@@ -126,7 +126,9 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
                 for key, device_info in self.devices.items()
             },
             "entity_descriptions": {
-                serialize_passive_bluetooth_entity_key(key): description
+                serialize_passive_bluetooth_entity_key(key): dataclasses.asdict(
+                    description
+                )
                 for key, description in self.entity_descriptions.items()
             },
             "entity_names": {
