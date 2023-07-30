@@ -1,9 +1,10 @@
 """Passive update processors for the Bluetooth integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import dataclasses
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast
+from typing import Any, Generic, TypedDict, TypeVar, cast
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -17,18 +18,15 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
-from homeassistant.helpers.entity_platform import async_get_current_platform
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
+from .models import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .update_coordinator import BasePassiveBluetoothCoordinator
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-    from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
