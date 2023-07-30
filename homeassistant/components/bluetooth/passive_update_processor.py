@@ -6,15 +6,19 @@ import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
-from homeassistant.core import (
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_NAME,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
+)
+from homeassistant.core import (
     Event,
     HomeAssistant,
     callback,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import async_get_current_platform
+from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
@@ -42,7 +46,20 @@ class PassiveBluetoothEntityKey:
 
 _T = TypeVar("_T")
 
-PASSIVE_UPDATE_PROCESSOR_COORDINATORS = "passive_update_processor_coordinators"
+STORAGE_KEY = "bluetooth.passive_update_processor"
+PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
+
+
+@dataclasses.dataclass(slots=True, frozen=False)
+class PassiveBluetoothProcessorData:
+    """Data for the passive bluetooth processor."""
+
+    coordinators: set[PassiveBluetoothProcessorCoordinator] = dataclasses.field(
+        default_factory=set
+    )
+    restore_data: dict[str, dict[str, dict[str, Any]]] = dataclasses.field(
+        default_factory=dict
+    )
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
@@ -61,6 +78,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     )
 
     def async_restore_data(self) -> dict[str, Any]:
+        """Restore the data."""
         return {
             "devices": self.devices,
             "entity_descriptions": self.entity_descriptions,
@@ -73,33 +91,36 @@ def register_coordinator(
     hass: HomeAssistant, coordinator: PassiveBluetoothProcessorCoordinator
 ) -> None:
     """Register a coordinator to have its processors data restored."""
-    coordinators: set[PassiveBluetoothProcessorCoordinator] = hass.data[
-        PASSIVE_UPDATE_PROCESSOR_COORDINATORS
-    ]
-    coordinators.add(coordinator)
+    data: PassiveBluetoothProcessorData = hass.data[PASSIVE_UPDATE_PROCESSOR]
+    data.coordinators.add(coordinator)
 
 
 def unregister_coordinator(
     hass: HomeAssistant, coordinator: PassiveBluetoothProcessorCoordinator
 ) -> None:
     """Unregister a coordinator to have its processors data restored."""
-    coordinators: set[PassiveBluetoothProcessorCoordinator] = hass.data[
-        PASSIVE_UPDATE_PROCESSOR_COORDINATORS
-    ]
-    coordinators.remove(coordinator)
+    data: PassiveBluetoothProcessorData = hass.data[PASSIVE_UPDATE_PROCESSOR]
+    data.coordinators.remove(coordinator)
 
 
 async def async_setup(hass: HomeAssistant) -> None:
-    """Setup the passive update processor coordinators."""
-    coordinators: set[PassiveBluetoothProcessorCoordinator] = set()
-    hass.data[PASSIVE_UPDATE_PROCESSOR_COORDINATORS]: set[
-        PassiveBluetoothProcessorCoordinator
-    ] = coordinators
+    """Set up the passive update processor coordinators."""
+    data = PassiveBluetoothProcessorData()
+    hass.data[PASSIVE_UPDATE_PROCESSOR] = data
+    storage: Store[dict[str, dict[str, dict[str, Any]]]] = Store(hass, 1, STORAGE_KEY)
+    if restore_data := await storage.async_load():
+        data.restore_data = restore_data
+    coordinators = data.coordinators
 
     async def _async_save_processor_data(_event: Event) -> None:
         """Save the processor data."""
-        for coordinator in coordinators:
-            coordinator.async_save_data()
+        await storage.async_save(
+            {
+                coordinator.restore_key: coordinator.async_restore_data()
+                for coordinator in coordinators
+                if coordinator.restore_key
+            }
+        )
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_FINAL_WRITE, _async_save_processor_data
@@ -143,12 +164,13 @@ class PassiveBluetoothProcessorCoordinator(
         return super().available and self.last_update_success
 
     @callback
-    def async_restore_data(self) -> tuple[str, dict[str, Any]] | None:
-        """Restore the data."""
-        if self.restore_key is None:
-            return None
-        return self.restore_key, {
-            processor.async_restore_data() for processor in self._processors
+    def async_restore_data(
+        self,
+    ) -> dict[str, dict[str, Any]]:
+        """Generate restore the data."""
+        return {
+            processor.restore_key: processor.data.async_restore_data()
+            for processor in self._processors
         }
 
     @callback
@@ -271,13 +293,6 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     def available(self) -> bool:
         """Return if the device is available."""
         return self.coordinator.available and self.last_update_success
-
-    @callback
-    def async_restore_data(self) -> tuple[str, dict[str, Any]] | None:
-        """Restore the data."""
-        if self.restore_key is None:
-            return None
-        return self.restore_key, self.data.async_restore_data()
 
     @callback
     def async_handle_unavailable(self) -> None:

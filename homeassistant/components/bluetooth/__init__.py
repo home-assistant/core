@@ -132,7 +132,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await bluetooth_storage.async_setup()
     slot_manager = BleakSlotManager()
     await slot_manager.async_setup()
-    await passive_update_processor.async_setup()
+    await passive_update_processor.async_setup(hass)
     manager = BluetoothManager(
         hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
     )
