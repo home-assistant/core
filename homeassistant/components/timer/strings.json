@@ -29,5 +29,39 @@
         }
       }
     }
+  },
+  "services": {
+    "start": {
+      "name": "[%key:common::action::start%]",
+      "description": "Starts a timer.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration the timer requires to finish. [optional]."
+        }
+      }
+    },
+    "pause": {
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses a timer."
+    },
+    "cancel": {
+      "name": "Cancel",
+      "description": "Cancels a timer."
+    },
+    "finish": {
+      "name": "Finish",
+      "description": "Finishes a timer."
+    },
+    "change": {
+      "name": "Change",
+      "description": "Changes a timer.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration to add or subtract to the running timer."
+        }
+      }
+    }
   }
 }

@@ -138,6 +138,17 @@ class MultiprotocolAddonManager(AddonManager):
 
         return tasks
 
+    async def async_active_platforms(self) -> list[str]:
+        """Return a list of platforms using the multipan radio."""
+        active_platforms: list[str] = []
+
+        for integration_domain, platform in self._platforms.items():
+            if not await platform.async_using_multipan(self._hass):
+                continue
+            active_platforms.append(integration_domain)
+
+        return active_platforms
+
     @callback
     def async_get_channel(self) -> int | None:
         """Get the channel."""
@@ -510,7 +521,26 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     ) -> FlowResult:
         """Reconfigure the addon."""
         multipan_manager = await get_addon_manager(self.hass)
+        active_platforms = await multipan_manager.async_active_platforms()
+        if set(active_platforms) != {"otbr", "zha"}:
+            return await self.async_step_notify_unknown_multipan_user()
+        return await self.async_step_change_channel()
 
+    async def async_step_notify_unknown_multipan_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Notify that there may be unknown multipan platforms."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="notify_unknown_multipan_user",
+            )
+        return await self.async_step_change_channel()
+
+    async def async_step_change_channel(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Change the channel."""
+        multipan_manager = await get_addon_manager(self.hass)
         if user_input is None:
             channels = [str(x) for x in range(11, 27)]
             suggested_channel = DEFAULT_CHANNEL
@@ -529,7 +559,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
                 }
             )
             return self.async_show_form(
-                step_id="reconfigure_addon", data_schema=data_schema
+                step_id="change_channel", data_schema=data_schema
             )
 
         # Change the shared channel

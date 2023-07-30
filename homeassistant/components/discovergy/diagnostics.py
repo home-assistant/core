@@ -19,9 +19,9 @@ TO_REDACT_METER = {
     "serial_number",
     "full_serial_number",
     "location",
-    "fullSerialNumber",
-    "printedFullSerialNumber",
-    "administrationNumber",
+    "full_serial_number",
+    "printed_full_serial_number",
+    "administration_number",
 }
 
 
@@ -39,8 +39,8 @@ async def async_get_config_entry_diagnostics(
         flattened_meter.append(async_redact_data(meter.__dict__, TO_REDACT_METER))
 
         # get last reading for meter and make a dict of it
-        coordinator = data.coordinators[meter.get_meter_id()]
-        last_readings[meter.get_meter_id()] = coordinator.data.__dict__
+        coordinator = data.coordinators[meter.meter_id]
+        last_readings[meter.meter_id] = coordinator.data.__dict__
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT_CONFIG_ENTRY),

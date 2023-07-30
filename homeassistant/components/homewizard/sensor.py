@@ -54,7 +54,7 @@ class HomeWizardSensorEntityDescription(
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
         key="smr_version",
-        name="DSMR version",
+        translation_key="dsmr_version",
         icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.smr_version is not None,
@@ -62,7 +62,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="meter_model",
-        name="Smart meter model",
+        translation_key="meter_model",
         icon="mdi:gauge",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.meter_model is not None,
@@ -70,7 +70,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="unique_meter_id",
-        name="Smart meter identifier",
+        translation_key="unique_meter_id",
         icon="mdi:alphabetical-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.unique_meter_id is not None,
@@ -78,7 +78,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="wifi_ssid",
-        name="Wi-Fi SSID",
+        translation_key="wifi_ssid",
         icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.wifi_ssid is not None,
@@ -86,7 +86,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_tariff",
-        name="Active tariff",
+        translation_key="active_tariff",
         icon="mdi:calendar-clock",
         has_fn=lambda data: data.active_tariff is not None,
         value_fn=lambda data: (
@@ -97,7 +97,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="wifi_strength",
-        name="Wi-Fi strength",
+        translation_key="wifi_strength",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -108,7 +108,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_kwh",
-        name="Total power import",
+        translation_key="total_power_import_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -117,7 +117,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t1_kwh",
-        name="Total power import T1",
+        translation_key="total_power_import_t1_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -126,7 +126,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t2_kwh",
-        name="Total power import T2",
+        translation_key="total_power_import_t2_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -135,7 +135,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t3_kwh",
-        name="Total power import T3",
+        translation_key="total_power_import_t3_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -144,7 +144,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t4_kwh",
-        name="Total power import T4",
+        translation_key="total_power_import_t4_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -153,7 +153,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_kwh",
-        name="Total power export",
+        translation_key="total_power_export_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -163,7 +163,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t1_kwh",
-        name="Total power export T1",
+        translation_key="total_power_export_t1_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -173,7 +173,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t2_kwh",
-        name="Total power export T2",
+        translation_key="total_power_export_t2_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -183,7 +183,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t3_kwh",
-        name="Total power export T3",
+        translation_key="total_power_export_t3_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -193,7 +193,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t4_kwh",
-        name="Total power export T4",
+        translation_key="total_power_export_t4_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -203,7 +203,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_w",
-        name="Active power",
+        translation_key="active_power_w",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -212,7 +212,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_l1_w",
-        name="Active power L1",
+        translation_key="active_power_l1_w",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -221,7 +221,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_l2_w",
-        name="Active power L2",
+        translation_key="active_power_l2_w",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -230,7 +230,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_l3_w",
-        name="Active power L3",
+        translation_key="active_power_l3_w",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -239,7 +239,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_voltage_l1_v",
-        name="Active voltage L1",
+        translation_key="active_voltage_l1_v",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -249,7 +249,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_voltage_l2_v",
-        name="Active voltage L2",
+        translation_key="active_voltage_l2_v",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -259,7 +259,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_voltage_l3_v",
-        name="Active voltage L3",
+        translation_key="active_voltage_l3_v",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -269,7 +269,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_current_l1_a",
-        name="Active current L1",
+        translation_key="active_current_l1_a",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -279,7 +279,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_current_l2_a",
-        name="Active current L2",
+        translation_key="active_current_l2_a",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -289,7 +289,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_current_l3_a",
-        name="Active current L3",
+        translation_key="active_current_l3_a",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -299,7 +299,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_frequency_hz",
-        name="Active frequency",
+        translation_key="active_frequency_hz",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -309,7 +309,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="voltage_sag_l1_count",
-        name="Voltage sags detected L1",
+        translation_key="voltage_sag_l1_count",
         icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.voltage_sag_l1_count is not None,
@@ -317,7 +317,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="voltage_sag_l2_count",
-        name="Voltage sags detected L2",
+        translation_key="voltage_sag_l2_count",
         icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.voltage_sag_l2_count is not None,
@@ -325,7 +325,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="voltage_sag_l3_count",
-        name="Voltage sags detected L3",
+        translation_key="voltage_sag_l3_count",
         icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.voltage_sag_l3_count is not None,
@@ -333,7 +333,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="voltage_swell_l1_count",
-        name="Voltage swells detected L1",
+        translation_key="voltage_swell_l1_count",
         icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.voltage_swell_l1_count is not None,
@@ -341,7 +341,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="voltage_swell_l2_count",
-        name="Voltage swells detected L2",
+        translation_key="voltage_swell_l2_count",
         icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.voltage_swell_l2_count is not None,
@@ -349,7 +349,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="voltage_swell_l3_count",
-        name="Voltage swells detected L3",
+        translation_key="voltage_swell_l3_count",
         icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.voltage_swell_l3_count is not None,
@@ -357,7 +357,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="any_power_fail_count",
-        name="Power failures detected",
+        translation_key="any_power_fail_count",
         icon="mdi:transmission-tower-off",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.any_power_fail_count is not None,
@@ -365,7 +365,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="long_power_fail_count",
-        name="Long power failures detected",
+        translation_key="long_power_fail_count",
         icon="mdi:transmission-tower-off",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.long_power_fail_count is not None,
@@ -373,7 +373,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_average_w",
-        name="Active average demand",
+        translation_key="active_power_average_w",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         has_fn=lambda data: data.active_power_average_w is not None,
@@ -381,7 +381,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="monthly_power_peak_w",
-        name="Peak demand current month",
+        translation_key="monthly_power_peak_w",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         has_fn=lambda data: data.monthly_power_peak_w is not None,
@@ -389,7 +389,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_gas_m3",
-        name="Total gas",
+        translation_key="total_gas_m3",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -398,7 +398,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="gas_unique_id",
-        name="Gas meter identifier",
+        translation_key="gas_unique_id",
         icon="mdi:alphabetical-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_fn=lambda data: data.gas_unique_id is not None,
@@ -406,7 +406,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_liter_lpm",
-        name="Active water usage",
+        translation_key="active_liter_lpm",
         native_unit_of_measurement="l/min",
         icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
@@ -415,7 +415,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_liter_m3",
-        name="Total water usage",
+        translation_key="total_liter_m3",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         icon="mdi:gauge",
         device_class=SensorDeviceClass.WATER,

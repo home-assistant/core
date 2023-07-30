@@ -9,6 +9,7 @@ from homeassistant.components.humidifier import (
     MODE_AWAY,
     MODE_NORMAL,
     PLATFORM_SCHEMA,
+    HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
@@ -158,6 +159,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._is_away = False
         if not self._device_class:
             self._device_class = HumidifierDeviceClass.HUMIDIFIER
+        self._attr_action = HumidifierAction.IDLE
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -361,6 +363,15 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         """Handle humidifier switch state changes."""
         if new_state is None:
             return
+
+        if new_state.state == STATE_ON:
+            if self._device_class == HumidifierDeviceClass.DEHUMIDIFIER:
+                self._attr_action = HumidifierAction.DRYING
+            else:
+                self._attr_action = HumidifierAction.HUMIDIFYING
+        else:
+            self._attr_action = HumidifierAction.IDLE
+
         self.async_schedule_update_ha_state()
 
     async def _async_update_humidity(self, humidity):

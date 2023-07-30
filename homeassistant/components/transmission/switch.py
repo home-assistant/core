@@ -36,11 +36,12 @@ async def async_setup_entry(
 class TransmissionSwitch(SwitchEntity):
     """Representation of a Transmission switch."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, switch_type, switch_name, tm_client, client_name):
         """Initialize the Transmission switch."""
-        self._attr_name = f"{client_name} {switch_name}"
+        self._attr_name = switch_name
         self.type = switch_type
         self._tm_client = tm_client
         self._state = STATE_OFF
