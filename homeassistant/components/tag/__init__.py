@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, NAME, TAG_ID, TAG_NAME
+from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,12 +120,14 @@ async def async_scan_tag(
 
     helper = hass.data[DOMAIN][TAGS]
 
-    # Get name from helper
-    tag_name = helper.data[tag_id][NAME]
+    # Get name from helper, default value None if not present in data
+    tag_name = None
+    if (tag_data := helper.data.get(tag_id)) is not None:
+        tag_name = tag_data.get(CONF_NAME)
 
     hass.bus.async_fire(
         EVENT_TAG_SCANNED,
-        {TAG_ID: tag_id, TAG_NAME: tag_name, DEVICE_ID: device_id},
+        {TAG_ID: tag_id, CONF_NAME: tag_name, DEVICE_ID: device_id},
         context=context,
     )
 
