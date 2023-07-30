@@ -230,8 +230,28 @@ class ReolinkHost:
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
+
+            if self._hass.config.api is not None and self._hass.config.api.use_ssl:
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "ssl",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="ssl",
+                    translation_placeholders={
+                        "ssl_link": "https://www.home-assistant.io/integrations/http/#ssl_certificate",
+                        "base_url": self._base_url,
+                        "network_link": "https://my.home-assistant.io/redirect/network/",
+                        "nginx_link": "https://github.com/home-assistant/addons/tree/master/nginx_proxy",
+                        "nginx_more_info": "https://kleypot.com/home-assistant-nginx-unencrypted-local-traffic/",
+                    },
+                )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, "ssl")
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+            ir.async_delete_issue(self._hass, DOMAIN, "ssl")
 
         # If no ONVIF push or long polling state is received, start fast polling
         await self._async_poll_all_motion()
@@ -423,25 +443,6 @@ class ReolinkHost:
             )
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
-
-        if self._hass.config.api is not None and self._hass.config.api.use_ssl:
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                "ssl",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="ssl",
-                translation_placeholders={
-                    "ssl_link": "https://www.home-assistant.io/integrations/http/#ssl_certificate",
-                    "base_url": self._base_url,
-                    "network_link": "https://my.home-assistant.io/redirect/network/",
-                    "nginx_link": "https://github.com/home-assistant/addons/tree/master/nginx_proxy",
-                    "nginx_more_info": "https://kleypot.com/home-assistant-nginx-unencrypted-local-traffic/",
-                },
-            )
-        else:
-            ir.async_delete_issue(self._hass, DOMAIN, "ssl")
 
         _LOGGER.debug("Registered webhook: %s", event_id)
 
