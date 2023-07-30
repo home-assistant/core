@@ -155,7 +155,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         self.entity_descriptions.update(
             {
                 deserialize_passive_bluetooth_entity_key(key): entity_description_class(
-                    **description
+                    description
                 )
                 for key, description in restore_data["entity_descriptions"].items()
             }
@@ -255,6 +255,7 @@ class PassiveBluetoothProcessorCoordinator(
         self.restore_key = None
         if config_entry := config_entries.current_entry.get():
             self.restore_key = config_entry.entry_id
+        self._registered_for_restore = False
 
     @property
     def available(self) -> bool:
@@ -277,7 +278,6 @@ class PassiveBluetoothProcessorCoordinator(
         """Start the callbacks."""
         super()._async_start()
         hass = self.hass
-        self._on_stop.append(async_register_coordinator_for_restore(hass, self))
         # If Home Assistant is already running we need to restore the
         # last service info as well since the startup restore has already
         # happened.
@@ -301,7 +301,11 @@ class PassiveBluetoothProcessorCoordinator(
         # entity_description_class will become mandatory
         # in the future, but is optional for now to allow
         # for a transition period.
-
+        if not self._registered_for_restore:
+            self._registered_for_restore = True
+            self._on_stop.append(
+                async_register_coordinator_for_restore(self.hass, self)
+            )
         processor.async_register_coordinator(self, entity_description_class)
 
         @callback
@@ -425,6 +429,17 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         self.entity_data = data.entity_data
         self.entity_descriptions = data.entity_descriptions
         self.devices = data.devices
+        import pprint
+
+        pprint.pprint(
+            [
+                "restored_data",
+                data,
+                entity_description_class,
+                self.restore_key,
+                coordinator.restore_data,
+            ]
+        )
         if (
             entity_description_class
             and (restore_key := self.restore_key)
@@ -435,6 +450,9 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 cast(RestoredPassiveBluetoothDataUpdate, restored_processor_data),
                 entity_description_class,
             )
+            import pprint
+
+            pprint.pprint(["restored_data", data])
             self.async_update_listeners(data)
 
     @property
