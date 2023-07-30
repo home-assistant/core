@@ -6,19 +6,15 @@ import logging
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
-from .api import (
+from . import (
+    BluetoothCallbackMatcher,
+    BluetoothChange,
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
     async_address_present,
     async_last_service_info,
     async_register_callback,
     async_track_unavailable,
-)
-from .match import (
-    BluetoothCallbackMatcher,
-)
-from .models import (
-    BluetoothChange,
-    BluetoothScanningMode,
-    BluetoothServiceInfoBleak,
 )
 
 
