@@ -250,6 +250,11 @@ class PassiveBluetoothProcessorCoordinator(
         entity_description_class: type[EntityDescription] | None = None,
     ) -> Callable[[], None]:
         """Register a processor that subscribes to updates."""
+
+        # entity_description_class will become mandatory
+        # in the future, but is optional for now to allow
+        # for a transition period.
+
         processor.async_register_coordinator(self, entity_description_class)
 
         @callback
