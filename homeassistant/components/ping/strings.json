@@ -25,7 +25,8 @@
       }
     },
     "abort": {
-      "no_matching_platform_type": "No matching platform type found."
+      "no_matching_platform_type": "No matching platform type found.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
