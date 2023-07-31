@@ -46,7 +46,7 @@ HOP_SELECT_TYPE: Final[tuple[ElectricKiwiHOPSelectDescription, ...]] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Electric Kiwi Sensor Setup."""
+    """Electric Kiwi select setup."""
     hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id][
         "hop_coordinator"
     ]
