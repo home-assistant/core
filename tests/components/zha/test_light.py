@@ -530,7 +530,37 @@ async def test_transitions(
     light2_state = hass.states.get(device_2_entity_id)
     assert light2_state.state == STATE_OFF
 
-    # first test 0 length transition with no color provided
+    # first test 0 length transition with no color and no brightness provided
+    dev1_cluster_on_off.request.reset_mock()
+    dev1_cluster_level.request.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": device_1_entity_id, "transition": 0},
+        blocking=True,
+    )
+    assert dev1_cluster_on_off.request.call_count == 1
+    assert dev1_cluster_on_off.request.await_count == 1
+    assert dev1_cluster_color.request.call_count == 0
+    assert dev1_cluster_color.request.await_count == 0
+    assert dev1_cluster_level.request.call_count == 1
+    assert dev1_cluster_level.request.await_count == 1
+    assert dev1_cluster_level.request.call_args == call(
+        False,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
+        level=254,  # default "full on" brightness
+        transition_time=0,
+        expect_reply=True,
+        manufacturer=None,
+        tsn=None,
+    )
+
+    light1_state = hass.states.get(device_1_entity_id)
+    assert light1_state.state == STATE_ON
+    assert light1_state.attributes["brightness"] == 254
+
+    # test 0 length transition with brightness, but no color provided
     dev1_cluster_on_off.request.reset_mock()
     dev1_cluster_level.request.reset_mock()
     await hass.services.async_call(

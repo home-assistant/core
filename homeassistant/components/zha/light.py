@@ -329,7 +329,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
 
         if (
-            (brightness is not None or transition)
+            (brightness is not None or transition is not None)
             and not new_color_provided_while_off
             and brightness_supported(self._attr_supported_color_modes)
         ):
