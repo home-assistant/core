@@ -321,6 +321,8 @@ class RestEntityDescription(EntityDescription):
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Helper class to represent a block entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
