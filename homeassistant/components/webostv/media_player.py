@@ -395,28 +395,21 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
         if media_type == MediaType.VIDEO:
-            if (source_dict := self._source_list.get("Media Player")) is None:
-                _LOGGER.warning(
-                    "Source %s not found for %s",
-                    "Media Player",
-                    self._friendly_name_internal(),
+            if (source_dict := self._source_list.get("Media Player")) is not None:
+                # See here for additional parameters which may be useful in the future: https://github.com/home-assistant/core/issues/97108
+                await self._client.launch_app_with_params(
+                    source_dict["id"],
+                    {
+                        "payload": [
+                            {
+                                "fullPath": media_id,
+                                "mediaType": "VIDEO",
+                                "deviceType": "DMR",
+                                "fileName": "video",
+                            }
+                        ]
+                    },
                 )
-                return
-
-            # See here for additional parameters which may be useful in the future: https://github.com/home-assistant/core/issues/97108
-            await self._client.launch_app_with_params(
-                source_dict["id"],
-                {
-                    "payload": [
-                        {
-                            "fullPath": media_id,
-                            "mediaType": "VIDEO",
-                            "deviceType": "DMR",
-                            "fileName": "video",
-                        }
-                    ]
-                },
-            )
 
         elif media_type == MediaType.CHANNEL:
             _LOGGER.debug("Searching channel")
