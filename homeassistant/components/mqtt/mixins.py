@@ -53,7 +53,6 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -130,10 +129,6 @@ CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
 CONF_OBJECT_ID = "object_id"
-
-MQTT_ENTRIES_NAMING_BLOG_URL = (
-    "https://developers.home-assistant.io/blog/2023-057-21-change-naming-mqtt-entities/"
-)
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -1056,7 +1051,7 @@ class MqttEntity(
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
-        self.process_issues()
+        self.collect_issues()
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
@@ -1172,31 +1167,13 @@ class MqttEntity(
                     new_entity_name,
                 )
 
-    def process_issues(self) -> None:
+    def collect_issues(self) -> None:
         """Process issues for MQTT entities."""
         if self._issue_key is None:
             return
-        domain = self.entity_id.split(".")[0]
-        device_name: str = self._config[CONF_DEVICE][CONF_NAME]
-        entity_name: str = self._config[CONF_NAME]
-        config = (
-            f"mqtt:\n  - {domain}:\n      name: {entity_name}\n      ...\n"
-            f"      device:\n        name: {device_name}\n        ..."
-        )
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            self.entity_id,
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=False,
-            translation_key=self._issue_key,
-            translation_placeholders={
-                "entity_id": self.entity_id,
-                "config": config,
-            },
-            learn_more_url=MQTT_ENTRIES_NAMING_BLOG_URL,
-            severity=IssueSeverity.WARNING,
-        )
+        mqtt_data = get_mqtt_data(self.hass)
+        issues = mqtt_data.issues.setdefault(self._issue_key, set())
+        issues.add(self.entity_id)
 
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""
