@@ -427,9 +427,7 @@ class MQTT:
         """Register issues with MQTT entity naming."""
         mqtt_data = get_mqtt_data(self.hass)
         for issue_key, items in mqtt_data.issues.items():
-            config_list = ""
-            for item in items:
-                config_list = config_list.join(f"- {item}\n")
+            config_list = "\n".join([f"- {item}" for item in items])
             async_create_issue(
                 self.hass,
                 DOMAIN,
