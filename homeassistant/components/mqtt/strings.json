@@ -8,13 +8,21 @@
       "title": "MQTT vacuum entities with legacy schema added through MQTT discovery",
       "description": "MQTT vacuum entities that use the legacy schema are deprecated, please adjust your devices to use the correct schema and restart Home Assistant to fix this issue."
     },
-    "entity_name_is_device_name": {
+    "entity_name_is_device_name_yaml": {
       "title": "MQTT entities with a name is equal to device name",
-      "description": "Some MQTT entities have an entity name equal to the device name. This is not expected. The entity name is set to `null` as a work-a-round to avoid a duplicate name. Please update your configuration, or inform the maintainer of the software application that supplies the entity, and restart Home Assistant to fix this issue.\n\nList of effected entities:\n\n{config}"
+      "description": "Some MQTT entities have an entity name equal to the device name. This is not expected. The entity name is set to `null` as a work-a-round to avoid a duplicate name. Please update your configuration and restart Home Assistant to fix this issue.\n\nList of affected entities:\n\n{config}"
     },
-    "entity_name_startswith_device_name": {
+    "entity_name_startswith_device_name_yaml": {
       "title": "MQTT entities with a name that starts with the device name",
-      "description": "Some MQTT entities have an entity name that starts with the device name. This is not expected. To avoid a duplicate name the device name prefix is stripped of the entity name as a work-a-round. Please update your configuration, or inform the maintainer of the integration that supplies the entity, and restart Home Assistant to fix this issue. \n\nList of effected entities:\n\n{config}"
+      "description": "Some MQTT entities have an entity name that starts with the device name. This is not expected. To avoid a duplicate name the device name prefix is stripped of the entity name as a work-a-round. Please update your configuration and restart Home Assistant to fix this issue. \n\nList of affected entities:\n\n{config}"
+    },
+    "entity_name_is_device_name_discovery": {
+      "title": "MQTT entities with a name is equal to device name",
+      "description": "Some MQTT entities have an entity name equal to the device name. This is not expected. The entity name is set to `null` as a work-a-round to avoid a duplicate name. Please inform the maintainer of the software application that supplies the affected entities to fix this issue.\n\nList of affected entities:\n\n{config}"
+    },
+    "entity_name_startswith_device_name_discovery": {
+      "title": "MQTT entities with a name that starts with the device name",
+      "description": "Some MQTT entities have an entity name that starts with the device name. This is not expected. To avoid a duplicate name the device name prefix is stripped of the entity name as a work-a-round. Please inform the maintainer of the software application that supplies the affected entities to fix this issue. \n\nList of affected entities:\n\n{config}"
     }
   },
   "config": {
