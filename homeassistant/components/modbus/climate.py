@@ -45,6 +45,7 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_STEP,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
     DataType,
 )
@@ -84,7 +85,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Initialize the modbus thermostat."""
         super().__init__(hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
-        self._target_temperature_write_registers = config[CONF_WRITE_REGISTERS]
+        self._target_temperature_write_registers = config[
+            CONF_TARGET_TEMP_WRITE_REGISTERS
+        ]
         self._unit = config[CONF_TEMPERATURE_UNIT]
 
         self._attr_current_temperature = None
@@ -134,7 +137,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
-            self._hvac_onoff_write_type = config[CONF_WRITE_REGISTERS]
+            self._hvac_onoff_write_registers = config[CONF_WRITE_REGISTERS]
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
         else:
@@ -151,7 +154,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
             # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
-            if self._hvac_onoff_write_type:
+            if self._hvac_onoff_write_registers:
                 await self._hub.async_pymodbus_call(
                     self._slave,
                     self._hvac_onoff_register,
