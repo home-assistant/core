@@ -1,9 +1,18 @@
 """Representation of the Damper for AirTouch 5 Devices."""
+import logging
+from typing import Any
+
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
+from airtouch5py.packets.zone_control import (
+    ZoneControlZone,
+    ZoneSettingPower,
+    ZoneSettingValue,
+)
 from airtouch5py.packets.zone_name import ZoneName
 from airtouch5py.packets.zone_status import ZoneStatusZone
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -15,6 +24,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import Airtouch5Entity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -38,7 +49,11 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
     """How open the damper is in each zone."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
-    _attr_supported_features = CoverEntityFeature(0)
+    _attr_supported_features = (
+        CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+    )
 
     def __init__(self, client: Airtouch5SimpleClient, name: ZoneName) -> None:
         """Initialise the Cover Entity."""
@@ -76,3 +91,29 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
         """Remove data updated listener after this object has been initialized."""
         await super().async_will_remove_from_hass()
         self._client.zone_status_callbacks.remove(self._async_update_attrs)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the damper."""
+        await self._set_cover_position(100)
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close damper."""
+        await self._set_cover_position(0)
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Update the damper to a specific position."""
+
+        if (position := kwargs.get(ATTR_POSITION)) is None:
+            _LOGGER.debug("Argument `position` is missing in set_cover_position")
+            return
+        await self._set_cover_position(position)
+
+    async def _set_cover_position(self, position_percent: float) -> None:
+        zcz = ZoneControlZone(
+            self._name.zone_number,
+            ZoneSettingValue.SET_OPEN_PERCENTAGE,
+            ZoneSettingPower.KEEP_POWER_STATE,
+            position_percent / 100.0,
+        )
+        packet = self._client.data_packet_factory.zone_control([zcz])
+        await self._client.send_packet(packet)
