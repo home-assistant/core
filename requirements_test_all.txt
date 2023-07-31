@@ -1638,7 +1638,7 @@ pyvolumio==0.1.5
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==1.1.0
+pywemo==1.2.0
 
 # homeassistant.components.wilight
 pywilight==0.0.74
