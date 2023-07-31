@@ -77,9 +77,9 @@ def get_block_entity_name(
     channel_name = get_block_channel_name(device, block)
 
     if description and channel_name:
-        return f"{channel_name} {description.lower()}"
+        return f"{channel_name} {uncapitalize(description)}"
     if description:
-        return description.lower()
+        return description
 
     return channel_name
 
@@ -308,9 +308,9 @@ def get_rpc_entity_name(
     channel_name = get_rpc_channel_name(device, key)
 
     if description and channel_name:
-        return f"{channel_name} {description.lower()}"
+        return f"{channel_name} {uncapitalize(description)}"
     if description:
-        return description.lower()
+        return description
 
     return channel_name
 
@@ -405,3 +405,8 @@ def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
     mac = name.partition(".")[0].partition("-")[-1]
     return mac.upper() if len(mac) == 12 else None
+
+
+def uncapitalize(description: str) -> str:
+    """Uncapitalize the first letter of a description."""
+    return description[:1].lower() + description[1:]
