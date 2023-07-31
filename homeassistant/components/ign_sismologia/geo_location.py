@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -141,12 +141,12 @@ class IgnSismologiaFeedEntityManager:
 
 
 class IgnSismologiaLocationEvent(GeolocationEvent):
-    """This represents an external event with IGN Sismologia feed data."""
+    """Represents an external event with IGN Sismologia feed data."""
 
     _attr_icon = "mdi:pulse"
     _attr_should_poll = False
     _attr_source = SOURCE
-    _attr_unit_of_measurement = LENGTH_KILOMETERS
+    _attr_unit_of_measurement = UnitOfLength.KILOMETERS
 
     def __init__(
         self, feed_manager: IgnSismologiaFeedEntityManager, external_id: str

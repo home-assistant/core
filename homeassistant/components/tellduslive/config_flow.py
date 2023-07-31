@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
-from homeassistant.util.json import load_json
+from homeassistant.util.json import load_json_object
 
 from .const import (
     APPLICATION_NAME,
@@ -34,7 +34,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init config flow."""
         self._hosts = [CLOUD_NAME]
         self._host = None
@@ -42,7 +42,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._scan_interval = SCAN_INTERVAL
 
     def _get_auth_url(self):
-
         self._session = Session(
             public_key=PUBLIC_KEY,
             private_key=NOT_SO_PRIVATE_KEY,
@@ -138,7 +137,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         conf = await self.hass.async_add_executor_job(
-            load_json, self.hass.config.path(TELLDUS_CONFIG_FILE)
+            load_json_object, self.hass.config.path(TELLDUS_CONFIG_FILE)
         )
         host = next(iter(conf))
 

@@ -10,7 +10,6 @@ from homeassistant import exceptions
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Event,
     HassJob,
     HomeAssistant,
     State,
@@ -22,12 +21,13 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_same_state,
     async_track_state_change_event,
     process_state_match,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,17 +123,17 @@ async def async_attach_trigger(
     unsub_track_same = {}
     period: dict[str, timedelta] = {}
     attribute = config.get(CONF_ATTRIBUTE)
-    job = HassJob(action)
+    job = HassJob(action, f"state trigger {trigger_info}")
 
     trigger_data = trigger_info["trigger_data"]
     _variables = trigger_info["variables"] or {}
 
     @callback
-    def state_automation_listener(event: Event):
+    def state_automation_listener(event: EventType[EventStateChangedData]) -> None:
         """Listen for state changes and calls action."""
-        entity: str = event.data["entity_id"]
-        from_s: State | None = event.data.get("old_state")
-        to_s: State | None = event.data.get("new_state")
+        entity = event.data["entity_id"]
+        from_s = event.data["old_state"]
+        to_s = event.data["new_state"]
 
         if from_s is None:
             old_value = None

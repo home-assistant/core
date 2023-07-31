@@ -1,5 +1,6 @@
-"""Test zha device switch."""
+"""Test ZHA device switch."""
 from datetime import timedelta
+import logging
 import time
 from unittest import mock
 from unittest.mock import patch
@@ -15,6 +16,7 @@ from homeassistant.components.zha.core.const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
 )
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 import homeassistant.util.dt as dt_util
 
@@ -26,7 +28,7 @@ from tests.common import async_fire_time_changed
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only setup the required platform and required base platforms to speed up tests."""
+    """Only set up the required platform and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -44,9 +46,9 @@ def required_platforms_only():
 def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""
 
-    def _dev(with_basic_channel: bool = True, **kwargs):
+    def _dev(with_basic_cluster_handler: bool = True, **kwargs):
         in_clusters = [general.OnOff.cluster_id]
-        if with_basic_channel:
+        if with_basic_cluster_handler:
             in_clusters.append(general.Basic.cluster_id)
 
         endpoints = {
@@ -65,9 +67,9 @@ def zigpy_device(zigpy_device_mock):
 def zigpy_device_mains(zigpy_device_mock):
     """Device tracker zigpy device."""
 
-    def _dev(with_basic_channel: bool = True):
+    def _dev(with_basic_cluster_handler: bool = True):
         in_clusters = [general.OnOff.cluster_id]
-        if with_basic_channel:
+        if with_basic_cluster_handler:
             in_clusters.append(general.Basic.cluster_id)
 
         endpoints = {
@@ -85,15 +87,15 @@ def zigpy_device_mains(zigpy_device_mock):
 
 
 @pytest.fixture
-def device_with_basic_channel(zigpy_device_mains):
-    """Return a zha device with a basic channel present."""
-    return zigpy_device_mains(with_basic_channel=True)
+def device_with_basic_cluster_handler(zigpy_device_mains):
+    """Return a ZHA device with a basic cluster handler present."""
+    return zigpy_device_mains(with_basic_cluster_handler=True)
 
 
 @pytest.fixture
-def device_without_basic_channel(zigpy_device):
-    """Return a zha device with a basic channel present."""
-    return zigpy_device(with_basic_channel=False)
+def device_without_basic_cluster_handler(zigpy_device):
+    """Return a ZHA device without a basic cluster handler present."""
+    return zigpy_device(with_basic_cluster_handler=False)
 
 
 @pytest.fixture
@@ -123,34 +125,32 @@ def _send_time_changed(hass, seconds):
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "homeassistant.components.zha.core.cluster_handlers.general.BasicClusterHandler.async_initialize",
     new=mock.AsyncMock(),
 )
 async def test_check_available_success(
-    hass, device_with_basic_channel, zha_device_restored
-):
+    hass: HomeAssistant, device_with_basic_cluster_handler, zha_device_restored
+) -> None:
     """Check device availability success on 1st try."""
-
-    # pylint: disable=protected-access
-    zha_device = await zha_device_restored(device_with_basic_channel)
+    zha_device = await zha_device_restored(device_with_basic_cluster_handler)
     await async_enable_traffic(hass, [zha_device])
-    basic_ch = device_with_basic_channel.endpoints[3].basic
+    basic_ch = device_with_basic_cluster_handler.endpoints[3].basic
 
     basic_ch.read_attributes.reset_mock()
-    device_with_basic_channel.last_seen = None
+    device_with_basic_cluster_handler.last_seen = None
     assert zha_device.available is True
     _send_time_changed(hass, zha_device.consider_unavailable_time + 2)
     await hass.async_block_till_done()
     assert zha_device.available is False
     assert basic_ch.read_attributes.await_count == 0
 
-    device_with_basic_channel.last_seen = (
+    device_with_basic_cluster_handler.last_seen = (
         time.time() - zha_device.consider_unavailable_time - 2
     )
-    _seens = [time.time(), device_with_basic_channel.last_seen]
+    _seens = [time.time(), device_with_basic_cluster_handler.last_seen]
 
     def _update_last_seen(*args, **kwargs):
-        device_with_basic_channel.last_seen = _seens.pop()
+        device_with_basic_cluster_handler.last_seen = _seens.pop()
 
     basic_ch.read_attributes.side_effect = _update_last_seen
 
@@ -177,27 +177,26 @@ async def test_check_available_success(
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "homeassistant.components.zha.core.cluster_handlers.general.BasicClusterHandler.async_initialize",
     new=mock.AsyncMock(),
 )
 async def test_check_available_unsuccessful(
-    hass, device_with_basic_channel, zha_device_restored
-):
+    hass: HomeAssistant, device_with_basic_cluster_handler, zha_device_restored
+) -> None:
     """Check device availability all tries fail."""
 
-    # pylint: disable=protected-access
-    zha_device = await zha_device_restored(device_with_basic_channel)
+    zha_device = await zha_device_restored(device_with_basic_cluster_handler)
     await async_enable_traffic(hass, [zha_device])
-    basic_ch = device_with_basic_channel.endpoints[3].basic
+    basic_ch = device_with_basic_cluster_handler.endpoints[3].basic
 
     assert zha_device.available is True
     assert basic_ch.read_attributes.await_count == 0
 
-    device_with_basic_channel.last_seen = (
+    device_with_basic_cluster_handler.last_seen = (
         time.time() - zha_device.consider_unavailable_time - 2
     )
 
-    # unsuccessfuly ping zigpy device, but zha_device is still available
+    # unsuccessfully ping zigpy device, but zha_device is still available
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 1
@@ -220,21 +219,24 @@ async def test_check_available_unsuccessful(
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "homeassistant.components.zha.core.cluster_handlers.general.BasicClusterHandler.async_initialize",
     new=mock.AsyncMock(),
 )
-async def test_check_available_no_basic_channel(
-    hass, device_without_basic_channel, zha_device_restored, caplog
-):
+async def test_check_available_no_basic_cluster_handler(
+    hass: HomeAssistant,
+    device_without_basic_cluster_handler,
+    zha_device_restored,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Check device availability for a device without basic cluster."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.zha")
 
-    # pylint: disable=protected-access
-    zha_device = await zha_device_restored(device_without_basic_channel)
+    zha_device = await zha_device_restored(device_without_basic_cluster_handler)
     await async_enable_traffic(hass, [zha_device])
 
     assert zha_device.available is True
 
-    device_without_basic_channel.last_seen = (
+    device_without_basic_cluster_handler.last_seen = (
         time.time() - zha_device.consider_unavailable_time - 2
     )
 
@@ -245,10 +247,10 @@ async def test_check_available_no_basic_channel(
     assert "does not have a mandatory basic cluster" in caplog.text
 
 
-async def test_ota_sw_version(hass, ota_zha_device):
-    """Test device entry gets sw_version updated via OTA channel."""
+async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
+    """Test device entry gets sw_version updated via OTA cluster handler."""
 
-    ota_ch = ota_zha_device.channels.pools[0].client_channels["1:0x0019"]
+    ota_ch = ota_zha_device._endpoints[1].client_cluster_handlers["1:0x0019"]
     dev_registry = dr.async_get(hass)
     entry = dev_registry.async_get(ota_zha_device.device_id)
     assert entry.sw_version is None
@@ -263,7 +265,7 @@ async def test_ota_sw_version(hass, ota_zha_device):
 
 
 @pytest.mark.parametrize(
-    "device, last_seen_delta, is_available",
+    ("device", "last_seen_delta", "is_available"),
     (
         ("zigpy_device", 0, True),
         (
@@ -305,8 +307,13 @@ async def test_ota_sw_version(hass, ota_zha_device):
     ),
 )
 async def test_device_restore_availability(
-    hass, request, device, last_seen_delta, is_available, zha_device_restored
-):
+    hass: HomeAssistant,
+    request,
+    device,
+    last_seen_delta,
+    is_available,
+    zha_device_restored,
+) -> None:
     """Test initial availability for restored devices."""
 
     zigpy_device = request.getfixturevalue(device)()
@@ -325,7 +332,9 @@ async def test_device_restore_availability(
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_device_is_active_coordinator(hass, zha_device_joined, zigpy_device):
+async def test_device_is_active_coordinator(
+    hass: HomeAssistant, zha_device_joined, zigpy_device
+) -> None:
     """Test that the current coordinator is uniquely detected."""
 
     current_coord_dev = zigpy_device(ieee="aa:bb:cc:dd:ee:ff:00:11", nwk=0x0000)

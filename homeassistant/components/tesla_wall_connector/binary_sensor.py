@@ -8,15 +8,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     WallConnectorData,
     WallConnectorEntity,
     WallConnectorLambdaValueGetterMixin,
-    prefix_entity_name,
 )
 from .const import DOMAIN, WALLCONNECTOR_DATA_VITALS
 
@@ -33,14 +32,14 @@ class WallConnectorBinarySensorDescription(
 WALL_CONNECTOR_SENSORS = [
     WallConnectorBinarySensorDescription(
         key="vehicle_connected",
-        name=prefix_entity_name("Vehicle connected"),
+        translation_key="vehicle_connected",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].vehicle_connected,
         device_class=BinarySensorDeviceClass.PLUG,
     ),
     WallConnectorBinarySensorDescription(
         key="contactor_closed",
-        name=prefix_entity_name("Contactor closed"),
+        translation_key="contactor_closed",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].contactor_closed,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,

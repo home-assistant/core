@@ -1,0 +1,24 @@
+add_product:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: picnic
+    product_id:
+      required: false
+      example: "10510201"
+      selector:
+        text:
+    product_name:
+      required: false
+      example: "Yoghurt"
+      selector:
+        text:
+    amount:
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 50

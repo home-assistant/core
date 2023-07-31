@@ -83,9 +83,15 @@ class InsteonEntity(Entity):
         return DeviceInfo(
             identifiers={(DOMAIN, str(self._insteon_device.address))},
             manufacturer="SmartLabs, Inc",
-            model=f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
+            model=(
+                f"{self._insteon_device.model} ({self._insteon_device.cat!r},"
+                f" 0x{self._insteon_device.subcat:02x})"
+            ),
             name=f"{self._insteon_device.description} {self._insteon_device.address}",
-            sw_version=f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
+            sw_version=(
+                f"{self._insteon_device.firmware:02x} Engine Version:"
+                f" {self._insteon_device.engine_version}"
+            ),
             via_device=(DOMAIN, str(devices.modem.address)),
         )
 

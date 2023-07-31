@@ -26,5 +26,3 @@ def valid_config(hass: HomeAssistant, requests_mock):
     ):
         # Setup hub
         vultr.setup(hass, VALID_CONFIG)
-
-    yield

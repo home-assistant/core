@@ -1,9 +1,0 @@
-{
-    "config": {
-        "step": {
-            "import_turn_on": {
-                "description": "Kveiktu \u00e1 t\u00e6kinu og smelltu \u00e1 senda til a\u00f0 halda \u00e1fram flutningi"
-            }
-        }
-    }
-}

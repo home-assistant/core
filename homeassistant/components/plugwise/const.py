@@ -20,9 +20,8 @@ PW_TYPE: Final = "plugwise_type"
 SMILE: Final = "smile"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
-UNIT_LUMEN: Final = "lm"
 
-PLATFORMS_GATEWAY: Final[list[str]] = [
+PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.NUMBER,

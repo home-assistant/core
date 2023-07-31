@@ -16,7 +16,7 @@ from homeassistant.components.minio import (
     DOMAIN,
     QueueListener,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_EVENT
@@ -52,7 +52,9 @@ def minio_client_event_fixture():
         yield minio_client_mock
 
 
-async def test_minio_services(hass, caplog, minio_client):
+async def test_minio_services(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, minio_client
+) -> None:
     """Test Minio services."""
     hass.config.allowlist_external_dirs = {"/test"}
 
@@ -105,7 +107,9 @@ async def test_minio_services(hass, caplog, minio_client):
     minio_client.reset_mock()
 
 
-async def test_minio_listen(hass, caplog, minio_client_event):
+async def test_minio_listen(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, minio_client_event
+) -> None:
     """Test minio listen on notifications."""
     minio_client_event.presigned_get_object.return_value = "http://url"
 
@@ -153,7 +157,7 @@ async def test_minio_listen(hass, caplog, minio_client_event):
     assert len(event.data["metadata"]) == 0
 
 
-async def test_queue_listener():
+async def test_queue_listener() -> None:
     """Tests QueueListener firing events on Home Assistant event bus."""
     hass = MagicMock()
 

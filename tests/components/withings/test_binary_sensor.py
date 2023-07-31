@@ -1,21 +1,26 @@
 """Tests for the Withings component."""
 from withings_api.common import NotifyAppli
 
-from homeassistant.components.withings.common import (
-    WITHINGS_MEASUREMENTS_MAP,
-    async_get_entity_id,
-)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.withings.binary_sensor import BINARY_SENSORS
+from homeassistant.components.withings.common import WithingsEntityDescription
 from homeassistant.components.withings.const import Measurement
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .common import ComponentFactory, new_profile_config
+from .common import ComponentFactory, async_get_entity_id, new_profile_config
+
+WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
+    attr.measurement: attr for attr in BINARY_SENSORS
+}
 
 
 async def test_binary_sensor(
-    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    current_request_with_host: None,
 ) -> None:
     """Test binary sensor."""
     in_bed_attribute = WITHINGS_MEASUREMENTS_MAP[Measurement.IN_BED]
@@ -25,15 +30,23 @@ async def test_binary_sensor(
     entity_registry: EntityRegistry = er.async_get(hass)
 
     await component_factory.configure_component(profile_configs=(person0, person1))
-    assert not await async_get_entity_id(hass, in_bed_attribute, person0.user_id)
-    assert not await async_get_entity_id(hass, in_bed_attribute, person1.user_id)
+    assert not await async_get_entity_id(
+        hass, in_bed_attribute, person0.user_id, BINARY_SENSOR_DOMAIN
+    )
+    assert not await async_get_entity_id(
+        hass, in_bed_attribute, person1.user_id, BINARY_SENSOR_DOMAIN
+    )
 
     # person 0
     await component_factory.setup_profile(person0.user_id)
     await component_factory.setup_profile(person1.user_id)
 
-    entity_id0 = await async_get_entity_id(hass, in_bed_attribute, person0.user_id)
-    entity_id1 = await async_get_entity_id(hass, in_bed_attribute, person1.user_id)
+    entity_id0 = await async_get_entity_id(
+        hass, in_bed_attribute, person0.user_id, BINARY_SENSOR_DOMAIN
+    )
+    entity_id1 = await async_get_entity_id(
+        hass, in_bed_attribute, person1.user_id, BINARY_SENSOR_DOMAIN
+    )
     assert entity_id0
     assert entity_id1
 

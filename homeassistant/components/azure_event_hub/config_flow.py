@@ -11,6 +11,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from .client import AzureEventHubClient
 from .const import (
@@ -52,6 +56,15 @@ SAS_SCHEMA = vol.Schema(
     }
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SEND_INTERVAL): int,
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
+
 
 async def validate_data(data: dict[str, Any]) -> dict[str, str] | None:
     """Validate the input."""
@@ -71,7 +84,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION: int = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self._data: dict[str, Any] = {}
         self._options: dict[str, Any] = deepcopy(DEFAULT_OPTIONS)
@@ -81,9 +94,9 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> AEHOptionsFlowHandler:
+    ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return AEHOptionsFlowHandler(config_entry)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -167,32 +180,3 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return None
         self._data.update(user_input)
         return await validate_data(self._data)
-
-
-class AEHOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle azure event hub options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize AEH options flow."""
-        self.config_entry = config_entry
-        self.options = deepcopy(dict(config_entry.options))
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the AEH options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SEND_INTERVAL,
-                        default=self.options.get(CONF_SEND_INTERVAL),
-                    ): int
-                }
-            ),
-            last_step=True,
-        )

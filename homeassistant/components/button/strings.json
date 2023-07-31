@@ -7,5 +7,25 @@
     "action_type": {
       "press": "Press {entity_name} button"
     }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::button::title%]"
+    },
+    "identify": {
+      "name": "Identify"
+    },
+    "restart": {
+      "name": "[%key:common::action::restart%]"
+    },
+    "update": {
+      "name": "Update"
+    }
+  },
+  "services": {
+    "press": {
+      "name": "Press",
+      "description": "Press the button entity."
+    }
   }
 }

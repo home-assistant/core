@@ -17,7 +17,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -44,6 +44,7 @@ class AtwWaterHeater(WaterHeaterEntity):
 
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
 
@@ -72,11 +73,11 @@ class AtwWaterHeater(WaterHeaterEntity):
         """Return a device description for device registry."""
         return self._api.device_info
 
-    async def async_turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._device.set({PROPERTY_POWER: True})
 
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.set({PROPERTY_POWER: False})
 
@@ -89,7 +90,7 @@ class AtwWaterHeater(WaterHeaterEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_operation(self) -> str | None:

@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -119,6 +119,8 @@ def create_water_heater_entity(tado, name: str, zone_id: int, zone: str):
 class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     """Representation of a Tado water heater."""
 
+    _attr_name = None
+
     def __init__(
         self,
         tado,
@@ -167,11 +169,6 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         self._async_update_data()
 
     @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.zone_name
-
-    @property
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
@@ -199,7 +196,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def min_temp(self):

@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from abodepy.devices.switch import CONST, AbodeSwitch as AbodeSW
+from jaraco.abode.devices.switch import Switch as AbodeSW
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -43,6 +44,7 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
     """Representation of an Abode switch."""
 
     _device: AbodeSW
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""

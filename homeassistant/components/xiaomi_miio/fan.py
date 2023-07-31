@@ -55,6 +55,7 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_AIRPURIFIER_ZA1,
     FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
@@ -77,6 +78,7 @@ from .const import (
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -160,6 +162,7 @@ PRESET_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_PRO_V7 = PRESET_MODES_AIRPURIFIER_PRO
 PRESET_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_3C = ["Auto", "Silent", "Favorite"]
+PRESET_MODES_AIRPURIFIER_ZA1 = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_V3 = [
     "Auto",
     "Silent",
@@ -201,7 +204,7 @@ async def async_setup_entry(
     entities: list[FanEntity] = []
     entity: FanEntity
 
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
     hass.data.setdefault(DATA_KEY, {})
@@ -272,9 +275,7 @@ async def async_setup_entry(
             if not entity_method:
                 continue
             await entity_method(**params)
-            update_tasks.append(
-                hass.async_create_task(entity.async_update_ha_state(True))
-            )
+            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
         if update_tasks:
             await asyncio.wait(update_tasks)
@@ -290,6 +291,8 @@ async def async_setup_entry(
 
 class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     """Representation of a generic Xiaomi device."""
+
+    _attr_name = None
 
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
@@ -447,6 +450,12 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
             self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
+            self._speed_count = 1
+        elif self._model == MODEL_AIRPURIFIER_ZA1:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_ZA1
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_ZA1
             self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
         elif self._model in MODELS_PURIFIER_MIOT:

@@ -19,5 +19,24 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "seeding_and_downloading": "Up/Down",
+          "seeding": "Seeding",
+          "downloading": "Downloading",
+          "idle": "[%key:common::state::idle%]"
+        }
+      },
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      }
+    }
   }
 }

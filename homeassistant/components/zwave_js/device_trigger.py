@@ -22,8 +22,8 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
-    entity_registry,
+    device_registry as dr,
+    entity_registry as er,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -142,7 +142,7 @@ SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA = (
 # State based trigger schemas
 BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
     }
 )
 
@@ -161,7 +161,7 @@ BASE_VALUE_UPDATED_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
         vol.Required(ATTR_PROPERTY): vol.Any(int, str),
         vol.Optional(ATTR_PROPERTY_KEY): vol.Any(None, vol.Coerce(int), str),
-        vol.Optional(ATTR_ENDPOINT): vol.Any(None, vol.Coerce(int)),
+        vol.Optional(ATTR_ENDPOINT, default=0): vol.Any(None, vol.Coerce(int)),
         vol.Optional(ATTR_FROM): VALUE_SCHEMA,
         vol.Optional(ATTR_TO): VALUE_SCHEMA,
     }
@@ -248,9 +248,6 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for Z-Wave JS devices."""
-    dev_reg = device_registry.async_get(hass)
-    node = async_get_node_from_device_id(hass, device_id, dev_reg)
-
     triggers: list[dict] = []
     base_trigger = {
         CONF_PLATFORM: "device",
@@ -258,8 +255,14 @@ async def async_get_triggers(
         CONF_DOMAIN: DOMAIN,
     }
 
+    dev_reg = dr.async_get(hass)
+    node = async_get_node_from_device_id(hass, device_id, dev_reg)
+
+    if node.client.driver and node.client.driver.controller.own_node == node:
+        return triggers
+
     # We can add a node status trigger if the node status sensor is enabled
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device_id, ent_reg, dev_reg
     )
@@ -269,7 +272,7 @@ async def async_get_triggers(
         and not entity.disabled
     ):
         triggers.append(
-            {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}
+            {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity.id}
         )
 
     # Handle notification event triggers

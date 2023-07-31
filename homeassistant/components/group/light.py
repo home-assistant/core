@@ -1,4 +1,4 @@
-"""This platform allows several lights to be grouped into one light."""
+"""Platform allowing several lights to be grouped into one light."""
 from __future__ import annotations
 
 from collections import Counter
@@ -44,11 +44,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import GroupEntity
 from .util import find_state_attributes, mean_tuple, reduce_attribute
@@ -154,7 +157,9 @@ class LightGroup(GroupEntity, LightEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(event: Event) -> None:
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle child updates."""
             self.async_set_context(event.context)
             self.async_defer_or_update_ha_state()
@@ -287,7 +292,7 @@ class LightGroup(GroupEntity, LightEntity):
                 set[str], set().union(*all_supported_color_modes)
             )
 
-        self._attr_supported_features = 0
+        self._attr_supported_features = LightEntityFeature(0)
         for support in find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
             # Merge supported features by emulating support for every feature
             # we find.

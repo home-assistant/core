@@ -1,12 +1,23 @@
 """Handle intents with scripts."""
-import copy
+from __future__ import annotations
+
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_TYPE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, intent, script, template
+from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import (
+    config_validation as cv,
+    intent,
+    script,
+    service,
+    template,
+)
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "intent_script"
 
@@ -51,10 +62,27 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Activate Alexa component."""
-    intents = copy.deepcopy(config[DOMAIN])
+async def async_reload(hass: HomeAssistant, servie_call: ServiceCall) -> None:
+    """Handle start Intent Script service call."""
+    new_config = await async_integration_yaml_config(hass, DOMAIN)
+    existing_intents = hass.data[DOMAIN]
+
+    for intent_type in existing_intents:
+        intent.async_remove(hass, intent_type)
+
+    if not new_config or DOMAIN not in new_config:
+        hass.data[DOMAIN] = {}
+        return
+
+    new_intents = new_config[DOMAIN]
+
+    async_load_intents(hass, new_intents)
+
+
+def async_load_intents(hass: HomeAssistant, intents: dict):
+    """Load YAML intents into the intent system."""
     template.attach(hass, intents)
+    hass.data[DOMAIN] = intents
 
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
@@ -62,6 +90,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass, conf[CONF_ACTION], f"Intent Script {intent_type}", DOMAIN
             )
         intent.async_register(hass, ScriptIntentHandler(intent_type, conf))
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the intent script component."""
+    intents = config[DOMAIN]
+
+    async_load_intents(hass, intents)
+
+    async def _handle_reload(servie_call: ServiceCall) -> None:
+        return await async_reload(hass, servie_call)
+
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        _handle_reload,
+    )
 
     return True
 
@@ -74,7 +119,7 @@ class ScriptIntentHandler(intent.IntentHandler):
         self.intent_type = intent_type
         self.config = config
 
-    async def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj: intent.Intent):
         """Handle the intent."""
         speech = self.config.get(CONF_SPEECH)
         reprompt = self.config.get(CONF_REPROMPT)
@@ -82,6 +127,16 @@ class ScriptIntentHandler(intent.IntentHandler):
         action = self.config.get(CONF_ACTION)
         is_async_action = self.config.get(CONF_ASYNC_ACTION)
         slots = {key: value["value"] for key, value in intent_obj.slots.items()}
+
+        _LOGGER.debug(
+            "Intent named %s received with slots: %s",
+            intent_obj.intent_type,
+            {
+                key: value
+                for key, value in slots.items()
+                if not key.startswith("_") and not key.endswith("_raw_value")
+            },
+        )
 
         if action is not None:
             if is_async_action:

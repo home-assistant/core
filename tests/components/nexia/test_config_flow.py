@@ -9,10 +9,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.nexia.const import CONF_BRAND, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize("brand", [BRAND_ASAIR, BRAND_NEXIA])
-async def test_form(hass, brand):
+async def test_form(hass: HomeAssistant, brand) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -47,13 +48,15 @@ async def test_form(hass, brand):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("homeassistant.components.nexia.config_flow.NexiaHome.login",), patch(
+    with patch(
+        "homeassistant.components.nexia.config_flow.NexiaHome.login",
+    ), patch(
         "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
         return_value=None,
     ):
@@ -70,7 +73,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -93,7 +96,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_invalid_auth_http_401(hass):
+async def test_form_invalid_auth_http_401(hass: HomeAssistant) -> None:
     """Test we handle invalid auth error from http 401."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -118,7 +121,7 @@ async def test_form_invalid_auth_http_401(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect_not_found(hass):
+async def test_form_cannot_connect_not_found(hass: HomeAssistant) -> None:
     """Test we handle cannot connect from an http not found error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -143,7 +146,7 @@ async def test_form_cannot_connect_not_found(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_broad_exception(hass):
+async def test_form_broad_exception(hass: HomeAssistant) -> None:
     """Test we handle invalid auth error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

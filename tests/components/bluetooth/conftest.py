@@ -1,6 +1,6 @@
 """Tests for the bluetooth component."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -43,16 +43,6 @@ def mock_operating_system_90():
         yield
 
 
-@pytest.fixture(name="bluez_dbus_mock")
-def bluez_dbus_mock():
-    """Fixture that mocks out the bluez dbus calls."""
-    # Must patch directly since this is loaded on demand only
-    with patch(
-        "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
-    ):
-        yield
-
-
 @pytest.fixture(name="macos_adapter")
 def macos_adapter():
     """Fixture that mocks the macos adapter."""
@@ -62,7 +52,7 @@ def macos_adapter():
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Darwin",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Darwin"
+        "bluetooth_adapters.systems.platform.system", return_value="Darwin"
     ):
         yield
 
@@ -71,14 +61,14 @@ def macos_adapter():
 def windows_adapter():
     """Fixture that mocks the windows adapter."""
     with patch(
-        "homeassistant.components.bluetooth.util.platform.system",
+        "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
     ):
         yield
 
 
 @pytest.fixture(name="no_adapters")
-def no_adapter_fixture(bluez_dbus_mock):
+def no_adapter_fixture():
     """Fixture that mocks no adapters on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -86,16 +76,18 @@ def no_adapter_fixture(bluez_dbus_mock):
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={},
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {},
     ):
         yield
 
 
 @pytest.fixture(name="one_adapter")
-def one_adapter_fixture(bluez_dbus_mock):
+def one_adapter_fixture():
     """Fixture that mocks one adapter on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -103,20 +95,21 @@ def one_adapter_fixture(bluez_dbus_mock):
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                },
-                "org.bluez.AdvertisementMonitorManager1": {
-                    "SupportedMonitorTypes": ["or_patterns"],
-                    "SupportedFeatures": [],
-                },
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": True,
+                "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
             },
         },
     ):
@@ -124,7 +117,7 @@ def one_adapter_fixture(bluez_dbus_mock):
 
 
 @pytest.fixture(name="two_adapters")
-def two_adapters_fixture(bluez_dbus_mock):
+def two_adapters_fixture():
     """Fixture that mocks two adapters on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -132,27 +125,33 @@ def two_adapters_fixture(bluez_dbus_mock):
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
+                "connection_slots": 1,
             },
             "hci1": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:02",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                },
-                "org.bluez.AdvertisementMonitorManager1": {
-                    "SupportedMonitorTypes": ["or_patterns"],
-                    "SupportedFeatures": [],
-                },
+                "address": "00:00:00:00:00:02",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": True,
+                "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
+                "connection_slots": 2,
             },
         },
     ):
@@ -160,7 +159,7 @@ def two_adapters_fixture(bluez_dbus_mock):
 
 
 @pytest.fixture(name="one_adapter_old_bluez")
-def one_adapter_old_bluez(bluez_dbus_mock):
+def one_adapter_old_bluez():
     """Fixture that mocks two adapters on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -168,16 +167,37 @@ def one_adapter_old_bluez(bluez_dbus_mock):
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.43",
-                }
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
             },
         },
     ):
         yield
+
+
+@pytest.fixture(name="disable_new_discovery_flows")
+def disable_new_discovery_flows_fixture():
+    """Fixture that disables new discovery flows.
+
+    We want to disable new discovery flows as we are testing the
+    BluetoothManager and not the discovery flows. This fixture
+    will patch the discovery_flow.async_create_flow method to
+    ensure we do not load other integrations.
+    """
+    with patch(
+        "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        yield mock_create_flow

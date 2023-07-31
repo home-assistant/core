@@ -7,23 +7,22 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import datetime as dt
+from enum import StrEnum
 import functools as ft
 import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
-from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
@@ -236,8 +235,7 @@ _ENTITY_IMAGE_CACHE = _ImageCache(images=collections.OrderedDict(), maxsize=16)
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
-    """
-    Return true if specified media player entity_id is on.
+    """Return true if specified media player entity_id is on.
 
     Check all media player if no entity_id specified.
     """
@@ -393,12 +391,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif value[ATTR_MEDIA_ENQUEUE] is True:
             value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.ADD
             _LOGGER.warning(
-                "Playing media with enqueue set to True is deprecated. Use 'add' instead"
+                "Playing media with enqueue set to True is deprecated. Use 'add'"
+                " instead"
             )
         elif value[ATTR_MEDIA_ENQUEUE] is False:
             value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.PLAY
             _LOGGER.warning(
-                "Playing media with enqueue set to False is deprecated. Use 'play' instead"
+                "Playing media with enqueue set to False is deprecated. Use 'play'"
+                " instead"
             )
 
         return value
@@ -453,7 +453,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class MediaPlayerEntityDescription(EntityDescription):
     """A class that describes media player entities."""
 
-    device_class: MediaPlayerDeviceClass | str | None = None
+    device_class: MediaPlayerDeviceClass | None = None
 
 
 class MediaPlayerEntity(Entity):
@@ -464,7 +464,7 @@ class MediaPlayerEntity(Entity):
 
     _attr_app_id: str | None = None
     _attr_app_name: str | None = None
-    _attr_device_class: MediaPlayerDeviceClass | str | None
+    _attr_device_class: MediaPlayerDeviceClass | None
     _attr_group_members: list[str] | None = None
     _attr_is_volume_muted: bool | None = None
     _attr_media_album_artist: str | None = None
@@ -491,13 +491,13 @@ class MediaPlayerEntity(Entity):
     _attr_sound_mode: str | None = None
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
-    _attr_state: MediaPlayerState | str | None = None
-    _attr_supported_features: int = 0
+    _attr_state: MediaPlayerState | None = None
+    _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
 
     # Implement these for your media player
     @property
-    def device_class(self) -> MediaPlayerDeviceClass | str | None:
+    def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -506,7 +506,7 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
-    def state(self) -> MediaPlayerState | str | None:
+    def state(self) -> MediaPlayerState | None:
         """State of the player."""
         return self._attr_state
 
@@ -589,8 +589,7 @@ class MediaPlayerEntity(Entity):
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
-        """
-        Optionally fetch internally accessible image for media browser.
+        """Optionally fetch internally accessible image for media browser.
 
         Must be implemented by integration.
         """
@@ -692,7 +691,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_group_members
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return self._attr_supported_features
 
@@ -920,9 +919,7 @@ class MediaPlayerEntity(Entity):
     async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            await self.hass.async_add_executor_job(
-                self.toggle  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.toggle)
             return
 
         if self.state in {
@@ -940,9 +937,7 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            await self.hass.async_add_executor_job(
-                self.volume_up  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.volume_up)
             return
 
         if (
@@ -958,9 +953,7 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            await self.hass.async_add_executor_job(
-                self.volume_down  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.volume_down)
             return
 
         if (
@@ -973,9 +966,7 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            await self.hass.async_add_executor_job(
-                self.media_play_pause  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
         if self.state == MediaPlayerState.PLAYING:
@@ -1008,8 +999,8 @@ class MediaPlayerEntity(Entity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
         data: dict[str, Any] = {}
+        supported_features = self.supported_features
 
         if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
             source_list := self.source_list
@@ -1046,7 +1037,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Return a BrowseMedia instance.
@@ -1147,7 +1138,7 @@ class MediaPlayerImageView(HomeAssistantView):
         self,
         request: web.Request,
         entity_id: str,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
@@ -1205,10 +1196,10 @@ async def websocket_browse_media(
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """
-    Browse media available to the media_player entity.
+    """Browse media available to the media_player entity.
 
-    To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
+    To use, media_player integrations can implement
+    MediaPlayerEntity.async_browse_media()
     """
     component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
     player = component.get_entity(msg["entity_id"])

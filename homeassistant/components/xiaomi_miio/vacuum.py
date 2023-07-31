@@ -187,6 +187,7 @@ class MiroboVacuum(
 ):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
+    _attr_name = None
     _attr_supported_features = (
         VacuumEntityFeature.STATE
         | VacuumEntityFeature.PAUSE
@@ -206,7 +207,7 @@ class MiroboVacuum(
         entry,
         unique_id,
         coordinator: DataUpdateCoordinator[VacuumCoordinatorData],
-    ):
+    ) -> None:
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(device, entry, unique_id, coordinator)
         self._state: str | None = None

@@ -9,10 +9,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_CHARGING
+from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables
@@ -25,13 +24,9 @@ from .const import (
 )
 from .entity import TractiveEntity
 
-TRACKERS_WITH_BUILTIN_BATTERY = ("TRNJA4", "TRAXL1")
-
 
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     """Tractive sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self, user_id: str, item: Trackables, description: BinarySensorEntityDescription
@@ -77,7 +72,7 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
 
 SENSOR_TYPE = BinarySensorEntityDescription(
     key=ATTR_BATTERY_CHARGING,
-    name="Tracker battery charging",
+    translation_key="tracker_battery_charging",
     device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
@@ -93,7 +88,7 @@ async def async_setup_entry(
     entities = [
         TractiveBinarySensor(client.user_id, item, SENSOR_TYPE)
         for item in trackables
-        if item.tracker_details["model_number"] in TRACKERS_WITH_BUILTIN_BATTERY
+        if item.tracker_details.get("charging_state") is not None
     ]
 
     async_add_entities(entities)

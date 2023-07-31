@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 @pytest.mark.usefixtures(
     "ssdp_instant_discovery", "mock_get_source_ip", "mock_mac_address_from_host"
 )
-async def test_async_setup_entry_default(hass: HomeAssistant):
+async def test_async_setup_entry_default(hass: HomeAssistant) -> None:
     """Test async_setup_entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -43,7 +43,7 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
 @pytest.mark.usefixtures(
     "ssdp_instant_discovery", "mock_get_source_ip", "mock_no_mac_address_from_host"
 )
-async def test_async_setup_entry_default_no_mac_address(hass: HomeAssistant):
+async def test_async_setup_entry_default_no_mac_address(hass: HomeAssistant) -> None:
     """Test async_setup_entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,

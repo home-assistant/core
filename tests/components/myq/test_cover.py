@@ -1,11 +1,11 @@
 """The scene tests for the myq platform."""
-
 from homeassistant.const import STATE_CLOSED
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_create_covers(hass):
+async def test_create_covers(hass: HomeAssistant) -> None:
     """Test creation of covers."""
 
     await async_init_integration(hass)

@@ -1,6 +1,6 @@
 """Constants for the siren component."""
 
-from enum import IntEnum
+from enum import IntFlag
 from typing import Final
 
 DOMAIN: Final = "siren"
@@ -12,7 +12,7 @@ ATTR_DURATION: Final = "duration"
 ATTR_VOLUME_LEVEL: Final = "volume_level"
 
 
-class SirenEntityFeature(IntEnum):
+class SirenEntityFeature(IntFlag):
     """Supported features of the siren entity."""
 
     TURN_ON = 1

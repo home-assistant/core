@@ -1,8 +1,8 @@
 {
   "domain": "ffmpeg_noise",
   "name": "FFmpeg Noise",
-  "documentation": "https://www.home-assistant.io/integrations/ffmpeg_noise",
-  "dependencies": ["ffmpeg"],
   "codeowners": [],
+  "dependencies": ["ffmpeg"],
+  "documentation": "https://www.home-assistant.io/integrations/ffmpeg_noise",
   "iot_class": "calculated"
 }

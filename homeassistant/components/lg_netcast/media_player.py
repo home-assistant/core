@@ -40,6 +40,7 @@ SUPPORT_LGTV = (
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.STOP
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -74,6 +75,7 @@ def setup_platform(
 class LgTVDevice(MediaPlayerEntity):
     """Representation of a LG TV."""
 
+    _attr_assumed_state = True
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_media_content_type = MediaType.CHANNEL
 
@@ -83,13 +85,10 @@ class LgTVDevice(MediaPlayerEntity):
         self._name = name
         self._muted = False
         self._on_action_script = on_action_script
-        # Assume that the TV is in Play mode
-        self._playing = True
         self._volume = 0
         self._channel_id = None
         self._channel_name = ""
         self._program_name = ""
-        self._state = None
         self._sources = {}
         self._source_names = []
 
@@ -100,14 +99,14 @@ class LgTVDevice(MediaPlayerEntity):
             with self._client as client:
                 client.send_command(command)
         except (LgNetCastError, RequestException):
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
 
     def update(self) -> None:
         """Retrieve the latest data from the LG TV."""
 
         try:
             with self._client as client:
-                self._state = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.ON
 
                 self.__update_volume()
 
@@ -142,7 +141,7 @@ class LgTVDevice(MediaPlayerEntity):
                     )
                     self._source_names = [n for n, k in sorted_sources]
         except (LgNetCastError, RequestException):
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
 
     def __update_volume(self):
         volume_info = self._client.get_volume()
@@ -155,11 +154,6 @@ class LgTVDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def is_volume_muted(self):
@@ -197,7 +191,7 @@ class LgTVDevice(MediaPlayerEntity):
         return self._program_name
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._on_action_script:
             return SUPPORT_LGTV | MediaPlayerEntityFeature.TURN_ON
@@ -239,24 +233,17 @@ class LgTVDevice(MediaPlayerEntity):
         """Select input source."""
         self._client.change_channel(self._sources[source])
 
-    def media_play_pause(self) -> None:
-        """Simulate play pause media player."""
-        if self._playing:
-            self.media_pause()
-        else:
-            self.media_play()
-
     def media_play(self) -> None:
         """Send play command."""
-        self._playing = True
-        self._state = MediaPlayerState.PLAYING
         self.send_command(LG_COMMAND.PLAY)
 
     def media_pause(self) -> None:
         """Send media pause command to media player."""
-        self._playing = False
-        self._state = MediaPlayerState.PAUSED
         self.send_command(LG_COMMAND.PAUSE)
+
+    def media_stop(self) -> None:
+        """Send media stop command to media player."""
+        self.send_command(LG_COMMAND.STOP)
 
     def media_next_track(self) -> None:
         """Send next track command."""
@@ -266,7 +253,9 @@ class LgTVDevice(MediaPlayerEntity):
         """Send the previous track command."""
         self.send_command(LG_COMMAND.REWIND)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Tune to channel."""
         if media_type != MediaType.CHANNEL:
             raise ValueError(f"Invalid media type: {media_type}")

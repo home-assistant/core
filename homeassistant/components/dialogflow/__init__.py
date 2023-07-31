@@ -106,7 +106,8 @@ async def async_handle_message(hass, message):
     _api_version = get_api_version(message)
     if _api_version is V1:
         _LOGGER.warning(
-            "Dialogflow V1 API will be removed on October 23, 2019. Please change your DialogFlow settings to use the V2 api"
+            "Dialogflow V1 API will be removed on October 23, 2019. Please change your"
+            " DialogFlow settings to use the V2 api"
         )
         req = message.get("result")
         if req.get("actionIncomplete", True):

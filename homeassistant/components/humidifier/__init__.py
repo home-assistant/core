@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
@@ -29,7 +29,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
+    ATTR_ACTION,
     ATTR_AVAILABLE_MODES,
+    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -44,6 +46,7 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SUPPORT_MODES,
+    HumidifierAction,
     HumidifierEntityFeature,
 )
 
@@ -125,36 +128,38 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class HumidifierEntityDescription(ToggleEntityDescription):
     """A class that describes humidifier entities."""
 
-    device_class: HumidifierDeviceClass | str | None = None
+    device_class: HumidifierDeviceClass | None = None
 
 
 class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
 
     entity_description: HumidifierEntityDescription
+    _attr_action: HumidifierAction | None = None
     _attr_available_modes: list[str] | None
-    _attr_device_class: HumidifierDeviceClass | str | None
+    _attr_current_humidity: int | None = None
+    _attr_device_class: HumidifierDeviceClass | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_mode: str | None
+    _attr_supported_features: HumidifierEntityFeature = HumidifierEntityFeature(0)
     _attr_target_humidity: int | None = None
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
         data: dict[str, int | list[str] | None] = {
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if supported_features & HumidifierEntityFeature.MODES:
+        if self.supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
 
     @property
-    def device_class(self) -> HumidifierDeviceClass | str | None:
+    def device_class(self) -> HumidifierDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -166,16 +171,31 @@ class HumidifierEntity(ToggleEntity):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        supported_features = self.supported_features or 0
         data: dict[str, int | str | None] = {}
+
+        if self.action is not None:
+            data[ATTR_ACTION] = self.action if self.is_on else HumidifierAction.OFF
+
+        if self.current_humidity is not None:
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
 
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if supported_features & HumidifierEntityFeature.MODES:
+        if self.supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_MODE] = self.mode
 
         return data
+
+    @property
+    def action(self) -> HumidifierAction | None:
+        """Return the current action."""
+        return self._attr_action
+
+    @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        return self._attr_current_humidity
 
     @property
     def target_humidity(self) -> int | None:
@@ -223,3 +243,8 @@ class HumidifierEntity(ToggleEntity):
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return self._attr_max_humidity
+
+    @property
+    def supported_features(self) -> HumidifierEntityFeature:
+        """Return the list of supported features."""
+        return self._attr_supported_features

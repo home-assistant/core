@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -76,6 +76,7 @@ class ControllerEntity(ClimateEntity):
 
     _attr_fan_modes = list(_HA_FAN_TO_ESCEA)
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_icon = ICON
     _attr_precision = PRECISION_WHOLE
@@ -84,7 +85,7 @@ class ControllerEntity(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""

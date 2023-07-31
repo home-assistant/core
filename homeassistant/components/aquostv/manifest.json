@@ -1,9 +1,9 @@
 {
   "domain": "aquostv",
   "name": "Sharp Aquos TV",
-  "documentation": "https://www.home-assistant.io/integrations/aquostv",
-  "requirements": ["sharp_aquos_rc==0.3.2"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/aquostv",
   "iot_class": "local_polling",
-  "loggers": ["sharp_aquos_rc"]
+  "loggers": ["sharp_aquos_rc"],
+  "requirements": ["sharp-aquos-rc==0.3.2"]
 }

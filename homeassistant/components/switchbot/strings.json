@@ -8,19 +8,43 @@
         }
       },
       "confirm": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       },
       "password": {
         "description": "The {name} device requires a password",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "lock_key": {
+        "description": "The {name} device requires encryption key, details on how to obtain it can be found in the documentation.",
+        "data": {
+          "key_id": "Key ID",
+          "encryption_key": "Encryption key"
+        }
+      },
+      "lock_auth": {
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your locks encryption key. Usernames and passwords are case sensitive.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "lock_choose_method": {
+        "description": "A SwitchBot lock can be set up in Home Assistant in two different ways.\n\nYou can enter the key id and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
+        "menu_options": {
+          "lock_auth": "SwitchBot account (recommended)",
+          "lock_key": "Enter lock encryption key manually"
+        }
       }
     },
-    "error": {},
+    "error": {
+      "encryption_key_invalid": "Key ID or Encryption key is invalid",
+      "auth_failed": "Authentication failed: {error_detail}"
+    },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_unconfigured_devices": "No unconfigured devices found.",
+      "no_devices_found": "No supported SwitchBot devices found in range; If the device is in range, ensure the scanner has active scanning enabled, as SwitchBot devices cannot be discovered with passive scans. Active scans can be disabled once the device is configured. If you need clarification on whether the device is in-range, download the diagnostics for the integration that provides your Bluetooth adapter or proxy and check if the MAC address of the SwitchBot device is present.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "switchbot_unsupported_type": "Unsupported Switchbot Type."
@@ -31,6 +55,90 @@
       "init": {
         "data": {
           "retry_count": "Retry count"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "calibration": {
+        "name": "Calibration"
+      },
+      "door_timeout": {
+        "name": "Timeout"
+      },
+      "door_unclosed_alarm": {
+        "name": "Unclosed alarm"
+      },
+      "door_unlocked_alarm": {
+        "name": "Unlocked alarm"
+      },
+      "door_auto_lock_paused": {
+        "name": "Auto-lock paused"
+      }
+    },
+    "sensor": {
+      "bluetooth_signal": {
+        "name": "Bluetooth signal"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "light_level": {
+        "name": "Light level"
+      }
+    },
+    "cover": {
+      "cover": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "humidifier": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "lock": {
+      "lock": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "switch": {
+      "bot": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          },
+          "switch_mode": {
+            "state": {
+              "true": "Pull/Retract",
+              "false": "Momentary"
+            }
+          }
         }
       }
     }

@@ -1,8 +1,6 @@
 """Provides the constants needed for component."""
-from enum import IntEnum
+from enum import IntFlag, StrEnum
 from typing import Final
-
-from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "alarm_control_panel"
 
@@ -23,7 +21,7 @@ FORMAT_TEXT: Final = "text"
 FORMAT_NUMBER: Final = "number"
 
 
-class AlarmControlPanelEntityFeature(IntEnum):
+class AlarmControlPanelEntityFeature(IntFlag):
     """Supported features of the alarm control panel entity."""
 
     ARM_HOME = 1

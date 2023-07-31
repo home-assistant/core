@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except URLError as exception:
         raise ConfigEntryNotReady from exception
 
-    async def async_update_data():
+    async def async_update_data() -> YoulessAPI:
         """Fetch data from the API."""
         await hass.async_add_executor_job(api.update)
         return api

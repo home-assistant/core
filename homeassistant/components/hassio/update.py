@@ -167,8 +167,8 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             await async_update_addon(self.hass, slug=self._addon_slug, backup=backup)
         except HassioAPIError as err:
             raise HomeAssistantError(f"Error updating {self.title}: {err}") from err
-        else:
-            await self.coordinator.force_info_update_supervisor()
+
+        await self.coordinator.force_info_update_supervisor()
 
 
 class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):

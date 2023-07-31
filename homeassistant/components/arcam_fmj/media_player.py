@@ -61,18 +61,17 @@ class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        device_name,
+        device_name: str,
         state: State,
         uuid: str,
-    ):
+    ) -> None:
         """Initialize device."""
         self._state = state
-        self._device_name = device_name
-        self._attr_name = f"{device_name} - Zone: {state.zn}"
-        self._uuid = uuid
+        self._attr_name = f"Zone {state.zn}"
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -87,6 +86,14 @@ class ArcamFmj(MediaPlayerEntity):
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_unique_id = f"{uuid}-{state.zn}"
         self._attr_entity_registry_enabled_default = state.zn == 1
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, uuid),
+            },
+            manufacturer="Arcam",
+            model="Arcam FMJ AVR",
+            name=device_name,
+        )
 
     @property
     def state(self) -> MediaPlayerState:
@@ -95,36 +102,23 @@ class ArcamFmj(MediaPlayerEntity):
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self._uuid),
-                (DOMAIN, self._state.client.host, self._state.client.port),
-            },
-            manufacturer="Arcam",
-            model="Arcam FMJ AVR",
-            name=self._device_name,
-        )
-
     async def async_added_to_hass(self) -> None:
         """Once registered, add listener for events."""
         await self._state.start()
         await self._state.update()
 
         @callback
-        def _data(host):
+        def _data(host: str) -> None:
             if host == self._state.client.host:
                 self.async_write_ha_state()
 
         @callback
-        def _started(host):
+        def _started(host: str) -> None:
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
         @callback
-        def _stopped(host):
+        def _stopped(host: str) -> None:
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
@@ -249,40 +243,40 @@ class ArcamFmj(MediaPlayerEntity):
             return
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         if (value := self._state.get_source()) is None:
             return None
         return value.name
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return [x.name for x in self._state.get_source_list()]
 
     @property
-    def sound_mode(self):
+    def sound_mode(self) -> str | None:
         """Name of the current sound mode."""
         if (value := self._state.get_decode_mode()) is None:
             return None
         return value.name
 
     @property
-    def sound_mode_list(self):
+    def sound_mode_list(self) -> list[str] | None:
         """List of available sound modes."""
         if (values := self._state.get_decode_modes()) is None:
             return None
         return [x.name for x in values]
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if (value := self._state.get_mute()) is None:
             return None
         return value
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of device."""
         if (value := self._state.get_volume()) is None:
             return None
@@ -301,7 +295,7 @@ class ArcamFmj(MediaPlayerEntity):
         return value
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content type of current playing media."""
         source = self._state.get_source()
         if source in (SourceCodes.DAB, SourceCodes.FM):
@@ -315,7 +309,7 @@ class ArcamFmj(MediaPlayerEntity):
         return value
 
     @property
-    def media_channel(self):
+    def media_channel(self) -> str | None:
         """Channel currently playing."""
         source = self._state.get_source()
         if source == SourceCodes.DAB:
@@ -327,7 +321,7 @@ class ArcamFmj(MediaPlayerEntity):
         return value
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if self._state.get_source() == SourceCodes.DAB:
             value = self._state.get_dls_pdt()
@@ -336,7 +330,7 @@ class ArcamFmj(MediaPlayerEntity):
         return value
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         if (source := self._state.get_source()) is None:
             return None

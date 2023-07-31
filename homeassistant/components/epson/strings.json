@@ -8,9 +8,24 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "powered_off": "Is projector turned on? You need to turn on projector for initial configuration."
+    }
+  },
+  "services": {
+    "select_cmode": {
+      "name": "Select color mode",
+      "description": "Selects color mode of Epson projector.",
+      "fields": {
+        "cmode": {
+          "name": "Color mode",
+          "description": "Name of Cmode."
+        }
+      }
     }
   }
 }

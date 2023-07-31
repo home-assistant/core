@@ -48,7 +48,6 @@ async def async_setup_entry(
 
         for partial_station in station_information.get("partialStations", []):
             for elevator in partial_station.get("elevators", []):
-
                 state = elevator.get("state") != "READY"
                 available = elevator.get("state") != "UNKNOWN"
                 label = elevator.get("label")
@@ -89,7 +88,7 @@ async def async_setup_entry(
         so entities can quickly look up their data.
         """
 
-        payload = {"station": station}
+        payload = {"station": {"id": station["id"], "type": station["type"]}}
 
         try:
             async with async_timeout.timeout(10):

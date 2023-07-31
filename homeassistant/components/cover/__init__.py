@@ -4,15 +4,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag, StrEnum
 import functools as ft
 import logging
-from typing import Any, TypeVar, final
+from typing import Any, ParamSpec, TypeVar, final
 
-from typing_extensions import ParamSpec
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
@@ -86,7 +84,7 @@ DEVICE_CLASS_WINDOW = CoverDeviceClass.WINDOW.value
 # mypy: disallow-any-generics
 
 
-class CoverEntityFeature(IntEnum):
+class CoverEntityFeature(IntFlag):
     """Supported features of the cover entity."""
 
     OPEN = 1
@@ -218,7 +216,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class CoverEntityDescription(EntityDescription):
     """A class that describes cover entities."""
 
-    device_class: CoverDeviceClass | str | None = None
+    device_class: CoverDeviceClass | None = None
 
 
 class CoverEntity(Entity):
@@ -227,11 +225,12 @@ class CoverEntity(Entity):
     entity_description: CoverEntityDescription
     _attr_current_cover_position: int | None = None
     _attr_current_cover_tilt_position: int | None = None
-    _attr_device_class: CoverDeviceClass | str | None
+    _attr_device_class: CoverDeviceClass | None
     _attr_is_closed: bool | None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_state: None = None
+    _attr_supported_features: CoverEntityFeature | None
 
     _cover_is_last_toggle_direction_open = True
 
@@ -252,7 +251,7 @@ class CoverEntity(Entity):
         return self._attr_current_cover_tilt_position
 
     @property
-    def device_class(self) -> CoverDeviceClass | str | None:
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -291,7 +290,7 @@ class CoverEntity(Entity):
         return data
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         if self._attr_supported_features is not None:
             return self._attr_supported_features

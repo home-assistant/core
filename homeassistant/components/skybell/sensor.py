@@ -14,8 +14,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -39,27 +39,27 @@ class SkybellSensorEntityDescription(
 SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     SkybellSensorEntityDescription(
         key="chime_level",
-        name="Chime level",
+        translation_key="chime_level",
         icon="mdi:bell-ring",
         value_fn=lambda device: device.outdoor_chime_level,
     ),
     SkybellSensorEntityDescription(
         key="last_button_event",
-        name="Last button event",
+        translation_key="last_button_event",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: device.latest("button").get(CONST.CREATED_AT),
     ),
     SkybellSensorEntityDescription(
         key="last_motion_event",
-        name="Last motion event",
+        translation_key="last_motion_event",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: device.latest("motion").get(CONST.CREATED_AT),
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_LAST_CHECK_IN,
-        name="Last check in",
+        translation_key="last_check_in",
         icon="mdi:clock",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -68,7 +68,7 @@ SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     ),
     SkybellSensorEntityDescription(
         key="motion_threshold",
-        name="Motion threshold",
+        translation_key="motion_threshold",
         icon="mdi:walk",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -76,14 +76,14 @@ SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     ),
     SkybellSensorEntityDescription(
         key="video_profile",
-        name="Video profile",
+        translation_key="video_profile",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.video_profile,
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_WIFI_SSID,
-        name="Wifi SSID",
+        translation_key="wifi_ssid",
         icon="mdi:wifi-settings",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -91,7 +91,7 @@ SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_WIFI_STATUS,
-        name="Wifi status",
+        translation_key="wifi_status",
         icon="mdi:wifi-strength-3",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,

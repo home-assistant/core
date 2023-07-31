@@ -12,17 +12,21 @@ from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    Camera,
+    CameraEntityFeature,
+)
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -129,6 +133,19 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     device = hass.data[DOMAIN][DEVICES][config_entry.entry_id]
     entity = AmcrestCam(name, device, get_ffmpeg_manager(hass))
+
+    # 2021.9.0 introduced unique id's for the camera entity, but these were not
+    # unique for different resolution streams.  If any cameras were configured
+    # with this version, update the old entity with the new unique id.
+    serial_number = await device.api.async_serial_number
+    serial_number = serial_number.strip()
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
+    if entity_id is not None:
+        _LOGGER.debug("Updating unique id for camera %s", entity_id)
+        new_unique_id = f"{serial_number}-{device.resolution}-{device.channel}"
+        registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
     await entity.async_update()
     async_add_entities([entity])
 
@@ -203,7 +220,7 @@ class AmcrestCam(Camera):
             # Amcrest cameras only support one snapshot command at a time.
             # Hence need to wait if a previous snapshot has not yet finished.
             # Also need to check that camera is online and turned on before each wait
-            # and before initiating shapshot.
+            # and before initiating snapshot.
             while self._snapshot_task:
                 self._check_snapshot_ok()
                 _LOGGER.debug("Waiting for previous snapshot from %s", self._name)

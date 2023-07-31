@@ -90,20 +90,20 @@ async def async_setup_entry(
     # Handle services for a discovered WiLight device.
     async def set_watering_time(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValveSwitch):
-            raise ValueError("Entity is not a WiLight valve switch")
+            raise TypeError("Entity is not a WiLight valve switch")
         watering_time = service.data[ATTR_WATERING_TIME]
         await entity.async_set_watering_time(watering_time=watering_time)
 
     async def set_trigger(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValveSwitch):
-            raise ValueError("Entity is not a WiLight valve switch")
+            raise TypeError("Entity is not a WiLight valve switch")
         trigger_index = service.data[ATTR_TRIGGER_INDEX]
         trigger = service.data[ATTR_TRIGGER]
         await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
 
     async def set_pause_time(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValvePauseSwitch):
-            raise ValueError("Entity is not a WiLight valve pause switch")
+            raise TypeError("Entity is not a WiLight valve pause switch")
         pause_time = service.data[ATTR_PAUSE_TIME]
         await entity.async_set_pause_time(pause_time=pause_time)
 
@@ -148,10 +148,7 @@ def hass_to_wilight_pause_time(value: int) -> int:
 class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve switch."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return f"{self._attr_name} {DESC_WATERING}"
+    _attr_translation_key = "watering"
 
     @property
     def is_on(self) -> bool:
@@ -272,10 +269,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
 class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve Pause switch."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return f"{self._attr_name} {DESC_PAUSE}"
+    _attr_translation_key = "pause"
 
     @property
     def is_on(self) -> bool:

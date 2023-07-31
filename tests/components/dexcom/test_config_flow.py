@@ -6,13 +6,14 @@ from pydexcom import AccountError, SessionError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dexcom.const import DOMAIN, MG_DL, MMOL_L
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from . import CONFIG
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -40,7 +41,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_account_error(hass):
+async def test_form_account_error(hass: HomeAssistant) -> None:
     """Test we handle account error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -59,7 +60,7 @@ async def test_form_account_error(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_session_error(hass):
+async def test_form_session_error(hass: HomeAssistant) -> None:
     """Test we handle session error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -78,7 +79,7 @@ async def test_form_session_error(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass):
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -97,7 +98,7 @@ async def test_form_unknown_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_option_flow_default(hass):
+async def test_option_flow_default(hass: HomeAssistant) -> None:
     """Test config flow options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -121,7 +122,7 @@ async def test_option_flow_default(hass):
     }
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     entry = MockConfigEntry(
         domain=DOMAIN,

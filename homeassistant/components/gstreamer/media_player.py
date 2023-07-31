@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from gsp import GstreamerPlayer
+from gsp import STATE_IDLE, STATE_PAUSED, STATE_PLAYING, GstreamerPlayer
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -32,6 +32,12 @@ DOMAIN = "gstreamer"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_PIPELINE): cv.string}
 )
+
+GSP_STATE_MAPPING = {
+    STATE_IDLE: MediaPlayerState.IDLE,
+    STATE_PAUSED: MediaPlayerState.PAUSED,
+    STATE_PLAYING: MediaPlayerState.PLAYING,
+}
 
 
 def setup_platform(
@@ -67,11 +73,11 @@ class GstreamerDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, player, name):
+    def __init__(self, player: GstreamerPlayer, name: str | None) -> None:
         """Initialize the Gstreamer device."""
         self._player = player
         self._name = name or DOMAIN
-        self._state = MediaPlayerState.IDLE
+        self._attr_state = MediaPlayerState.IDLE
         self._volume = None
         self._duration = None
         self._uri = None
@@ -81,7 +87,7 @@ class GstreamerDevice(MediaPlayerEntity):
 
     def update(self) -> None:
         """Update properties."""
-        self._state = self._player.state
+        self._attr_state = GSP_STATE_MAPPING.get(self._player.state)
         self._volume = self._player.volume
         self._duration = self._player.duration
         self._uri = self._player.uri
@@ -94,7 +100,7 @@ class GstreamerDevice(MediaPlayerEntity):
         self._player.volume = volume
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
         # Handle media_source
@@ -140,11 +146,6 @@ class GstreamerDevice(MediaPlayerEntity):
         return self._volume
 
     @property
-    def state(self):
-        """Return the state of the player."""
-        return self._state
-
-    @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
         return self._duration
@@ -165,7 +166,9 @@ class GstreamerDevice(MediaPlayerEntity):
         return self._album
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

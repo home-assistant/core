@@ -1,11 +1,11 @@
 {
   "domain": "camera",
   "name": "Camera",
-  "documentation": "https://www.home-assistant.io/integrations/camera",
-  "dependencies": ["http"],
-  "requirements": ["PyTurboJPEG==1.6.7"],
   "after_dependencies": ["media_player"],
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/camera",
+  "integration_type": "entity",
   "quality_scale": "internal",
-  "integration_type": "entity"
+  "requirements": ["PyTurboJPEG==1.7.1"]
 }

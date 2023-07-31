@@ -7,7 +7,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +40,9 @@ async def async_setup_entry(
 class SpiderThermostat(ClimateEntity):
     """Representation of a thermostat."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, api, thermostat):
         """Initialize the thermostat."""
@@ -64,7 +66,7 @@ class SpiderThermostat(ClimateEntity):
         )
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self.thermostat.has_fan_mode:
             return (
@@ -76,11 +78,6 @@ class SpiderThermostat(ClimateEntity):
     def unique_id(self):
         """Return the id of the thermostat, if any."""
         return self.thermostat.id
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self.thermostat.name
 
     @property
     def current_temperature(self):

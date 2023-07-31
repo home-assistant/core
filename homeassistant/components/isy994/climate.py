@@ -1,4 +1,4 @@
-"""Support for Insteon Thermostats via ISY994 Platform."""
+"""Support for Insteon Thermostats via ISY Platform."""
 from __future__ import annotations
 
 from typing import Any
@@ -19,7 +19,6 @@ from pyisy.nodes import Node
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
@@ -32,18 +31,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     _LOGGER,
-    DOMAIN as ISY994_DOMAIN,
+    DOMAIN,
     HA_FAN_TO_ISY,
     HA_HVAC_TO_ISY,
-    ISY994_NODES,
     ISY_HVAC_MODES,
     UOM_FAN_MODES,
     UOM_HVAC_ACTIONS,
@@ -55,25 +55,25 @@ from .const import (
     UOM_TO_STATES,
 )
 from .entity import ISYNodeEntity
-from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 thermostat platform."""
+    """Set up the ISY thermostat platform."""
     entities = []
 
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    for node in hass_isy_data[ISY994_NODES][CLIMATE]:
-        entities.append(ISYThermostatEntity(node))
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
+    for node in isy_data.nodes[Platform.CLIMATE]:
+        entities.append(ISYThermostatEntity(node, devices.get(node.primary_node)))
 
-    await migrate_old_unique_ids(hass, CLIMATE, entities)
     async_add_entities(entities)
 
 
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
-    """Representation of an ISY994 thermostat entity."""
+    """Representation of an ISY thermostat entity."""
 
     _attr_hvac_modes = ISY_HVAC_MODES
     _attr_precision = PRECISION_TENTHS
@@ -83,9 +83,9 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
 
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the ISY Thermostat entity."""
-        super().__init__(node)
+        super().__init__(node, device_info=device_info)
         self._uom = self._node.uom
         if isinstance(self._uom, list):
             self._uom = self._node.uom[0]
@@ -103,10 +103,10 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         if not (uom := self._node.aux_properties.get(PROP_UOM)):
             return self.hass.config.units.temperature_unit
         if uom.value == UOM_ISY_CELSIUS:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         if uom.value == UOM_ISY_FAHRENHEIT:
-            return TEMP_FAHRENHEIT
-        return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_humidity(self) -> int | None:
@@ -132,7 +132,10 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
                 if self._node.protocol == PROTO_INSTEON
                 else UOM_HVAC_MODE_GENERIC
             )
-        return UOM_TO_STATES[uom].get(hvac_mode.value, HVACMode.OFF)
+        return (
+            try_parse_enum(HVACMode, UOM_TO_STATES[uom].get(hvac_mode.value))
+            or HVACMode.OFF
+        )
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -140,7 +143,9 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         hvac_action = self._node.aux_properties.get(PROP_HEAT_COOL_STATE)
         if not hvac_action:
             return None
-        return UOM_TO_STATES[UOM_HVAC_ACTIONS].get(hvac_action.value)
+        return try_parse_enum(
+            HVACAction, UOM_TO_STATES[UOM_HVAC_ACTIONS].get(hvac_action.value)
+        )
 
     @property
     def current_temperature(self) -> float | None:

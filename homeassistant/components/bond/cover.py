@@ -58,7 +58,7 @@ class BondCover(BondEntity, CoverEntity):
     ) -> None:
         """Create HA entity representing Bond cover."""
         super().__init__(hub, device, bpup_subs)
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
         if self._device.supports_set_position():
             supported_features |= CoverEntityFeature.SET_POSITION
         if self._device.supports_open():

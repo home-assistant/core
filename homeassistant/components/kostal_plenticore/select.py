@@ -7,8 +7,9 @@ import logging
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,7 +43,6 @@ SELECT_SETTINGS_DATA = [
             "Battery:SmartBatteryControl:Enable",
             "Battery:TimeControl:Enable",
         ],
-        device_class="kostal_plenticore__battery",
     )
 ]
 
@@ -88,7 +88,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
+class PlenticoreDataSelect(
+    CoordinatorEntity[SelectDataUpdateCoordinator], SelectEntity
+):
     """Representation of a Plenticore Select."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -125,7 +127,11 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id, self.options)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(
+                self.module_id, self.data_id, self.options
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""

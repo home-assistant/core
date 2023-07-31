@@ -1,9 +1,12 @@
 """Constants for the Shelly integration."""
 from __future__ import annotations
 
+from enum import StrEnum
 from logging import Logger, getLogger
 import re
 from typing import Final
+
+from awesomeversion import AwesomeVersion
 
 DOMAIN: Final = "shelly"
 
@@ -98,6 +101,7 @@ RPC_INPUTS_EVENTS_TYPES: Final = {
     "btn_up",
     "single_push",
     "double_push",
+    "triple_push",
     "long_push",
 }
 
@@ -143,6 +147,7 @@ SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
     "max": 31,
     "step": 0.5,
+    "default": 20.0,
 }
 
 # Kelvin value for colorTemp
@@ -156,3 +161,21 @@ UPTIME_DEVIATION: Final = 5
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = ["SHGS-1"]
+
+BLE_MIN_VERSION = AwesomeVersion("0.12.0-beta2")
+
+CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
+
+
+class BLEScannerMode(StrEnum):
+    """BLE scanner mode."""
+
+    DISABLED = "disabled"
+    ACTIVE = "active"
+    PASSIVE = "passive"
+
+
+MAX_PUSH_UPDATE_FAILURES = 5
+PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
+
+NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"

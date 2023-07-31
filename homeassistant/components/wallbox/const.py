@@ -1,10 +1,11 @@
 """Constants for the Wallbox integration."""
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
 
 DOMAIN = "wallbox"
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QSX"]
 
+CODE_KEY = "code"
 CONF_STATION = "station"
 CHARGER_ADDED_DISCHARGED_ENERGY_KEY = "added_discharged_energy"
 CHARGER_ADDED_ENERGY_KEY = "added_energy"
@@ -15,8 +16,10 @@ CHARGER_CHARGING_TIME_KEY = "charging_time"
 CHARGER_COST_KEY = "cost"
 CHARGER_CURRENT_MODE_KEY = "current_mode"
 CHARGER_CURRENT_VERSION_KEY = "currentVersion"
+CHARGER_CURRENCY_KEY = "currency"
 CHARGER_DATA_KEY = "config_data"
 CHARGER_DEPOT_PRICE_KEY = "depot_price"
+CHARGER_ENERGY_PRICE_KEY = "energy_price"
 CHARGER_SERIAL_NUMBER_KEY = "serial_number"
 CHARGER_PART_NUMBER_KEY = "part_number"
 CHARGER_SOFTWARE_KEY = "software"

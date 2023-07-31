@@ -8,6 +8,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOME_ASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -42,7 +43,7 @@ async def test_sensor(
     assert state.state == "3.2"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "CPU Speed"
     assert state.attributes.get(ATTR_ICON) == "mdi:pulse"
-    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.FREQUENCY
 
     assert state.attributes.get(ATTR_ARCH) == "aargh"
     assert state.attributes.get(ATTR_BRAND) == "Intel Ryzen 7"

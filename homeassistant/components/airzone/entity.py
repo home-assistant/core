@@ -1,9 +1,13 @@
 """Entity classes for the Airzone integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from aioairzone.const import (
+    API_SYSTEM_ID,
+    API_ZONE_ID,
+    AZD_AVAILABLE,
     AZD_FIRMWARE,
     AZD_FULL_NAME,
     AZD_ID,
@@ -17,14 +21,18 @@ from aioairzone.const import (
     AZD_WEBSERVER,
     AZD_ZONES,
 )
+from aioairzone.exceptions import AirzoneError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
@@ -58,6 +66,11 @@ class AirzoneSystemEntity(AirzoneEntity):
             via_device=(DOMAIN, f"{entry.entry_id}_ws"),
         )
         self._attr_unique_id = entry.unique_id or entry.entry_id
+
+    @property
+    def available(self) -> bool:
+        """Return system availability."""
+        return super().available and self.get_airzone_value(AZD_AVAILABLE)
 
     def get_airzone_value(self, key: str) -> Any:
         """Return system value by key."""
@@ -123,6 +136,11 @@ class AirzoneZoneEntity(AirzoneEntity):
         )
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
+    @property
+    def available(self) -> bool:
+        """Return zone availability."""
+        return super().available and self.get_airzone_value(AZD_AVAILABLE)
+
     def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""
         value = None
@@ -130,3 +148,20 @@ class AirzoneZoneEntity(AirzoneEntity):
             if key in zone:
                 value = zone[key]
         return value
+
+    async def _async_update_hvac_params(self, params: dict[str, Any]) -> None:
+        """Send HVAC parameters to API."""
+        _params = {
+            API_SYSTEM_ID: self.system_id,
+            API_ZONE_ID: self.zone_id,
+            **params,
+        }
+        _LOGGER.debug("update_hvac_params=%s", _params)
+        try:
+            await self.coordinator.airzone.set_hvac_parameters(_params)
+        except AirzoneError as error:
+            raise HomeAssistantError(
+                f"Failed to set zone {self.name}: {error}"
+            ) from error
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())

@@ -26,9 +26,7 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-        discovery_info[ATTR_CONFIG_ENTRY_ID]
-    ].client
+    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][discovery_info[ATTR_CONFIG_ENTRY_ID]]
 
     return LgWebOSNotificationService(client)
 

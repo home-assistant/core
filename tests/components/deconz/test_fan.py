@@ -1,5 +1,4 @@
 """deCONZ fan platform tests."""
-
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +12,7 @@ from homeassistant.components.fan import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -20,14 +20,20 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_fans(hass, aioclient_mock):
+
+async def test_no_fans(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no fan entities are created."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_fans(hass, aioclient_mock, mock_deconz_websocket):
+async def test_fans(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported fan entities are created."""
     data = {
         "lights": {
@@ -236,7 +242,9 @@ async def test_fans(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websocket):
+async def test_fans_legacy_speed_modes(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported fan entities are created.
 
     Legacy fan support.

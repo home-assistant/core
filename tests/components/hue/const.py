@@ -18,6 +18,7 @@ FAKE_DEVICE = {
         {"rid": "fake_zigbee_connectivity_id_1", "rtype": "zigbee_connectivity"},
         {"rid": "fake_temperature_sensor_id_1", "rtype": "temperature"},
         {"rid": "fake_motion_sensor_id_1", "rtype": "motion"},
+        {"rid": "fake_relative_rotary", "rtype": "relative_rotary"},
     ],
     "type": "device",
 }
@@ -32,7 +33,6 @@ FAKE_LIGHT = {
     },
     "id": "fake_light_id_1",
     "id_v1": "/lights/1",
-    "metadata": {"archetype": "unknown", "name": "Hue fake light"},
     "mode": "normal",
     "on": {"on": False},
     "owner": {"rid": "fake_device_id_1", "rtype": "device"},
@@ -93,5 +93,23 @@ FAKE_SCENE = {
     },
     "palette": {"color": [], "color_temperature": [], "dimming": []},
     "speed": 0.5,
+    "auto_dynamic": False,
     "type": "scene",
+}
+
+FAKE_ROTARY = {
+    "id": "fake_relative_rotary",
+    "id_v1": "/sensors/1",
+    "owner": {"rid": "fake_device_id_1", "rtype": "device"},
+    "relative_rotary": {
+        "last_event": {
+            "action": "start",
+            "rotation": {
+                "direction": "clock_wise",
+                "steps": 0,
+                "duration": 0,
+            },
+        }
+    },
+    "type": "relative_rotary",
 }

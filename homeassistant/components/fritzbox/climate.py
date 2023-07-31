@@ -16,12 +16,12 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity
+from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
 from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
@@ -50,41 +50,43 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
-    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
+        entry.entry_id
+    ][CONF_COORDINATOR]
 
     async_add_entities(
         [
             FritzboxThermostat(coordinator, ain)
-            for ain, device in coordinator.data.items()
+            for ain, device in coordinator.data.devices.items()
             if device.has_thermostat
         ]
     )
 
 
-class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
+class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     """The thermostat class for FRITZ!SmartHome thermostats."""
 
     _attr_precision = PRECISION_HALVES
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        if self.device.has_temperature_sensor and self.device.temperature is not None:
-            return self.device.temperature  # type: ignore [no-any-return]
-        return self.device.actual_temperature  # type: ignore [no-any-return]
+        if self.data.has_temperature_sensor and self.data.temperature is not None:
+            return self.data.temperature  # type: ignore [no-any-return]
+        return self.data.actual_temperature  # type: ignore [no-any-return]
 
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        if self.device.target_temperature == ON_API_TEMPERATURE:
+        if self.data.target_temperature == ON_API_TEMPERATURE:
             return ON_REPORT_SET_TEMPERATURE
-        if self.device.target_temperature == OFF_API_TEMPERATURE:
+        if self.data.target_temperature == OFF_API_TEMPERATURE:
             return OFF_REPORT_SET_TEMPERATURE
-        return self.device.target_temperature  # type: ignore [no-any-return]
+        return self.data.target_temperature  # type: ignore [no-any-return]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -94,14 +96,14 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         elif kwargs.get(ATTR_TEMPERATURE) is not None:
             temperature = kwargs[ATTR_TEMPERATURE]
             await self.hass.async_add_executor_job(
-                self.device.set_target_temperature, temperature
+                self.data.set_target_temperature, temperature
             )
         await self.coordinator.async_refresh()
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current operation mode."""
-        if self.device.target_temperature in (
+        if self.data.target_temperature in (
             OFF_REPORT_SET_TEMPERATURE,
             OFF_API_TEMPERATURE,
         ):
@@ -119,16 +121,14 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         else:
-            await self.async_set_temperature(
-                temperature=self.device.comfort_temperature
-            )
+            await self.async_set_temperature(temperature=self.data.comfort_temperature)
 
     @property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
-        if self.device.target_temperature == self.device.comfort_temperature:
+        if self.data.target_temperature == self.data.comfort_temperature:
             return PRESET_COMFORT
-        if self.device.target_temperature == self.device.eco_temperature:
+        if self.data.target_temperature == self.data.eco_temperature:
             return PRESET_ECO
         return None
 
@@ -140,11 +140,9 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         if preset_mode == PRESET_COMFORT:
-            await self.async_set_temperature(
-                temperature=self.device.comfort_temperature
-            )
+            await self.async_set_temperature(temperature=self.data.comfort_temperature)
         elif preset_mode == PRESET_ECO:
-            await self.async_set_temperature(temperature=self.device.eco_temperature)
+            await self.async_set_temperature(temperature=self.data.eco_temperature)
 
     @property
     def min_temp(self) -> int:
@@ -160,17 +158,17 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     def extra_state_attributes(self) -> ClimateExtraAttributes:
         """Return the device specific state attributes."""
         attrs: ClimateExtraAttributes = {
-            ATTR_STATE_BATTERY_LOW: self.device.battery_low,
+            ATTR_STATE_BATTERY_LOW: self.data.battery_low,
         }
 
         # the following attributes are available since fritzos 7
-        if self.device.battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = self.device.battery_level
-        if self.device.holiday_active is not None:
-            attrs[ATTR_STATE_HOLIDAY_MODE] = self.device.holiday_active
-        if self.device.summer_active is not None:
-            attrs[ATTR_STATE_SUMMER_MODE] = self.device.summer_active
-        if self.device.window_open is not None:
-            attrs[ATTR_STATE_WINDOW_OPEN] = self.device.window_open
+        if self.data.battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = self.data.battery_level
+        if self.data.holiday_active is not None:
+            attrs[ATTR_STATE_HOLIDAY_MODE] = self.data.holiday_active
+        if self.data.summer_active is not None:
+            attrs[ATTR_STATE_SUMMER_MODE] = self.data.summer_active
+        if self.data.window_open is not None:
+            attrs[ATTR_STATE_WINDOW_OPEN] = self.data.window_open
 
         return attrs

@@ -2,7 +2,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from open_meteo import OpenMeteoConnectionError
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -51,7 +51,7 @@ async def test_config_entry_not_ready(
 
 async def test_config_entry_zone_removed(
     hass: HomeAssistant,
-    caplog: LogCaptureFixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the Open-Meteo configuration entry not ready."""
     mock_config_entry = MockConfigEntry(

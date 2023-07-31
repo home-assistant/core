@@ -5,7 +5,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from yolink.client_request import ClientRequest
+from yolink.const import (
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_SWITCH,
+)
 from yolink.device import YoLinkDevice
+from yolink.outlet_request_builder import OutletRequestBuilder
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -16,13 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_COORDINATORS,
-    ATTR_DEVICE_MANIPULATOR,
-    ATTR_DEVICE_OUTLET,
-    ATTR_DEVICE_SWITCH,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -32,35 +34,71 @@ class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     """YoLink SwitchEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-    value: Callable[[Any], bool | None] = lambda _: None
-    state_key: str = "state"
+    plug_index: int | None = None
 
 
 DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
     YoLinkSwitchEntityDescription(
         key="outlet_state",
         device_class=SwitchDeviceClass.OUTLET,
-        name="State",
-        value=lambda value: value == "open" if value is not None else None,
+        name=None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_OUTLET,
     ),
     YoLinkSwitchEntityDescription(
         key="manipulator_state",
-        name="State",
+        name=None,
         icon="mdi:pipe",
-        value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MANIPULATOR,
     ),
     YoLinkSwitchEntityDescription(
         key="switch_state",
-        name="State",
+        name=None,
         device_class=SwitchDeviceClass.SWITCH,
-        value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SWITCH,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_usb_ports",
+        translation_key="usb_ports",
+        device_class=SwitchDeviceClass.OUTLET,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=0,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_plug_1",
+        translation_key="plug_1",
+        device_class=SwitchDeviceClass.OUTLET,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=1,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_plug_2",
+        translation_key="plug_2",
+        device_class=SwitchDeviceClass.OUTLET,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=2,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_plug_3",
+        translation_key="plug_3",
+        device_class=SwitchDeviceClass.OUTLET,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=3,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_plug_4",
+        translation_key="plug_4",
+        device_class=SwitchDeviceClass.OUTLET,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=4,
     ),
 )
 
-DEVICE_TYPE = [ATTR_DEVICE_MANIPULATOR, ATTR_DEVICE_OUTLET, ATTR_DEVICE_SWITCH]
+DEVICE_TYPE = [
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_SWITCH,
+]
 
 
 async def async_setup_entry(
@@ -69,7 +107,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink switch from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
     switch_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
@@ -104,22 +142,37 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
         )
-        self._attr_name = (
-            f"{coordinator.device.device_name} ({self.entity_description.name})"
-        )
+
+    def _get_state(
+        self, state_value: str | list[str] | None, plug_index: int | None
+    ) -> bool | None:
+        """Parse state value."""
+        if isinstance(state_value, list) and plug_index is not None:
+            return state_value[plug_index] == "open"
+        return state_value == "open" if state_value is not None else None
 
     @callback
-    def update_entity_state(self, state: dict[str, Any]) -> None:
+    def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
-        self._attr_is_on = self.entity_description.value(
-            state.get(self.entity_description.state_key)
+        self._attr_is_on = self._get_state(
+            state.get("state"), self.entity_description.plug_index
         )
         self.async_write_ha_state()
 
     async def call_state_change(self, state: str) -> None:
         """Call setState api to change switch state."""
-        await self.call_device_api("setState", {"state": state})
-        self._attr_is_on = self.entity_description.value(state)
+        client_request: ClientRequest = None
+        if self.coordinator.device.device_type in [
+            ATTR_DEVICE_OUTLET,
+            ATTR_DEVICE_MULTI_OUTLET,
+        ]:
+            client_request = OutletRequestBuilder.set_state_request(
+                state, self.entity_description.plug_index
+            )
+        else:
+            client_request = ClientRequest("setState", {"state": state})
+        await self.call_device(client_request)
+        self._attr_is_on = self._get_state(state, self.entity_description.plug_index)
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:

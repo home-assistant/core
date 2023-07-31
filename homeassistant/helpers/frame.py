@@ -102,8 +102,10 @@ def report_integration(
 
     _LOGGER.log(
         level,
-        "Detected integration that %s. "
-        "Please report issue%s for %s using this method at %s, line %s: %s",
+        (
+            "Detected integration that %s. "
+            "Please report issue%s for %s using this method at %s, line %s: %s"
+        ),
         what,
         extra,
         integration,

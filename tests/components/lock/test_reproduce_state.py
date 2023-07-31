@@ -1,11 +1,15 @@
 """Test reproduce state for Lock."""
-from homeassistant.core import State
+import pytest
+
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Lock states."""
     hass.states.async_set("lock.entity_locked", "locked", {})
     hass.states.async_set("lock.entity_unlocked", "unlocked", {})

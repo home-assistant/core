@@ -1,9 +1,8 @@
 """Test the Aranet sensors."""
-
-
 from homeassistant.components.aranet.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant
 
 from . import DISABLED_INTEGRATIONS_SERVICE_INFO, VALID_DATA_SERVICE_INFO
 
@@ -11,7 +10,9 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass):
+async def test_sensors(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -73,7 +74,9 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
 
 
-async def test_smart_home_integration_disabled(hass):
+async def test_smart_home_integration_disabled(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test disabling smart home integration marks entities as unavailable."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -103,9 +106,6 @@ async def test_smart_home_integration_disabled(hass):
 
     press_sensor = hass.states.get("sensor.aranet4_12345_pressure")
     assert press_sensor.state == "unavailable"
-
-    interval_sensor = hass.states.get("sensor.aranet4_12345_update_interval")
-    assert interval_sensor.state == "unavailable"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

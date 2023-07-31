@@ -2,7 +2,10 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
-from abodepy.exceptions import AbodeAuthenticationException, AbodeException
+from jaraco.abode.exceptions import (
+    AuthenticationException as AbodeAuthenticationException,
+    Exception as AbodeException,
+)
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import (
@@ -23,7 +26,7 @@ async def test_change_settings(hass: HomeAssistant) -> None:
     """Test change_setting service."""
     await setup_platform(hass, ALARM_DOMAIN)
 
-    with patch("abodepy.Abode.set_setting") as mock_set_setting:
+    with patch("jaraco.abode.client.Client.set_setting") as mock_set_setting:
         await hass.services.async_call(
             ABODE_DOMAIN,
             SERVICE_SETTINGS,
@@ -43,9 +46,8 @@ async def test_add_unique_id(hass: HomeAssistant) -> None:
 
     assert mock_entry.unique_id is None
 
-    with patch("abodepy.UTILS"):
-        await hass.config_entries.async_reload(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_reload(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_entry.unique_id == mock_entry.data[CONF_USERNAME]
 
@@ -54,8 +56,8 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the Abode entry."""
     mock_entry = await setup_platform(hass, ALARM_DOMAIN)
 
-    with patch("abodepy.Abode.logout") as mock_logout, patch(
-        "abodepy.event_controller.AbodeEventController.stop"
+    with patch("jaraco.abode.client.Client.logout") as mock_logout, patch(
+        "jaraco.abode.event_controller.EventController.stop"
     ) as mock_events_stop:
         assert await hass.config_entries.async_unload(mock_entry.entry_id)
         mock_logout.assert_called_once()

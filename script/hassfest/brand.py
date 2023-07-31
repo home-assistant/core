@@ -11,7 +11,9 @@ BRAND_SCHEMA = vol.Schema(
         vol.Required("domain"): str,
         vol.Required("name"): str,
         vol.Optional("integrations"): [str],
-        vol.Optional("iot_standards"): [vol.Any("homekit", "zigbee", "zwave")],
+        vol.Optional("iot_standards"): [
+            vol.Any("homekit", "matter", "zigbee", "zwave")
+        ],
     }
 )
 
@@ -55,7 +57,7 @@ def _validate_brand(
     ):
         config.add_error(
             "brand",
-            f"{brand.path.name}: Brand '{brand.brand['domain']}' "
+            f"{brand.path.name}: Brand '{brand.domain}' "
             f"is an integration but is missing in the brand's 'integrations' list'",
         )
 

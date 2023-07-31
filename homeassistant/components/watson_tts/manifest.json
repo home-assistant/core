@@ -1,9 +1,10 @@
 {
   "domain": "watson_tts",
   "name": "IBM Watson TTS",
-  "documentation": "https://www.home-assistant.io/integrations/watson_tts",
-  "requirements": ["ibm-watson==5.2.2"],
   "codeowners": ["@rutkai"],
+  "disabled": "Dependencies not compatible with the new pip resolver",
+  "documentation": "https://www.home-assistant.io/integrations/watson_tts",
   "iot_class": "cloud_push",
-  "loggers": ["ibm_cloud_sdk_core", "ibm_watson"]
+  "loggers": ["ibm_cloud_sdk_core", "ibm_watson"],
+  "requirements": ["ibm-watson==5.2.2"]
 }

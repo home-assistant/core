@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, cast
+from typing import Any
 import uuid
 
 import voluptuous as vol
@@ -45,7 +45,7 @@ class ResourceYAMLCollection:
         return self.data
 
 
-class ResourceStorageCollection(collection.StorageCollection):
+class ResourceStorageCollection(collection.DictStorageCollection):
     """Collection to store resources."""
 
     loaded = False
@@ -56,7 +56,6 @@ class ResourceStorageCollection(collection.StorageCollection):
         """Initialize the storage collection."""
         super().__init__(
             storage.Store(hass, RESOURCES_STORAGE_VERSION, RESOURCE_STORAGE_KEY),
-            _LOGGER,
         )
         self.ll_config = ll_config
 
@@ -68,10 +67,10 @@ class ResourceStorageCollection(collection.StorageCollection):
 
         return {"resources": len(self.async_items() or [])}
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data."""
-        if (data := await self.store.async_load()) is not None:
-            return cast(Optional[dict], data)
+        if (store_data := await self.store.async_load()) is not None:
+            return store_data
 
         # Import it from config.
         try:
@@ -83,20 +82,20 @@ class ResourceStorageCollection(collection.StorageCollection):
             return None
 
         # Remove it from config and save both resources + config
-        data = conf[CONF_RESOURCES]
+        resources: list[dict[str, Any]] = conf[CONF_RESOURCES]
 
         try:
-            vol.Schema([RESOURCE_SCHEMA])(data)
+            vol.Schema([RESOURCE_SCHEMA])(resources)
         except vol.Invalid as err:
             _LOGGER.warning("Resource import failed. Data invalid: %s", err)
             return None
 
         conf.pop(CONF_RESOURCES)
 
-        for item in data:
+        for item in resources:
             item[CONF_ID] = uuid.uuid4().hex
 
-        data = {"items": data}
+        data: collection.SerializedStorageCollection = {"items": resources}
 
         await self.store.async_save(data)
         await self.ll_config.async_save(conf)
@@ -114,7 +113,7 @@ class ResourceStorageCollection(collection.StorageCollection):
         """Return unique ID."""
         return uuid.uuid4().hex
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         if not self.loaded:
             await self.async_load()
@@ -124,4 +123,4 @@ class ResourceStorageCollection(collection.StorageCollection):
         if CONF_RESOURCE_TYPE_WS in update_data:
             update_data[CONF_TYPE] = update_data.pop(CONF_RESOURCE_TYPE_WS)
 
-        return {**data, **update_data}
+        return {**item, **update_data}

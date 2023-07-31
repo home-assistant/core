@@ -8,7 +8,13 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_FILE_PATH,
+    CONF_FILENAME,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -18,6 +24,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     SERVICE_REFRESH,
+    SERVICE_SAVE_RECENT_CLIPS,
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
@@ -28,9 +35,12 @@ SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
     {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILENAME): cv.string}
 )
 SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
+SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
+    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILE_PATH): cv.string}
+)
 
 
-def _blink_startup_wrapper(hass, entry):
+def _blink_startup_wrapper(hass: HomeAssistant, entry: ConfigEntry) -> Blink:
     """Startup wrapper for blink."""
     blink = Blink()
     auth_data = deepcopy(dict(entry.data))
@@ -55,7 +65,10 @@ def _reauth_flow_wrapper(hass, data):
     )
     persistent_notification.async_create(
         hass,
-        "Blink configuration migrated to a new version. Please go to the integrations page to re-configure (such as sending a new 2FA key).",
+        (
+            "Blink configuration migrated to a new version. Please go to the"
+            " integrations page to re-configure (such as sending a new 2FA key)."
+        ),
         "Blink Migration",
     )
 
@@ -87,6 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     def blink_refresh(event_time=None):
         """Call blink to refresh info."""
@@ -95,6 +109,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_save_video(call):
         """Call save video service handler."""
         await async_handle_save_video_service(hass, entry, call)
+
+    async def async_save_recent_clips(call):
+        """Call save recent clips service handler."""
+        await async_handle_save_recent_clips_service(hass, entry, call)
 
     def send_pin(call):
         """Call blink to send new pin."""
@@ -109,6 +127,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN, SERVICE_SAVE_VIDEO, async_save_video, schema=SERVICE_SAVE_VIDEO_SCHEMA
     )
     hass.services.async_register(
+        DOMAIN,
+        SERVICE_SAVE_RECENT_CLIPS,
+        async_save_recent_clips,
+        schema=SERVICE_SAVE_RECENT_CLIPS_SCHEMA,
+    )
+    hass.services.async_register(
         DOMAIN, SERVICE_SEND_PIN, send_pin, schema=SERVICE_SEND_PIN_SCHEMA
     )
 
@@ -116,7 +140,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def _async_import_options_from_data_if_missing(hass, entry):
+def _async_import_options_from_data_if_missing(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     options = dict(entry.options)
     if CONF_SCAN_INTERVAL not in entry.options:
         options[CONF_SCAN_INTERVAL] = entry.data.get(
@@ -144,6 +170,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    blink: Blink = hass.data[DOMAIN][entry.entry_id]
+    blink.refresh_rate = entry.options[CONF_SCAN_INTERVAL]
+
+
 async def async_handle_save_video_service(hass, entry, call):
     """Handle save video service calls."""
     camera_name = call.data[CONF_NAME]
@@ -152,13 +184,33 @@ async def async_handle_save_video_service(hass, entry, call):
         _LOGGER.error("Can't write %s, no access to path!", video_path)
         return
 
-    def _write_video(camera_name, video_path):
+    def _write_video(name, file_path):
         """Call video write."""
         all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
-        if camera_name in all_cameras:
-            all_cameras[camera_name].video_to_file(video_path)
+        if name in all_cameras:
+            all_cameras[name].video_to_file(file_path)
 
     try:
         await hass.async_add_executor_job(_write_video, camera_name, video_path)
     except OSError as err:
         _LOGGER.error("Can't write image to file: %s", err)
+
+
+async def async_handle_save_recent_clips_service(hass, entry, call):
+    """Save multiple recent clips to output directory."""
+    camera_name = call.data[CONF_NAME]
+    clips_dir = call.data[CONF_FILE_PATH]
+    if not hass.config.is_allowed_path(clips_dir):
+        _LOGGER.error("Can't write to directory %s, no access to path!", clips_dir)
+        return
+
+    def _save_recent_clips(name, output_dir):
+        """Call save recent clips."""
+        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
+        if name in all_cameras:
+            all_cameras[name].save_recent_clips(output_dir=output_dir)
+
+    try:
+        await hass.async_add_executor_job(_save_recent_clips, camera_name, clips_dir)
+    except OSError as err:
+        _LOGGER.error("Can't write recent clips to directory: %s", err)

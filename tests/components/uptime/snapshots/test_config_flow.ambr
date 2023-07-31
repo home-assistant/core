@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_full_user_flow
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+    }),
+    'data': dict({
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'uptime',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'domain': 'uptime',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Uptime',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'title': 'Uptime',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---

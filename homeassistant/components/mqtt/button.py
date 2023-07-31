@@ -6,7 +6,7 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import button
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import DEVICE_CLASSES_SCHEMA, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -22,13 +22,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
 )
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    async_setup_platform_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import MqttCommandTemplate
 from .util import valid_publish_topic
 
@@ -40,38 +34,14 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): button.DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_PRESS, default=DEFAULT_PAYLOAD_PRESS): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Buttons under the button platform key is deprecated in HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
-    warn_for_legacy_schema(button.DOMAIN),
-)
-
-
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT button configured under the fan platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        button.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(
@@ -79,7 +49,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT button through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT button through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -100,6 +70,7 @@ async def _async_setup_entity(
 class MqttButton(MqttEntity, ButtonEntity):
     """Representation of a switch that can be toggled using MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = button.ENTITY_ID_FORMAT
 
     def __init__(
@@ -122,17 +93,13 @@ class MqttButton(MqttEntity, ButtonEntity):
         self._command_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE), entity=self
         ).async_render
+        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-    @property
-    def device_class(self) -> ButtonDeviceClass | None:
-        """Return the device class of the sensor."""
-        return self._config.get(CONF_DEVICE_CLASS)
 
     async def async_press(self) -> None:
         """Turn the device on.

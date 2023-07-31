@@ -34,7 +34,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
+from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY, SET_SOUND_SETTING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up from legacy configuration file. Obsolete."""
     _LOGGER.error(
-        "Configuring Songpal through media_player platform is no longer supported. Convert to songpal platform or UI configuration"
+        "Configuring Songpal through media_player platform is no longer supported."
+        " Convert to songpal platform or UI configuration"
     )
 
 
@@ -99,6 +100,8 @@ class SongpalEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, name, device):
         """Init."""
@@ -197,11 +200,6 @@ class SongpalEntity(MediaPlayerEntity):
         self.hass.loop.create_task(self._dev.listen_notifications())
 
     @property
-    def name(self):
-        """Return name of the device."""
-        return self._name
-
-    @property
     def unique_id(self):
         """Return a unique ID."""
         return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
@@ -219,7 +217,7 @@ class SongpalEntity(MediaPlayerEntity):
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Sony Corporation",
             model=self._model,
-            name=self.name,
+            name=self._name,
             sw_version=self._sysinfo.version,
         )
 
@@ -331,11 +329,27 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        return await self._dev.set_power(True)
+        try:
+            return await self._dev.set_power(True)
+        except SongpalException as ex:
+            if ex.code == ERROR_REQUEST_RETRY:
+                _LOGGER.debug(
+                    "Swallowing %s, the device might be already in the wanted state", ex
+                )
+                return
+            raise
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        return await self._dev.set_power(False)
+        try:
+            return await self._dev.set_power(False)
+        except SongpalException as ex:
+            if ex.code == ERROR_REQUEST_RETRY:
+                _LOGGER.debug(
+                    "Swallowing %s, the device might be already in the wanted state", ex
+                )
+                return
+            raise
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the device."""

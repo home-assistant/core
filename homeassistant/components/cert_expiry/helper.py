@@ -1,9 +1,10 @@
 """Helper functions for the Cert Expiry platform."""
+from functools import cache
 import socket
 import ssl
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import TIMEOUT
 from .errors import (
@@ -14,17 +15,24 @@ from .errors import (
 )
 
 
+@cache
+def _get_default_ssl_context():
+    """Return the default SSL context."""
+    return ssl.create_default_context()
+
+
 def get_cert(
     host: str,
     port: int,
 ):
     """Get the certificate for the host and port combination."""
-    ctx = ssl.create_default_context()
+    ctx = _get_default_ssl_context()
     address = (host, port)
-    with socket.create_connection(address, timeout=TIMEOUT) as sock:
-        with ctx.wrap_socket(sock, server_hostname=address[0]) as ssock:
-            cert = ssock.getpeercert()
-            return cert
+    with socket.create_connection(address, timeout=TIMEOUT) as sock, ctx.wrap_socket(
+        sock, server_hostname=address[0]
+    ) as ssock:
+        cert = ssock.getpeercert()
+        return cert
 
 
 async def get_cert_expiry_timestamp(
@@ -51,4 +59,4 @@ async def get_cert_expiry_timestamp(
         raise ValidationFailure(err.args[0]) from err
 
     ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    return dt.utc_from_timestamp(ts_seconds)
+    return dt_util.utc_from_timestamp(ts_seconds)

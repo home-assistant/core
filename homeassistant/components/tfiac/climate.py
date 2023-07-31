@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -84,7 +84,7 @@ class TfiacClimate(ClimateEntity):
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, hass, client):
         """Init class."""

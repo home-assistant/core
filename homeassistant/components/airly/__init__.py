@@ -38,8 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def set_update_interval(instances_count: int, requests_remaining: int) -> timedelta:
-    """
-    Return data update interval.
+    """Return data update interval.
 
     The number of requests is reset at midnight UTC so we calculate the update
     interval based on number of minutes until midnight, the number of Airly instances
@@ -91,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             str(longitude),
         ),
     ):
-        device_entry = device_registry.async_get_device({old_ids})  # type: ignore[arg-type]
+        device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
         if device_entry and entry.entry_id in device_entry.config_entries:
             new_ids = (DOMAIN, f"{latitude}-{longitude}")
             device_registry.async_update_device(
@@ -150,7 +149,9 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
-        self.airly = Airly(api_key, session)
+        # Currently, Airly only supports Polish and English
+        language = "pl" if hass.config.language == "pl" else "en"
+        self.airly = Airly(api_key, session, language=language)
         self.use_nearest = use_nearest
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)

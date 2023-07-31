@@ -29,6 +29,7 @@ HUB_BUSY_SLEEP = 0.5
 PLATFORMS_v1 = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR]
 PLATFORMS_v2 = [
     Platform.BINARY_SENSOR,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SENSOR,
@@ -72,7 +73,7 @@ class HueBridge:
     async def async_initialize_bridge(self) -> bool:
         """Initialize Connection with the Hue API."""
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await self.api.initialize()
 
         except (LinkButtonNotPressed, Unauthorized):

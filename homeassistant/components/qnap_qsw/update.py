@@ -1,7 +1,7 @@
 """Support for the QNAP QSW update."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Any, Final
 
 from aioqsw.const import (
     QSD_DESCRIPTION,
@@ -16,10 +16,11 @@ from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
+    UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, QSW_COORD_FW, QSW_UPDATE
@@ -51,6 +52,7 @@ async def async_setup_entry(
 class QswUpdate(QswFirmwareEntity, UpdateEntity):
     """Define a QNAP QSW update."""
 
+    _attr_supported_features = UpdateEntityFeature.INSTALL
     entity_description: UpdateEntityDescription
 
     def __init__(
@@ -87,3 +89,13 @@ class QswUpdate(QswFirmwareEntity, UpdateEntity):
         self._attr_release_summary = self.get_device_value(
             QSD_FIRMWARE_CHECK, QSD_DESCRIPTION
         )
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        await self.coordinator.async_refresh()
+        await self.coordinator.qsw.live_update()
+
+        self._attr_installed_version = self.latest_version
+        self.async_write_ha_state()

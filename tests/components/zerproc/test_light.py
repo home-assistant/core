@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -66,7 +67,7 @@ async def mock_light(hass, mock_entry):
     return light
 
 
-async def test_init(hass, mock_entry):
+async def test_init(hass: HomeAssistant, mock_entry) -> None:
     """Test platform setup."""
 
     mock_entry.add_to_hass(hass)
@@ -126,7 +127,7 @@ async def test_init(hass, mock_entry):
     assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"}
 
 
-async def test_discovery_exception(hass, mock_entry):
+async def test_discovery_exception(hass: HomeAssistant, mock_entry) -> None:
     """Test platform setup."""
 
     mock_entry.add_to_hass(hass)
@@ -142,7 +143,7 @@ async def test_discovery_exception(hass, mock_entry):
     assert len(hass.data[DOMAIN]["addresses"]) == 0
 
 
-async def test_remove_entry(hass, mock_light, mock_entry):
+async def test_remove_entry(hass: HomeAssistant, mock_light, mock_entry) -> None:
     """Test platform setup."""
     assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:DD:EE:FF"}
     assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
@@ -154,7 +155,9 @@ async def test_remove_entry(hass, mock_light, mock_entry):
     assert DOMAIN not in hass.data
 
 
-async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
+async def test_remove_entry_exceptions_caught(
+    hass: HomeAssistant, mock_light, mock_entry
+) -> None:
     """Assert that disconnect exceptions are caught."""
     with patch.object(
         mock_light, "disconnect", side_effect=pyzerproc.ZerprocException("Mock error")
@@ -164,7 +167,7 @@ async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
     assert mock_disconnect.called
 
 
-async def test_light_turn_on(hass, mock_light):
+async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
     """Test ZerprocLight turn_on."""
     utcnow = dt_util.utcnow()
     with patch.object(mock_light, "turn_on") as mock_turn_on:
@@ -256,7 +259,7 @@ async def test_light_turn_on(hass, mock_light):
         mock_set_color.assert_called_with(162, 200, 50)
 
 
-async def test_light_turn_off(hass, mock_light):
+async def test_light_turn_off(hass: HomeAssistant, mock_light) -> None:
     """Test ZerprocLight turn_on."""
     with patch.object(mock_light, "turn_off") as mock_turn_off:
         await hass.services.async_call(
@@ -269,7 +272,7 @@ async def test_light_turn_off(hass, mock_light):
     mock_turn_off.assert_called()
 
 
-async def test_light_update(hass, mock_light):
+async def test_light_update(hass: HomeAssistant, mock_light) -> None:
     """Test ZerprocLight update."""
     utcnow = dt_util.utcnow()
 

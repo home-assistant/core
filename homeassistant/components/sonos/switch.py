@@ -10,12 +10,12 @@ from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TIME, Platform
+from homeassistant.const import ATTR_TIME, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_change
 
 from .const import (
     DATA_SONOS,
@@ -67,18 +67,6 @@ POLL_REQUIRED = (
     ATTR_STATUS_LIGHT,
 )
 
-FRIENDLY_NAMES = {
-    ATTR_CROSSFADE: "Crossfade",
-    ATTR_LOUDNESS: "Loudness",
-    ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "Surround music full volume",
-    ATTR_NIGHT_SOUND: "Night sound",
-    ATTR_SPEECH_ENHANCEMENT: "Speech enhancement",
-    ATTR_STATUS_LIGHT: "Status light",
-    ATTR_SUB_ENABLED: "Subwoofer enabled",
-    ATTR_SURROUND_ENABLED: "Surround enabled",
-    ATTR_TOUCH_CONTROLS: "Touch controls",
-}
-
 FEATURE_ICONS = {
     ATTR_LOUDNESS: "mdi:bullhorn-variant",
     ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "mdi:music-note-plus",
@@ -90,6 +78,8 @@ FEATURE_ICONS = {
     ATTR_SURROUND_ENABLED: "mdi:surround-sound",
     ATTR_TOUCH_CONTROLS: "mdi:gesture-tap",
 }
+
+WEEKEND_DAYS = (0, 6)
 
 
 async def async_setup_entry(
@@ -138,7 +128,7 @@ async def async_setup_entry(
                 )
             _LOGGER.debug(
                 "Creating %s switch on %s",
-                FRIENDLY_NAMES[feature_type],
+                feature_type,
                 speaker.zone_name,
             )
             entities.append(SonosSwitchEntity(feature_type, speaker))
@@ -161,7 +151,7 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
         self.feature_type = feature_type
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_name = FRIENDLY_NAMES[feature_type]
+        self._attr_translation_key = feature_type
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
 
@@ -233,6 +223,17 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             )
         )
 
+        async def async_write_state_daily(now: datetime.datetime) -> None:
+            """Update alarm state attributes each calendar day."""
+            _LOGGER.debug("Updating state attributes for %s", self.name)
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass, async_write_state_daily, hour=0, minute=0, second=0
+            )
+        )
+
     @property
     def alarm(self) -> Alarm:
         """Return the alarm instance."""
@@ -241,7 +242,10 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"{self.alarm.recurrence.capitalize()} alarm {str(self.alarm.start_time)[:5]}"
+        return (
+            f"{self.alarm.recurrence.capitalize()} alarm"
+            f" {str(self.alarm.start_time)[:5]}"
+        )
 
     async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
@@ -304,14 +308,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def _is_today(self) -> bool:
         """Return whether this alarm is scheduled for today."""
         recurrence = self.alarm.recurrence
-        timestr = int(datetime.datetime.today().strftime("%w"))
+        daynum = int(datetime.datetime.today().strftime("%w"))
         return (
-            bool(recurrence[:2] == "ON" and str(timestr) in recurrence)
-            or bool(recurrence == "DAILY")
-            or bool(recurrence == "WEEKDAYS" and int(timestr) not in [0, 7])
-            or bool(recurrence == "ONCE")
-            or bool(recurrence == "WEEKDAYS" and int(timestr) not in [0, 7])
-            or bool(recurrence == "WEEKENDS" and int(timestr) not in range(1, 7))
+            recurrence in ("DAILY", "ONCE")
+            or (recurrence == "WEEKENDS" and daynum in WEEKEND_DAYS)
+            or (recurrence == "WEEKDAYS" and daynum not in WEEKEND_DAYS)
+            or (recurrence.startswith("ON_") and str(daynum) in recurrence)
         )
 
     @property
@@ -412,7 +414,10 @@ def async_migrate_speech_enhancement_entity_unique_id(
 
     if len(speech_enhancement_entries) > 1:
         _LOGGER.warning(
-            "Migration of Speech Enhancement switches on %s failed, manual cleanup required: %s",
+            (
+                "Migration of Speech Enhancement switches on %s failed,"
+                " manual cleanup required: %s"
+            ),
             speaker.zone_name,
             [e.entity_id for e in speech_enhancement_entries],
         )

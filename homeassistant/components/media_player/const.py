@@ -1,7 +1,5 @@
 """Provides the constants needed for component."""
-from enum import IntEnum
-
-from homeassistant.backports.enum import StrEnum
+from enum import IntFlag, StrEnum
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
@@ -176,7 +174,7 @@ REPEAT_MODE_ONE = "one"
 REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
 
 
-class MediaPlayerEntityFeature(IntEnum):
+class MediaPlayerEntityFeature(IntFlag):
     """Supported features of the media player entity."""
 
     PAUSE = 1
@@ -199,6 +197,8 @@ class MediaPlayerEntityFeature(IntEnum):
     BROWSE_MEDIA = 131072
     REPEAT_SET = 262144
     GROUPING = 524288
+    MEDIA_ANNOUNCE = 1048576
+    MEDIA_ENQUEUE = 2097152
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.

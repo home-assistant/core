@@ -1,4 +1,6 @@
 """Mail (SMTP) notification service."""
+from __future__ import annotations
+
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -27,8 +29,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ssl import client_context
 
@@ -72,7 +76,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MailNotificationService | None:
     """Get the mail notification service."""
     setup_reload_service(hass, DOMAIN, PLATFORMS)
     mail_service = MailNotificationService(
@@ -154,16 +162,17 @@ class MailNotificationService(BaseNotificationService):
             server = self.connect()
         except (smtplib.socket.gaierror, ConnectionRefusedError):
             _LOGGER.exception(
-                "SMTP server not found or refused connection (%s:%s). "
-                "Please check the IP address, hostname, and availability of your SMTP server",
+                (
+                    "SMTP server not found or refused connection (%s:%s). Please check"
+                    " the IP address, hostname, and availability of your SMTP server"
+                ),
                 self._server,
                 self._port,
             )
 
         except smtplib.SMTPAuthenticationError:
             _LOGGER.exception(
-                "Login not possible. "
-                "Please check your setting and/or your credentials"
+                "Login not possible. Please check your setting and/or your credentials"
             )
             return False
 
@@ -174,8 +183,7 @@ class MailNotificationService(BaseNotificationService):
         return True
 
     def send_message(self, message="", **kwargs):
-        """
-        Build and send a message to a user.
+        """Build and send a message to a user.
 
         Will send plain text normally, or will build a multipart HTML message
         with inline image attachments if images config is defined, or will

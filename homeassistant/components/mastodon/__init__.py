@@ -1,1 +1,1 @@
-"""The mastodon component."""
+"""The Mastodon integration."""

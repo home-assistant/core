@@ -1,9 +1,9 @@
 {
   "domain": "pandora",
   "name": "Pandora",
-  "documentation": "https://www.home-assistant.io/integrations/pandora",
-  "requirements": ["pexpect==4.6.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/pandora",
   "iot_class": "local_polling",
-  "loggers": ["pexpect", "ptyprocess"]
+  "loggers": ["pexpect", "ptyprocess"],
+  "requirements": ["pexpect==4.6.0"]
 }

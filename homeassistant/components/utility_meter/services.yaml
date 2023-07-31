@@ -1,22 +1,17 @@
 # Describes the format for available switch services
 
 reset:
-  name: Reset
-  description: Resets all counters of a utility meter.
   target:
     entity:
       domain: select
 
 calibrate:
-  name: Calibrate
-  description: Calibrates a utility meter sensor.
   target:
     entity:
       domain: sensor
+      integration: utility_meter
   fields:
     value:
-      name: Value
-      description: Value to which set the meter
       example: "100"
       required: true
       selector:

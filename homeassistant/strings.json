@@ -1,10 +1,59 @@
 {
   "common": {
+    "generic": {
+      "model": "Model",
+      "ui_managed": "Managed via UI"
+    },
+    "device_automation": {
+      "condition_type": {
+        "is_on": "{entity_name} is on",
+        "is_off": "{entity_name} is off"
+      },
+      "trigger_type": {
+        "changed_states": "{entity_name} turned on or off",
+        "turned_on": "{entity_name} turned on",
+        "turned_off": "{entity_name} turned off"
+      },
+      "action_type": {
+        "toggle": "Toggle {entity_name}",
+        "turn_on": "Turn on {entity_name}",
+        "turn_off": "Turn off {entity_name}"
+      }
+    },
+    "action": {
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "enable": "Enable",
+      "disable": "Disable",
+      "open": "Open",
+      "close": "Close",
+      "reload": "Reload",
+      "restart": "Restart",
+      "start": "Start",
+      "stop": "Stop",
+      "pause": "Pause",
+      "turn_on": "Turn on",
+      "turn_off": "Turn off",
+      "toggle": "Toggle"
+    },
+    "time": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
     "state": {
       "off": "Off",
       "on": "On",
+      "yes": "Yes",
+      "no": "No",
       "open": "Open",
       "closed": "Closed",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
       "connected": "Connected",
       "disconnected": "Disconnected",
       "locked": "Locked",
@@ -23,7 +72,7 @@
         "via_hassio_addon": "{name} via Home Assistant add-on"
       },
       "description": {
-        "confirm_setup": "Do you want to start set up?"
+        "confirm_setup": "Do you want to start setup?"
       },
       "data": {
         "device": "Device",
@@ -71,6 +120,7 @@
         "no_devices_found": "No devices found on the network",
         "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages.",
         "oauth2_error": "Received invalid token data.",
+        "oauth2_timeout": "Timeout resolving OAuth token.",
         "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
         "oauth2_missing_credentials": "The integration requires application credentials.",
         "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",

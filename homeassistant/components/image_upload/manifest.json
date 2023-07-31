@@ -1,0 +1,11 @@
+{
+  "domain": "image_upload",
+  "name": "Image Upload",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": false,
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/image_upload",
+  "integration_type": "system",
+  "quality_scale": "internal",
+  "requirements": ["Pillow==10.0.0"]
+}

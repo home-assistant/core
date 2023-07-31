@@ -2,23 +2,26 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from functools import partial
+from ipaddress import IPv6Address, ip_address
 import logging
 from pprint import pformat
-from typing import Any, Optional, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.profiles.profile import find_device_of_type
+from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_TYPE, CONF_URL
-from homeassistant.core import callback
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_TYPE, CONF_URL
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONF_BROWSE_UNFILTERED,
@@ -32,7 +35,7 @@ from .data import get_domain_data
 
 LOGGER = logging.getLogger(__name__)
 
-FlowInput = Optional[Mapping[str, Any]]
+FlowInput = Mapping[str, Any] | None
 
 
 class ConnectError(IntegrationError):
@@ -56,6 +59,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._udn: str | None = None
         self._device_type: str | None = None
         self._name: str | None = None
+        self._mac: str | None = None
         self._options: dict[str, Any] = {}
 
     @staticmethod
@@ -122,7 +126,8 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by SSDP discovery."""
-        LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_set_info_from_discovery(discovery_info)
 
@@ -130,31 +135,55 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="alternative_integration")
 
         # Abort if the device doesn't support all services required for a DmrDevice.
-        # Use the discovery_info instead of DmrDevice.is_profile_device to avoid
-        # contacting the device again.
-        discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
-        if not discovery_service_list:
+        if not _is_dmr_device(discovery_info):
             return self.async_abort(reason="not_dmr")
 
-        services = discovery_service_list.get("service")
-        if not services:
-            discovery_service_ids: set[str] = set()
-        elif isinstance(services, list):
-            discovery_service_ids = {service.get("serviceId") for service in services}
-        else:
-            # Only one service defined (etree_to_dict failed to make a list)
-            discovery_service_ids = {services.get("serviceId")}
-
-        if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
-            return self.async_abort(reason="not_dmr")
-
-        # Abort if another config entry has the same location, in case the
-        # device doesn't have a static and unique UDN (breaking the UPnP spec).
-        self._async_abort_entries_match({CONF_URL: self._location})
+        # Abort if another config entry has the same location or MAC address, in
+        # case the device doesn't have a static and unique UDN (breaking the
+        # UPnP spec).
+        for entry in self._async_current_entries(include_ignore=True):
+            if self._location == entry.data[CONF_URL]:
+                return self.async_abort(reason="already_configured")
+            if self._mac and self._mac == entry.data.get(CONF_MAC):
+                return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {"name": self._name}
 
         return await self.async_step_confirm()
+
+    async def async_step_ignore(self, user_input: Mapping[str, Any]) -> FlowResult:
+        """Ignore this config flow, and add MAC address as secondary identifier.
+
+        Not all DMR devices correctly implement the spec, so their UDN may
+        change between boots. Use the MAC address as a secondary identifier so
+        they can still be ignored in this case.
+        """
+        LOGGER.debug("async_step_ignore: user_input: %s", user_input)
+        self._udn = user_input["unique_id"]
+        assert self._udn
+        await self.async_set_unique_id(self._udn, raise_on_progress=False)
+
+        # Try to get relevant info from SSDP discovery, but don't worry if it's
+        # not available - the data values will just be None in that case
+        for dev_type in DmrDevice.DEVICE_TYPES:
+            discovery = await ssdp.async_get_discovery_info_by_udn_st(
+                self.hass, self._udn, dev_type
+            )
+            if discovery:
+                await self._async_set_info_from_discovery(
+                    discovery, abort_if_configured=False
+                )
+                break
+
+        return self.async_create_entry(
+            title=user_input["title"],
+            data={
+                CONF_URL: self._location,
+                CONF_DEVICE_ID: self._udn,
+                CONF_TYPE: self._device_type,
+                CONF_MAC: self._mac,
+            },
+        )
 
     async def async_step_unignore(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Rediscover previously ignored devices by their unique_id."""
@@ -224,6 +253,9 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._name:
             self._name = device.name
 
+        if not self._mac and (host := urlparse(self._location).hostname):
+            self._mac = await _async_get_mac_address(self.hass, host)
+
     def _create_entry(self) -> FlowResult:
         """Create a config entry, assuming all required information is now known."""
         LOGGER.debug(
@@ -238,6 +270,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_URL: self._location,
             CONF_DEVICE_ID: self._udn,
             CONF_TYPE: self._device_type,
+            CONF_MAC: self._mac,
         }
         return self.async_create_entry(title=title, data=data, options=self._options)
 
@@ -256,13 +289,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assert isinstance(self._location, str)
 
         self._udn = discovery_info.ssdp_udn
-        await self.async_set_unique_id(self._udn)
-
-        if abort_if_configured:
-            # Abort if already configured, but update the last-known location
-            self._abort_if_unique_id_configured(
-                updates={CONF_URL: self._location}, reload_on_update=False
-            )
+        await self.async_set_unique_id(self._udn, raise_on_progress=abort_if_configured)
 
         self._device_type = discovery_info.ssdp_nt or discovery_info.ssdp_st
         self._name = (
@@ -270,6 +297,17 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or urlparse(self._location).hostname
             or DEFAULT_NAME
         )
+
+        if host := discovery_info.ssdp_headers.get("_host"):
+            self._mac = await _async_get_mac_address(self.hass, host)
+
+        if abort_if_configured:
+            # Abort if already configured, but update the last-known location
+            updates = {CONF_URL: self._location}
+            # Set the MAC address for older entries
+            if self._mac:
+                updates[CONF_MAC] = self._mac
+            self._abort_if_unique_id_configured(updates=updates, reload_on_update=False)
 
     async def _async_get_discoveries(self) -> list[ssdp.SsdpServiceInfo]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
@@ -408,3 +446,59 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
         return True
 
     return False
+
+
+def _is_dmr_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+    """Determine if discovery is a complete DLNA DMR device.
+
+    Use the discovery_info instead of DmrDevice.is_profile_device to avoid
+    contacting the device again.
+    """
+    # Abort if the device doesn't support all services required for a DmrDevice.
+    discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
+    if not discovery_service_list:
+        return False
+
+    services = discovery_service_list.get("service")
+    if not services:
+        discovery_service_ids: set[str] = set()
+    elif isinstance(services, list):
+        discovery_service_ids = {service.get("serviceId") for service in services}
+    else:
+        # Only one service defined (etree_to_dict failed to make a list)
+        discovery_service_ids = {services.get("serviceId")}
+
+    if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
+        return False
+
+    return True
+
+
+async def _async_get_mac_address(hass: HomeAssistant, host: str) -> str | None:
+    """Get mac address from host name, IPv4 address, or IPv6 address."""
+    # Help mypy, which has trouble with the async_add_executor_job + partial call
+    mac_address: str | None
+    # getmac has trouble using IPv6 addresses as the "hostname" parameter so
+    # assume host is an IP address, then handle the case it's not.
+    try:
+        ip_addr = ip_address(host)
+    except ValueError:
+        mac_address = await hass.async_add_executor_job(
+            partial(get_mac_address, hostname=host)
+        )
+    else:
+        if ip_addr.version == 4:
+            mac_address = await hass.async_add_executor_job(
+                partial(get_mac_address, ip=host)
+            )
+        else:
+            # Drop scope_id from IPv6 address by converting via int
+            ip_addr = IPv6Address(int(ip_addr))
+            mac_address = await hass.async_add_executor_job(
+                partial(get_mac_address, ip6=str(ip_addr))
+            )
+
+    if not mac_address:
+        return None
+
+    return dr.format_mac(mac_address)

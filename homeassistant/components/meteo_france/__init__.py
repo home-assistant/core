@@ -8,9 +8,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -51,6 +52,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=city_conf
             )
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Météo-France",
+            },
         )
 
     return True
@@ -133,30 +148,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             await coordinator_alert.async_refresh()
 
-            if not coordinator_alert.last_update_success:
-                raise ConfigEntryNotReady
-
-            hass.data[DOMAIN][department] = True
+            if coordinator_alert.last_update_success:
+                hass.data[DOMAIN][department] = True
         else:
             _LOGGER.warning(
-                "Weather alert for department %s won't be added with city %s, as it has already been added within another city",
+                (
+                    "Weather alert for department %s won't be added with city %s, as it"
+                    " has already been added within another city"
+                ),
                 department,
                 entry.title,
             )
     else:
         _LOGGER.warning(
-            "Weather alert not available: The city %s is not in metropolitan France or Andorre",
+            (
+                "Weather alert not available: The city %s is not in metropolitan France"
+                " or Andorre"
+            ),
             entry.title,
         )
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: undo_listener,
         COORDINATOR_FORECAST: coordinator_forecast,
         COORDINATOR_RAIN: coordinator_rain,
-        COORDINATOR_ALERT: coordinator_alert,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
+    if coordinator_alert and coordinator_alert.last_update_success:
+        hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT] = coordinator_alert
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -166,13 +186,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]:
-
         department = hass.data[DOMAIN][entry.entry_id][
             COORDINATOR_FORECAST
         ].data.position.get("dept")
         hass.data[DOMAIN][department] = False
         _LOGGER.debug(
-            "Weather alert for depatment %s unloaded and released. It can be added now by another city",
+            (
+                "Weather alert for depatment %s unloaded and released. It can be added"
+                " now by another city"
+            ),
             department,
         )
 

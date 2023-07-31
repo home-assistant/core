@@ -134,20 +134,20 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
-    # pylint: disable=protected-access
+    # pylint: disable-next=protected-access
     app._on_startup.freeze()
     await app.startup()
 
-    DescriptionXmlView(config).register(app, app.router)
-    HueUsernameView().register(app, app.router)
-    HueConfigView(config).register(app, app.router)
-    HueUnauthorizedUser().register(app, app.router)
-    HueAllLightsStateView(config).register(app, app.router)
-    HueOneLightStateView(config).register(app, app.router)
-    HueOneLightChangeView(config).register(app, app.router)
-    HueAllGroupsStateView(config).register(app, app.router)
-    HueGroupView(config).register(app, app.router)
-    HueFullStateView(config).register(app, app.router)
+    DescriptionXmlView(config).register(hass, app, app.router)
+    HueUsernameView().register(hass, app, app.router)
+    HueConfigView(config).register(hass, app, app.router)
+    HueUnauthorizedUser().register(hass, app, app.router)
+    HueAllLightsStateView(config).register(hass, app, app.router)
+    HueOneLightStateView(config).register(hass, app, app.router)
+    HueOneLightChangeView(config).register(hass, app, app.router)
+    HueAllGroupsStateView(config).register(hass, app, app.router)
+    HueGroupView(config).register(hass, app, app.router)
+    HueFullStateView(config).register(hass, app, app.router)
 
     async def _start(event: Event) -> None:
         """Start the bridge."""

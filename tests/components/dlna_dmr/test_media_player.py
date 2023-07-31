@@ -40,9 +40,19 @@ from homeassistant.components.media_player import (
     const as mp_const,
 )
 from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_MAC,
+    CONF_TYPE,
+    CONF_URL,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as async_get_dr
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    CONNECTION_UPNP,
+    async_get as async_get_dr,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
@@ -57,10 +67,12 @@ from .conftest import (
     MOCK_DEVICE_TYPE,
     MOCK_DEVICE_UDN,
     MOCK_DEVICE_USN,
+    MOCK_MAC_ADDRESS,
     NEW_DEVICE_LOCATION,
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 # Auto-use the domain_data_mock fixture for every test in this module
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
@@ -269,7 +281,7 @@ async def test_setup_entry_with_options(
     config_entry_mock.options = MappingProxyType(
         {
             CONF_LISTEN_PORT: 2222,
-            CONF_CALLBACK_URL_OVERRIDE: "http://192.88.99.10/events",
+            CONF_CALLBACK_URL_OVERRIDE: "http://198.51.100.10/events",
             CONF_POLL_AVAILABILITY: True,
         }
     )
@@ -283,7 +295,7 @@ async def test_setup_entry_with_options(
     )
     # Check event notifiers are acquired with the configured port and callback URL
     domain_data_mock.async_get_event_notifier.assert_awaited_once_with(
-        EventListenAddr(LOCAL_IP, 2222, "http://192.88.99.10/events"), hass
+        EventListenAddr(LOCAL_IP, 2222, "http://198.51.100.10/events"), hass
     )
     # Check UPnP services are subscribed
     dmr_device_mock.async_subscribe_services.assert_awaited_once_with(
@@ -322,6 +334,46 @@ async def test_setup_entry_with_options(
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+
+async def test_setup_entry_mac_address(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
+    dmr_device_mock: Mock,
+) -> None:
+    """Entry with a MAC address will set up and set the device registry connection."""
+    await setup_mock_component(hass, config_entry_mock)
+
+    # Check the device registry connections for MAC address
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
+    assert device is not None
+    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
+
+
+async def test_setup_entry_no_mac_address(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock_no_mac: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test setting up an entry without a MAC address will succeed."""
+    await setup_mock_component(hass, config_entry_mock_no_mac)
+
+    # Check the device registry connections does not include the MAC address
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
+    assert device is not None
+    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
 
 
 async def test_event_subscribe_failure(
@@ -382,7 +434,10 @@ async def test_available_device(
     """Test a DlnaDmrEntity with a connected DmrDevice."""
     # Check hass device information is filled in
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is not None
     # Device properties are set in dmr_device_mock before the entity gets constructed
     assert device.manufacturer == "device_manufacturer"
@@ -390,7 +445,7 @@ async def test_available_device(
     assert device.name == "device_name"
 
     # Check entity state gets updated when device changes state
-    for (dev_state, ent_state) in [
+    for dev_state, ent_state in [
         (None, MediaPlayerState.ON),
         (TransportState.STOPPED, MediaPlayerState.IDLE),
         (TransportState.PLAYING, MediaPlayerState.PLAYING),
@@ -630,21 +685,23 @@ async def test_play_media_stopped(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_url="http://198.51.100.20:8200/MediaItems/17621.mp3",
         media_title="Home Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_awaited_once_with()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://198.51.100.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
     dmr_device_mock.async_play.assert_awaited_once_with()
@@ -662,21 +719,23 @@ async def test_play_media_playing(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_url="http://198.51.100.20:8200/MediaItems/17621.mp3",
         media_title="Home Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_not_awaited()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://198.51.100.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_not_awaited()
     dmr_device_mock.async_play.assert_not_awaited()
@@ -695,7 +754,9 @@ async def test_play_media_no_autoplay(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {"autoplay": False},
         },
@@ -703,14 +764,14 @@ async def test_play_media_no_autoplay(
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_url="http://198.51.100.20:8200/MediaItems/17621.mp3",
         media_title="Home Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_awaited_once_with()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://198.51.100.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_not_awaited()
     dmr_device_mock.async_play.assert_not_awaited()
@@ -726,11 +787,13 @@ async def test_play_media_metadata(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
                 "title": "Mock song",
-                "thumb": "http://192.88.99.20:8200/MediaItems/17621.jpg",
+                "thumb": "http://198.51.100.20:8200/MediaItems/17621.jpg",
                 "metadata": {"artist": "Mock artist", "album": "Mock album"},
             },
         },
@@ -738,13 +801,13 @@ async def test_play_media_metadata(
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_url="http://198.51.100.20:8200/MediaItems/17621.mp3",
         media_title="Mock song",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={
             "artist": "Mock artist",
             "album": "Mock album",
-            "album_art_uri": "http://192.88.99.20:8200/MediaItems/17621.jpg",
+            "album_art_uri": "http://198.51.100.20:8200/MediaItems/17621.jpg",
         },
     )
 
@@ -756,7 +819,9 @@ async def test_play_media_metadata(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/123.mkv",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/123.mkv"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
                 "title": "Mock show",
@@ -767,7 +832,7 @@ async def test_play_media_metadata(
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/123.mkv",
+        media_url="http://198.51.100.20:8200/MediaItems/123.mkv",
         media_title="Mock show",
         override_upnp_class="object.item.videoItem.videoBroadcast",
         meta_data={"episodeSeason": 1, "episodeNumber": 12},
@@ -789,7 +854,9 @@ async def test_play_media_local_source(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-            mp_const.ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+            ),
         },
         blocking=True,
     )
@@ -844,7 +911,9 @@ async def test_play_media_didl_metadata(
             {
                 ATTR_ENTITY_ID: mock_entity_id,
                 mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-                mp_const.ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                mp_const.ATTR_MEDIA_CONTENT_ID: (
+                    "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                ),
             },
             blocking=True,
         )
@@ -943,7 +1012,10 @@ async def test_shuffle_repeat_modes(
 
 
 async def test_browse_media(
-    hass: HomeAssistant, hass_ws_client, dmr_device_mock: Mock, mock_entity_id: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
 ) -> None:
     """Test the async_browse_media method."""
     # Based on cast's test_entity_browse_media
@@ -967,7 +1039,9 @@ async def test_browse_media(
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1046,7 +1120,7 @@ async def test_browse_media(
 
 async def test_browse_media_unfiltered(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
     mock_entity_id: str,
@@ -1060,7 +1134,9 @@ async def test_browse_media_unfiltered(
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1208,6 +1284,7 @@ async def test_unavailable_device(
     hass.config_entries.async_update_entry(
         config_entry_mock, options={CONF_POLL_AVAILABILITY: True}
     )
+    await hass.async_block_till_done()
     await async_update_entity(hass, mock_entity_id)
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
@@ -1236,7 +1313,9 @@ async def test_unavailable_device(
             mp_const.SERVICE_PLAY_MEDIA,
             {
                 mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+                mp_const.ATTR_MEDIA_CONTENT_ID: (
+                    "http://198.51.100.20:8200/MediaItems/17621.mp3"
+                ),
                 mp_const.ATTR_MEDIA_ENQUEUE: False,
             },
         ),
@@ -1254,7 +1333,10 @@ async def test_unavailable_device(
 
     # Check hass device information has not been filled in yet
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is None
 
     # Unload config entry to clean up
@@ -1291,7 +1373,10 @@ async def test_become_available(
 
     # Check hass device information has not been filled in yet
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is None
 
     # Mock device is now available.
@@ -1330,7 +1415,10 @@ async def test_become_available(
     assert mock_state.state == MediaPlayerState.IDLE
     # Check hass device information is now filled in
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
     assert device is not None
     assert device.manufacturer == "device_manufacturer"
     assert device.model == "device_model_name"
@@ -2146,3 +2234,45 @@ async def test_config_update_poll_availability(
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
     assert mock_state.state == MediaPlayerState.IDLE
+
+
+async def test_config_update_mac_address(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock_no_mac: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test discovering the MAC address post-setup will update the device registry."""
+    await setup_mock_component(hass, config_entry_mock_no_mac)
+
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+
+    # Check the device registry connections does not include the MAC address
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
+    assert device is not None
+    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
+
+    # MAC address discovered and set by config flow
+    hass.config_entries.async_update_entry(
+        config_entry_mock_no_mac,
+        data={
+            CONF_URL: MOCK_DEVICE_LOCATION,
+            CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+            CONF_TYPE: MOCK_DEVICE_TYPE,
+            CONF_MAC: MOCK_MAC_ADDRESS,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Device registry connections should now include the MAC address
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
+    assert device is not None
+    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections

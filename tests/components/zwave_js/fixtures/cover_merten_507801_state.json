@@ -1,0 +1,798 @@
+{
+  "nodeId": 41,
+  "index": 0,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "manufacturerId": 122,
+  "productId": 1,
+  "productType": 32771,
+  "firmwareVersion": "2.2",
+  "deviceConfig": {
+    "filename": "/opt/node_modules/@zwave-js/config/config/devices/0x007a/507801.json",
+    "isEmbedded": false,
+    "manufacturer": "Merten",
+    "manufacturerId": 122,
+    "label": "507801",
+    "description": "Connect Roller Shutter",
+    "devices": [
+      {
+        "productType": 32771,
+        "productId": 1
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "inclusion": "Triple click button",
+      "exclusion": "Triple click button",
+      "reset": "Triple click button, then click and hold for 5 seconds",
+      "manual": "https://download.schneider-electric.com/files?p_Doc_Ref=MTN507801_HW_2008_43_EN&p_enDocType=User+guide&p_File_Name=MTN507801_HW_2008_43_EN.pdf"
+    }
+  },
+  "label": "507801",
+  "endpointCountIsDynamic": false,
+  "endpointsHaveIdenticalCapabilities": true,
+  "individualEndpointCount": 2,
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 41,
+      "index": 0,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 9,
+          "label": "Window Covering"
+        },
+        "specific": {
+          "key": 0,
+          "label": "Unused"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 117,
+          "name": "Protection",
+          "version": 2,
+          "isSecure": false
+        }
+      ]
+    },
+    {
+      "nodeId": 41,
+      "index": 1,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 9,
+          "label": "Window Covering"
+        },
+        "specific": {
+          "key": 0,
+          "label": "Unused"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 117,
+          "name": "Protection",
+          "version": 2,
+          "isSecure": false
+        }
+      ]
+    },
+    {
+      "nodeId": 41,
+      "index": 2,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 9,
+          "label": "Window Covering"
+        },
+        "specific": {
+          "key": 0,
+          "label": "Unused"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 117,
+          "name": "Protection",
+          "version": 2,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 176,
+      "propertyName": "Changeover Delay",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "For motor protection",
+        "label": "Changeover Delay",
+        "default": 10,
+        "min": 0,
+        "max": 255,
+        "unit": "0.1 seconds",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 177,
+      "propertyName": "Travel Time Up, Byte 1",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Travel Time Up, Byte 1",
+        "default": 4,
+        "min": 0,
+        "max": 255,
+        "unit": "25.6 seconds",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 178,
+      "propertyName": "Travel Time Up, Byte 2",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Travel Time Up, Byte 2",
+        "default": 176,
+        "min": 0,
+        "max": 255,
+        "unit": "0.1 seconds",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 176
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 179,
+      "propertyName": "Travel Time Down, Byte 1",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Travel Time Down, Byte 1",
+        "default": 4,
+        "min": 0,
+        "max": 255,
+        "unit": "25.6 seconds",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 180,
+      "propertyName": "Travel Time Down, Byte 2",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Travel Time Down, Byte 2",
+        "default": 176,
+        "min": 0,
+        "max": 255,
+        "unit": "0.1 seconds",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 176
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 122
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 32771
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        }
+      },
+      "value": 6
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "2.27"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["2.2"]
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "restorePrevious",
+      "propertyName": "restorePrevious",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Restore previous value"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "local",
+      "propertyName": "local",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Local protection state",
+        "states": {
+          "0": "Unprotected",
+          "2": "NoOperationPossible"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "rf",
+      "propertyName": "rf",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "RF protection state",
+        "states": {
+          "0": "Unprotected",
+          "1": "NoControl"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "exclusiveControlNodeId",
+      "propertyName": "exclusiveControlNodeId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Node ID with exclusive control",
+        "min": 1,
+        "max": 232
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "timeout",
+      "propertyName": "timeout",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "RF protection timeout",
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration"
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "restorePrevious",
+      "propertyName": "restorePrevious",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Restore previous value"
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "local",
+      "propertyName": "local",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Local protection state",
+        "states": {
+          "0": "Unprotected",
+          "1": "ProtectedBySequence",
+          "2": "NoOperationPossible"
+        }
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "rf",
+      "propertyName": "rf",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "RF protection state",
+        "states": {
+          "0": "Unprotected",
+          "1": "NoControl",
+          "2": "NoResponse"
+        }
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "exclusiveControlNodeId",
+      "propertyName": "exclusiveControlNodeId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Node ID with exclusive control",
+        "min": 1,
+        "max": 232
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "timeout",
+      "propertyName": "timeout",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "RF protection timeout",
+        "min": 0,
+        "max": 255
+      }
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 9600,
+  "supportedDataRates": [9600],
+  "protocolVersion": 1,
+  "supportsBeaming": false,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 9,
+      "label": "Window Covering"
+    },
+    "specific": {
+      "key": 0,
+      "label": "Unused"
+    },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x007a:0x8003:0x0001:2.2",
+  "highestSecurityClass": -1,
+  "isControllerNode": false,
+  "keepAwake": false
+}

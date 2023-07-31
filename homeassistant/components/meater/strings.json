@@ -18,10 +18,41 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown_auth_error": "[%key:common::config_flow::error::unknown%]",
       "service_unavailable_error": "The API is currently unavailable, please try again later."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ambient": {
+        "name": "Ambient temperature"
+      },
+      "internal": {
+        "name": "Internal temperature"
+      },
+      "cook_name": {
+        "name": "Cooking"
+      },
+      "cook_state": {
+        "name": "Cook state"
+      },
+      "cook_target_temp": {
+        "name": "Target temperature"
+      },
+      "cook_peak_temp": {
+        "name": "Peak temperature"
+      },
+      "cook_time_remaining": {
+        "name": "Time remaining"
+      },
+      "cook_time_elapsed": {
+        "name": "Time elapsed"
+      }
     }
   }
 }

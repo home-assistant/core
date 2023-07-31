@@ -1,0 +1,70 @@
+{
+  "silabs_multiprotocol_hardware": {
+    "options": {
+      "step": {
+        "addon_not_installed": {
+          "title": "Enable multiprotocol support on the IEEE 802.15.4 radio",
+          "description": "When multiprotocol support is enabled, the {hardware_name}'s IEEE 802.15.4 radio can be used for both Zigbee and Thread (used by Matter) at the same time. If the radio is already used by the ZHA Zigbee integration, ZHA will be reconfigured to use the multiprotocol firmware.\n\nNote: This is an experimental feature.",
+          "data": {
+            "enable_multi_pan": "Enable multiprotocol support"
+          }
+        },
+        "addon_installed_other_device": {
+          "title": "Multiprotocol support is already enabled for another device"
+        },
+        "addon_menu": {
+          "menu_options": {
+            "reconfigure_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
+            "uninstall_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
+          }
+        },
+        "change_channel": {
+          "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
+          "data": {
+            "channel": "Channel"
+          },
+          "description": "Start a channel change for your Zigbee and Thread networks.\n\nNote: this is an advanced operation and can leave your Thread and Zigbee networks inoperable if the new channel is congested. Depending on existing network conditions, many of your devices may not migrate to the new channel and will require re-joining before they start working again. Use with caution.\n\nOnce you selected  **Submit**, the channel change starts quietly in the background and will finish after a few minutes. "
+        },
+        "install_addon": {
+          "title": "The Silicon Labs Multiprotocol add-on installation has started"
+        },
+        "notify_channel_change": {
+          "title": "Channel change initiated",
+          "description": "A Zigbee and Thread channel change has been initiated and will finish in {delay_minutes} minutes."
+        },
+        "notify_unknown_multipan_user": {
+          "title": "Manual configuration may be needed",
+          "description": "Home Assistant can automatically change the channels for otbr and zha. If you have configured another integration to use the radio, for example Zigbee2MQTT, you will have to reconfigure the channel in that integration after completing this guide."
+        },
+        "reconfigure_addon": {
+          "title": "Reconfigure IEEE 802.15.4 radio multiprotocol support"
+        },
+        "show_revert_guide": {
+          "title": "Multiprotocol support is enabled for this device",
+          "description": "If you want to change to Zigbee only firmware, please complete the following manual steps:\n\n  * Remove the Silicon Labs Multiprotocol addon\n\n  * Flash the Zigbee only firmware, follow the guide at https://github.com/NabuCasa/silabs-firmware/wiki/Flash-Silicon-Labs-radio-firmware-manually.\n\n  * Reconfigure ZHA to migrate settings to the reflashed radio"
+        },
+        "start_addon": {
+          "title": "The Silicon Labs Multiprotocol add-on is starting."
+        },
+        "uninstall_addon": {
+          "title": "Remove IEEE 802.15.4 radio multiprotocol support."
+        }
+      },
+      "error": {
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "addon_info_failed": "Failed to get Silicon Labs Multiprotocol add-on info.",
+        "addon_install_failed": "Failed to install the Silicon Labs Multiprotocol add-on.",
+        "addon_set_config_failed": "Failed to set Silicon Labs Multiprotocol configuration.",
+        "addon_start_failed": "Failed to start the Silicon Labs Multiprotocol add-on.",
+        "not_hassio": "The hardware options can only be configured on HassOS installations.",
+        "zha_migration_failed": "The ZHA migration did not succeed."
+      },
+      "progress": {
+        "install_addon": "Please wait while the Silicon Labs Multiprotocol add-on installation finishes. This can take several minutes.",
+        "start_addon": "Please wait while the Silicon Labs Multiprotocol add-on start completes. This may take some seconds."
+      }
+    }
+  }
+}

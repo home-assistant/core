@@ -3,15 +3,15 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "title": "Setup Logitech Harmony Hub",
+        "title": "Set up Logitech Harmony Hub",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "Hub Name"
         }
       },
       "link": {
-        "title": "Setup Logitech Harmony Hub",
-        "description": "Do you want to setup {name} ({host})?"
+        "title": "[%key:component::harmony::config::step::user::title%]",
+        "description": "Do you want to set up {name} ({host})?"
       }
     },
     "error": {
@@ -29,6 +29,31 @@
         "data": {
           "activity": "The default activity to execute when none is specified.",
           "delay_secs": "The delay between sending commands."
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "activities": {
+        "state": {
+          "power_off": "Power Off"
+        }
+      }
+    }
+  },
+  "services": {
+    "sync": {
+      "name": "Sync",
+      "description": "Syncs the remote's configuration."
+    },
+    "change_channel": {
+      "name": "Change channel",
+      "description": "Sends change channel command to the Harmony HUB.",
+      "fields": {
+        "channel": {
+          "name": "Channel",
+          "description": "Channel number to change to."
         }
       }
     }

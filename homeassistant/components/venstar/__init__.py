@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP, VENSTAR_TIMEOUT
@@ -56,14 +57,14 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
-    """Unload the config config and platforms."""
+    """Unload the config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(config.entry_id)
     return unload_ok
 
 
-class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None]):
     """Class to manage fetching Venstar data."""
 
     def __init__(
@@ -123,8 +124,6 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
                 f"Exception during Venstar runtime update: {ex}"
             ) from ex
 
-        return None
-
 
 class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
     """Representation of a Venstar entity."""
@@ -145,12 +144,12 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._config.entry_id)},
-            "name": self._client.name,
-            "manufacturer": "Venstar",
-            "model": f"{self._client.model}-{self._client.get_type()}",
-            "sw_version": self._client.get_api_ver(),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config.entry_id)},
+            name=self._client.name,
+            manufacturer="Venstar",
+            model=f"{self._client.model}-{self._client.get_type()}",
+            sw_version=self._client.get_api_ver(),
+        )

@@ -64,7 +64,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-
             try:
                 validated = await validate_input(user_input)
             except CannotConnect:

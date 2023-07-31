@@ -28,5 +28,18 @@
       "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "monitor_status": {
+        "state": {
+          "down": "Down",
+          "not_checked_yet": "Not checked yet",
+          "pause": "[%key:common::action::pause%]",
+          "seems_down": "Seems down",
+          "up": "Up"
+        }
+      }
+    }
   }
 }

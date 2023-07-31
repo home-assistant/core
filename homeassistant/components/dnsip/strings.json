@@ -17,10 +17,13 @@
     "step": {
       "init": {
         "data": {
-          "resolver": "Resolver for IPV4 lookup",
-          "resolver_ipv6": "Resolver for IPV6 lookup"
+          "resolver": "[%key:component::dnsip::config::step::user::data::resolver%]",
+          "resolver_ipv6": "[%key:component::dnsip::config::step::user::data::resolver_ipv6%]"
         }
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "invalid_resolver": "Invalid IP address for resolver"

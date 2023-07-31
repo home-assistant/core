@@ -23,34 +23,67 @@ CONF_SCHEMA = "schema"
 CONF_STATE_TOPIC = "state_topic"
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_TOPIC = "topic"
+CONF_TRANSPORT = "transport"
+CONF_WS_PATH = "ws_path"
+CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
+CONF_PAYLOAD_RESET = "payload_reset"
+
+CONF_ACTION_TEMPLATE = "action_template"
+CONF_ACTION_TOPIC = "action_topic"
+CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
+CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
+CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
+CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
+CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
+CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
+CONF_MODE_LIST = "modes"
+CONF_MODE_STATE_TEMPLATE = "mode_state_template"
+CONF_MODE_STATE_TOPIC = "mode_state_topic"
+CONF_POWER_COMMAND_TOPIC = "power_command_topic"
+CONF_POWER_COMMAND_TEMPLATE = "power_command_template"
+CONF_PRECISION = "precision"
+CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
+CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
+CONF_TEMP_STATE_TEMPLATE = "temperature_state_template"
+CONF_TEMP_STATE_TOPIC = "temperature_state_topic"
+CONF_TEMP_INITIAL = "initial"
+CONF_TEMP_MAX = "max_temp"
+CONF_TEMP_MIN = "min_temp"
 
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
-CONF_TLS_VERSION = "tls_version"
 
 DATA_MQTT = "mqtt"
-MQTT_DATA_DEVICE_TRACKER_LEGACY = "mqtt_device_tracker_legacy"
+DATA_MQTT_AVAILABLE = "mqtt_client_available"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
 DEFAULT_DISCOVERY = True
 DEFAULT_ENCODING = "utf-8"
+DEFAULT_OPTIMISTIC = False
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_AVAILABLE = "online"
 DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
 DEFAULT_PORT = 1883
 DEFAULT_RETAIN = False
+DEFAULT_WS_HEADERS: dict[str, str] = {}
+DEFAULT_WS_PATH = "/"
 
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"
-SUPPORTED_PROTOCOLS = [PROTOCOL_31, PROTOCOL_311]
+PROTOCOL_5 = "5"
+SUPPORTED_PROTOCOLS = [PROTOCOL_31, PROTOCOL_311, PROTOCOL_5]
+
+TRANSPORT_TCP = "tcp"
+TRANSPORT_WEBSOCKETS = "websockets"
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
+DEFAULT_TRANSPORT = TRANSPORT_TCP
 
 DEFAULT_BIRTH = {
     ATTR_TOPIC: DEFAULT_BIRTH_WILL_TOPIC,
@@ -81,9 +114,11 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -92,8 +127,10 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]
 
 RELOADABLE_PLATFORMS = [
@@ -103,8 +140,11 @@ RELOADABLE_PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -113,6 +153,8 @@ RELOADABLE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]

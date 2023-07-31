@@ -1,10 +1,10 @@
 {
   "domain": "stookalert",
   "name": "RIVM Stookalert",
+  "codeowners": ["@fwestenberg", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/stookalert",
-  "codeowners": ["@fwestenberg", "@frenck"],
-  "requirements": ["stookalert==0.1.4"],
   "integration_type": "service",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "requirements": ["stookalert==0.1.4"]
 }

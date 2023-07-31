@@ -37,18 +37,25 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import DOMAIN, PLATFORMS
 
@@ -395,9 +402,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Get default temp from super class
         return super().max_temp
 
-    async def _async_sensor_changed(self, event):
+    async def _async_sensor_changed(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle temperature changes."""
-        new_state = event.data.get("new_state")
+        new_state = event.data["new_state"]
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
 
@@ -409,16 +418,19 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Prevent the device from keep running if HVACMode.OFF."""
         if self._hvac_mode == HVACMode.OFF and self._is_device_active:
             _LOGGER.warning(
-                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
+                (
+                    "The climate mode is OFF, but the switch device is ON. Turning off"
+                    " device %s"
+                ),
                 self.heater_entity_id,
             )
             await self._async_heater_turn_off()
 
     @callback
-    def _async_switch_changed(self, event):
+    def _async_switch_changed(self, event: EventType[EventStateChangedData]) -> None:
         """Handle heater switch state changes."""
-        new_state = event.data.get("new_state")
-        old_state = event.data.get("old_state")
+        new_state = event.data["new_state"]
+        old_state = event.data["old_state"]
         if new_state is None:
             return
         if old_state is None:
@@ -426,7 +438,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_update_temp(self, state):
+    def _async_update_temp(self, state: State) -> None:
         """Update thermostat with latest state from sensor."""
         try:
             cur_temp = float(state.state)
@@ -445,8 +457,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             ):
                 self._active = True
                 _LOGGER.info(
-                    "Obtained current and target temperature. "
-                    "Generic thermostat active. %s, %s",
+                    (
+                        "Obtained current and target temperature. "
+                        "Generic thermostat active. %s, %s"
+                    ),
                     self._cur_temp,
                     self._target_temp,
                 )
@@ -489,16 +503,15 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self.heater_entity_id,
                     )
                     await self._async_heater_turn_on()
-            else:
-                if (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
-                    _LOGGER.info("Turning on heater %s", self.heater_entity_id)
-                    await self._async_heater_turn_on()
-                elif time is not None:
-                    # The time argument is passed only in keep-alive case
-                    _LOGGER.info(
-                        "Keep-alive - Turning off heater %s", self.heater_entity_id
-                    )
-                    await self._async_heater_turn_off()
+            elif (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
+                _LOGGER.info("Turning on heater %s", self.heater_entity_id)
+                await self._async_heater_turn_on()
+            elif time is not None:
+                # The time argument is passed only in keep-alive case
+                _LOGGER.info(
+                    "Keep-alive - Turning off heater %s", self.heater_entity_id
+                )
+                await self._async_heater_turn_off()
 
     @property
     def _is_device_active(self):
@@ -526,7 +539,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Set new preset mode."""
         if preset_mode not in (self.preset_modes or []):
             raise ValueError(
-                f"Got unsupported preset_mode {preset_mode}. Must be one of {self.preset_modes}"
+                f"Got unsupported preset_mode {preset_mode}. Must be one of"
+                f" {self.preset_modes}"
             )
         if preset_mode == self._attr_preset_mode:
             # I don't think we need to call async_write_ha_state if we didn't change the state

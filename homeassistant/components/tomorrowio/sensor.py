@@ -11,6 +11,7 @@ from pytomorrowio.const import (
     PollenIndex,
     PrecipitationType,
     PrimaryPollutantType,
+    UVDescription,
 )
 
 from homeassistant.components.sensor import (
@@ -24,15 +25,12 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     CONF_NAME,
-    IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PERCENTAGE,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -67,6 +65,8 @@ from .const import (
     TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
     TMRW_ATTR_SOLAR_GHI,
     TMRW_ATTR_SULPHUR_DIOXIDE,
+    TMRW_ATTR_UV_HEALTH_CONCERN,
+    TMRW_ATTR_UV_INDEX,
     TMRW_ATTR_WIND_GUST,
 )
 
@@ -74,6 +74,10 @@ from .const import (
 @dataclass
 class TomorrowioSensorEntityDescription(SensorEntityDescription):
     """Describes a Tomorrow.io sensor entity."""
+
+    # TomorrowioSensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
     unit_imperial: str | None = None
     unit_metric: str | None = None
@@ -91,6 +95,10 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
                 "they must both be None"
             )
 
+        if self.value_map is not None:
+            self.device_class = SensorDeviceClass.ENUM
+            self.options = [item.name.lower() for item in self.value_map]
+
 
 # From https://cfpub.epa.gov/ncer_abstracts/index.cfm/fuseaction/display.files/fileID/14285
 # x ug/m^3 = y ppb * molecular weight / 24.45
@@ -103,20 +111,20 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_FEELS_LIKE,
         name="Feels Like",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_DEW_POINT,
         name="Dew Point",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     # Data comes in as hPa
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
@@ -124,28 +132,33 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SOLAR_GHI,
         name="Global Horizontal Irradiance",
-        unit_imperial=IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
-        unit_metric=IRRADIATION_WATTS_PER_SQUARE_METER,
+        unit_imperial=UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
+        unit_metric=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         imperial_conversion=(1 / 3.15459),
+        device_class=SensorDeviceClass.IRRADIANCE,
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_BASE,
         name="Cloud Base",
-        unit_imperial=LENGTH_MILES,
-        unit_metric=LENGTH_KILOMETERS,
+        unit_imperial=UnitOfLength.MILES,
+        unit_metric=UnitOfLength.KILOMETERS,
         imperial_conversion=lambda val: DistanceConverter.convert(
-            val, LENGTH_KILOMETERS, LENGTH_MILES
+            val,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
         ),
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_CEILING,
         name="Cloud Ceiling",
-        unit_imperial=LENGTH_MILES,
-        unit_metric=LENGTH_KILOMETERS,
+        unit_imperial=UnitOfLength.MILES,
+        unit_metric=UnitOfLength.KILOMETERS,
         imperial_conversion=lambda val: DistanceConverter.convert(
-            val, LENGTH_KILOMETERS, LENGTH_MILES
+            val,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
         ),
     ),
     TomorrowioSensorEntityDescription(
@@ -157,17 +170,17 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_WIND_GUST,
         name="Wind Gust",
-        unit_imperial=SPEED_MILES_PER_HOUR,
-        unit_metric=SPEED_METERS_PER_SECOND,
+        unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
+        unit_metric=UnitOfSpeed.METERS_PER_SECOND,
         imperial_conversion=lambda val: SpeedConverter.convert(
-            val, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
+            val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
         ),
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_TYPE,
         name="Precipitation Type",
         value_map=PrecipitationType,
-        device_class="tomorrowio__precipitation_type",
+        translation_key="precipitation_type",
         icon="mdi:weather-snowy-rainy",
     ),
     # Data comes in as ppb, convert to µg/m^3
@@ -226,12 +239,13 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
         name="US EPA Primary Pollutant",
         value_map=PrimaryPollutantType,
+        translation_key="primary_pollutant",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_EPA_HEALTH_CONCERN,
         name="US EPA Health Concern",
         value_map=HealthConcernType,
-        device_class="tomorrowio__health_concern",
+        translation_key="health_concern",
         icon="mdi:hospital",
     ),
     TomorrowioSensorEntityDescription(
@@ -243,39 +257,52 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
         name="China MEP Primary Pollutant",
         value_map=PrimaryPollutantType,
+        translation_key="primary_pollutant",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CHINA_HEALTH_CONCERN,
         name="China MEP Health Concern",
         value_map=HealthConcernType,
-        device_class="tomorrowio__health_concern",
+        translation_key="health_concern",
         icon="mdi:hospital",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_TREE,
         name="Tree Pollen Index",
         value_map=PollenIndex,
-        device_class="tomorrowio__pollen_index",
+        translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_WEED,
         name="Weed Pollen Index",
         value_map=PollenIndex,
-        device_class="tomorrowio__pollen_index",
+        translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_GRASS,
         name="Grass Pollen Index",
         value_map=PollenIndex,
-        device_class="tomorrowio__pollen_index",
+        translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         TMRW_ATTR_FIRE_INDEX,
         name="Fire Index",
         icon="mdi:fire",
+    ),
+    TomorrowioSensorEntityDescription(
+        key=TMRW_ATTR_UV_INDEX,
+        name="UV Index",
+        icon="mdi:sun-wireless",
+    ),
+    TomorrowioSensorEntityDescription(
+        key=TMRW_ATTR_UV_HEALTH_CONCERN,
+        name="UV Radiation Health Concern",
+        value_map=UVDescription,
+        translation_key="uv_index",
+        icon="mdi:sun-wireless",
     ),
 )
 

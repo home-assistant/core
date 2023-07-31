@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from elgato import Elgato, ElgatoError, Info, Settings, State
+from elgato import ElgatoError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -13,20 +13,15 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
-from . import HomeAssistantElgatoData
 from .const import DOMAIN, SERVICE_IDENTIFY
+from .coordinator import ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 PARALLEL_UPDATES = 1
@@ -38,20 +33,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato Light based on a config entry."""
-    data: HomeAssistantElgatoData = hass.data[DOMAIN][entry.entry_id]
-    settings = await data.client.settings()
-    async_add_entities(
-        [
-            ElgatoLight(
-                data.coordinator,
-                data.client,
-                data.info,
-                entry.data.get(CONF_MAC),
-                settings,
-            )
-        ],
-        True,
-    )
+    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([ElgatoLight(coordinator)])
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
@@ -61,30 +44,21 @@ async def async_setup_entry(
     )
 
 
-class ElgatoLight(
-    ElgatoEntity, CoordinatorEntity[DataUpdateCoordinator[State]], LightEntity
-):
+class ElgatoLight(ElgatoEntity, LightEntity):
     """Defines an Elgato Light."""
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[State],
-        client: Elgato,
-        info: Info,
-        mac: str | None,
-        settings: Settings,
-    ) -> None:
-        """Initialize Elgato Light."""
-        super().__init__(client, info, mac)
-        CoordinatorEntity.__init__(self, coordinator)
+    _attr_name = None
+    _attr_min_mireds = 143
+    _attr_max_mireds = 344
 
-        self._attr_min_mireds = 143
-        self._attr_max_mireds = 344
+    def __init__(self, coordinator: ElgatoDataUpdateCoordinator) -> None:
+        """Initialize Elgato Light."""
+        super().__init__(coordinator)
         self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
-        self._attr_unique_id = info.serial_number
+        self._attr_unique_id = coordinator.data.info.serial_number
 
         # Elgato Light supporting color, have a different temperature range
-        if settings.power_on_hue is not None:
+        if self.coordinator.data.settings.power_on_hue is not None:
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
             self._attr_min_mireds = 153
             self._attr_max_mireds = 285
@@ -92,17 +66,17 @@ class ElgatoLight(
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
-        return round((self.coordinator.data.brightness * 255) / 100)
+        return round((self.coordinator.data.state.brightness * 255) / 100)
 
     @property
     def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
-        return self.coordinator.data.temperature
+        return self.coordinator.data.state.temperature
 
     @property
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
-        if self.coordinator.data.hue is not None:
+        if self.coordinator.data.state.hue is not None:
             return ColorMode.HS
 
         return ColorMode.COLOR_TEMP
@@ -110,17 +84,20 @@ class ElgatoLight(
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
-        return (self.coordinator.data.hue or 0, self.coordinator.data.saturation or 0)
+        return (
+            self.coordinator.data.state.hue or 0,
+            self.coordinator.data.state.saturation or 0,
+        )
 
     @property
     def is_on(self) -> bool:
         """Return the state of the light."""
-        return self.coordinator.data.on
+        return self.coordinator.data.state.on
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         try:
-            await self.client.light(on=False)
+            await self.coordinator.client.light(on=False)
         except ElgatoError as error:
             raise HomeAssistantError(
                 "An error occurred while updating the Elgato Light"
@@ -155,7 +132,7 @@ class ElgatoLight(
             temperature = self.color_temp
 
         try:
-            await self.client.light(
+            await self.coordinator.client.light(
                 on=True,
                 brightness=brightness,
                 hue=hue,
@@ -172,7 +149,7 @@ class ElgatoLight(
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""
         try:
-            await self.client.identify()
+            await self.coordinator.client.identify()
         except ElgatoError as error:
             raise HomeAssistantError(
                 "An error occurred while identifying the Elgato Light"

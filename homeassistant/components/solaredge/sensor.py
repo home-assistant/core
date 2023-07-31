@@ -9,7 +9,10 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, SENSOR_TYPES
 from .coordinator import (
@@ -108,7 +111,9 @@ class SolarEdgeSensorFactory:
         return sensor_class(self.platform_name, sensor_type, service)
 
 
-class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
+class SolarEdgeSensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[None]], SensorEntity
+):
     """Abstract class for a solaredge sensor."""
 
     entity_description: SolarEdgeSensorEntityDescription

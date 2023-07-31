@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
-from typing import Any, Optional, Protocol, cast
+from typing import Any, Protocol, cast
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery, template
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform, async_start_setup
@@ -41,7 +42,7 @@ class LegacyNotifyPlatform(Protocol):
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = ...,
-    ) -> BaseNotificationService:
+    ) -> BaseNotificationService | None:
         """Set up notification service."""
 
     def get_service(
@@ -49,7 +50,7 @@ class LegacyNotifyPlatform(Protocol):
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = ...,
-    ) -> BaseNotificationService:
+    ) -> BaseNotificationService | None:
         """Set up notification service."""
 
 
@@ -71,7 +72,7 @@ def async_setup_legacy(
             p_config = {}
 
         platform = cast(
-            Optional[LegacyNotifyPlatform],
+            LegacyNotifyPlatform | None,
             await async_prepare_setup_platform(hass, config, DOMAIN, integration_name),
         )
 
@@ -82,7 +83,7 @@ def async_setup_legacy(
         full_name = f"{DOMAIN}.{integration_name}"
         LOGGER.info("Setting up %s", full_name)
         with async_start_setup(hass, [full_name]):
-            notify_service = None
+            notify_service: BaseNotificationService | None = None
             try:
                 if hasattr(platform, "async_get_service"):
                     notify_service = await platform.async_get_service(
@@ -144,15 +145,15 @@ def async_setup_legacy(
 
 
 @callback
-def check_templates_warn(hass: HomeAssistant, tpl: template.Template) -> None:
+def check_templates_warn(hass: HomeAssistant, tpl: Template) -> None:
     """Warn user that passing templates to notify service is deprecated."""
     if tpl.is_static or hass.data.get("notify_template_warned"):
         return
 
     hass.data["notify_template_warned"] = True
     LOGGER.warning(
-        "Passing templates to notify service is deprecated and will be removed in 2021.12. "
-        "Automations and scripts handle templates automatically"
+        "Passing templates to notify service is deprecated and will be removed in"
+        " 2021.12. Automations and scripts handle templates automatically"
     )
 
 
@@ -217,7 +218,12 @@ class BaseNotificationService:
     hass: HomeAssistant = None  # type: ignore[assignment]
 
     # Name => target
-    registered_targets: dict[str, str]
+    registered_targets: dict[str, Any]
+
+    @property
+    def targets(self) -> Mapping[str, Any] | None:
+        """Return a dictionary of registered targets."""
+        return None
 
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message.
@@ -238,8 +244,8 @@ class BaseNotificationService:
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         kwargs = {}
-        message = service.data[ATTR_MESSAGE]
-
+        message: Template = service.data[ATTR_MESSAGE]
+        title: Template | None
         if title := service.data.get(ATTR_TITLE):
             check_templates_warn(self.hass, title)
             title.hass = self.hass
@@ -279,10 +285,10 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        if hasattr(self, "targets"):
+        if self.targets is not None:
             stale_targets = set(self.registered_targets)
 
-            for name, target in self.targets.items():  # type: ignore[attr-defined]
+            for name, target in self.targets.items():
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)
@@ -301,7 +307,10 @@ class BaseNotificationService:
                 # Register the service description
                 service_desc = {
                     CONF_NAME: f"Send a notification via {target_name}",
-                    CONF_DESCRIPTION: f"Sends a notification message using the {target_name} integration.",
+                    CONF_DESCRIPTION: (
+                        "Sends a notification message using the"
+                        f" {target_name} integration."
+                    ),
                     CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
                 }
                 async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
@@ -326,7 +335,9 @@ class BaseNotificationService:
         # Register the service description
         service_desc = {
             CONF_NAME: f"Send a notification with {self._service_name}",
-            CONF_DESCRIPTION: f"Sends a notification message using the {self._service_name} service.",
+            CONF_DESCRIPTION: (
+                f"Sends a notification message using the {self._service_name} service."
+            ),
             CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
         }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)

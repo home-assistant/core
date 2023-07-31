@@ -89,8 +89,9 @@ DEPRECATED_GROUP = [
 ]
 
 DEPRECATION_WARNING = (
-    "The use of other attributes than device state attributes is deprecated and will be removed in a future release. "
-    "Invalid attributes are %s. Read the logs for further details: https://www.home-assistant.io/integrations/scene/"
+    "The use of other attributes than device state attributes is deprecated and will be"
+    " removed in a future release. Invalid attributes are %s. Read the logs for further"
+    " details: https://www.home-assistant.io/integrations/scene/"
 )
 
 

@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from demetriek import LaMetricConnectionError, LaMetricError
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError

@@ -1,21 +1,16 @@
 """Support for collecting data from the ARWN project."""
 from __future__ import annotations
 
-import json
 import logging
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import (
-    DEGREE,
-    PRECIPITATION_INCHES,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import DEGREE, UnitOfPrecipitationDepth, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
+from homeassistant.util.json import json_loads_object
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +31,9 @@ def discover_sensors(topic, payload):
     if domain == "temperature":
         name = parts[2]
         if unit == "F":
-            unit = TEMP_FAHRENHEIT
+            unit = UnitOfTemperature.FAHRENHEIT
         else:
-            unit = TEMP_CELSIUS
+            unit = UnitOfTemperature.CELSIUS
         return ArwnSensor(
             topic, name, "temp", unit, device_class=SensorDeviceClass.TEMPERATURE
         )
@@ -51,21 +46,43 @@ def discover_sensors(topic, payload):
                 topic,
                 "Rain Since Midnight",
                 "since_midnight",
-                PRECIPITATION_INCHES,
-                "mdi:water",
+                UnitOfPrecipitationDepth.INCHES,
+                device_class=SensorDeviceClass.PRECIPITATION,
             )
         return (
-            ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
-            ArwnSensor(topic + "/rate", "Rainfall Rate", "rate", unit, "mdi:water"),
+            ArwnSensor(
+                topic + "/total",
+                "Total Rainfall",
+                "total",
+                unit,
+                device_class=SensorDeviceClass.PRECIPITATION,
+            ),
+            ArwnSensor(
+                topic + "/rate",
+                "Rainfall Rate",
+                "rate",
+                unit,
+                device_class=SensorDeviceClass.PRECIPITATION,
+            ),
         )
     if domain == "barometer":
         return ArwnSensor(topic, "Barometer", "pressure", unit, "mdi:thermometer-lines")
     if domain == "wind":
         return (
             ArwnSensor(
-                topic + "/speed", "Wind Speed", "speed", unit, "mdi:speedometer"
+                topic + "/speed",
+                "Wind Speed",
+                "speed",
+                unit,
+                device_class=SensorDeviceClass.WIND_SPEED,
             ),
-            ArwnSensor(topic + "/gust", "Wind Gust", "gust", unit, "mdi:speedometer"),
+            ArwnSensor(
+                topic + "/gust",
+                "Wind Gust",
+                "gust",
+                unit,
+                device_class=SensorDeviceClass.WIND_SPEED,
+            ),
             ArwnSensor(
                 topic + "/dir", "Wind Direction", "direction", DEGREE, "mdi:compass"
             ),
@@ -84,8 +101,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ARWN platform."""
 
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return
+
     @callback
-    def async_sensor_event_received(msg):
+    def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:
         """Process events as sensors.
 
         When a new event on our topic (arwn/#) is received we map it
@@ -98,7 +120,7 @@ async def async_setup_platform(
         This lets us dynamically incorporate sensors without any
         configuration on our side.
         """
-        event = json.loads(msg.payload)
+        event = json_loads_object(msg.payload)
         sensors = discover_sensors(msg.topic, event)
         if not sensors:
             return

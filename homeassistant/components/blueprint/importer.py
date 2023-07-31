@@ -1,6 +1,8 @@
 """Import logic for blueprint."""
+
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 import html
 import re
@@ -26,6 +28,10 @@ COMMUNITY_CODE_BLOCK = re.compile(
 
 GITHUB_FILE_PATTERN = re.compile(
     r"^https://github.com/(?P<repository>.+)/blob/(?P<path>.+)$"
+)
+
+WEBSITE_PATTERN = re.compile(
+    r"^https://(?P<subdomain>[a-z0-9-]+)\.home-assistant\.io/(?P<path>.+).yaml$"
 )
 
 COMMUNITY_TOPIC_SCHEMA = vol.Schema(
@@ -125,7 +131,8 @@ def _extract_blueprint_from_community_topic(
 
     if blueprint is None:
         raise HomeAssistantError(
-            "No valid blueprint found in the topic. Blueprint syntax blocks need to be marked as YAML or no syntax."
+            "No valid blueprint found in the topic. Blueprint syntax blocks need to be"
+            " marked as YAML or no syntax."
         )
 
     return ImportedBlueprint(
@@ -209,12 +216,33 @@ async def fetch_blueprint_from_github_gist_url(
 
     if blueprint is None:
         raise HomeAssistantError(
-            "No valid blueprint found in the gist. The blueprint file needs to end with '.yaml'"
+            "No valid blueprint found in the gist. The blueprint file needs to end with"
+            " '.yaml'"
         )
 
     return ImportedBlueprint(
         f"{gist['owner']['login']}/{filename[:-5]}", content, blueprint
     )
+
+
+async def fetch_blueprint_from_website_url(
+    hass: HomeAssistant, url: str
+) -> ImportedBlueprint:
+    """Get a blueprint from our website."""
+    if (WEBSITE_PATTERN.match(url)) is None:
+        raise UnsupportedUrl("Not a Home Assistant website URL")
+
+    session = aiohttp_client.async_get_clientsession(hass)
+
+    resp = await session.get(url, raise_for_status=True)
+    raw_yaml = await resp.text()
+    data = yaml.parse_yaml(raw_yaml)
+    assert isinstance(data, dict)
+    blueprint = Blueprint(data)
+
+    parsed_import_url = yarl.URL(url)
+    suggested_filename = f"homeassistant/{parsed_import_url.parts[-1][:-5]}"
+    return ImportedBlueprint(suggested_filename, raw_yaml, blueprint)
 
 
 async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlueprint:
@@ -223,12 +251,11 @@ async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlu
         fetch_blueprint_from_community_post,
         fetch_blueprint_from_github_url,
         fetch_blueprint_from_github_gist_url,
+        fetch_blueprint_from_website_url,
     ):
-        try:
+        with suppress(UnsupportedUrl):
             imported_bp = await func(hass, url)
             imported_bp.blueprint.update_metadata(source_url=url)
             return imported_bp
-        except UnsupportedUrl:
-            pass
 
-    raise HomeAssistantError("Unsupported url")
+    raise HomeAssistantError("Unsupported URL")

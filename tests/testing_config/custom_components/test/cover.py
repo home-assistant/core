@@ -1,5 +1,4 @@
-"""
-Provide a mock cover platform.
+"""Provide a mock cover platform.
 
 Call init before using it in your tests to ensure clean test data.
 """

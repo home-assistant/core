@@ -1,12 +1,12 @@
 """Test automation logbook."""
 from homeassistant.components import automation
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_automation_trigger_event(hass):
+async def test_humanify_automation_trigger_event(hass: HomeAssistant) -> None:
     """Test humanifying Shelly click event."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "automation", {})

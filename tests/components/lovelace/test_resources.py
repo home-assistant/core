@@ -1,10 +1,14 @@
 """Test Lovelace resources."""
 import copy
+from typing import Any
 from unittest.mock import patch
 import uuid
 
 from homeassistant.components.lovelace import dashboard, resources
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.typing import WebSocketGenerator
 
 RESOURCE_EXAMPLES = [
     {"type": "js", "url": "/local/bla.js"},
@@ -12,7 +16,9 @@ RESOURCE_EXAMPLES = [
 ]
 
 
-async def test_yaml_resources(hass, hass_ws_client):
+async def test_yaml_resources(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test defining resources in configuration.yaml."""
     assert await async_setup_component(
         hass, "lovelace", {"lovelace": {"mode": "yaml", "resources": RESOURCE_EXAMPLES}}
@@ -27,7 +33,9 @@ async def test_yaml_resources(hass, hass_ws_client):
     assert response["result"] == RESOURCE_EXAMPLES
 
 
-async def test_yaml_resources_backwards(hass, hass_ws_client):
+async def test_yaml_resources_backwards(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test defining resources in YAML ll config (legacy)."""
     with patch(
         "homeassistant.components.lovelace.dashboard.load_yaml",
@@ -46,7 +54,9 @@ async def test_yaml_resources_backwards(hass, hass_ws_client):
     assert response["result"] == RESOURCE_EXAMPLES
 
 
-async def test_storage_resources(hass, hass_ws_client, hass_storage):
+async def test_storage_resources(
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test defining resources in storage config."""
     resource_config = [{**item, "id": uuid.uuid4().hex} for item in RESOURCE_EXAMPLES]
     hass_storage[resources.RESOURCE_STORAGE_KEY] = {
@@ -65,7 +75,9 @@ async def test_storage_resources(hass, hass_ws_client, hass_storage):
     assert response["result"] == resource_config
 
 
-async def test_storage_resources_import(hass, hass_ws_client, hass_storage):
+async def test_storage_resources_import(
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test importing resources from storage config."""
     assert await async_setup_component(hass, "lovelace", {})
     hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
@@ -151,7 +163,9 @@ async def test_storage_resources_import(hass, hass_ws_client, hass_storage):
     assert first_item["id"] not in (item["id"] for item in response["result"])
 
 
-async def test_storage_resources_import_invalid(hass, hass_ws_client, hass_storage):
+async def test_storage_resources_import_invalid(
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test importing resources from storage config."""
     assert await async_setup_component(hass, "lovelace", {})
     hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {

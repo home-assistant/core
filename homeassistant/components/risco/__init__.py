@@ -12,6 +12,8 @@ from pyrisco import (
     RiscoLocal,
     UnauthorizedError,
 )
+from pyrisco.cloud.alarm import Alarm
+from pyrisco.cloud.event import Event
 from pyrisco.common import Partition, Zone
 
 from homeassistant.config_entries import ConfigEntry
@@ -175,10 +177,12 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class RiscoDataUpdateCoordinator(DataUpdateCoordinator):
+class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
     """Class to manage fetching risco data."""
 
-    def __init__(self, hass, risco, scan_interval):
+    def __init__(
+        self, hass: HomeAssistant, risco: RiscoCloud, scan_interval: int
+    ) -> None:
         """Initialize global risco data updater."""
         self.risco = risco
         interval = timedelta(seconds=scan_interval)
@@ -189,7 +193,7 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=interval,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> Alarm:
         """Fetch data from risco."""
         try:
             return await self.risco.get_state()
@@ -197,13 +201,15 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(error) from error
 
 
-class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator):
+class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     """Class to manage fetching risco data."""
 
-    def __init__(self, hass, risco, eid, scan_interval):
+    def __init__(
+        self, hass: HomeAssistant, risco: RiscoCloud, eid: str, scan_interval: int
+    ) -> None:
         """Initialize global risco data updater."""
         self.risco = risco
-        self._store = Store(
+        self._store = Store[dict[str, Any]](
             hass, LAST_EVENT_STORAGE_VERSION, f"risco_{eid}_last_event_timestamp"
         )
         interval = timedelta(seconds=scan_interval)
@@ -214,7 +220,7 @@ class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=interval,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> list[Event]:
         """Fetch data from risco."""
         last_store = await self._store.async_load() or {}
         last_timestamp = last_store.get(

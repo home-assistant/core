@@ -25,7 +25,7 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
     assert "use unit_conversion.DistanceConverter instead" in caplog.text
 
 
-def test_convert_same_unit():
+def test_convert_same_unit() -> None:
     """Test conversion from any unit to same unit."""
     assert distance_util.convert(5, LENGTH_KILOMETERS, LENGTH_KILOMETERS) == 5
     assert distance_util.convert(2, LENGTH_METERS, LENGTH_METERS) == 2
@@ -37,7 +37,7 @@ def test_convert_same_unit():
     assert distance_util.convert(7, LENGTH_INCHES, LENGTH_INCHES) == 7
 
 
-def test_convert_invalid_unit():
+def test_convert_invalid_unit() -> None:
     """Test exception is thrown for invalid units."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         distance_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
@@ -46,14 +46,14 @@ def test_convert_invalid_unit():
         distance_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 
-def test_convert_nonnumeric_value():
+def test_convert_nonnumeric_value() -> None:
     """Test exception is thrown for nonnumeric type."""
     with pytest.raises(TypeError):
         distance_util.convert("a", LENGTH_KILOMETERS, LENGTH_METERS)
 
 
 @pytest.mark.parametrize(
-    "unit,expected",
+    ("unit", "expected"),
     [
         (LENGTH_KILOMETERS, 8.04672),
         (LENGTH_METERS, 8046.72),
@@ -64,14 +64,14 @@ def test_convert_nonnumeric_value():
         (LENGTH_INCHES, 316800.171072),
     ],
 )
-def test_convert_from_miles(unit, expected):
+def test_convert_from_miles(unit, expected) -> None:
     """Test conversion from miles to other units."""
     miles = 5
     assert distance_util.convert(miles, LENGTH_MILES, unit) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "unit,expected",
+    ("unit", "expected"),
     [
         (LENGTH_KILOMETERS, 0.0045720000000000005),
         (LENGTH_METERS, 4.572),
@@ -82,14 +82,14 @@ def test_convert_from_miles(unit, expected):
         (LENGTH_INCHES, 180.0000972),
     ],
 )
-def test_convert_from_yards(unit, expected):
+def test_convert_from_yards(unit, expected) -> None:
     """Test conversion from yards to other units."""
     yards = 5
     assert distance_util.convert(yards, LENGTH_YARD, unit) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "unit,expected",
+    ("unit", "expected"),
     [
         (LENGTH_KILOMETERS, 1.524),
         (LENGTH_METERS, 1524),
@@ -100,14 +100,14 @@ def test_convert_from_yards(unit, expected):
         (LENGTH_INCHES, 60000.032400000004),
     ],
 )
-def test_convert_from_feet(unit, expected):
+def test_convert_from_feet(unit, expected) -> None:
     """Test conversion from feet to other units."""
     feet = 5000
     assert distance_util.convert(feet, LENGTH_FEET, unit) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "unit,expected",
+    ("unit", "expected"),
     [
         (LENGTH_KILOMETERS, 0.127),
         (LENGTH_METERS, 127.0),
@@ -118,14 +118,14 @@ def test_convert_from_feet(unit, expected):
         (LENGTH_FEET, 416.66668),
     ],
 )
-def test_convert_from_inches(unit, expected):
+def test_convert_from_inches(unit, expected) -> None:
     """Test conversion from inches to other units."""
     inches = 5000
     assert distance_util.convert(inches, LENGTH_INCHES, unit) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "unit,expected",
+    ("unit", "expected"),
     [
         (LENGTH_METERS, 5000),
         (LENGTH_CENTIMETERS, 500000),
@@ -136,14 +136,14 @@ def test_convert_from_inches(unit, expected):
         (LENGTH_INCHES, 196850.5),
     ],
 )
-def test_convert_from_kilometers(unit, expected):
+def test_convert_from_kilometers(unit, expected) -> None:
     """Test conversion from kilometers to other units."""
     km = 5
     assert distance_util.convert(km, LENGTH_KILOMETERS, unit) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "unit,expected",
+    ("unit", "expected"),
     [
         (LENGTH_KILOMETERS, 5),
         (LENGTH_CENTIMETERS, 500000),
@@ -154,14 +154,14 @@ def test_convert_from_kilometers(unit, expected):
         (LENGTH_INCHES, 196850.5),
     ],
 )
-def test_convert_from_meters(unit, expected):
+def test_convert_from_meters(unit, expected) -> None:
     """Test conversion from meters to other units."""
     m = 5000
     assert distance_util.convert(m, LENGTH_METERS, unit) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "unit,expected",
+    ("unit", "expected"),
     [
         (LENGTH_KILOMETERS, 5),
         (LENGTH_METERS, 5000),
@@ -172,7 +172,7 @@ def test_convert_from_meters(unit, expected):
         (LENGTH_INCHES, 196850.5),
     ],
 )
-def test_convert_from_centimeters(unit, expected):
+def test_convert_from_centimeters(unit, expected) -> None:
     """Test conversion from centimeters to other units."""
     cm = 500000
     assert distance_util.convert(cm, LENGTH_CENTIMETERS, unit) == pytest.approx(
@@ -181,7 +181,7 @@ def test_convert_from_centimeters(unit, expected):
 
 
 @pytest.mark.parametrize(
-    "unit,expected",
+    ("unit", "expected"),
     [
         (LENGTH_KILOMETERS, 5),
         (LENGTH_METERS, 5000),
@@ -192,7 +192,7 @@ def test_convert_from_centimeters(unit, expected):
         (LENGTH_INCHES, 196850.5),
     ],
 )
-def test_convert_from_millimeters(unit, expected):
+def test_convert_from_millimeters(unit, expected) -> None:
     """Test conversion from millimeters to other units."""
     mm = 5000000
     assert distance_util.convert(mm, LENGTH_MILLIMETERS, unit) == pytest.approx(

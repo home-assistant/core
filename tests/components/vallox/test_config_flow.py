@@ -1,10 +1,10 @@
 """Test the Vallox integration config flow."""
 from unittest.mock import patch
 
-from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api import ValloxApiException, ValloxWebsocketException
 
 from homeassistant.components.vallox.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -95,7 +95,7 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        side_effect=OSError,
+        side_effect=ValloxWebsocketException,
     ):
         result = await hass.config_entries.flow.async_configure(
             init["flow_id"],
@@ -150,145 +150,3 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_import_with_custom_name(hass: HomeAssistant) -> None:
-    """Test that import is handled."""
-    name = "Vallox 90 MV"
-
-    with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.vallox.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"host": "1.2.3.4", "name": name},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == name
-    assert result["data"] == {"host": "1.2.3.4", "name": "Vallox 90 MV"}
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_without_custom_name(hass: HomeAssistant) -> None:
-    """Test that import is handled."""
-    with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.vallox.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"host": "1.2.3.4"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Vallox"
-    assert result["data"] == {"host": "1.2.3.4", "name": "Vallox"}
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_invalid_ip(hass: HomeAssistant) -> None:
-    """Test that invalid IP error is handled during import."""
-    name = "Vallox 90 MV"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={"host": "vallox90mv.host.name", "name": name},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_host"
-
-
-async def test_import_already_configured(hass: HomeAssistant) -> None:
-    """Test that an already configured Vallox device is handled during import."""
-    name = "Vallox 145 MV"
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "40.10.20.30",
-            CONF_NAME: "Vallox 145 MV",
-        },
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={"host": "40.10.20.30", "name": name},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_cannot_connect_os_error(hass: HomeAssistant) -> None:
-    """Test that cannot connect error is handled."""
-    name = "Vallox 90 MV"
-
-    with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        side_effect=OSError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"host": "1.2.3.4", "name": name},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_cannot_connect_vallox_api_exception(hass: HomeAssistant) -> None:
-    """Test that cannot connect error is handled."""
-    name = "Vallox 90 MV"
-
-    with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        side_effect=ValloxApiException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"host": "5.6.3.1", "name": name},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_unknown_exception(hass: HomeAssistant) -> None:
-    """Test that unknown exceptions are handled."""
-    name = "Vallox 245 MV"
-
-    with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"host": "1.2.3.4", "name": name},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "unknown"

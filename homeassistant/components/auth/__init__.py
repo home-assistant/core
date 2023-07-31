@@ -127,7 +127,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Any, Optional, cast
+from typing import Any, cast
 import uuid
 
 from aiohttp import web
@@ -149,6 +149,7 @@ from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -159,7 +160,9 @@ from . import indieauth, login_flow, mfa_setup_flow
 DOMAIN = "auth"
 
 StoreResultType = Callable[[str, Credentials], str]
-RetrieveResultType = Callable[[str, str], Optional[Credentials]]
+RetrieveResultType = Callable[[str, str], Credentials | None]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass
@@ -438,7 +441,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     def store_result(client_id: str, result: Credentials) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
-            raise ValueError("result has to be a Credentials instance")
+            raise TypeError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
         temp_results[(client_id, code)] = (

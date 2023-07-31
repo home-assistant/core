@@ -94,7 +94,8 @@
     "opt": 127,
     "brand": "WLED",
     "product": "FOSS",
-    "mac": "aabbccddeeff"
+    "mac": "aabbccddeeff",
+    "ip": "127.0.0.1"
   },
   "effects": [
     "Solid",

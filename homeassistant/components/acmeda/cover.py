@@ -45,7 +45,9 @@ async def async_setup_entry(
 
 
 class AcmedaCover(AcmedaBase, CoverEntity):
-    """Representation of a Acmeda cover device."""
+    """Representation of an Acmeda cover device."""
+
+    _attr_name = None
 
     @property
     def current_cover_position(self) -> int | None:
@@ -70,9 +72,9 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return position
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
         if self.current_cover_position is not None:
             supported_features |= (
                 CoverEntityFeature.OPEN

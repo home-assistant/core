@@ -1,7 +1,7 @@
 """Config flow for Yale Access Bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -19,32 +19,42 @@ from yalexs_ble.const import YALE_MFR_ID
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
+    async_ble_device_from_address,
     async_discovered_service_info,
 )
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
-from .util import async_get_service_info, human_readable_name
+from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
+from .util import async_find_existing_service_info, human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_lock(
+async def async_validate_lock_or_error(
     local_name: str, device: BLEDevice, key: str, slot: int
-) -> None:
-    """Validate a lock."""
+) -> dict[str, str]:
+    """Validate the lock and return errors if any."""
     if len(key) != 32:
-        raise InvalidKeyFormat
+        return {CONF_KEY: "invalid_key_format"}
     try:
         bytes.fromhex(key)
-    except ValueError as ex:
-        raise InvalidKeyFormat from ex
-    if not isinstance(slot, int) or slot < 0 or slot > 255:
-        raise InvalidKeyIndex
-    await PushLock(local_name, device.address, device, key, slot).validate()
+    except ValueError:
+        return {CONF_KEY: "invalid_key_format"}
+    if not isinstance(slot, int) or not 0 <= slot <= 255:
+        return {CONF_SLOT: "invalid_key_index"}
+    try:
+        await PushLock(local_name, device.address, device, key, slot).validate()
+    except (DisconnectedError, AuthError, ValueError):
+        return {CONF_KEY: "invalid_auth"}
+    except BleakError:
+        return {"base": "cannot_connect"}
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected error")
+        return {"base": "unknown"}
+    return {}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,6 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
         self._lock_cfg: ValidatedLockConfig | None = None
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -110,11 +121,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 raise AbortFlow(reason="already_configured")
 
-        try:
-            self._discovery_info = await async_get_service_info(
-                hass, local_name, address
-            )
-        except asyncio.TimeoutError:
+        self._discovery_info = async_find_existing_service_info(
+            hass, local_name, address
+        )
+        if not self._discovery_info:
             return self.async_abort(reason="no_devices_found")
 
         # Integration discovery should abort other flows unless they
@@ -168,6 +178,53 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_validate()
+
+    async def async_step_reauth_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle reauth and validation."""
+        errors = {}
+        reauth_entry = self._reauth_entry
+        assert reauth_entry is not None
+        if user_input is not None:
+            if (
+                device := async_ble_device_from_address(
+                    self.hass, reauth_entry.data[CONF_ADDRESS], True
+                )
+            ) is None:
+                errors = {"base": "no_longer_in_range"}
+            elif not (
+                errors := await async_validate_lock_or_error(
+                    reauth_entry.data[CONF_LOCAL_NAME],
+                    device,
+                    user_input[CONF_KEY],
+                    user_input[CONF_SLOT],
+                )
+            ):
+                self.hass.config_entries.async_update_entry(
+                    reauth_entry, data={**reauth_entry.data, **user_input}
+                )
+                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_validate",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_KEY): str, vol.Required(CONF_SLOT): int}
+            ),
+            description_placeholders={
+                "address": reauth_entry.data[CONF_ADDRESS],
+                "title": reauth_entry.title,
+            },
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -185,20 +242,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 discovery_info.address, raise_on_progress=False
             )
             self._abort_if_unique_id_configured()
-            try:
-                await validate_lock(local_name, discovery_info.device, key, slot)
-            except InvalidKeyFormat:
-                errors[CONF_KEY] = "invalid_key_format"
-            except InvalidKeyIndex:
-                errors[CONF_SLOT] = "invalid_key_index"
-            except (DisconnectedError, AuthError, ValueError):
-                errors[CONF_KEY] = "invalid_auth"
-            except BleakError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
-            else:
+            if not (
+                errors := await async_validate_lock_or_error(
+                    local_name, discovery_info.device, key, slot
+                )
+            ):
                 return self.async_create_entry(
                     title=local_name,
                     data={
@@ -229,13 +277,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._discovered_devices[discovery.address] = discovery
 
         if not self._discovered_devices:
-            return self.async_abort(reason="no_unconfigured_devices")
+            return self.async_abort(reason="no_devices_found")
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        service_info.address: f"{service_info.name} ({service_info.address})"
+                        service_info.address: (
+                            f"{service_info.name} ({service_info.address})"
+                        )
                         for service_info in self._discovered_devices.values()
                     }
                 ),
@@ -249,10 +299,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> YaleXSBLEOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return YaleXSBLEOptionsFlowHandler(config_entry)
 
-class InvalidKeyFormat(HomeAssistantError):
-    """Invalid key format."""
 
+class YaleXSBLEOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle YaleXSBLE options."""
 
-class InvalidKeyIndex(HomeAssistantError):
-    """Invalid key index."""
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize YaleXSBLE options flow."""
+        self.entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the YaleXSBLE options."""
+        return await self.async_step_device_options()
+
+    async def async_step_device_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the YaleXSBLE devices options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={CONF_ALWAYS_CONNECTED: user_input[CONF_ALWAYS_CONNECTED]},
+            )
+
+        return self.async_show_form(
+            step_id="device_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ALWAYS_CONNECTED,
+                        default=self.entry.options.get(CONF_ALWAYS_CONNECTED, False),
+                    ): bool,
+                }
+            ),
+        )

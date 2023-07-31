@@ -1,7 +1,7 @@
 """Fixtures for Samsung TV."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime
 from socket import AddressFamily
 from typing import Any
@@ -20,9 +20,21 @@ from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.util.dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
+
+from tests.common import async_mock_service
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.samsungtv.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(autouse=True)
@@ -278,15 +290,6 @@ def remoteencws_fixture() -> Mock:
         yield remoteencws
 
 
-@pytest.fixture(name="delay")
-def delay_fixture() -> Mock:
-    """Patch the delay script function."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.Script.async_run"
-    ) as delay:
-        yield delay
-
-
 @pytest.fixture
 def mock_now() -> datetime:
     """Fixture for dtutil.now."""
@@ -298,3 +301,9 @@ def mac_address_fixture() -> Mock:
     """Patch getmac.get_mac_address."""
     with patch("getmac.get_mac_address", return_value=None) as mac:
         yield mac
+
+
+@pytest.fixture
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")

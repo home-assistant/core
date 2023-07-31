@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.spider.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +26,7 @@ def spider_fixture() -> Mock:
         yield spider
 
 
-async def test_user(hass, spider):
+async def test_user(hass: HomeAssistant, spider) -> None:
     """Test user config."""
 
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +56,7 @@ async def test_user(hass, spider):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import(hass, spider):
+async def test_import(hass: HomeAssistant, spider) -> None:
     """Test import step."""
 
     with patch(
@@ -82,7 +83,7 @@ async def test_import(hass, spider):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_abort_if_already_setup(hass, spider):
+async def test_abort_if_already_setup(hass: HomeAssistant, spider) -> None:
     """Test we abort if Spider is already setup."""
     MockConfigEntry(domain=DOMAIN, data=SPIDER_USER_DATA).add_to_hass(hass)
 

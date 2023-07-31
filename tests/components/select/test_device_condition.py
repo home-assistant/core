@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous_serialize
 
 from homeassistant.components import automation
@@ -10,35 +11,20 @@ from homeassistant.components.select import DOMAIN
 from homeassistant.components.select.device_condition import (
     async_get_condition_capabilities,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
-    entity_registry,
+    device_registry as dr,
+    entity_registry as er,
 )
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
-
-
-@pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -49,57 +35,59 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 async def test_get_conditions(
     hass: HomeAssistant,
-    device_reg: device_registry.DeviceRegistry,
-    entity_reg: entity_registry.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we get the expected conditions from a select."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_conditions = [
         {
             "condition": "device",
             "domain": DOMAIN,
             "type": "selected_option",
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
-        (entity_registry.RegistryEntryHider.INTEGRATION, None),
-        (entity_registry.RegistryEntryHider.USER, None),
+        (er.RegistryEntryHider.INTEGRATION, None),
+        (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -113,7 +101,7 @@ async def test_get_conditions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for condition in ["selected_option"]
@@ -121,13 +109,17 @@ async def test_get_conditions_hidden_auxiliary(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 async def test_if_selected_option(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for selected_option conditions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -140,7 +132,7 @@ async def test_if_selected_option(
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "select.entity",
+                            "entity_id": entry.id,
                             "type": "selected_option",
                             "option": "option1",
                         }
@@ -159,7 +151,7 @@ async def test_if_selected_option(
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "select.entity",
+                            "entity_id": entry.id,
                             "type": "selected_option",
                             "option": "option2",
                         }
@@ -182,7 +174,7 @@ async def test_if_selected_option(
     assert len(calls) == 0
 
     hass.states.async_set(
-        "select.entity", "option1", {"options": ["option1", "option2"]}
+        entry.entity_id, "option1", {"options": ["option1", "option2"]}
     )
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
@@ -191,7 +183,7 @@ async def test_if_selected_option(
     assert calls[0].data["result"] == "option1 - event - test_event1"
 
     hass.states.async_set(
-        "select.entity", "option2", {"options": ["option1", "option2"]}
+        entry.entity_id, "option2", {"options": ["option1", "option2"]}
     )
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
@@ -200,13 +192,62 @@ async def test_if_selected_option(
     assert calls[1].data["result"] == "option2 - event - test_event2"
 
 
-async def test_get_condition_capabilities(hass: HomeAssistant) -> None:
+async def test_if_selected_option_legacy(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for selected_option conditions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": entry.entity_id,
+                            "type": "selected_option",
+                            "option": "option1",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "result": "option1 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    hass.states.async_set(
+        entry.entity_id, "option1", {"options": ["option1", "option2"]}
+    )
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["result"] == "option1 - event - test_event1"
+
+
+async def test_get_condition_capabilities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we get the expected capabilities from a select condition."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
     config = {
         "platform": "device",
         "domain": DOMAIN,
         "type": "selected_option",
-        "entity_id": "select.test",
+        "entity_id": entry.id,
         "option": "option1",
     }
 
@@ -231,7 +272,69 @@ async def test_get_condition_capabilities(hass: HomeAssistant) -> None:
     ]
 
     # Mock an entity
-    hass.states.async_set("select.test", "option1", {"options": ["option1", "option2"]})
+    hass.states.async_set(
+        entry.entity_id, "option1", {"options": ["option1", "option2"]}
+    )
+
+    # Test if we get the right capabilities now
+    capabilities = await async_get_condition_capabilities(hass, config)
+    assert capabilities
+    assert "extra_fields" in capabilities
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "option",
+            "required": True,
+            "type": "select",
+            "options": [("option1", "option1"), ("option2", "option2")],
+        },
+        {
+            "name": "for",
+            "optional": True,
+            "type": "positive_time_period_dict",
+        },
+    ]
+
+
+async def test_get_condition_capabilities_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test we get the expected capabilities from a select condition."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "selected_option",
+        "entity_id": entry.entity_id,
+        "option": "option1",
+    }
+
+    # Test when entity doesn't exists
+    capabilities = await async_get_condition_capabilities(hass, config)
+    assert capabilities
+    assert "extra_fields" in capabilities
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "option",
+            "required": True,
+            "type": "select",
+            "options": [],
+        },
+        {
+            "name": "for",
+            "optional": True,
+            "type": "positive_time_period_dict",
+        },
+    ]
+
+    # Mock an entity
+    hass.states.async_set(
+        entry.entity_id, "option1", {"options": ["option1", "option2"]}
+    )
 
     # Test if we get the right capabilities now
     capabilities = await async_get_condition_capabilities(hass, config)

@@ -2,7 +2,7 @@
 import logging
 
 from pyairnow import WebServiceAPI
-from pyairnow.errors import AirNowError, InvalidKeyError
+from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -16,8 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
-    """
-    Validate the user input allows us to connect.
+    """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
@@ -36,6 +35,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth from exc
     except AirNowError as exc:
         raise CannotConnect from exc
+    except EmptyResponseError as exc:
+        raise InvalidLocation from exc
 
     if not test_data:
         raise InvalidLocation
@@ -75,7 +76,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 # Create Entry
                 return self.async_create_entry(
-                    title=f"AirNow Sensor at {user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
+                    title=(
+                        f"AirNow Sensor at {user_input[CONF_LATITUDE]},"
+                        f" {user_input[CONF_LONGITUDE]}"
+                    ),
                     data=user_input,
                 )
 

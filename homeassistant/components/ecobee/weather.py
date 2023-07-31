@@ -16,10 +16,10 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_METERS,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_FAHRENHEIT,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -53,10 +53,12 @@ async def async_setup_entry(
 class EcobeeWeather(WeatherEntity):
     """Representation of Ecobee weather data."""
 
-    _attr_native_pressure_unit = PRESSURE_HPA
-    _attr_native_temperature_unit = TEMP_FAHRENHEIT
-    _attr_native_visibility_unit = LENGTH_METERS
-    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_visibility_unit = UnitOfLength.METERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, data, name, index):
         """Initialize the Ecobee weather platform."""
@@ -64,6 +66,7 @@ class EcobeeWeather(WeatherEntity):
         self._name = name
         self._index = index
         self.weather = None
+        self._attr_unique_id = data.ecobee.get_thermostat(self._index)["identifier"]
 
     def get_forecast(self, index, param):
         """Retrieve forecast parameter."""
@@ -72,16 +75,6 @@ class EcobeeWeather(WeatherEntity):
             return forecast[param]
         except (IndexError, KeyError) as err:
             raise ValueError from err
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for the weather platform."""
-        return self.data.ecobee.get_thermostat(self._index)["identifier"]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -98,7 +91,7 @@ class EcobeeWeather(WeatherEntity):
             identifiers={(DOMAIN, thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=model,
-            name=self.name,
+            name=self._name,
         )
 
     @property

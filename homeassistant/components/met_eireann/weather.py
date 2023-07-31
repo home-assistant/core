@@ -11,10 +11,10 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_MILLIMETERS,
-    PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION, CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
+from .const import CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,10 +55,11 @@ async def async_setup_entry(
 class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met Éireann weather condition."""
 
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
-    _attr_native_pressure_unit = PRESSURE_HPA
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_attribution = "Data provided by Met Éireann"
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     def __init__(self, coordinator, config, hourly):
         """Initialise the platform with a data instance and site."""
@@ -126,11 +127,6 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
         return self.coordinator.data.current_weather_data.get("wind_bearing")
 
     @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
     def forecast(self):
         """Return the forecast array."""
         if self._hourly:
@@ -163,7 +159,7 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     def device_info(self):
         """Device info."""
         return DeviceInfo(
-            default_name="Forecast",
+            name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN,)},
             manufacturer="Met Éireann",

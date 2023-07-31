@@ -4,11 +4,10 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -22,7 +21,6 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -72,6 +70,8 @@ def catch_vlc_errors(
 class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.CLEAR_PLAYLIST
@@ -93,7 +93,6 @@ class VlcDevice(MediaPlayerEntity):
     ) -> None:
         """Initialize the vlc device."""
         self._config_entry = config_entry
-        self._name = name
         self._volume: float | None = None
         self._muted: bool | None = None
         self._media_position_updated_at: datetime | None = None
@@ -184,11 +183,6 @@ class VlcDevice(MediaPlayerEntity):
             # Strip out auth signatures if streaming local media
             if self._media_title and (pos := self._media_title.find("?authSig=")) != -1:
                 self._media_title = self._media_title[:pos]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
 
     @property
     def available(self) -> bool:
@@ -294,13 +288,7 @@ class VlcDevice(MediaPlayerEntity):
             sourced_media = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
-            media_type = sourced_media.mime_type
             media_id = sourced_media.url
-
-        if media_type != MediaType.MUSIC and not media_type.startswith("audio/"):
-            raise HomeAssistantError(
-                f"Invalid media type {media_type}. Only {MediaType.MUSIC} is supported"
-            )
 
         # If media ID is a relative URL, we serve it from HA.
         media_id = async_process_play_media_url(
@@ -337,8 +325,4 @@ class VlcDevice(MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
-            self.hass,
-            media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
-        )
+        return await media_source.async_browse_media(self.hass, media_content_id)

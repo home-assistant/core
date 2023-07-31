@@ -1,4 +1,4 @@
-"""This platform allows several fans to be grouped into one fan."""
+"""Platform allowing several fans to be grouped into one fan."""
 from __future__ import annotations
 
 from functools import reduce
@@ -35,11 +35,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import GroupEntity
 from .util import (
@@ -110,17 +113,11 @@ class FanGroup(GroupEntity, FanEntity):
         self._percentage = None
         self._oscillating = None
         self._direction = None
-        self._supported_features = 0
         self._speed_count = 100
         self._is_on: bool | None = False
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     @property
     def speed_count(self) -> int:
@@ -148,10 +145,13 @@ class FanGroup(GroupEntity, FanEntity):
         return self._oscillating
 
     @callback
-    def _update_supported_features_event(self, event: Event) -> None:
+    def _update_supported_features_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         self.async_set_context(event.context)
-        if (entity := event.data.get("entity_id")) is not None:
-            self.async_update_supported_features(entity, event.data.get("new_state"))
+        self.async_update_supported_features(
+            event.data["entity_id"], event.data["new_state"]
+        )
 
     @callback
     def async_update_supported_features(
@@ -319,8 +319,10 @@ class FanGroup(GroupEntity, FanEntity):
             "_direction", FanEntityFeature.DIRECTION, ATTR_DIRECTION
         )
 
-        self._supported_features = reduce(
-            ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+        self._attr_supported_features = FanEntityFeature(
+            reduce(
+                ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+            )
         )
         self._attr_assumed_state |= any(
             state.attributes.get(ATTR_ASSUMED_STATE) for state in states

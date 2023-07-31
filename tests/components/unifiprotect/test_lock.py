@@ -1,5 +1,5 @@
 """Test the UniFi Protect lock platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
@@ -32,7 +32,7 @@ from .utils import (
 
 async def test_lock_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
-):
+) -> None:
     """Test removing and re-adding a lock device."""
 
     await init_entry(hass, ufp, [doorlock])
@@ -48,7 +48,7 @@ async def test_lock_setup(
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
-):
+) -> None:
     """Test lock entity setup."""
 
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
@@ -73,7 +73,7 @@ async def test_lock_locked(
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
-):
+) -> None:
     """Test lock entity locked."""
 
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
@@ -100,7 +100,7 @@ async def test_lock_unlocking(
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
-):
+) -> None:
     """Test lock entity unlocking."""
 
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
@@ -127,7 +127,7 @@ async def test_lock_locking(
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
-):
+) -> None:
     """Test lock entity locking."""
 
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
@@ -154,7 +154,7 @@ async def test_lock_jammed(
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
-):
+) -> None:
     """Test lock entity jammed."""
 
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
@@ -181,7 +181,7 @@ async def test_lock_unavailable(
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
-):
+) -> None:
     """Test lock entity unavailable."""
 
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
@@ -208,7 +208,7 @@ async def test_lock_do_lock(
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
-):
+) -> None:
     """Test lock entity lock service."""
 
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
@@ -232,7 +232,7 @@ async def test_lock_do_unlock(
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
-):
+) -> None:
     """Test lock entity unlock service."""
 
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])

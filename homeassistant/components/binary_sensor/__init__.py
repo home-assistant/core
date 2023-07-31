@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Literal, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -179,19 +179,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BinarySensorEntityDescription(EntityDescription):
     """A class that describes binary sensor entities."""
 
-    device_class: BinarySensorDeviceClass | str | None = None
+    device_class: BinarySensorDeviceClass | None = None
 
 
 class BinarySensorEntity(Entity):
     """Represent a binary sensor."""
 
     entity_description: BinarySensorEntityDescription
-    _attr_device_class: BinarySensorDeviceClass | str | None
+    _attr_device_class: BinarySensorDeviceClass | None
     _attr_is_on: bool | None = None
     _attr_state: None = None
 
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For binary sensors this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @property
-    def device_class(self) -> BinarySensorDeviceClass | str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class

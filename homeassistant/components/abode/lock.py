@@ -1,8 +1,8 @@
 """Support for the Abode Security System locks."""
 from typing import Any
 
-from abodepy.devices.lock import AbodeLock as AbodeLK
-import abodepy.helpers.constants as CONST
+from jaraco.abode.devices.lock import Lock as AbodeLK
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -29,6 +29,7 @@ class AbodeLock(AbodeDevice, LockEntity):
     """Representation of an Abode lock."""
 
     _device: AbodeLK
+    _attr_name = None
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""

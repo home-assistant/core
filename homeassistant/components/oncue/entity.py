@@ -14,12 +14,14 @@ from homeassistant.helpers.update_coordinator import (
 from .const import CONNECTION_ESTABLISHED_KEY, DOMAIN, VALUE_UNAVAILABLE
 
 
-class OncueEntity(CoordinatorEntity, Entity):
+class OncueEntity(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, OncueDevice]]], Entity
+):
     """Representation of an Oncue entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, OncueDevice]],
         device_id: str,
         device: OncueDevice,
         sensor: OncueSensor,
@@ -64,7 +66,8 @@ class OncueEntity(CoordinatorEntity, Entity):
                 return False
             # If the cloud is reporting that the generator is not connected
             # this also indicates the data is not available.
-            # The battery voltage sensor reports 0.0 rather than -- hence the purpose of this check.
+            # The battery voltage sensor reports 0.0 rather than
+            # -- hence the purpose of this check.
             device: OncueDevice = self.coordinator.data[self._device_id]
             conn_established: OncueSensor = device.sensors[CONNECTION_ESTABLISHED_KEY]
             if (

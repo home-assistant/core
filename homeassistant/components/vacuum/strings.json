@@ -14,16 +14,87 @@
       "dock": "Let {entity_name} return to the dock"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "cleaning": "Cleaning",
-      "docked": "Docked",
-      "error": "Error",
-      "idle": "[%key:common::state::idle%]",
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]",
-      "paused": "[%key:common::state::paused%]",
-      "returning": "Returning to dock"
+      "name": "[%key:component::vacuum::title%]",
+      "state": {
+        "cleaning": "Cleaning",
+        "docked": "Docked",
+        "error": "Error",
+        "idle": "[%key:common::state::idle%]",
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]",
+        "paused": "[%key:common::state::paused%]",
+        "returning": "Returning to dock"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_vacuum_base_class": {
+      "title": "The {platform} custom integration is using deprecated vacuum feature",
+      "description": "The custom integration `{platform}` is extending the deprecated base class `VacuumEntity` instead of `StateVacuumEntity`.\n\nPlease report it to the author of the `{platform}` custom integration.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
+    }
+  },
+  "services": {
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Starts a new cleaning task."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Stops the current cleaning task and returns to its dock."
+    },
+    "stop": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Stops the current cleaning task."
+    },
+    "locate": {
+      "name": "Locate",
+      "description": "Locates the vacuum cleaner robot."
+    },
+    "start_pause": {
+      "name": "Start/pause",
+      "description": "Starts, pauses, or resumes the cleaning task."
+    },
+    "start": {
+      "name": "[%key:common::action::start%]",
+      "description": "Starts or resumes the cleaning task."
+    },
+    "pause": {
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses the cleaning task."
+    },
+    "return_to_base": {
+      "name": "Return to dock",
+      "description": "Tells the vacuum cleaner to return to its dock."
+    },
+    "clean_spot": {
+      "name": "Clean spot",
+      "description": "Tells the vacuum cleaner to do a spot clean-up."
+    },
+    "send_command": {
+      "name": "Send command",
+      "description": "Sends a command to the vacuum cleaner.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command to execute. The commands are integration-specific."
+        },
+        "params": {
+          "name": "Parameters",
+          "description": "Parameters for the command. The parameters are integration-specific."
+        }
+      }
+    },
+    "set_fan_speed": {
+      "name": "Set fan speed",
+      "description": "Sets the fan speed of the vacuum cleaner.",
+      "fields": {
+        "fan_speed": {
+          "name": "Fan speed",
+          "description": "Fan speed. The value depends on the integration. Some integrations have speed steps, like 'medium'. Some use a percentage, between 0 and 100."
+        }
+      }
     }
   }
 }

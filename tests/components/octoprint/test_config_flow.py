@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -69,7 +69,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -118,7 +118,7 @@ async def test_form_cannot_connect(hass):
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_form_unknown_exception(hass):
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle a random error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -428,7 +428,7 @@ async def test_failed_auth_unexpected_error(hass: HomeAssistant) -> None:
     assert result["reason"] == "auth_failed"
 
 
-async def test_user_duplicate_entry(hass):
+async def test_user_duplicate_entry(hass: HomeAssistant) -> None:
     """Test that duplicate entries abort."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -535,7 +535,7 @@ async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_form(hass):
+async def test_reauth_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     entry = MockConfigEntry(
         domain=DOMAIN,

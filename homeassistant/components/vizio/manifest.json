@@ -1,13 +1,13 @@
 {
   "domain": "vizio",
   "name": "VIZIO SmartCast",
-  "documentation": "https://www.home-assistant.io/integrations/vizio",
-  "requirements": ["pyvizio==0.1.57"],
   "codeowners": ["@raman325"],
   "config_flow": true,
-  "zeroconf": ["_viziocast._tcp.local."],
-  "quality_scale": "platinum",
+  "documentation": "https://www.home-assistant.io/integrations/vizio",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyvizio"],
-  "integration_type": "hub"
+  "quality_scale": "platinum",
+  "requirements": ["pyvizio==0.1.61"],
+  "zeroconf": ["_viziocast._tcp.local."]
 }

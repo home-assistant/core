@@ -1,0 +1,190 @@
+{
+  "nodeId": 43,
+  "index": 0,
+  "installerIcon": 1536,
+  "userIcon": 1540,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": true,
+  "manufacturerId": 634,
+  "productId": 40962,
+  "productType": 28672,
+  "firmwareVersion": "10.0.1",
+  "zwavePlusVersion": 2,
+  "location": "**REDACTED**",
+  "deviceConfig": {
+    "filename": "/usr/src/app/store/.config-db/devices/0x027a/zen72.json",
+    "isEmbedded": true,
+    "manufacturer": "Fake",
+    "manufacturerId": 634,
+    "label": "Device",
+    "description": "This is a fake device",
+    "devices": [
+      {
+        "productType": 28672,
+        "productId": 40962
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    },
+    "compat": {
+      "skipConfigurationNameQuery": true,
+      "skipConfigurationInfoQuery": true
+    },
+    "metadata": {
+      "inclusion": "1. Initiate inclusion (pairing) in the app (or web interface).\n2. TAP UP 3 TIMES QUICKLY if using traditional Z-Wave inclusion.\n3. The LED indicator will blink blue to signal communication and turn green for 3 seconds if inclusion is successful or turn red for 3 seconds if the pairing attempt fails",
+      "exclusion": "1. Bring your Z-Wave gateway (hub) close to the switch if possible\n2. Put the Z-Wave hub into exclusion mode (not sure how to do that? ask@getzooz.com) \n3. Tap the lower paddle on the switch 3 times quickly (the LED indicator will start blinking blue)\n4. Your hub will confirm exclusion, the LED indicator on the switch will turn green for 3 seconds, and the device will disappear from your controller's device list",
+      "reset": "If your primary controller is missing or inoperable, you may need to reset the device to factory settings. To reset the switch, press and hold the lower paddle for 10 seconds until the LED indicator starts blinking. Release paddle, and immediately after, tap the lower paddle 5 times to complete the reset. The LED indicator will flash blue 3 times and turn red for 3 seconds to confirm successful reset",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4108/zooz-700-series-z-wave-dimmer-zen72-manual.pdf"
+    }
+  },
+  "label": "Device",
+  "interviewAttempts": 0,
+  "endpoints": [
+    {
+      "nodeId": 43,
+      "index": 0,
+      "installerIcon": 1536,
+      "userIcon": 1540,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Multilevel Power Switch"
+        },
+        "mandatorySupportedCCs": [32, 38, 39],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 3,
+          "isSecure": true
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "Test",
+      "propertyKey": "Sensor",
+      "propertyName": "Test",
+      "propertyKeyName": "Sensor",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Tests non-writeable Indicator CC number gets created as a sensor entity",
+        "label": "Sensor",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 4
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "Test",
+      "propertyKey": "Switch",
+      "propertyName": "Test",
+      "propertyKeyName": "Switch",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "description": "Tests writeable Indicator CC boolean gets created as a switch entity",
+        "label": "Switch",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 5
+        }
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "Test",
+      "propertyKey": "Binary Sensor",
+      "propertyName": "Test",
+      "propertyKeyName": "Binary Sensor",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "description": "Tests non-writeable Indicator CC boolean gets created as a binary sensor entity",
+        "label": "Binary Sensor",
+        "ccSpecific": {
+          "indicatorId": 80,
+          "propertyId": 5
+        }
+      },
+      "value": false
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Multilevel Power Switch"
+    },
+    "mandatorySupportedCCs": [32, 38, 39],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x027a:0x7000:0xa002:10.0.1",
+  "statistics": {
+    "commandsTX": 64,
+    "commandsRX": 88,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0,
+    "rtt": 74.5,
+    "rssi": -60
+  },
+  "highestSecurityClass": 1,
+  "isControllerNode": false,
+  "keepAwake": false
+}

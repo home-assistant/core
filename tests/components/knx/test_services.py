@@ -1,7 +1,10 @@
 """Test KNX services."""
+from unittest.mock import patch
+
 import pytest
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
+from homeassistant.components.knx import async_unload_entry as knx_async_unload_entry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -11,7 +14,7 @@ from tests.common import async_capture_events
 
 
 @pytest.mark.parametrize(
-    "service_payload,expected_telegrams,expected_apci",
+    ("service_payload", "expected_telegrams", "expected_apci"),
     [
         # send DPT 1 telegram
         (
@@ -104,7 +107,7 @@ async def test_send(
     service_payload,
     expected_telegrams,
     expected_apci,
-):
+) -> None:
     """Test `knx.send` service."""
     await knx.setup_integration({})
 
@@ -120,7 +123,7 @@ async def test_send(
         await knx.assert_telegram(group_address, payload, expected_apci)
 
 
-async def test_read(hass: HomeAssistant, knx: KNXTestKit):
+async def test_read(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.read` service."""
     await knx.setup_integration({})
 
@@ -140,7 +143,7 @@ async def test_read(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_read("3/3/3")
 
 
-async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
+async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.event_register` service."""
     events = async_capture_events(hass, "knx_event")
     test_address = "1/2/3"
@@ -193,7 +196,7 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
     assert untyped_event_1.data["value"] is None
 
 
-async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit):
+async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.exposure_register` service."""
     test_address = "1/2/3"
     test_entity = "fake.entity"
@@ -250,3 +253,24 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit):
     hass.states.async_set(test_entity, STATE_OFF, {test_attribute: 25})
     await knx.assert_telegram_count(1)
     await knx.assert_write(test_address, (25,))
+
+
+async def test_reload_service(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test reload service."""
+    await knx.setup_integration({})
+
+    with patch(
+        "homeassistant.components.knx.async_unload_entry", wraps=knx_async_unload_entry
+    ) as mock_unload_entry, patch(
+        "homeassistant.components.knx.async_setup_entry"
+    ) as mock_setup_entry:
+        await hass.services.async_call(
+            "knx",
+            "reload",
+            blocking=True,
+        )
+        mock_unload_entry.assert_called_once()
+        mock_setup_entry.assert_called_once()

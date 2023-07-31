@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
@@ -176,7 +176,7 @@ def register_discovery_flow(
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
 
-    class DiscoveryFlow(DiscoveryFlowHandler[Union[Awaitable[bool], bool]]):
+    class DiscoveryFlow(DiscoveryFlowHandler[Awaitable[bool] | bool]):
         """Discovery flow handler."""
 
         def __init__(self) -> None:

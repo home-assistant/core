@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.ruckus_unleashed import API_MAC, DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import utcnow
@@ -22,7 +23,7 @@ from . import (
 from tests.common import async_fire_time_changed
 
 
-async def test_client_connected(hass):
+async def test_client_connected(hass: HomeAssistant) -> None:
     """Test client connected."""
     await init_integration(hass)
 
@@ -41,7 +42,7 @@ async def test_client_connected(hass):
     assert test_client.state == STATE_HOME
 
 
-async def test_client_disconnected(hass):
+async def test_client_disconnected(hass: HomeAssistant) -> None:
     """Test client disconnected."""
     await init_integration(hass)
 
@@ -58,7 +59,7 @@ async def test_client_disconnected(hass):
         assert test_client.state == STATE_NOT_HOME
 
 
-async def test_clients_update_failed(hass):
+async def test_clients_update_failed(hass: HomeAssistant) -> None:
     """Test failed update."""
     await init_integration(hass)
 
@@ -75,7 +76,7 @@ async def test_clients_update_failed(hass):
         assert test_client.state == STATE_UNAVAILABLE
 
 
-async def test_restoring_clients(hass):
+async def test_restoring_clients(hass: HomeAssistant) -> None:
     """Test restoring existing device_tracker entities if not detected on startup."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)

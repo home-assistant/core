@@ -10,11 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
 from .entity import (
@@ -92,6 +92,7 @@ SENSORS: Final = {
         key="sensor|gas",
         name="Gas",
         device_class=BinarySensorDeviceClass.GAS,
+        translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
         extra_state_attributes=lambda block: {"detected": block.gas},
     ),
@@ -126,7 +127,7 @@ SENSORS: Final = {
     ),
     ("sensor", "extInput"): BlockBinarySensorDescription(
         key="sensor|extInput",
-        name="External Input",
+        name="External input",
         device_class=BinarySensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
@@ -163,6 +164,14 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "external_power": RpcBinarySensorDescription(
+        key="devicepower:0",
+        sub_key="external",
+        name="External power",
+        value=lambda status, _: status["present"],
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "overtemp": RpcBinarySensorDescription(
         key="switch",
         sub_key="errors",
@@ -189,6 +198,12 @@ RPC_SENSORS: Final = {
         value=lambda status, _: False if status is None else "overvoltage" in status,
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("apower") is not None,
+    ),
+    "smoke": RpcBinarySensorDescription(
+        key="smoke",
+        sub_key="alarm",
+        name="Smoke",
+        device_class=BinarySensorDeviceClass.SMOKE,
     ),
 }
 
@@ -268,10 +283,8 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     entity_description: RestBinarySensorDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if REST sensor state is on."""
-        if self.attribute_value is None:
-            return None
         return bool(self.attribute_value)
 
 
@@ -281,31 +294,46 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     entity_description: RpcBinarySensorDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if RPC sensor state is on."""
-        if self.attribute_value is None:
-            return None
         return bool(self.attribute_value)
 
 
-class BlockSleepingBinarySensor(ShellySleepingBlockAttributeEntity, BinarySensorEntity):
+class BlockSleepingBinarySensor(
+    ShellySleepingBlockAttributeEntity, BinarySensorEntity, RestoreEntity
+):
     """Represent a block sleeping binary sensor."""
 
     entity_description: BlockBinarySensorDescription
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.last_state = await self.async_get_last_state()
+
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor state is on."""
         if self.block is not None:
             return bool(self.attribute_value)
 
-        return self.last_state == STATE_ON
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state == STATE_ON
 
 
-class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEntity):
+class RpcSleepingBinarySensor(
+    ShellySleepingRpcAttributeEntity, BinarySensorEntity, RestoreEntity
+):
     """Represent a RPC sleeping binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.last_state = await self.async_get_last_state()
 
     @property
     def is_on(self) -> bool | None:
@@ -313,4 +341,7 @@ class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEnti
         if self.coordinator.device.initialized:
             return bool(self.attribute_value)
 
-        return self.last_state == STATE_ON
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state == STATE_ON

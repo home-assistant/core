@@ -1,10 +1,10 @@
 {
   "domain": "soma",
   "name": "Soma Connect",
+  "codeowners": ["@ratsept", "@sebfortier2288"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/soma",
-  "codeowners": ["@ratsept", "@sebfortier2288"],
-  "requirements": ["pysoma==0.0.10"],
   "iot_class": "local_polling",
-  "loggers": ["api"]
+  "loggers": ["api"],
+  "requirements": ["pysoma==0.0.12"]
 }

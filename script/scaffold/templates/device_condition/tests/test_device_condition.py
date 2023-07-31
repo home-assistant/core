@@ -2,35 +2,21 @@
 from __future__ import annotations
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
-
-
-@pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -41,17 +27,19 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 async def test_get_conditions(
     hass: HomeAssistant,
-    device_reg: device_registry.DeviceRegistry,
-    entity_reg: entity_registry.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we get the expected conditions from a NEW_DOMAIN."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_conditions = [
         {
             "condition": "device",
@@ -71,7 +59,7 @@ async def test_get_conditions(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:

@@ -1,6 +1,7 @@
 """The tests for SleepIQ sensor platform."""
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
@@ -16,7 +17,7 @@ from .conftest import (
 )
 
 
-async def test_sleepnumber_sensors(hass, mock_asyncsleepiq):
+async def test_sleepnumber_sensors(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ sleepnumber for a bed with two sides."""
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
@@ -54,7 +55,7 @@ async def test_sleepnumber_sensors(hass, mock_asyncsleepiq):
     assert entry.unique_id == f"{SLEEPER_R_ID}_sleep_number"
 
 
-async def test_pressure_sensors(hass, mock_asyncsleepiq):
+async def test_pressure_sensors(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ pressure for a bed with two sides."""
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)

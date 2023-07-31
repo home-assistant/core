@@ -2,16 +2,22 @@
 from __future__ import annotations
 
 from asyncio import gather
+from dataclasses import dataclass
 from datetime import timedelta
 
 from aiohttp import ClientSession
 from async_timeout import timeout
 from python_awair import Awair, AwairLocal
+from python_awair.air_data import AirData
 from python_awair.devices import AwairBaseDevice, AwairLocalDevice
 from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -23,7 +29,6 @@ from .const import (
     LOGGER,
     UPDATE_INTERVAL_CLOUD,
     UPDATE_INTERVAL_LOCAL,
-    AwairResult,
 )
 
 PLATFORMS = [Platform.SENSOR]
@@ -72,7 +77,15 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class AwairDataUpdateCoordinator(DataUpdateCoordinator):
+@dataclass
+class AwairResult:
+    """Wrapper class to hold an awair device and set of air data."""
+
+    device: AwairBaseDevice
+    air_data: AirData
+
+
+class AwairDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AwairResult]]):
     """Define a wrapper class to update Awair data."""
 
     def __init__(
@@ -107,7 +120,7 @@ class AwairCloudDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_CLOUD)
 
-    async def _async_update_data(self) -> dict[str, AwairResult] | None:
+    async def _async_update_data(self) -> dict[str, AwairResult]:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
             try:
@@ -139,7 +152,7 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_LOCAL)
 
-    async def _async_update_data(self) -> dict[str, AwairResult] | None:
+    async def _async_update_data(self) -> dict[str, AwairResult]:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
             try:

@@ -5,11 +5,16 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -18,7 +23,9 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_state_change(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for turn_on and turn_off triggers firing.
 
     This is a sanity test for the toggle entity device automation helper, this is
@@ -137,8 +144,8 @@ async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations)
 
 @pytest.mark.parametrize("trigger", ["turned_off", "changed_states"])
 async def test_if_fires_on_state_change_with_for(
-    hass, calls, enable_custom_integrations, trigger
-):
+    hass: HomeAssistant, calls, enable_custom_integrations: None, trigger
+) -> None:
     """Test for triggers firing with delay."""
     platform = getattr(hass.components, "test.switch")
 

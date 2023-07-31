@@ -1,12 +1,12 @@
 {
   "domain": "tts",
-  "name": "Text-to-Speech (TTS)",
-  "documentation": "https://www.home-assistant.io/integrations/tts",
-  "requirements": ["mutagen==1.46.0"],
-  "dependencies": ["http"],
+  "name": "Text-to-speech (TTS)",
   "after_dependencies": ["media_player"],
-  "codeowners": ["@pvizeli"],
-  "quality_scale": "internal",
+  "codeowners": ["@home-assistant/core", "@pvizeli"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/tts",
+  "integration_type": "entity",
   "loggers": ["mutagen"],
-  "integration_type": "entity"
+  "quality_scale": "internal",
+  "requirements": ["mutagen==1.46.0"]
 }

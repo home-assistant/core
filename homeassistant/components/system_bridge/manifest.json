@@ -1,15 +1,15 @@
 {
   "domain": "system_bridge",
   "name": "System Bridge",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/system_bridge",
-  "requirements": ["systembridgeconnector==3.4.4"],
-  "codeowners": ["@timmo001"],
-  "zeroconf": ["_system-bridge._tcp.local."],
-  "dependencies": ["media_source"],
   "after_dependencies": ["zeroconf"],
-  "quality_scale": "silver",
+  "codeowners": ["@timmo001"],
+  "config_flow": true,
+  "dependencies": ["media_source"],
+  "documentation": "https://www.home-assistant.io/integrations/system_bridge",
   "integration_type": "device",
   "iot_class": "local_push",
-  "loggers": ["systembridgeconnector"]
+  "loggers": ["systembridgeconnector"],
+  "quality_scale": "silver",
+  "requirements": ["systembridgeconnector==3.4.9"],
+  "zeroconf": ["_system-bridge._tcp.local."]
 }

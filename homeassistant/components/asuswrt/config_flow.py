@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import socket
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -13,7 +13,7 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
@@ -25,8 +25,13 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
+from .bridge import AsusWrtBridge
 from .const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
@@ -42,7 +47,6 @@ from .const import (
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
 )
-from .router import get_api, get_nvram_info
 
 LABEL_MAC = "LABEL_MAC"
 
@@ -51,6 +55,35 @@ RESULT_SUCCESS = "success"
 RESULT_UNKNOWN = "unknown"
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
+        ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+        vol.Optional(CONF_TRACK_UNKNOWN, default=DEFAULT_TRACK_UNKNOWN): bool,
+        vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
+        vol.Required(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): str,
+    }
+)
+
+
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Get options schema."""
+    options_flow: SchemaOptionsFlowHandler
+    options_flow = cast(SchemaOptionsFlowHandler, handler.parent_handler)
+    if options_flow.config_entry.data[CONF_MODE] == MODE_AP:
+        return OPTIONS_SCHEMA.extend(
+            {
+                vol.Optional(CONF_REQUIRE_IP, default=True): bool,
+            }
+        )
+    return OPTIONS_SCHEMA
+
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(get_options_schema),
+}
 
 
 def _is_file(value: str) -> bool:
@@ -109,16 +142,15 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    @staticmethod
     async def _async_check_connection(
-        user_input: dict[str, Any]
+        self, user_input: dict[str, Any]
     ) -> tuple[str, str | None]:
         """Attempt to connect the AsusWrt router."""
 
         host: str = user_input[CONF_HOST]
-        api = get_api(user_input)
+        api = AsusWrtBridge.get_bridge(self.hass, user_input)
         try:
-            await api.connection.async_connect()
+            await api.async_connect()
 
         except OSError:
             _LOGGER.error("Error connecting to the AsusWrt router at %s", host)
@@ -134,14 +166,9 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error connecting to the AsusWrt router at %s", host)
             return RESULT_CONN_ERROR, None
 
-        label_mac = await get_nvram_info(api, LABEL_MAC)
-        conf_protocol = user_input[CONF_PROTOCOL]
-        if conf_protocol == PROTOCOL_TELNET:
-            api.connection.disconnect()
+        unique_id = api.label_mac
+        await api.async_disconnect()
 
-        unique_id = None
-        if label_mac and "label_mac" in label_mac:
-            unique_id = format_mac(label_mac["label_mac"])
         return RESULT_SUCCESS, unique_id
 
     async def async_step_user(
@@ -203,62 +230,8 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Handle a option flow for AsusWrt."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_CONSIDER_HOME,
-                    default=self.config_entry.options.get(
-                        CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
-                vol.Optional(
-                    CONF_TRACK_UNKNOWN,
-                    default=self.config_entry.options.get(
-                        CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN
-                    ),
-                ): bool,
-                vol.Required(
-                    CONF_INTERFACE,
-                    default=self.config_entry.options.get(
-                        CONF_INTERFACE, DEFAULT_INTERFACE
-                    ),
-                ): str,
-                vol.Required(
-                    CONF_DNSMASQ,
-                    default=self.config_entry.options.get(
-                        CONF_DNSMASQ, DEFAULT_DNSMASQ
-                    ),
-                ): str,
-            }
-        )
-
-        if self.config_entry.data[CONF_MODE] == MODE_AP:
-            data_schema = data_schema.extend(
-                {
-                    vol.Optional(
-                        CONF_REQUIRE_IP,
-                        default=self.config_entry.options.get(CONF_REQUIRE_IP, True),
-                    ): bool,
-                }
-            )
-
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
+        """Get options flow for this handler."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

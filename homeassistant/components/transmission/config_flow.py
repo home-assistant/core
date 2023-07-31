@@ -62,7 +62,6 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             for entry in self._async_current_entries():
                 if (
                     entry.data[CONF_HOST] == user_input[CONF_HOST]

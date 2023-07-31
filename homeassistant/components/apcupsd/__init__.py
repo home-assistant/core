@@ -6,13 +6,12 @@ import logging
 from typing import Any, Final
 
 from apcaccess import status
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,51 +21,7 @@ VALUE_ONLINE: Final = 8
 PLATFORMS: Final = (Platform.BINARY_SENSOR, Platform.SENSOR)
 MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=60)
 
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_HOST, default="localhost"): cv.string,
-                vol.Optional(CONF_PORT, default=3551): cv.port,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up integration from legacy YAML configurations."""
-    conf = config.get(DOMAIN)
-    if conf is None:
-        return True
-
-    # We only import configs from YAML if it hasn't been imported. If there is a config
-    # entry marked with SOURCE_IMPORT, it means the YAML config has been imported.
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.source == SOURCE_IMPORT:
-            return True
-
-    # Since the YAML configuration for apcupsd consists of two parts:
-    # apcupsd:
-    #   host: xxx
-    #   port: xxx
-    # sensor:
-    #   - platform: apcupsd
-    #     resource:
-    #       - resource_1
-    #       - resource_2
-    #       - ...
-    # Here at the integration set up we do not have the entire information to be
-    # imported to config flow yet. So we temporarily store the configuration to
-    # hass.data[DOMAIN] under a special entry_id SOURCE_IMPORT (which shouldn't
-    # conflict with other entry ids). Later when the sensor platform setup is
-    # called we gather the resources information and from there we start the
-    # actual config entry imports.
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][SOURCE_IMPORT] = conf
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -108,7 +63,7 @@ class APCUPSdData:
         """Initialize the data object."""
         self._host = host
         self._port = port
-        self.status: dict[str, Any] = {}
+        self.status: dict[str, str] = {}
 
     @property
     def name(self) -> str | None:
@@ -126,16 +81,6 @@ class APCUPSdData:
         return None
 
     @property
-    def sw_version(self) -> str | None:
-        """Return the software version of the APCUPSd, if available."""
-        return self.status.get("VERSION")
-
-    @property
-    def hw_version(self) -> str | None:
-        """Return the firmware version of the UPS, if available."""
-        return self.status.get("FIRMWARE")
-
-    @property
     def serial_no(self) -> str | None:
         """Return the unique serial number of the UPS, if available."""
         return self.status.get("SERIALNO")
@@ -145,8 +90,23 @@ class APCUPSdData:
         """Return the STATFLAG indicating the status of the UPS, if available."""
         return self.status.get("STATFLAG")
 
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the DeviceInfo of this APC UPS for the sensors, if serial number is available."""
+        if self.serial_no is None:
+            return None
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial_no)},
+            model=self.model,
+            manufacturer="APC",
+            name=self.name if self.name is not None else "APC UPS",
+            hw_version=self.status.get("FIRMWARE"),
+            sw_version=self.status.get("VERSION"),
+        )
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
+    def update(self, **kwargs: Any) -> None:
         """Fetch the latest status from APCUPSd.
 
         Note that the result dict uses upper case for each resource, where our

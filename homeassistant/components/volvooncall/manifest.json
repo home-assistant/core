@@ -1,10 +1,10 @@
 {
   "domain": "volvooncall",
   "name": "Volvo On Call",
-  "documentation": "https://www.home-assistant.io/integrations/volvooncall",
-  "requirements": ["volvooncall==0.10.1"],
   "codeowners": ["@molobrakos"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/volvooncall",
   "iot_class": "cloud_polling",
   "loggers": ["geopy", "hbmqtt", "volvooncall"],
-  "config_flow": true
+  "requirements": ["volvooncall==0.10.3"]
 }

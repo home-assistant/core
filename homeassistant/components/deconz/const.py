@@ -57,3 +57,6 @@ POWER_PLUGS = [
 
 CONF_ANGLE = "angle"
 CONF_GESTURE = "gesture"
+
+ATTR_DURATION = "duration"
+ATTR_ROTATION = "rotation"

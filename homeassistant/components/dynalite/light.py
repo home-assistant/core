@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,3 +44,9 @@ class DynaliteLight(DynaliteBase, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.async_turn_off(**kwargs)
+
+    def initialize_state(self, state):
+        """Initialize the state from cache."""
+        target_level = state.attributes.get(ATTR_BRIGHTNESS)
+        if target_level is not None:
+            self._device.init_level(target_level)

@@ -1,5 +1,4 @@
 """Tests for the Yeelight integration."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -33,8 +32,10 @@ CAPABILITIES = {
     "model": MODEL,
     "fw_ver": FW_VER,
     "location": f"yeelight://{IP_ADDRESS}",
-    "support": "get_prop set_default set_power toggle set_bright start_cf stop_cf"
-    " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
+    "support": (
+        "get_prop set_default set_power toggle set_bright start_cf stop_cf"
+        " set_scene cron_add cron_get cron_del set_ct_abx set_rgb"
+    ),
     "name": "",
 }
 
@@ -164,12 +165,12 @@ def _patched_ssdp_listener(info: CaseInsensitiveDict, *args, **kwargs):
     async def _async_callback(*_):
         if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
-        await listener.async_connect_callback()
+        listener.connect_callback()
 
     @callback
     def _async_search(*_):
         if info:
-            asyncio.create_task(listener.async_callback(info))
+            listener.callback(info)
 
     listener.async_start = _async_callback
     listener.async_search = _async_search

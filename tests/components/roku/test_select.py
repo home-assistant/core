@@ -113,7 +113,7 @@ async def test_application_state(
 
 
 @pytest.mark.parametrize(
-    "error, error_string",
+    ("error", "error_string"),
     [
         (RokuConnectionError, "Error communicating with Roku API"),
         (RokuConnectionTimeoutError, "Timeout communicating with Roku API"),

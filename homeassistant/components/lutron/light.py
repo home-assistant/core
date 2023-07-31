@@ -19,7 +19,7 @@ def setup_platform(
 ) -> None:
     """Set up the Lutron lights."""
     devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["light"]:
+    for area_name, device in hass.data[LUTRON_DEVICES]["light"]:
         dev = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 

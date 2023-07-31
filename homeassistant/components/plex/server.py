@@ -1,4 +1,6 @@
 """Shared class to maintain Plex server instances."""
+from __future__ import annotations
+
 import logging
 import ssl
 import time
@@ -27,7 +29,6 @@ from .const import (
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
-    DOMAIN,
     GDM_DEBOUNCER,
     GDM_SCANNER,
     PLAYER_SOURCE,
@@ -47,6 +48,7 @@ from .errors import (
     ServerNotSpecified,
     ShouldUpdateConfigEntry,
 )
+from .helpers import get_plex_data
 from .media_search import search_media
 from .models import PlexSession
 
@@ -197,8 +199,10 @@ class PlexServer:
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
                         else:
-                            raise Unauthorized(  # pylint: disable=raise-missing-from
-                                "New certificate cannot be validated with provided token"
+                            # pylint: disable-next=raise-missing-from
+                            raise Unauthorized(  # noqa: TRY200
+                                "New certificate cannot be validated"
+                                " with provided token"
                             )
                     else:
                         raise
@@ -212,7 +216,8 @@ class PlexServer:
             shared_users = self.account.users() if self.account else []
         except Unauthorized:
             _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available"
+                "Plex account has limited permissions,"
+                " shared account filtering will not be available"
             )
         else:
             self._accounts = []
@@ -314,7 +319,7 @@ class PlexServer:
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
-        await self.hass.data[DOMAIN][GDM_DEBOUNCER]()
+        await get_plex_data(self.hass)[GDM_DEBOUNCER]()
 
         available_clients = {}
         ignored_clients = set()
@@ -427,7 +432,7 @@ class PlexServer:
 
         def connect_new_clients():
             """Create connections to newly discovered clients."""
-            for gdm_entry in self.hass.data[DOMAIN][GDM_SCANNER].entries:
+            for gdm_entry in get_plex_data(self.hass)[GDM_SCANNER].entries:
                 machine_identifier = gdm_entry["data"]["Resource-Identifier"]
                 if machine_identifier in self._client_device_cache:
                     client = self._client_device_cache[machine_identifier]

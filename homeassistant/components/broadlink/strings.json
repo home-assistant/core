@@ -43,5 +43,21 @@
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "light": {
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      }
+    }
   }
 }

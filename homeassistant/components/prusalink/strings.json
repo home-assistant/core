@@ -14,5 +14,67 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "not_supported": "Only PrusaLink API v2 is supported"
     }
+  },
+  "entity": {
+    "sensor": {
+      "printer_state": {
+        "state": {
+          "cancelling": "Cancelling",
+          "idle": "[%key:common::state::idle%]",
+          "paused": "[%key:common::state::paused%]",
+          "pausing": "Pausing",
+          "printing": "Printing"
+        }
+      },
+      "heatbed_temperature": {
+        "name": "Heatbed temperature"
+      },
+      "heatbed_target_temperature": {
+        "name": "Heatbed target temperature"
+      },
+      "nozzle_temperature": {
+        "name": "Nozzle temperature"
+      },
+      "nozzle_target_temperature": {
+        "name": "Nozzle target temperature"
+      },
+      "progress": {
+        "name": "Progress"
+      },
+      "filename": {
+        "name": "Filename"
+      },
+      "material": {
+        "name": "Material"
+      },
+      "print_start": {
+        "name": "Print start"
+      },
+      "print_finish": {
+        "name": "Print finish"
+      },
+      "print_speed": {
+        "name": "Print speed"
+      },
+      "z_height": {
+        "name": "Z-Height"
+      }
+    },
+    "button": {
+      "cancel_job": {
+        "name": "Cancel job"
+      },
+      "pause_job": {
+        "name": "Pause job"
+      },
+      "resume_job": {
+        "name": "Resume job"
+      }
+    },
+    "camera": {
+      "job_preview": {
+        "name": "Preview"
+      }
+    }
   }
 }

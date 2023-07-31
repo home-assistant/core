@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .core import Orientation
+
 if TYPE_CHECKING:
     from io import BufferedIOBase
 
@@ -149,7 +151,7 @@ def find_moov(mp4_io: BufferedIOBase) -> int:
     while 1:
         mp4_io.seek(index)
         box_header = mp4_io.read(8)
-        if len(box_header) != 8:
+        if len(box_header) != 8 or box_header[0:4] == b"\x00\x00\x00\x00":
             raise HomeAssistantError("moov atom not found")
         if box_header[4:8] == b"moov":
             return index
@@ -179,22 +181,24 @@ ROTATE_LEFT_FLIP = (ZERO32 + NEGONE32 + ZERO32) + (NEGONE32 + ZERO32 + ZERO32)
 ROTATE_RIGHT_FLIP = (ZERO32 + ONE32 + ZERO32) + (ONE32 + ZERO32 + ZERO32)
 
 TRANSFORM_MATRIX_TOP = (
-    # The first two entries are just to align the indices with the EXIF orientation tags
-    b"",
-    b"",
-    MIRROR,
-    ROTATE_180,
-    FLIP,
-    ROTATE_LEFT_FLIP,
-    ROTATE_LEFT,
-    ROTATE_RIGHT_FLIP,
-    ROTATE_RIGHT,
+    # The index into this tuple corresponds to the EXIF orientation tag
+    # Only index values of 2 through 8 are used
+    # The first two entries are just to keep everything aligned
+    b"",  # 0
+    b"",  # 1
+    MIRROR,  # 2
+    ROTATE_180,  # 3
+    FLIP,  # 4
+    ROTATE_LEFT_FLIP,  # 5
+    ROTATE_LEFT,  # 6
+    ROTATE_RIGHT_FLIP,  # 7
+    ROTATE_RIGHT,  # 8
 )
 
 
-def transform_init(init: bytes, orientation: int) -> bytes:
+def transform_init(init: bytes, orientation: Orientation) -> bytes:
     """Change the transformation matrix in the header."""
-    if orientation == 1:
+    if orientation == Orientation.NO_TRANSFORM:
         return init
     # Find moov
     moov_location = next(find_box(init, b"moov"))

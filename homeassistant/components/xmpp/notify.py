@@ -1,4 +1,6 @@
 """Jabber (XMPP) notification service."""
+from __future__ import annotations
+
 from concurrent.futures import TimeoutError as FutTimeoutError
 from http import HTTPStatus
 import logging
@@ -31,8 +33,10 @@ from homeassistant.const import (
     CONF_ROOM,
     CONF_SENDER,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +68,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> XmppNotificationService:
     """Get the Jabber (XMPP) notification service."""
     return XmppNotificationService(
         config.get(CONF_SENDER),

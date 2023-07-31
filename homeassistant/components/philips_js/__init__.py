@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any
@@ -18,10 +18,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import Context, HassJob, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.trigger import TriggerActionType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
@@ -78,54 +79,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class PluggableAction:
-    """A pluggable action handler."""
-
-    def __init__(self, update: Callable[[], None]) -> None:
-        """Initialize."""
-        self._update = update
-        self._actions: dict[
-            Any, tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]]
-        ] = {}
-
-    def __bool__(self):
-        """Return if we have something attached."""
-        return bool(self._actions)
-
-    @callback
-    def async_attach(self, action: TriggerActionType, variables: dict[str, Any]):
-        """Attach a device trigger for turn on."""
-
-        @callback
-        def _remove():
-            del self._actions[_remove]
-            self._update()
-
-        job = HassJob(action)
-
-        self._actions[_remove] = (job, variables)
-        self._update()
-
-        return _remove
-
-    async def async_run(self, hass: HomeAssistant, context: Context | None = None):
-        """Run all turn on triggers."""
-        for job, variables in self._actions.values():
-            hass.async_run_hass_job(job, variables, context)
-
-
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass, api: PhilipsTV, options: Mapping) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: PhilipsTV, options: Mapping[str, Any]
+    ) -> None:
         """Set up the coordinator."""
         self.api = api
         self.options = options
         self._notify_future: asyncio.Task | None = None
-
-        self.turn_on = PluggableAction(self.async_update_listeners)
 
         super().__init__(
             hass,
@@ -135,6 +100,19 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=2.0, immediate=False
             ),
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self.unique_id),
+            },
+            manufacturer="Philips",
+            model=self.system.get("model"),
+            name=self.system["name"],
+            sw_version=self.system.get("softwareversion"),
         )
 
     @property
@@ -208,4 +186,4 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except ConnectionFailure:
             pass
         except AutenticationFailure as exception:
-            raise UpdateFailed(str(exception)) from exception
+            raise ConfigEntryAuthFailed(str(exception)) from exception

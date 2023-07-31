@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MILLISECONDS
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MinecraftServer, MinecraftServerEntity
+from . import MinecraftServer
 from .const import (
     ATTR_PLAYERS_LIST,
     DOMAIN,
@@ -23,12 +23,10 @@ from .const import (
     NAME_PLAYERS_ONLINE,
     NAME_PROTOCOL_VERSION,
     NAME_VERSION,
-    UNIT_MOTD,
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
-    UNIT_PROTOCOL_VERSION,
-    UNIT_VERSION,
 )
+from .entity import MinecraftServerEntity
 
 
 async def async_setup_entry(
@@ -61,7 +59,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         server: MinecraftServer,
         type_name: str,
         icon: str,
-        unit: str | None,
+        unit: str | None = None,
         device_class: str | None = None,
     ) -> None:
         """Initialize sensor base entity."""
@@ -77,11 +75,11 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
 class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server version sensor."""
 
+    _attr_translation_key = "version"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize version sensor."""
-        super().__init__(
-            server=server, type_name=NAME_VERSION, icon=ICON_VERSION, unit=UNIT_VERSION
-        )
+        super().__init__(server=server, type_name=NAME_VERSION, icon=ICON_VERSION)
 
     async def async_update(self) -> None:
         """Update version."""
@@ -91,13 +89,14 @@ class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
 class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server protocol version sensor."""
 
+    _attr_translation_key = "protocol_version"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize protocol version sensor."""
         super().__init__(
             server=server,
             type_name=NAME_PROTOCOL_VERSION,
             icon=ICON_PROTOCOL_VERSION,
-            unit=UNIT_PROTOCOL_VERSION,
         )
 
     async def async_update(self) -> None:
@@ -108,13 +107,15 @@ class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
 class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server latency time sensor."""
 
+    _attr_translation_key = "latency"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize latency time sensor."""
         super().__init__(
             server=server,
             type_name=NAME_LATENCY_TIME,
             icon=ICON_LATENCY_TIME,
-            unit=TIME_MILLISECONDS,
+            unit=UnitOfTime.MILLISECONDS,
         )
 
     async def async_update(self) -> None:
@@ -124,6 +125,8 @@ class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
 
 class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server online players sensor."""
+
+    _attr_translation_key = "players_online"
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize online players sensor."""
@@ -150,6 +153,8 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
 class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server maximum number of players sensor."""
 
+    _attr_translation_key = "players_max"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize maximum number of players sensor."""
         super().__init__(
@@ -167,13 +172,14 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
 class MinecraftServerMOTDSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server MOTD sensor."""
 
+    _attr_translation_key = "motd"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize MOTD sensor."""
         super().__init__(
             server=server,
             type_name=NAME_MOTD,
             icon=ICON_MOTD,
-            unit=UNIT_MOTD,
         )
 
     async def async_update(self) -> None:

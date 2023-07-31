@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -42,15 +42,13 @@ class EcobeeSensorEntityDescription(
 SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     EcobeeSensorEntityDescription(
         key="temperature",
-        name="Temperature",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         runtime_key=None,
     ),
     EcobeeSensorEntityDescription(
         key="humidity",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -58,7 +56,6 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     ),
     EcobeeSensorEntityDescription(
         key="co2PPM",
-        name="CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -66,7 +63,6 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     ),
     EcobeeSensorEntityDescription(
         key="vocPPM",
-        name="VOC",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -74,9 +70,7 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     ),
     EcobeeSensorEntityDescription(
         key="airQuality",
-        name="Air Quality Index",
         device_class=SensorDeviceClass.AQI,
-        native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
         runtime_key="actualAQScore",
     ),
@@ -105,6 +99,8 @@ async def async_setup_entry(
 class EcobeeSensor(SensorEntity):
     """Representation of an Ecobee sensor."""
 
+    _attr_has_entity_name = True
+
     entity_description: EcobeeSensorEntityDescription
 
     def __init__(
@@ -113,14 +109,13 @@ class EcobeeSensor(SensorEntity):
         sensor_name,
         sensor_index,
         description: EcobeeSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data = data
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
-        self._attr_name = f"{sensor_name} {description.name}"
 
     @property
     def unique_id(self):

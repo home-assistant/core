@@ -179,9 +179,9 @@ class NetatmoCamera(NetatmoBase, Camera):
         return None
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
-        supported_features: int = CameraEntityFeature.ON_OFF
+        supported_features = CameraEntityFeature.ON_OFF
         if self._model != "NDB":
             supported_features |= CameraEntityFeature.STREAM
         return supported_features
@@ -200,9 +200,7 @@ class NetatmoCamera(NetatmoBase, Camera):
             await self._camera.async_update_camera_urls()
 
         if self._camera.local_url:
-            return "{}/live/files/{}/index.m3u8".format(
-                self._camera.local_url, self._quality
-            )
+            return f"{self._camera.local_url}/live/files/{self._quality}/index.m3u8"
         return f"{self._camera.vpn_url}/live/files/{self._quality}/index.m3u8"
 
     @callback

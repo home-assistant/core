@@ -1,4 +1,4 @@
-"""This platform allows several locks to be grouped into one lock."""
+"""Platform allowing several locks to be grouped into one lock."""
 from __future__ import annotations
 
 import logging
@@ -6,7 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.lock import DOMAIN, PLATFORM_SCHEMA, LockEntity
+from homeassistant.components.lock import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    LockEntity,
+    LockEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,11 +28,14 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKING,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import GroupEntity
 
@@ -100,6 +108,7 @@ class LockGroup(GroupEntity, LockEntity):
     ) -> None:
         """Initialize a lock group."""
         self._entity_ids = entity_ids
+        self._attr_supported_features = LockEntityFeature.OPEN
 
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
@@ -109,7 +118,9 @@ class LockGroup(GroupEntity, LockEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(event: Event) -> None:
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle child updates."""
             self.async_set_context(event.context)
             self.async_defer_or_update_ha_state()

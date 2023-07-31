@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please re-enter the API key for {latitude}, {longitude}.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
       "user": {
         "title": "Fill in your information",
         "data": {
@@ -15,7 +22,8 @@
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -29,14 +37,43 @@
       }
     }
   },
-  "issues": {
-    "deprecated_service_multiple_alternate_targets": {
-      "title": "The {deprecated_service} service is being removed",
-      "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with one of these entity IDs as the target: `{alternate_targets}`."
+  "entity": {
+    "binary_sensor": {
+      "protection_window": {
+        "name": "Protection window"
+      }
     },
-    "deprecated_service_single_alternate_target": {
-      "title": "The {deprecated_service} service is being removed",
-      "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with `{alternate_targets}` as the target."
+    "sensor": {
+      "current_ozone_level": {
+        "name": "Current ozone level"
+      },
+      "current_uv_index": {
+        "name": "Current UV index"
+      },
+      "current_uv_level": {
+        "name": "Current UV level"
+      },
+      "max_uv_index": {
+        "name": "Max UV index"
+      },
+      "skin_type_1_safe_exposure_time": {
+        "name": "Skin type 1 safe exposure time"
+      },
+      "skin_type_2_safe_exposure_time": {
+        "name": "Skin type 2 safe exposure time"
+      },
+      "skin_type_3_safe_exposure_time": {
+        "name": "Skin type 3 safe exposure time"
+      },
+      "skin_type_4_safe_exposure_time": {
+        "name": "Skin type 4 safe exposure time"
+      },
+      "skin_type_5_safe_exposure_time": {
+        "name": "Skin type 5 safe exposure time"
+      },
+      "skin_type_6_safe_exposure_time": {
+        "name": "Skin type 6 safe exposure time"
+      }
     }
   }
 }

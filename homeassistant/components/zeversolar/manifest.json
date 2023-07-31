@@ -1,0 +1,10 @@
+{
+  "domain": "zeversolar",
+  "name": "Zeversolar",
+  "codeowners": ["@kvanzuijlen"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zeversolar",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["zeversolar==0.3.1"]
+}

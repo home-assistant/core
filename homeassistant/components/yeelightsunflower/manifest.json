@@ -1,9 +1,9 @@
 {
   "domain": "yeelightsunflower",
   "name": "Yeelight Sunflower",
-  "documentation": "https://www.home-assistant.io/integrations/yeelightsunflower",
-  "requirements": ["yeelightsunflower==0.0.10"],
   "codeowners": ["@lindsaymarkward"],
+  "documentation": "https://www.home-assistant.io/integrations/yeelightsunflower",
   "iot_class": "local_polling",
-  "loggers": ["yeelightsunflower"]
+  "loggers": ["yeelightsunflower"],
+  "requirements": ["yeelightsunflower==0.0.10"]
 }

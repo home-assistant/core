@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SLAVE,
     DEVICE_DEFAULT_NAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -67,7 +67,7 @@ class Flexit(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, hub: ModbusHub, modbus_slave: int | None, name: str | None
@@ -192,7 +192,7 @@ class Flexit(ClimateEntity):
         result = float(
             await self._async_read_int16_from_register(register_type, register)
         )
-        if result == -1:
+        if not result:
             return -1
         return result / 10.0
 
@@ -200,6 +200,6 @@ class Flexit(ClimateEntity):
         result = await self._hub.async_pymodbus_call(
             self._slave, register, value, CALL_TYPE_WRITE_REGISTER
         )
-        if result == -1:
+        if not result:
             return False
         return True

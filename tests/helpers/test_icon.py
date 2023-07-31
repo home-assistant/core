@@ -1,7 +1,7 @@
 """Test Home Assistant icon util methods."""
 
 
-def test_battery_icon():
+def test_battery_icon() -> None:
     """Test icon generator for battery sensor."""
     from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -16,7 +16,7 @@ def test_battery_icon():
 
     iconbase = "mdi:battery"
     for level in range(0, 100, 5):
-        print(
+        print(  # noqa: T201
             "Level: %d. icon: %s, charging: %s"
             % (
                 level,
@@ -46,7 +46,7 @@ def test_battery_icon():
         assert iconbase + postfix_charging == icon_for_battery_level(level, True)
 
 
-def test_signal_icon():
+def test_signal_icon() -> None:
     """Test icon generator for signal sensor."""
     from homeassistant.helpers.icon import icon_for_signal_level
 

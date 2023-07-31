@@ -13,5 +13,10 @@
       "invalid_sensor": "Sensor not available or invalid",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "pressure_at_sealevel": { "name": "Pressure at sealevel" }
+    }
   }
 }

@@ -66,6 +66,8 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncBaseLight(VeSyncDevice, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
+    _attr_name = None
+
     @property
     def brightness(self) -> int:
         """Get light brightness."""
@@ -121,7 +123,8 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
             brightness = max(1, min(brightness, 100))
             # call pyvesync library api method to set brightness
             self.device.set_brightness(brightness)
-            # flag attribute_adjustment_only, so it doesn't turn_on the device redundantly
+            # flag attribute_adjustment_only, so it doesn't
+            # turn_on the device redundantly
             attribute_adjustment_only = True
         # check flag if should skip sending the turn_on command
         if attribute_adjustment_only:
@@ -156,7 +159,10 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
         except ValueError:
             # deal if any unexpected/non numeric value
             _LOGGER.debug(
-                "VeSync - received unexpected 'color_temp_pct' value from pyvesync api: %s",
+                (
+                    "VeSync - received unexpected 'color_temp_pct' value from pyvesync"
+                    " api: %s"
+                ),
                 result,
             )
             return 0

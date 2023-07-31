@@ -1,55 +1,29 @@
 repos:
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.1.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.280
     hooks:
-      - id: pyupgrade
-        args: [--py39-plus]
+      - id: ruff
+        args:
+          - --fix
   - repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: 23.7.0
     hooks:
       - id: black
         args:
-          - --safe
           - --quiet
         files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.2
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,iif,ines,ist,lightsensor,mut,nd,pres,referer,rime,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba,haa,pullrequests
-          - --skip="./.*,*.csv,*.json"
+          - --ignore-words-list=additionals,alle,alot,bund,currenty,datas,farenheit,falsy,fo,haa,hass,iif,incomfort,ines,ist,nam,nd,pres,pullrequests,resset,rime,ser,serie,te,technik,ue,unsecure,withing,zar
+          - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         exclude_types: [csv, json]
         exclude: ^tests/fixtures/|homeassistant/generated/
-  - repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - pycodestyle==2.8.0
-          - pyflakes==2.4.0
-          - flake8-docstrings==1.6.0
-          - pydocstyle==6.1.1
-          - flake8-comprehensions==3.10.0
-          - flake8-noqa==1.2.8
-          - mccabe==0.6.1
-        files: ^(homeassistant|script|tests)/.+\.py$
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.4
-    hooks:
-      - id: bandit
-        args:
-          - --quiet
-          - --format=custom
-          - --configfile=tests/bandit.yaml
-        files: ^(homeassistant|script|tests)/.+\.py$
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
-    hooks:
-      - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v4.4.0
     hooks:
       - id: check-executables-have-shebangs
         stages: [manual]
@@ -61,11 +35,11 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.28.0
+    rev: v1.32.0
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.6.1
+    rev: v2.7.1
     hooks:
       - id: prettier
   - repo: https://github.com/cdce8p/python-typing-update
@@ -78,7 +52,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py39-plus
+          - --py310-plus
           - --force
           - --keep-updates
         files: ^(homeassistant|tests|script)/.+\.py$

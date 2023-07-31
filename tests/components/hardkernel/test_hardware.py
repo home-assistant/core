@@ -7,9 +7,12 @@ from homeassistant.components.hardkernel.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.typing import WebSocketGenerator
 
 
-async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_hardware_info(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can get the board info."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -48,8 +51,9 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
                     "model": "odroid-n2",
                     "revision": None,
                 },
+                "config_entries": [config_entry.entry_id],
                 "dongle": None,
-                "name": "Home Assistant Blue / Hardkernel Odroid-N2",
+                "name": "Home Assistant Blue / Hardkernel ODROID-N2/N2+",
                 "url": None,
             }
         ]
@@ -57,7 +61,9 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
 
 
 @pytest.mark.parametrize("os_info", [None, {"board": None}, {"board": "other"}])
-async def test_hardware_info_fail(hass: HomeAssistant, hass_ws_client, os_info) -> None:
+async def test_hardware_info_fail(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, os_info
+) -> None:
     """Test async_info raises if os_info is not as expected."""
     mock_integration(hass, MockModule("hassio"))
 

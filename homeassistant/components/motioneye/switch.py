@@ -8,7 +8,6 @@ from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import (
     KEY_MOTION_DETECTION,
     KEY_MOVIES,
-    KEY_NAME,
     KEY_STILL_IMAGES,
     KEY_TEXT_OVERLAY,
     KEY_UPLOAD_ENABLED,
@@ -17,8 +16,8 @@ from motioneye_client.const import (
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -28,37 +27,37 @@ from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_
 MOTIONEYE_SWITCHES = [
     SwitchEntityDescription(
         key=KEY_MOTION_DETECTION,
-        name="Motion Detection",
+        translation_key="motion_detection",
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_TEXT_OVERLAY,
-        name="Text Overlay",
+        translation_key="text_overlay",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_VIDEO_STREAMING,
-        name="Video Streaming",
+        translation_key="video_streaming",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_STILL_IMAGES,
-        name="Still Images",
+        translation_key="still_images",
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_MOVIES,
-        name="Movies",
+        translation_key="movies",
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_UPLOAD_ENABLED,
-        name="Upload Enabled",
+        translation_key="upload_enabled",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
@@ -113,12 +112,6 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
             options,
             entity_description,
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        camera_prepend = f"{self._camera[KEY_NAME]} " if self._camera else ""
-        return f"{camera_prepend}{self.entity_description.name}"
 
     @property
     def is_on(self) -> bool:

@@ -1,7 +1,8 @@
 """Test the LaCrosse View config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from lacrosse_view import Location, LoginError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.lacrosse_view.const import DOMAIN
@@ -10,8 +11,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_form(hass: HomeAssistant) -> None:
+
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -19,11 +22,12 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
+    with patch(
+        "lacrosse_view.LaCrosse.login",
+        return_value=True,
+    ), patch(
         "lacrosse_view.LaCrosse.get_locations",
         return_value=[Location(id=1, name="Test")],
-    ), patch(
-        "homeassistant.components.lacrosse_view.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -38,17 +42,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "location"
     assert result2["errors"] is None
 
-    with patch(
-        "homeassistant.components.lacrosse_view.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                "location": "1",
-            },
-        )
-        await hass.async_block_till_done()
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "location": "1",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Test"
@@ -167,7 +167,9 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_already_configured_device(hass: HomeAssistant) -> None:
+async def test_already_configured_device(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we handle invalid auth."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -189,7 +191,10 @@ async def test_already_configured_device(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
+    with patch(
+        "lacrosse_view.LaCrosse.login",
+        return_value=True,
+    ), patch(
         "lacrosse_view.LaCrosse.get_locations",
         return_value=[Location(id=1, name="Test")],
     ):
@@ -206,17 +211,13 @@ async def test_already_configured_device(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "location"
     assert result2["errors"] is None
 
-    with patch(
-        "homeassistant.components.lacrosse_view.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                "location": "1",
-            },
-        )
-        await hass.async_block_till_done()
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "location": "1",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_configured"

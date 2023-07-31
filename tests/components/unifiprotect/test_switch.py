@@ -1,5 +1,5 @@
 """Test the UniFi Protect switch platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
@@ -35,6 +35,8 @@ CAMERA_SWITCHES_BASIC = [
     for d in CAMERA_SWITCHES
     if d.name != "Detections: Face"
     and d.name != "Detections: Package"
+    and d.name != "Detections: License Plate"
+    and d.name != "Detections: Smoke/CO"
     and d.name != "SSH Enabled"
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
@@ -44,7 +46,7 @@ CAMERA_SWITCHES_NO_EXTRA = [
 
 async def test_switch_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -58,7 +60,7 @@ async def test_switch_camera_remove(
 
 async def test_switch_light_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -70,7 +72,7 @@ async def test_switch_light_remove(
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
 
 
-async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test switch entity setup for light devices."""
 
     await init_entry(hass, ufp, [])
@@ -100,7 +102,7 @@ async def test_switch_setup_no_perm(
     ufp: MockUFPFixture,
     light: Light,
     doorbell: Camera,
-):
+) -> None:
     """Test switch entity setup for light devices."""
 
     ufp.api.bootstrap.auth_user.all_permissions = [
@@ -116,7 +118,7 @@ async def test_switch_setup_light(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     light: Light,
-):
+) -> None:
     """Test switch entity setup for light devices."""
 
     await init_entry(hass, ufp, [light])
@@ -161,7 +163,7 @@ async def test_switch_setup_camera_all(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
-):
+) -> None:
     """Test switch entity setup for camera devices (all enabled feature flags)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -208,7 +210,7 @@ async def test_switch_setup_camera_none(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     camera: Camera,
-):
+) -> None:
     """Test switch entity setup for camera devices (no enabled feature flags)."""
 
     await init_entry(hass, ufp, [camera])
@@ -256,7 +258,7 @@ async def test_switch_setup_camera_none(
 
 async def test_switch_light_status(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Tests status light switch for lights."""
 
     await init_entry(hass, ufp, [light])
@@ -284,7 +286,7 @@ async def test_switch_light_status(
 
 async def test_switch_camera_ssh(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Tests SSH switch for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -317,7 +319,7 @@ async def test_switch_camera_simple(
     ufp: MockUFPFixture,
     doorbell: Camera,
     description: ProtectSwitchEntityDescription,
-):
+) -> None:
     """Tests all simple switches for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -346,7 +348,7 @@ async def test_switch_camera_simple(
 
 async def test_switch_camera_highfps(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Tests High FPS switch for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -374,7 +376,7 @@ async def test_switch_camera_highfps(
 
 async def test_switch_camera_privacy(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Tests Privacy Mode switch for cameras with privacy mode defaulted on."""
 
     previous_mic = doorbell.mic_volume = 53
@@ -428,7 +430,7 @@ async def test_switch_camera_privacy(
 
 async def test_switch_camera_privacy_already_on(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Tests Privacy Mode switch for cameras with privacy mode defaulted on."""
 
     doorbell.add_privacy_zone()

@@ -1,14 +1,10 @@
 set_climate_timer:
-  name: Set climate timer
-  description: Turn on climate entities for a set time.
   target:
     entity:
       integration: tado
       domain: climate
   fields:
     temperature:
-      name: Temperature
-      description: Temperature to set climate entity to
       required: true
       selector:
         number:
@@ -17,19 +13,13 @@ set_climate_timer:
           step: 0.5
           unit_of_measurement: "°"
     time_period:
-      name: Time period
-      description: Choose this or Overlay. Set the time period for the change if you want to be specific. Alternatively use Overlay
       required: false
       example: "01:30:00"
-      default: "01:00:00"
       selector:
         text:
     requested_overlay:
-      name: Overlay
-      description: Choose this or Time Period. Allows you to choose an overlay. MANUAL:=Overlay until user removes; NEXT_TIME_BLOCK:=Overlay until next timeblock; TADO_DEFAULT:=Overlay based on tado app setting
       required: false
       example: "MANUAL"
-      default: "TADO_DEFAULT"
       selector:
         select:
           options:
@@ -38,24 +28,18 @@ set_climate_timer:
             - "TADO_DEFAULT"
 
 set_water_heater_timer:
-  name: Set water heater timer
-  description: Turn on water heater for a set time.
   target:
     entity:
       integration: tado
-      domain: climate
+      domain: water_heater
   fields:
     time_period:
-      name: Time period
-      description: Set the time period for the boost.
       required: true
       example: "01:30:00"
       default: "01:00:00"
       selector:
         text:
     temperature:
-      name: Temperature
-      description: Temperature to set heater to
       selector:
         number:
           min: 0
@@ -64,16 +48,12 @@ set_water_heater_timer:
           unit_of_measurement: "°"
 
 set_climate_temperature_offset:
-  name: Set climate temperature offset
-  description: Set the temperature offset of climate entities
   target:
     entity:
       integration: tado
       domain: climate
   fields:
     offset:
-      name: Offset
-      description: Offset you would like (depending on your device).
       default: 0
       selector:
         number:

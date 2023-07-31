@@ -1,0 +1,415 @@
+# serializer version: 1
+# name: test_sensors[sensor.frenck_battery-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Frenck Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frenck_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '78.57',
+  })
+# ---
+# name: test_sensors[sensor.frenck_battery-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.frenck_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'GW24L1A02987_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.frenck_battery-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[sensor.frenck_battery_voltage-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Frenck Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frenck_battery_voltage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.86',
+  })
+# ---
+# name: test_sensors[sensor.frenck_battery_voltage-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.frenck_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'GW24L1A02987_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[sensor.frenck_battery_voltage-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_current-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Frenck Charging current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frenck_charging_current',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.008',
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_current-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.frenck_charging_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Charging current',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': 'input_charge_current',
+    'unique_id': 'GW24L1A02987_input_charge_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_current-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_power-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Frenck Charging power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frenck_charging_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.66',
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_power-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.frenck_charging_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Charging power',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': 'charge_power',
+    'unique_id': 'GW24L1A02987_charge_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_power-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_voltage-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Frenck Charging voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frenck_charging_voltage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.208',
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_voltage-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.frenck_charging_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Charging voltage',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': 'input_charge_voltage',
+    'unique_id': 'GW24L1A02987_input_charge_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[sensor.frenck_charging_voltage-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---

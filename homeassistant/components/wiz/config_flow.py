@@ -114,11 +114,11 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 bulbtype = await bulb.get_bulbtype()
             except WIZ_CONNECT_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
-            else:
-                return self.async_create_entry(
-                    title=name_from_bulb_type_and_mac(bulbtype, device.mac_address),
-                    data={CONF_HOST: device.ip_address},
-                )
+
+            return self.async_create_entry(
+                title=name_from_bulb_type_and_mac(bulbtype, device.mac_address),
+                data={CONF_HOST: device.ip_address},
+            )
 
         current_unique_ids = self._async_current_ids()
         current_hosts = {

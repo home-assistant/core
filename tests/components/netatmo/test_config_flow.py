@@ -14,9 +14,12 @@ from homeassistant.components.netatmo.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -24,7 +27,7 @@ CLIENT_SECRET = "5678"
 VALID_CONFIG = {}
 
 
-async def test_abort_if_existing_entry(hass):
+async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check flow abort when an entry already exist."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -55,8 +58,11 @@ async def test_abort_if_existing_entry(hass):
 
 
 async def test_full_flow(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -110,7 +116,7 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     valid_option = {
         "lat_ne": 32.91336,
@@ -168,7 +174,7 @@ async def test_option_flow(hass):
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
 
 
-async def test_option_flow_wrong_coordinates(hass):
+async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
     """Test config flow options with mixed up coordinates."""
     valid_option = {
         "lat_ne": 32.1234567,
@@ -227,8 +233,11 @@ async def test_option_flow_wrong_coordinates(hass):
 
 
 async def test_reauth(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test initialization of the reauth flow."""
     assert await setup.async_setup_component(
         hass,

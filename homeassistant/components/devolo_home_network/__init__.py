@@ -5,14 +5,29 @@ import logging
 from typing import Any
 
 import async_timeout
-from devolo_plc_api.device import Device
-from devolo_plc_api.exceptions.device import DeviceNotFound, DeviceUnavailable
+from devolo_plc_api import Device
+from devolo_plc_api.device_api import (
+    ConnectedStationInfo,
+    NeighborAPInfo,
+    WifiGuestAccessGet,
+)
+from devolo_plc_api.exceptions.device import (
+    DeviceNotFound,
+    DevicePasswordProtected,
+    DeviceUnavailable,
+)
+from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -22,8 +37,9 @@ from .const import (
     DOMAIN,
     LONG_UPDATE_INTERVAL,
     NEIGHBORING_WIFI_NETWORKS,
-    PLATFORMS,
     SHORT_UPDATE_INTERVAL,
+    SWITCH_GUEST_WIFI,
+    SWITCH_LEDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,27 +64,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}"
         ) from err
 
-    async def async_update_connected_plc_devices() -> dict[str, Any]:
+    async def async_update_connected_plc_devices() -> LogicalNetwork:
         """Fetch data from API endpoint."""
+        assert device.plcnet
         try:
             async with async_timeout.timeout(10):
-                return await device.plcnet.async_get_network_overview()  # type: ignore[no-any-return, union-attr]
+                return await device.plcnet.async_get_network_overview()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
-    async def async_update_wifi_connected_station() -> dict[str, Any]:
+    async def async_update_guest_wifi_status() -> WifiGuestAccessGet:
         """Fetch data from API endpoint."""
+        assert device.device
         try:
             async with async_timeout.timeout(10):
-                return await device.device.async_get_wifi_connected_station()  # type: ignore[no-any-return, union-attr]
+                return await device.device.async_get_wifi_guest_access()
+        except DeviceUnavailable as err:
+            raise UpdateFailed(err) from err
+        except DevicePasswordProtected as err:
+            raise ConfigEntryAuthFailed(err) from err
+
+    async def async_update_led_status() -> bool:
+        """Fetch data from API endpoint."""
+        assert device.device
+        try:
+            async with async_timeout.timeout(10):
+                return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
-    async def async_update_wifi_neighbor_access_points() -> dict[str, Any]:
+    async def async_update_wifi_connected_station() -> list[ConnectedStationInfo]:
         """Fetch data from API endpoint."""
+        assert device.device
+        try:
+            async with async_timeout.timeout(10):
+                return await device.device.async_get_wifi_connected_station()
+        except DeviceUnavailable as err:
+            raise UpdateFailed(err) from err
+
+    async def async_update_wifi_neighbor_access_points() -> list[NeighborAPInfo]:
+        """Fetch data from API endpoint."""
+        assert device.device
         try:
             async with async_timeout.timeout(30):
-                return await device.device.async_get_wifi_neighbor_access_points()  # type: ignore[no-any-return, union-attr]
+                return await device.device.async_get_wifi_neighbor_access_points()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -76,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Disconnect from device."""
         await device.async_disconnect()
 
-    coordinators: dict[str, DataUpdateCoordinator] = {}
+    coordinators: dict[str, DataUpdateCoordinator[Any]] = {}
     if device.plcnet:
         coordinators[CONNECTED_PLC_DEVICES] = DataUpdateCoordinator(
             hass,
@@ -84,6 +123,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             name=CONNECTED_PLC_DEVICES,
             update_method=async_update_connected_plc_devices,
             update_interval=LONG_UPDATE_INTERVAL,
+        )
+    if device.device and "led" in device.device.features:
+        coordinators[SWITCH_LEDS] = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=SWITCH_LEDS,
+            update_method=async_update_led_status,
+            update_interval=SHORT_UPDATE_INTERVAL,
         )
     if device.device and "wifi1" in device.device.features:
         coordinators[CONNECTED_WIFI_CLIENTS] = DataUpdateCoordinator(
@@ -100,13 +147,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_method=async_update_wifi_neighbor_access_points,
             update_interval=LONG_UPDATE_INTERVAL,
         )
+        coordinators[SWITCH_GUEST_WIFI] = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=SWITCH_GUEST_WIFI,
+            update_method=async_update_guest_wifi_status,
+            update_interval=SHORT_UPDATE_INTERVAL,
+        )
 
     hass.data[DOMAIN][entry.entry_id] = {"device": device, "coordinators": coordinators}
 
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms(device))
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect)
@@ -117,9 +171,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, platforms(device)
+    )
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
+        await device.async_disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+@callback
+def platforms(device: Device) -> set[Platform]:
+    """Assemble supported platforms."""
+    supported_platforms = {Platform.BUTTON, Platform.SENSOR, Platform.SWITCH}
+    if device.plcnet:
+        supported_platforms.add(Platform.BINARY_SENSOR)
+    if device.device and "wifi1" in device.device.features:
+        supported_platforms.add(Platform.DEVICE_TRACKER)
+    return supported_platforms

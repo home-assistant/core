@@ -213,7 +213,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     _LOGGER.debug("Closing Firmata board %s", config_entry.data[CONF_NAME])
 
     unload_entries = []
-    for (conf, platform) in CONF_PLATFORM_MAP.items():
+    for conf, platform in CONF_PLATFORM_MAP.items():
         if conf in config_entry.data:
             unload_entries.append(
                 hass.config_entries.async_forward_entry_unload(config_entry, platform)

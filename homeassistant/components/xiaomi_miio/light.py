@@ -38,7 +38,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import color, dt
+from homeassistant.util import color, dt as dt_util
 
 from .const import (
     CONF_DEVICE,
@@ -198,9 +198,11 @@ async def async_setup_entry(
             hass.data[DATA_KEY][host] = entity
         else:
             _LOGGER.error(
-                "Unsupported device found! Please create an issue at "
-                "https://github.com/syssi/philipslight/issues "
-                "and provide the following data: %s",
+                (
+                    "Unsupported device found! Please create an issue at "
+                    "https://github.com/syssi/philipslight/issues "
+                    "and provide the following data: %s"
+                ),
                 model,
             )
             return
@@ -227,7 +229,9 @@ async def async_setup_entry(
                 if not hasattr(target_device, method["method"]):
                     continue
                 await getattr(target_device, method["method"])(**params)
-                update_tasks.append(target_device.async_update_ha_state(True))
+                update_tasks.append(
+                    asyncio.create_task(target_device.async_update_ha_state(True))
+                )
 
             if update_tasks:
                 await asyncio.wait(update_tasks)
@@ -360,7 +364,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
-            dt.utcnow(),
+            dt_util.utcnow(),
             self._state_attrs[ATTR_DELAYED_TURN_OFF],
         )
 
@@ -445,12 +449,14 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color temperature: "
-                "%s %s%%, %s mireds, %s%% cct",
+                (
+                    "Setting brightness and color temperature: "
+                    "%s %s%%, %s mireds, %s%% cct"
+                ),
                 brightness,
-                percent_brightness,
+                percent_brightness,  # pylint: disable=used-before-assignment
                 color_temp,
-                percent_color_temp,
+                percent_color_temp,  # pylint: disable=used-before-assignment
             )
 
             result = await self._try_command(
@@ -519,7 +525,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
-            dt.utcnow(),
+            dt_util.utcnow(),
             self._state_attrs[ATTR_DELAYED_TURN_OFF],
         )
 
@@ -578,7 +584,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
-            dt.utcnow(),
+            dt_util.utcnow(),
             self._state_attrs[ATTR_DELAYED_TURN_OFF],
         )
 
@@ -621,7 +627,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
-            dt.utcnow(),
+            dt_util.utcnow(),
             self._state_attrs[ATTR_DELAYED_TURN_OFF],
         )
 
@@ -826,8 +832,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             _LOGGER.debug(
                 "Setting brightness and color: %s %s%%, %s",
                 brightness,
-                percent_brightness,
-                rgb,
+                percent_brightness,  # pylint: disable=used-before-assignment
+                rgb,  # pylint: disable=used-before-assignment
             )
 
             result = await self._try_command(
@@ -843,12 +849,14 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
         elif ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color temperature: "
-                "%s %s%%, %s mireds, %s%% cct",
+                (
+                    "Setting brightness and color temperature: "
+                    "%s %s%%, %s mireds, %s%% cct"
+                ),
                 brightness,
                 percent_brightness,
                 color_temp,
-                percent_color_temp,
+                percent_color_temp,  # pylint: disable=used-before-assignment
             )
 
             result = await self._try_command(

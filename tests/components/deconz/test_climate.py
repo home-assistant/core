@@ -40,6 +40,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -47,14 +48,20 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_sensors(hass, aioclient_mock):
+
+async def test_no_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no sensors in deconz results in no climate entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket):
+async def test_simple_climate_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of climate entities.
 
     This is a simple water heater that only supports setting temperature and on and off.
@@ -181,8 +188,8 @@ async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket
 
 
 async def test_climate_device_without_cooling_support(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of sensor entities."""
     data = {
         "sensors": {
@@ -359,8 +366,8 @@ async def test_climate_device_without_cooling_support(
 
 
 async def test_climate_device_with_cooling_support(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of sensor entities."""
     data = {
         "sensors": {
@@ -463,8 +470,8 @@ async def test_climate_device_with_cooling_support(
 
 
 async def test_climate_device_with_fan_support(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of sensor entities."""
     data = {
         "sensors": {
@@ -604,7 +611,9 @@ async def test_climate_device_with_fan_support(
         )
 
 
-async def test_climate_device_with_preset(hass, aioclient_mock, mock_deconz_websocket):
+async def test_climate_device_with_preset(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of sensor entities."""
     data = {
         "sensors": {
@@ -725,7 +734,9 @@ async def test_climate_device_with_preset(hass, aioclient_mock, mock_deconz_webs
         )
 
 
-async def test_clip_climate_device(hass, aioclient_mock):
+async def test_clip_climate_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test successful creation of sensor entities."""
     data = {
         "sensors": {
@@ -788,7 +799,9 @@ async def test_clip_climate_device(hass, aioclient_mock):
     )
 
 
-async def test_verify_state_update(hass, aioclient_mock, mock_deconz_websocket):
+async def test_verify_state_update(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that state update properly."""
     data = {
         "sensors": {
@@ -833,7 +846,9 @@ async def test_verify_state_update(hass, aioclient_mock, mock_deconz_websocket):
     )
 
 
-async def test_add_new_climate_device(hass, aioclient_mock, mock_deconz_websocket):
+async def test_add_new_climate_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that adding a new climate device works."""
     event_added_sensor = {
         "t": "event",
@@ -871,7 +886,9 @@ async def test_add_new_climate_device(hass, aioclient_mock, mock_deconz_websocke
     )
 
 
-async def test_not_allow_clip_thermostat(hass, aioclient_mock):
+async def test_not_allow_clip_thermostat(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that CLIP thermostats are not allowed."""
     data = {
         "sensors": {
@@ -893,7 +910,9 @@ async def test_not_allow_clip_thermostat(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_no_mode_no_state(hass, aioclient_mock, mock_deconz_websocket):
+async def test_no_mode_no_state(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that a climate device without mode and state works."""
     data = {
         "sensors": {
@@ -934,7 +953,9 @@ async def test_no_mode_no_state(hass, aioclient_mock, mock_deconz_websocket):
     mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
 
 
-async def test_boost_mode(hass, aioclient_mock, mock_deconz_websocket):
+async def test_boost_mode(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that a climate device with boost mode and different state works."""
     data = {
         "sensors": {

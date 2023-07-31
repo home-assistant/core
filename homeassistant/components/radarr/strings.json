@@ -35,10 +35,19 @@
       }
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Radarr YAML configuration is being removed",
-      "description": "Configuring Radarr using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Radarr YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "binary_sensor": {
+      "health": {
+        "name": "Health"
+      }
+    },
+    "sensor": {
+      "movies": {
+        "name": "Movies"
+      },
+      "start_time": {
+        "name": "Start time"
+      }
     }
   }
 }

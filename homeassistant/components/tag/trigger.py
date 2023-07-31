@@ -1,4 +1,6 @@
 """Support for tag triggers."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -26,8 +28,10 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for tag_scanned events based on configuration."""
     trigger_data = trigger_info["trigger_data"]
-    tag_ids = set(config[TAG_ID])
-    device_ids = set(config[DEVICE_ID]) if DEVICE_ID in config else None
+    tag_ids: set[str] = set(config[TAG_ID])
+    device_ids: set[str] | None = (
+        set(config[DEVICE_ID]) if DEVICE_ID in config else None
+    )
 
     job = HassJob(action)
 

@@ -41,8 +41,8 @@ async def async_get_controller(
         await client.load_local(ip_address, password, port=port, use_ssl=ssl)
     except RainMachineError:
         return None
-    else:
-        return get_client_controller(client)
+
+    return get_client_controller(client)
 
 
 class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -172,7 +172,7 @@ class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",

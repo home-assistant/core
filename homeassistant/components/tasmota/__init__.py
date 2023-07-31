@@ -102,7 +102,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for platform in PLATFORMS:
         hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format(platform))()
 
-    # deattach device triggers
+    # detach device triggers
     device_registry = dr.async_get(hass)
     devices = async_entries_for_config_entry(device_registry, entry.entry_id)
     for device in devices:
@@ -119,7 +119,9 @@ async def _remove_device(
     device_registry: DeviceRegistry,
 ) -> None:
     """Remove a discovered Tasmota device."""
-    device = device_registry.async_get_device(set(), {(CONNECTION_NETWORK_MAC, mac)})
+    device = device_registry.async_get_device(
+        connections={(CONNECTION_NETWORK_MAC, mac)}
+    )
 
     if device is None or config_entry.entry_id not in device.config_entries:
         return

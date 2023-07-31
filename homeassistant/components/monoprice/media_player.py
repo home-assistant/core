@@ -125,6 +125,8 @@ class MonopriceZone(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, monoprice, sources, namespace, zone_id):
         """Initialize new zone."""
@@ -137,12 +139,11 @@ class MonopriceZone(MediaPlayerEntity):
         self._attr_source_list = sources[2]
         self._zone_id = zone_id
         self._attr_unique_id = f"{namespace}_{self._zone_id}"
-        self._attr_name = f"Zone {self._zone_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Monoprice",
             model="6-Zone Amplifier",
-            name=self.name,
+            name=f"Zone {self._zone_id}",
         )
 
         self._snapshot = None
@@ -165,10 +166,7 @@ class MonopriceZone(MediaPlayerEntity):
         self._attr_volume_level = state.volume / MAX_VOLUME
         self._attr_is_volume_muted = state.mute
         idx = state.source
-        if idx in self._source_id_name:
-            self._attr_source = self._source_id_name[idx]
-        else:
-            self._attr_source = None
+        self._attr_source = self._source_id_name.get(idx)
 
     @property
     def entity_registry_enabled_default(self) -> bool:

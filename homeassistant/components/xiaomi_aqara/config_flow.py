@@ -105,7 +105,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_settings()
 
-        # Discover Xiaomi Aqara Gateways in the netwerk to get required SIDs.
+        # Discover Xiaomi Aqara Gateways in the network to get required SIDs.
         xiaomi = XiaomiGatewayDiscovery(self.interface)
         try:
             await self.hass.async_add_executor_job(xiaomi.discover_gateways)
@@ -162,7 +162,10 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name.startswith(ZEROCONF_GATEWAY) or name.startswith(ZEROCONF_ACPARTNER)
         ):
             _LOGGER.debug(
-                "Xiaomi device '%s' discovered with host %s, not identified as xiaomi aqara gateway",
+                (
+                    "Xiaomi device '%s' discovered with host %s, not identified as"
+                    " xiaomi aqara gateway"
+                ),
                 name,
                 self.host,
             )

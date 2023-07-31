@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 CODE = "12345"
 PASSWORD = "password"
-SYSTEM_ID = "system_123"
+SYSTEM_ID = 12345
 
 
 @pytest.fixture(name="api")
@@ -79,7 +79,8 @@ def data_settings_fixture():
 @pytest.fixture(name="data_subscription", scope="package")
 def data_subscription_fixture():
     """Define subscription data."""
-    return json.loads(load_fixture("subscription_data.json", "simplisafe"))
+    data = json.loads(load_fixture("subscription_data.json", "simplisafe"))
+    return {SYSTEM_ID: data}
 
 
 @pytest.fixture(name="reauth_config")

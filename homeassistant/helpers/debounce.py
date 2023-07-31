@@ -38,8 +38,13 @@ class Debouncer(Generic[_R_co]):
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
         self._job: HassJob[[], _R_co] | None = (
-            None if function is None else HassJob(function)
+            None
+            if function is None
+            else HassJob(
+                function, f"debouncer cooldown={cooldown}, immediate={immediate}"
+            )
         )
+        self._shutdown_requested = False
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
@@ -51,10 +56,18 @@ class Debouncer(Generic[_R_co]):
         """Update the function being wrapped by the Debouncer."""
         self._function = function
         if self._job is None or function != self._job.target:
-            self._job = HassJob(function)
+            self._job = HassJob(
+                function,
+                f"debouncer cooldown={self.cooldown}, immediate={self.immediate}",
+            )
 
     async def async_call(self) -> None:
         """Call the function."""
+        if self._shutdown_requested:
+            self.logger.warning(
+                "Debouncer call ignored as shutdown has been requested."
+            )
+            return
         assert self._job is not None
 
         if self._timer_task:
@@ -77,20 +90,15 @@ class Debouncer(Generic[_R_co]):
             if self._timer_task:
                 return
 
-            task = self.hass.async_run_hass_job(self._job)
-            if task:
-                await task
-
-            self._schedule_timer()
+            try:
+                if task := self.hass.async_run_hass_job(self._job):
+                    await task
+            finally:
+                self._schedule_timer()
 
     async def _handle_timer_finish(self) -> None:
         """Handle a finished timer."""
         assert self._job is not None
-
-        self._timer_task = None
-
-        if not self._execute_at_end_of_timer:
-            return
 
         self._execute_at_end_of_timer = False
 
@@ -101,16 +109,21 @@ class Debouncer(Generic[_R_co]):
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
-                return  # type: ignore[unreachable]
+                return
 
             try:
-                task = self.hass.async_run_hass_job(self._job)
-                if task:
+                if task := self.hass.async_run_hass_job(self._job):
                     await task
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
+            finally:
+                # Schedule a new timer to prevent new runs during cooldown
+                self._schedule_timer()
 
-            self._schedule_timer()
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and prevent new runs."""
+        self._shutdown_requested = True
+        self.async_cancel()
 
     @callback
     def async_cancel(self) -> None:
@@ -122,9 +135,19 @@ class Debouncer(Generic[_R_co]):
         self._execute_at_end_of_timer = False
 
     @callback
+    def _on_debounce(self) -> None:
+        """Create job task, but only if pending."""
+        self._timer_task = None
+        if self._execute_at_end_of_timer:
+            self.hass.async_create_task(
+                self._handle_timer_finish(),
+                f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
+            )
+
+    @callback
     def _schedule_timer(self) -> None:
         """Schedule a timer."""
-        self._timer_task = self.hass.loop.call_later(
-            self.cooldown,
-            lambda: self.hass.async_create_task(self._handle_timer_finish()),
-        )
+        if not self._shutdown_requested:
+            self._timer_task = self.hass.loop.call_later(
+                self.cooldown, self._on_debounce
+            )

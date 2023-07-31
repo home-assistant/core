@@ -10,6 +10,7 @@ import pytest
 
 import homeassistant.components.apache_kafka as apache_kafka
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 APACHE_KAFKA_PATH = "homeassistant.components.apache_kafka"
@@ -54,7 +55,9 @@ def mock_client_stop():
         yield stop
 
 
-async def test_minimal_config(hass, mock_client):
+async def test_minimal_config(
+    hass: HomeAssistant, mock_client: MockKafkaClient
+) -> None:
     """Test the minimal config and defaults of component."""
     config = {apache_kafka.DOMAIN: MIN_CONFIG}
     assert await async_setup_component(hass, apache_kafka.DOMAIN, config)
@@ -62,7 +65,7 @@ async def test_minimal_config(hass, mock_client):
     assert mock_client.start.called_once
 
 
-async def test_full_config(hass, mock_client):
+async def test_full_config(hass: HomeAssistant, mock_client: MockKafkaClient) -> None:
     """Test the full config of component."""
     config = {
         apache_kafka.DOMAIN: {
@@ -105,7 +108,7 @@ async def _run_filter_tests(hass, tests, mock_client):
             mock_client.send_and_wait.assert_not_called()
 
 
-async def test_allowlist(hass, mock_client):
+async def test_allowlist(hass: HomeAssistant, mock_client: MockKafkaClient) -> None:
     """Test an allowlist only config."""
     await _setup(
         hass,
@@ -128,7 +131,7 @@ async def test_allowlist(hass, mock_client):
     await _run_filter_tests(hass, tests, mock_client)
 
 
-async def test_denylist(hass, mock_client):
+async def test_denylist(hass: HomeAssistant, mock_client: MockKafkaClient) -> None:
     """Test a denylist only config."""
     await _setup(
         hass,
@@ -151,7 +154,9 @@ async def test_denylist(hass, mock_client):
     await _run_filter_tests(hass, tests, mock_client)
 
 
-async def test_filtered_allowlist(hass, mock_client):
+async def test_filtered_allowlist(
+    hass: HomeAssistant, mock_client: MockKafkaClient
+) -> None:
     """Test an allowlist config with a filtering denylist."""
     await _setup(
         hass,
@@ -175,7 +180,9 @@ async def test_filtered_allowlist(hass, mock_client):
     await _run_filter_tests(hass, tests, mock_client)
 
 
-async def test_filtered_denylist(hass, mock_client):
+async def test_filtered_denylist(
+    hass: HomeAssistant, mock_client: MockKafkaClient
+) -> None:
     """Test a denylist config with a filtering allowlist."""
     await _setup(
         hass,

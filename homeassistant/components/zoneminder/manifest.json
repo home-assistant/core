@@ -1,9 +1,9 @@
 {
   "domain": "zoneminder",
   "name": "ZoneMinder",
-  "documentation": "https://www.home-assistant.io/integrations/zoneminder",
-  "requirements": ["zm-py==0.5.2"],
   "codeowners": ["@rohankapoorcom"],
+  "documentation": "https://www.home-assistant.io/integrations/zoneminder",
   "iot_class": "local_polling",
-  "loggers": ["zoneminder"]
+  "loggers": ["zoneminder"],
+  "requirements": ["zm-py==0.5.2"]
 }

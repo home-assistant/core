@@ -59,14 +59,12 @@ class SirenTurnOnServiceParameters(TypedDict, total=False):
 def process_turn_on_params(
     siren: SirenEntity, params: SirenTurnOnServiceParameters
 ) -> SirenTurnOnServiceParameters:
-    """
-    Process turn_on service params.
+    """Process turn_on service params.
 
     Filters out unsupported params and validates the rest.
     """
-    supported_features = siren.supported_features or 0
 
-    if not supported_features & SirenEntityFeature.TONES:
+    if not siren.supported_features & SirenEntityFeature.TONES:
         params.pop(ATTR_TONE, None)
     elif (tone := params.get(ATTR_TONE)) is not None:
         # Raise an exception if the specified tone isn't available
@@ -92,9 +90,9 @@ def process_turn_on_params(
                 key for key, value in siren.available_tones.items() if value == tone
             )
 
-    if not supported_features & SirenEntityFeature.DURATION:
+    if not siren.supported_features & SirenEntityFeature.DURATION:
         params.pop(ATTR_DURATION, None)
-    if not supported_features & SirenEntityFeature.VOLUME_SET:
+    if not siren.supported_features & SirenEntityFeature.VOLUME_SET:
         params.pop(ATTR_VOLUME_LEVEL, None)
 
     return params
@@ -133,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_TOGGLE,
         {},
         "async_toggle",
-        [SirenEntityFeature.TURN_ON & SirenEntityFeature.TURN_OFF],
+        [SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF],
     )
 
     return True
@@ -163,15 +161,14 @@ class SirenEntity(ToggleEntity):
 
     entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | dict[int, str] | None
+    _attr_supported_features: SirenEntityFeature = SirenEntityFeature(0)
 
     @final
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
-
         if (
-            supported_features & SirenEntityFeature.TONES
+            self.supported_features & SirenEntityFeature.TONES
             and self.available_tones is not None
         ):
             return {ATTR_AVAILABLE_TONES: self.available_tones}
@@ -180,8 +177,7 @@ class SirenEntity(ToggleEntity):
 
     @property
     def available_tones(self) -> list[int | str] | dict[int, str] | None:
-        """
-        Return a list of available tones.
+        """Return a list of available tones.
 
         Requires SirenEntityFeature.TONES.
         """
@@ -190,3 +186,8 @@ class SirenEntity(ToggleEntity):
         if hasattr(self, "entity_description"):
             return self.entity_description.available_tones
         return None
+
+    @property
+    def supported_features(self) -> SirenEntityFeature:
+        """Return the list of supported features."""
+        return self._attr_supported_features

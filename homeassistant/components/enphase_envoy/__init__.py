@@ -16,7 +16,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import COORDINATOR, DOMAIN, NAME, PLATFORMS, SENSORS
+from .const import COORDINATOR, DOMAIN, NAME, PLATFORMS
+from .sensor import SENSORS
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -63,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=f"envoy {name}",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
+        always_update=False,
     )
 
     try:
@@ -78,8 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady(
                 f"Could not obtain serial number from envoy: {ex}"
             ) from ex
-        else:
-            hass.config_entries.async_update_entry(entry, unique_id=serial)
+
+        hass.config_entries.async_update_entry(entry, unique_id=serial)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,

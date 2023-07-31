@@ -1,18 +1,21 @@
 """Define tests for the AEMET OpenData config flow."""
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from unittest.mock import MagicMock, patch
-
+import pytest
 import requests_mock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.aemet.const import CONF_STATION_UPDATES, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .util import aemet_requests_mock
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 CONFIG = {
     CONF_NAME: "aemet",
@@ -22,13 +25,10 @@ CONFIG = {
 }
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that the form is served with valid input."""
 
-    with patch(
-        "homeassistant.components.aemet.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, requests_mock.mock() as _m:
+    with requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 
         result = await hass.config_entries.flow.async_init(
@@ -36,7 +36,7 @@ async def test_form(hass):
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
@@ -58,7 +58,7 @@ async def test_form(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_options(hass):
+async def test_form_options(hass: HomeAssistant) -> None:
     """Test the form options."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
@@ -114,7 +114,7 @@ async def test_form_options(hass):
         assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_form_duplicated_id(hass):
+async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     """Test setting up duplicated entry."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
@@ -136,7 +136,7 @@ async def test_form_duplicated_id(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_form_api_offline(hass):
+async def test_form_api_offline(hass: HomeAssistant) -> None:
     """Test setting up with api call error."""
     mocked_aemet = MagicMock()
 

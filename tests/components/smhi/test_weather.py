@@ -6,14 +6,11 @@ from unittest.mock import patch
 import pytest
 from smhi.smhi_lib import APIURL_TEMPLATE, SmhiForecast, SmhiForecastException
 
-from homeassistant.components.smhi.const import (
-    ATTR_SMHI_CLOUDINESS,
-    ATTR_SMHI_THUNDER_PROBABILITY,
-    ATTR_SMHI_WIND_GUST_SPEED,
-)
+from homeassistant.components.smhi.const import ATTR_SMHI_THUNDER_PROBABILITY
 from homeassistant.components.smhi.weather import CONDITION_CLASSES, RETRY_TIMEOUT
 from homeassistant.components.weather import (
     ATTR_FORECAST,
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
@@ -21,6 +18,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_GUST_SPEED,
     ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
@@ -31,7 +29,11 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, SPEED_METERS_PER_SECOND, STATE_UNKNOWN
+from homeassistant.components.weather.const import (
+    ATTR_WEATHER_CLOUD_COVERAGE,
+    ATTR_WEATHER_WIND_GUST_SPEED,
+)
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -64,9 +66,9 @@ async def test_setup_hass(
 
     assert state
     assert state.state == "sunny"
-    assert state.attributes[ATTR_SMHI_CLOUDINESS] == 50
+    assert state.attributes[ATTR_WEATHER_CLOUD_COVERAGE] == 50
     assert state.attributes[ATTR_SMHI_THUNDER_PROBABILITY] == 33
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 16.92
     assert state.attributes[ATTR_ATTRIBUTION].find("SMHI") >= 0
     assert state.attributes[ATTR_WEATHER_HUMIDITY] == 55
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
@@ -85,6 +87,8 @@ async def test_setup_hass(
     assert forecast[ATTR_FORECAST_PRESSURE] == 1026
     assert forecast[ATTR_FORECAST_WIND_BEARING] == 203
     assert forecast[ATTR_FORECAST_WIND_SPEED] == 6.12
+    assert forecast[ATTR_FORECAST_WIND_GUST_SPEED] == 18.36
+    assert forecast[ATTR_FORECAST_CLOUD_COVERAGE] == 100
 
 
 async def test_properties_no_data(hass: HomeAssistant) -> None:
@@ -112,9 +116,9 @@ async def test_properties_no_data(hass: HomeAssistant) -> None:
     assert ATTR_WEATHER_WIND_SPEED not in state.attributes
     assert ATTR_WEATHER_WIND_BEARING not in state.attributes
     assert ATTR_FORECAST not in state.attributes
-    assert ATTR_SMHI_CLOUDINESS not in state.attributes
+    assert ATTR_WEATHER_CLOUD_COVERAGE not in state.attributes
     assert ATTR_SMHI_THUNDER_PROBABILITY not in state.attributes
-    assert ATTR_SMHI_WIND_GUST_SPEED not in state.attributes
+    assert ATTR_WEATHER_WIND_GUST_SPEED not in state.attributes
 
 
 async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
@@ -252,7 +256,7 @@ async def test_refresh_weather_forecast_retry(
         assert mock_get_forecast.call_count == 3
 
 
-def test_condition_class():
+def test_condition_class() -> None:
     """Test condition class."""
 
     def get_condition(index: int) -> str:
@@ -337,16 +341,16 @@ async def test_custom_speed_unit(
 
     assert state
     assert state.name == "test"
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 16.92
 
     entity_reg = er.async_get(hass)
     entity_reg.async_update_entity_options(
         state.entity_id,
         WEATHER_DOMAIN,
-        {ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_METERS_PER_SECOND},
+        {ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND},
     )
 
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 4.7
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 4.7

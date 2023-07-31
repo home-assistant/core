@@ -132,7 +132,7 @@ def signal_device_update(mac_address) -> str:
 
 
 class NmapDeviceScanner:
-    """This class scans for devices using nmap."""
+    """Scanner for devices using nmap."""
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, devices: NmapTrackedDevices
@@ -343,7 +343,10 @@ class NmapDeviceScanner:
             return
         if device.first_offline + self.consider_home > now:
             _LOGGER.debug(
-                "Device %s (%s) has NOT been offline (first offline at: %s) long enough to be considered not home: %s",
+                (
+                    "Device %s (%s) has NOT been offline (first offline at: %s) long"
+                    " enough to be considered not home: %s"
+                ),
                 ipv4,
                 formatted_mac,
                 device.first_offline,
@@ -351,7 +354,10 @@ class NmapDeviceScanner:
             )
             return
         _LOGGER.debug(
-            "Device %s (%s) has been offline (first offline at: %s) long enough to be considered not home: %s",
+            (
+                "Device %s (%s) has been offline (first offline at: %s) long enough to"
+                " be considered not home: %s"
+            ),
             ipv4,
             formatted_mac,
             device.first_offline,

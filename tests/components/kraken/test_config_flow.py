@@ -3,13 +3,14 @@ from unittest.mock import patch
 
 from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
 
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow(hass):
+async def test_config_flow(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     with patch(
         "homeassistant.components.kraken.async_setup_entry",
@@ -28,8 +29,8 @@ async def test_config_flow(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_already_configured(hass):
-    """Test we can not add a second config flow."""
+async def test_already_configured(hass: HomeAssistant) -> None:
+    """Test we cannot add a second config flow."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -39,7 +40,7 @@ async def test_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options for Kraken."""
     entry = MockConfigEntry(
         domain=DOMAIN,

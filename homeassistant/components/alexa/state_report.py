@@ -5,21 +5,27 @@ import asyncio
 from http import HTTPStatus
 import json
 import logging
+from typing import TYPE_CHECKING, cast
 
 import aiohttp
 import async_timeout
 
+from homeassistant.components import event
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import API_CHANGE, DATE_FORMAT, DOMAIN, Cause
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
 from .errors import NoTokenAvailable, RequireRelink
 from .messages import AlexaResponse
+
+if TYPE_CHECKING:
+    from .config import AbstractConfig
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10
@@ -86,8 +92,10 @@ async def async_enable_proactive_mode(hass, smart_home_config):
             return
 
         if should_doorbell:
-            if new_state.state == STATE_ON and (
-                old_state is None or old_state.state != STATE_ON
+            if (
+                new_state.domain == event.DOMAIN
+                or new_state.state == STATE_ON
+                and (old_state is None or old_state.state != STATE_ON)
             ):
                 await async_send_doorbell_event_message(
                     hass, smart_home_config, alexa_changed_entity
@@ -162,9 +170,10 @@ async def async_send_changereport_message(
     if response.status == HTTPStatus.ACCEPTED:
         return
 
-    response_json = json.loads(response_text)
+    response_json = json_loads_object(response_text)
+    response_payload = cast(JsonObjectType, response_json["payload"])
 
-    if response_json["payload"]["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION":
+    if response_payload["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION":
         if invalidate_access_token:
             # Invalidate the access token and try again
             config.async_invalidate_access_token()
@@ -180,12 +189,14 @@ async def async_send_changereport_message(
     _LOGGER.error(
         "Error when sending ChangeReport for %s to Alexa: %s: %s",
         alexa_entity.entity_id,
-        response_json["payload"]["code"],
-        response_json["payload"]["description"],
+        response_payload["code"],
+        response_payload["description"],
     )
 
 
-async def async_send_add_or_update_message(hass, config, entity_ids):
+async def async_send_add_or_update_message(
+    hass: HomeAssistant, config: AbstractConfig, entity_ids: list[str]
+) -> aiohttp.ClientResponse:
     """Send an AddOrUpdateReport message for entities.
 
     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#add-or-update-report
@@ -220,7 +231,9 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     )
 
 
-async def async_send_delete_message(hass, config, entity_ids):
+async def async_send_delete_message(
+    hass: HomeAssistant, config: AbstractConfig, entity_ids: list[str]
+) -> aiohttp.ClientResponse:
     """Send an DeleteReport message for entities.
 
     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#deletereport-event
@@ -299,11 +312,12 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     if response.status == HTTPStatus.ACCEPTED:
         return
 
-    response_json = json.loads(response_text)
+    response_json = json_loads_object(response_text)
+    response_payload = cast(JsonObjectType, response_json["payload"])
 
     _LOGGER.error(
         "Error when sending DoorbellPress event for %s to Alexa: %s: %s",
         alexa_entity.entity_id,
-        response_json["payload"]["code"],
-        response_json["payload"]["description"],
+        response_payload["code"],
+        response_payload["description"],
     )

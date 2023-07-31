@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
 import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -50,6 +49,8 @@ def async_handle_api_call(
 class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
     """Representation of a Sensibo Base Entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
@@ -68,8 +69,6 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
 
 class SensiboDeviceBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Device."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -93,8 +92,6 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Motion Entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -42,13 +42,13 @@ class RDWSensorEntityDescription(
 SENSORS: tuple[RDWSensorEntityDescription, ...] = (
     RDWSensorEntityDescription(
         key="apk_expiration",
-        name="APK expiration",
+        translation_key="apk_expiration",
         device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.apk_expiration,
     ),
     RDWSensorEntityDescription(
         key="ascription_date",
-        name="Ascription date",
+        translation_key="ascription_date",
         device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.ascription_date,
     ),
@@ -72,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class RDWSensorEntity(CoordinatorEntity, SensorEntity):
+class RDWSensorEntity(CoordinatorEntity[DataUpdateCoordinator[Vehicle]], SensorEntity):
     """Defines an RDW sensor."""
 
     entity_description: RDWSensorEntityDescription
@@ -81,7 +81,7 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Vehicle],
         license_plate: str,
         description: RDWSensorEntityDescription,
     ) -> None:

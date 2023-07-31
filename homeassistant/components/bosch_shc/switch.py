@@ -20,8 +20,8 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -95,7 +95,6 @@ async def async_setup_entry(
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for switch in session.device_helper.smart_plugs:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -112,8 +111,7 @@ async def async_setup_entry(
             )
         )
 
-    for switch in session.device_helper.light_switches:
-
+    for switch in session.device_helper.light_switches_bsm:
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -124,7 +122,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.smart_plugs_compact:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -135,7 +132,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.camera_eyes:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -146,7 +142,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.camera_360:
-
         entities.append(
             SHCSwitch(
                 device=switch,

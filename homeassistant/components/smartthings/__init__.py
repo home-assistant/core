@@ -16,6 +16,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -50,6 +51,8 @@ from .smartapp import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -92,7 +95,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not validate_webhook_requirements(hass):
         _LOGGER.warning(
-            "The 'base_url' of the 'http' integration must be configured and start with 'https://'"
+            "The 'base_url' of the 'http' integration must be configured and start with"
+            " 'https://'"
         )
         return False
 
@@ -135,7 +139,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await device.status.refresh()
             except ClientResponseError:
                 _LOGGER.debug(
-                    "Unable to update status for device: %s (%s), the device will be excluded",
+                    (
+                        "Unable to update status for device: %s (%s), the device will"
+                        " be excluded"
+                    ),
                     device.label,
                     device.device_id,
                     exc_info=True,
@@ -161,7 +168,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientResponseError as ex:
         if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             _LOGGER.exception(
-                "Unable to setup configuration entry '%s' - please reconfigure the integration",
+                (
+                    "Unable to setup configuration entry '%s' - please reconfigure the"
+                    " integration"
+                ),
                 entry.title,
             )
             remove_entry = True
@@ -194,7 +204,10 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     except ClientResponseError as ex:
         if ex.status == HTTPStatus.FORBIDDEN:
             _LOGGER.exception(
-                "Unable to load scenes for configuration entry '%s' because the access token does not have the required access",
+                (
+                    "Unable to load scenes for configuration entry '%s' because the"
+                    " access token does not have the required access"
+                ),
                 entry.title,
             )
         else:
@@ -237,7 +250,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     app_count = sum(1 for entry in all_entries if entry.data[CONF_APP_ID] == app_id)
     if app_count > 1:
         _LOGGER.debug(
-            "App %s was not removed because it is in use by other configuration entries",
+            (
+                "App %s was not removed because it is in use by other configuration"
+                " entries"
+            ),
             app_id,
         )
         return
@@ -266,7 +282,7 @@ class DeviceBroker:
         smart_app,
         devices: Iterable,
         scenes: Iterable,
-    ):
+    ) -> None:
         """Create a new instance of the DeviceBroker."""
         self._hass = hass
         self._entry = entry
@@ -305,6 +321,7 @@ class DeviceBroker:
 
     def connect(self):
         """Connect handlers/listeners for device/lifecycle events."""
+
         # Setup interval to regenerate the refresh token on a periodic basis.
         # Tokens expire in 30 days and once expired, cannot be recovered.
         async def regenerate_refresh_token(now):
@@ -435,9 +452,11 @@ class SmartThingsEntity(Entity):
         return DeviceInfo(
             configuration_url="https://account.smartthings.com",
             identifiers={(DOMAIN, self._device.device_id)},
-            manufacturer="Unavailable",
-            model=self._device.device_type_name,
+            manufacturer=self._device.status.ocf_manufacturer_name,
+            model=self._device.status.ocf_model_number,
             name=self._device.label,
+            hw_version=self._device.status.ocf_hardware_version,
+            sw_version=self._device.status.ocf_firmware_version,
         )
 
     @property

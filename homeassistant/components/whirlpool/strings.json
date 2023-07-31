@@ -8,10 +8,63 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_appliances": "No supported appliances found"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "whirlpool_machine": {
+        "name": "State",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "setting": "Setting",
+          "delay_countdown": "Delay Countdown",
+          "delay_paused": "Delay Paused",
+          "smart_delay": "Smart Delay",
+          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::whirlpool_machine::state::smart_delay%]",
+          "pause": "[%key:common::state::paused%]",
+          "running_maincycle": "Running Maincycle",
+          "running_postcycle": "Running Postcycle",
+          "exception": "Exception",
+          "complete": "Complete",
+          "power_failure": "Power Failure",
+          "service_diagnostic_mode": "Service Diagnostic Mode",
+          "factory_diagnostic_mode": "Factory Diagnostic Mode",
+          "life_test": "Life Test",
+          "customer_focus_mode": "Customer Focus Mode",
+          "demo_mode": "Demo Mode",
+          "hard_stop_or_error": "Hard Stop or Error",
+          "system_initialize": "System Initialize",
+          "cycle_filling": "Cycle Filling",
+          "cycle_rinsing": "Cycle Rinsing",
+          "cycle_sensing": "Cycle Sensing",
+          "cycle_soaking": "Cycle Soaking",
+          "cycle_spinning": "Cycle Spinning",
+          "cycle_washing": "Cycle Washing",
+          "door_open": "Door Open"
+        }
+      },
+      "whirlpool_tank": {
+        "name": "Detergent level",
+        "state": {
+          "unknown": "Unknown",
+          "empty": "Empty",
+          "25": "25%",
+          "50": "50%",
+          "100": "100%",
+          "active": "[%key:common::state::active%]"
+        }
+      },
+      "end_time": {
+        "name": "End time"
+      }
     }
   }
 }

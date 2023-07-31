@@ -79,6 +79,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -86,12 +87,10 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("description_placeholders") == {"addon": "motionEye"}
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("step_id") == "user"
-    assert "flow_id" in result2
 
     mock_client = create_mock_motioneye_client()
 
@@ -359,6 +358,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -378,6 +378,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -398,6 +399,7 @@ async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -414,6 +416,7 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
             config={"addon": "motionEye", "url": TEST_URL},
             name="motionEye",
             slug="motioneye",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -423,7 +426,6 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert "flow_id" in result2
 
     mock_client = create_mock_motioneye_client()
 

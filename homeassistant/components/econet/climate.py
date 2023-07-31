@@ -81,7 +81,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
                 self.op_list.append(ha_mode)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self._econet.supports_humidifier:
             return SUPPORT_FLAGS_THERMOSTAT | ClimateEntityFeature.TARGET_HUMIDITY
@@ -151,7 +151,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         return self.op_list
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, mode.
 
         Needs to be one of HVAC_MODE_*.

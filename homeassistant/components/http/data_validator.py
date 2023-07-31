@@ -5,10 +5,9 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from aiohttp import web
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from .view import HomeAssistantView

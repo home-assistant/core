@@ -15,13 +15,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    TEMP_CELSIUS,
+    EntityCategory,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import (
@@ -29,7 +29,7 @@ from .const import (
     METRIC_KEY_MODE,
     MODE_ON,
     VALLOX_CELL_STATE_TO_STR,
-    VALLOX_PROFILE_TO_STR_REPORTABLE,
+    VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
 )
 
 
@@ -38,7 +38,6 @@ class ValloxSensorEntity(ValloxEntity, SensorEntity):
 
     entity_description: ValloxSensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -76,7 +75,7 @@ class ValloxProfileSensor(ValloxSensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         vallox_profile = self.coordinator.data.profile
-        return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
+        return VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE.get(vallox_profile)
 
 
 # There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
@@ -108,7 +107,7 @@ class ValloxFilterRemainingSensor(ValloxSensorEntity):
 
         return datetime.combine(
             next_filter_change_date,
-            time(hour=13, minute=0, second=0, tzinfo=dt.DEFAULT_TIME_ZONE),
+            time(hour=13, minute=0, second=0, tzinfo=dt_util.DEFAULT_TIME_ZONE),
         )
 
 
@@ -138,13 +137,13 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
 SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
     ValloxSensorEntityDescription(
         key="current_profile",
-        name="Current profile",
+        translation_key="current_profile",
         icon="mdi:gauge",
         entity_type=ValloxProfileSensor,
     ),
     ValloxSensorEntityDescription(
         key="fan_speed",
-        name="Fan speed",
+        translation_key="fan_speed",
         metric_key="A_CYC_FAN_SPEED",
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
@@ -153,7 +152,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="extract_fan_speed",
-        name="Extract fan speed",
+        translation_key="extract_fan_speed",
         metric_key="A_CYC_EXTR_FAN_SPEED",
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
@@ -163,7 +162,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="supply_fan_speed",
-        name="Supply fan speed",
+        translation_key="supply_fan_speed",
         metric_key="A_CYC_SUPP_FAN_SPEED",
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
@@ -173,69 +172,68 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="remaining_time_for_filter",
-        name="Remaining time for filter",
+        translation_key="remaining_time_for_filter",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_type=ValloxFilterRemainingSensor,
     ),
     ValloxSensorEntityDescription(
         key="cell_state",
-        name="Cell state",
+        translation_key="cell_state",
         icon="mdi:swap-horizontal-bold",
         metric_key="A_CYC_CELL_STATE",
         entity_type=ValloxCellStateSensor,
     ),
     ValloxSensorEntityDescription(
         key="extract_air",
-        name="Extract air",
+        translation_key="extract_air",
         metric_key="A_CYC_TEMP_EXTRACT_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="exhaust_air",
-        name="Exhaust air",
+        translation_key="exhaust_air",
         metric_key="A_CYC_TEMP_EXHAUST_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="outdoor_air",
-        name="Outdoor air",
+        translation_key="outdoor_air",
         metric_key="A_CYC_TEMP_OUTDOOR_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="supply_air",
-        name="Supply air",
+        translation_key="supply_air",
         metric_key="A_CYC_TEMP_SUPPLY_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="supply_cell_air",
-        name="Supply cell air",
+        translation_key="supply_cell_air",
         metric_key="A_CYC_TEMP_SUPPLY_CELL_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="optional_air",
-        name="Optional air",
+        translation_key="optional_air",
         metric_key="A_CYC_TEMP_OPTIONAL",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=False,
     ),
     ValloxSensorEntityDescription(
         key="humidity",
-        name="Humidity",
         metric_key="A_CYC_RH_VALUE",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -243,7 +241,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="efficiency",
-        name="Efficiency",
+        translation_key="efficiency",
         metric_key="A_CYC_EXTRACT_EFFICIENCY",
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
@@ -253,7 +251,6 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="co2",
-        name="CO2",
         metric_key="A_CYC_CO2_VALUE",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import KNXTestKit
 
 
-async def test_notify_simple(hass: HomeAssistant, knx: KNXTestKit):
+async def test_notify_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX notify can send to one device."""
     await knx.setup_integration(
         {
@@ -77,7 +77,7 @@ async def test_notify_simple(hass: HomeAssistant, knx: KNXTestKit):
 
 async def test_notify_multiple_sends_to_all_with_different_encodings(
     hass: HomeAssistant, knx: KNXTestKit
-):
+) -> None:
     """Test KNX notify `type` configuration."""
     await knx.setup_integration(
         {

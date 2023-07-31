@@ -12,6 +12,7 @@ class CrownstoneBaseEntity(Entity):
     """Base entity class for Crownstone devices."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device: Crownstone) -> None:
         """Initialize the device."""
@@ -19,8 +20,7 @@ class CrownstoneBaseEntity(Entity):
 
     @property
     def cloud_id(self) -> str:
-        """
-        Return the unique identifier for this device.
+        """Return the unique identifier for this device.
 
         Used as device ID and to generate unique entity ID's.
         """

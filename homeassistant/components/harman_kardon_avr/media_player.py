@@ -66,18 +66,17 @@ class HkAvrDevice(MediaPlayerEntity):
 
         self._source_list = avr.sources
 
-        self._state = None
         self._muted = avr.muted
         self._current_source = avr.current_source
 
     def update(self) -> None:
         """Update the state of this media_player."""
         if self._avr.is_on():
-            self._state = MediaPlayerState.ON
+            self._attr_state = MediaPlayerState.ON
         elif self._avr.is_off():
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
         else:
-            self._state = None
+            self._attr_state = None
 
         self._muted = self._avr.muted
         self._current_source = self._avr.current_source
@@ -86,11 +85,6 @@ class HkAvrDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def is_volume_muted(self):

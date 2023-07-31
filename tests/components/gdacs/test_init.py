@@ -2,9 +2,10 @@
 from unittest.mock import patch
 
 from homeassistant.components.gdacs import DOMAIN, FEED
+from homeassistant.core import HomeAssistant
 
 
-async def test_component_unload_config_entry(hass, config_entry):
+async def test_component_unload_config_entry(hass: HomeAssistant, config_entry) -> None:
     """Test that loading and unloading of a config entry works."""
     config_entry.add_to_hass(hass)
     with patch("aio_georss_gdacs.GdacsFeedManager.update") as mock_feed_manager_update:

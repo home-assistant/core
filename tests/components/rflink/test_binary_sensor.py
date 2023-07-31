@@ -1,5 +1,4 @@
-"""
-Test for RFlink sensor components.
+"""Test for RFlink sensor components.
 
 Test setup of rflink sensor component/platform. Verify manual and
 automatic sensor creation.
@@ -16,7 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, State, callback
+from homeassistant.core import CoreState, HomeAssistant, State, callback
 import homeassistant.util.dt as dt_util
 
 from .test_init import mock_rflink
@@ -45,7 +44,7 @@ CONFIG = {
 }
 
 
-async def test_default_setup(hass, monkeypatch):
+async def test_default_setup(hass: HomeAssistant, monkeypatch) -> None:
     """Test all basic functionality of the rflink sensor component."""
     # setup mocking rflink module
     event_callback, create, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)
@@ -84,7 +83,7 @@ async def test_default_setup(hass, monkeypatch):
     assert hass.states.get("binary_sensor.test").state == STATE_OFF
 
 
-async def test_entity_availability(hass, monkeypatch):
+async def test_entity_availability(hass: HomeAssistant, monkeypatch) -> None:
     """If Rflink device is disconnected, entities should become unavailable."""
     # Make sure Rflink mock does not 'recover' to quickly from the
     # disconnect or else the unavailability cannot be measured
@@ -125,7 +124,7 @@ async def test_entity_availability(hass, monkeypatch):
     assert hass.states.get("binary_sensor.test").state == STATE_ON
 
 
-async def test_off_delay(hass, monkeypatch):
+async def test_off_delay(hass: HomeAssistant, monkeypatch) -> None:
     """Test off_delay option."""
     # setup mocking rflink module
     event_callback, create, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)
@@ -188,7 +187,7 @@ async def test_off_delay(hass, monkeypatch):
     assert len(events) == 3
 
 
-async def test_restore_state(hass, monkeypatch):
+async def test_restore_state(hass: HomeAssistant, monkeypatch) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State(f"{DOMAIN}.test", STATE_ON), State(f"{DOMAIN}.test2", STATE_ON))

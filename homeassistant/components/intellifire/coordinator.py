@@ -33,7 +33,6 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         self._api = api
 
     async def _async_update_data(self) -> IntellifirePollData:
-
         if not self._api.is_polling_in_background:
             LOGGER.info("Starting Intellifire Background Polling Loop")
             await self._api.start_background_polling()
@@ -68,7 +67,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         return DeviceInfo(
             manufacturer="Hearth and Home",
             model="IFT-WFM",
-            name="IntelliFire Fireplace",
+            name="IntelliFire",
             identifiers={("IntelliFire", f"{self.read_api.data.serial}]")},
             sw_version=self.read_api.data.fw_ver_str,
             configuration_url=f"http://{self._api.fireplace_ip}/poll",

@@ -8,12 +8,39 @@
       "invalid_system_id": "Invalid Airzone System ID"
     },
     "step": {
-      "user": {
+      "discovered_connection": {
         "data": {
+          "id": "[%key:component::airzone::config::step::user::data::id%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
-        },
-        "description": "Set up Airzone integration."
+        }
+      },
+      "user": {
+        "data": {
+          "id": "System ID",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "grille_angles": {
+        "state": {
+          "90deg": "90°",
+          "50deg": "50°",
+          "45deg": "45°",
+          "40deg": "40°"
+        }
+      },
+      "sleep_times": {
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "30m": "30 minutes",
+          "60m": "60 minutes",
+          "90m": "90 minutes"
+        }
       }
     }
   }

@@ -14,13 +14,14 @@ class AcmedaBase(entity.Entity):
     """Base representation of an Acmeda roller."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, roller: aiopulse.Roller) -> None:
         """Initialize the roller."""
         self.roller = roller
 
     async def async_remove_and_unregister(self) -> None:
-        """Unregister from entity and device registry and call entity remove function."""
+        """Unregister from registries and call entity remove function."""
         LOGGER.error("Removing %s %s", self.__class__.__name__, self.unique_id)
 
         ent_registry = er.async_get(self.hass)
@@ -71,11 +72,6 @@ class AcmedaBase(entity.Entity):
     def device_id(self) -> str:
         """Return the ID of this roller."""
         return self.roller.id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of roller."""
-        return self.roller.name
 
     @property
     def device_info(self) -> entity.DeviceInfo:

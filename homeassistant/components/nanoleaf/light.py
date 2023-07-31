@@ -46,12 +46,14 @@ class NanoleafLight(NanoleafEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
+    _attr_name = None
 
-    def __init__(self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator[None]
+    ) -> None:
         """Initialize the Nanoleaf light."""
         super().__init__(nanoleaf, coordinator)
         self._attr_unique_id = nanoleaf.serial_no
-        self._attr_name = nanoleaf.name
         self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
         self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
 

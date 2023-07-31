@@ -19,7 +19,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -98,7 +98,7 @@ async def async_setup_entry(
 
     tasks = []
     for heater in data_connection.get_devices():
-        tasks.append(heater.update_device_info())
+        tasks.append(asyncio.create_task(heater.update_device_info()))
     await asyncio.wait(tasks)
 
     devs = []
@@ -150,21 +150,22 @@ async def async_setup_entry(
 class AmbiclimateEntity(ClimateEntity):
     """Representation of a Ambiclimate Thermostat device."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, heater, store):
         """Initialize the thermostat."""
         self._heater = heater
         self._store = store
         self._attr_unique_id = heater.device_id
-        self._attr_name = heater.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Ambiclimate",
-            name=self.name,
+            name=heater.name,
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:

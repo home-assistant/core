@@ -18,9 +18,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
@@ -315,6 +315,10 @@ async def async_setup_entry(
                     config_entry, driver, info, property_description
                 )
             )
+        elif info.platform_hint == "config_parameter":
+            entities.append(
+                ZWaveConfigParameterBinarySensor(config_entry, driver, info)
+            )
         else:
             # boolean sensor
             entities.append(ZWaveBooleanBinarySensor(config_entry, driver, info))
@@ -411,3 +415,22 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if self.info.primary_value.value is None:
             return None
         return self.info.primary_value.value in self.entity_description.on_states
+
+
+class ZWaveConfigParameterBinarySensor(ZWaveBooleanBinarySensor):
+    """Representation of a Z-Wave config parameter binary sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWaveConfigParameterBinarySensor entity."""
+        super().__init__(config_entry, driver, info)
+
+        property_key_name = self.info.primary_value.property_key_name
+        # Entity class attributes
+        self._attr_name = self.generate_name(
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[property_key_name] if property_key_name else None,
+        )

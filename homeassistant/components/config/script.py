@@ -16,9 +16,8 @@ async def async_setup(hass):
 
     async def hook(action, config_key):
         """post_write_hook for Config View that reloads scripts."""
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
-
         if action != ACTION_DELETE:
+            await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
             return
 
         ent_reg = er.async_get(hass)
