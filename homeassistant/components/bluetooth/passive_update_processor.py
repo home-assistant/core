@@ -54,6 +54,16 @@ class PassiveBluetoothEntityKey:
     key: str
     device_id: str | None
 
+    def to_string(self) -> str:
+        """Convert the key to a string."""
+        return f"{self.key}___{self.device_id or ''}"
+
+    @classmethod
+    def from_string(cls, key: str) -> PassiveBluetoothEntityKey:
+        """Convert a string to a key."""
+        key, device_id = key.split("___")
+        return cls(key, device_id or None)
+
 
 _T = TypeVar("_T")
 
@@ -81,21 +91,6 @@ class RestoredPassiveBluetoothDataUpdate(TypedDict):
     entity_descriptions: dict[str, dict[str, Any]]
     entity_names: dict[str, str | None]
     entity_data: dict[str, Any]
-
-
-def serialize_passive_bluetooth_entity_key(
-    entity_key: PassiveBluetoothEntityKey,
-) -> str:
-    """Serialize a passive bluetooth entity key."""
-    return f"{entity_key.key}___{entity_key.device_id or ''}"
-
-
-def deserialize_passive_bluetooth_entity_key(
-    seralized_entity_key: str,
-) -> PassiveBluetoothEntityKey:
-    """Deserialize a passive bluetooth entity key."""
-    key, device_id = seralized_entity_key.split("___")
-    return PassiveBluetoothEntityKey(key, device_id or None)
 
 
 # Fields do not change so we can cache the result
@@ -131,18 +126,6 @@ def serialize_entity_description(description: EntityDescription) -> dict[str, An
     return result
 
 
-def serialize_device_key(device_key: str | None) -> str:
-    """Serialize a device key."""
-    return device_key or ""
-
-
-def deserialize_device_key(
-    seralized_device_key: str,
-) -> str | None:
-    """Deserialize a device key."""
-    return seralized_device_key or None
-
-
 @dataclasses.dataclass(slots=True, frozen=True)
 class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
@@ -169,22 +152,17 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         """Serialize restore data to storage."""
         return {
             "devices": {
-                serialize_device_key(key): device_info
-                for key, device_info in self.devices.items()
+                key or "": device_info for key, device_info in self.devices.items()
             },
             "entity_descriptions": {
-                serialize_passive_bluetooth_entity_key(
-                    key
-                ): serialize_entity_description(description)
+                key.to_string(): serialize_entity_description(description)
                 for key, description in self.entity_descriptions.items()
             },
             "entity_names": {
-                serialize_passive_bluetooth_entity_key(key): name
-                for key, name in self.entity_names.items()
+                key.to_string(): name for key, name in self.entity_names.items()
             },
             "entity_data": {
-                serialize_passive_bluetooth_entity_key(key): data
-                for key, data in self.entity_data.items()
+                key.to_string(): data for key, data in self.entity_data.items()
             },
         }
 
@@ -197,13 +175,13 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         """Set the restored data from storage."""
         self.devices.update(
             {
-                deserialize_device_key(key): device_info
+                key or None: device_info
                 for key, device_info in restore_data["devices"].items()
             }
         )
         self.entity_descriptions.update(
             {
-                deserialize_passive_bluetooth_entity_key(
+                PassiveBluetoothEntityKey.from_string(
                     key
                 ): deserialize_entity_description(entity_description_class, description)
                 for key, description in restore_data["entity_descriptions"].items()
@@ -212,13 +190,13 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         )
         self.entity_names.update(
             {
-                deserialize_passive_bluetooth_entity_key(key): name
+                PassiveBluetoothEntityKey.from_string(key): name
                 for key, name in restore_data["entity_names"].items()
             }
         )
         self.entity_data.update(
             {
-                deserialize_passive_bluetooth_entity_key(key): cast(_T, data)
+                PassiveBluetoothEntityKey.from_string(key): cast(_T, data)
                 for key, data in restore_data["entity_data"].items()
             }
         )
