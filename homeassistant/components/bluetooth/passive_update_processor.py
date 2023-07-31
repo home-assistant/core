@@ -418,7 +418,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
             and (restored_processor_data := restore_data.get(restore_key))
         ):
             data.async_set_restore_data(
-                cast(RestoredPassiveBluetoothDataUpdate, restored_processor_data),
+                restored_processor_data,
                 entity_description_class,
             )
             self.async_update_listeners(data)
