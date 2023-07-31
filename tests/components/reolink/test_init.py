@@ -116,7 +116,14 @@ async def test_https_repair_issue(
         hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
     )
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
+    ), patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+    ), patch(
+        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
@@ -150,6 +157,8 @@ async def test_webhook_repair_issue(
     """Test repairs issue is raised when the webhook url is unreachable."""
     with patch(
         "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
+    ), patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
     ), patch(
         "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
     ):
