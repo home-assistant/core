@@ -10,11 +10,11 @@
     },
     "entity_name_is_device_name": {
       "title": "MQTT entity name of {entity_id} is equal to device name",
-      "description": "MQTT entity with entity_id `{entity_id}` has an entity name that is equal to the device name. This is not expected. To avoid a duplicate names the entity name is set to `null` as a work-a-round. Please update your configuration, or inform the maintainer of the integration that supplies the entity, and restart Home Assistant to fix this issue.\n\nConfiguration found:\n```yaml\n{config}\n```"
+      "description": "MQTT entity with entity_id `{entity_id}` has an entity name that is equal to the device name. This is not expected. To avoid a duplicate names the entity name is set to `null` as a work-a-round. Please update your configuration, or inform the maintainer of the integration that supplies the entity, and restart Home Assistant to fix this issue.\n\nNames found in configuration:\n```yaml\n{config}\n```"
     },
     "entity_name_startswith_device_name": {
       "title": "MQTT entity name of {entity_id} starts with the device name",
-      "description": "MQTT entity with entity_id `{entity_id}` has an entity name that starts with the device name. This is not expected. To avoid a duplicate names the device name prefix is stripped of the entity name as a work-a-round. Please update your configuration, or inform the maintainer of the integration that supplies the entity, and restart Home Assistant to fix this issue. \n\nConfiguration found:\n```yaml\n{config}\n```"
+      "description": "MQTT entity with entity_id `{entity_id}` has an entity name that starts with the device name. This is not expected. To avoid a duplicate names the device name prefix is stripped of the entity name as a work-a-round. Please update your configuration, or inform the maintainer of the integration that supplies the entity, and restart Home Assistant to fix this issue. \n\nNames found in configuration:\n```yaml\n{config}\n```"
     }
   },
   "config": {

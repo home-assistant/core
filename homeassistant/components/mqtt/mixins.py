@@ -9,7 +9,6 @@ import logging
 from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
-import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -55,7 +54,6 @@ from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -1178,6 +1176,13 @@ class MqttEntity(
         """Process issues for MQTT entities."""
         if self._issue_key is None:
             return
+        domain = self.entity_id.split(".")[0]
+        device_name: str = self._config[CONF_DEVICE][CONF_NAME]
+        entity_name: str = self._config[CONF_NAME]
+        config = (
+            f"mqtt:\n  - {domain}:\n      name: {entity_name}\n      ...\n"
+            f"      device:\n        name: {device_name}\n        ..."
+        )
         async_create_issue(
             self.hass,
             DOMAIN,
@@ -1187,7 +1192,7 @@ class MqttEntity(
             translation_key=self._issue_key,
             translation_placeholders={
                 "entity_id": self.entity_id,
-                "config": yaml.dump(json_loads(json_dumps(self._config))),
+                "config": config,
             },
             learn_more_url=MQTT_ENTRIES_NAMING_BLOG_URL,
             severity=IssueSeverity.WARNING,
