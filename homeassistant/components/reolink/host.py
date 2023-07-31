@@ -26,6 +26,7 @@ from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotA
 
 DEFAULT_TIMEOUT = 30
 FIRST_ONVIF_TIMEOUT = 10
+FIRST_ONVIF_LONG_POLL_TIMEOUT = 90
 SUBSCRIPTION_RENEW_THRESHOLD = 300
 POLL_INTERVAL_NO_PUSH = 5
 LONG_POLL_COOLDOWN = 0.75
@@ -205,7 +206,7 @@ class ReolinkHost:
         # ONVIF push is not received, start long polling and schedule check
         await self._async_start_long_polling()
         self._cancel_long_poll_check = async_call_later(
-            self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif_long_poll
+            self._hass, FIRST_ONVIF_LONG_POLL_TIMEOUT, self._async_check_onvif_long_poll
         )
 
         self._cancel_onvif_check = None
@@ -215,7 +216,7 @@ class ReolinkHost:
         if not self._long_poll_received:
             _LOGGER.debug(
                 "Did not receive state through ONVIF long polling after %i seconds",
-                FIRST_ONVIF_TIMEOUT,
+                FIRST_ONVIF_LONG_POLL_TIMEOUT,
             )
             ir.async_create_issue(
                 self._hass,
@@ -230,8 +231,24 @@ class ReolinkHost:
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
+            if self._base_url.startswith("https"):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "https_webhook",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="https_webhook",
+                    translation_placeholders={
+                        "base_url": self._base_url,
+                        "network_link": "https://my.home-assistant.io/redirect/network/",
+                    },
+                )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+            ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
 
         # If no ONVIF push or long polling state is received, start fast polling
         await self._async_poll_all_motion()
@@ -425,22 +442,6 @@ class ReolinkHost:
 
         webhook_path = webhook.async_generate_path(event_id)
         self._webhook_url = f"{self._base_url}{webhook_path}"
-
-        if self._base_url.startswith("https"):
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                "https_webhook",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="https_webhook",
-                translation_placeholders={
-                    "base_url": self._base_url,
-                    "network_link": "https://my.home-assistant.io/redirect/network/",
-                },
-            )
-        else:
-            ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
 
         _LOGGER.debug("Registered webhook: %s", event_id)
 
