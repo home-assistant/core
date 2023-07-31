@@ -68,7 +68,7 @@ async def test_setup_entry_exception(
     # ConfigEntryNotReady.
     with patch(
         "renault_api.renault_session.RenaultSession.login",
-        side_effect=aiohttp.ClientConnectionError,
+        side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
