@@ -1021,7 +1021,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
-    _issues: list[str] = []
+    _issue_key: str | None
 
     def __init__(
         self,
@@ -1131,6 +1131,7 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
+        self._issue_key = None
         entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
@@ -1149,7 +1150,7 @@ class MqttEntity(
                 )
             elif (device_name := config[CONF_DEVICE][CONF_NAME]) == entity_name:
                 self._attr_name = None
-                self._issues.append("entity_name_is_device_name")
+                self._issue_key = "entity_name_is_device_name"
                 _LOGGER.warning(
                     "MQTT device name is equal to entity name in your config %s, "
                     "this is not expected. Please correct your configuration. "
@@ -1163,7 +1164,7 @@ class MqttEntity(
                 if device_name[:1].isupper():
                     # Ensure a capital if the device name first char is a capital
                     new_entity_name = new_entity_name[:1].upper() + new_entity_name[1:]
-                self._issues.append("entity_name_startswith_device_name")
+                self._issue_key = "entity_name_startswith_device_name"
                 _LOGGER.warning(
                     "MQTT entity name starts with the device name in your config %s, "
                     "this is not expected. Please correct your configuration. "
@@ -1175,21 +1176,22 @@ class MqttEntity(
 
     def process_issues(self) -> None:
         """Process issues for MQTT entities."""
-        for issue_key in self._issues:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                self.entity_id,
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                translation_key=issue_key,
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                    "config": yaml.dump(json_loads(json_dumps(self._config))),
-                },
-                learn_more_url=MQTT_ENTRIES_NAMING_BLOG_URL,
-                severity=IssueSeverity.WARNING,
-            )
+        if self._issue_key is None:
+            return
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            self.entity_id,
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            translation_key=self._issue_key,
+            translation_placeholders={
+                "entity_id": self.entity_id,
+                "config": yaml.dump(json_loads(json_dumps(self._config))),
+            },
+            learn_more_url=MQTT_ENTRIES_NAMING_BLOG_URL,
+            severity=IssueSeverity.WARNING,
+        )
 
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""
