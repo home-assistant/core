@@ -61,7 +61,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda res: getattr(res, "heat_usage_mwh", None),
+        value_fn=lambda res: res.heat_usage_mwh,
     ),
     HeatMeterSensorEntityDescription(
         key="volume_usage_m3",
@@ -70,7 +70,7 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda res: getattr(res, "volume_usage_m3", None),
+        value_fn=lambda res: res.volume_usage_m3,
     ),
     HeatMeterSensorEntityDescription(
         key="heat_usage_gj",
@@ -79,7 +79,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda res: getattr(res, "heat_usage_gj", None),
+        value_fn=lambda res: res.heat_usage_gj,
     ),
     HeatMeterSensorEntityDescription(
         key="heat_previous_year_mwh",
@@ -88,7 +88,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "heat_previous_year_mwh", None),
+        value_fn=lambda res: res.heat_previous_year_mwh,
     ),
     HeatMeterSensorEntityDescription(
         key="heat_previous_year_gj",
@@ -97,7 +97,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "heat_previous_year_gj", None),
+        value_fn=lambda res: res.heat_previous_year_gj,
     ),
     HeatMeterSensorEntityDescription(
         key="volume_previous_year_m3",
@@ -106,28 +106,28 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "volume_previous_year_m3", None),
+        value_fn=lambda res: res.volume_previous_year_m3,
     ),
     HeatMeterSensorEntityDescription(
         key="ownership_number",
         name="Ownership number",
         icon="mdi:identifier",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "ownership_number", None),
+        value_fn=lambda res: res.ownership_number,
     ),
     HeatMeterSensorEntityDescription(
         key="error_number",
         name="Error number",
         icon="mdi:home-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "error_number", None),
+        value_fn=lambda res: res.error_number,
     ),
     HeatMeterSensorEntityDescription(
         key="device_number",
         name="Device number",
         icon="mdi:identifier",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "device_number", None),
+        value_fn=lambda res: res.device_number,
     ),
     HeatMeterSensorEntityDescription(
         key="measurement_period_minutes",
@@ -135,7 +135,7 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "measurement_period_minutes", None),
+        value_fn=lambda res: res.measurement_period_minutes,
     ),
     HeatMeterSensorEntityDescription(
         key="power_max_kw",
@@ -143,7 +143,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "power_max_kw", None),
+        value_fn=lambda res: res.power_max_kw,
     ),
     HeatMeterSensorEntityDescription(
         key="power_max_previous_year_kw",
@@ -151,7 +151,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "power_max_previous_year_kw", None),
+        value_fn=lambda res: res.power_max_previous_year_kw,
     ),
     HeatMeterSensorEntityDescription(
         key="flowrate_max_m3ph",
@@ -159,7 +159,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "flowrate_max_m3ph", None),
+        value_fn=lambda res: res.flowrate_max_m3ph,
     ),
     HeatMeterSensorEntityDescription(
         key="flowrate_max_previous_year_m3ph",
@@ -167,7 +167,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "flowrate_max_previous_year_m3ph", None),
+        value_fn=lambda res: res.flowrate_max_previous_year_m3ph,
     ),
     HeatMeterSensorEntityDescription(
         key="return_temperature_max_c",
@@ -175,7 +175,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "return_temperature_max_c", None),
+        value_fn=lambda res: res.return_temperature_max_c,
     ),
     HeatMeterSensorEntityDescription(
         key="return_temperature_max_previous_year_c",
@@ -183,9 +183,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(
-            res, "return_temperature_max_previous_year_c", None
-        ),
+        value_fn=lambda res: res.return_temperature_max_previous_year_c,
     ),
     HeatMeterSensorEntityDescription(
         key="flow_temperature_max_c",
@@ -193,7 +191,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "flow_temperature_max_c", None),
+        value_fn=lambda res: res.flow_temperature_max_c,
     ),
     HeatMeterSensorEntityDescription(
         key="flow_temperature_max_previous_year_c",
@@ -201,7 +199,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "flow_temperature_max_previous_year_c", None),
+        value_fn=lambda res: res.flow_temperature_max_previous_year_c,
     ),
     HeatMeterSensorEntityDescription(
         key="operating_hours",
@@ -209,7 +207,7 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "operating_hours", None),
+        value_fn=lambda res: res.operating_hours,
     ),
     HeatMeterSensorEntityDescription(
         key="flow_hours",
@@ -217,7 +215,7 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "flow_hours", None),
+        value_fn=lambda res: res.flow_hours,
     ),
     HeatMeterSensorEntityDescription(
         key="fault_hours",
@@ -225,7 +223,7 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "fault_hours", None),
+        value_fn=lambda res: res.fault_hours,
     ),
     HeatMeterSensorEntityDescription(
         key="fault_hours_previous_year",
@@ -233,21 +231,21 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "fault_hours_previous_year", None),
+        value_fn=lambda res: res.fault_hours_previous_year,
     ),
     HeatMeterSensorEntityDescription(
         key="yearly_set_day",
         name="Yearly set day",
         icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "yearly_set_day", None),
+        value_fn=lambda res: res.yearly_set_day,
     ),
     HeatMeterSensorEntityDescription(
         key="monthly_set_day",
         name="Monthly set day",
         icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "monthly_set_day", None),
+        value_fn=lambda res: res.monthly_set_day,
     ),
     HeatMeterSensorEntityDescription(
         key="meter_date_time",
@@ -265,13 +263,13 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "measuring_range_m3ph", None),
+        value_fn=lambda res: res.measuring_range_m3ph,
     ),
     HeatMeterSensorEntityDescription(
         key="settings_and_firmware",
         name="Settings and firmware",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: getattr(res, "settings_and_firmware", None),
+        value_fn=lambda res: res.settings_and_firmware,
     ),
 )
 

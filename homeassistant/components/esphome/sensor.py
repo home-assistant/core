@@ -5,6 +5,7 @@ from datetime import datetime
 import math
 
 from aioesphomeapi import (
+    EntityInfo,
     SensorInfo,
     SensorState,
     SensorStateClass as EsphomeSensorStateClass,
@@ -19,17 +20,17 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from . import (
+from .entity import (
     EsphomeEntity,
-    EsphomeEnumMapper,
     esphome_state_property,
     platform_async_setup_entry,
 )
+from .enum_mapper import EsphomeEnumMapper
 
 
 async def async_setup_entry(
@@ -40,7 +41,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="sensor",
         info_type=SensorInfo,
         entity_type=EsphomeSensor,
         state_type=SensorState,
@@ -49,7 +49,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="text_sensor",
         info_type=TextSensorInfo,
         entity_type=EsphomeTextSensor,
         state_type=TextSensorState,
@@ -71,50 +70,41 @@ _STATE_CLASSES: EsphomeEnumMapper[
 class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
 
-    @property
-    def force_update(self) -> bool:
-        """Return if this sensor should force a state update."""
-        return self._static_info.force_update
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
+        self._attr_force_update = static_info.force_update
+        # protobuf doesn't support nullable strings so we need to check
+        # if the string is empty
+        if unit_of_measurement := static_info.unit_of_measurement:
+            self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_device_class = try_parse_enum(
+            SensorDeviceClass, static_info.device_class
+        )
+        if not (state_class := static_info.state_class):
+            return
+        if (
+            state_class == EsphomeSensorStateClass.MEASUREMENT
+            and static_info.last_reset_type == LastResetType.AUTO
+        ):
+            # Legacy, last_reset_type auto was the equivalent to the
+            # TOTAL_INCREASING state class
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        else:
+            self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
     @esphome_state_property
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
-        if math.isnan(self._state.state):
+        state = self._state
+        if math.isnan(state.state) or state.missing_state:
             return None
-        if self._state.missing_state:
-            return None
-        if self.device_class == SensorDeviceClass.TIMESTAMP:
-            return dt.utc_from_timestamp(self._state.state)
-        return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        if not self._static_info.unit_of_measurement:
-            return None
-        return self._static_info.unit_of_measurement
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return try_parse_enum(SensorDeviceClass, self._static_info.device_class)
-
-    @property
-    def state_class(self) -> SensorStateClass | None:
-        """Return the state class of this entity."""
-        if not self._static_info.state_class:
-            return None
-        state_class = self._static_info.state_class
-        reset_type = self._static_info.last_reset_type
-        if (
-            state_class == EsphomeSensorStateClass.MEASUREMENT
-            and reset_type == LastResetType.AUTO
-        ):
-            # Legacy, last_reset_type auto was the equivalent to the
-            # TOTAL_INCREASING state class
-            return SensorStateClass.TOTAL_INCREASING
-        return _STATE_CLASSES.from_esphome(self._static_info.state_class)
+        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+            return dt_util.utc_from_timestamp(state.state)
+        return f"{state.state:.{self._static_info.accuracy_decimals}f}"
 
 
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
@@ -124,6 +114,5 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
     @esphome_state_property
     def native_value(self) -> str | None:
         """Return the state of the entity."""
-        if self._state.missing_state:
-            return None
-        return self._state.state
+        state = self._state
+        return None if state.missing_state else state.state

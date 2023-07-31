@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/apprise",
   "iot_class": "cloud_push",
   "loggers": ["apprise"],
-  "requirements": ["apprise==1.3.0"]
+  "requirements": ["apprise==1.4.5"]
 }

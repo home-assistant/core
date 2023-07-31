@@ -24,7 +24,7 @@
       },
       "discovery_confirm": {
         "title": "UniFi Protect Discovered",
-        "description": "Do you want to set up {name} ({ip_address})? [%key:component::unifiprotect::config::step::user::description%]",
+        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -66,7 +66,7 @@
             "description": "You are using v{version} of UniFi Protect which is an Early Access version. [Early Access versions are not supported by Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) and it is recommended to go back to a stable release as soon as possible.\n\nBy submitting this form you have either [downgraded UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) or you agree to run an unsupported version of UniFi Protect."
           },
           "confirm": {
-            "title": "v{version} is an Early Access version",
+            "title": "[%key:component::unifiprotect::issues::ea_warning::fix_flow::step::start::title%]",
             "description": "Are you sure you want to run unsupported versions of UniFi Protect? This may cause your Home Assistant integration to break."
           }
         }
@@ -75,21 +75,6 @@
     "ea_setup_failed": {
       "title": "Setup error using Early Access version",
       "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}"
-    },
-    "deprecate_smart_sensor": {
-      "title": "Smart Detection Sensor Deprecated",
-      "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
-    },
-    "deprecated_service_set_doorbell_message": {
-      "title": "set_doorbell_message is Deprecated",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "set_doorbell_message is Deprecated",
-            "description": "The `unifiprotect.set_doorbell_message` service is deprecated in favor of the new Doorbell Text entity added to each Doorbell device. It will be removed in v2023.3.0. Please update to use the [`text.set_value` service]({link})."
-          }
-        }
-      }
     }
   },
   "entity": {
@@ -97,6 +82,64 @@
       "license_plate": {
         "state": {
           "none": "Clear"
+        }
+      }
+    }
+  },
+  "services": {
+    "add_doorbell_text": {
+      "name": "Add custom doorbell text",
+      "description": "Adds a new custom message for doorbells.",
+      "fields": {
+        "device_id": {
+          "name": "UniFi Protect NVR",
+          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances."
+        },
+        "message": {
+          "name": "Custom message",
+          "description": "New custom message to add for doorbells. Must be less than 30 characters."
+        }
+      }
+    },
+    "remove_doorbell_text": {
+      "name": "Remove custom doorbell text",
+      "description": "Removes an existing message for doorbells.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]",
+          "description": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::description%]"
+        },
+        "message": {
+          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::message::name%]",
+          "description": "Existing custom message to remove for doorbells."
+        }
+      }
+    },
+    "set_default_doorbell_text": {
+      "name": "Set default doorbell text",
+      "description": "Sets the default doorbell message. This will be the message that is automatically selected when a message \"expires\".",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]",
+          "description": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::description%]"
+        },
+        "message": {
+          "name": "Default message",
+          "description": "The default message for your doorbell. Must be less than 30 characters."
+        }
+      }
+    },
+    "set_chime_paired_doorbells": {
+      "name": "Set chime paired doorbells",
+      "description": "Use to set the paired doorbell(s) with a smart chime.",
+      "fields": {
+        "device_id": {
+          "name": "Chime",
+          "description": "The chimes to link to the doorbells to."
+        },
+        "doorbells": {
+          "name": "Doorbells",
+          "description": "The doorbells to link to the chime."
         }
       }
     }

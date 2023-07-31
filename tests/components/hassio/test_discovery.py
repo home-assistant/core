@@ -89,6 +89,7 @@ async def test_hassio_discovery_startup(
             },
             name="Mosquitto Test",
             slug="mosquitto",
+            uuid="test",
         )
     )
 
@@ -153,6 +154,7 @@ async def test_hassio_discovery_startup_done(
                 },
                 name="Mosquitto Test",
                 slug="mosquitto",
+                uuid="test",
             )
         )
 
@@ -207,5 +209,6 @@ async def test_hassio_discovery_webhook(
             },
             name="Mosquitto Test",
             slug="mosquitto",
+            uuid="test",
         )
     )

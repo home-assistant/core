@@ -4,20 +4,21 @@ from unittest.mock import MagicMock
 
 from whirlpool.washerdryer import MachineState
 
+from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import as_timestamp, utc_from_timestamp
+from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
 from . import init_integration
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 
 async def update_sensor_state(
     hass: HomeAssistant,
     entity_id: str,
     mock_sensor_api_instance: MagicMock,
-) -> None:
+) -> State:
     """Simulate an update trigger from the API."""
 
     for call in mock_sensor_api_instance.register_attr_callback.call_args_list:
@@ -131,6 +132,12 @@ async def test_washer_sensor_values(
     )
 
     await init_integration(hass)
+
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
 
     entity_id = "sensor.washer_state"
     mock_instance = mock_sensor1_api
@@ -298,6 +305,24 @@ async def test_restore_state(
     assert state.state == thetimestamp.isoformat()
     state = hass.states.get("sensor.dryer_end_time")
     assert state.state == thetimestamp.isoformat()
+
+
+async def test_no_restore_state(
+    hass: HomeAssistant,
+    mock_sensor_api_instances: MagicMock,
+    mock_sensor1_api: MagicMock,
+) -> None:
+    """Test sensor restore state with no restore."""
+    # create and add entry
+    entity_id = "sensor.washer_end_time"
+    await init_integration(hass)
+    # restore from cache
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"
+
+    mock_sensor1_api.get_machine_state.return_value = MachineState.RunningMainCycle
+    state = await update_sensor_state(hass, entity_id, mock_sensor1_api)
+    assert state.state != "unknown"
 
 
 async def test_callback(

@@ -25,9 +25,11 @@ async def async_setup_entry(
 class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
     """StarLine device tracker."""
 
+    _attr_translation_key = "location"
+
     def __init__(self, account: StarlineAccount, device: StarlineDevice) -> None:
         """Set up StarLine entity."""
-        super().__init__(account, device, "location", "Location")
+        super().__init__(account, device, "location")
 
     @property
     def extra_state_attributes(self):

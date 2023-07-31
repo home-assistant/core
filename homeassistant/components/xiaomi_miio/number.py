@@ -441,7 +441,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         return await self._try_command(
             "Setting delay off miio device failed.",
             self._device.delay_off,
-            delay_off_countdown * 60,
+            delay_off_countdown,
         )
 
     async def async_set_led_brightness_level(self, level: int) -> bool:

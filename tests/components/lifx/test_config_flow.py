@@ -546,9 +546,11 @@ async def test_suggested_area(hass: HomeAssistant) -> None:
             self.bulb = bulb
             self.lifx_group = kwargs.get("lifx_group")
 
-        def __call__(self, *args, **kwargs):
+        def __call__(self, callb=None, *args, **kwargs):
             """Call command."""
             self.bulb.group = self.lifx_group
+            if callb:
+                callb(self.bulb, self.lifx_group)
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.2.3.4"}, unique_id=SERIAL

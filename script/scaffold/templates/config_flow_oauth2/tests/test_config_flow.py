@@ -5,14 +5,14 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.NEW_DOMAIN.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
-)
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow

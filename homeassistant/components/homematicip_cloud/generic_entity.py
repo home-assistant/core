@@ -161,7 +161,7 @@ class HomematicipGenericEntity(Entity):
             if device_id in device_registry.devices:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
-        else:
+        else:  # noqa: PLR5501
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
             if entity_id := self.registry_entry.entity_id:
@@ -185,9 +185,8 @@ class HomematicipGenericEntity(Entity):
         if hasattr(self._device, "functionalChannels"):
             if self._is_multi_channel:
                 name = self._device.functionalChannels[self._channel].label
-            else:
-                if len(self._device.functionalChannels) > 1:
-                    name = self._device.functionalChannels[1].label
+            elif len(self._device.functionalChannels) > 1:
+                name = self._device.functionalChannels[1].label
 
         # Use device label, if name is not defined by channel label.
         if not name:

@@ -27,7 +27,7 @@ class SchemaFlowStep:
     """Define a config or options flow step."""
 
 
-@dataclass
+@dataclass(slots=True)
 class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
@@ -79,7 +79,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """
 
 
-@dataclass
+@dataclass(slots=True)
 class SchemaFlowMenuStep(SchemaFlowStep):
     """Define a config or options flow menu step."""
 

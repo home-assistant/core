@@ -20,6 +20,7 @@ from awesomeversion import (
 import ciso8601
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
+from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
@@ -198,6 +199,7 @@ def execute_stmt_lambda_element(
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int = DEFAULT_YIELD_STATES_ROWS,
+    orm_rows: bool = True,
 ) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
@@ -210,10 +212,13 @@ def execute_stmt_lambda_element(
     specific entities) since they are usually faster
     with .all().
     """
-    executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
         try:
+            if orm_rows:
+                executed = session.execute(stmt)
+            else:
+                executed = session.connection().execute(stmt)
             if use_all:
                 return executed.all()
             return executed.yield_per(yield_per)
@@ -273,9 +278,11 @@ def basic_sanity_check(cursor: SQLiteCursor) -> bool:
 
     for table in TABLES_TO_CHECK:
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
-            cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
+            cursor.execute(f"SELECT * FROM {table};")  # noqa: S608 # not injection
         else:
-            cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
+            cursor.execute(
+                f"SELECT * FROM {table} LIMIT 1;"  # noqa: S608 # not injection
+            )
 
     return True
 
@@ -344,14 +351,14 @@ def move_away_broken_database(dbfile: str) -> None:
         os.rename(path, f"{path}{corrupt_postfix}")
 
 
-def execute_on_connection(dbapi_connection: Any, statement: str) -> None:
+def execute_on_connection(dbapi_connection: DBAPIConnection, statement: str) -> None:
     """Execute a single statement with a dbapi connection."""
     cursor = dbapi_connection.cursor()
     cursor.execute(statement)
     cursor.close()
 
 
-def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
+def query_on_connection(dbapi_connection: DBAPIConnection, statement: str) -> Any:
     """Execute a single statement with a dbapi connection and return the result."""
     cursor = dbapi_connection.cursor()
     cursor.execute(statement)
@@ -457,7 +464,7 @@ def _async_create_mariadb_range_index_regression_issue(
 def setup_connection_for_dialect(
     instance: Recorder,
     dialect_name: str,
-    dbapi_connection: Any,
+    dbapi_connection: DBAPIConnection,
     first_connection: bool,
 ) -> DatabaseEngine | None:
     """Execute statements needed for dialect connection."""
@@ -465,10 +472,10 @@ def setup_connection_for_dialect(
     slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
-            old_isolation = dbapi_connection.isolation_level
-            dbapi_connection.isolation_level = None
+            old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
+            dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
             execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
-            dbapi_connection.isolation_level = old_isolation
+            dbapi_connection.isolation_level = old_isolation  # type: ignore[attr-defined]
             # WAL mode only needs to be setup once
             # instead of every time we open the sqlite connection
             # as its persistent and isn't free to call every time.
@@ -523,11 +530,10 @@ def setup_connection_for_dialect(
                         version,
                     )
 
-            else:
-                if not version or version < MIN_VERSION_MYSQL:
-                    _fail_unsupported_version(
-                        version or version_string, "MySQL", MIN_VERSION_MYSQL
-                    )
+            elif not version or version < MIN_VERSION_MYSQL:
+                _fail_unsupported_version(
+                    version or version_string, "MySQL", MIN_VERSION_MYSQL
+                )
 
             slow_range_in_select = bool(
                 not version
@@ -672,6 +678,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:
             connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))
+            connection.execute(text("PRAGMA OPTIMIZE;"))
 
 
 @contextmanager

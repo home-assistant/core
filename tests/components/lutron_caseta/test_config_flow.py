@@ -1,9 +1,9 @@
 """Test the Lutron Caseta config flow."""
 import asyncio
+from pathlib import Path
 import ssl
 from unittest.mock import AsyncMock, patch
 
-import py
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY
 from pylutron_caseta.smartbridge import Smartbridge
 import pytest
@@ -193,12 +193,11 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
 
 
-async def test_form_user(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we get the form and can pair."""
-
-    hass.config.config_dir = await hass.async_add_executor_job(
-        tmpdir.mkdir, "tls_assets"
-    )
+    config_dir = tmp_path / "tls_assets"
+    await hass.async_add_executor_job(config_dir.mkdir)
+    hass.config.config_dir = str(config_dir)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -244,14 +243,11 @@ async def test_form_user(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_pairing_fails(
-    hass: HomeAssistant, tmpdir: py.path.local
-) -> None:
+async def test_form_user_pairing_fails(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we get the form and we handle pairing failure."""
-
-    hass.config.config_dir = await hass.async_add_executor_job(
-        tmpdir.mkdir, "tls_assets"
-    )
+    config_dir = tmp_path / "tls_assets"
+    await hass.async_add_executor_job(config_dir.mkdir)
+    hass.config.config_dir = str(config_dir)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -292,13 +288,12 @@ async def test_form_user_pairing_fails(
 
 
 async def test_form_user_reuses_existing_assets_when_pairing_again(
-    hass: HomeAssistant, tmpdir: py.path.local
+    hass: HomeAssistant, tmp_path: Path
 ) -> None:
     """Test the tls assets saved on disk are reused when pairing again."""
-
-    hass.config.config_dir = await hass.async_add_executor_job(
-        tmpdir.mkdir, "tls_assets"
-    )
+    config_dir = tmp_path / "tls_assets"
+    await hass.async_add_executor_job(config_dir.mkdir)
+    hass.config.config_dir = str(config_dir)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -394,13 +389,12 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
 
 
 async def test_zeroconf_host_already_configured(
-    hass: HomeAssistant, tmpdir: py.path.local
+    hass: HomeAssistant, tmp_path: Path
 ) -> None:
     """Test starting a flow from discovery when the host is already configured."""
-
-    hass.config.config_dir = await hass.async_add_executor_job(
-        tmpdir.mkdir, "tls_assets"
-    )
+    config_dir = tmp_path / "tls_assets"
+    await hass.async_add_executor_job(config_dir.mkdir)
+    hass.config.config_dir = str(config_dir)
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
 
@@ -479,12 +473,11 @@ async def test_zeroconf_not_lutron_device(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "source", (config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_HOMEKIT)
 )
-async def test_zeroconf(hass: HomeAssistant, source, tmpdir: py.path.local) -> None:
+async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
     """Test starting a flow from discovery."""
-
-    hass.config.config_dir = await hass.async_add_executor_job(
-        tmpdir.mkdir, "tls_assets"
-    )
+    config_dir = tmp_path / "tls_assets"
+    await hass.async_add_executor_job(config_dir.mkdir)
+    hass.config.config_dir = str(config_dir)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

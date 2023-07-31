@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
@@ -80,6 +80,9 @@ _PHASE_UPDATES = {
 }
 
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track the state of the sun."""
     hass.async_create_task(
@@ -118,6 +121,9 @@ class Sun(Entity):
 
     _attr_name = "Sun"
     entity_id = ENTITY_ID
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
 
     location: Location
     elevation: Elevation

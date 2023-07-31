@@ -1,30 +1,32 @@
 # serializer version: 1
 # name: test_sensors
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'http://192.168.0.1',
-    'connections': set({
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': 'http://192.168.0.1',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sfr_box',
+          'e4:5d:51:00:11:22',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': None,
+      'model': 'NB6VAC-FXC-r0',
+      'name': 'SFR Box',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': 'NB6VAC-MAIN-R4.0.44k',
+      'via_device_id': None,
     }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'sfr_box',
-        'e4:5d:51:00:11:22',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': None,
-    'model': 'NB6VAC-FXC-r0',
-    'name': 'SFR Box',
-    'name_by_user': None,
-    'suggested_area': None,
-    'sw_version': 'NB6VAC-MAIN-R4.0.44k',
-    'via_device_id': None,
-  })
+  ])
 # ---
 # name: test_sensors.1
   list([
@@ -87,7 +89,7 @@
       'original_name': 'Voltage',
       'platform': 'sfr_box',
       'supported_features': 0,
-      'translation_key': 'voltage',
+      'translation_key': None,
       'unique_id': 'e4:5d:51:00:11:22_system_alimvoltage',
       'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
@@ -115,7 +117,7 @@
       'original_name': 'Temperature',
       'platform': 'sfr_box',
       'supported_features': 0,
-      'translation_key': 'temperature',
+      'translation_key': None,
       'unique_id': 'e4:5d:51:00:11:22_system_temperature',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -499,242 +501,216 @@
     }),
   ])
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_attenuation_down]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'SFR Box DSL attenuation down',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+# name: test_sensors.2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'enum',
+        'friendly_name': 'SFR Box Network infrastructure',
+        'options': list([
+          'adsl',
+          'ftth',
+          'gprs',
+          'unknown',
+        ]),
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_network_infrastructure',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'adsl',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_attenuation_down',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '28.5',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_attenuation_up]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'SFR Box DSL attenuation up',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'voltage',
+        'friendly_name': 'SFR Box Voltage',
+        'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_voltage',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '12251',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_attenuation_up',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.8',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_counter]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box DSL counter',
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'temperature',
+        'friendly_name': 'SFR Box Temperature',
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_temperature',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '27.56',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_counter',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '16',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_crc]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box DSL CRC',
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'enum',
+        'friendly_name': 'SFR Box WAN mode',
+        'options': list([
+          'adsl_ppp',
+          'adsl_routed',
+          'ftth_routed',
+          'grps_ppp',
+          'unknown',
+        ]),
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_wan_mode',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'adsl_routed',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_crc',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_line_mode]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box DSL line mode',
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'SFR Box DSL line mode',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_line_mode',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'ADSL2+',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_line_mode',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'ADSL2+',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_line_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'SFR Box DSL line status',
-      'options': list([
-        'no_defect',
-        'of_frame',
-        'loss_of_signal',
-        'loss_of_power',
-        'loss_of_signal_quality',
-        'unknown',
-      ]),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'SFR Box DSL counter',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_counter',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '16',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_line_status',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_defect',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_noise_down]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'SFR Box DSL noise down',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'SFR Box DSL CRC',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_crc',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '0',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_noise_down',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5.8',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_noise_up]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'SFR Box DSL noise up',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'signal_strength',
+        'friendly_name': 'SFR Box DSL noise down',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'dB',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_noise_down',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '5.8',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_noise_up',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '6.0',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_rate_down]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'SFR Box DSL rate down',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'signal_strength',
+        'friendly_name': 'SFR Box DSL noise up',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'dB',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_noise_up',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '6.0',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_rate_down',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5549',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_rate_up]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'SFR Box DSL rate up',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'signal_strength',
+        'friendly_name': 'SFR Box DSL attenuation down',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'dB',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_attenuation_down',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '28.5',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_rate_up',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '187',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_dsl_training]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'SFR Box DSL training',
-      'options': list([
-        'idle',
-        'g_994_training',
-        'g_992_started',
-        'g_922_channel_analysis',
-        'g_992_message_exchange',
-        'g_993_started',
-        'g_993_channel_analysis',
-        'g_993_message_exchange',
-        'showtime',
-        'unknown',
-      ]),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'signal_strength',
+        'friendly_name': 'SFR Box DSL attenuation up',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'dB',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_attenuation_up',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '20.8',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_training',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'showtime',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_network_infrastructure]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'SFR Box Network infrastructure',
-      'options': list([
-        'adsl',
-        'ftth',
-        'gprs',
-        'unknown',
-      ]),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'data_rate',
+        'friendly_name': 'SFR Box DSL rate down',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_rate_down',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '5549',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_network_infrastructure',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'adsl',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_temperature]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'SFR Box Temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'data_rate',
+        'friendly_name': 'SFR Box DSL rate up',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_rate_up',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '187',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_temperature',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '27.56',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_voltage]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'SFR Box Voltage',
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'enum',
+        'friendly_name': 'SFR Box DSL line status',
+        'options': list([
+          'no_defect',
+          'of_frame',
+          'loss_of_signal',
+          'loss_of_power',
+          'loss_of_signal_quality',
+          'unknown',
+        ]),
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_line_status',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'no_defect',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_voltage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '12251',
-  })
-# ---
-# name: test_sensors[sensor.sfr_box_wan_mode]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'SFR Box WAN mode',
-      'options': list([
-        'adsl_ppp',
-        'adsl_routed',
-        'ftth_routed',
-        'grps_ppp',
-        'unknown',
-      ]),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'enum',
+        'friendly_name': 'SFR Box DSL training',
+        'options': list([
+          'idle',
+          'g_994_training',
+          'g_992_started',
+          'g_922_channel_analysis',
+          'g_992_message_exchange',
+          'g_993_started',
+          'g_993_channel_analysis',
+          'g_993_message_exchange',
+          'showtime',
+          'unknown',
+        ]),
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sfr_box_dsl_training',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'showtime',
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_wan_mode',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'adsl_routed',
-  })
+  ])
 # ---

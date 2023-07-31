@@ -39,11 +39,6 @@
     }
   },
   "entity": {
-    "button": {
-      "restart": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      }
-    },
     "sensor": {
       "bme280_humidity": {
         "name": "BME280 humidity"
@@ -89,13 +84,13 @@
         }
       },
       "pmsx003_pm1": {
-        "name": "PMSx003 particulate matter 1 μm"
+        "name": "PMSx003 PM1"
       },
       "pmsx003_pm10": {
-        "name": "PMSx003 particulate matter 10 μm"
+        "name": "PMSx003 PM10"
       },
       "pmsx003_pm25": {
-        "name": "PMSx003 particulate matter 2.5 μm"
+        "name": "PMSx003 PM2.5"
       },
       "sds011_caqi": {
         "name": "SDS011 common air quality index"
@@ -111,10 +106,10 @@
         }
       },
       "sds011_pm10": {
-        "name": "SDS011 particulate matter 10 μm"
+        "name": "SDS011 PM10"
       },
       "sds011_pm25": {
-        "name": "SDS011 particulate matter 2.5 μm"
+        "name": "SDS011 PM2.5"
       },
       "sht3x_humidity": {
         "name": "SHT3X humidity"
@@ -136,25 +131,22 @@
         }
       },
       "sps30_pm1": {
-        "name": "SPS30 particulate matter 1 μm"
+        "name": "SPS30 PM1"
       },
       "sps30_pm10": {
-        "name": "SPS30 particulate matter 10 μm"
+        "name": "SPS30 PM10"
       },
       "sps30_pm25": {
-        "name": "SPS30 particulate matter 2.5 μm"
+        "name": "SPS30 PM2.5"
       },
       "sps30_pm4": {
-        "name": "SPS30 Particulate matter 4 μm"
+        "name": "SPS30 PM4"
       },
       "dht22_humidity": {
         "name": "DHT22 humidity"
       },
       "dht22_temperature": {
         "name": "DHT22 temperature"
-      },
-      "signal_strength": {
-        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       },
       "last_restart": {
         "name": "Last restart"

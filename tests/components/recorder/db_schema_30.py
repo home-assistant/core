@@ -9,10 +9,10 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, TypedDict, cast, overload
+from typing import Any, Self, TypedDict, cast, overload
 
 import ciso8601
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     JSON,
     BigInteger,
@@ -34,7 +34,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
-from typing_extensions import Self
 
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.const import (

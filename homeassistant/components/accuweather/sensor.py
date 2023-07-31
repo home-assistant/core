@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     PERCENTAGE,
     UV_INDEX,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -24,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AccuWeatherDataUpdateCoordinator
@@ -49,7 +49,7 @@ PARALLEL_UPDATES = 1
 class AccuWeatherSensorDescriptionMixin:
     """Mixin for AccuWeather sensor."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], str | int | float | None]
 
 
 @dataclass
@@ -58,162 +58,281 @@ class AccuWeatherSensorDescription(
 ):
     """Class describing AccuWeather sensor entities."""
 
-    attr_fn: Callable[[dict[str, Any]], dict[str, StateType]] = lambda _: {}
+    attr_fn: Callable[[dict[str, Any]], dict[str, Any]] = lambda _: {}
+    day: int | None = None
 
 
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
-    AccuWeatherSensorDescription(
-        key="CloudCoverDay",
-        icon="mdi:weather-cloudy",
-        name="Cloud cover day",
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(int, data),
+    *(
+        AccuWeatherSensorDescription(
+            key="AirQuality",
+            icon="mdi:air-filter",
+            value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+            device_class=SensorDeviceClass.ENUM,
+            options=["good", "hazardous", "high", "low", "moderate", "unhealthy"],
+            translation_key=f"air_quality_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="CloudCoverNight",
-        icon="mdi:weather-cloudy",
-        name="Cloud cover night",
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(int, data),
+    *(
+        AccuWeatherSensorDescription(
+            key="CloudCoverDay",
+            icon="mdi:weather-cloudy",
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=PERCENTAGE,
+            value_fn=lambda data: cast(int, data),
+            translation_key=f"cloud_cover_day_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="Grass",
-        icon="mdi:grass",
-        name="Grass pollen",
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
-        value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+    *(
+        AccuWeatherSensorDescription(
+            key="CloudCoverNight",
+            icon="mdi:weather-cloudy",
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=PERCENTAGE,
+            value_fn=lambda data: cast(int, data),
+            translation_key=f"cloud_cover_night_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="HoursOfSun",
-        icon="mdi:weather-partly-cloudy",
-        name="Hours of sun",
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        value_fn=lambda data: cast(float, data),
+    *(
+        AccuWeatherSensorDescription(
+            key="Grass",
+            icon="mdi:grass",
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+            value_fn=lambda data: cast(int, data[ATTR_VALUE]),
+            attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+            translation_key=f"grass_pollen_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="Mold",
-        icon="mdi:blur",
-        name="Mold pollen",
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
-        value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+    *(
+        AccuWeatherSensorDescription(
+            key="HoursOfSun",
+            icon="mdi:weather-partly-cloudy",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            value_fn=lambda data: cast(float, data),
+            translation_key=f"hours_of_sun_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="Ozone",
-        icon="mdi:vector-triangle",
-        name="Ozone",
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+    *(
+        AccuWeatherSensorDescription(
+            key="LongPhraseDay",
+            value_fn=lambda data: cast(str, data),
+            translation_key=f"condition_day_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="Ragweed",
-        icon="mdi:sprout",
-        name="Ragweed pollen",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+    *(
+        AccuWeatherSensorDescription(
+            key="LongPhraseNight",
+            value_fn=lambda data: cast(str, data),
+            translation_key=f"condition_night_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="RealFeelTemperatureMax",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        name="RealFeel temperature max",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+    *(
+        AccuWeatherSensorDescription(
+            key="Mold",
+            icon="mdi:blur",
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+            value_fn=lambda data: cast(int, data[ATTR_VALUE]),
+            attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+            translation_key=f"mold_pollen_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="RealFeelTemperatureMin",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        name="RealFeel temperature min",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+    *(
+        AccuWeatherSensorDescription(
+            key="Ragweed",
+            icon="mdi:sprout",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+            entity_registry_enabled_default=False,
+            value_fn=lambda data: cast(int, data[ATTR_VALUE]),
+            attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+            translation_key=f"ragweed_pollen_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="RealFeelTemperatureShadeMax",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        name="RealFeel temperature shade max",
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+    *(
+        AccuWeatherSensorDescription(
+            key="RealFeelTemperatureMax",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+            translation_key=f"realfeel_temperature_max_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="RealFeelTemperatureShadeMin",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        name="RealFeel temperature shade min",
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+    *(
+        AccuWeatherSensorDescription(
+            key="RealFeelTemperatureMin",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+            translation_key=f"realfeel_temperature_min_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="ThunderstormProbabilityDay",
-        icon="mdi:weather-lightning",
-        name="Thunderstorm probability day",
-        native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(int, data),
+    *(
+        AccuWeatherSensorDescription(
+            key="RealFeelTemperatureShadeMax",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+            translation_key=f"realfeel_temperature_shade_max_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="ThunderstormProbabilityNight",
-        icon="mdi:weather-lightning",
-        name="Thunderstorm probability night",
-        native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(int, data),
+    *(
+        AccuWeatherSensorDescription(
+            key="RealFeelTemperatureShadeMin",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+            translation_key=f"realfeel_temperature_shade_min_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="Tree",
-        icon="mdi:tree-outline",
-        name="Tree pollen",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+    *(
+        AccuWeatherSensorDescription(
+            key="SolarIrradianceDay",
+            icon="mdi:weather-sunny",
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+            value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+            translation_key=f"solar_irradiance_day_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="UVIndex",
-        icon="mdi:weather-sunny",
-        name="UV index",
-        native_unit_of_measurement=UV_INDEX,
-        value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+    *(
+        AccuWeatherSensorDescription(
+            key="SolarIrradianceNight",
+            icon="mdi:weather-sunny",
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+            value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+            translation_key=f"solar_irradiance_night_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="WindGustDay",
-        device_class=SensorDeviceClass.WIND_SPEED,
-        name="Wind gust day",
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+    *(
+        AccuWeatherSensorDescription(
+            key="ThunderstormProbabilityDay",
+            icon="mdi:weather-lightning",
+            native_unit_of_measurement=PERCENTAGE,
+            value_fn=lambda data: cast(int, data),
+            translation_key=f"thunderstorm_probability_day_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="WindGustNight",
-        device_class=SensorDeviceClass.WIND_SPEED,
-        name="Wind gust night",
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+    *(
+        AccuWeatherSensorDescription(
+            key="ThunderstormProbabilityNight",
+            icon="mdi:weather-lightning",
+            native_unit_of_measurement=PERCENTAGE,
+            value_fn=lambda data: cast(int, data),
+            translation_key=f"thunderstorm_probability_night_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="WindDay",
-        device_class=SensorDeviceClass.WIND_SPEED,
-        name="Wind day",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+    *(
+        AccuWeatherSensorDescription(
+            key="Tree",
+            icon="mdi:tree-outline",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+            entity_registry_enabled_default=False,
+            value_fn=lambda data: cast(int, data[ATTR_VALUE]),
+            attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+            translation_key=f"tree_pollen_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
-    AccuWeatherSensorDescription(
-        key="WindNight",
-        device_class=SensorDeviceClass.WIND_SPEED,
-        name="Wind night",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+    *(
+        AccuWeatherSensorDescription(
+            key="UVIndex",
+            icon="mdi:weather-sunny",
+            native_unit_of_measurement=UV_INDEX,
+            value_fn=lambda data: cast(int, data[ATTR_VALUE]),
+            attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+            translation_key=f"uv_index_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
+    ),
+    *(
+        AccuWeatherSensorDescription(
+            key="WindGustDay",
+            device_class=SensorDeviceClass.WIND_SPEED,
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+            value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
+            attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+            translation_key=f"wind_gust_speed_day_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
+    ),
+    *(
+        AccuWeatherSensorDescription(
+            key="WindGustNight",
+            device_class=SensorDeviceClass.WIND_SPEED,
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+            value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
+            attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+            translation_key=f"wind_gust_speed_night_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
+    ),
+    *(
+        AccuWeatherSensorDescription(
+            key="WindDay",
+            device_class=SensorDeviceClass.WIND_SPEED,
+            native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+            value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
+            attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+            translation_key=f"wind_speed_day_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
+    ),
+    *(
+        AccuWeatherSensorDescription(
+            key="WindNight",
+            device_class=SensorDeviceClass.WIND_SPEED,
+            native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+            value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
+            attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+            translation_key=f"wind_speed_night_{day}d",
+            day=day,
+        )
+        for day in range(MAX_FORECAST_DAYS + 1)
     ),
 )
 
@@ -221,118 +340,117 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="ApparentTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Apparent temperature",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
+        translation_key="apparent_temperature",
     ),
     AccuWeatherSensorDescription(
         key="Ceiling",
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:weather-fog",
-        name="Cloud ceiling",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.METERS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
         suggested_display_precision=0,
+        translation_key="cloud_ceiling",
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",
         icon="mdi:weather-cloudy",
-        name="Cloud cover",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data),
+        translation_key="cloud_cover",
     ),
     AccuWeatherSensorDescription(
         key="DewPoint",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Dew point",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
+        translation_key="dew_point",
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="RealFeel temperature",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
+        translation_key="realfeel_temperature",
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureShade",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="RealFeel temperature shade",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
+        translation_key="realfeel_temperature_shade",
     ),
     AccuWeatherSensorDescription(
         key="Precipitation",
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
-        name="Precipitation",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
         attr_fn=lambda data: {"type": data["PrecipitationType"]},
+        translation_key="precipitation",
     ),
     AccuWeatherSensorDescription(
         key="PressureTendency",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:gauge",
-        name="Pressure tendency",
         options=["falling", "rising", "steady"],
-        translation_key="pressure_tendency",
         value_fn=lambda data: cast(str, data["LocalizedText"]).lower(),
+        translation_key="pressure_tendency",
     ),
     AccuWeatherSensorDescription(
         key="UVIndex",
         icon="mdi:weather-sunny",
-        name="UV index",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data),
         attr_fn=lambda data: {ATTR_LEVEL: data["UVIndexText"]},
+        translation_key="uv_index",
     ),
     AccuWeatherSensorDescription(
         key="WetBulbTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Wet bulb temperature",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
+        translation_key="wet_bulb_temperature",
     ),
     AccuWeatherSensorDescription(
         key="WindChillTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Wind chill temperature",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
+        translation_key="wind_chill_temperature",
     ),
     AccuWeatherSensorDescription(
         key="Wind",
         device_class=SensorDeviceClass.WIND_SPEED,
-        name="Wind",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][API_METRIC][ATTR_VALUE]),
+        translation_key="wind_speed",
     ),
     AccuWeatherSensorDescription(
         key="WindGust",
         device_class=SensorDeviceClass.WIND_SPEED,
-        name="Wind gust",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][API_METRIC][ATTR_VALUE]),
+        translation_key="wind_gust_speed",
     ),
 )
 
@@ -349,14 +467,12 @@ async def async_setup_entry(
     ]
 
     if coordinator.forecast:
-        # Some air quality/allergy sensors are only available for certain
-        # locations.
-        sensors.extend(
-            AccuWeatherSensor(coordinator, description, forecast_day=day)
-            for day in range(MAX_FORECAST_DAYS + 1)
-            for description in FORECAST_SENSOR_TYPES
-            if description.key in coordinator.data[ATTR_FORECAST][0]
-        )
+        for description in FORECAST_SENSOR_TYPES:
+            # Some air quality/allergy sensors are only available for certain
+            # locations.
+            if description.key not in coordinator.data[ATTR_FORECAST][description.day]:
+                continue
+            sensors.append(AccuWeatherSensor(coordinator, description))
 
     async_add_entities(sensors)
 
@@ -374,28 +490,24 @@ class AccuWeatherSensor(
         self,
         coordinator: AccuWeatherDataUpdateCoordinator,
         description: AccuWeatherSensorDescription,
-        forecast_day: int | None = None,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        self.forecast_day = description.day
         self.entity_description = description
         self._sensor_data = _get_sensor_data(
-            coordinator.data, description.key, forecast_day
+            coordinator.data, description.key, self.forecast_day
         )
-        if forecast_day is not None:
-            self._attr_name = f"{description.name} {forecast_day}d"
-            self._attr_unique_id = (
-                f"{coordinator.location_key}-{description.key}-{forecast_day}".lower()
-            )
+        if self.forecast_day is not None:
+            self._attr_unique_id = f"{coordinator.location_key}-{description.key}-{self.forecast_day}".lower()
         else:
             self._attr_unique_id = (
                 f"{coordinator.location_key}-{description.key}".lower()
             )
         self._attr_device_info = coordinator.device_info
-        self.forecast_day = forecast_day
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 

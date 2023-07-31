@@ -11,17 +11,20 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     authorisation_response,
-    entry,
     setup_integration,
     setup_integration_platform_not_ready,
 )
 from .const import MOCK_NUMBER_ENTITY_ID
 
+from tests.common import MockConfigEntry
 
-async def test_wallbox_number_class(hass: HomeAssistant) -> None:
+
+async def test_wallbox_number_class(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox sensor class."""
 
-    await setup_integration(hass)
+    await setup_integration(hass, entry)
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
@@ -47,10 +50,12 @@ async def test_wallbox_number_class(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> None:
+async def test_wallbox_number_class_connection_error(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox sensor class."""
 
-    await setup_integration(hass)
+    await setup_integration(hass, entry)
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
@@ -77,10 +82,12 @@ async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> Non
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_wallbox_number_class_platform_not_ready(hass: HomeAssistant) -> None:
+async def test_wallbox_number_class_platform_not_ready(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox lock not loaded on authentication error."""
 
-    await setup_integration_platform_not_ready(hass)
+    await setup_integration_platform_not_ready(hass, entry)
 
     state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
 

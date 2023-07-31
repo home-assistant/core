@@ -8,6 +8,7 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import fan, mqtt
 from homeassistant.components.fan import (
+    ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
@@ -15,6 +16,8 @@ from homeassistant.components.fan import (
     NotValidPresetModeError,
 )
 from homeassistant.components.mqtt.fan import (
+    CONF_DIRECTION_COMMAND_TOPIC,
+    CONF_DIRECTION_STATE_TOPIC,
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
     CONF_PERCENTAGE_COMMAND_TOPIC,
@@ -89,15 +92,12 @@ def fan_platform_only():
 async def test_fail_setup_if_no_command_topic(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test if command fails with command topic."""
     with pytest.raises(AssertionError):
-        await mqtt_mock_entry_no_yaml_config()
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['fan'][0]['command_topic']"
-        in caplog.text
-    )
+        await mqtt_mock_entry()
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -111,6 +111,8 @@ async def test_fail_setup_if_no_command_topic(
                     "command_topic": "command-topic",
                     "payload_off": "StAtE_OfF",
                     "payload_on": "StAtE_On",
+                    "direction_state_topic": "direction-state-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_state_topic": "oscillation-state-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "payload_oscillation_off": "OsC_OfF",
@@ -138,11 +140,11 @@ async def test_fail_setup_if_no_command_topic(
 )
 async def test_controlling_state_via_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the controlling state via topic."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -156,6 +158,14 @@ async def test_controlling_state_via_topic(
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get("oscillating") is False
+
+    async_fire_mqtt_message(hass, "direction-state-topic", "forward")
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "forward"
+
+    async_fire_mqtt_message(hass, "direction-state-topic", "reverse")
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "reverse"
 
     async_fire_mqtt_message(hass, "oscillation-state-topic", "OsC_On")
     state = hass.states.get("fan.test")
@@ -262,11 +272,11 @@ async def test_controlling_state_via_topic(
 )
 async def test_controlling_state_via_topic_with_different_speed_range(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the controlling state via topic using an alternate speed range."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     async_fire_mqtt_message(hass, "percentage-state-topic1", "100")
     state = hass.states.get("fan.test1")
@@ -314,11 +324,11 @@ async def test_controlling_state_via_topic_with_different_speed_range(
 )
 async def test_controlling_state_via_topic_no_percentage_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the controlling state via topic without percentage topics."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -357,6 +367,8 @@ async def test_controlling_state_via_topic_no_percentage_topics(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
+                    "direction_state_topic": "direction-state-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_state_topic": "oscillation-state-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "percentage_state_topic": "percentage-state-topic",
@@ -372,6 +384,7 @@ async def test_controlling_state_via_topic_no_percentage_topics(
                         "silent",
                     ],
                     "state_value_template": "{{ value_json.val }}",
+                    "direction_value_template": "{{ value_json.val }}",
                     "oscillation_value_template": "{{ value_json.val }}",
                     "percentage_value_template": "{{ value_json.val }}",
                     "preset_mode_value_template": "{{ value_json.val }}",
@@ -384,11 +397,11 @@ async def test_controlling_state_via_topic_no_percentage_topics(
 )
 async def test_controlling_state_via_topic_and_json_message(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the controlling state via topic and JSON message (percentage mode)."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -406,6 +419,14 @@ async def test_controlling_state_via_topic_and_json_message(
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get("oscillating") is False
+
+    async_fire_mqtt_message(hass, "direction-state-topic", '{"val":"forward"}')
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "forward"
+
+    async_fire_mqtt_message(hass, "direction-state-topic", '{"val":"reverse"}')
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "reverse"
 
     async_fire_mqtt_message(hass, "oscillation-state-topic", '{"val":"oscillate_on"}')
     state = hass.states.get("fan.test")
@@ -464,6 +485,8 @@ async def test_controlling_state_via_topic_and_json_message(
                     "name": "test",
                     "state_topic": "shared-state-topic",
                     "command_topic": "command-topic",
+                    "direction_state_topic": "shared-state-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_state_topic": "shared-state-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "percentage_state_topic": "shared-state-topic",
@@ -479,6 +502,7 @@ async def test_controlling_state_via_topic_and_json_message(
                         "silent",
                     ],
                     "state_value_template": "{{ value_json.state }}",
+                    "direction_value_template": "{{ value_json.direction }}",
                     "oscillation_value_template": "{{ value_json.oscillation }}",
                     "percentage_value_template": "{{ value_json.percentage }}",
                     "preset_mode_value_template": "{{ value_json.preset_mode }}",
@@ -491,23 +515,31 @@ async def test_controlling_state_via_topic_and_json_message(
 )
 async def test_controlling_state_via_topic_and_json_message_shared_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the controlling state via topic and JSON message using a shared topic."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("direction") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"ON","preset_mode":"eco","oscillation":"oscillate_on","percentage": 50}',
+        """{
+        "state":"ON",
+        "preset_mode":"eco",
+        "oscillation":"oscillate_on",
+        "percentage": 50,
+        "direction": "forward"
+        }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
+    assert state.attributes.get("direction") == "forward"
     assert state.attributes.get("oscillating") is True
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 50
     assert state.attributes.get("preset_mode") == "eco"
@@ -515,10 +547,17 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"ON","preset_mode":"auto","oscillation":"oscillate_off","percentage": 10}',
+        """{
+       "state":"ON",
+       "preset_mode":"auto",
+       "oscillation":"oscillate_off",
+       "percentage": 10,
+       "direction": "forward"
+       }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
+    assert state.attributes.get("direction") == "forward"
     assert state.attributes.get("oscillating") is False
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 10
     assert state.attributes.get("preset_mode") == "auto"
@@ -526,10 +565,17 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"OFF","preset_mode":"auto","oscillation":"oscillate_off","percentage": 0}',
+        """{
+        "state":"OFF",
+        "preset_mode":"auto",
+        "oscillation":"oscillate_off",
+        "percentage": 0,
+        "direction": "reverse"
+        }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
+    assert state.attributes.get("direction") == "reverse"
     assert state.attributes.get("oscillating") is False
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get("preset_mode") == "auto"
@@ -555,6 +601,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
                     "command_topic": "command-topic",
                     "payload_off": "StAtE_OfF",
                     "payload_on": "StAtE_On",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "payload_oscillation_off": "OsC_OfF",
                     "payload_oscillation_on": "OsC_On",
@@ -572,10 +619,10 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
 )
 async def test_sending_mqtt_commands_and_optimistic(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test optimistic mode without state topic."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -593,6 +640,24 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_off(hass, "fan.test")
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "StAtE_OfF", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "forward")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "forward", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "reverse")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "reverse", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -711,10 +776,10 @@ async def test_sending_mqtt_commands_and_optimistic(
     ],
 )
 async def test_sending_mqtt_commands_with_alternate_speed_range(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the controlling state via topic using an alternate speed range."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     await common.async_set_percentage(hass, "fan.test1", 0)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -803,11 +868,11 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 )
 async def test_sending_mqtt_commands_and_optimistic_no_legacy(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test optimistic mode without state topic without legacy speed command topic."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -924,6 +989,8 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
                     "name": "test",
                     "command_topic": "command-topic",
                     "command_template": "state: {{ value }}",
+                    "direction_command_topic": "direction-command-topic",
+                    "direction_command_template": "direction: {{ value }}",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "oscillation_command_template": "oscillation: {{ value }}",
                     "percentage_command_topic": "percentage-command-topic",
@@ -942,10 +1009,10 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 )
 async def test_sending_mqtt_command_templates_(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test optimistic mode without state topic without legacy speed command topic."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -967,6 +1034,24 @@ async def test_sending_mqtt_command_templates_(
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "forward")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "direction: forward", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "forward"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "reverse")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "direction: reverse", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "reverse"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     with pytest.raises(MultipleInvalid):
@@ -1082,10 +1167,10 @@ async def test_sending_mqtt_command_templates_(
 )
 async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test optimistic mode without state topic without percentage command topic."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -1131,6 +1216,8 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
+                    "direction_state_topic": "direction-state-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_state_topic": "oscillation-state-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "percentage_state_topic": "percentage-state-topic",
@@ -1150,10 +1237,10 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
 )
 async def test_sending_mqtt_commands_and_explicit_optimistic(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test optimistic mode with state topic and turn on attributes."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -1250,6 +1337,15 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
+    await common.async_set_direction(hass, "fan.test", "forward")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "forward", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
     await common.async_oscillate(hass, "fan.test", True)
     mqtt_mock.async_publish.assert_called_once_with(
         "oscillation-command-topic", "oscillate_on", 0, False
@@ -1270,6 +1366,15 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_turn_off(hass, "fan.test")
     mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "reverse")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "reverse", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1368,11 +1473,17 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
             ATTR_OSCILLATING,
             True,
         ),
+        (
+            CONF_DIRECTION_STATE_TOPIC,
+            "reverse",
+            ATTR_DIRECTION,
+            "reverse",
+        ),
     ],
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     topic: str,
     value: str,
     attribute: str | None,
@@ -1383,10 +1494,11 @@ async def test_encoding_subscribable_topics(
     config[ATTR_PRESET_MODES] = ["eco", "auto"]
     config[CONF_PRESET_MODE_COMMAND_TOPIC] = "fan/some_preset_mode_command_topic"
     config[CONF_PERCENTAGE_COMMAND_TOPIC] = "fan/some_percentage_command_topic"
+    config[CONF_DIRECTION_COMMAND_TOPIC] = "fan/some_direction_command_topic"
     config[CONF_OSCILLATION_COMMAND_TOPIC] = "fan/some_oscillation_command_topic"
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         fan.DOMAIN,
         config,
         topic,
@@ -1404,6 +1516,7 @@ async def test_encoding_subscribable_topics(
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "preset_mode_command_topic": "preset-mode-command-topic",
                     "percentage_command_topic": "percentage-command-topic",
@@ -1418,11 +1531,11 @@ async def test_encoding_subscribable_topics(
 )
 async def test_attributes(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -1432,24 +1545,41 @@ async def test_attributes(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_OSCILLATING) is None
+    assert state.attributes.get(fan.ATTR_DIRECTION) is None
 
     await common.async_turn_off(hass, "fan.test")
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_OSCILLATING) is None
+    assert state.attributes.get(fan.ATTR_DIRECTION) is None
 
     await common.async_oscillate(hass, "fan.test", True)
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_OSCILLATING) is True
+    assert state.attributes.get(fan.ATTR_DIRECTION) is None
+
+    await common.async_set_direction(hass, "fan.test", "reverse")
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(fan.ATTR_OSCILLATING) is True
+    assert state.attributes.get(fan.ATTR_DIRECTION) == "reverse"
 
     await common.async_oscillate(hass, "fan.test", False)
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_OSCILLATING) is False
+
+    await common.async_set_direction(hass, "fan.test", "forward")
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(fan.ATTR_OSCILLATING) is False
+    assert state.attributes.get(fan.ATTR_DIRECTION) == "forward"
 
 
 @pytest.mark.parametrize(
@@ -1694,53 +1824,65 @@ async def test_attributes(
             True,
             fan.FanEntityFeature.PRESET_MODE,
         ),
+        (
+            "test17",
+            {
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test17",
+                        "command_topic": "command-topic",
+                        "direction_command_topic": "direction-command-topic",
+                    }
+                }
+            },
+            True,
+            fan.FanEntityFeature.DIRECTION,
+        ),
     ],
 )
 async def test_supported_features(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     name: str,
     success: bool,
     features,
 ) -> None:
     """Test optimistic mode without state topic."""
     if success:
-        await mqtt_mock_entry_no_yaml_config()
+        await mqtt_mock_entry()
 
         state = hass.states.get(f"fan.{name}")
         assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == features
         return
     with pytest.raises(AssertionError):
-        await mqtt_mock_entry_no_yaml_config()
+        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_when_connection_lost(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability after MQTT disconnection."""
-    await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN
-    )
+    await help_test_availability_when_connection_lost(hass, mqtt_mock_entry, fan.DOMAIN)
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_without_topic(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_default_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         fan.DOMAIN,
         DEFAULT_CONFIG,
         True,
@@ -1750,12 +1892,12 @@ async def test_default_availability_payload(
 
 
 async def test_custom_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         fan.DOMAIN,
         DEFAULT_CONFIG,
         True,
@@ -1765,21 +1907,21 @@ async def test_custom_availability_payload(
 
 
 async def test_setting_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         fan.DOMAIN,
         DEFAULT_CONFIG,
         MQTT_FAN_ATTRIBUTES_BLOCKED,
@@ -1787,23 +1929,23 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 
 
 async def test_setting_attribute_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         fan.DOMAIN,
         DEFAULT_CONFIG,
@@ -1812,13 +1954,13 @@ async def test_update_with_json_attrs_not_dict(
 
 async def test_update_with_json_attrs_bad_json(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         fan.DOMAIN,
         DEFAULT_CONFIG,
@@ -1827,12 +1969,12 @@ async def test_update_with_json_attrs_bad_json(
 
 async def test_discovery_update_attr(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, caplog, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1860,40 +2002,38 @@ async def test_discovery_update_attr(
     ],
 )
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unique_id option only creates one fan per id."""
-    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN)
+    await help_test_unique_id(hass, mqtt_mock_entry, fan.DOMAIN)
 
 
 async def test_discovery_removal_fan(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered fan."""
     data = '{ "name": "test", "command_topic": "test_topic" }'
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, fan.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, fan.DOMAIN, data)
 
 
 async def test_discovery_update_fan(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered fan."""
     config1 = {"name": "Beer", "command_topic": "test_topic"}
     config2 = {"name": "Milk", "command_topic": "test_topic"}
     await help_test_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, fan.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, caplog, fan.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_fan(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered fan."""
@@ -1903,7 +2043,7 @@ async def test_discovery_update_unchanged_fan(
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,
-            mqtt_mock_entry_no_yaml_config,
+            mqtt_mock_entry,
             caplog,
             fan.DOMAIN,
             data1,
@@ -1914,7 +2054,7 @@ async def test_discovery_update_unchanged_fan(
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
@@ -1922,71 +2062,71 @@ async def test_discovery_broken(
     data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
 
     await help_test_discovery_broken(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, fan.DOMAIN, data1, data2
+        hass, mqtt_mock_entry, caplog, fan.DOMAIN, data1, data2
     )
 
 
 async def test_entity_device_info_with_connection(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT fan device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_with_identifier(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT fan device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_remove(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_subscriptions(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_discovery_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_debug_info_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         fan.DOMAIN,
         DEFAULT_CONFIG,
         fan.SERVICE_TURN_ON,
@@ -2031,11 +2171,18 @@ async def test_entity_debug_info_message(
             "oscillate_on",
             "oscillation_command_template",
         ),
+        (
+            fan.SERVICE_SET_DIRECTION,
+            "direction_command_topic",
+            {fan.ATTR_DIRECTION: "forward"},
+            "forward",
+            "direction_command_template",
+        ),
     ],
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     service: str,
     topic: str,
@@ -2051,7 +2198,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         domain,
         config,
@@ -2073,23 +2220,27 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup manual configured MQTT entity."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     platform = fan.DOMAIN
     assert hass.states.get(f"{platform}.test")
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = fan.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_no_yaml_config, domain, config
+        hass, mqtt_mock_entry, domain, config
     )

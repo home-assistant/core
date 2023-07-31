@@ -8,7 +8,7 @@
   "documentation": "https://www.home-assistant.io/integrations/dlna_dms",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["async-upnp-client==0.33.1"],
+  "requirements": ["async-upnp-client==0.34.1"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",

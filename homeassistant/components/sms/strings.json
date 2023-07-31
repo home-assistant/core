@@ -4,7 +4,7 @@
       "user": {
         "title": "Connect to the modem",
         "data": {
-          "device": "Device",
+          "device": "[%key:common::config_flow::data::device%]",
           "baud_speed": "Baud Speed"
         }
       }
@@ -16,6 +16,31 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bit_error_rate": {
+        "name": "Bit error rate"
+      },
+      "cid": {
+        "name": "Cell ID"
+      },
+      "lac": {
+        "name": "Local area code"
+      },
+      "network_code": {
+        "name": "GSM network code"
+      },
+      "network_name": {
+        "name": "Network name"
+      },
+      "signal_percent": {
+        "name": "Signal percent"
+      },
+      "state": {
+        "name": "Network status"
+      }
     }
   }
 }

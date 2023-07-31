@@ -1,10 +1,12 @@
 {
   "domain": "dynalite",
   "name": "Philips Dynalite",
+  "after_dependencies": ["panel_custom"],
   "codeowners": ["@ziv1234"],
   "config_flow": true,
+  "dependencies": ["http", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/dynalite",
   "iot_class": "local_push",
   "loggers": ["dynalite_devices_lib"],
-  "requirements": ["dynalite_devices==0.1.47"]
+  "requirements": ["dynalite-devices==0.1.47", "dynalite-panel==0.0.4"]
 }

@@ -19,6 +19,8 @@ PREF_USERNAME = "username"
 PREF_REMOTE_DOMAIN = "remote_domain"
 PREF_ALEXA_DEFAULT_EXPOSE = "alexa_default_expose"
 PREF_GOOGLE_DEFAULT_EXPOSE = "google_default_expose"
+PREF_ALEXA_SETTINGS_VERSION = "alexa_settings_version"
+PREF_GOOGLE_SETTINGS_VERSION = "google_settings_version"
 PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "female")
 DEFAULT_DISABLE_2FA = False
@@ -56,7 +58,7 @@ CONF_RELAYER_SERVER = "relayer_server"
 CONF_REMOTE_SNI_SERVER = "remote_sni_server"
 CONF_REMOTESTATE_SERVER = "remotestate_server"
 CONF_THINGTALK_SERVER = "thingtalk_server"
-CONF_VOICE_SERVER = "voice_server"
+CONF_SERVICEHANDLERS_SERVER = "servicehandlers_server"
 
 MODE_DEV = "development"
 MODE_PROD = "production"

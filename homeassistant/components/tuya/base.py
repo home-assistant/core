@@ -5,10 +5,9 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any, Literal, overload
+from typing import Any, Literal, Self, overload
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
-from typing_extensions import Self
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity

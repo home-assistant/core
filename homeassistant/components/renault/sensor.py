@@ -37,8 +37,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
 from .const import DOMAIN
-from .renault_coordinator import T
-from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
+from .coordinator import T
+from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 
@@ -165,7 +165,6 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="battery_level",
     ),
     RenaultSensorEntityDescription(
         key="charge_state",

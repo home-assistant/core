@@ -1,7 +1,7 @@
 {
   "domain": "vicare",
   "name": "Viessmann ViCare",
-  "codeowners": ["@oischinger"],
+  "codeowners": [],
   "config_flow": true,
   "dhcp": [
     {

@@ -44,11 +44,5 @@
     "trigger_type": {
       "samsungtv.turn_on": "Device is requested to turn on"
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The SamsungTV YAML configuration is being removed",
-      "description": "Configuring SamsungTV using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the SamsungTV YAML configuration from your `configuration.yaml` file and restart Home Assistant to fix this issue.\n\nPlease note that previously configured `turn_on_action` needs to be manually converted to use the `turn_on` trigger ([documentation]({on_action_url}))."
-    }
   }
 }

@@ -45,7 +45,6 @@ _KNOWN_LRU_CLASSES = (
     "StatesMetaManager",
     "StateAttributesManager",
     "StatisticsMetaManager",
-    "DomainData",
     "IntegrationMatcher",
 )
 
@@ -164,11 +163,12 @@ async def async_setup_entry(  # noqa: C901
 
         obj_type = call.data[CONF_TYPE]
 
-        _LOGGER.critical(
-            "%s objects in memory: %s",
-            obj_type,
-            [_safe_repr(obj) for obj in objgraph.by_type(obj_type)],
-        )
+        for obj in objgraph.by_type(obj_type):
+            _LOGGER.critical(
+                "%s object in memory: %s",
+                obj_type,
+                _safe_repr(obj),
+            )
 
         persistent_notification.create(
             hass,
@@ -402,11 +402,6 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
-    if sys.version_info >= (3, 11):
-        raise HomeAssistantError(
-            "Memory profiling is not supported on Python 3.11. Please use Python 3.10."
-        )
-
     from guppy import hpy  # pylint: disable=import-outside-toplevel
 
     start_time = int(time.time() * 1000000)

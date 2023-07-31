@@ -1,7 +1,7 @@
 {
   "domain": "lifx",
   "name": "LIFX",
-  "codeowners": ["@bdraco", "@Djelibeybi"],
+  "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["network"],
   "dhcp": [
@@ -41,8 +41,8 @@
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
   "quality_scale": "platinum",
   "requirements": [
-    "aiolifx==0.8.9",
-    "aiolifx_effects==0.3.2",
-    "aiolifx_themes==0.4.5"
+    "aiolifx==0.8.10",
+    "aiolifx-effects==0.3.2",
+    "aiolifx-themes==0.4.5"
   ]
 }

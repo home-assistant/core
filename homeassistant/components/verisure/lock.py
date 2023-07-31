@@ -60,6 +60,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
     """Representation of a Verisure doorlock."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -188,9 +189,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
     def disable_autolock(self) -> None:
         """Disable autolock on a doorlock."""
         try:
-            self.coordinator.verisure.set_lock_config(
+            command = self.coordinator.verisure.set_autolock_enabled(
                 self.serial_number, auto_lock_enabled=False
             )
+            self.coordinator.verisure.request(command)
             LOGGER.debug("Disabling autolock on %s", self.serial_number)
         except VerisureError as ex:
             LOGGER.error("Could not disable autolock, %s", ex)
@@ -198,9 +200,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
     def enable_autolock(self) -> None:
         """Enable autolock on a doorlock."""
         try:
-            self.coordinator.verisure.set_lock_config(
+            command = self.coordinator.verisure.set_autolock_enabled(
                 self.serial_number, auto_lock_enabled=True
             )
+            self.coordinator.verisure.request(command)
             LOGGER.debug("Enabling autolock on %s", self.serial_number)
         except VerisureError as ex:
             LOGGER.error("Could not enable autolock, %s", ex)

@@ -41,16 +41,14 @@ def async_setup_entry_base(
 class DynaliteBase(RestoreEntity, ABC):
     """Base class for the Dynalite entities."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, device: Any, bridge: DynaliteBridge) -> None:
         """Initialize the base class."""
         self._device = device
         self._bridge = bridge
         self._unsub_dispatchers: list[Callable[[], None]] = []
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._device.name
 
     @property
     def unique_id(self) -> str:
@@ -68,7 +66,7 @@ class DynaliteBase(RestoreEntity, ABC):
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.unique_id)},
             manufacturer="Dynalite",
-            name=self.name,
+            name=self._device.name,
         )
 
     async def async_added_to_hass(self) -> None:

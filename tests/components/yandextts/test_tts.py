@@ -1,8 +1,6 @@
 """The tests for the Yandex SpeechKit speech platform."""
 import asyncio
 from http import HTTPStatus
-import os
-import shutil
 
 import pytest
 
@@ -16,12 +14,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
-from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
-    mutagen_mock,
-)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 URL = "https://tts.voicetech.yandex.net/generate?"
+
+
+@pytest.fixture(autouse=True)
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+    """Mock writing tags."""
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
 async def get_media_source_url(hass, media_content_id):
@@ -31,15 +37,6 @@ async def get_media_source_url(hass, media_content_id):
 
     resolved = await media_source.async_resolve_media(hass, media_content_id, None)
     return resolved.url
-
-
-@pytest.fixture(autouse=True)
-def cleanup_cache(hass):
-    """Prevent TTS writing."""
-    yield
-    default_tts = hass.config.path(tts.DEFAULT_CACHE_DIR)
-    if os.path.isdir(default_tts):
-        shutil.rmtree(default_tts)
 
 
 async def test_setup_component(hass: HomeAssistant) -> None:

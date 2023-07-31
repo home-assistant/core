@@ -54,22 +54,24 @@
       'original_name': 'Restart',
       'platform': 'sfr_box',
       'supported_features': 0,
-      'translation_key': 'reboot',
+      'translation_key': None,
       'unique_id': 'e4:5d:51:00:11:22_system_reboot',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_buttons[button.sfr_box_restart]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'SFR Box Restart',
+# name: test_buttons.2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'restart',
+        'friendly_name': 'SFR Box Restart',
+      }),
+      'context': <ANY>,
+      'entity_id': 'button.sfr_box_restart',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
     }),
-    'context': <ANY>,
-    'entity_id': 'button.sfr_box_restart',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
+  ])
 # ---
