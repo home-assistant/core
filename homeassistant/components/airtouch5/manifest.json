@@ -7,7 +7,8 @@
   "documentation": "https://www.home-assistant.io/integrations/airtouch5",
   "homekit": {},
   "iot_class": "local_push",
-  "requirements": ["airtouch5py==0.2.6"],
+  "loggers": ["custom_components.airtouch5", "airtouch5py"],
+  "requirements": ["airtouch5py==0.2.7"],
   "ssdp": [],
   "zeroconf": []
 }
