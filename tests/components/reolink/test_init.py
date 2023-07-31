@@ -146,6 +146,8 @@ async def test_ssl_repair_issue(
     with patch(
         "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
     ), patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+    ), patch(
         "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
