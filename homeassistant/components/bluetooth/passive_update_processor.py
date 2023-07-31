@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import timedelta
+from functools import cache
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast
 
@@ -11,14 +12,20 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    EntityCategory,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.entity import (
+    DeviceInfo,
+    Entity,
+    EntityDescription,
+)
 from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
+from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
@@ -91,6 +98,36 @@ def deserialize_passive_bluetooth_entity_key(
     return PassiveBluetoothEntityKey(key, device_id or None)
 
 
+# Fields do not change so we can cache the result
+# of calling fields() on the dataclass
+cached_fields = cache(dataclasses.fields)
+
+
+def deserialize_entity_description(
+    descriptions_class: type[EntityDescription], data: dict[str, Any]
+) -> EntityDescription:
+    """Deserialize an entity description."""
+    result: dict[str, Any] = {}
+    for field in cached_fields(descriptions_class):  # type: ignore[arg-type]
+        field_name = field.name
+        if field_name == "entity_category":
+            value = try_parse_enum(EntityCategory, data.get(field_name))
+        else:
+            value = data.get(field_name)
+        result[field_name] = value
+    return descriptions_class(**result)
+
+
+def serialize_entity_description(description: EntityDescription) -> dict[str, Any]:
+    """Serialize an entity description."""
+    result: dict[str, Any] = dataclasses.asdict(description)
+    for field in cached_fields(type(description)):  # type: ignore[arg-type]
+        field_name = field.name
+        if field.default == result.get(field_name):
+            del result[field_name]
+    return result
+
+
 def serialize_device_key(device_key: str | None) -> str:
     """Serialize a device key."""
     return device_key or ""
@@ -133,9 +170,9 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
                 for key, device_info in self.devices.items()
             },
             "entity_descriptions": {
-                serialize_passive_bluetooth_entity_key(key): dataclasses.asdict(
-                    description
-                )
+                serialize_passive_bluetooth_entity_key(
+                    key
+                ): serialize_entity_description(description)
                 for key, description in self.entity_descriptions.items()
             },
             "entity_names": {
@@ -163,9 +200,9 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         )
         self.entity_descriptions.update(
             {
-                deserialize_passive_bluetooth_entity_key(key): entity_description_class(
-                    **description
-                )
+                deserialize_passive_bluetooth_entity_key(
+                    key
+                ): deserialize_entity_description(entity_description_class, description)
                 for key, description in restore_data["entity_descriptions"].items()
                 if description
             }
