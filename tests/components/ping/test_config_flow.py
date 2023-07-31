@@ -10,6 +10,8 @@ from homeassistant.components.ping import DOMAIN, async_setup_entry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 BINARY_SENSOR_IMPORT_DATA = {
     "name": "test2",
     "host": "127.0.0.1",
@@ -59,6 +61,30 @@ async def test_form(hass: HomeAssistant, platform_type, extra_input) -> None:
         "count": 10.0,
         "host": "192.618.178.1",
     }
+
+
+@pytest.mark.parametrize(
+    ("platform_type", "extra_options"),
+    (("binary_sensor", {"count": 10.0, "host": "192.618.178.1"}),),
+)
+async def test_options(hass: HomeAssistant, platform_type, extra_options) -> None:
+    """Test options flow."""
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "platform_type": platform_type,
+            "name": "Router",
+            **extra_options,
+        },
+        title="Router",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == platform_type
 
 
 async def test_step_import(hass: HomeAssistant) -> None:
