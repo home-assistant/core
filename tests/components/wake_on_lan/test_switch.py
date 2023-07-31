@@ -1,10 +1,7 @@
 """The tests for the wake on lan switch platform."""
 from __future__ import annotations
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import switch
 from homeassistant.const import (
@@ -18,22 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-
-
-@pytest.fixture
-def subprocess_call_return_value() -> int | None:
-    """Return value for subprocess."""
-    return 1
-
-
-@pytest.fixture(autouse=True)
-def mock_subprocess_call(
-    subprocess_call_return_value: int,
-) -> Generator[None, None, MagicMock]:
-    """Mock magic packet."""
-    with patch("homeassistant.components.wake_on_lan.switch.sp.call") as mock_sp:
-        mock_sp.return_value = subprocess_call_return_value
-        yield mock_sp
 
 
 async def test_valid_hostname(
