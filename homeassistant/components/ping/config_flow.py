@@ -77,7 +77,7 @@ OPTIONS_FLOW = {
 
 
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
-    """Handle a config or options flow for Times of the Day."""
+    """Handle a config or options flow for Ping."""
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
