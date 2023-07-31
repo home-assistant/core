@@ -25,12 +25,18 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
 
-from .const import DOMAIN, ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_PRIVS, PING_TIMEOUT
+from .const import (
+    CONF_PING_COUNT,
+    DOMAIN,
+    ICMP_TIMEOUT,
+    PING_ATTEMPTS_COUNT,
+    PING_PRIVS,
+    PING_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-CONF_PING_COUNT = "count"
 CONCURRENT_PING_LIMIT = 6
 
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
