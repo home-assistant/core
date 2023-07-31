@@ -1193,6 +1193,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
     assert entry.data[CONF_SLEEPY_DEVICE] is True
 
 
@@ -1256,4 +1257,5 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
 
     # Sleepy devices should keep their state over time and restore it
     assert pressure_sensor.state == "1008.83"
+
     assert entry.data[CONF_SLEEPY_DEVICE] is True
