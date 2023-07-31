@@ -92,5 +92,5 @@ class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
         """Fetch the movies data."""
         movies = await self.api_client.async_get_movies()
         if isinstance(movies, RadarrMovie):
-            movies = [movies]
+            return 1
         return len(movies)
