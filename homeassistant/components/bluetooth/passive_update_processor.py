@@ -107,7 +107,9 @@ def deserialize_entity_description(
         field_name = field.name
         # It would be nice if field.type returned the actual
         # type instead of a str so we could avoid writing this
-        # out, but it doesn't.
+        # out, but it doesn't. If we end up using this in more
+        # places we can add a `as_dict` and a `from_dict`
+        # method to these classes
         if field_name == "entity_category":
             value = try_parse_enum(EntityCategory, data.get(field_name))
         else:
