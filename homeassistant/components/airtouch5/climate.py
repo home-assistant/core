@@ -82,6 +82,7 @@ class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
+    _attr_name = None
 
 
 AC_MODE_TO_HVAC_MODE = {
