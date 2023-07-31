@@ -87,7 +87,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         return cast(str, options[CONF_NAME])
 
     async def async_step_import(self, import_info: Mapping[str, Any]) -> FlowResult:
-        """Import a entry."""
+        """Import an entry."""
 
         if CONF_HOST in import_info:
             # import data seems to be a binary_sensor entry
@@ -96,4 +96,4 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
                 data={"platform_type": "binary_sensor", **import_info}
             )
 
-        return self.async_abort(reason="No matching type")
+        return self.async_abort(reason="no_matching_platform_type")

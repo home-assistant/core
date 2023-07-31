@@ -137,7 +137,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         self,
         name: str,
         ping: PingDataSubProcess | PingDataICMPLib,
-        entry_id: str | None,
+        entry_id: str,
     ) -> None:
         """Initialize the Ping Binary sensor."""
         self._attr_available = False

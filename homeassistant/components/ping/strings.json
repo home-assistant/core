@@ -20,9 +20,12 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "count": "Ping Count"
+          "count": "Ping count"
         }
       }
+    },
+    "abort": {
+      "no_matching_platform_type": "No matching platform type found."
     }
   },
   "options": {
