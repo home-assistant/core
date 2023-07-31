@@ -25,7 +25,7 @@ CO2Signal==0.4.2
 DoorBirdPy==2.1.0
 
 # homeassistant.components.homekit
-HAP-python==4.7.0
+HAP-python==4.7.1
 
 # homeassistant.components.tasmota
 HATasmota==0.6.5
