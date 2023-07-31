@@ -20,7 +20,29 @@
   },
   "entity": {
     "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "road_temperature": {
+        "name": "Road temperature"
+      },
+      "precipitation": {
+        "name": "Precipitation type",
+        "state": {
+          "drizzle": "Drizzle",
+          "hail": "Hail",
+          "none": "None",
+          "rain": "Rain",
+          "snow": "Snow",
+          "rain_snow_mixed": "Rain and snow mixed",
+          "freezing_rain": "Freezing rain"
+        }
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
       "wind_direction_text": {
+        "name": "Wind direction text",
         "state": {
           "east": "East",
           "north_east": "North east",
@@ -36,7 +58,11 @@
           "west": "West"
         }
       },
+      "wind_speed_max": {
+        "name": "Wind speed max"
+      },
       "precipitation_amountname": {
+        "name": "Precipitation name",
         "state": {
           "error": "Error",
           "mild_rain": "Mild rain",
@@ -53,16 +79,8 @@
           "unknown": "Unknown"
         }
       },
-      "precipitation": {
-        "state": {
-          "drizzle": "Drizzle",
-          "hail": "Hail",
-          "none": "None",
-          "rain": "Rain",
-          "snow": "Snow",
-          "rain_snow_mixed": "Rain and snow mixed",
-          "freezing_rain": "Freezing rain"
-        }
+      "measure_time": {
+        "name": "Measure time"
       }
     }
   }

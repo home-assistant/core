@@ -9,7 +9,7 @@ from typing import Literal
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException, PyWeMoException
-from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
+from pywemo.subscribe import EVENT_TYPE_LONG_PRESS, SubscriptionRegistry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,17 +30,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
+from .models import async_wemo_data
 
 _LOGGER = logging.getLogger(__name__)
 
 # Literal values must match options.error keys from strings.json.
-ErrorStringKey = Literal[
-    "long_press_requires_subscription", "polling_interval_to_small"
-]
+ErrorStringKey = Literal["long_press_requires_subscription"]  # noqa: F821
 # Literal values must match options.step.init.data keys from strings.json.
-OptionsFieldKey = Literal[
-    "enable_subscription", "enable_long_press", "polling_interval_seconds"
-]
+OptionsFieldKey = Literal["enable_subscription", "enable_long_press"]
 
 
 class OptionsValidationError(Exception):
@@ -78,9 +75,6 @@ class Options:
     # Register for device long-press events.
     enable_long_press: bool = True
 
-    # Polling interval for when subscriptions are not enabled or broken.
-    polling_interval_seconds: int = 30
-
     def __post_init__(self) -> None:
         """Validate parameters."""
         if not self.enable_subscription and self.enable_long_press:
@@ -88,12 +82,6 @@ class Options:
                 "enable_subscription",
                 "long_press_requires_subscription",
                 "Local push update subscriptions must be enabled to use long-press events",
-            )
-        if self.polling_interval_seconds < 10:
-            raise OptionsValidationError(
-                "polling_interval_seconds",
-                "polling_interval_to_small",
-                "Polling more frequently than 10 seconds is not supported",
             )
 
 
@@ -108,6 +96,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name=wemo.name,
+            update_interval=timedelta(seconds=30),
         )
         self.hass = hass
         self.wemo = wemo
@@ -136,9 +125,21 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             updated = self.wemo.subscription_update(event_type, params)
             self.hass.create_task(self._async_subscription_callback(updated))
 
+    async def async_shutdown(self) -> None:
+        """Unregister push subscriptions and remove from coordinators dict."""
+        await super().async_shutdown()
+        del _async_coordinators(self.hass)[self.device_id]
+        assert self.options  # Always set by async_register_device.
+        if self.options.enable_subscription:
+            await self._async_set_enable_subscription(False)
+        # Check that the device is available (last_update_success) before disabling long
+        # press. That avoids long shutdown times for devices that are no longer connected.
+        if self.options.enable_long_press and self.last_update_success:
+            await self._async_set_enable_long_press(False)
+
     async def _async_set_enable_subscription(self, enable_subscription: bool) -> None:
         """Turn on/off push updates from the device."""
-        registry = self.hass.data[DOMAIN]["registry"]
+        registry = _async_registry(self.hass)
         if enable_subscription:
             registry.on(self.wemo, None, self.subscription_callback)
             await self.hass.async_add_executor_job(registry.register, self.wemo)
@@ -163,11 +164,6 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                 "Failed to enable long press support for device: %s", self.wemo.name
             )
             self.supports_long_press = False
-
-    async def _async_set_polling_interval_seconds(
-        self, polling_interval_seconds: int
-    ) -> None:
-        self.update_interval = timedelta(seconds=polling_interval_seconds)
 
     async def async_set_options(
         self, hass: HomeAssistant, config_entry: ConfigEntry
@@ -216,8 +212,10 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             # this case so the Sensor entities are properly populated.
             return True
 
-        registry = self.hass.data[DOMAIN]["registry"]
-        return not (registry.is_subscribed(self.wemo) and self.last_update_success)
+        return not (
+            _async_registry(self.hass).is_subscribed(self.wemo)
+            and self.last_update_success
+        )
 
     async def _async_update_data(self) -> None:
         """Update WeMo state."""
@@ -275,7 +273,7 @@ async def async_register_device(
     )
 
     device = DeviceCoordinator(hass, wemo, entry.id)
-    hass.data[DOMAIN].setdefault("devices", {})[entry.id] = device
+    _async_coordinators(hass)[entry.id] = device
 
     config_entry.async_on_unload(
         config_entry.add_update_listener(device.async_set_options)
@@ -288,5 +286,14 @@ async def async_register_device(
 @callback
 def async_get_coordinator(hass: HomeAssistant, device_id: str) -> DeviceCoordinator:
     """Return DeviceCoordinator for device_id."""
-    coordinator: DeviceCoordinator = hass.data[DOMAIN]["devices"][device_id]
-    return coordinator
+    return _async_coordinators(hass)[device_id]
+
+
+@callback
+def _async_coordinators(hass: HomeAssistant) -> dict[str, DeviceCoordinator]:
+    return async_wemo_data(hass).config_entry_data.device_coordinators
+
+
+@callback
+def _async_registry(hass: HomeAssistant) -> SubscriptionRegistry:
+    return async_wemo_data(hass).registry

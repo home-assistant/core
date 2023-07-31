@@ -205,7 +205,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         key="process",
         name="Process",
         icon=CPU_ICON,
-        state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
     ),
     "processor_use": SysMonitorSensorEntityDescription(

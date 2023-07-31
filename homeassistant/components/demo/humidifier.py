@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.humidifier import (
+    HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
@@ -30,6 +31,7 @@ async def async_setup_platform(
                 mode=None,
                 target_humidity=68,
                 current_humidity=45,
+                action=HumidifierAction.HUMIDIFYING,
                 device_class=HumidifierDeviceClass.HUMIDIFIER,
             ),
             DemoHumidifier(
@@ -37,6 +39,7 @@ async def async_setup_platform(
                 mode=None,
                 target_humidity=54,
                 current_humidity=59,
+                action=HumidifierAction.DRYING,
                 device_class=HumidifierDeviceClass.DEHUMIDIFIER,
             ),
             DemoHumidifier(
@@ -71,11 +74,13 @@ class DemoHumidifier(HumidifierEntity):
         current_humidity: int | None = None,
         available_modes: list[str] | None = None,
         is_on: bool = True,
+        action: HumidifierAction | None = None,
         device_class: HumidifierDeviceClass | None = None,
     ) -> None:
         """Initialize the humidifier device."""
         self._attr_name = name
         self._attr_is_on = is_on
+        self._attr_action = action
         self._attr_supported_features = SUPPORT_FLAGS
         if mode is not None:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
