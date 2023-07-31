@@ -429,7 +429,7 @@ class MQTT:
         for issue_key, items in mqtt_data.issues.items():
             config_list = ""
             for item in items:
-                config_list.join(f"- {item}\n")
+                config_list = config_list.join(f"- {item}\n")
             async_create_issue(
                 self.hass,
                 DOMAIN,
