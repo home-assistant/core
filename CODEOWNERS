@@ -1080,8 +1080,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/schlage/ @dknowles2
 /tests/components/schlage/ @dknowles2
 /homeassistant/components/schluter/ @prairieapps
-/homeassistant/components/scrape/ @fabaff @gjohansson-ST @epenet
-/tests/components/scrape/ @fabaff @gjohansson-ST @epenet
+/homeassistant/components/scrape/ @fabaff @gjohansson-ST
+/tests/components/scrape/ @fabaff @gjohansson-ST
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
 /tests/components/screenlogic/ @dieselrabbit @bdraco
 /homeassistant/components/script/ @home-assistant/core
