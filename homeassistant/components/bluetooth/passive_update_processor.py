@@ -253,7 +253,7 @@ class PassiveBluetoothProcessorCoordinator(
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._update_method = update_method
         self.last_update_success = True
-        self.restore_data: dict[str, dict[str, Any]] = {}
+        self.restore_data: dict[str, dict[str, RestoredPassiveBluetoothDataUpdate]] = {}
         self.restore_key = None
         if config_entry := config_entries.current_entry.get():
             self.restore_key = config_entry.entry_id
