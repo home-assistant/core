@@ -261,7 +261,6 @@ class ReolinkHost:
                         "base_url": self._base_url,
                         "network_link": "https://my.home-assistant.io/redirect/network/",
                         "nginx_link": "https://github.com/home-assistant/addons/tree/master/nginx_proxy",
-                        "nginx_more_info": "https://kleypot.com/home-assistant-nginx-unencrypted-local-traffic/",
                     },
                 )
             else:
