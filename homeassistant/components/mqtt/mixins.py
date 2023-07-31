@@ -9,6 +9,7 @@ import logging
 from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -53,6 +54,8 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -129,6 +132,10 @@ CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
 CONF_OBJECT_ID = "object_id"
+
+MQTT_ENTRIES_NAMING_BLOG_URL = (
+    "https://developers.home-assistant.io/blog/2023-057-21-change-naming-mqtt-entities/"
+)
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -1014,6 +1021,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    _issues: list[str] = []
 
     def __init__(
         self,
@@ -1050,6 +1058,7 @@ class MqttEntity(
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
+        self.process_issues()
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
@@ -1139,15 +1148,22 @@ class MqttEntity(
                     config,
                 )
             elif (device_name := config[CONF_DEVICE][CONF_NAME]) == entity_name:
+                self._attr_name = None
+                self._issues.append("entity_name_is_device_name")
                 _LOGGER.warning(
                     "MQTT device name is equal to entity name in your config %s, "
                     "this is not expected. Please correct your configuration. "
                     "The entity name will be set to `null`",
                     config,
                 )
-                self._attr_name = None
             elif isinstance(entity_name, str) and entity_name.startswith(device_name):
-                new_entity_name = entity_name[len(device_name) :].lstrip()
+                self._attr_name = (
+                    new_entity_name := entity_name[len(device_name) :].lstrip()
+                )
+                if device_name[:1].isupper():
+                    # Ensure a capital if the device name first char is a capital
+                    new_entity_name = new_entity_name[:1].upper() + new_entity_name[1:]
+                self._issues.append("entity_name_startswith_device_name")
                 _LOGGER.warning(
                     "MQTT entity name starts with the device name in your config %s, "
                     "this is not expected. Please correct your configuration. "
@@ -1156,7 +1172,24 @@ class MqttEntity(
                     config,
                     new_entity_name,
                 )
-                self._attr_name = new_entity_name
+
+    def process_issues(self) -> None:
+        """Process issues for MQTT entities."""
+        for issue_key in self._issues:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                self.entity_id,
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                translation_key=issue_key,
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "config": yaml.dump(json_loads(json_dumps(self._config))),
+                },
+                learn_more_url=MQTT_ENTRIES_NAMING_BLOG_URL,
+                severity=IssueSeverity.WARNING,
+            )
 
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""

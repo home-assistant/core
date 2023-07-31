@@ -232,11 +232,11 @@ async def test_availability_with_shared_state_topic(
             "Hello world",
             False,
         ),
-        (  # entity_name_startswith_device_name
+        (  # entity_name_startswith_device_name1
             {
                 mqtt.DOMAIN: {
                     sensor.DOMAIN: {
-                        "name": "World Home Assistant",
+                        "name": "World automation",
                         "state_topic": "test-topic",
                         "unique_id": "veryunique",
                         "device_class": "humidity",
@@ -247,9 +247,29 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.world_home_assistant",
-            "World Home Assistant",
+            "sensor.world_automation",
+            "World automation",
             "World",
+            False,
+        ),
+        (  # entity_name_startswith_device_name2
+            {
+                mqtt.DOMAIN: {
+                    sensor.DOMAIN: {
+                        "name": "world automation",
+                        "state_topic": "test-topic",
+                        "unique_id": "veryunique",
+                        "device_class": "humidity",
+                        "device": {
+                            "identifiers": ["helloworld"],
+                            "name": "world",
+                        },
+                    }
+                }
+            },
+            "sensor.world_automation",
+            "world automation",
+            "world",
             False,
         ),
     ],
@@ -263,7 +283,8 @@ async def test_availability_with_shared_state_topic(
         "none_entity_name_with_device_name",
         "none_entity_name_without_device_name",
         "entity_name_and_device_name_the_same",
-        "entity_name_startswith_device_name",
+        "entity_name_startswith_device_name1",
+        "entity_name_startswith_device_name2",
     ],
 )
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
