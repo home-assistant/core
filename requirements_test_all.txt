@@ -1217,7 +1217,7 @@ pydeconz==113
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==2.0.1
+pydiscovergy==2.0.3
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1474,7 +1474,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.5.0
+pyschlage==2023.7.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.32
@@ -1677,7 +1677,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.5
+reolink-aio==0.7.6
 
 # homeassistant.components.rflink
 rflink==0.0.65
