@@ -350,9 +350,9 @@ class BaseLight(LogMixin, light.LightEntity):
                 self._attr_brightness = level
 
         if (
-            brightness is None
+            (brightness is None and transition is None)
             and not new_color_provided_while_off
-            or (self._FORCE_ON and brightness)
+            or (self._FORCE_ON and brightness != 0)
         ):
             # since some lights don't always turn on with move_to_level_with_on_off,
             # we should call the on command on the on_off cluster

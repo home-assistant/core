@@ -539,8 +539,8 @@ async def test_transitions(
         {"entity_id": device_1_entity_id, "transition": 0},
         blocking=True,
     )
-    assert dev1_cluster_on_off.request.call_count == 1
-    assert dev1_cluster_on_off.request.await_count == 1
+    assert dev1_cluster_on_off.request.call_count == 0
+    assert dev1_cluster_on_off.request.await_count == 0
     assert dev1_cluster_color.request.call_count == 0
     assert dev1_cluster_color.request.await_count == 0
     assert dev1_cluster_level.request.call_count == 1
@@ -1494,18 +1494,10 @@ async def async_test_level_on_off_from_hass(
         {"entity_id": entity_id, "transition": 10},
         blocking=True,
     )
-    assert on_off_cluster.request.call_count == 1
-    assert on_off_cluster.request.await_count == 1
+    assert on_off_cluster.request.call_count == 0
+    assert on_off_cluster.request.await_count == 0
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
-    assert on_off_cluster.request.call_args == call(
-        False,
-        on_off_cluster.commands_by_name["on"].id,
-        on_off_cluster.commands_by_name["on"].schema,
-        expect_reply=True,
-        manufacturer=None,
-        tsn=None,
-    )
     assert level_cluster.request.call_args == call(
         False,
         level_cluster.commands_by_name["move_to_level_with_on_off"].id,
