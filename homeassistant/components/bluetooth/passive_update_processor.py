@@ -54,7 +54,7 @@ class PassiveBluetoothProcessorData:
     coordinators: set[PassiveBluetoothProcessorCoordinator] = dataclasses.field(
         default_factory=set
     )
-    restore_data: dict[
+    all_restore_data: dict[
         str, dict[str, RestoredPassiveBluetoothDataUpdate]
     ] = dataclasses.field(default_factory=dict)
 
@@ -183,7 +183,7 @@ def async_register_coordinator_for_restore(
     data: PassiveBluetoothProcessorData = hass.data[PASSIVE_UPDATE_PROCESSOR]
     data.coordinators.add(coordinator)
     if restore_key := coordinator.restore_key:
-        coordinator.restore_data = data.restore_data.setdefault(restore_key, {})
+        coordinator.restore_data = data.all_restore_data.setdefault(restore_key, {})
 
     @callback
     def _unregister_coordinator_for_restore() -> None:
@@ -201,7 +201,7 @@ async def async_setup(hass: HomeAssistant) -> None:
         hass, 1, STORAGE_KEY
     )
     if restore_data := await storage.async_load():
-        data.restore_data = restore_data
+        data.all_restore_data = restore_data
     coordinators = data.coordinators
 
     async def _async_save_processor_data(_: Any) -> None:
