@@ -202,7 +202,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     def async_add_entities_listener(
         self,
         entity_class: type[PassiveBluetoothProcessorEntity],
-        async_add_entites: AddEntitiesCallback,
+        async_add_entities: AddEntitiesCallback,
     ) -> Callable[[], None]:
         """Add a listener for new entities."""
         created: set[PassiveBluetoothEntityKey] = set()
@@ -220,7 +220,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                     entities.append(entity_class(self, entity_key, description))
                     created.add(entity_key)
             if entities:
-                async_add_entites(entities)
+                async_add_entities(entities)
 
         return self.async_add_listener(_async_add_or_update_entities)
 
