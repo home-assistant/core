@@ -54,9 +54,9 @@ class PassiveBluetoothProcessorData:
     coordinators: set[PassiveBluetoothProcessorCoordinator] = dataclasses.field(
         default_factory=set
     )
-    restore_data: dict[str, dict[str, dict[str, Any]]] = dataclasses.field(
-        default_factory=dict
-    )
+    restore_data: dict[
+        str, dict[str, RestoredPassiveBluetoothDataUpdate]
+    ] = dataclasses.field(default_factory=dict)
 
 
 class RestoredPassiveBluetoothDataUpdate(TypedDict):
@@ -117,7 +117,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
         self.entity_data.update(new_data.entity_data)
         self.entity_names.update(new_data.entity_names)
 
-    def async_get_restore_data(self) -> dict[str, Any]:
+    def async_get_restore_data(self) -> RestoredPassiveBluetoothDataUpdate:
         """Serialize restore data to storage."""
         return {
             "devices": {
@@ -197,7 +197,9 @@ async def async_setup(hass: HomeAssistant) -> None:
     """Set up the passive update processor coordinators."""
     data = PassiveBluetoothProcessorData()
     hass.data[PASSIVE_UPDATE_PROCESSOR] = data
-    storage: Store[dict[str, dict[str, dict[str, Any]]]] = Store(hass, 1, STORAGE_KEY)
+    storage: Store[dict[str, dict[str, RestoredPassiveBluetoothDataUpdate]]] = Store(
+        hass, 1, STORAGE_KEY
+    )
     if restore_data := await storage.async_load():
         data.restore_data = restore_data
     coordinators = data.coordinators
@@ -253,7 +255,7 @@ class PassiveBluetoothProcessorCoordinator(
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._update_method = update_method
         self.last_update_success = True
-        self.restore_data: dict[str, dict[str, RestoredPassiveBluetoothDataUpdate]] = {}
+        self.restore_data: dict[str, RestoredPassiveBluetoothDataUpdate] = {}
         self.restore_key = None
         if config_entry := config_entries.current_entry.get():
             self.restore_key = config_entry.entry_id
@@ -267,7 +269,7 @@ class PassiveBluetoothProcessorCoordinator(
     @callback
     def async_get_restore_data(
         self,
-    ) -> dict[str, dict[str, Any]]:
+    ) -> dict[str, RestoredPassiveBluetoothDataUpdate]:
         """Generate the restore data."""
         return {
             processor.restore_key: processor.data.async_get_restore_data()
