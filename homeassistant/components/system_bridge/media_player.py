@@ -77,7 +77,7 @@ async def async_setup_entry(
                 entry.data[CONF_PORT],
             )
         ]
-        if data.media is not None and data.media.status in MEDIA_STATUS_MAP
+        if data.media is not None
         else []
     )
 
@@ -107,10 +107,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            self.coordinator.data.media is not None
-            and self.coordinator.data.media.status is not None
-        )
+        return self.coordinator.data.media is not None
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -139,7 +136,10 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         data: SystemBridgeCoordinatorData = self.coordinator.data
         if data.media.status is None:
             return None
-        return MEDIA_STATUS_MAP.get(data.media.status)
+        return MEDIA_STATUS_MAP.get(
+            data.media.status,
+            MediaPlayerState.IDLE,
+        )
 
     @property
     def media_duration(self) -> int | None:
