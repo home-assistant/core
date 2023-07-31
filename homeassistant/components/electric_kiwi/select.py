@@ -1,9 +1,7 @@
 """Support for Electric Kiwi hour of free power."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
-from typing import Final
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -18,28 +16,10 @@ from .coordinator import ElectricKiwiHOPDataCoordinator
 _LOGGER = logging.getLogger(__name__)
 ATTR_EK_HOP_SELECT = "hop_select"
 
-
-@dataclass
-class ElectricKiwiHOPSelectDescriptionMixin:
-    """Define an entity description mixin for select entities."""
-
-    options_dict: dict[str, int] | None
-
-
-@dataclass
-class ElectricKiwiHOPSelectDescription(
-    SelectEntityDescription, ElectricKiwiHOPSelectDescriptionMixin
-):
-    """Class to describe an Electric Kiwi select entity."""
-
-
-HOP_SELECT_TYPE: Final[tuple[ElectricKiwiHOPSelectDescription, ...]] = (
-    ElectricKiwiHOPSelectDescription(
-        entity_category=EntityCategory.CONFIG,
-        key=ATTR_EK_HOP_SELECT,
-        translation_key="hopselector",
-        options_dict=None,
-    ),
+HOP_SELECT = SelectEntityDescription(
+    entity_category=EntityCategory.CONFIG,
+    key=ATTR_EK_HOP_SELECT,
+    translation_key="hopselector",
 )
 
 
@@ -47,15 +27,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Electric Kiwi select setup."""
-    hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "hop_coordinator"
-    ]
+    hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     _LOGGER.debug("Setting up HOP entity")
-    entities = [
-        ElectricKiwiSelectHOPEntity(hop_coordinator, description)
-        for description in HOP_SELECT_TYPE
-    ]
+    entities = [ElectricKiwiSelectHOPEntity(hop_coordinator, HOP_SELECT)]
     async_add_entities(entities)
 
 
@@ -64,7 +39,7 @@ class ElectricKiwiSelectHOPEntity(
 ):
     """Entity object for seeing and setting the hour of free power."""
 
-    entity_description: ElectricKiwiHOPSelectDescription
+    entity_description: SelectEntityDescription
     _attr_has_entity_name = True
     _attr_attribution = ATTRIBUTION
     values_dict: dict[str, int]
@@ -72,7 +47,7 @@ class ElectricKiwiSelectHOPEntity(
     def __init__(
         self,
         hop_coordinator: ElectricKiwiHOPDataCoordinator,
-        description: ElectricKiwiHOPSelectDescription,
+        description: SelectEntityDescription,
     ) -> None:
         """Initialise the HOP selection entity."""
         super().__init__(hop_coordinator)
