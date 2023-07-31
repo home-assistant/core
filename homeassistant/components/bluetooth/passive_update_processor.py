@@ -110,6 +110,9 @@ def deserialize_entity_description(
     result: dict[str, Any] = {}
     for field in cached_fields(descriptions_class):  # type: ignore[arg-type]
         field_name = field.name
+        # It would be nice if field.type returned the actual
+        # type instead of a str so we could avoid writing this
+        # out, but it doesn't.
         if field_name == "entity_category":
             value = try_parse_enum(EntityCategory, data.get(field_name))
         else:
