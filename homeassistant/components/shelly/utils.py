@@ -285,32 +285,33 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
-def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
-    device_name = device.name
     entity_name: str | None = None
     if key in device.config:
-        entity_name = device.config[key].get("name", device_name)
+        entity_name = device.config[key].get("name")
 
     if entity_name is None:
         if key.startswith(("input:", "light:", "switch:")):
-            return f"{device_name} {key.replace(':', '_')}"
-        return device_name
+            return key.replace(":", "_")
+        return None
 
     return entity_name
 
 
 def get_rpc_entity_name(
     device: RpcDevice, key: str, description: str | None = None
-) -> str:
+) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if description:
+    if description and channel_name:
         return f"{channel_name} {description.lower()}"
+    if description:
+        return description.lower()
 
     return channel_name
 

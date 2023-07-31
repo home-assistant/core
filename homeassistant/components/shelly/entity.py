@@ -359,6 +359,8 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     """Helper class to represent a rpc entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: ShellyRpcCoordinator, key: str) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
