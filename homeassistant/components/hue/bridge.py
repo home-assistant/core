@@ -29,6 +29,7 @@ HUB_BUSY_SLEEP = 0.5
 PLATFORMS_v1 = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR]
 PLATFORMS_v2 = [
     Platform.BINARY_SENSOR,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SENSOR,

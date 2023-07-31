@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
-from typing import cast
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
@@ -70,7 +69,7 @@ class BasePassiveBluetoothCoordinator(ABC):
         if service_info := async_last_service_info(
             self.hass, self.address, self.connectable
         ):
-            return cast(str, service_info.name)  # for compat this can be a pyobjc
+            return service_info.name
         return self._last_name
 
     @property

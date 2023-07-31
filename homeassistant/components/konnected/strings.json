@@ -69,7 +69,7 @@
       },
       "options_digital": {
         "title": "Configure Digital Sensor",
-        "description": "{zone} options",
+        "description": "[%key:component::konnected::options::step::options_binary::description%]",
         "data": {
           "type": "Sensor Type",
           "name": "[%key:common::config_flow::data::name%]",
@@ -103,7 +103,7 @@
       "bad_host": "Invalid Override API host URL"
     },
     "abort": {
-      "not_konn_panel": "Not a recognized Konnected.io device"
+      "not_konn_panel": "[%key:component::konnected::config::abort::not_konn_panel%]"
     }
   }
 }

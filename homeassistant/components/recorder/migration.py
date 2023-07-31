@@ -423,13 +423,7 @@ def _add_columns(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(
-                    text(
-                        "ALTER TABLE {table} {column_def}".format(
-                            table=table_name, column_def=column_def
-                        )
-                    )
-                )
+                connection.execute(text(f"ALTER TABLE {table_name} {column_def}"))
             except (InternalError, OperationalError, ProgrammingError) as err:
                 raise_if_exception_missing_str(err, ["already exists", "duplicate"])
                 _LOGGER.warning(
@@ -498,13 +492,7 @@ def _modify_columns(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(
-                    text(
-                        "ALTER TABLE {table} {column_def}".format(
-                            table=table_name, column_def=column_def
-                        )
-                    )
-                )
+                connection.execute(text(f"ALTER TABLE {table_name} {column_def}"))
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not modify column %s in table %s", column_def, table_name
