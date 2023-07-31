@@ -310,20 +310,6 @@ async def test_availability_with_shared_state_topic(
         "entity_name_startswith_device_name2",
     ],
 )
-@pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [
-        {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_BIRTH_MESSAGE: {
-                mqtt.ATTR_TOPIC: "homeassistant/status",
-                mqtt.ATTR_PAYLOAD: "online",
-                mqtt.ATTR_QOS: 0,
-                mqtt.ATTR_RETAIN: False,
-            },
-        }
-    ],
-)
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 async def test_default_entity_and_device_name(
@@ -347,7 +333,7 @@ async def test_default_entity_and_device_name(
     hass.state = CoreState.starting
     await hass.async_block_till_done()
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "mock-broker"})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
