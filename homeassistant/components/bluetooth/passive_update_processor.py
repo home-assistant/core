@@ -55,12 +55,12 @@ class PassiveBluetoothEntityKey:
     device_id: str | None
 
     def to_string(self) -> str:
-        """Convert the key to a string."""
+        """Convert the key to a string which can be used as JSON key."""
         return f"{self.key}___{self.device_id or ''}"
 
     @classmethod
     def from_string(cls, key: str) -> PassiveBluetoothEntityKey:
-        """Convert a string to a key."""
+        """Convert a string (from JSON) to a key."""
         key, device_id = key.split("___")
         return cls(key, device_id or None)
 
