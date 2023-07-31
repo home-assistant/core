@@ -35,11 +35,11 @@ from .const import (
     DOMAIN,
     LED_MODE_KEY,
     RECORDING_MODE_KEY,
-    SENSOR_TYPES,
     SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD,
     SIGNAL_LOGI_CIRCLE_SNAPSHOT,
 )
+from .sensor import SENSOR_TYPES
 
 NOTIFICATION_ID = "logi_circle_notification"
 NOTIFICATION_TITLE = "Logi Circle Setup"

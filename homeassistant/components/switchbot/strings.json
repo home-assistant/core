@@ -67,9 +67,6 @@
       "door_timeout": {
         "name": "Timeout"
       },
-      "light": {
-        "name": "[%key:component::binary_sensor::entity_component::light::name%]"
-      },
       "door_unclosed_alarm": {
         "name": "Unclosed alarm"
       },
@@ -87,17 +84,8 @@
       "wifi_signal": {
         "name": "Wi-Fi signal"
       },
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      },
       "light_level": {
         "name": "Light level"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "power": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
       }
     },
     "cover": {

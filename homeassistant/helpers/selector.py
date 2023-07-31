@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from functools import cache
-from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
+from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
 from uuid import UUID
 
-from typing_extensions import Required
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
@@ -453,6 +451,27 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         return value
 
 
+class ConditionSelectorConfig(TypedDict):
+    """Class to represent an action selector config."""
+
+
+@SELECTORS.register("condition")
+class ConditionSelector(Selector[ConditionSelectorConfig]):
+    """Selector of an condition sequence (script syntax)."""
+
+    selector_type = "condition"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: ConditionSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.CONDITIONS_SCHEMA)(data)
+
+
 class ConfigEntrySelectorConfig(TypedDict, total=False):
     """Class to represent a config entry selector config."""
 
@@ -520,7 +539,7 @@ class ConversationAgentSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("conversation_agent")
-class COnversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
+class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
     """Selector for a conversation agent."""
 
     selector_type = "conversation_agent"
@@ -1116,6 +1135,7 @@ class TextSelectorConfig(TypedDict, total=False):
     """Class to represent a text selector config."""
 
     multiline: bool
+    prefix: str
     suffix: str
     type: TextSelectorType
     autocomplete: str
@@ -1148,6 +1168,7 @@ class TextSelector(Selector[TextSelectorConfig]):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("multiline", default=False): bool,
+            vol.Optional("prefix"): str,
             vol.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.
@@ -1178,7 +1199,11 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     selector_type = "theme"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("include_default", default=False): cv.boolean,
+        }
+    )
 
     def __init__(self, config: ThemeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

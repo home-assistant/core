@@ -147,7 +147,7 @@ async def test_strip(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.my_strip") is None
 
     for plug_id in range(2):
-        entity_id = f"switch.plug{plug_id}"
+        entity_id = f"switch.my_strip_plug{plug_id}"
         state = hass.states.get(entity_id)
         assert state.state == STATE_ON
 
@@ -176,7 +176,7 @@ async def test_strip_unique_ids(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     for plug_id in range(2):
-        entity_id = f"switch.plug{plug_id}"
+        entity_id = f"switch.my_strip_plug{plug_id}"
         entity_registry = er.async_get(hass)
         assert (
             entity_registry.async_get(entity_id).unique_id == f"PLUG{plug_id}DEVICEID"
