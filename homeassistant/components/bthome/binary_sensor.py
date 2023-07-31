@@ -206,4 +206,4 @@ class BTHomeBluetoothBinarySensorEntity(
         coordinator: BTHomePassiveBluetoothProcessorCoordinator = (
             self.processor.coordinator
         )
-        return coordinator.device_data.sleepy_device or super().available
+        return coordinator.sleepy_device or super().available
