@@ -10,7 +10,7 @@
     },
     "entity_name_is_device_name": {
       "title": "MQTT entities with a name is equal to device name",
-      "description": "Some MQTT entities have an entity name that is equal to the device name. This is not expected. To avoid a duplicate name the entity name is set to `null` as a work-a-round. Please update your configuration, or inform the maintainer of the integration that supplies the entity, and restart Home Assistant to fix this issue.\n\nList of effected entities:\n\n{config}"
+      "description": "Some MQTT entities have an entity name equal to the device name. This is not expected. The entity name is set to `null` as a work-a-round to avoid a duplicate name. Please update your configuration, or inform the maintainer of the software application that supplies the entity, and restart Home Assistant to fix this issue.\n\nList of effected entities:\n\n{config}"
     },
     "entity_name_startswith_device_name": {
       "title": "MQTT entities with a name that starts with the device name",
