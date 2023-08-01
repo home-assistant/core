@@ -205,14 +205,15 @@ def async_register_coordinator_for_restore(
 ) -> CALLBACK_TYPE:
     """Register a coordinator to have its processors data restored."""
     data: PassiveBluetoothProcessorData = hass.data[PASSIVE_UPDATE_PROCESSOR]
-    data.coordinators.add(coordinator)
+    coordinators = data.coordinators
+    coordinators.add(coordinator)
     if restore_key := coordinator.restore_key:
         coordinator.restore_data = data.all_restore_data.setdefault(restore_key, {})
 
     @callback
     def _unregister_coordinator_for_restore() -> None:
         """Unregister a coordinator."""
-        data.coordinators.remove(coordinator)
+        coordinators.remove(coordinator)
 
     return _unregister_coordinator_for_restore
 
