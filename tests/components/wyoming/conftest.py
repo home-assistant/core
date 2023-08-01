@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -69,3 +70,16 @@ async def init_wyoming_tts(hass: HomeAssistant, tts_config_entry: ConfigEntry):
         return_value=TTS_INFO,
     ):
         await hass.config_entries.async_setup(tts_config_entry.entry_id)
+
+
+@pytest.fixture
+def metadata(hass: HomeAssistant) -> stt.SpeechMetadata:
+    """Get default STT metadata."""
+    return stt.SpeechMetadata(
+        language=hass.config.language,
+        format=stt.AudioFormats.WAV,
+        codec=stt.AudioCodecs.PCM,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
