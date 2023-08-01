@@ -125,7 +125,6 @@ async def _async_get_adapter_from_address(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
-
     await passive_update_processor.async_setup(hass)
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     integration_matcher.async_setup()
