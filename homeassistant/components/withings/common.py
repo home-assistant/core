@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from http import HTTPStatus
 import logging
 import re
@@ -27,7 +27,6 @@ from withings_api.common import (
     query_measure_groups,
 )
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import webhook
 from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.http import HomeAssistantView
@@ -449,7 +448,7 @@ class DataManager:
             0,
             0,
             0,
-            datetime.timezone.utc,
+            datetime.UTC,
         )
 
         def get_sleep_summary() -> SleepGetSummaryResponse:

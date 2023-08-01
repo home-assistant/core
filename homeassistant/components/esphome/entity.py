@@ -164,11 +164,11 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         if object_id := entity_info.object_id:
             # Use the object_id to suggest the entity_id
             self.entity_id = f"{domain}.{device_info.name}_{object_id}"
-        self._attr_has_entity_name = bool(device_info.friendly_name)
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
         self._entry_id = entry_data.entry_id
+        self._attr_has_entity_name = bool(device_info.friendly_name)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

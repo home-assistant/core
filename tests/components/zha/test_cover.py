@@ -32,6 +32,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
     async_enable_traffic,
@@ -332,7 +333,7 @@ async def test_shade(
 
     # close from UI command fails
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_CLOSE_COVER,
@@ -357,7 +358,7 @@ async def test_shade(
     assert ATTR_CURRENT_POSITION not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster_level, {0: 0})
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_OPEN_COVER,
@@ -381,7 +382,7 @@ async def test_shade(
 
     # set position UI command fails
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_SET_COVER_POSITION,
@@ -422,7 +423,7 @@ async def test_shade(
 
     # test cover stop
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_STOP_COVER,
@@ -491,7 +492,7 @@ async def test_keen_vent(
     p2 = patch.object(cluster_level, "request", return_value=[4, 0])
 
     with p1, p2:
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_OPEN_COVER,

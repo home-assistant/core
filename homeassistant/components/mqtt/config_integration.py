@@ -22,6 +22,7 @@ from . import (
     climate as climate_platform,
     cover as cover_platform,
     device_tracker as device_tracker_platform,
+    event as event_platform,
     fan as fan_platform,
     humidifier as humidifier_platform,
     image as image_platform,
@@ -81,6 +82,10 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.DEVICE_TRACKER.value: vol.All(
             cv.ensure_list,
             [device_tracker_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
+        ),
+        Platform.EVENT.value: vol.All(
+            cv.ensure_list,
+            [event_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.FAN.value: vol.All(
             cv.ensure_list,
