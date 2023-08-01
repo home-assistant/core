@@ -176,8 +176,6 @@ class MillSensor(CoordinatorEntity, SensorEntity):
             manufacturer=MANUFACTURER,
             model=mill_device.model,
         )
-
-        self._attr_device_info["model"] = mill_device.model
         self._update_attr(mill_device)
 
     @callback
