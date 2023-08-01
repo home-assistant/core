@@ -66,6 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     coordinator_map: dict[str, RoborockDataUpdateCoordinator] = {}
     for device_id, device in device_map.items():
+        if device_id not in network_info:
+            continue
         coordinator_map[device_id] = RoborockDataUpdateCoordinator(
             hass,
             device,
