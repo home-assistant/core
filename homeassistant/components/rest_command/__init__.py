@@ -132,17 +132,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     headers=headers,
                     timeout=timeout,
                 ) as response:
-                    return_data: ServiceResponse = {
-                        "status": response.status,
-                        "headers": [
-                            {"key": item[0], "value": item[1]}
-                            for item in response.headers.items()
-                        ],
-                        "content": (await response.content.read()).decode(
-                            response.get_encoding()
-                        ),
-                        "url": str(response.url),
-                    }
+                    return_data: ServiceResponse = (
+                        {
+                            "status": response.status,
+                            "headers": [
+                                {"key": item[0], "value": item[1]}
+                                for item in response.headers.items()
+                            ],
+                            "content": (await response.content.read()).decode(
+                                response.get_encoding()
+                            ),
+                            "url": str(response.url),
+                        }
+                        if service.return_response
+                        else None
+                    )
 
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
