@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-from aiohttp import hdrs
+from aiohttp import ClientResponse, hdrs
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,7 +17,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -89,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if CONF_CONTENT_TYPE in command_config:
             content_type = command_config[CONF_CONTENT_TYPE]
 
-        async def async_service_handler(service: ServiceCall) -> None:
+        async def async_service_handler(service: ServiceCall) -> ServiceResponse:
             """Execute a shell command service."""
             payload = None
             if template_payload:
@@ -118,6 +124,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 headers[hdrs.CONTENT_TYPE] = content_type
 
             try:
+                response: ClientResponse
                 async with getattr(websession, method)(
                     request_url,
                     data=payload,
@@ -125,6 +132,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     headers=headers,
                     timeout=timeout,
                 ) as response:
+                    return_data: ServiceResponse = {
+                        "status": response.status,
+                        "headers": [
+                            {"key": item[0], "value": item[1]}
+                            for item in response.headers.items()
+                        ],
+                        "content": (await response.content.read()).decode(
+                            response.get_encoding()
+                        ),
+                        "url": str(response.url),
+                    }
+
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
                             "Success. Url: %s. Status code: %d. Payload: %s",
@@ -140,6 +159,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             payload,
                         )
 
+                    return return_data
+
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s", request_url)
 
@@ -150,8 +171,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     err,
                 )
 
+            return None
+
         # register services
-        hass.services.async_register(DOMAIN, name, async_service_handler)
+        hass.services.async_register(
+            DOMAIN,
+            name,
+            async_service_handler,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
 
     for name, command_config in config[DOMAIN].items():
         async_register_rest_command(name, command_config)
