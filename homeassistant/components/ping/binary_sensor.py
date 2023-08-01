@@ -1,16 +1,10 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
 from __future__ import annotations
 
-import asyncio
-from contextlib import suppress
-from datetime import timedelta
 import logging
-import re
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from icmplib import NameLookupError, async_ping
 import voluptuous as vol
-from voluptuous import Schema
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -18,21 +12,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import PingDomainData, PingUpdateCoordinator
 from .const import (
+    CONF_IMPORTED_BY,
     CONF_PING_COUNT,
     DEFAULT_PING_COUNT,
     DOMAIN,
-    ICMP_TIMEOUT,
-    PING_PRIVS,
-    PING_TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,36 +35,14 @@ ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
 ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
-DEFAULT_NAME = "Ping"
-
-SCAN_INTERVAL = timedelta(minutes=5)
-
-PARALLEL_UPDATES = 50
-
-PING_MATCHER = re.compile(
-    r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)"
-)
-
-PING_MATCHER_BUSYBOX = re.compile(
-    r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)"
-)
-
-WIN32_PING_MATCHER = re.compile(r"(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms")
-
-
-PLATFORM_SCHEMA = Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        PARENT_PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
-                    min=1, max=100
-                ),
-            }
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
+            min=1, max=100
         ),
-    )
+    }
 )
 
 
@@ -81,7 +52,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Ping Binary sensor."""
+    """Legacy init: Trigger the import config flow and create a deprecated yaml issue."""
 
     async_create_issue(
         hass,
@@ -100,7 +71,9 @@ async def async_setup_platform(
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_IMPORTED_BY: "binary_sensor", **config},
         )
     )
 
@@ -109,218 +82,51 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Ping config entry."""
-    host: str = entry.options[CONF_HOST]
-    count: int = int(entry.options[CONF_PING_COUNT])
+
+    data: PingDomainData = hass.data[DOMAIN]
+
     name: str = entry.options[CONF_NAME]
-    privileged: bool | None = hass.data[DOMAIN][PING_PRIVS]
-    ping_cls: type[PingDataSubProcess | PingDataICMPLib]
-    if privileged is None:
-        ping_cls = PingDataSubProcess
-    else:
-        ping_cls = PingDataICMPLib
+    coordinator: PingUpdateCoordinator = data.coordinators[entry.entry_id]
 
-    async_add_entities(
-        [
-            PingBinarySensor(
-                name, ping_cls(hass, host, count, privileged), entry.entry_id
-            )
-        ]
-    )
+    async_add_entities([PingBinarySensor(name, entry, coordinator)])
 
 
-class PingBinarySensor(RestoreEntity, BinarySensorEntity):
+class PingBinarySensor(CoordinatorEntity[PingUpdateCoordinator], BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    config_entry: ConfigEntry
 
     def __init__(
-        self,
-        name: str,
-        ping: PingDataSubProcess | PingDataICMPLib,
-        entry_id: str,
+        self, name: str, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
     ) -> None:
-        """Initialize the Ping Binary sensor."""
-        self._attr_available = False
+        """Initialize the Ping binary sensor."""
+        super().__init__(coordinator)
+
         self._attr_name = name
-        self._ping = ping
-        self._attr_unique_id = f"{entry_id}_ping"
+        self._attr_unique_id = f"{config_entry.entry_id}_binary_sensor"
+        self.config_entry = config_entry
 
     @property
     def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        return self._ping.is_alive
+        """Return true if the host is available."""
+        return self.coordinator.data.is_alive
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the ICMP checo request."""
-        if self._ping.data is None:
+        """Return the state attributes of the ICMP echo request."""
+        if self.coordinator.data.data is None:
             return None
         return {
-            ATTR_ROUND_TRIP_TIME_AVG: self._ping.data["avg"],
-            ATTR_ROUND_TRIP_TIME_MAX: self._ping.data["max"],
-            ATTR_ROUND_TRIP_TIME_MDEV: self._ping.data["mdev"],
-            ATTR_ROUND_TRIP_TIME_MIN: self._ping.data["min"],
+            ATTR_ROUND_TRIP_TIME_AVG: self.coordinator.data.data["avg"],
+            ATTR_ROUND_TRIP_TIME_MAX: self.coordinator.data.data["max"],
+            ATTR_ROUND_TRIP_TIME_MDEV: self.coordinator.data.data["mdev"],
+            ATTR_ROUND_TRIP_TIME_MIN: self.coordinator.data.data["min"],
         }
 
-    async def async_update(self) -> None:
-        """Get the latest data."""
-        await self._ping.async_update()
-        self._attr_available = True
-
-    async def async_added_to_hass(self) -> None:
-        """Restore previous state on restart to avoid blocking startup."""
-        await super().async_added_to_hass()
-
-        last_state = await self.async_get_last_state()
-        if last_state is not None:
-            self._attr_available = True
-
-        if last_state is None or last_state.state != STATE_ON:
-            self._ping.data = None
-            return
-
-        attributes = last_state.attributes
-        self._ping.is_alive = True
-        self._ping.data = {
-            "min": attributes[ATTR_ROUND_TRIP_TIME_MIN],
-            "max": attributes[ATTR_ROUND_TRIP_TIME_MAX],
-            "avg": attributes[ATTR_ROUND_TRIP_TIME_AVG],
-            "mdev": attributes[ATTR_ROUND_TRIP_TIME_MDEV],
-        }
-
-
-class PingData:
-    """The base class for handling the data retrieval."""
-
-    def __init__(self, hass: HomeAssistant, host: str, count: int) -> None:
-        """Initialize the data object."""
-        self.hass = hass
-        self._ip_address = host
-        self._count = count
-        self.data: dict[str, Any] | None = None
-        self.is_alive = False
-
-
-class PingDataICMPLib(PingData):
-    """The Class for handling the data retrieval using icmplib."""
-
-    def __init__(
-        self, hass: HomeAssistant, host: str, count: int, privileged: bool | None
-    ) -> None:
-        """Initialize the data object."""
-        super().__init__(hass, host, count)
-        self._privileged = privileged
-
-    async def async_update(self) -> None:
-        """Retrieve the latest details from the host."""
-        _LOGGER.debug("ping address: %s", self._ip_address)
-        try:
-            data = await async_ping(
-                self._ip_address,
-                count=self._count,
-                timeout=ICMP_TIMEOUT,
-                privileged=self._privileged,
-            )
-        except NameLookupError:
-            self.is_alive = False
-            return
-
-        self.is_alive = data.is_alive
-        if not self.is_alive:
-            self.data = None
-            return
-
-        self.data = {
-            "min": data.min_rtt,
-            "max": data.max_rtt,
-            "avg": data.avg_rtt,
-            "mdev": "",
-        }
-
-
-class PingDataSubProcess(PingData):
-    """The Class for handling the data retrieval using the ping binary."""
-
-    def __init__(
-        self, hass: HomeAssistant, host: str, count: int, privileged: bool | None
-    ) -> None:
-        """Initialize the data object."""
-        super().__init__(hass, host, count)
-        self._ping_cmd = [
-            "ping",
-            "-n",
-            "-q",
-            "-c",
-            str(self._count),
-            "-W1",
-            self._ip_address,
-        ]
-
-    async def async_ping(self) -> dict[str, Any] | None:
-        """Send ICMP echo request and return details if success."""
-        pinger = await asyncio.create_subprocess_exec(
-            *self._ping_cmd,
-            stdin=None,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            close_fds=False,  # required for posix_spawn
-        )
-        try:
-            async with asyncio.timeout(self._count + PING_TIMEOUT):
-                out_data, out_error = await pinger.communicate()
-
-            if out_data:
-                _LOGGER.debug(
-                    "Output of command: `%s`, return code: %s:\n%s",
-                    " ".join(self._ping_cmd),
-                    pinger.returncode,
-                    out_data,
-                )
-            if out_error:
-                _LOGGER.debug(
-                    "Error of command: `%s`, return code: %s:\n%s",
-                    " ".join(self._ping_cmd),
-                    pinger.returncode,
-                    out_error,
-                )
-
-            if pinger.returncode and pinger.returncode > 1:
-                # returncode of 1 means the host is unreachable
-                _LOGGER.exception(
-                    "Error running command: `%s`, return code: %s",
-                    " ".join(self._ping_cmd),
-                    pinger.returncode,
-                )
-
-            if "max/" not in str(out_data):
-                match = PING_MATCHER_BUSYBOX.search(
-                    str(out_data).rsplit("\n", maxsplit=1)[-1]
-                )
-                if TYPE_CHECKING:
-                    assert match is not None
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
-            if TYPE_CHECKING:
-                assert match is not None
-            rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-            return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except asyncio.TimeoutError:
-            _LOGGER.exception(
-                "Timed out running command: `%s`, after: %ss",
-                self._ping_cmd,
-                self._count + PING_TIMEOUT,
-            )
-            if pinger:
-                with suppress(TypeError):
-                    await pinger.kill()  # type: ignore[func-returns-value]
-                del pinger
-
-            return None
-        except AttributeError:
-            return None
-
-    async def async_update(self) -> None:
-        """Retrieve the latest details from the host."""
-        self.data = await self.async_ping()
-        self.is_alive = self.data is not None
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        if CONF_IMPORTED_BY in self.config_entry.options:
+            return bool(self.config_entry.options[CONF_IMPORTED_BY] == "binary_sensor")
+        return True

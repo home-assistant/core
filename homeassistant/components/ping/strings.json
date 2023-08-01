@@ -10,13 +10,6 @@
       "user": {
         "title": "Add Ping",
         "description": "Ping allows you to check the availability of a host.",
-        "menu_options": {
-          "binary_sensor": "Binary sensor",
-          "device_tracker": "Device tracker"
-        }
-      },
-      "binary_sensor": {
-        "title": "[%key:component::ping::config::step::user::menu_options::binary_sensor%]",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
@@ -25,17 +18,17 @@
       }
     },
     "abort": {
-      "no_matching_platform_type": "No matching platform type found.",
+      "missing_data": "Imported data missing data.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
     "step": {
-      "binary_sensor": {
+      "init": {
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "count": "[%key:component::ping::config::step::binary_sensor::data::count%]"
+          "count": "[%key:component::ping::config::step::user::data::count%]"
         }
       }
     }

@@ -11,11 +11,9 @@ PING_TIMEOUT = 3
 # icmplib timeout
 ICMP_TIMEOUT = 1
 
-PING_ATTEMPTS_COUNT = 3
-
 DOMAIN = "ping"
-
-PING_PRIVS = "ping_privs"
 
 CONF_PING_COUNT = "count"
 DEFAULT_PING_COUNT = 5
+
+CONF_IMPORTED_BY = "imported_by"
