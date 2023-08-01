@@ -64,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=f"envoy {name}",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
+        always_update=False,
     )
 
     try:
