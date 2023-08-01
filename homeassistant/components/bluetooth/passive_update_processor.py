@@ -42,6 +42,12 @@ if TYPE_CHECKING:
         BluetoothServiceInfoBleak,
     )
 
+STORAGE_KEY = "bluetooth.passive_update_processor"
+STORAGE_VERSION = 1
+STORAGE_SAVE_INTERVAL = timedelta(minutes=15)
+PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
+_T = TypeVar("_T")
+
 
 @dataclasses.dataclass(slots=True, frozen=True)
 class PassiveBluetoothEntityKey:
@@ -64,14 +70,6 @@ class PassiveBluetoothEntityKey:
         """Convert a string (from JSON) to a key."""
         key, device_id = key.split("___")
         return cls(key, device_id or None)
-
-
-_T = TypeVar("_T")
-
-STORAGE_KEY = "bluetooth.passive_update_processor"
-STORAGE_VERSION = 1
-STORAGE_SAVE_INTERVAL = timedelta(minutes=15)
-PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
 
 
 @dataclasses.dataclass(slots=True, frozen=False)
