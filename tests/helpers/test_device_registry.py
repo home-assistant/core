@@ -1767,3 +1767,7 @@ async def test_loading_invalid_configuration_url_from_storage(
     await dr.async_load(hass)
     registry = dr.async_get(hass)
     assert len(registry.devices) == 1
+    entry = registry.async_get_or_create(
+        config_entry_id="1234", identifiers={("serial", "12:34:56:AB:CD:EF")}
+    )
+    assert entry.configuration_url == "invalid"
