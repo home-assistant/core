@@ -14,7 +14,7 @@ from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Minecraft Server."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
