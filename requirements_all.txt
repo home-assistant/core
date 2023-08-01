@@ -26,7 +26,7 @@ CO2Signal==0.4.2
 DoorBirdPy==2.1.0
 
 # homeassistant.components.homekit
-HAP-python==4.7.0
+HAP-python==4.7.1
 
 # homeassistant.components.tasmota
 HATasmota==0.6.5
@@ -988,7 +988,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230725.0
+home-assistant-frontend==20230801.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.7.25
@@ -1129,7 +1129,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==5.5.0
+life360==6.0.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -1368,7 +1368,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.16
+opower==0.0.18
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1650,7 +1650,7 @@ pydrawise==2023.7.1
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.7.3
+pyduotecno==2023.8.0
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -2227,7 +2227,7 @@ pyvolumio==0.1.5
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==1.2.0
+pywemo==1.2.1
 
 # homeassistant.components.wilight
 pywilight==0.0.74
