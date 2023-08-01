@@ -82,6 +82,8 @@ class PhilipsTVBinarySensorEntityRecordingType(
 ):
     """A Philips TV binary sensor class, which allows multiple entities given by a BinarySensorEntityDescription."""
 
+    entity_description: PhilipsTVBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -89,11 +91,10 @@ class PhilipsTVBinarySensorEntityRecordingType(
     ) -> None:
         """Initialize entity class."""
         self.coordinator = coordinator
-        self.description = description
 
-        self.entity_description = self.description
-        self._attr_unique_id = f"{self.coordinator.unique_id}_{self.description.key}"
-        self._attr_device_info = self.coordinator.device_info
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
+        self._attr_device_info = coordinator.device_info
 
         super().__init__(coordinator)
 
@@ -102,7 +103,7 @@ class PhilipsTVBinarySensorEntityRecordingType(
         """Handle updated data from the coordinator and set is_on true if one specified value is available within given entry of list."""
         self._attr_is_on = _check_for_recording_entry(
             self.coordinator.api,
-            self.description.recording_entry,
-            self.description.recording_value,
+            self.entity_description.recording_entry,
+            self.entity_description.recording_value,
         )
         super()._handle_coordinator_update()
