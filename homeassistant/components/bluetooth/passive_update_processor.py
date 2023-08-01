@@ -68,6 +68,7 @@ class PassiveBluetoothEntityKey:
 _T = TypeVar("_T")
 
 STORAGE_KEY = "bluetooth.passive_update_processor"
+STORAGE_VERSION = 1
 STORAGE_SAVE_INTERVAL = timedelta(minutes=15)
 PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
 
@@ -76,12 +77,8 @@ PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
 class PassiveBluetoothProcessorData:
     """Data for the passive bluetooth processor."""
 
-    coordinators: set[PassiveBluetoothProcessorCoordinator] = dataclasses.field(
-        default_factory=set
-    )
-    all_restore_data: dict[
-        str, dict[str, RestoredPassiveBluetoothDataUpdate]
-    ] = dataclasses.field(default_factory=dict)
+    coordinators: set[PassiveBluetoothProcessorCoordinator]
+    all_restore_data: dict[str, dict[str, RestoredPassiveBluetoothDataUpdate]]
 
 
 class RestoredPassiveBluetoothDataUpdate(TypedDict):
@@ -223,14 +220,16 @@ def async_register_coordinator_for_restore(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the passive update processor coordinators."""
-    data = PassiveBluetoothProcessorData()
-    hass.data[PASSIVE_UPDATE_PROCESSOR] = data
     storage: Store[dict[str, dict[str, RestoredPassiveBluetoothDataUpdate]]] = Store(
-        hass, 1, STORAGE_KEY
+        hass, STORAGE_VERSION, STORAGE_KEY
     )
-    if restore_data := await storage.async_load():
-        data.all_restore_data = restore_data
-    coordinators = data.coordinators
+    coordinators: set[PassiveBluetoothProcessorCoordinator] = set()
+    all_restore_data: dict[str, dict[str, RestoredPassiveBluetoothDataUpdate]] = (
+        await storage.async_load() or {}
+    )
+    hass.data[PASSIVE_UPDATE_PROCESSOR] = PassiveBluetoothProcessorData(
+        coordinators, all_restore_data
+    )
 
     async def _async_save_processor_data(_: Any) -> None:
         """Save the processor data."""
