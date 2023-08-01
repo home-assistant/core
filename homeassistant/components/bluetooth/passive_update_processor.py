@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_NAME,
+    CONF_ENTITY_CATEGORY,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
 )
@@ -107,7 +108,7 @@ def deserialize_entity_description(
         # out, but it doesn't. If we end up using this in more
         # places we can add a `as_dict` and a `from_dict`
         # method to these classes
-        if field_name == "entity_category":
+        if field_name == CONF_ENTITY_CATEGORY:
             value = try_parse_enum(EntityCategory, data.get(field_name))
         else:
             value = data.get(field_name)
