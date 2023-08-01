@@ -118,12 +118,12 @@ def deserialize_entity_description(
 
 def serialize_entity_description(description: EntityDescription) -> dict[str, Any]:
     """Serialize an entity description."""
-    result: dict[str, Any] = dataclasses.asdict(description)
-    for field in cached_fields(type(description)):  # type: ignore[arg-type]
-        field_name = field.name
-        if field.default == result.get(field_name):
-            del result[field_name]
-    return result
+    as_dict = dataclasses.asdict(description)
+    return {
+        field.name: as_dict[field.name]
+        for field in cached_fields(type(description))  # type: ignore[arg-type]
+        if field.default != as_dict.get(field.name)
+    }
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
