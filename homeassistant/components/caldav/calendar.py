@@ -126,7 +126,12 @@ class WebDavCalendarEntity(CalendarEntity):
 
     def __init__(self, name, calendar, entity_id, days, all_day=False, search=None):
         """Create the WebDav Calendar Event Device."""
-        self.data = WebDavCalendarData(calendar, days, all_day, search)
+        self.data = WebDavCalendarData(
+            calendar=calendar,
+            days=days,
+            include_all_day=all_day,
+            search=search,
+        )
         self.entity_id = entity_id
         self._event: CalendarEvent | None = None
         self._attr_name = name
