@@ -466,6 +466,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Class to load info from REST."""
 
     entity_description: RestEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
