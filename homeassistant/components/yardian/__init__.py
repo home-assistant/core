@@ -4,7 +4,7 @@ from __future__ import annotations
 from pyyardian import AsyncYardianClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -17,8 +17,8 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yardian from a config entry."""
 
-    host = entry.data["host"]
-    access_token = entry.data["access_token"]
+    host = entry.data[CONF_HOST]
+    access_token = entry.data[CONF_ACCESS_TOKEN]
 
     controller = AsyncYardianClient(async_get_clientsession(hass), host, access_token)
     coordinator = YardianUpdateCoordinator(hass, entry, controller)
