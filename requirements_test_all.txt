@@ -2028,7 +2028,7 @@ zeroconf==0.71.4
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.101
+zha-quirks==0.0.102
 
 # homeassistant.components.zha
 zigpy-deconz==0.21.0
