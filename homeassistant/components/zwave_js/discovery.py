@@ -588,6 +588,19 @@ DISCOVERY_SCHEMAS = [
         ),
         absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
     ),
+    # Logic Group ZDB5100
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="black_is_off",
+        manufacturer_id={0x0234},
+        product_id={0x0121},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_COLOR},
+            property={CURRENT_COLOR_PROPERTY},
+            property_key={None},
+        ),
+    ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     # Door Lock CC
