@@ -105,7 +105,12 @@ def setup_platform(
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEntity(
-                    name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH]
+                    name=name,
+                    calendar=calendar,
+                    entity_id=entity_id,
+                    days=days,
+                    all_day=True,
+                    search=cust_calendar[CONF_SEARCH],
                 )
             )
 
