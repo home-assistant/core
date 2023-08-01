@@ -32,6 +32,7 @@ from .core.const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_CONFIG,
+    DATA_ZHA_GATEWAY,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
@@ -157,6 +158,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
+
+    try:
+        del hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    except KeyError:
+        return False
+
     GROUP_PROBE.cleanup()
     websocket_api.async_unload_api(hass)
 
