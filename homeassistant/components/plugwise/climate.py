@@ -150,7 +150,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         """Return entity specific state attributes."""
         return {
             "available_schemas": self.device["available_schedules"],
-            "selected_schema": self.device["selected_schedule"],
+            "selected_schema": self.device["select_schedule"],
         }
 
     @plugwise_command

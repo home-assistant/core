@@ -55,6 +55,7 @@
       "model": "ThermoTouch",
       "name": "Anna",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+      "select_schedule": "Weekschema",
       "selected_schedule": "None",
       "sensors": {
         "setpoint_high": 23.5,
@@ -89,6 +90,7 @@
         "bleeding_hot",
         "cooling"
       ],
+      "select_regulation_mode": "heating",
       "sensors": {
         "outdoor_temperature": 29.65
       },
@@ -109,7 +111,7 @@
       "model": "Lisa",
       "name": "Lisa Badkamer",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "selected_schedule": "Badkamer",
+      "select_schedule": "Badkamer",
       "sensors": {
         "battery": 56,
         "setpoint_high": 23.5,

@@ -69,7 +69,7 @@
       "model": "ThermoTouch",
       "name": "Anna",
       "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
-      "selected_schedule": "standaard",
+      "select_schedule": "standaard",
       "sensors": {
         "cooling_activation_outdoor_temperature": 21.0,
         "cooling_deactivation_threshold": 4.0,

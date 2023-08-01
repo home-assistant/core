@@ -117,7 +117,7 @@
       "model": "Lisa",
       "name": "Zone Thermostat Jessie",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "selected_schedule": "CV Jessie",
+      "select_schedule": "CV Jessie",
       "sensors": {
         "battery": 37,
         "setpoint": 15.0,
@@ -239,7 +239,7 @@
       "model": "Lisa",
       "name": "Zone Lisa WK",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "selected_schedule": "GF7  Woonkamer",
+      "select_schedule": "GF7  Woonkamer",
       "sensors": {
         "battery": 34,
         "setpoint": 21.5,
@@ -311,7 +311,7 @@
       "model": "Lisa",
       "name": "Zone Lisa Bios",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "selected_schedule": "None",
+      "select_schedule": "None",
       "sensors": {
         "battery": 67,
         "setpoint": 13.0,
@@ -345,7 +345,7 @@
       "model": "Tom/Floor",
       "name": "CV Kraan Garage",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "selected_schedule": "None",
+      "select_schedule": "None",
       "sensors": {
         "battery": 68,
         "setpoint": 5.5,
@@ -381,7 +381,7 @@
       "model": "Lisa",
       "name": "Zone Thermostat Badkamer",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "selected_schedule": "Badkamer Schema",
+      "select_schedule": "Badkamer Schema",
       "sensors": {
         "battery": 92,
         "setpoint": 14.0,
@@ -407,7 +407,7 @@
       "mac_address": "012345670001",
       "model": "Gateway",
       "name": "Adam",
-      "regulation_mode": "heating",
+      "select_regulation_mode": "heating",
       "sensors": {
         "outdoor_temperature": 7.81
       },
