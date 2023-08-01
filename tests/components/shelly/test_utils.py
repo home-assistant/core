@@ -207,7 +207,7 @@ async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
 async def test_get_rpc_channel_name(mock_rpc_device) -> None:
     """Test get RPC channel name."""
     assert get_rpc_channel_name(mock_rpc_device, "input:0") == "test switch_0"
-    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "switch 3"
+    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Switch 3"
 
 
 async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:

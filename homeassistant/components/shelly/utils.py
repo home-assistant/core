@@ -296,7 +296,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
 
     if entity_name is None:
         if key.startswith(("input:", "light:", "switch:")):
-            return key.replace(":", " ")
+            return key.replace(":", " ").capitalize()
 
     return entity_name
 
