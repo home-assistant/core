@@ -1223,7 +1223,7 @@ pydiscovergy==2.0.1
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.7.3
+pyduotecno==2023.8.0
 
 # homeassistant.components.econet
 pyeconet==0.1.20
