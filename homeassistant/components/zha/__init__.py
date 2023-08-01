@@ -10,7 +10,7 @@ from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -32,8 +32,6 @@ from .core.const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_CONFIG,
-    DATA_ZHA_GATEWAY,
-    DATA_ZHA_SHUTDOWN_TASK,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
@@ -137,6 +135,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
 
+    config_entry.async_on_unload(zha_gateway.shutdown)
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -149,15 +149,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     websocket_api.async_load_api(hass)
 
-    async def async_zha_shutdown(event):
-        """Handle shutdown tasks."""
-        zha_gateway: ZHAGateway = zha_data[DATA_ZHA_GATEWAY]
-        await zha_gateway.shutdown()
-
-    zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
-    )
-
     await zha_gateway.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
@@ -166,9 +157,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA].pop(DATA_ZHA_GATEWAY)
-    await zha_gateway.shutdown()
-
     GROUP_PROBE.cleanup()
     websocket_api.async_unload_api(hass)
 
@@ -179,8 +167,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             for platform in PLATFORMS
         )
     )
-
-    hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
 
     return True
 
