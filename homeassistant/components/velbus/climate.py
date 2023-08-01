@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, PRESET_MODES
@@ -27,10 +28,7 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    entities = []
-    for channel in cntrl.get_all("climate"):
-        entities.append(VelbusClimate(channel))
-    async_add_entities(entities)
+    async_add_entities(VelbusClimate(channel) for channel in cntrl.get_all("climate"))
 
 
 class VelbusClimate(VelbusEntity, ClimateEntity):
@@ -71,10 +69,16 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._channel.set_temp(temp)
+        try:
+            await self._channel.set_temp(temp)
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the set_temp packet failed") from err
         self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the new preset mode."""
-        await self._channel.set_preset(PRESET_MODES[preset_mode])
+        try:
+            await self._channel.set_preset(PRESET_MODES[preset_mode])
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the set_mode packet failed") from err
         self.async_write_ha_state()

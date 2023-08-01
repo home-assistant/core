@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -83,16 +84,28 @@ class VelbusCover(VelbusEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._channel.open()
+        try:
+            await self._channel.open()
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the open packet failed") from err
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._channel.close()
+        try:
+            await self._channel.close()
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the close packet failed") from err
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._channel.stop()
+        try:
+            await self._channel.stop()
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the stop packet failed") from err
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._channel.set_position(100 - kwargs[ATTR_POSITION])
+        try:
+            await self._channel.set_position(100 - kwargs[ATTR_POSITION])
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the position packet failed") from err

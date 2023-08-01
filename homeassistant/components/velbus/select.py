@@ -5,6 +5,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -39,7 +40,12 @@ class VelbusSelect(VelbusEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the program on the module."""
-        await self._channel.set_selected_program(option)
+        try:
+            await self._channel.set_selected_program(option)
+        except OSError as err:
+            raise HomeAssistantError(
+                "Transmit for the select_option packet failed"
+            ) from err
 
     @property
     def current_option(self) -> str:

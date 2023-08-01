@@ -22,6 +22,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -81,7 +82,10 @@ class VelbusLight(VelbusEntity, LightEntity):
                 "restore_dimmer_state",
                 kwargs.get(ATTR_TRANSITION, 0),
             )
-        await getattr(self._channel, attr)(*args)
+        try:
+            await getattr(self._channel, attr)(*args)
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the turn_on packet failed") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
@@ -90,7 +94,10 @@ class VelbusLight(VelbusEntity, LightEntity):
             0,
             kwargs.get(ATTR_TRANSITION, 0),
         )
-        await getattr(self._channel, attr)(*args)
+        try:
+            await getattr(self._channel, attr)(*args)
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the turn_off packet failed") from err
 
 
 class VelbusButtonLight(VelbusEntity, LightEntity):
@@ -124,9 +131,15 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
                 attr, *args = "set_led_state", "on"
         else:
             attr, *args = "set_led_state", "on"
-        await getattr(self._channel, attr)(*args)
+        try:
+            await getattr(self._channel, attr)(*args)
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the turn_on packet failed") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
         attr, *args = "set_led_state", "off"
-        await getattr(self._channel, attr)(*args)
+        try:
+            await getattr(self._channel, attr)(*args)
+        except OSError as err:
+            raise HomeAssistantError("Transmit for the turn_off packet failed") from err
