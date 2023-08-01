@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
 from requests.exceptions import ConnectTimeout
 
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
@@ -14,20 +15,27 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+MOCKED_MODEL = "homeassistant.components.dremel_3d_printer.Dremel3DPrinter.get_model"
 
+
+@pytest.mark.parametrize("model", ["3D45", "3D20"])
 async def test_setup(
-    hass: HomeAssistant, connection, config_entry: MockConfigEntry
+    hass: HomeAssistant, connection, config_entry: MockConfigEntry, model: str
 ) -> None:
     """Test load and unload."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    assert await async_setup_component(hass, DOMAIN, {})
+    with patch(MOCKED_MODEL, return_value=model) as mock:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await async_setup_component(hass, DOMAIN, {})
     assert config_entry.state == ConfigEntryState.LOADED
+    assert mock.called
 
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(MOCKED_MODEL, return_value=model) as mock:
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+    assert mock.called
 
 
 async def test_async_setup_entry_not_ready(
@@ -72,7 +80,9 @@ async def test_device_info(
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert await async_setup_component(hass, DOMAIN, {})
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, config_entry.unique_id)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry.unique_id)}
+    )
 
     assert device.manufacturer == "Dremel"
     assert device.model == "3D45"

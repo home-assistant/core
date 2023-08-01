@@ -19,11 +19,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "charging": {
-        "name": "[%key:component::binary_sensor::entity_component::battery_charging::name%]"
-      }
-    },
     "number": {
       "perfume_amount": {
         "name": "Perfume amount"
@@ -35,9 +30,6 @@
       }
     },
     "sensor": {
-      "battery_percentage": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      },
       "fill": {
         "name": "Fill"
       },

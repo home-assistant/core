@@ -3,19 +3,14 @@ from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DeviceUnavailable
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.components.devolo_home_network.const import (
     CONNECTED_TO_ROUTER,
     LONG_UPDATE_INTERVAL,
 )
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    EntityCategory,
-)
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -42,7 +37,10 @@ async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_attached_to_router(
-    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test state change of a attached_to_router binary sensor device."""
     entry = configure_integration(hass)
@@ -52,15 +50,8 @@ async def test_update_attached_to_router(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{entry.title} Connected to router"
-
-    assert (
-        entity_registry.async_get(state_key).entity_category
-        == EntityCategory.DIAGNOSTIC
-    )
+    assert hass.states.get(state_key) == snapshot
+    assert entity_registry.async_get(state_key) == snapshot
 
     # Emulate device failure
     mock_device.plcnet.async_get_network_overview = AsyncMock(

@@ -47,6 +47,10 @@ class BalboaBinarySensorEntityDescription(
 ):
     """A class that describes Balboa binary sensor entities."""
 
+    # BalboaBinarySensorEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
 
 FILTER_CYCLE_ICONS = ("mdi:sync", "mdi:sync-off")
 BINARY_SENSOR_DESCRIPTIONS = (

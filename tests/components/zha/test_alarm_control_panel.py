@@ -65,7 +65,7 @@ async def test_alarm_control_panel(
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).ias_ace
-    entity_id = await find_entity_id(Platform.ALARM_CONTROL_PANEL, zha_device, hass)
+    entity_id = find_entity_id(Platform.ALARM_CONTROL_PANEL, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
     await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -96,7 +96,6 @@ async def test_alarm_control_panel(
         0,
         security.IasAce.AudibleNotification.Default_Sound,
         security.IasAce.AlarmStatus.No_Alarm,
-        tries=3,
     )
 
     # disarm from HA
@@ -135,7 +134,6 @@ async def test_alarm_control_panel(
         0,
         security.IasAce.AudibleNotification.Default_Sound,
         security.IasAce.AlarmStatus.Emergency,
-        tries=3,
     )
 
     # reset the panel
@@ -159,7 +157,6 @@ async def test_alarm_control_panel(
         0,
         security.IasAce.AudibleNotification.Default_Sound,
         security.IasAce.AlarmStatus.No_Alarm,
-        tries=3,
     )
 
     # arm_night from HA
@@ -180,7 +177,6 @@ async def test_alarm_control_panel(
         0,
         security.IasAce.AudibleNotification.Default_Sound,
         security.IasAce.AlarmStatus.No_Alarm,
-        tries=3,
     )
 
     # reset the panel
@@ -278,6 +274,5 @@ async def reset_alarm_panel(hass, cluster, entity_id):
         0,
         security.IasAce.AudibleNotification.Default_Sound,
         security.IasAce.AlarmStatus.No_Alarm,
-        tries=3,
     )
     cluster.client_command.reset_mock()

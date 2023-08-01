@@ -39,7 +39,6 @@ class RitualsBinarySensorEntityDescription(
 ENTITY_DESCRIPTIONS = (
     RitualsBinarySensorEntityDescription(
         key="charging",
-        translation_key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda diffuser: diffuser.charging,

@@ -28,6 +28,8 @@ async def test_text_only_pipeline(
             "start_stage": "intent",
             "end_stage": "intent",
             "input": {"text": "Are the lights on?"},
+            "conversation_id": "mock-conversation-id",
+            "device_id": "mock-device-id",
         }
     )
 
@@ -954,7 +956,6 @@ async def test_list_pipelines(
 ) -> None:
     """Test we can list pipelines."""
     client = await hass_ws_client(hass)
-    hass.data[DOMAIN]
 
     await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
     msg = await client.receive_json()

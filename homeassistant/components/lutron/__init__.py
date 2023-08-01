@@ -37,6 +37,7 @@ LUTRON_DEVICES = "lutron_devices"
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
 ATTR_FULL_ID = "full_id"
+ATTR_UUID = "uuid"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -170,6 +171,7 @@ class LutronButton:
         self._button = button
         self._event = "lutron_event"
         self._full_id = slugify(f"{area_name} {name}")
+        self._uuid = button.uuid
 
         button.subscribe(self.button_callback, None)
 
@@ -188,5 +190,10 @@ class LutronButton:
             action = "single"
 
         if action:
-            data = {ATTR_ID: self._id, ATTR_ACTION: action, ATTR_FULL_ID: self._full_id}
+            data = {
+                ATTR_ID: self._id,
+                ATTR_ACTION: action,
+                ATTR_FULL_ID: self._full_id,
+                ATTR_UUID: self._uuid,
+            }
             self._hass.bus.fire(self._event, data)

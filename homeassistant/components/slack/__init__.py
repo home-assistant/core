@@ -7,8 +7,8 @@ from aiohttp.client_exceptions import ClientError
 from slack import WebClient
 from slack.errors import SlackApiError
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv, discovery
@@ -36,17 +36,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Slack component."""
     hass.data[DATA_HASS_CONFIG] = config
-
-    # Iterate all entries for notify to only get Slack
-    if Platform.NOTIFY in config:
-        for entry in config[Platform.NOTIFY]:
-            if entry[CONF_PLATFORM] == DOMAIN:
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                    )
-                )
-
     return True
 
 

@@ -128,7 +128,6 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
                 _LOGGER.debug("Update stream URL for camera %s", self.camera_data.name)
                 self.stream.update_source(url)
 
-        assert self.platform
         assert self.platform.config_entry
         self.async_on_remove(
             async_dispatcher_connect(

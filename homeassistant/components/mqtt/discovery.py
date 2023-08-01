@@ -52,8 +52,10 @@ SUPPORTED_COMPONENTS = [
     "cover",
     "device_automation",
     "device_tracker",
+    "event",
     "fan",
     "humidifier",
+    "image",
     "light",
     "lock",
     "number",
@@ -66,6 +68,7 @@ SUPPORTED_COMPONENTS = [
     "text",
     "update",
     "vacuum",
+    "water_heater",
 ]
 
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"

@@ -49,6 +49,19 @@ def disable_platform_only():
 
 
 @pytest.fixture(autouse=True)
+def mock_multipan_platform():
+    """Mock the multipan platform."""
+    with patch(
+        "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
+        return_value=False,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
     with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.01):
@@ -61,6 +74,12 @@ def mock_app():
     mock_app = AsyncMock()
     mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
+    mock_app.state.network_info.metadata = {
+        "ezsp": {
+            "can_burn_userdata_custom_eui64": True,
+            "can_rewrite_custom_eui64": False,
+        }
+    }
 
     with patch(
         "zigpy.application.ControllerApplication.new", AsyncMock(return_value=mock_app)
@@ -1504,6 +1523,7 @@ async def test_ezsp_restore_without_settings_change_ieee(
     mock_app.state.node_info = backup.node_info
     mock_app.state.network_info = copy.deepcopy(backup.network_info)
     mock_app.state.network_info.network_key.tx_counter += 10000
+    mock_app.state.network_info.metadata["ezsp"] = {}
 
     # Include the overwrite option, just in case someone uploads a backup with it
     backup.network_info.metadata["ezsp"] = {EZSP_OVERWRITE_EUI64: True}

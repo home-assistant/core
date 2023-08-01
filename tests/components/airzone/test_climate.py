@@ -1,14 +1,12 @@
 """The climate tests for the Airzone platform."""
 from unittest.mock import patch
 
-from aioairzone.common import OperationMode
 from aioairzone.const import (
     API_COOL_SET_POINT,
     API_DATA,
     API_HEAT_SET_POINT,
     API_MAX_TEMP,
     API_MIN_TEMP,
-    API_MODE,
     API_ON,
     API_SET_POINT,
     API_SPEED,
@@ -336,7 +334,6 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
             {
                 API_SYSTEM_ID: 1,
                 API_ZONE_ID: 1,
-                API_MODE: OperationMode.COOLING.value,
                 API_ON: 1,
             }
         ]
@@ -441,7 +438,7 @@ async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant) -> None
         )
 
     state = hass.states.get("climate.dorm_2")
-    assert state.state == HVACMode.OFF
+    assert state.state == HVACMode.HEAT
 
 
 async def test_airzone_climate_set_fan_mode(hass: HomeAssistant) -> None:

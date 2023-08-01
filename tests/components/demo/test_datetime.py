@@ -1,16 +1,28 @@
 """The tests for the demo datetime component."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.datetime import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_DATETIME = "datetime.date_and_time"
 
 
+@pytest.fixture
+async def datetime_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.DATETIME],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_datetime(hass: HomeAssistant) -> None:
+async def setup_demo_datetime(hass: HomeAssistant, datetime_only) -> None:
     """Initialize setup demo datetime."""
     assert await async_setup_component(hass, DOMAIN, {"datetime": {"platform": "demo"}})
     await hass.async_block_till_done()

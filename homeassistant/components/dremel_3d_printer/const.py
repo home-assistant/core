@@ -5,6 +5,8 @@ import logging
 
 LOGGER = logging.getLogger(__package__)
 
+CAMERA_MODEL = "3D45"
+
 DOMAIN = "dremel_3d_printer"
 
 ATTR_EXTRUDER = "extruder"

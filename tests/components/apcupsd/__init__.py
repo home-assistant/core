@@ -20,12 +20,14 @@ MOCK_STATUS: Final = OrderedDict(
         ("CABLE", "USB Cable"),
         ("DRIVER", "USB UPS Driver"),
         ("UPSMODE", "Stand Alone"),
+        ("UPSNAME", "MyUPS"),
         ("MODEL", "Back-UPS ES 600"),
         ("STATUS", "ONLINE"),
         ("LINEV", "124.0 Volts"),
         ("LOADPCT", "14.0 Percent"),
         ("BCHARGE", "100.0 Percent"),
         ("TIMELEFT", "51.0 Minutes"),
+        ("NOMAPNT", "60.0 VA"),
         ("ITEMP", "34.6 C Internal"),
         ("MBATTCHG", "5 Percent"),
         ("MINTIMEL", "3 Minutes"),
@@ -35,6 +37,7 @@ MOCK_STATUS: Final = OrderedDict(
         ("HITRANS", "139.0 Volts"),
         ("ALARMDEL", "30 Seconds"),
         ("BATTV", "13.7 Volts"),
+        ("OUTCURNT", "0.88 Amps"),
         ("LASTXFER", "Automatic or explicit self test"),
         ("NUMXFERS", "1"),
         ("XONBATT", "1970-01-01 00:00:00 0000"),
@@ -74,7 +77,7 @@ MOCK_MINIMAL_STATUS: Final = OrderedDict(
 )
 
 
-async def init_integration(
+async def async_init_integration(
     hass: HomeAssistant, host: str = "test", status=None
 ) -> MockConfigEntry:
     """Set up the APC UPS Daemon integration in HomeAssistant."""
@@ -95,7 +98,7 @@ async def init_integration(
     with patch("apcaccess.status.parse", return_value=status), patch(
         "apcaccess.status.get", return_value=b""
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     return entry
