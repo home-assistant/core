@@ -2,7 +2,7 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aioimaplib import AUTH, NONAUTH, SELECTED, AioImapException, Response
 import pytest
@@ -36,13 +36,17 @@ from tests.common import MockConfigEntry, async_capture_events, async_fire_time_
 
 
 @pytest.mark.parametrize(
-    ("cipher_list", "verify_ssl"),
+    ("cipher_list", "verify_ssl", "enable_push"),
     [
-        (None, None),
-        ("python_default", True),
-        ("python_default", False),
-        ("modern", True),
-        ("intermediate", True),
+        (None, None, None),
+        ("python_default", True, None),
+        ("python_default", False, None),
+        ("modern", True, None),
+        ("intermediate", True, None),
+        (None, None, False),
+        (None, None, True),
+        ("python_default", True, False),
+        ("python_default", False, True),
     ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
@@ -51,6 +55,7 @@ async def test_entry_startup_and_unload(
     mock_imap_protocol: MagicMock,
     cipher_list: str | None,
     verify_ssl: bool | None,
+    enable_push: bool | None,
 ) -> None:
     """Test imap entry startup and unload with push and polling coordinator and alternate ciphers."""
     config = MOCK_CONFIG.copy()
@@ -58,6 +63,8 @@ async def test_entry_startup_and_unload(
         config["ssl_cipher_list"] = cipher_list
     if verify_ssl is not None:
         config["verify_ssl"] = verify_ssl
+    if enable_push is not None:
+        config["enable_push"] = enable_push
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)
@@ -660,3 +667,58 @@ async def test_custom_template(
     assert data["text"]
     assert data["custom"] == result
     assert error in caplog.text if error is not None else True
+
+
+@pytest.mark.parametrize(
+    ("imap_search", "imap_fetch"),
+    [(TEST_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN)],
+)
+@pytest.mark.parametrize(
+    ("imap_has_capability", "enable_push", "should_poll"),
+    [
+        (True, False, True),
+        (False, False, True),
+        (True, True, False),
+        (False, True, True),
+    ],
+    ids=["enforce_poll", "poll", "auto_push", "auto_poll"],
+)
+async def test_enforce_polling(
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    enable_push: bool,
+    should_poll: True,
+) -> None:
+    """Test enforce polling."""
+    event_called = async_capture_events(hass, "imap_content")
+    config = MOCK_CONFIG.copy()
+    config["enable_push"] = enable_push
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have received one message
+    assert state is not None
+    assert state.state == "1"
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+    # we should have received one event
+    assert len(event_called) == 1
+    data: dict[str, Any] = event_called[0].data
+    assert data["server"] == "imap.server.com"
+    assert data["username"] == "email@email.com"
+    assert data["search"] == "UnSeen UnDeleted"
+    assert data["folder"] == "INBOX"
+    assert data["sender"] == "john.doe@example.com"
+    assert data["subject"] == "Test subject"
+    assert data["text"]
+
+    if should_poll:
+        mock_imap_protocol.wait_server_push.assert_not_called()
+    else:
+        mock_imap_protocol.assert_has_calls([call.wait_server_push])

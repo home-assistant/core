@@ -1,0 +1,72 @@
+{
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads all modbus entities."
+    },
+    "write_coil": {
+      "name": "Write coil",
+      "description": "Writes to a modbus coil.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "Address of the register to write to."
+        },
+        "state": {
+          "name": "State",
+          "description": "State to write."
+        },
+        "slave": {
+          "name": "Slave",
+          "description": "Address of the modbus unit/slave."
+        },
+        "hub": {
+          "name": "Hub",
+          "description": "Modbus hub name."
+        }
+      }
+    },
+    "write_register": {
+      "name": "Write register",
+      "description": "Writes to a modbus holding register.",
+      "fields": {
+        "address": {
+          "name": "[%key:component::modbus::services::write_coil::fields::address::name%]",
+          "description": "Address of the holding register to write to."
+        },
+        "slave": {
+          "name": "[%key:component::modbus::services::write_coil::fields::slave::name%]",
+          "description": "[%key:component::modbus::services::write_coil::fields::slave::description%]"
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value (single value or array) to write."
+        },
+        "hub": {
+          "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
+          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]"
+        }
+      }
+    },
+    "stop": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Stops modbus hub.",
+      "fields": {
+        "hub": {
+          "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
+          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]"
+        }
+      }
+    },
+    "restart": {
+      "name": "[%key:common::action::restart%]",
+      "description": "Restarts modbus hub (if running stop then start).",
+      "fields": {
+        "hub": {
+          "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
+          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]"
+        }
+      }
+    }
+  }
+}

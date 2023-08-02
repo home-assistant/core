@@ -35,5 +35,106 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "not_intellifire_device": "Not an IntelliFire Device."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "flame": {
+        "name": "Flame"
+      },
+      "timer_on": {
+        "name": "Timer on"
+      },
+      "pilot_light_on": {
+        "name": "Pilot light on"
+      },
+      "thermostat_on": {
+        "name": "Thermostat on"
+      },
+      "pilot_flame_error": {
+        "name": "Pilot flame error"
+      },
+      "flame_error": {
+        "name": "Flame Error"
+      },
+      "fan_delay_error": {
+        "name": "Fan delay error"
+      },
+      "maintenance_error": {
+        "name": "Maintenance error"
+      },
+      "disabled_error": {
+        "name": "Disabled error"
+      },
+      "fan_error": {
+        "name": "Fan error"
+      },
+      "lights_error": {
+        "name": "Lights error"
+      },
+      "accessory_error": {
+        "name": "Accessory error"
+      },
+      "soft_lock_out_error": {
+        "name": "Soft lock out error"
+      },
+      "ecm_offline_error": {
+        "name": "ECM offline error"
+      },
+      "offline_error": {
+        "name": "Offline error"
+      }
+    },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::title%]"
+      }
+    },
+    "light": {
+      "lights": {
+        "name": "Lights"
+      }
+    },
+    "number": {
+      "flame_control": {
+        "name": "Flame control"
+      }
+    },
+    "sensor": {
+      "flame_height": {
+        "name": "Flame height"
+      },
+      "target_temp": {
+        "name": "Target temperature"
+      },
+      "fan_speed": {
+        "name": "Fan Speed"
+      },
+      "timer_end_timestamp": {
+        "name": "Timer end"
+      },
+      "downtime": {
+        "name": "Downtime"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "connection_quality": {
+        "name": "Connection quality"
+      },
+      "ecm_latency": {
+        "name": "ECM latency"
+      },
+      "ipv4_address": {
+        "name": "IP address"
+      }
+    },
+    "switch": {
+      "flame": {
+        "name": "Flame"
+      },
+      "pilot_light": {
+        "name": "Pilot light"
+      }
+    }
   }
 }

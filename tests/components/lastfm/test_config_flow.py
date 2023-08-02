@@ -139,10 +139,12 @@ async def test_flow_friends_invalid_username(
 
 
 async def test_flow_friends_no_friends(
-    hass: HomeAssistant, default_user: MockUser
+    hass: HomeAssistant, default_user_no_friends: MockUser
 ) -> None:
     """Test options is empty when user has no friends."""
-    with patch("pylast.User", return_value=default_user), patch_setup_entry():
+    with patch(
+        "pylast.User", return_value=default_user_no_friends
+    ), patch_setup_entry():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -177,11 +179,11 @@ async def test_import_flow_success(hass: HomeAssistant, default_user: MockUser) 
 async def test_import_flow_already_exist(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
+    imported_config_entry: MockConfigEntry,
     default_user: MockUser,
 ) -> None:
     """Test import of yaml already exist."""
-    await setup_integration(config_entry, default_user)
+    await setup_integration(imported_config_entry, default_user)
 
     with patch("pylast.User", return_value=default_user):
         result = await hass.config_entries.flow.async_init(
@@ -275,12 +277,12 @@ async def test_options_flow_incorrect_username(
 async def test_options_flow_from_import(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    default_user: MockUser,
+    imported_config_entry: MockConfigEntry,
+    default_user_no_friends: MockUser,
 ) -> None:
     """Test updating options gained from import."""
-    await setup_integration(config_entry, default_user)
-    with patch("pylast.User", return_value=default_user):
+    await setup_integration(imported_config_entry, default_user_no_friends)
+    with patch("pylast.User", return_value=default_user_no_friends):
         entry = hass.config_entries.async_entries(DOMAIN)[0]
         result = await hass.config_entries.options.async_init(entry.entry_id)
         await hass.async_block_till_done()
@@ -294,11 +296,11 @@ async def test_options_flow_without_friends(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
-    default_user: MockUser,
+    default_user_no_friends: MockUser,
 ) -> None:
     """Test updating options for someone without friends."""
-    await setup_integration(config_entry, default_user)
-    with patch("pylast.User", return_value=default_user):
+    await setup_integration(config_entry, default_user_no_friends)
+    with patch("pylast.User", return_value=default_user_no_friends):
         entry = hass.config_entries.async_entries(DOMAIN)[0]
         result = await hass.config_entries.options.async_init(entry.entry_id)
         await hass.async_block_till_done()

@@ -80,8 +80,8 @@ async def test_setup(hass: HomeAssistant) -> None:
         (38.0, -3.0),
         category="Category 1",
         attribution="Attribution 1",
-        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
-        updated=datetime.datetime(2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc),
+        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        updated=datetime.datetime(2018, 9, 22, 8, 10, tzinfo=datetime.UTC),
         status="Status 1",
     )
     mock_entry_2 = _generate_mock_feed_entry("2345", "Title 2", 20.5, (38.1, -3.1))
@@ -119,10 +119,10 @@ async def test_setup(hass: HomeAssistant) -> None:
                 ATTR_CATEGORY: "Category 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
                 ),
                 ATTR_UPDATED_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 10, tzinfo=datetime.UTC
                 ),
                 ATTR_STATUS: "Status 1",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,

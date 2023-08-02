@@ -1767,6 +1767,7 @@ async def test_execute_script_complex_response(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test testing a condition."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
     ws_client = await hass_ws_client(hass)

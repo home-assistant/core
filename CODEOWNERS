@@ -195,8 +195,8 @@ build.json @home-assistant/supervisor
 /tests/components/camera/ @home-assistant/core
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
-/homeassistant/components/cert_expiry/ @Cereal2nd @jjlawren
-/tests/components/cert_expiry/ @Cereal2nd @jjlawren
+/homeassistant/components/cert_expiry/ @jjlawren
+/tests/components/cert_expiry/ @jjlawren
 /homeassistant/components/circuit/ @braam
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
@@ -277,8 +277,6 @@ build.json @home-assistant/supervisor
 /tests/components/discord/ @tkdrob
 /homeassistant/components/discovergy/ @jpbede
 /tests/components/discovergy/ @jpbede
-/homeassistant/components/discovery/ @home-assistant/core
-/tests/components/discovery/ @home-assistant/core
 /homeassistant/components/dlink/ @tkdrob
 /tests/components/dlink/ @tkdrob
 /homeassistant/components/dlna_dmr/ @StevenLooman @chishm
@@ -299,6 +297,8 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr_reader/ @depl0y @glodenox
 /homeassistant/components/dunehd/ @bieniu
 /tests/components/dunehd/ @bieniu
+/homeassistant/components/duotecno/ @cereal2nd
+/tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95 @andarotajo
 /tests/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95 @andarotajo
 /homeassistant/components/dynalite/ @ziv1234
@@ -321,6 +321,8 @@ build.json @home-assistant/supervisor
 /tests/components/eight_sleep/ @mezz64 @raman325
 /homeassistant/components/electrasmart/ @jafar-atili
 /tests/components/electrasmart/ @jafar-atili
+/homeassistant/components/electric_kiwi/ @mikey0000
+/tests/components/electric_kiwi/ @mikey0000
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
@@ -360,6 +362,8 @@ build.json @home-assistant/supervisor
 /tests/components/esphome/ @OttoWinter @jesserockz @bdraco
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
+/homeassistant/components/event/ @home-assistant/core
+/tests/components/event/ @home-assistant/core
 /homeassistant/components/evil_genius_labs/ @balloob
 /tests/components/evil_genius_labs/ @balloob
 /homeassistant/components/evohome/ @zxdavb
@@ -425,6 +429,8 @@ build.json @home-assistant/supervisor
 /tests/components/fully_kiosk/ @cgarwood
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
 /tests/components/garages_amsterdam/ @klaasnicolaas
+/homeassistant/components/gardena_bluetooth/ @elupus
+/tests/components/gardena_bluetooth/ @elupus
 /homeassistant/components/gdacs/ @exxamalte
 /tests/components/gdacs/ @exxamalte
 /homeassistant/components/generic/ @davet2001
@@ -745,7 +751,6 @@ build.json @home-assistant/supervisor
 /tests/components/meteoclimatic/ @adrianmo
 /homeassistant/components/metoffice/ @MrHarcombe @avee87
 /tests/components/metoffice/ @MrHarcombe @avee87
-/homeassistant/components/miflora/ @danielhiversen @basnijholt
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
 /homeassistant/components/mill/ @danielhiversen
@@ -889,6 +894,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/openhome/ @bazwilliams
 /tests/components/openhome/ @bazwilliams
 /homeassistant/components/opensky/ @joostlek
+/tests/components/opensky/ @joostlek
 /homeassistant/components/opentherm_gw/ @mvn23
 /tests/components/opentherm_gw/ @mvn23
 /homeassistant/components/openuv/ @bachya
@@ -897,6 +903,8 @@ build.json @home-assistant/supervisor
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi
 /homeassistant/components/opnsense/ @mtreinish
 /tests/components/opnsense/ @mtreinish
+/homeassistant/components/opower/ @tronikos
+/tests/components/opower/ @tronikos
 /homeassistant/components/oralb/ @bdraco @Lash-L
 /tests/components/oralb/ @bdraco @Lash-L
 /homeassistant/components/oru/ @bvlaicu
@@ -914,6 +922,8 @@ build.json @home-assistant/supervisor
 /tests/components/panel_iframe/ @home-assistant/frontend
 /homeassistant/components/peco/ @IceBotYT
 /tests/components/peco/ @IceBotYT
+/homeassistant/components/pegel_online/ @mib1185
+/tests/components/pegel_online/ @mib1185
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/philips_js/ @elupus
@@ -1000,8 +1010,8 @@ build.json @home-assistant/supervisor
 /tests/components/rapt_ble/ @sairon
 /homeassistant/components/raspberry_pi/ @home-assistant/core
 /tests/components/raspberry_pi/ @home-assistant/core
-/homeassistant/components/rdw/ @frenck
-/tests/components/rdw/ @frenck
+/homeassistant/components/rdw/ @frenck @joostlek
+/tests/components/rdw/ @frenck @joostlek
 /homeassistant/components/recollect_waste/ @bachya
 /tests/components/recollect_waste/ @bachya
 /homeassistant/components/recorder/ @home-assistant/core

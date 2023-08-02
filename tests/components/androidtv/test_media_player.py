@@ -1,4 +1,5 @@
 """The tests for the androidtv platform."""
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
@@ -70,10 +71,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import slugify
+from homeassistant.util.dt import utcnow
 
 from . import patchers
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 HOST = "127.0.0.1"
@@ -197,7 +199,7 @@ def keygen_fixture() -> None:
         yield
 
 
-def _setup(config):
+def _setup(config) -> tuple[str, str, MockConfigEntry]:
     """Perform common setup tasks for the tests."""
     patch_key = config[ADB_PATCH_KEY]
     entity_id = f"{MP_DOMAIN}.{slugify(config[TEST_ENTITY_NAME])}"
@@ -263,7 +265,7 @@ async def test_reconnect(
     caplog.set_level(logging.DEBUG)
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
         SHELL_RESPONSE_STANDBY
-    )[patch_key]:
+    )[patch_key], patchers.PATCH_SCREENCAP:
         await async_update_entity(hass, entity_id)
 
         state = hass.states.get(entity_id)
@@ -453,8 +455,8 @@ async def test_exclude_sources(
 
 
 async def _test_select_source(
-    hass, config, conf_apps, source, expected_arg, method_patch
-):
+    hass: HomeAssistant, config, conf_apps, source, expected_arg, method_patch
+) -> None:
     """Test that the methods for launching and stopping apps are called correctly when selecting a source."""
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
@@ -751,7 +753,9 @@ async def test_update_lock_not_acquired(hass: HomeAssistant) -> None:
         assert state is not None
         assert state.state == STATE_OFF
 
-    with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+    with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
+        patch_key
+    ], patchers.PATCH_SCREENCAP:
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -890,8 +894,11 @@ async def test_get_image_http(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patchers.patch_shell("11")[patch_key]:
+    with patchers.patch_shell("11")[
+        patch_key
+    ], patchers.PATCH_SCREENCAP as patch_screen_cap:
         await async_update_entity(hass, entity_id)
+        patch_screen_cap.assert_called()
 
     media_player_name = "media_player." + slugify(
         CONFIG_ANDROID_DEFAULT[TEST_ENTITY_NAME]
@@ -901,21 +908,53 @@ async def test_get_image_http(
 
     client = await hass_client_no_auth()
 
-    with patch(
-        "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap", return_value=b"image"
-    ):
-        resp = await client.get(state.attributes["entity_picture"])
-        content = await resp.read()
-
+    resp = await client.get(state.attributes["entity_picture"])
+    content = await resp.read()
     assert content == b"image"
 
-    with patch(
+    next_update = utcnow() + timedelta(seconds=30)
+    with patchers.patch_shell("11")[
+        patch_key
+    ], patchers.PATCH_SCREENCAP as patch_screen_cap, patch(
+        "homeassistant.util.utcnow", return_value=next_update
+    ):
+        async_fire_time_changed(hass, next_update, True)
+        await hass.async_block_till_done()
+        patch_screen_cap.assert_not_called()
+
+    next_update = utcnow() + timedelta(seconds=60)
+    with patchers.patch_shell("11")[
+        patch_key
+    ], patchers.PATCH_SCREENCAP as patch_screen_cap, patch(
+        "homeassistant.util.utcnow", return_value=next_update
+    ):
+        async_fire_time_changed(hass, next_update, True)
+        await hass.async_block_till_done()
+        patch_screen_cap.assert_called()
+
+
+async def test_get_image_http_fail(hass: HomeAssistant) -> None:
+    """Test taking a screen capture fail."""
+
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+
+    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
+        SHELL_RESPONSE_OFF
+    )[patch_key]:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with patchers.patch_shell("11")[patch_key], patch(
         "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
         side_effect=ConnectionResetError,
     ):
-        resp = await client.get(state.attributes["entity_picture"])
+        await async_update_entity(hass, entity_id)
 
     # The device is unavailable, but getting the media image did not cause an exception
+    media_player_name = "media_player." + slugify(
+        CONFIG_ANDROID_DEFAULT[TEST_ENTITY_NAME]
+    )
     state = hass.states.get(media_player_name)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -947,13 +986,13 @@ async def test_get_image_disabled(hass: HomeAssistant) -> None:
 
 
 async def _test_service(
-    hass,
+    hass: HomeAssistant,
     entity_id,
     ha_service_name,
     androidtv_method,
     additional_service_data=None,
     return_value=None,
-):
+) -> None:
     """Test generic Android media player entity service."""
     service_data = {ATTR_ENTITY_ID: entity_id}
     if additional_service_data:
@@ -986,7 +1025,9 @@ async def test_services_androidtv(hass: HomeAssistant) -> None:
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
-        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
+            patch_key
+        ], patchers.PATCH_SCREENCAP:
             await _test_service(
                 hass, entity_id, SERVICE_MEDIA_NEXT_TRACK, "media_next_track"
             )
@@ -1034,7 +1075,9 @@ async def test_services_firetv(hass: HomeAssistant) -> None:
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
-        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
+            patch_key
+        ], patchers.PATCH_SCREENCAP:
             await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
             await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
             await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
@@ -1050,7 +1093,9 @@ async def test_volume_mute(hass: HomeAssistant) -> None:
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
-        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
+            patch_key
+        ], patchers.PATCH_SCREENCAP:
             service_data = {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_MUTED: True}
             with patch(
                 "androidtv.androidtv.androidtv_async.AndroidTVAsync.mute_volume",
