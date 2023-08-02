@@ -198,9 +198,7 @@ class DeviceEntry:
 
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
-    configuration_url: str | URL | None = attr.ib(
-        converter=_validate_configuration_url, default=None
-    )
+    configuration_url: str | None = attr.ib(default=None)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
@@ -482,6 +480,8 @@ class DeviceRegistry:
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
+        if configuration_url is not UNDEFINED:
+            configuration_url = _validate_configuration_url(configuration_url)
 
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
@@ -680,6 +680,9 @@ class DeviceRegistry:
         if new_identifiers is not UNDEFINED:
             new_values["identifiers"] = new_identifiers
             old_values["identifiers"] = old.identifiers
+
+        if configuration_url is not UNDEFINED:
+            configuration_url = _validate_configuration_url(configuration_url)
 
         for attr_name, value in (
             ("area_id", area_id),
