@@ -97,5 +97,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=f"WeatherFlow{f' ({host})' if host != DEFAULT_HOST else ''}",
-            data=user_input or {},
+            data=user_input or {CONF_HOST: DEFAULT_HOST},
         )
