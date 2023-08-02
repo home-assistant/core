@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from reolink_aio.api import (
+    DUAL_LENS_DUAL_MOTION_MODELS,
     FACE_DETECTION_TYPE,
     PERSON_DETECTION_TYPE,
     PET_DETECTION_TYPE,
@@ -127,6 +128,9 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
         """Initialize Reolink binary sensor."""
         super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+
+        if self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
+            self._attr_name = f"{entity_description.name} lens {self._channel}"
 
         self._attr_unique_id = (
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
