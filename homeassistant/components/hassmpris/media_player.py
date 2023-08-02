@@ -24,7 +24,12 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_PLAYBACK_RATE, DOMAIN, LOGGER as _LOGGER
+from .const import (
+    ATTR_PLAYBACK_RATE,
+    DOMAIN,
+    LOGGER as _LOGGER,
+    EXPECTED_HEARTBEAT_FREQUENCY,
+)
 
 PLATFORM = "media_player"
 
@@ -418,13 +423,16 @@ class EntityManager:
                 self.config_entry.async_start_reauth(self.hass)
                 await self.stop()
             except hassmpris_client.ClientException as exc:
-                _LOGGER.error(
+                _LOGGER.exception(
                     "%X: We lost connectivity (%s) -- reconnecting", id(self), exc
                 )
                 await asyncio.sleep(5)
-            except Exception as exc:
-                await self.stop(exception=exc)
-                raise
+            except Exception:
+                _LOGGER.exception(
+                    "%X: Unexpected exception -- reconnecting",
+                    id(self),
+                )
+                await asyncio.sleep(5)
         await self._shutdown
         _LOGGER.debug("%X: Streaming updates ended", id(self))
 
@@ -595,7 +603,9 @@ class EntityManager:
         try:
             started_syncing = False
             finished_syncing = False
-            async for update in self.client.stream_updates():
+            async for update in self.client.stream_updates(
+                timeout=EXPECTED_HEARTBEAT_FREQUENCY * 1.5
+            ):
                 if not started_syncing:
                     # First update.  Mark entities available.  This does not
                     # mark players as off or idle or any other state — that
