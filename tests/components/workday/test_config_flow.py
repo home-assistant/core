@@ -561,7 +561,7 @@ async def test_language_no_localization(hass: HomeAssistant) -> None:
     )
 
     with mock.patch(
-        "homeassistant.components.workday.config_flow.list_localized_countries",
+        "homeassistant.components.workday.config_flow.holidays.list_localized_countries",
         return_value={},
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -585,7 +585,7 @@ async def test_language_no_localization(hass: HomeAssistant) -> None:
         "add_holidays": [],
         "remove_holidays": [],
         "province": "BW",
-        "language": None,
+        "language": "de",
     }
 
 

@@ -3,12 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from holidays import (
-    HolidayBase,
-    country_holidays,
-    list_localized_countries,
-    list_supported_countries,
-)
+import holidays
+from holidays import HolidayBase
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -57,11 +53,11 @@ def add_province_to_schema(
     country: str,
 ) -> vol.Schema:
     """Update schema with province from country."""
-    all_countries = list_supported_countries()
-    if not all_countries[country]:
+    cls: HolidayBase = getattr(holidays, country)
+    if not cls.subdivisions:
         return schema
 
-    province_list = [NONE_SENTINEL, *all_countries[country]]
+    province_list = [NONE_SENTINEL, *cls.subdivisions]
     add_schema = {
         vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
@@ -80,15 +76,13 @@ def add_language_to_schema(
     country: str,
 ) -> vol.Schema:
     """Update schema with a language (one of available localizations)."""
-    all_countries = list_localized_countries()
-    if not all_countries.get(country):
+    cls: HolidayBase = getattr(holidays, country)
+    if not cls.supported_languages:
         return schema
 
-    language_options = [NONE_SENTINEL, *all_countries[country]]
+    language_options = [NONE_SENTINEL, *cls.supported_languages]
     add_schema = {
-        vol.Optional(
-            CONF_LANGUAGE, default=country_holidays(country).default_language
-        ): SelectSelector(
+        vol.Optional(CONF_LANGUAGE, default=cls.default_language): SelectSelector(
             SelectSelectorConfig(
                 options=language_options,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -107,14 +101,14 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
+    cls: HolidayBase = getattr(holidays, user_input[CONF_COUNTRY])
     year: int = dt_util.now().year
 
-    obj_holidays: HolidayBase = country_holidays(
-        country=user_input[CONF_COUNTRY],
+    obj_holidays: HolidayBase = cls(
+        language=user_input.get(CONF_LANGUAGE) or cls.default_language,
         subdiv=user_input.get(CONF_PROVINCE),
-        language=user_input.get(CONF_LANGUAGE),
         years=year,
-    )
+    )  # type: ignore[operator]
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
         if dt_util.parse_date(remove_date) is None:
@@ -127,7 +121,7 @@ DATA_SCHEMA_SETUP = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Required(CONF_COUNTRY): SelectSelector(
             SelectSelectorConfig(
-                options=list(list_supported_countries()),
+                options=list(holidays.list_supported_countries()),
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
