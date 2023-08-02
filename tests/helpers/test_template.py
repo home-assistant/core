@@ -24,6 +24,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     UnitOfLength,
     UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -51,7 +52,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
     """Set up the tests."""
     hass.config.units = UnitSystem(
         "custom",
-        accumulated_precipitation=UnitOfLength.MILLIMETERS,
+        accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
         conversions={},
         length=UnitOfLength.METERS,
         mass=UnitOfMass.GRAMS,
