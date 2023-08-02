@@ -25,7 +25,7 @@ def script_config():
 
 
 @pytest.fixture(autouse=True)
-async def setup_bp(hass, automation_config, script_config):
+async def setup_bp(hass: HomeAssistant, automation_config, script_config):
     """Fixture to set up the blueprint component."""
     assert await async_setup_component(hass, "blueprint", {})
 

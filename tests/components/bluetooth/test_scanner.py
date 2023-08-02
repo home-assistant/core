@@ -195,7 +195,7 @@ async def test_recovery_from_dbus_restart(
     mock_discovered = []
 
     class MockBleakScanner:
-        def __init__(self, detection_callback, *args, **kwargs):
+        def __init__(self, detection_callback, *args, **kwargs) -> None:
             nonlocal _callback
             _callback = detection_callback
 
@@ -602,7 +602,7 @@ async def test_setup_and_stop_macos(
     init_kwargs = None
 
     class MockBleakScanner:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             """Init the scanner."""
             nonlocal init_kwargs
             init_kwargs = kwargs

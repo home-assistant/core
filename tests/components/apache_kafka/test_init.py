@@ -86,7 +86,7 @@ async def test_full_config(hass: HomeAssistant, mock_client: MockKafkaClient) ->
     assert mock_client.start.called_once
 
 
-async def _setup(hass, filter_config):
+async def _setup(hass: HomeAssistant, filter_config):
     """Shared set up for filtering tests."""
     config = {apache_kafka.DOMAIN: {"filter": filter_config}}
     config[apache_kafka.DOMAIN].update(MIN_CONFIG)
@@ -95,7 +95,7 @@ async def _setup(hass, filter_config):
     await hass.async_block_till_done()
 
 
-async def _run_filter_tests(hass, tests, mock_client):
+async def _run_filter_tests(hass: HomeAssistant, tests, mock_client):
     """Run a series of filter tests on apache kafka."""
     for test in tests:
         hass.states.async_set(test.id, STATE_ON)

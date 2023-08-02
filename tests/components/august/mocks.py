@@ -58,7 +58,7 @@ def _mock_authenticator(auth_state):
 @patch("homeassistant.components.august.gateway.ApiAsync")
 @patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
-    hass, api_instance, pubnub_mock, authenticate_mock, api_mock
+    hass: HomeAssistant, api_instance, pubnub_mock, authenticate_mock, api_mock
 ):
     """Set up august integration."""
     authenticate_mock.side_effect = MagicMock(
@@ -95,7 +95,11 @@ async def _create_august_with_devices(
 
 
 async def _create_august_api_with_devices(  # noqa: C901
-    hass, devices, api_call_side_effects=None, activities=None, pubnub=None
+    hass: HomeAssistant,
+    devices,
+    api_call_side_effects=None,
+    activities=None,
+    pubnub=None,
 ):
     if api_call_side_effects is None:
         api_call_side_effects = {}
@@ -193,7 +197,9 @@ async def _create_august_api_with_devices(  # noqa: C901
     return entry, api_instance
 
 
-async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, pubnub):
+async def _mock_setup_august_with_api_side_effects(
+    hass: HomeAssistant, api_call_side_effects, pubnub
+):
     api_instance = MagicMock(name="Api")
 
     if api_call_side_effects["get_lock_detail"]:
@@ -298,19 +304,19 @@ def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
     }
 
 
-async def _mock_operative_august_lock_detail(hass):
+async def _mock_operative_august_lock_detail(hass: HomeAssistant):
     return await _mock_lock_from_fixture(hass, "get_lock.online.json")
 
 
-async def _mock_lock_with_offline_key(hass):
+async def _mock_lock_with_offline_key(hass: HomeAssistant):
     return await _mock_lock_from_fixture(hass, "get_lock.online_with_keys.json")
 
 
-async def _mock_inoperative_august_lock_detail(hass):
+async def _mock_inoperative_august_lock_detail(hass: HomeAssistant):
     return await _mock_lock_from_fixture(hass, "get_lock.offline.json")
 
 
-async def _mock_activities_from_fixture(hass, path):
+async def _mock_activities_from_fixture(hass: HomeAssistant, path):
     json_dict = await _load_json_fixture(hass, path)
     activities = []
     for activity_json in json_dict:
@@ -321,28 +327,28 @@ async def _mock_activities_from_fixture(hass, path):
     return activities
 
 
-async def _mock_lock_from_fixture(hass, path):
+async def _mock_lock_from_fixture(hass: HomeAssistant, path):
     json_dict = await _load_json_fixture(hass, path)
     return LockDetail(json_dict)
 
 
-async def _mock_doorbell_from_fixture(hass, path):
+async def _mock_doorbell_from_fixture(hass: HomeAssistant, path):
     json_dict = await _load_json_fixture(hass, path)
     return DoorbellDetail(json_dict)
 
 
-async def _load_json_fixture(hass, path):
+async def _load_json_fixture(hass: HomeAssistant, path):
     fixture = await hass.async_add_executor_job(
         load_fixture, os.path.join("august", path)
     )
     return json.loads(fixture)
 
 
-async def _mock_doorsense_enabled_august_lock_detail(hass):
+async def _mock_doorsense_enabled_august_lock_detail(hass: HomeAssistant):
     return await _mock_lock_from_fixture(hass, "get_lock.online_with_doorsense.json")
 
 
-async def _mock_doorsense_missing_august_lock_detail(hass):
+async def _mock_doorsense_missing_august_lock_detail(hass: HomeAssistant):
     return await _mock_lock_from_fixture(hass, "get_lock.online_missing_doorsense.json")
 
 

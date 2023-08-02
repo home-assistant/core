@@ -15,7 +15,7 @@ from homeassistant.util import aiohttp
 from tests.common import MockConfigEntry
 
 
-async def init_config_flow(hass):
+async def init_config_flow(hass: HomeAssistant):
     """Init a configuration flow."""
     await async_process_ha_core_config(
         hass,

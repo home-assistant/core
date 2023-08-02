@@ -2,6 +2,7 @@
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import (
     MockConfigEntry,
@@ -11,7 +12,7 @@ from tests.common import (
 
 
 async def init_integration(
-    hass, forecast=False, unsupported_icon=False
+    hass: HomeAssistant, forecast=False, unsupported_icon=False
 ) -> MockConfigEntry:
     """Set up the AccuWeather integration in Home Assistant."""
     options = {}

@@ -6,6 +6,7 @@ from homeassistant.components.aussie_broadband.const import (
     DOMAIN as AUSSIE_BROADBAND_DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -37,7 +38,7 @@ FAKE_DATA = {
 
 
 async def setup_platform(
-    hass, platforms=[], side_effect=None, usage={}, usage_effect=None
+    hass: HomeAssistant, platforms=[], side_effect=None, usage={}, usage_effect=None
 ):
     """Set up the Aussie Broadband platform."""
     mock_entry = MockConfigEntry(

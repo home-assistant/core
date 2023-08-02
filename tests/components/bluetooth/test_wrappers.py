@@ -67,7 +67,7 @@ class FakeScanner(BaseHaRemoteScanner):
 class BaseFakeBleakClient:
     """Base class for fake bleak clients."""
 
-    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs):
+    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs) -> None:
         """Initialize the fake bleak client."""
         self._device_path = "/dev/test"
         self._device = address_or_ble_device
@@ -158,7 +158,7 @@ def mock_platform_client_that_raises_on_connect_fixture():
         yield
 
 
-def _generate_scanners_with_fake_devices(hass):
+def _generate_scanners_with_fake_devices(hass: HomeAssistant):
     """Generate scanners with fake devices."""
     manager = _get_manager()
     hci0_device_advs = {}

@@ -35,7 +35,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
-def mock_conf(hass, cloud_prefs):
+def mock_conf(hass: HomeAssistant, cloud_prefs):
     """Mock Google conf."""
     return CloudGoogleConfig(
         hass,
@@ -46,13 +46,13 @@ def mock_conf(hass, cloud_prefs):
     )
 
 
-def expose_new(hass, expose_new):
+def expose_new(hass: HomeAssistant, expose_new):
     """Enable exposing new entities to Google."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.google_assistant", expose_new)
 
 
-def expose_entity(hass, entity_id, should_expose):
+def expose_entity(hass: HomeAssistant, entity_id, should_expose):
     """Expose an entity to Google."""
     async_expose_entity(hass, "cloud.google_assistant", entity_id, should_expose)
 

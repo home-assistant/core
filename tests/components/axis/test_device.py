@@ -33,7 +33,7 @@ from tests.typing import MqttMockHAClient
 
 
 @pytest.fixture(name="forward_entry_setup")
-def hass_mock_forward_entry_setup(hass):
+def hass_mock_forward_entry_setup(hass: HomeAssistant):
     """Mock async_forward_entry_setup."""
     with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
         yield forward_mock

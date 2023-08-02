@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, MockEntityPlatform
 
@@ -70,7 +71,7 @@ def state_fixture(state_1):
 
 
 @pytest.fixture(name="player")
-def player_fixture(hass, state):
+def player_fixture(hass: HomeAssistant, state):
     """Get standard player."""
     player = ArcamFmj(MOCK_NAME, state, MOCK_UUID)
     player.entity_id = MOCK_ENTITY_ID
@@ -81,7 +82,7 @@ def player_fixture(hass, state):
 
 
 @pytest.fixture(name="player_setup")
-async def player_setup_fixture(hass, state_1, state_2, client):
+async def player_setup_fixture(hass: HomeAssistant, state_1, state_2, client):
     """Get standard player."""
     config_entry = MockConfigEntry(
         domain="arcam_fmj", data=MOCK_CONFIG_ENTRY, title=MOCK_NAME

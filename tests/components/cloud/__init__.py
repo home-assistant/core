@@ -4,10 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import cloud
 from homeassistant.components.cloud import const, prefs as cloud_prefs
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def mock_cloud(hass, config=None):
+async def mock_cloud(hass: HomeAssistant, config=None):
     """Mock cloud."""
     # The homeassistant integration is needed by cloud. It's not in it's requirements
     # because it's always setup by bootstrap. Set it up manually in tests.
@@ -19,7 +20,7 @@ async def mock_cloud(hass, config=None):
         await cloud_inst.initialize()
 
 
-def mock_cloud_prefs(hass, prefs={}):
+def mock_cloud_prefs(hass: HomeAssistant, prefs={}):
     """Fixture for cloud component."""
     prefs_to_set = {
         const.PREF_ALEXA_SETTINGS_VERSION: cloud_prefs.ALEXA_SETTINGS_VERSION,

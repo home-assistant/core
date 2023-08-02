@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def user_flow(hass):
+async def user_flow(hass: HomeAssistant):
     """Return a user-initiated flow after filling in host info."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

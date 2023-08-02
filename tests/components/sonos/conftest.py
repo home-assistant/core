@@ -9,6 +9,7 @@ from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -45,7 +46,7 @@ class SonosMockService:
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, service, variables):
+    def __init__(self, soco, service, variables) -> None:
         """Initialize the instance."""
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
@@ -86,7 +87,7 @@ async def async_autosetup_sonos(async_setup_sonos):
 
 
 @pytest.fixture
-def async_setup_sonos(hass, config_entry, fire_zgs_event):
+def async_setup_sonos(hass: HomeAssistant, config_entry, fire_zgs_event):
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
     async def _wrapper():
@@ -222,7 +223,7 @@ def soco_fixture(soco_factory):
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+async def silent_ssdp_scanner(hass: HomeAssistant):
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with patch(
         "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
@@ -240,7 +241,7 @@ async def silent_ssdp_scanner(hass):
 def discover_fixture(soco):
     """Create a mock soco discover fixture."""
 
-    async def do_callback(hass, callback, *args, **kwargs):
+    async def do_callback(hass: HomeAssistant, callback, *args, **kwargs):
         await callback(
             ssdp.SsdpServiceInfo(
                 ssdp_location=f"http://{soco.ip_address}/",
@@ -451,7 +452,7 @@ def zgs_discovery_fixture():
 
 
 @pytest.fixture(name="fire_zgs_event")
-def zgs_event_fixture(hass, soco, zgs_discovery):
+def zgs_event_fixture(hass: HomeAssistant, soco, zgs_discovery):
     """Create alarm_event fixture."""
     variables = {"ZoneGroupState": zgs_discovery}
 

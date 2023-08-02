@@ -1,5 +1,7 @@
 """Mockup Nuki device."""
 
+from homeassistant.core import HomeAssistant
+
 from tests.common import MockConfigEntry
 
 NAME = "Nuki_Bridge_75BCD15"
@@ -12,7 +14,7 @@ ID_HEX = "75BCD15"
 MOCK_INFO = {"ids": {"hardwareId": HW_ID}}
 
 
-async def setup_nuki_integration(hass):
+async def setup_nuki_integration(hass: HomeAssistant):
     """Create the Nuki device."""
 
     entry = MockConfigEntry(

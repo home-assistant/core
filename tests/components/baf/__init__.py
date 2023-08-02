@@ -12,7 +12,7 @@ MOCK_NAME = "Living Room Fan"
 class MockBAFDevice(Device):
     """A simple mock for a BAF Device."""
 
-    def __init__(self, async_wait_available_side_effect=None):
+    def __init__(self, async_wait_available_side_effect=None) -> None:
         """Init simple mock."""
         self._async_wait_available_side_effect = async_wait_available_side_effect
 

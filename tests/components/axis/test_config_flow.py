@@ -38,7 +38,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_config_entry")
-async def mock_config_entry_fixture(hass, config_entry, mock_setup_entry):
+async def mock_config_entry_fixture(
+    hass: HomeAssistant, config_entry, mock_setup_entry
+):
     """Mock config entry and setup entry."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

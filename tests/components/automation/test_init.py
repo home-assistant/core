@@ -62,7 +62,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 

@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 class MockAioSession:
     """Mock AioSession."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Init a mock session."""
         self.get_user = AsyncMock()
         self.invoke = AsyncMock()

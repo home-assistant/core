@@ -35,7 +35,7 @@ async def test_cloud_setup(
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
 
-async def _check_cloud_state(hass, zones, bypassed, entity_id, zone_id):
+async def _check_cloud_state(hass: HomeAssistant, zones, bypassed, entity_id, zone_id):
     with patch.object(
         zones[zone_id],
         "bypassed",
@@ -108,7 +108,9 @@ async def test_local_setup(
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
 
-async def _check_local_state(hass, zones, bypassed, entity_id, zone_id, callback):
+async def _check_local_state(
+    hass: HomeAssistant, zones, bypassed, entity_id, zone_id, callback
+):
     with patch.object(
         zones[zone_id],
         "bypassed",

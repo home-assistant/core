@@ -159,7 +159,7 @@ async def test_cloud_setup(
 
 
 async def _check_cloud_state(
-    hass, partitions, property, state, entity_id, partition_id
+    hass: HomeAssistant, partitions, property, state, entity_id, partition_id
 ):
     with patch.object(partitions[partition_id], property, return_value=True):
         await async_update_entity(hass, entity_id)
@@ -235,7 +235,7 @@ async def test_cloud_states(
             )
 
 
-async def _call_alarm_service(hass, service, entity_id, **kwargs):
+async def _call_alarm_service(hass: HomeAssistant, service, entity_id, **kwargs):
     data = {"entity_id": entity_id, **kwargs}
 
     await hass.services.async_call(
@@ -244,7 +244,7 @@ async def _call_alarm_service(hass, service, entity_id, **kwargs):
 
 
 async def _test_cloud_service_call(
-    hass, service, method, entity_id, partition_id, *args, **kwargs
+    hass: HomeAssistant, service, method, entity_id, partition_id, *args, **kwargs
 ):
     with patch(f"homeassistant.components.risco.RiscoCloud.{method}") as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
@@ -252,7 +252,7 @@ async def _test_cloud_service_call(
 
 
 async def _test_cloud_no_service_call(
-    hass, service, method, entity_id, partition_id, **kwargs
+    hass: HomeAssistant, service, method, entity_id, partition_id, **kwargs
 ):
     with patch(f"homeassistant.components.risco.RiscoCloud.{method}") as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
@@ -502,7 +502,7 @@ async def test_local_setup(
 
 
 async def _check_local_state(
-    hass, partitions, property, state, entity_id, partition_id, callback
+    hass: HomeAssistant, partitions, property, state, entity_id, partition_id, callback
 ):
     with patch.object(partitions[partition_id], property, return_value=True):
         await callback(partition_id, partitions[partition_id])
@@ -599,7 +599,7 @@ async def test_local_states(
 
 
 async def _test_local_service_call(
-    hass, service, method, entity_id, partition, *args, **kwargs
+    hass: HomeAssistant, service, method, entity_id, partition, *args, **kwargs
 ):
     with patch.object(partition, method, AsyncMock()) as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
@@ -607,7 +607,7 @@ async def _test_local_service_call(
 
 
 async def _test_local_no_service_call(
-    hass, service, method, entity_id, partition, **kwargs
+    hass: HomeAssistant, service, method, entity_id, partition, **kwargs
 ):
     with patch.object(partition, method, AsyncMock()) as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)

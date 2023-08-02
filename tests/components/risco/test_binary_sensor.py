@@ -54,7 +54,7 @@ async def test_cloud_setup(
     assert device.manufacturer == "Risco"
 
 
-async def _check_cloud_state(hass, zones, triggered, entity_id, zone_id):
+async def _check_cloud_state(hass: HomeAssistant, zones, triggered, entity_id, zone_id):
     with patch.object(
         zones[zone_id],
         "triggered",
@@ -117,7 +117,7 @@ async def test_local_setup(
 
 
 async def _check_local_state(
-    hass, zones, property, value, entity_id, zone_id, callback
+    hass: HomeAssistant, zones, property, value, entity_id, zone_id, callback
 ):
     with patch.object(
         zones[zone_id],

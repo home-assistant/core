@@ -135,7 +135,7 @@ async def test_setup_after_deps_all_present(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config):
             order.append(domain)
             return True
 
@@ -182,7 +182,7 @@ async def test_setup_after_deps_in_stage_1_ignored(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config):
             order.append(domain)
             return True
 
@@ -227,7 +227,7 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config):
             order.append(domain)
             return True
 
@@ -304,7 +304,7 @@ async def test_setup_after_deps_via_platform(hass: HomeAssistant) -> None:
     after_dep_event = asyncio.Event()
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config):
             if domain == "after_dep_of_platform_int":
                 await after_dep_event.wait()
 
@@ -353,7 +353,7 @@ async def test_setup_after_deps_not_trigger_load(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config):
             order.append(domain)
             return True
 
@@ -392,7 +392,7 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config):
             order.append(domain)
             return True
 
@@ -724,7 +724,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config):
             order.append(domain)
             await asyncio.sleep(0.1)
 
@@ -783,7 +783,7 @@ async def test_warning_logged_on_wrap_up_timeout(
     """Test we log a warning on bootstrap timeout."""
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config):
             async def _background_task():
                 await asyncio.sleep(0.2)
 

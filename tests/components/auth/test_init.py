@@ -30,7 +30,7 @@ def mock_credential():
     )
 
 
-async def async_setup_user_refresh_token(hass):
+async def async_setup_user_refresh_token(hass: HomeAssistant):
     """Create a testing user with a connected credential."""
     user = await hass.auth.async_create_user("Test User")
 

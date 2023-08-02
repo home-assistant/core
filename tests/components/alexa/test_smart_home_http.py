@@ -12,7 +12,7 @@ from .test_common import get_new_request
 from tests.typing import ClientSessionGenerator
 
 
-async def do_http_discovery(config, hass, hass_client):
+async def do_http_discovery(config, hass: HomeAssistant, hass_client):
     """Submit a request to the Smart Home HTTP API."""
     await async_setup_component(hass, DOMAIN, config)
     http_client = await hass_client()

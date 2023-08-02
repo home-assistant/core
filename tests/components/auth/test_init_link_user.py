@@ -10,7 +10,7 @@ from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 from tests.typing import ClientSessionGenerator
 
 
-async def async_get_code(hass, aiohttp_client):
+async def async_get_code(hass: HomeAssistant, aiohttp_client):
     """Return authorization code for link user tests."""
     config = [
         {

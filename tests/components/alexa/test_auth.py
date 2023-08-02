@@ -9,7 +9,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def run_auth_get_access_token(
-    hass,
+    hass: HomeAssistant,
     aioclient_mock,
     expires_in,
     client_id,

@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components import alexa
 from homeassistant.components.alexa import const
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
@@ -21,7 +21,7 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(event_loop, hass, hass_client):
+def alexa_client(event_loop, hass: HomeAssistant, hass_client):
     """Initialize a Home Assistant server for testing this module."""
     loop = event_loop
 

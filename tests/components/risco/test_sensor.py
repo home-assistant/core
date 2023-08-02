@@ -133,7 +133,7 @@ async def test_error_on_login(
         assert not registry.async_is_registered(id)
 
 
-def _check_state(hass, category, entity_id):
+def _check_state(hass: HomeAssistant, category, entity_id):
     event_index = CATEGORIES_TO_EVENTS[category]
     event = TEST_EVENTS[event_index]
     state = hass.states.get(entity_id)
@@ -157,7 +157,7 @@ def _check_state(hass, category, entity_id):
 
 
 @pytest.fixture
-def _set_utc_time_zone(hass):
+def _set_utc_time_zone(hass: HomeAssistant):
     hass.config.set_time_zone("UTC")
 
 

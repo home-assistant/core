@@ -16,9 +16,12 @@ from homeassistant.const import (
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
+from homeassistant.core import HomeAssistant
 
 
-async def async_alarm_disarm(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_disarm(
+    hass: HomeAssistant, code=None, entity_id=ENTITY_MATCH_ALL
+):
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -29,7 +32,9 @@ async def async_alarm_disarm(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_DISARM, data, blocking=True)
 
 
-async def async_alarm_arm_home(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_home(
+    hass: HomeAssistant, code=None, entity_id=ENTITY_MATCH_ALL
+):
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -40,7 +45,9 @@ async def async_alarm_arm_home(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_HOME, data, blocking=True)
 
 
-async def async_alarm_arm_away(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_away(
+    hass: HomeAssistant, code=None, entity_id=ENTITY_MATCH_ALL
+):
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -51,7 +58,9 @@ async def async_alarm_arm_away(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data, blocking=True)
 
 
-async def async_alarm_arm_night(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_night(
+    hass: HomeAssistant, code=None, entity_id=ENTITY_MATCH_ALL
+):
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -62,7 +71,9 @@ async def async_alarm_arm_night(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data, blocking=True)
 
 
-async def async_alarm_arm_vacation(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_vacation(
+    hass: HomeAssistant, code=None, entity_id=ENTITY_MATCH_ALL
+):
     """Send the alarm the command for vacation mode."""
     data = {}
     if code:
@@ -75,7 +86,9 @@ async def async_alarm_arm_vacation(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     )
 
 
-async def async_alarm_trigger(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_trigger(
+    hass: HomeAssistant, code=None, entity_id=ENTITY_MATCH_ALL
+):
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -86,7 +99,9 @@ async def async_alarm_trigger(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_TRIGGER, data, blocking=True)
 
 
-async def async_alarm_arm_custom_bypass(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_custom_bypass(
+    hass: HomeAssistant, code=None, entity_id=ENTITY_MATCH_ALL
+):
     """Send the alarm the command for disarm."""
     data = {}
     if code:

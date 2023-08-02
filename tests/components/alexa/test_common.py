@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.alexa import config, smart_home, smart_home_http
 from homeassistant.components.alexa.const import CONF_ENDPOINT, CONF_FILTER, CONF_LOCALE
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
@@ -27,7 +27,7 @@ class MockConfig(smart_home_http.AlexaConfig):
         "camera.test": {"display_categories": "CAMERA"},
     }
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Mock Alexa config."""
         super().__init__(
             hass,
@@ -61,7 +61,7 @@ class MockConfig(smart_home_http.AlexaConfig):
         """Accept a grant."""
 
 
-def get_default_config(hass):
+def get_default_config(hass: HomeAssistant):
     """Return a MockConfig instance."""
     return MockConfig(hass)
 
@@ -96,7 +96,7 @@ async def assert_request_calls_service(
     name,
     endpoint,
     service,
-    hass,
+    hass: HomeAssistant,
     response_type="Response",
     payload=None,
     instance=None,
@@ -128,7 +128,7 @@ async def assert_request_calls_service(
 
 
 async def assert_request_fails(
-    namespace, name, endpoint, service_not_called, hass, payload=None
+    namespace, name, endpoint, service_not_called, hass: HomeAssistant, payload=None
 ):
     """Assert an API request returns an ErrorResponse."""
     request = get_new_request(namespace, name, endpoint)
@@ -149,7 +149,7 @@ async def assert_request_fails(
 
 
 async def assert_power_controller_works(
-    endpoint, on_service, off_service, hass, timestamp
+    endpoint, on_service, off_service, hass: HomeAssistant, timestamp
 ):
     """Assert PowerController API requests work."""
     _, response = await assert_request_calls_service(
@@ -166,7 +166,7 @@ async def assert_power_controller_works(
 
 
 async def assert_scene_controller_works(
-    endpoint, activate_service, deactivate_service, hass, timestamp
+    endpoint, activate_service, deactivate_service, hass: HomeAssistant, timestamp
 ):
     """Assert SceneController API requests work."""
     _, response = await assert_request_calls_service(
@@ -193,7 +193,9 @@ async def assert_scene_controller_works(
         assert response["event"]["payload"]["timestamp"] == timestamp
 
 
-async def reported_properties(hass, endpoint, return_full_response=False):
+async def reported_properties(
+    hass: HomeAssistant, endpoint, return_full_response=False
+):
     """Use ReportState to get properties and return them.
 
     The result is a ReportedProperties instance, which has methods to make
@@ -210,7 +212,7 @@ async def reported_properties(hass, endpoint, return_full_response=False):
 class ReportedProperties:
     """Class to help assert reported properties."""
 
-    def __init__(self, properties):
+    def __init__(self, properties) -> None:
         """Initialize class."""
         self.properties = properties
 

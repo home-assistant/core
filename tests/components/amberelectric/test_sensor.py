@@ -30,7 +30,7 @@ MOCK_API_TOKEN = "psk_0000000000000000"
 
 
 @pytest.fixture
-async def setup_general(hass) -> AsyncGenerator:
+async def setup_general(hass: HomeAssistant) -> AsyncGenerator:
     """Set up general channel."""
     MockConfigEntry(
         domain="amberelectric",
@@ -53,7 +53,7 @@ async def setup_general(hass) -> AsyncGenerator:
 
 
 @pytest.fixture
-async def setup_general_and_controlled_load(hass) -> AsyncGenerator:
+async def setup_general_and_controlled_load(hass: HomeAssistant) -> AsyncGenerator:
     """Set up general channel and controller load channel."""
     MockConfigEntry(
         domain="amberelectric",
@@ -77,7 +77,7 @@ async def setup_general_and_controlled_load(hass) -> AsyncGenerator:
 
 
 @pytest.fixture
-async def setup_general_and_feed_in(hass) -> AsyncGenerator:
+async def setup_general_and_feed_in(hass: HomeAssistant) -> AsyncGenerator:
     """Set up general channel and feed in channel."""
     MockConfigEntry(
         domain="amberelectric",

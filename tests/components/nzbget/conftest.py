@@ -3,11 +3,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
+
 from . import MOCK_HISTORY, MOCK_STATUS, MOCK_VERSION
 
 
 @pytest.fixture
-def nzbget_api(hass):
+def nzbget_api(hass: HomeAssistant):
     """Mock NZBGetApi for easier testing."""
     with patch("homeassistant.components.nzbget.coordinator.NZBGetAPI") as mock_api:
         instance = mock_api.return_value

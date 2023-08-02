@@ -30,7 +30,7 @@ def radar_map_url(country_code: str = "NL") -> str:
     return f"https://api.buienradar.nl/image/1.0/RadarMap{country_code}?w=700&h=700"
 
 
-async def _setup_config_entry(hass, entry):
+async def _setup_config_entry(hass: HomeAssistant, entry):
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
         domain="camera",

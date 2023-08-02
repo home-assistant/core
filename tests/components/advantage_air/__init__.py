@@ -2,6 +2,7 @@
 
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -25,7 +26,7 @@ TEST_SET_THING_URL = (
 )
 
 
-async def add_mock_config(hass):
+async def add_mock_config(hass: HomeAssistant):
     """Create a fake Advantage Air Config Entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,

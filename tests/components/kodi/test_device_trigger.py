@@ -24,13 +24,13 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture
-async def kodi_media_player(hass):
+async def kodi_media_player(hass: HomeAssistant):
     """Get a kodi media player."""
     await init_integration(hass)
     return f"{MP_DOMAIN}.name"

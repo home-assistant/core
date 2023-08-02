@@ -13,7 +13,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
-async def gather_system_health_info(hass, hass_ws_client):
+async def gather_system_health_info(hass: HomeAssistant, hass_ws_client):
     """Gather all info."""
     client = await hass_ws_client(hass)
 
@@ -71,7 +71,7 @@ async def test_info_endpoint_register_callback(
 ) -> None:
     """Test that the info endpoint allows registering callbacks."""
 
-    async def mock_info(hass):
+    async def mock_info(hass: HomeAssistant):
         return {"storage": "YAML"}
 
     hass.components.system_health.async_register_info("lovelace", mock_info)
@@ -91,7 +91,7 @@ async def test_info_endpoint_register_callback_timeout(
 ) -> None:
     """Test that the info endpoint timing out."""
 
-    async def mock_info(hass):
+    async def mock_info(hass: HomeAssistant):
         raise asyncio.TimeoutError
 
     hass.components.system_health.async_register_info("lovelace", mock_info)
@@ -108,7 +108,7 @@ async def test_info_endpoint_register_callback_exc(
 ) -> None:
     """Test that the info endpoint requires auth."""
 
-    async def mock_info(hass):
+    async def mock_info(hass: HomeAssistant):
         raise Exception("TEST ERROR")
 
     hass.components.system_health.async_register_info("lovelace", mock_info)

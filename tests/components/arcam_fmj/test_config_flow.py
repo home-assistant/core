@@ -52,7 +52,7 @@ MOCK_DISCOVER = ssdp.SsdpServiceInfo(
 
 
 @pytest.fixture(name="dummy_client", autouse=True)
-def dummy_client_fixture(hass):
+def dummy_client_fixture(hass: HomeAssistant):
     """Mock out the real client."""
     with patch("homeassistant.components.arcam_fmj.config_flow.Client") as client:
         client.return_value.start.side_effect = AsyncMock(return_value=None)

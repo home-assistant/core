@@ -43,7 +43,7 @@ VERY_LARGE_LAST_BYTE_POS = 9007199254740991
 
 
 @pytest.fixture
-def hls_stream(hass, hass_client):
+def hls_stream(hass: HomeAssistant, hass_client):
     """Create test fixture for creating an HLS client for a stream."""
 
     async def create_client_for_stream(stream):

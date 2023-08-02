@@ -6,18 +6,19 @@ import pytest
 
 from homeassistant.components.ambient_station.const import CONF_APP_KEY, DOMAIN
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="api")
-def api_fixture(hass, data_devices):
+def api_fixture(hass: HomeAssistant, data_devices):
     """Define a mock API object."""
     return Mock(get_devices=AsyncMock(return_value=data_devices))
 
 
 @pytest.fixture(name="config")
-def config_fixture(hass):
+def config_fixture(hass: HomeAssistant):
     """Define a config entry data fixture."""
     return {
         CONF_API_KEY: "12345abcde12345abcde",
@@ -26,7 +27,7 @@ def config_fixture(hass):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config):
+def config_entry_fixture(hass: HomeAssistant, config):
     """Define a config entry fixture."""
     entry = MockConfigEntry(domain=DOMAIN, data=config)
     entry.add_to_hass(hass)
@@ -56,7 +57,9 @@ async def mock_aioambient_fixture(api):
 
 
 @pytest.fixture(name="setup_config_entry")
-async def setup_config_entry_fixture(hass, config_entry, mock_aioambient):
+async def setup_config_entry_fixture(
+    hass: HomeAssistant, config_entry, mock_aioambient
+):
     """Define a fixture to set up ambient_station."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

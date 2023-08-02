@@ -247,7 +247,7 @@ async def test_get_trigger_capabilities_legacy(
 
 async def test_if_fires_on_state_change(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
-):
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 

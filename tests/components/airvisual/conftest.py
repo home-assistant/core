@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -65,7 +66,9 @@ def cloud_api_fixture(data_cloud):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, config_entry_version, integration_type):
+def config_entry_fixture(
+    hass: HomeAssistant, config, config_entry_version, integration_type
+):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -138,7 +141,9 @@ def node_samba_fixture(data_pro):
 
 
 @pytest.fixture(name="setup_config_entry")
-async def setup_config_entry_fixture(hass, config_entry, mock_pyairvisual):
+async def setup_config_entry_fixture(
+    hass: HomeAssistant, config_entry, mock_pyairvisual
+):
     """Define a fixture to set up airvisual."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

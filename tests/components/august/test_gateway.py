@@ -22,7 +22,7 @@ async def test_refresh_access_token(hass: HomeAssistant) -> None:
     "homeassistant.components.august.gateway.AuthenticatorAsync.async_refresh_access_token"
 )
 async def _patched_refresh_access_token(
-    hass,
+    hass: HomeAssistant,
     new_token,
     new_token_expire_time,
     refresh_access_token_mock,

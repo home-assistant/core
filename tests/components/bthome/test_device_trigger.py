@@ -31,12 +31,12 @@ def get_device_id(mac: str) -> tuple[str, str]:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
-async def _async_setup_bthome_device(hass, mac: str):
+async def _async_setup_bthome_device(hass: HomeAssistant, mac: str):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=mac,

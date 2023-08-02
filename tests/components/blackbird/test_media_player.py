@@ -31,7 +31,7 @@ class AttrDict(dict):
 class MockBlackbird:
     """Mock for pyblackbird object."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init mock object."""
         self.zones = defaultdict(lambda: AttrDict(power=True, av=1))
 
@@ -171,7 +171,7 @@ def mock_blackbird():
 
 
 @pytest.fixture
-async def setup_blackbird(hass, mock_blackbird):
+async def setup_blackbird(hass: HomeAssistant, mock_blackbird):
     """Set up blackbird."""
     with mock.patch(
         "homeassistant.components.blackbird.media_player.get_blackbird",
@@ -197,7 +197,7 @@ async def setup_blackbird(hass, mock_blackbird):
 
 
 @pytest.fixture
-def media_player_entity(hass, setup_blackbird):
+def media_player_entity(hass: HomeAssistant, setup_blackbird):
     """Return the media player entity."""
     media_player = hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
     media_player.hass = hass

@@ -34,7 +34,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
-async def stream_component(hass):
+async def stream_component(hass: HomeAssistant):
     """Set up the component before each test."""
     await async_setup_component(hass, "stream", {"stream": {}})
 

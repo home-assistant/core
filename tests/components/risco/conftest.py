@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from .util import TEST_SITE_NAME, TEST_SITE_UUID, zone_mock
 
@@ -105,7 +106,7 @@ def events():
 
 
 @pytest.fixture
-def cloud_config_entry(hass, options):
+def cloud_config_entry(hass: HomeAssistant, options):
     """Fixture for a cloud config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -128,7 +129,7 @@ def login_with_error(exception):
 
 
 @pytest.fixture
-async def setup_risco_cloud(hass, cloud_config_entry, events):
+async def setup_risco_cloud(hass: HomeAssistant, cloud_config_entry, events):
     """Set up a Risco integration for testing."""
     with patch(
         "homeassistant.components.risco.RiscoCloud.login",
@@ -152,7 +153,7 @@ async def setup_risco_cloud(hass, cloud_config_entry, events):
 
 
 @pytest.fixture
-def local_config_entry(hass, options):
+def local_config_entry(hass: HomeAssistant, options):
     """Fixture for a local config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=TEST_LOCAL_CONFIG, options=options
@@ -172,7 +173,7 @@ def connect_with_error(exception):
 
 
 @pytest.fixture
-async def setup_risco_local(hass, local_config_entry):
+async def setup_risco_local(hass: HomeAssistant, local_config_entry):
     """Set up a local Risco integration for testing."""
     with patch(
         "homeassistant.components.risco.RiscoLocal.connect",

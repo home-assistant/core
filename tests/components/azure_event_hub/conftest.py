@@ -14,6 +14,7 @@ from homeassistant.components.azure_event_hub.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -39,7 +40,9 @@ def mock_filter_schema():
 
 
 @pytest.fixture(name="entry")
-async def mock_entry_fixture(hass, filter_schema, mock_create_batch, mock_send_batch):
+async def mock_entry_fixture(
+    hass: HomeAssistant, filter_schema, mock_create_batch, mock_send_batch
+):
     """Create the setup in HA."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -67,7 +70,7 @@ async def mock_entry_fixture(hass, filter_schema, mock_create_batch, mock_send_b
 
 # fixtures for init tests
 @pytest.fixture(name="entry_with_one_event")
-async def mock_entry_with_one_event(hass, entry):
+async def mock_entry_with_one_event(hass: HomeAssistant, entry):
     """Use the entry and add a single test event to the queue."""
     assert entry.state == ConfigEntryState.LOADED
     hass.states.async_set("sensor.test", STATE_ON)

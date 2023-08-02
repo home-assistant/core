@@ -20,7 +20,7 @@ CONTEXT_NAME = "78a5db95-b7d6-4d50-9c9b-2fc73a5e34c3_id_dialog_context"
 
 
 @pytest.fixture
-async def calls(hass, fixture):
+async def calls(hass: HomeAssistant, fixture):
     """Return a list of Dialogflow calls triggered."""
     calls = []
 
@@ -35,7 +35,7 @@ async def calls(hass, fixture):
 
 
 @pytest.fixture
-async def fixture(hass, hass_client_no_auth):
+async def fixture(hass: HomeAssistant, hass_client_no_auth):
     """Initialize a Home Assistant server for testing this module."""
     await async_setup_component(hass, dialogflow.DOMAIN, {"dialogflow": {}})
     await async_setup_component(

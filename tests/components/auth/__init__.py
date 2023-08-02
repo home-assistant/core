@@ -1,5 +1,6 @@
 """Tests for the auth component."""
 from homeassistant import auth
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import ensure_auth_manager_loaded
@@ -18,7 +19,7 @@ EMPTY_CONFIG = []
 
 
 async def async_setup_auth(
-    hass,
+    hass: HomeAssistant,
     aiohttp_client,
     provider_configs=BASE_CONFIG,
     module_configs=EMPTY_CONFIG,

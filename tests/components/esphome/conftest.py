@@ -49,7 +49,7 @@ def esphome_mock_async_zeroconf(mock_async_zeroconf):
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass) -> None:
+async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 
@@ -60,7 +60,7 @@ def mock_tts(mock_tts_cache_dir):
 
 
 @pytest.fixture
-def mock_config_entry(hass) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
         title="ESPHome Device",
@@ -139,7 +139,7 @@ def mock_client(mock_device_info) -> APIClient:
 
 
 @pytest.fixture
-async def mock_dashboard(hass):
+async def mock_dashboard(hass: HomeAssistant):
     """Mock dashboard."""
     data = {"configured": [], "importable": []}
     with patch(
@@ -237,7 +237,7 @@ async def _mock_generic_device_entry(
     class MockReconnectLogic(ReconnectLogic):
         """Mock ReconnectLogic."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             """Init the mock."""
             super().__init__(*args, **kwargs)
             mock_device.set_on_disconnect(kwargs["on_disconnect"])

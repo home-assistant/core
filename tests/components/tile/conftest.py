@@ -7,6 +7,7 @@ from pytile.tile import Tile
 
 from homeassistant.components.tile.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -15,7 +16,7 @@ TEST_USERNAME = "user@host.com"
 
 
 @pytest.fixture(name="api")
-def api_fixture(hass, data_tile_details):
+def api_fixture(hass: HomeAssistant, data_tile_details):
     """Define a pytile API object."""
     tile = Tile(None, data_tile_details)
     tile.async_update = AsyncMock()
@@ -28,7 +29,7 @@ def api_fixture(hass, data_tile_details):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config):
+def config_entry_fixture(hass: HomeAssistant, config):
     """Define a config entry fixture."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=config[CONF_USERNAME], data=config)
     entry.add_to_hass(hass)
@@ -60,7 +61,7 @@ async def mock_pytile_fixture(api):
 
 
 @pytest.fixture(name="setup_config_entry")
-async def setup_config_entry_fixture(hass, config_entry, mock_pytile):
+async def setup_config_entry_fixture(hass: HomeAssistant, config_entry, mock_pytile):
     """Define a fixture to set up tile."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

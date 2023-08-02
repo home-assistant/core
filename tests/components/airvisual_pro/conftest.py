@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.airvisual_pro.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
@@ -22,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config):
+def config_entry_fixture(hass: HomeAssistant, config):
     """Define a config entry fixture."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="XXXXXXX", data=config)
     entry.add_to_hass(hass)
@@ -30,7 +31,7 @@ def config_entry_fixture(hass, config):
 
 
 @pytest.fixture(name="config")
-def config_fixture(hass):
+def config_fixture(hass: HomeAssistant):
     """Define a config entry data fixture."""
     return {
         CONF_IP_ADDRESS: "192.168.1.101",
@@ -67,7 +68,7 @@ def pro_fixture(connect, data, disconnect):
 
 
 @pytest.fixture(name="setup_airvisual_pro")
-async def setup_airvisual_pro_fixture(hass, config, pro):
+async def setup_airvisual_pro_fixture(hass: HomeAssistant, config, pro):
     """Define a fixture to set up AirVisual Pro."""
     with patch(
         "homeassistant.components.airvisual_pro.config_flow.NodeSamba", return_value=pro

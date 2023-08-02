@@ -10,12 +10,13 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
+from homeassistant.core import HomeAssistant
 
 
 class ExtendedMediaPlayer(mp.MediaPlayerEntity):
     """Media player test class."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the test media player."""
         self.hass = hass
         self._volume = 0
@@ -95,7 +96,7 @@ class ExtendedMediaPlayer(mp.MediaPlayerEntity):
 class SimpleMediaPlayer(mp.MediaPlayerEntity):
     """Media player test class."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the test media player."""
         self.hass = hass
         self._volume = 0
@@ -149,7 +150,7 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
 
 
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
-def player(hass, request):
+def player(hass: HomeAssistant, request):
     """Return a media player."""
     return request.param(hass)
 

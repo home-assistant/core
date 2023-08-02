@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from .const import (
     API_DISCOVERY_RESPONSE,
@@ -56,7 +57,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, options, config_entry_version):
+def config_entry_fixture(hass: HomeAssistant, config, options, config_entry_version):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=AXIS_DOMAIN,
@@ -190,7 +191,9 @@ def default_vapix_requests_fixture(mock_vapix_requests):
 
 
 @pytest.fixture(name="prepare_config_entry")
-async def prep_config_entry_fixture(hass, config_entry, setup_default_vapix_requests):
+async def prep_config_entry_fixture(
+    hass: HomeAssistant, config_entry, setup_default_vapix_requests
+):
     """Fixture factory to set up Axis network device."""
 
     async def __mock_setup_config_entry():
@@ -202,7 +205,9 @@ async def prep_config_entry_fixture(hass, config_entry, setup_default_vapix_requ
 
 
 @pytest.fixture(name="setup_config_entry")
-async def setup_config_entry_fixture(hass, config_entry, setup_default_vapix_requests):
+async def setup_config_entry_fixture(
+    hass: HomeAssistant, config_entry, setup_default_vapix_requests
+):
     """Define a fixture to set up Axis network device."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
