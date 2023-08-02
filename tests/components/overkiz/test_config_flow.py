@@ -1,4 +1,4 @@
-"""Tests for Overkiz (by Somfy) config flow."""
+"""Tests for Overkiz config flow."""
 from __future__ import annotations
 
 from ipaddress import ip_address
@@ -97,7 +97,9 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_local(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form_local_happy_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -125,6 +127,8 @@ async def test_form_local(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways",
         return_value=MOCK_GATEWAY_RESPONSE,
+    ), patch(
+        "pyoverkiz.client.OverkizClient.get_setup_option", return_value=True
     ), patch(
         "pyoverkiz.client.OverkizClient.generate_local_token", return_value=True
     ), patch(
