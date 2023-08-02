@@ -64,7 +64,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         key="Device restart",
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
-        entity_registry_enabled_default=False,
         device_class=ButtonDeviceClass.RESTART,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.devices,
@@ -89,6 +88,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up button platform for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    if controller.site_role != "admin":
+        return
+
     controller.register_platform_add_entities(
         UnifiButtonEntity, ENTITY_DESCRIPTIONS, async_add_entities
     )
