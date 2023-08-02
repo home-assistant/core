@@ -24,10 +24,10 @@ from .test_controller import (
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_wlan_switches(
+async def test_restart_device_button(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
 ) -> None:
-    """Test control of UniFi WLAN availability."""
+    """Test restarting device button."""
     config_entry = await setup_unifi_integration(
         hass,
         aioclient_mock,
@@ -35,7 +35,7 @@ async def test_wlan_switches(
             {
                 "board_rev": 3,
                 "device_id": "mock-id",
-                "ip": "10.0.1.1",
+                "ip": "10.0.0.1",
                 "last_seen": 1562600145,
                 "mac": "00:00:00:00:01:01",
                 "model": "US16P150",
@@ -60,7 +60,7 @@ async def test_wlan_switches(
     assert button is not None
     assert button.attributes.get(ATTR_DEVICE_CLASS) == ButtonDeviceClass.RESTART
 
-    # Restart device
+    # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         f"https://{controller.host}:1234/api/s/{controller.site}/cmd/devmgr",

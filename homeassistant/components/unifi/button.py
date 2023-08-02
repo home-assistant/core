@@ -103,7 +103,7 @@ class UnifiButtonEntity(UnifiEntity[HandlerT, ApiItemT], ButtonEntity):
     entity_description: UnifiButtonEntityDescription[HandlerT, ApiItemT]
 
     async def async_press(self) -> None:
-        """Store reset presence state."""
+        """Press the button."""
         await self.entity_description.control_fn(self.controller.api, self._obj_id)
 
     @callback
