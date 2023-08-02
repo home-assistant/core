@@ -2,7 +2,7 @@
 from http import HTTPStatus
 import json
 
-from homeassistant.components.alexa import DOMAIN, smart_home_http
+from homeassistant.components.alexa import DOMAIN, smart_home
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -19,7 +19,7 @@ async def do_http_discovery(config, hass, hass_client):
 
     request = get_new_request("Alexa.Discovery", "Discover")
     response = await http_client.post(
-        smart_home_http.SMART_HOME_HTTP_ENDPOINT,
+        smart_home.SMART_HOME_HTTP_ENDPOINT,
         data=json.dumps(request),
         headers={"content-type": CONTENT_TYPE_JSON},
     )
