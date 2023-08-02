@@ -179,11 +179,11 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             self._attr_fan_modes.append(FAN_INTELLIGENT_AUTO)
 
         # We can have different setpoints for heat cool, we expose the lowest low and highest high
-        self._attr_target_temperature_low = min(
-            self._ability.min_cool_set_point, self._ability.min_heat_set_point
+        self._attr_min_temp = min(
+            ability.min_cool_set_point, ability.min_heat_set_point
         )
-        self._attr_target_temperature_high = max(
-            self._ability.max_cool_set_point, self._ability.max_heat_set_point
+        self._attr_max_temp = max(
+            ability.max_cool_set_point, ability.max_heat_set_point
         )
 
     @callback
@@ -298,12 +298,8 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
             model="AirTouch 5",
         )
         # We can have different setpoints for heat and cool, we expose the lowest low and highest high
-        self._attr_target_temperature_low = min(
-            ac.min_cool_set_point, ac.min_heat_set_point
-        )
-        self._attr_target_temperature_high = max(
-            ac.max_cool_set_point, ac.max_heat_set_point
-        )
+        self._attr_min_temp = min(ac.min_cool_set_point, ac.min_heat_set_point)
+        self._attr_max_temp = max(ac.max_cool_set_point, ac.max_heat_set_point)
 
     @callback
     def _async_update_attrs(self, data: dict[int, ZoneStatusZone]) -> None:
