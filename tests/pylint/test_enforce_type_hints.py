@@ -108,7 +108,7 @@ def test_ignore_no_annotations(
 ) -> None:
     """Ensure that _is_valid_type is not run if there are no annotations."""
     # Set ignore option
-    type_hint_checker.config.ignore_missing_annotations = True
+    type_hint_checker.linter.config.ignore_missing_annotations = True
 
     func_node = astroid.extract_node(
         code,
@@ -143,7 +143,7 @@ def test_bypass_ignore_no_annotations(
     but `ignore-missing-annotations` option is forced to False.
     """
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     func_node = astroid.extract_node(
         code,
@@ -485,7 +485,7 @@ def test_invalid_entity_properties(
 ) -> None:
     """Check missing entity properties when ignore_missing_annotations is False."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, prop_node, func_node = astroid.extract_node(
         """
@@ -552,7 +552,7 @@ def test_ignore_invalid_entity_properties(
 ) -> None:
     """Check invalid entity properties are ignored by default."""
     # Set ignore option
-    type_hint_checker.config.ignore_missing_annotations = True
+    type_hint_checker.linter.config.ignore_missing_annotations = True
 
     class_node = astroid.extract_node(
         """
@@ -590,7 +590,7 @@ def test_named_arguments(
 ) -> None:
     """Check missing entity properties when ignore_missing_annotations is False."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, func_node, percentage_node, preset_mode_node = astroid.extract_node(
         """
@@ -676,7 +676,7 @@ def test_invalid_mapping_return_type(
 ) -> None:
     """Check that Mapping[xxx, Any] doesn't accept invalid Mapping or dict."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, property_node = astroid.extract_node(
         f"""
@@ -734,7 +734,7 @@ def test_valid_mapping_return_type(
 ) -> None:
     """Check that Mapping[xxx, Any] accepts both Mapping and dict."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node = astroid.extract_node(
         f"""
@@ -774,7 +774,7 @@ def test_valid_long_tuple(
 ) -> None:
     """Check invalid entity properties are ignored by default."""
     # Set ignore option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, _, _, _ = astroid.extract_node(
         """
@@ -821,7 +821,7 @@ def test_invalid_long_tuple(
 ) -> None:
     """Check invalid entity properties are ignored by default."""
     # Set ignore option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, rgbw_node, rgbww_node = astroid.extract_node(
         """
@@ -882,7 +882,7 @@ def test_invalid_device_class(
 ) -> None:
     """Ensure invalid hints are rejected for entity device_class."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, prop_node = astroid.extract_node(
         """
@@ -925,7 +925,7 @@ def test_media_player_entity(
 ) -> None:
     """Ensure valid hints are accepted for media_player entity."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node = astroid.extract_node(
         """
@@ -952,7 +952,7 @@ def test_media_player_entity(
 def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
     """Ensure valid hints are accepted for number entity."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     # Ensure that device class is valid despite Entity inheritance
     # Ensure that `int` is valid for `float` return type
@@ -989,7 +989,7 @@ def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
 def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
     """Ensure valid hints are accepted for vacuum entity."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     # Ensure that `dict | list | None` is valid for params
     class_node = astroid.extract_node(
