@@ -1650,7 +1650,7 @@ pydrawise==2023.7.1
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.8.0
+pyduotecno==2023.8.1
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -2752,13 +2752,13 @@ zamg==0.2.4
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.71.4
+zeroconf==0.72.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.101
+zha-quirks==0.0.102
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9

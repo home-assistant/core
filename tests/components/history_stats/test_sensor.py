@@ -386,6 +386,7 @@ async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
                         "start": "{{ as_timestamp(utcnow()) - 3600 }}",
                         "end": "{{ utcnow() }}",
                         "type": "time",
+                        "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
                     },
                     {
                         "platform": "history_stats",
@@ -413,7 +414,7 @@ async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
@@ -724,7 +725,17 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
                         "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
                         "end": "{{ utcnow() }}",
                         "type": "time",
-                    }
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor2",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
+                        "end": "{{ utcnow() }}",
+                        "type": "time",
+                        "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
+                    },
                 ]
             },
         )
@@ -734,6 +745,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
+    assert hass.states.get("sensor.sensor2").state == "0.0"
 
     one_hour_in = start_time + timedelta(minutes=60)
     with freeze_time(one_hour_in):
@@ -741,6 +753,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "1.0"
+    assert hass.states.get("sensor.sensor2").state == "1.0"
 
     turn_off_time = start_time + timedelta(minutes=90)
     with freeze_time(turn_off_time):
@@ -750,6 +763,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
+    assert hass.states.get("sensor.sensor2").state == "1.5"
 
     turn_back_on_time = start_time + timedelta(minutes=105)
     with freeze_time(turn_back_on_time):
@@ -757,19 +771,22 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
+    assert hass.states.get("sensor.sensor2").state == "1.5"
 
     with freeze_time(turn_back_on_time):
         hass.states.async_set("binary_sensor.state", "on")
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
+    assert hass.states.get("sensor.sensor2").state == "1.5"
 
     next_update_time = start_time + timedelta(minutes=107)
     with freeze_time(next_update_time):
         async_fire_time_changed(hass, next_update_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "1.53333333333333"
+    assert hass.states.get("sensor.sensor1").state == "1.53"
+    assert hass.states.get("sensor.sensor2").state == "1.53333333333333"
 
     end_time = start_time + timedelta(minutes=120)
     with freeze_time(end_time):
@@ -777,6 +794,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "1.75"
+    assert hass.states.get("sensor.sensor2").state == "1.75"
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_multiple(
@@ -960,7 +978,17 @@ async def test_does_not_work_into_the_future(
                             "start": "{{ utcnow().replace(hour=23, minute=0, second=0) }}",
                             "duration": {"hours": 1},
                             "type": "time",
-                        }
+                        },
+                        {
+                            "platform": "history_stats",
+                            "entity_id": "binary_sensor.state",
+                            "name": "sensor2",
+                            "state": "on",
+                            "start": "{{ utcnow().replace(hour=23, minute=0, second=0) }}",
+                            "duration": {"hours": 1},
+                            "type": "time",
+                            "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
+                        },
                     ]
                 },
             )
@@ -969,6 +997,7 @@ async def test_does_not_work_into_the_future(
             await hass.async_block_till_done()
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
+        assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
 
         one_hour_in = start_time + timedelta(minutes=60)
         with freeze_time(one_hour_in):
@@ -976,6 +1005,7 @@ async def test_does_not_work_into_the_future(
             await hass.async_block_till_done()
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
+        assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
 
         turn_off_time = start_time + timedelta(minutes=90)
         with freeze_time(turn_off_time):
@@ -985,6 +1015,7 @@ async def test_does_not_work_into_the_future(
             await hass.async_block_till_done()
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
+        assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
 
         turn_back_on_time = start_time + timedelta(minutes=105)
         with freeze_time(turn_back_on_time):
@@ -992,12 +1023,14 @@ async def test_does_not_work_into_the_future(
             await hass.async_block_till_done()
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
+        assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
 
         with freeze_time(turn_back_on_time):
             hass.states.async_set("binary_sensor.state", "on")
             await hass.async_block_till_done()
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
+        assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
 
         end_time = start_time + timedelta(minutes=120)
         with freeze_time(end_time):
@@ -1005,13 +1038,15 @@ async def test_does_not_work_into_the_future(
             await hass.async_block_till_done()
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
+        assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
 
         in_the_window = start_time + timedelta(hours=23, minutes=5)
         with freeze_time(in_the_window):
             async_fire_time_changed(hass, in_the_window)
             await hass.async_block_till_done()
 
-        assert hass.states.get("sensor.sensor1").state == "0.0833333333333333"
+        assert hass.states.get("sensor.sensor1").state == "0.08"
+        assert hass.states.get("sensor.sensor2").state == "0.0833333333333333"
 
     past_the_window = start_time + timedelta(hours=25)
     with patch(
@@ -1143,6 +1178,7 @@ async def test_measure_sliding_window(
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ as_timestamp(now()) + 3600 }}",
                     "type": "time",
+                    "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
                 },
                 {
                     "platform": "history_stats",
@@ -1175,7 +1211,7 @@ async def test_measure_sliding_window(
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "41.7"
@@ -1188,7 +1224,7 @@ async def test_measure_sliding_window(
         async_fire_time_changed(hass, past_next_update)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "41.7"
@@ -1242,6 +1278,7 @@ async def test_measure_from_end_going_backwards(
                         "duration": {"hours": 1},
                         "end": "{{ utcnow() }}",
                         "type": "time",
+                        "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
                     },
                     {
                         "platform": "history_stats",
@@ -1269,7 +1306,7 @@ async def test_measure_from_end_going_backwards(
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
@@ -1282,7 +1319,7 @@ async def test_measure_from_end_going_backwards(
         async_fire_time_changed(hass, past_next_update)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
@@ -1335,6 +1372,7 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
                         "start": "{{ as_timestamp(utcnow()) - 3600 }}",
                         "end": "{{ utcnow() }}",
                         "type": "time",
+                        "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
                     },
                     {
                         "platform": "history_stats",
@@ -1362,7 +1400,7 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.833333333333333"
+    assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.833333333333333"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
@@ -1425,20 +1463,33 @@ async def test_end_time_with_microseconds_zeroed(
                         "end": "{{ now().replace(microsecond=0) }}",
                         "type": "time",
                     },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.heatpump_compressor_state",
+                        "name": "heatpump_compressor_today2",
+                        "state": "on",
+                        "start": "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}",
+                        "end": "{{ now().replace(microsecond=0) }}",
+                        "type": "time",
+                        "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
+                    },
                 ]
             },
         )
         await hass.async_block_till_done()
         await async_update_entity(hass, "sensor.heatpump_compressor_today")
         await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
         assert (
-            hass.states.get("sensor.heatpump_compressor_today").state
+            hass.states.get("sensor.heatpump_compressor_today2").state
             == "1.83333333333333"
         )
+
         async_fire_time_changed(hass, time_200)
         await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
         assert (
-            hass.states.get("sensor.heatpump_compressor_today").state
+            hass.states.get("sensor.heatpump_compressor_today2").state
             == "1.83333333333333"
         )
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
@@ -1448,8 +1499,9 @@ async def test_end_time_with_microseconds_zeroed(
     with freeze_time(time_400):
         async_fire_time_changed(hass, time_400)
         await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
         assert (
-            hass.states.get("sensor.heatpump_compressor_today").state
+            hass.states.get("sensor.heatpump_compressor_today2").state
             == "1.83333333333333"
         )
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "on")
@@ -1458,8 +1510,9 @@ async def test_end_time_with_microseconds_zeroed(
     with freeze_time(time_600):
         async_fire_time_changed(hass, time_600)
         await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "3.83"
         assert (
-            hass.states.get("sensor.heatpump_compressor_today").state
+            hass.states.get("sensor.heatpump_compressor_today2").state
             == "3.83333333333333"
         )
 
@@ -1473,6 +1526,7 @@ async def test_end_time_with_microseconds_zeroed(
         async_fire_time_changed(hass, rolled_to_next_day)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "0.0"
+        assert hass.states.get("sensor.heatpump_compressor_today2").state == "0.0"
 
     rolled_to_next_day_plus_12 = start_of_today + timedelta(
         days=1, hours=12, microseconds=0
@@ -1481,6 +1535,7 @@ async def test_end_time_with_microseconds_zeroed(
         async_fire_time_changed(hass, rolled_to_next_day_plus_12)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "12.0"
+        assert hass.states.get("sensor.heatpump_compressor_today2").state == "12.0"
 
     rolled_to_next_day_plus_14 = start_of_today + timedelta(
         days=1, hours=14, microseconds=0
@@ -1489,6 +1544,7 @@ async def test_end_time_with_microseconds_zeroed(
         async_fire_time_changed(hass, rolled_to_next_day_plus_14)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "14.0"
+        assert hass.states.get("sensor.heatpump_compressor_today2").state == "14.0"
 
     rolled_to_next_day_plus_16_860000 = start_of_today + timedelta(
         days=1, hours=16, microseconds=860000
@@ -1503,8 +1559,9 @@ async def test_end_time_with_microseconds_zeroed(
     with freeze_time(rolled_to_next_day_plus_18):
         async_fire_time_changed(hass, rolled_to_next_day_plus_18)
         await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "16.0"
         assert (
-            hass.states.get("sensor.heatpump_compressor_today").state
+            hass.states.get("sensor.heatpump_compressor_today2").state
             == "16.0002388888929"
         )
 
