@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     client = hass.data.setdefault(DOMAIN, {}).setdefault(
-        entry.entry_id, WeatherFlowListener(host=entry.data.get(CONF_HOST))
+        entry.entry_id, WeatherFlowListener(host=entry.data.get(CONF_HOST, "0.0.0.0"))
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
