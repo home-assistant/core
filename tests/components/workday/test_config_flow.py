@@ -560,10 +560,17 @@ async def test_language_no_localization(hass: HomeAssistant) -> None:
         },
     )
 
-    with mock.patch(
-        "homeassistant.components.workday.config_flow.holidays.list_localized_countries",
-        return_value={},
-    ):
+    class DE:
+        """DE class with no l10n support."""
+
+        default_language = None
+        subdivisions = ()
+        supported_languages = ()
+
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+    with mock.patch("homeassistant.components.workday.config_flow.holidays.DE", DE):
         result = await hass.config_entries.options.async_init(entry.entry_id)
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -571,7 +578,6 @@ async def test_language_no_localization(hass: HomeAssistant) -> None:
                 "excludes": ["sat", "sun", "holiday"],
                 "days_offset": 0,
                 "workdays": ["mon", "tue", "wed", "thu", "fri"],
-                "province": "BW",
             },
         )
 
@@ -584,8 +590,8 @@ async def test_language_no_localization(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "province": "BW",
-        "language": "de",
+        "province": None,
+        "language": None,
     }
 
 
