@@ -1,6 +1,8 @@
 """Test service helpers."""
 from collections import OrderedDict
+from collections.abc import Iterable
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -556,13 +558,52 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}
-    await async_setup_component(hass, logger.DOMAIN, logger_config)
-    descriptions = await service.async_get_all_descriptions(hass)
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        translation_key_prefix = f"component.{logger.DOMAIN}.services.set_default_level"
+        return {
+            f"{translation_key_prefix}.name": "Translated name",
+            f"{translation_key_prefix}.description": "Translated description",
+            f"{translation_key_prefix}.fields.level.name": "Field name",
+            f"{translation_key_prefix}.fields.level.description": "Field description",
+            f"{translation_key_prefix}.fields.level.example": "Field example",
+        }
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await async_setup_component(hass, logger.DOMAIN, logger_config)
+        descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 2
 
-    assert "description" in descriptions[logger.DOMAIN]["set_level"]
-    assert "fields" in descriptions[logger.DOMAIN]["set_level"]
+    assert descriptions[logger.DOMAIN]["set_default_level"]["name"] == "Translated name"
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["description"]
+        == "Translated description"
+    )
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"]["name"]
+        == "Field name"
+    )
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"][
+            "description"
+        ]
+        == "Field description"
+    )
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"]["example"]
+        == "Field example"
+    )
 
     hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
     service.async_set_service_schema(
@@ -602,7 +643,6 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         "another_service_with_response",
         {"description": "response service"},
     )
-
     descriptions = await service.async_get_all_descriptions(hass)
     assert "another_new_service" in descriptions[logger.DOMAIN]
     assert "service_with_optional_response" in descriptions[logger.DOMAIN]
@@ -642,6 +682,9 @@ async def test_async_get_all_descriptions_failing_integration(
     with patch(
         "homeassistant.helpers.service.async_get_integrations",
         return_value={"logger": ImportError},
+    ), patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={},
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
@@ -721,6 +764,7 @@ async def test_async_get_all_descriptions_dynamically_created_services(
         "description": "",
         "fields": {},
         "name": "",
+        "response": {"optional": True},
     }
 
 
@@ -1378,9 +1422,9 @@ async def test_entity_service_call_warn_referenced(
     )
     await service.entity_service_call(hass, {}, "", call)
     assert (
-        "Unable to find referenced areas non-existent-area, devices"
-        " non-existent-device, entities non.existent" in caplog.text
-    )
+        "Referenced areas non-existent-area, devices non-existent-device, "
+        "entities non.existent are missing or not currently available"
+    ) in caplog.text
 
 
 async def test_async_extract_entities_warn_referenced(
@@ -1399,9 +1443,9 @@ async def test_async_extract_entities_warn_referenced(
     extracted = await service.async_extract_entities(hass, {}, call)
     assert len(extracted) == 0
     assert (
-        "Unable to find referenced areas non-existent-area, devices"
-        " non-existent-device, entities non.existent" in caplog.text
-    )
+        "Referenced areas non-existent-area, devices non-existent-device, "
+        "entities non.existent are missing or not currently available"
+    ) in caplog.text
 
 
 async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:

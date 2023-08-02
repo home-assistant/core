@@ -44,12 +44,12 @@
       "double_buttons_2_4": "Second and Fourth buttons",
       "dim_down": "Dim down",
       "dim_up": "Dim up",
-      "turn_off": "Turn off",
-      "turn_on": "Turn on",
-      "1": "First button",
-      "2": "Second button",
-      "3": "Third button",
-      "4": "Fourth button",
+      "turn_off": "[%key:common::action::turn_off%]",
+      "turn_on": "[%key:common::action::turn_on%]",
+      "1": "[%key:component::hue::device_automation::trigger_subtype::button_1%]",
+      "2": "[%key:component::hue::device_automation::trigger_subtype::button_2%]",
+      "3": "[%key:component::hue::device_automation::trigger_subtype::button_3%]",
+      "4": "[%key:component::hue::device_automation::trigger_subtype::button_4%]",
       "clock_wise": "Rotation clockwise",
       "counter_clock_wise": "Rotation counter-clockwise"
     },
@@ -59,13 +59,41 @@
       "remote_button_short_release": "\"{subtype}\" released",
       "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
       "remote_double_button_short_press": "Both \"{subtype}\" released",
-
       "initial_press": "\"{subtype}\" pressed initially",
       "repeat": "\"{subtype}\" held down",
       "short_release": "\"{subtype}\" released after short press",
-      "long_release": "\"{subtype}\" released after long press",
-      "double_short_release": "Both \"{subtype}\" released",
-      "start": "\"{subtype}\" pressed initially"
+      "long_release": "[%key:component::hue::device_automation::trigger_type::remote_button_long_release%]",
+      "double_short_release": "[%key:component::hue::device_automation::trigger_type::remote_double_button_short_press%]",
+      "start": "[%key:component::hue::device_automation::trigger_type::initial_press%]"
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "Initial press",
+              "repeat": "Repeat",
+              "short_release": "Short press",
+              "long_press": "Long press",
+              "long_release": "Long release",
+              "double_short_release": "Double press"
+            }
+          }
+        }
+      },
+      "rotary": {
+        "name": "Rotary",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "clock_wise": "Clockwise",
+              "counter_clock_wise": "Counter clockwise"
+            }
+          }
+        }
+      }
     }
   },
   "options": {
@@ -76,6 +104,48 @@
           "allow_hue_scenes": "Allow Hue scenes",
           "allow_unreachable": "Allow unreachable bulbs to report their state correctly",
           "ignore_availability": "Ignore connectivity status for the given devices"
+        }
+      }
+    }
+  },
+  "services": {
+    "hue_activate_scene": {
+      "name": "Activate scene",
+      "description": "Activates a hue scene stored in the hue hub.",
+      "fields": {
+        "group_name": {
+          "name": "Group",
+          "description": "Name of hue group/room from the hue app."
+        },
+        "scene_name": {
+          "name": "Scene",
+          "description": "Name of hue scene from the hue app."
+        },
+        "dynamic": {
+          "name": "Dynamic",
+          "description": "Enable dynamic mode of the scene (V2 bridges and supported scenes only)."
+        }
+      }
+    },
+    "activate_scene": {
+      "name": "Activate Hue scene",
+      "description": "Activates a Hue scene with more control over the options.",
+      "fields": {
+        "transition": {
+          "name": "Transition",
+          "description": "Transition duration it takes to bring devices to the state defined in the scene."
+        },
+        "dynamic": {
+          "name": "[%key:component::hue::services::hue_activate_scene::fields::dynamic::name%]",
+          "description": "Enable dynamic mode of the scene."
+        },
+        "speed": {
+          "name": "Speed",
+          "description": "Speed of dynamic palette for this scene."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Set brightness for the scene."
         }
       }
     }

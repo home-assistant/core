@@ -45,8 +45,8 @@ class SensiboDeviceSwitchEntityDescription(
 DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
     SensiboDeviceSwitchEntityDescription(
         key="timer_on_switch",
+        translation_key="timer_on_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        name="Timer",
         icon="mdi:timer",
         value_fn=lambda data: data.timer_on,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
@@ -56,8 +56,8 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
     ),
     SensiboDeviceSwitchEntityDescription(
         key="climate_react_switch",
+        translation_key="climate_react_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        name="Climate React",
         icon="mdi:wizard-hat",
         value_fn=lambda data: data.smart_on,
         extra_fn=lambda data: {"type": data.smart_type},
@@ -70,8 +70,8 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
 PURE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
     SensiboDeviceSwitchEntityDescription(
         key="pure_boost_switch",
+        translation_key="pure_boost_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        name="Pure Boost",
         value_fn=lambda data: data.pure_boost_enabled,
         extra_fn=None,
         command_on="async_turn_on_off_pure_boost",

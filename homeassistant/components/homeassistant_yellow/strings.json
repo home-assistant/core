@@ -17,6 +17,13 @@
           "uninstall_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_menu::menu_options::uninstall_addon%]"
         }
       },
+      "change_channel": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::title%]",
+        "data": {
+          "channel": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::data::channel%]"
+        },
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::description%]"
+      },
       "hardware_settings": {
         "title": "Configure hardware settings",
         "data": {
@@ -38,6 +45,10 @@
           "multipan_settings": "Configure IEEE 802.15.4 radio multiprotocol support"
         }
       },
+      "notify_unknown_multipan_user": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::description%]"
+      },
       "reboot_menu": {
         "title": "Reboot required",
         "description": "The settings have changed, but the new settings will not take effect until the system is rebooted",
@@ -47,10 +58,7 @@
         }
       },
       "reconfigure_addon": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
-        "data": {
-          "channel": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::data::channel%]"
-        }
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]"
       },
       "show_revert_guide": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::show_revert_guide::title%]",

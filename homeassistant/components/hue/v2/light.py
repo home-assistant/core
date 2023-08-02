@@ -123,7 +123,7 @@ class HueLight(HueBaseEntity, LightEntity):
         """Return the color mode of the light."""
         if color_temp := self.resource.color_temperature:
             # Hue lights return `mired_valid` to indicate CT is active
-            if color_temp.mirek_valid and color_temp.mirek is not None:
+            if color_temp.mirek is not None:
                 return ColorMode.COLOR_TEMP
         if self.resource.supports_color:
             return ColorMode.XY

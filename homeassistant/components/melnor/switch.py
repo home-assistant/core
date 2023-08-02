@@ -53,7 +53,7 @@ ZONE_ENTITY_DESCRIPTIONS = [
         device_class=SwitchDeviceClass.SWITCH,
         icon="mdi:calendar-sync-outline",
         key="frequency",
-        name="Schedule",
+        translation_key="frequency",
         on_off_fn=lambda valve, bool: valve.set_frequency_enabled(bool),
         state_fn=lambda valve: valve.schedule_enabled,
     ),

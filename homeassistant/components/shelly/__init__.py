@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -30,6 +31,7 @@ from .const import (
     DEFAULT_COAP_PORT,
     DOMAIN,
     LOGGER,
+    PUSH_UPDATE_ISSUE_ID,
 )
 from .coordinator import (
     ShellyBlockCoordinator,
@@ -143,7 +145,6 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers=set(),
             connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
@@ -227,7 +228,6 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers=set(),
             connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
@@ -324,6 +324,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             get_entry_data(hass).pop(entry.entry_id)
 
         return unload_ok
+
+    # delete push update issue if it exists
+    LOGGER.debug(
+        "Deleting issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+    )
+    ir.async_delete_issue(
+        hass, DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+    )
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 

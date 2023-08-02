@@ -72,7 +72,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(
-            default_name=f"{MANUFACTURER} Controller",
+            name=f"{MANUFACTURER} Controller",
             identifiers={(DOMAIN, self._serial_number)},
             manufacturer=MANUFACTURER,
             model=self._model_info.model_name,

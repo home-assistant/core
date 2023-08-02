@@ -1,85 +1,60 @@
 set_mode:
-  name: Set mode
-  description: Set a operation mode.
   target:
     entity:
       integration: yeelight
       domain: light
   fields:
     mode:
-      name: Mode
-      description: Operation mode.
       required: true
       selector:
         select:
           options:
-            - label: "Color Flow"
-              value: "color_flow"
-            - label: "HSV"
-              value: "hsv"
-            - label: "Last"
-              value: "last"
-            - label: "Moonlight"
-              value: "moonlight"
-            - label: "Normal"
-              value: "normal"
-            - label: "RGB"
-              value: "rgb"
+            - "color_flow"
+            - "hsv"
+            - "last"
+            - "moonlight"
+            - "normal"
+            - "rgb"
+          translation_key: mode
 set_color_scene:
-  name: Set color scene
-  description: Changes the light to the specified RGB color and brightness. If the light is off, it will be turned on.
   target:
     entity:
       integration: yeelight
       domain: light
   fields:
     rgb_color:
-      name: RGB color
-      description: Color for the light in RGB-format.
       example: "[255, 100, 100]"
       selector:
         object:
     brightness:
-      name: Brightness
-      description: The brightness value to set.
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
 set_hsv_scene:
-  name: Set HSV scene
-  description: Changes the light to the specified HSV color and brightness. If the light is off, it will be turned on.
   target:
     entity:
       integration: yeelight
       domain: light
   fields:
     hs_color:
-      name: Hue/sat color
-      description: Color for the light in hue/sat format. Hue is 0-359 and Sat is 0-100.
       example: "[300, 70]"
       selector:
         object:
     brightness:
-      name: Brightness
-      description: The brightness value to set.
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
 set_color_temp_scene:
-  name: Set color temperature scene
-  description: Changes the light to the specified color temperature. If the light is off, it will be turned on.
   target:
     entity:
       integration: yeelight
       domain: light
   fields:
     kelvin:
-      name: Kelvin
-      description: Color temperature for the light in Kelvin.
       selector:
         number:
           min: 1700
@@ -87,118 +62,90 @@ set_color_temp_scene:
           step: 100
           unit_of_measurement: K
     brightness:
-      name: Brightness
-      description: The brightness value to set.
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
 set_color_flow_scene:
-  name: Set color flow scene
-  description: starts a color flow. If the light is off, it will be turned on.
   target:
     entity:
       integration: yeelight
       domain: light
   fields:
     count:
-      name: Count
-      description: The number of times to run this flow (0 to run forever).
       default: 0
       selector:
         number:
           min: 0
           max: 100
     action:
-      name: Action
-      description: The action to take after the flow stops.
       default: "recover"
       selector:
         select:
           options:
-            - label: "Off"
-              value: "off"
-            - label: "Recover"
-              value: "recover"
-            - label: "Stay"
-              value: "stay"
+            - "off"
+            - "recover"
+            - "stay"
+          translation_key: action
     transitions:
-      name: Transitions
-      description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
-      example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
+      example:
+        '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition":
+        [1900, 1000, 10] }]'
       selector:
         object:
 set_auto_delay_off_scene:
-  name: Set auto delay off scene
-  description: Turns the light on to the specified brightness and sets a timer to turn it back off after the given number of minutes. If the light is off, Set a color scene, if light is off, it will be turned on.
   target:
     entity:
       integration: yeelight
       domain: light
   fields:
     minutes:
-      name: Minutes
-      description: The time to wait before automatically turning the light off.
       selector:
         number:
           min: 1
           max: 60
           unit_of_measurement: minutes
     brightness:
-      name: Brightness
-      description: The brightness value to set.
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
 start_flow:
-  name: Start flow
-  description: Start a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects
   target:
     entity:
       integration: yeelight
       domain: light
   fields:
     count:
-      name: Count
-      description: The number of times to run this flow (0 to run forever).
       default: 0
       selector:
         number:
           min: 0
           max: 100
     action:
-      name: Action
-      description: The action to take after the flow stops.
       default: "recover"
       selector:
         select:
           options:
-            - label: "Off"
-              value: "off"
-            - label: "Recover"
-              value: "recover"
-            - label: "Stay"
-              value: "stay"
+            - "off"
+            - "recover"
+            - "stay"
+          translation_key: action
     transitions:
-      name: Transitions
-      description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
-      example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
+      example:
+        '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition":
+        [1900, 1000, 10] }]'
       selector:
         object:
 set_music_mode:
-  name: Set music mode
-  description: Enable or disable music_mode
   target:
     entity:
       integration: yeelight
       domain: light
   fields:
     music_mode:
-      name: Music mode
-      description: Use true or false to enable / disable music_mode
       required: true
       selector:
         boolean:

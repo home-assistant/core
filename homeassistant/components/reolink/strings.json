@@ -22,7 +22,8 @@
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -60,7 +61,7 @@
     "select": {
       "floodlight_mode": {
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "auto": "Auto",
           "schedule": "Schedule",
           "adaptive": "Adaptive",
@@ -76,7 +77,7 @@
       },
       "auto_quick_reply_message": {
         "state": {
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "auto_track_method": {
@@ -92,6 +93,11 @@
           "auto": "Auto",
           "alwaysonatnight": "Auto & always on at night"
         }
+      }
+    },
+    "sensor": {
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
       }
     }
   }

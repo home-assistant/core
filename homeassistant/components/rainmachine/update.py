@@ -44,7 +44,7 @@ UPDATE_STATE_MAP = {
 
 UPDATE_DESCRIPTION = RainMachineEntityDescription(
     key="update",
-    name="Firmware",
+    translation_key="firmware",
     api_category=DATA_MACHINE_FIRMWARE_UPDATE_STATUS,
 )
 
@@ -52,7 +52,7 @@ UPDATE_DESCRIPTION = RainMachineEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up WLED update based on a config entry."""
+    """Set up Rainmachine update based on a config entry."""
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([RainMachineUpdateEntity(entry, data, UPDATE_DESCRIPTION)])

@@ -72,7 +72,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Wh stored",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="volts",

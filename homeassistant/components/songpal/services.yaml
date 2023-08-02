@@ -1,21 +1,15 @@
 set_sound_setting:
-  name: Set sound setting
-  description: Change sound setting.
   target:
     entity:
       integration: songpal
       domain: media_player
   fields:
     name:
-      name: Name
-      description: Name of the setting.
       required: true
       example: "nightMode"
       selector:
         text:
     value:
-      name: Value
-      description: Value to set.
       required: true
       example: "on"
       selector:

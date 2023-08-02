@@ -1,4 +1,4 @@
-"""Support for Rain Bird Irrigation system LNK WiFi Module."""
+"""Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
 from __future__ import annotations
 
 import logging
@@ -73,7 +73,7 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         self._duration_minutes = duration_minutes
         self._attr_unique_id = f"{coordinator.serial_number}-{zone}"
         self._attr_device_info = DeviceInfo(
-            default_name=f"{MANUFACTURER} Sprinkler {zone}",
+            name=f"{MANUFACTURER} Sprinkler {zone}",
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer=MANUFACTURER,
             via_device=(DOMAIN, coordinator.serial_number),

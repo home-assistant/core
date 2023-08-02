@@ -3,20 +3,20 @@
   "device_automation": {
     "condition_type": {
       "is_buffering": "{entity_name} is buffering",
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off",
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]",
       "is_idle": "{entity_name} is idle",
       "is_paused": "{entity_name} is paused",
       "is_playing": "{entity_name} is playing"
     },
     "trigger_type": {
       "buffering": "{entity_name} starts buffering",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
       "idle": "{entity_name} becomes idle",
       "paused": "{entity_name} is paused",
       "playing": "{entity_name} starts playing",
-      "changed_states": "{entity_name} changed states"
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]"
     }
   },
   "entity_component": {
@@ -122,7 +122,7 @@
           "name": "Repeat",
           "state": {
             "all": "All",
-            "off": "Off",
+            "off": "[%key:common::state::off%]",
             "one": "One"
           }
         },
@@ -160,10 +160,177 @@
       "name": "Receiver"
     }
   },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+  "services": {
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns on the power of the media player."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns off the power of the media player."
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles a media player on/off."
+    },
+    "volume_up": {
+      "name": "Turn up volume",
+      "description": "Turns up the volume."
+    },
+    "volume_down": {
+      "name": "Turn down volume",
+      "description": "Turns down the volume."
+    },
+    "volume_mute": {
+      "name": "Mute/unmute volume",
+      "description": "Mutes or unmutes the media player.",
+      "fields": {
+        "is_volume_muted": {
+          "name": "Muted",
+          "description": "Defines whether or not it is muted."
+        }
+      }
+    },
+    "volume_set": {
+      "name": "Set volume",
+      "description": "Sets the volume level.",
+      "fields": {
+        "volume_level": {
+          "name": "Level",
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume."
+        }
+      }
+    },
+    "media_play_pause": {
+      "name": "Play/Pause",
+      "description": "Toggles play/pause."
+    },
+    "media_play": {
+      "name": "Play",
+      "description": "Starts playing."
+    },
+    "media_pause": {
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses."
+    },
+    "media_stop": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Stops playing."
+    },
+    "media_next_track": {
+      "name": "Next",
+      "description": "Selects the next track."
+    },
+    "media_previous_track": {
+      "name": "Previous",
+      "description": "Selects the previous track."
+    },
+    "media_seek": {
+      "name": "Seek",
+      "description": "Allows you to go to a different part of the media that is currently playing.",
+      "fields": {
+        "seek_position": {
+          "name": "Position",
+          "description": "Target position in the currently playing media. The format is platform dependent."
+        }
+      }
+    },
+    "play_media": {
+      "name": "Play media",
+      "description": "Starts playing specified media.",
+      "fields": {
+        "media_content_id": {
+          "name": "Content ID",
+          "description": "The ID of the content to play. Platform dependent."
+        },
+        "media_content_type": {
+          "name": "Content type",
+          "description": "The type of the content to play. Such as image, music, tv show, video, episode, channel, or playlist."
+        },
+        "enqueue": {
+          "name": "Enqueue",
+          "description": "If the content should be played now or be added to the queue."
+        },
+        "announce": {
+          "name": "Announce",
+          "description": "If the media should be played as an announcement."
+        }
+      }
+    },
+    "select_source": {
+      "name": "Select source",
+      "description": "Sends the media player the command to change input source.",
+      "fields": {
+        "source": {
+          "name": "Source",
+          "description": "Name of the source to switch to. Platform dependent."
+        }
+      }
+    },
+    "select_sound_mode": {
+      "name": "Select sound mode",
+      "description": "Selects a specific sound mode.",
+      "fields": {
+        "sound_mode": {
+          "name": "Sound mode",
+          "description": "Name of the sound mode to switch to."
+        }
+      }
+    },
+    "clear_playlist": {
+      "name": "Clear playlist",
+      "description": "Clears the playlist."
+    },
+    "shuffle_set": {
+      "name": "Shuffle",
+      "description": "Playback mode that selects the media in randomized order.",
+      "fields": {
+        "shuffle": {
+          "name": "Shuffle",
+          "description": "Whether or not shuffle mode is enabled."
+        }
+      }
+    },
+    "repeat_set": {
+      "name": "Repeat",
+      "description": "Playback mode that plays the media in a loop.",
+      "fields": {
+        "repeat": {
+          "name": "Repeat mode",
+          "description": "Repeat mode to set."
+        }
+      }
+    },
+    "join": {
+      "name": "Join",
+      "description": "Groups media players together for synchronous playback. Only works on supported multiroom audio systems.",
+      "fields": {
+        "group_members": {
+          "name": "Group members",
+          "description": "The players which will be synced with the playback specified in `target`."
+        }
+      }
+    },
+    "unjoin": {
+      "name": "Unjoin",
+      "description": "Removes the player from a group. Only works on platforms which support player groups."
+    }
+  },
+  "selector": {
+    "enqueue": {
+      "options": {
+        "play": "Play",
+        "next": "Play next",
+        "add": "Add to queue",
+        "replace": "Play now and clear queue"
+      }
+    },
+    "repeat": {
+      "options": {
+        "off": "Off",
+        "all": "Repeat all",
+        "one": "Repeat one"
+      }
     }
   }
 }

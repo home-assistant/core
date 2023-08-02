@@ -972,6 +972,7 @@ async def _test_friendly_name(
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
     entity_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )
@@ -1002,8 +1003,7 @@ async def _test_friendly_name(
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu", False),
         (True, None, "Device Bla", "Device Bla", False),
         (True, "Entity Blu", UNDEFINED, "Entity Blu", False),
-        # Not valid on RC
-        # (True, "Entity Blu", None, "Mock Title Entity Blu", False),
+        (True, "Entity Blu", None, "Mock Title Entity Blu", False),
     ),
 )
 async def test_friendly_name_attr(
