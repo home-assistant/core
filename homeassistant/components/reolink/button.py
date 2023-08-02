@@ -91,6 +91,22 @@ BUTTON_ENTITIES = (
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.down.value),
     ),
     ReolinkButtonEntityDescription(
+        key="ptz_zoom_in",
+        name="PTZ zoom in",
+        icon="mdi:magnify",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "zoom_basic"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.zoomin.value),
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_zoom_out",
+        name="PTZ zoom out",
+        icon="mdi:magnify",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "zoom_basic"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.zoomout.value),
+    ),
+    ReolinkButtonEntityDescription(
         key="ptz_calibrate",
         name="PTZ calibrate",
         icon="mdi:pan",
