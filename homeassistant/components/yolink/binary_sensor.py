@@ -75,13 +75,13 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="co_detected",
         device_class=BinarySensorDeviceClass.CO,
-        value=lambda state: state.get("gasAlarm"),
+        value=lambda state: state.get("gasAlarm") if state is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="smoke_detected",
         device_class=BinarySensorDeviceClass.SMOKE,
-        value=lambda state: state.get("smokeAlarm"),
+        value=lambda state: state.get("smokeAlarm") if state is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
     ),
 )
