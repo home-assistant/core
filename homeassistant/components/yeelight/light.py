@@ -932,7 +932,7 @@ class YeelightColorLightWithoutNightlightSwitch(
 
 
 class YeelightColorLightWithoutNightlightSwitchLight(
-    YeelightColorLightSupport, YeelightWithoutNightlightSwitchMixIn
+    YeelightColorLightWithoutNightlightSwitch
 ):
     """Representation of a Color Yeelight light."""
 
