@@ -6,6 +6,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
@@ -36,6 +37,12 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    internal_state = coordinator.device.internal_state
+    oui: str | None = None
+    if mac := internal_state.get("system", {}).get("get_sysinfo", {}).get("mac"):
+        formatted_mac = format_mac(mac)
+        oui = formatted_mac[:8].upper()
     return async_redact_data(
-        {"device_last_response": coordinator.device.internal_state}, TO_REDACT
+        {"device_last_response": coordinator.device.internal_state, "oui": oui},
+        TO_REDACT,
     )
