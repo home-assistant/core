@@ -50,9 +50,9 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
             return await self.discovergy_client.meter_last_reading(self.meter.meter_id)
         except AccessTokenExpired as err:
             raise ConfigEntryAuthFailed(
-                f"Auth expired while fetching last reading for meter {self.meter.get_meter_id()}"
+                f"Auth expired while fetching last reading for meter {self.meter.meter_id}"
             ) from err
         except HTTPError as err:
             raise UpdateFailed(
-                f"Error while fetching last reading for meter {self.meter.get_meter_id()}"
+                f"Error while fetching last reading for meter {self.meter.meter_id}"
             ) from err
