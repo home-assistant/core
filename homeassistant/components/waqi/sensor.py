@@ -142,7 +142,9 @@ class WaqiSensor(SensorEntity):
     def native_value(self):
         """Return the state of the device."""
         if self._data is not None:
-            return self._data.get("aqi")
+            value = self._data.get("aqi")
+            if not isinstance(value, str):
+                return value
         return None
 
     @property
