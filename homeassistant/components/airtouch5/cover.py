@@ -40,7 +40,11 @@ async def async_setup_entry(
 
     # Each zone has a cover for its open percentage
     for zone in client.zones:
-        entities.append(Airtouch5ZoneOpenPercentage(client, zone))
+        entities.append(
+            Airtouch5ZoneOpenPercentage(
+                client, zone, client.latest_zone_status[zone.zone_number].has_sensor
+            )
+        )
 
     async_add_entities(entities)
 
@@ -49,13 +53,10 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
     """How open the damper is in each zone."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
-    _attr_supported_features = (
-        CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-    )
 
-    def __init__(self, client: Airtouch5SimpleClient, name: ZoneName) -> None:
+    def __init__(
+        self, client: Airtouch5SimpleClient, name: ZoneName, has_sensor: bool
+    ) -> None:
         """Initialise the Cover Entity."""
         super().__init__(client)
         self._name = name
@@ -68,6 +69,16 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
+
+        # Zones with temperature sensors shouldn't be manually controlled
+        if has_sensor:
+            self._attr_supported_features = CoverEntityFeature(0)
+        else:
+            self._attr_supported_features = (
+                CoverEntityFeature.SET_POSITION
+                | CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+            )
 
     @callback
     def _async_update_attrs(self, data: dict[int, ZoneStatusZone]) -> None:

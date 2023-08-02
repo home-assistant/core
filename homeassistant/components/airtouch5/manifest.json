@@ -8,7 +8,7 @@
   "homekit": {},
   "iot_class": "local_push",
   "loggers": ["custom_components.airtouch5", "airtouch5py"],
-  "requirements": ["airtouch5py==0.2.7"],
+  "requirements": ["airtouch5py==0.2.8"],
   "ssdp": [],
   "zeroconf": []
 }
