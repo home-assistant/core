@@ -1,7 +1,8 @@
 """General Starlink patchers."""
+import json
 from unittest.mock import patch
 
-from starlink_grpc import StatusDict
+from tests.common import load_fixture
 
 SETUP_ENTRY_PATCHER = patch(
     "homeassistant.components.starlink.async_setup_entry", return_value=True
@@ -9,11 +10,7 @@ SETUP_ENTRY_PATCHER = patch(
 
 COORDINATOR_SUCCESS_PATCHER = patch(
     "homeassistant.components.starlink.coordinator.status_data",
-    return_value=[
-        StatusDict(id="1", software_version="1", hardware_version="1"),
-        {},
-        {},
-    ],
+    return_value=json.loads(load_fixture("status_data_success.json", "starlink")),
 )
 
 DEVICE_FOUND_PATCHER = patch(

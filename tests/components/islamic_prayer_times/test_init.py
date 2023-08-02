@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import islamic_prayer_times
+from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -83,6 +84,26 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
         assert islamic_prayer_times.DOMAIN not in hass.data
+
+
+async def test_options_listener(hass: HomeAssistant) -> None:
+    """Ensure updating options triggers a coordinator refresh."""
+    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        return_value=PRAYER_TIMES,
+    ) as mock_fetch_prayer_times:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_fetch_prayer_times.call_count == 1
+
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_CALC_METHOD: "makkah"}
+        )
+        await hass.async_block_till_done()
+        assert mock_fetch_prayer_times.call_count == 2
 
 
 async def test_islamic_prayer_times_timestamp_format(hass: HomeAssistant) -> None:

@@ -4,8 +4,9 @@ BASE_CUSTOM_CONFIGURATION = {
     "schemas": {
         "zha_options": [
             {
-                "type": "integer",
+                "type": "float",
                 "valueMin": 0,
+                "valueMax": 6553.6,
                 "name": "default_light_transition",
                 "optional": True,
                 "default": 0,
@@ -74,8 +75,9 @@ CONFIG_WITH_ALARM_OPTIONS = {
     "schemas": {
         "zha_options": [
             {
-                "type": "integer",
+                "type": "float",
                 "valueMin": 0,
+                "valueMax": 6553.6,
                 "name": "default_light_transition",
                 "optional": True,
                 "default": 0,

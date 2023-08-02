@@ -1,15 +1,21 @@
 """Tests for the for the BMW Connected Drive integration."""
 
-import json
 from pathlib import Path
+from urllib.parse import urlparse
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
-from bimmer_connected.const import VEHICLE_STATE_URL, VEHICLES_URL
+from bimmer_connected.const import (
+    REMOTE_SERVICE_POSITION_URL,
+    VEHICLE_CHARGING_DETAILS_URL,
+    VEHICLE_STATE_URL,
+    VEHICLES_URL,
+)
 import httpx
 import respx
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
+    CONF_GCID,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
     DOMAIN as BMW_DOMAIN,
@@ -17,7 +23,12 @@ from homeassistant.components.bmw_connected_drive.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, get_fixture_path, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    get_fixture_path,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 FIXTURE_USER_INPUT = {
     CONF_USERNAME: "user@domain.com",
@@ -25,6 +36,7 @@ FIXTURE_USER_INPUT = {
     CONF_REGION: "rest_of_world",
 }
 FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
+FIXTURE_GCID = "SOME_GCID"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
@@ -35,6 +47,7 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
         CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
+        CONF_GCID: FIXTURE_GCID,
     },
     "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,
@@ -42,6 +55,17 @@ FIXTURE_CONFIG_ENTRY = {
 }
 
 FIXTURE_PATH = Path(get_fixture_path("", integration=BMW_DOMAIN))
+FIXTURE_FILES = {
+    "vehicles": sorted(FIXTURE_PATH.rglob("*-eadrax-vcs_v4_vehicles.json")),
+    "states": {
+        p.stem.split("_")[-1]: p
+        for p in FIXTURE_PATH.rglob("*-eadrax-vcs_v4_vehicles_state_*.json")
+    },
+    "charging": {
+        p.stem.split("_")[-1]: p
+        for p in FIXTURE_PATH.rglob("*-eadrax-crccs_v2_vehicles_*.json")
+    },
+}
 
 
 def vehicles_sideeffect(request: httpx.Request) -> httpx.Response:
@@ -49,17 +73,31 @@ def vehicles_sideeffect(request: httpx.Request) -> httpx.Response:
     x_user_agent = request.headers.get("x-user-agent", "").split(";")
     brand = x_user_agent[1]
     vehicles = []
-    for vehicle_file in FIXTURE_PATH.rglob(f"vehicles_v2_{brand}_*.json"):
-        vehicles.extend(json.loads(load_fixture(vehicle_file, integration=BMW_DOMAIN)))
+    for vehicle_file in FIXTURE_FILES["vehicles"]:
+        if vehicle_file.name.startswith(brand):
+            vehicles.extend(
+                load_json_array_fixture(vehicle_file, integration=BMW_DOMAIN)
+            )
     return httpx.Response(200, json=vehicles)
 
 
 def vehicle_state_sideeffect(request: httpx.Request) -> httpx.Response:
     """Return /vehicles/state response."""
-    state_file = next(FIXTURE_PATH.rglob(f"state_{request.headers['bmw-vin']}_*.json"))
     try:
+        state_file = FIXTURE_FILES["states"][request.headers["bmw-vin"]]
         return httpx.Response(
-            200, json=json.loads(load_fixture(state_file, integration=BMW_DOMAIN))
+            200, json=load_json_object_fixture(state_file, integration=BMW_DOMAIN)
+        )
+    except KeyError:
+        return httpx.Response(404)
+
+
+def vehicle_charging_sideeffect(request: httpx.Request) -> httpx.Response:
+    """Return /vehicles/state response."""
+    try:
+        charging_file = FIXTURE_FILES["charging"][request.headers["bmw-vin"]]
+        return httpx.Response(
+            200, json=load_json_object_fixture(charging_file, integration=BMW_DOMAIN)
         )
     except KeyError:
         return httpx.Response(404)
@@ -74,6 +112,22 @@ def mock_vehicles() -> respx.Router:
 
     # Get vehicle state
     router.get(VEHICLE_STATE_URL).mock(side_effect=vehicle_state_sideeffect)
+
+    # Get vehicle charging details
+    router.get(VEHICLE_CHARGING_DETAILS_URL).mock(
+        side_effect=vehicle_charging_sideeffect
+    )
+
+    # Get vehicle position after remote service
+    router.post(urlparse(REMOTE_SERVICE_POSITION_URL).netloc).mock(
+        httpx.Response(
+            200,
+            json=load_json_object_fixture(
+                FIXTURE_PATH / "remote_service" / "eventposition.json",
+                integration=BMW_DOMAIN,
+            ),
+        )
+    )
 
     return router
 

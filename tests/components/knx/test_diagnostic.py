@@ -55,6 +55,7 @@ async def test_diagnostics(
         },
         "configuration_error": None,
         "configuration_yaml": None,
+        "project_info": None,
         "xknx": {"current_address": "0.0.0", "version": "1.0.0"},
     }
 
@@ -85,6 +86,7 @@ async def test_diagnostic_config_error(
         },
         "configuration_error": "extra keys not allowed @ data['knx']['wrong_key']",
         "configuration_yaml": {"wrong_key": {}},
+        "project_info": None,
         "xknx": {"current_address": "0.0.0", "version": "1.0.0"},
     }
 
@@ -134,5 +136,34 @@ async def test_diagnostic_redact(
         },
         "configuration_error": None,
         "configuration_yaml": None,
+        "project_info": None,
         "xknx": {"current_address": "0.0.0", "version": "1.0.0"},
     }
+
+
+@pytest.mark.parametrize("hass_config", [{}])
+async def test_diagnostics_project(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    knx: KNXTestKit,
+    mock_hass_config: None,
+    load_knxproj: None,
+) -> None:
+    """Test diagnostics."""
+    await knx.setup_integration({})
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+
+    assert "config_entry_data" in diag
+    assert "configuration_error" in diag
+    assert "configuration_yaml" in diag
+    assert "project_info" in diag
+    assert "xknx" in diag
+    # project specific fields
+    assert "created_by" in diag["project_info"]
+    assert "group_address_style" in diag["project_info"]
+    assert "last_modified" in diag["project_info"]
+    assert "schema_version" in diag["project_info"]
+    assert "tool_version" in diag["project_info"]
+    assert "language_code" in diag["project_info"]
+    assert diag["project_info"]["name"] == "**REDACTED**"

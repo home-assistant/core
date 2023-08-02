@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from sfrbox_api.exceptions import SFRBoxError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
@@ -12,10 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import check_device_registry, check_entities
-from .const import EXPECTED_ENTITIES
-
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
+pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
 
 
 @pytest.fixture(autouse=True)
@@ -32,20 +30,36 @@ async def test_buttons(
     config_entry_with_auth: ConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for SFR Box buttons."""
     await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
     await hass.async_block_till_done()
 
-    check_device_registry(device_registry, EXPECTED_ENTITIES["expected_device"])
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry_with_auth.entry_id
+    )
+    assert device_entries == snapshot
 
-    expected_entities = EXPECTED_ENTITIES[Platform.BUTTON]
-    assert len(entity_registry.entities) == len(expected_entities)
+    # Ensure entities are correctly registered
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry_with_auth.entry_id
+    )
+    assert entity_entries == snapshot
 
-    check_entities(hass, entity_registry, expected_entities)
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot
+
+
+async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) -> None:
+    """Test for SFR Box reboot button."""
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    await hass.async_block_till_done()
 
     # Reboot success
-    service_data = {ATTR_ENTITY_ID: "button.sfr_box_reboot"}
+    service_data = {ATTR_ENTITY_ID: "button.sfr_box_restart"}
     with patch(
         "homeassistant.components.sfr_box.button.SFRBox.system_reboot"
     ) as mock_action:
@@ -57,7 +71,7 @@ async def test_buttons(
     assert mock_action.mock_calls[0][1] == ()
 
     # Reboot failed
-    service_data = {ATTR_ENTITY_ID: "button.sfr_box_reboot"}
+    service_data = {ATTR_ENTITY_ID: "button.sfr_box_restart"}
     with patch(
         "homeassistant.components.sfr_box.button.SFRBox.system_reboot",
         side_effect=SFRBoxError,

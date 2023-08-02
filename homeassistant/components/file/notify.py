@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from typing import TextIO
+from typing import Any, TextIO
 
 import voluptuous as vol
 
@@ -48,7 +48,7 @@ class FileNotificationService(BaseNotificationService):
         self.filename = filename
         self.add_timestamp = add_timestamp
 
-    def send_message(self, message="", **kwargs) -> None:
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a file."""
         file: TextIO
         if not self.hass.config.config_dir:

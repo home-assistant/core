@@ -41,9 +41,14 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
 
 # Endpoints needed for ingress can't require admin because addons can set `panel_admin: false`
 # pylint: disable=implicit-str-concat
+# fmt: off
 WS_NO_ADMIN_ENDPOINTS = re.compile(
-    r"^(?:" r"|/ingress/(session|validate_session)" r"|/addons/[^/]+/info" r")$"
+    r"^(?:"
+    r"|/ingress/(session|validate_session)"
+    r"|/addons/[^/]+/info"
+    r")$" # noqa: ISC001
 )
+# fmt: on
 # pylint: enable=implicit-str-concat
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)

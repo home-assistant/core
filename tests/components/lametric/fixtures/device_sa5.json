@@ -1,0 +1,71 @@
+{
+  "audio": {
+    "volume": 100,
+    "volume_limit": {
+      "max": 100,
+      "min": 0
+    },
+    "volume_range": {
+      "max": 100,
+      "min": 0
+    }
+  },
+  "bluetooth": {
+    "active": true,
+    "address": "AA:BB:CC:DD:EE:FF",
+    "available": true,
+    "discoverable": true,
+    "low_energy": {
+      "active": true,
+      "advertising": true,
+      "connectable": true
+    },
+    "name": "SKY0123",
+    "pairable": false
+  },
+  "display": {
+    "brightness": 66,
+    "brightness_limit": {
+      "max": 100,
+      "min": 2
+    },
+    "brightness_mode": "manual",
+    "brightness_range": {
+      "max": 100,
+      "min": 0
+    },
+    "height": 8,
+    "on": true,
+    "screensaver": {
+      "enabled": true,
+      "modes": {
+        "screen_off": {
+          "enabled": false
+        },
+        "time_based": {
+          "enabled": false
+        }
+      },
+      "widget": ""
+    },
+    "type": "mixed",
+    "width": 64
+  },
+  "id": "12345",
+  "mode": "manual",
+  "model": "sa5",
+  "name": "spyfly's LaMetric SKY",
+  "os_version": "3.0.13",
+  "serial_number": "SA52100000123TBNC",
+  "wifi": {
+    "active": true,
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "available": true,
+    "encryption": "WPA",
+    "ssid": "IoT",
+    "ip": "127.0.0.1",
+    "mode": "dhcp",
+    "netmask": "255.255.255.0",
+    "strength": 58
+  }
+}

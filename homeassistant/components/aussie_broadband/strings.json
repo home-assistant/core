@@ -35,9 +35,9 @@
   "options": {
     "step": {
       "init": {
-        "title": "Select Services",
+        "title": "[%key:component::aussie_broadband::config::step::service::title%]",
         "data": {
-          "services": "Services"
+          "services": "[%key:component::aussie_broadband::config::step::service::data::services%]"
         }
       }
     },
@@ -45,6 +45,43 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "data_used": {
+        "name": "Data used"
+      },
+      "downloaded": {
+        "name": "Downloaded"
+      },
+      "uploaded": {
+        "name": "Uploaded"
+      },
+      "national_calls": {
+        "name": "National calls"
+      },
+      "mobile_calls": {
+        "name": "Mobile calls"
+      },
+      "international_calls": {
+        "name": "International calls"
+      },
+      "sms_sent": {
+        "name": "SMS sent"
+      },
+      "voicemail_calls": {
+        "name": "Voicemail calls"
+      },
+      "other_calls": {
+        "name": "Other calls"
+      },
+      "billing_cycle_length": {
+        "name": "Billing cycle length"
+      },
+      "billing_cycle_remaining": {
+        "name": "Billing cycle remaining"
+      }
     }
   }
 }

@@ -45,7 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     api = get_api(hass, data)
     try:
-        await api.get_data("all")
+        await api.get_ha_sensor_data()
     except GlancesApiError as err:
         raise CannotConnect from err
 

@@ -5,10 +5,9 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import pytest
 
-import homeassistant.components.sun as sun
+from homeassistant.components import sun
 from homeassistant.const import EVENT_STATE_CHANGED
-import homeassistant.core as ha
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -196,7 +195,7 @@ async def test_state_change_count(hass: HomeAssistant) -> None:
 
     events = []
 
-    @ha.callback
+    @callback
     def state_change_listener(event):
         if event.data.get("entity_id") == "sun.sun":
             events.append(event)

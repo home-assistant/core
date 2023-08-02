@@ -1,6 +1,7 @@
 """Preference management for camera component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import Final, cast
 
@@ -89,7 +90,7 @@ class CameraPreferences:
         # Get preload stream setting from prefs
         # Get orientation setting from entity registry
         reg_entry = er.async_get(self._hass).async_get(entity_id)
-        er_prefs = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
+        er_prefs: Mapping = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
         preload_prefs = await self._store.async_load() or {}
         settings = DynamicStreamSettings(
             preload_stream=cast(

@@ -28,14 +28,16 @@ def account_fixture():
             "state": "New York",
             "postal_code": "10001",
         },
-        async_get_next_pickup_event=AsyncMock(
-            return_value=RidwellPickupEvent(
-                None,
-                "event_123",
-                date(2022, 1, 24),
-                [RidwellPickup("Plastic Film", "offer_123", 1, "product_123", 1)],
-                EventState.INITIALIZED,
-            )
+        async_get_pickup_events=AsyncMock(
+            return_value=[
+                RidwellPickupEvent(
+                    None,
+                    "event_123",
+                    date(2022, 1, 24),
+                    [RidwellPickup("Plastic Film", "offer_123", 1, "product_123", 1)],
+                    EventState.INITIALIZED,
+                )
+            ]
         ),
     )
 

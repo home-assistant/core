@@ -17,6 +17,7 @@ import fractions
 import io
 import logging
 import math
+from pathlib import Path
 import threading
 from unittest.mock import patch
 
@@ -75,9 +76,9 @@ TIMEOUT = 15
 
 
 @pytest.fixture
-def filename(tmpdir):
+def filename(tmp_path: Path) -> str:
     """Use this filename for the tests."""
-    return f"{tmpdir}/test.mp4"
+    return str(tmp_path / "test.mp4")
 
 
 @pytest.fixture(autouse=True)
@@ -244,7 +245,7 @@ class FakePyAvBuffer:
         # Forward to appropriate FakeStream
         packet.stream.mux(packet)
         # Make new init/part data available to the worker
-        self.memory_file.write(b"\x00\x00\x00\x00moov")
+        self.memory_file.write(b"\x00\x00\x00\x08moov")
 
     def close(self):
         """Close the buffer."""

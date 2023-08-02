@@ -1,11 +1,13 @@
 """SFR Box."""
 from __future__ import annotations
 
+import asyncio
+
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -34,18 +36,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = DomainData(
         box=box,
         dsl=SFRDataUpdateCoordinator(hass, box, "dsl", lambda b: b.dsl_get_info()),
+        ftth=SFRDataUpdateCoordinator(hass, box, "ftth", lambda b: b.ftth_get_info()),
         system=SFRDataUpdateCoordinator(
             hass, box, "system", lambda b: b.system_get_info()
         ),
+        wan=SFRDataUpdateCoordinator(hass, box, "wan", lambda b: b.wan_get_info()),
     )
+    # Preload system information
     await data.system.async_config_entry_first_refresh()
     system_info = data.system.data
 
-    if system_info.net_infra == "adsl":
-        await data.dsl.async_config_entry_first_refresh()
-    else:
-        platforms = list(platforms)
-        platforms.remove(Platform.BINARY_SENSOR)
+    # Preload other coordinators (based on net infrastructure)
+    tasks = [data.wan.async_config_entry_first_refresh()]
+    if (net_infra := system_info.net_infra) == "adsl":
+        tasks.append(data.dsl.async_config_entry_first_refresh())
+    elif net_infra == "ftth":
+        tasks.append(data.ftth.async_config_entry_first_refresh())
+    await asyncio.gather(*tasks)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
 

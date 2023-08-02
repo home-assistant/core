@@ -2,10 +2,11 @@
 
 from time import time
 
-from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+
+from tests.components.bluetooth import generate_ble_device
 
 
 def fake_service_info(name, service_uuid, manufacturer_data):
@@ -20,7 +21,7 @@ def fake_service_info(name, service_uuid, manufacturer_data):
         source="local",
         connectable=False,
         time=time(),
-        device=BLEDevice("aa:bb:cc:dd:ee:ff", name=name),
+        device=generate_ble_device("aa:bb:cc:dd:ee:ff", name=name),
         advertisement=AdvertisementData(
             local_name=name,
             manufacturer_data=manufacturer_data,

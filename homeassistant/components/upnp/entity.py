@@ -13,7 +13,6 @@ from .coordinator import UpnpDataUpdateCoordinator
 class UpnpEntityDescription(EntityDescription):
     """UPnP entity description."""
 
-    format: str = "s"
     unique_id: str | None = None
     value_key: str | None = None
 
@@ -26,6 +25,7 @@ class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):
     """Base class for UPnP/IGD entities."""
 
     entity_description: UpnpEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -36,7 +36,6 @@ class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device = coordinator.device
         self.entity_description = entity_description
-        self._attr_name = f"{coordinator.device.name} {entity_description.name}"
         self._attr_unique_id = f"{coordinator.device.original_udn}_{entity_description.unique_id or entity_description.key}"
         self._attr_device_info = DeviceInfo(
             connections=coordinator.device_entry.connections,

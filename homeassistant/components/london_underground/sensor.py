@@ -26,7 +26,6 @@ DOMAIN = "london_underground"
 
 CONF_LINE = "line"
 
-ICON = "mdi:subway"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -100,6 +99,7 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     """Sensor that reads the status of a line from Tube Data."""
 
     _attr_attribution = "Powered by TfL Open Data"
+    _attr_icon = "mdi:subway"
 
     def __init__(self, coordinator, name):
         """Initialize the London Underground sensor."""
@@ -115,11 +115,6 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data[self.name]["State"]
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def extra_state_attributes(self):

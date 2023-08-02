@@ -206,7 +206,7 @@ def process_before_send(
                 "channel": channel,
                 "custom_components": "\n".join(sorted(custom_components)),
                 "integrations": "\n".join(sorted(integrations)),
-                **system_info,  # type: ignore[arg-type]
+                **system_info,
             },
         }
     )

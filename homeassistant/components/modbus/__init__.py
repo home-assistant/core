@@ -104,7 +104,9 @@ from .const import (  # noqa: F401
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
+    CONF_WRITE_REGISTERS,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
     DEFAULT_HUB,
@@ -227,11 +229,13 @@ CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
+            vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
@@ -244,6 +248,7 @@ CLIMATE_SCHEMA = vol.All(
                         vol.Optional(CONF_HVAC_MODE_DRY): cv.positive_int,
                         vol.Optional(CONF_HVAC_MODE_FAN_ONLY): cv.positive_int,
                     },
+                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }
             ),
         }

@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -768,7 +769,9 @@ class PlenticoreDataSensor(
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
@@ -791,7 +794,7 @@ class PlenticoreDataSensor(
         return f"{self.platform_name} {self._sensor_name}"
 
     @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             # None is translated to STATE_UNKNOWN

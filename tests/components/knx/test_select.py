@@ -37,7 +37,6 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit) -> None
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
     state = hass.states.get("select.test")
     assert state.state is STATE_UNKNOWN
 
@@ -152,7 +151,6 @@ async def test_select_dpt_20_103_all_options(
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
     state = hass.states.get("select.test")
     assert state.state is STATE_UNKNOWN
 

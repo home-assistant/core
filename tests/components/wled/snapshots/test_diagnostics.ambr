@@ -92,6 +92,7 @@
       'effect_count': 81,
       'filesystem': None,
       'free_heap': 14600,
+      'ip': '127.0.0.1',
       'leds': dict({
         '__type': "<class 'wled.models.Leds'>",
         'repr': 'Leds(cct=False, count=30, fps=None, light_capabilities=None, max_power=850, max_segments=10, power=470, rgbw=False, wv=True, segment_light_capabilities=None)',

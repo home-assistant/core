@@ -24,6 +24,8 @@ WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
     }
 )
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the wake on LAN component."""

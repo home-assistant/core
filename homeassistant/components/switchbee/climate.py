@@ -103,7 +103,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         # set HVAC capabilities
         self._attr_max_temp = device.max_temperature
         self._attr_min_temp = device.min_temperature
-        self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.unit]
+        self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.temperature_unit]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
         self._update_attrs_from_coordinator()

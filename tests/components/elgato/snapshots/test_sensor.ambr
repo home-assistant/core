@@ -128,7 +128,7 @@
     'original_name': 'Battery voltage',
     'platform': 'elgato',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'voltage',
     'unique_id': 'GW24L1A02987_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -212,7 +212,7 @@
     'original_name': 'Charging current',
     'platform': 'elgato',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'input_charge_current',
     'unique_id': 'GW24L1A02987_input_charge_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -293,7 +293,7 @@
     'original_name': 'Charging power',
     'platform': 'elgato',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'charge_power',
     'unique_id': 'GW24L1A02987_charge_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -377,7 +377,7 @@
     'original_name': 'Charging voltage',
     'platform': 'elgato',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'input_charge_voltage',
     'unique_id': 'GW24L1A02987_input_charge_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })

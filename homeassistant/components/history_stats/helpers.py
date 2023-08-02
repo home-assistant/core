@@ -79,7 +79,7 @@ def pretty_ratio(
     if len(period) != 2 or period[0] == period[1]:
         return 0.0
 
-    ratio = 100 * 3600 * value / (period[1] - period[0]).total_seconds()
+    ratio = 100 * value / (period[1] - period[0]).total_seconds()
     return round(ratio, 1)
 
 

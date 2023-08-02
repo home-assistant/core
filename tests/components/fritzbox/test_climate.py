@@ -85,7 +85,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.state == "22.0"
     assert (
-        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Comfort Temperature"
+        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Comfort temperature"
     )
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
@@ -93,7 +93,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_eco_temperature")
     assert state
     assert state.state == "16.0"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Eco Temperature"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Eco temperature"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
 
@@ -104,7 +104,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == "22.0"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Next Scheduled Temperature"
+        == f"{CONF_FAKE_NAME} Next scheduled temperature"
     )
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
@@ -116,7 +116,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == "1970-01-01T00:00:00+00:00"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Next Scheduled Change Time"
+        == f"{CONF_FAKE_NAME} Next scheduled change time"
     )
     assert ATTR_STATE_CLASS not in state.attributes
 
@@ -125,7 +125,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == PRESET_COMFORT
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Next Scheduled Preset"
+        == f"{CONF_FAKE_NAME} Next scheduled preset"
     )
     assert ATTR_STATE_CLASS not in state.attributes
 
@@ -136,7 +136,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == PRESET_ECO
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Current Scheduled Preset"
+        == f"{CONF_FAKE_NAME} Current scheduled preset"
     )
     assert ATTR_STATE_CLASS not in state.attributes
 
@@ -255,7 +255,7 @@ async def test_set_temperature_temperature(hass: HomeAssistant, fritz: Mock) -> 
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 123},
@@ -271,7 +271,7 @@ async def test_set_temperature_mode_off(hass: HomeAssistant, fritz: Mock) -> Non
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
@@ -291,7 +291,7 @@ async def test_set_temperature_mode_heat(hass: HomeAssistant, fritz: Mock) -> No
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
@@ -311,7 +311,7 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
@@ -327,7 +327,7 @@ async def test_set_hvac_mode_heat(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
@@ -343,7 +343,7 @@ async def test_set_preset_mode_comfort(hass: HomeAssistant, fritz: Mock) -> None
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_COMFORT},
@@ -359,7 +359,7 @@ async def test_set_preset_mode_eco(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},

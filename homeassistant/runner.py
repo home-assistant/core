@@ -34,7 +34,7 @@ ALPINE_RELEASE_FILE = "/etc/alpine-release"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class RuntimeConfig:
     """Class to hold the information for running Home Assistant."""
 
@@ -196,7 +196,7 @@ def _cancel_all_tasks_with_timeout(
         return
 
     for task in to_cancel:
-        task.cancel()
+        task.cancel("Final process shutdown")
 
     loop.run_until_complete(asyncio.wait(to_cancel, timeout=timeout))
 

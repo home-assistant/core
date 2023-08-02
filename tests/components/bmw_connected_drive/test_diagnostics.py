@@ -1,10 +1,10 @@
 """Test BMW diagnostics."""
 import datetime
-import json
 import os
 import time
 
-from freezegun import freeze_time
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bmw_connected_drive.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -12,7 +12,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_mocked_integration
 
-from tests.common import load_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -20,9 +19,12 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
-@freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    bmw_fixture,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
 
@@ -36,16 +38,15 @@ async def test_config_entry_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
-    diagnostics_fixture = json.loads(
-        load_fixture("diagnostics/diagnostics_config_entry.json", DOMAIN)
-    )
-
-    assert diagnostics == diagnostics_fixture
+    assert diagnostics == snapshot
 
 
-@freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_device_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    bmw_fixture,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics."""
 
@@ -65,16 +66,15 @@ async def test_device_diagnostics(
         hass, hass_client, mock_config_entry, reg_device
     )
 
-    diagnostics_fixture = json.loads(
-        load_fixture("diagnostics/diagnostics_device.json", DOMAIN)
-    )
-
-    assert diagnostics == diagnostics_fixture
+    assert diagnostics == snapshot
 
 
-@freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_device_diagnostics_vehicle_not_found(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    bmw_fixture,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics when the vehicle cannot be found."""
 
@@ -99,10 +99,4 @@ async def test_device_diagnostics_vehicle_not_found(
         hass, hass_client, mock_config_entry, reg_device
     )
 
-    diagnostics_fixture = json.loads(
-        load_fixture("diagnostics/diagnostics_device.json", DOMAIN)
-    )
-    # Mock empty data if car is not found in account anymore
-    diagnostics_fixture["data"] = None
-
-    assert diagnostics == diagnostics_fixture
+    assert diagnostics == snapshot

@@ -6,10 +6,9 @@ from datetime import timedelta
 import logging
 from random import randrange
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Self
 
 import metno
-from typing_extensions import Self
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,15 +17,12 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     EVENT_CORE_CONFIG_UPDATE,
     Platform,
-    UnitOfLength,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import DistanceConverter
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_TRACK_HOME,
@@ -102,9 +98,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize global Met data updater."""
         self._unsub_track_home: Callable[[], None] | None = None
-        self.weather = MetWeatherData(
-            hass, config_entry.data, hass.config.units is METRIC_SYSTEM
-        )
+        self.weather = MetWeatherData(hass, config_entry.data)
         self.weather.set_coordinates()
 
         update_interval = timedelta(minutes=randrange(55, 65))
@@ -142,13 +136,10 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
 class MetWeatherData:
     """Keep data for Met.no weather entities."""
 
-    def __init__(
-        self, hass: HomeAssistant, config: MappingProxyType[str, Any], is_metric: bool
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config: MappingProxyType[str, Any]) -> None:
         """Initialise the weather entity data."""
         self.hass = hass
         self._config = config
-        self._is_metric = is_metric
         self._weather_data: metno.MetWeatherData
         self.current_weather_data: dict = {}
         self.daily_forecast: list[dict] = []
@@ -165,14 +156,6 @@ class MetWeatherData:
             latitude = self._config[CONF_LATITUDE]
             longitude = self._config[CONF_LONGITUDE]
             elevation = self._config[CONF_ELEVATION]
-            if not self._is_metric:
-                elevation = int(
-                    round(
-                        DistanceConverter.convert(
-                            elevation, UnitOfLength.FEET, UnitOfLength.METERS
-                        )
-                    )
-                )
 
         coordinates = {
             "lat": str(latitude),
@@ -195,6 +178,6 @@ class MetWeatherData:
             raise CannotConnect()
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
-        self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
+        self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self

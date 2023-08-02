@@ -115,7 +115,10 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
                 self._result = result.bits
             else:
                 self._result = result.registers
-            self._attr_is_on = bool(self._result[0] & 1)
+            if len(self._result) >= 1:
+                self._attr_is_on = bool(self._result[0] & 1)
+            else:
+                self._attr_available = False
 
         self.async_write_ha_state()
         if self._coordinator:

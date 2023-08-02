@@ -9,6 +9,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
+        "service_uuid": "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e4a8e-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e1c08-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e3882-ade7-11e4-89d3-123b93f75cba",
     },
     {
         "connectable": False,
@@ -82,6 +98,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
             82,
         ],
         "manufacturer_id": 20296,
+    },
+    {
+        "connectable": True,
+        "domain": "gardena_bluetooth",
+        "manufacturer_id": 1062,
+        "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
     },
     {
         "connectable": False,
@@ -328,6 +350,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
     },
     {
+        "domain": "rapt_ble",
+        "manufacturer_data_start": [
+            80,
+            84,
+        ],
+        "manufacturer_id": 16722,
+    },
+    {
+        "domain": "rapt_ble",
+        "manufacturer_data_start": [
+            71,
+        ],
+        "manufacturer_id": 17739,
+    },
+    {
         "connectable": False,
         "domain": "ruuvitag_ble",
         "manufacturer_id": 1177,
@@ -482,6 +519,16 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
             187,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": False,
+        "domain": "xiaomi_ble",
+        "service_data_uuid": "0000181b-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "xiaomi_ble",
+        "service_data_uuid": "0000181d-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,

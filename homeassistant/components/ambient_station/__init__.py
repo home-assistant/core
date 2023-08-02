@@ -117,7 +117,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         en_reg.async_clear_config_entry(entry.entry_id)
 
         version = entry.version = 2
-        hass.config_entries.async_update_entry(entry)
 
     LOGGER.info("Migration to version %s successful", version)
 
@@ -149,6 +148,7 @@ class AmbientStation:
             """Define a handler to fire when the data is received."""
             mac = data["macAddress"]
 
+            # If data has not changed, don't update:
             if data == self.stations[mac][ATTR_LAST_DATA]:
                 return
 
@@ -229,33 +229,23 @@ class AmbientWeatherEntity(Entity):
         self._mac_address = mac_address
         self.entity_description = description
 
+    @callback
+    def _async_update(self) -> None:
+        """Update the state."""
+        last_data = self._ambient.stations[self._mac_address][ATTR_LAST_DATA]
+        key = self.entity_description.key
+        available_key = TYPE_SOLARRADIATION if key == TYPE_SOLARRADIATION_LX else key
+        self._attr_available = last_data[available_key] is not None
+        self.update_from_latest_data()
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            if self.entity_description.key == TYPE_SOLARRADIATION_LX:
-                self._attr_available = (
-                    self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
-                        TYPE_SOLARRADIATION
-                    ]
-                    is not None
-                )
-            else:
-                self._attr_available = (
-                    self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
-                        self.entity_description.key
-                    ]
-                    is not None
-                )
-
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"ambient_station_data_update_{self._mac_address}", update
+                self.hass,
+                f"ambient_station_data_update_{self._mac_address}",
+                self._async_update,
             )
         )
 

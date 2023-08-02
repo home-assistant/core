@@ -49,13 +49,13 @@ from .const import (
     DOMAIN,
     MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
-    SERVERS,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
+from .helpers import get_plex_server
 from .server import PlexServer
 
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
@@ -360,7 +360,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_plex_mp_settings(self, user_input=None):
         """Manage the Plex media_player options."""
-        plex_server = self.hass.data[DOMAIN][SERVERS][self.server_id]
+        plex_server = get_plex_server(self.hass, self.server_id)
 
         if user_input is not None:
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
