@@ -1,6 +1,9 @@
 """Test Smart Home HTTP endpoints."""
 from http import HTTPStatus
 import json
+from typing import Any
+
+import pytest
 
 from homeassistant.components.alexa import DOMAIN, smart_home
 from homeassistant.const import CONTENT_TYPE_JSON
@@ -26,12 +29,24 @@ async def do_http_discovery(config, hass, hass_client):
     return response
 
 
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"alexa": {"smart_home": None}},
+        {
+            "alexa": {
+                "smart_home": {
+                    "client_id": "someclientid",
+                    "client_secret": "verysecret",
+                }
+            }
+        },
+    ],
+)
 async def test_http_api(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, config: dict[str, Any]
 ) -> None:
     """With `smart_home:` HTTP API is exposed."""
-    config = {"alexa": {"smart_home": None}}
-
     response = await do_http_discovery(config, hass, hass_client)
     response_data = await response.json()
 

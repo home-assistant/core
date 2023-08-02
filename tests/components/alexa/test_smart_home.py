@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.alexa import smart_home, state_report
+from homeassistant.components.alexa import SMART_HOME_SCHEMA, smart_home, state_report
 import homeassistant.components.camera as camera
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -13,6 +13,7 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import entityfilter
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -29,6 +30,7 @@ from .test_common import (
 )
 
 from tests.common import async_capture_events, async_mock_service
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -52,6 +54,14 @@ async def mock_stream(hass: HomeAssistant) -> None:
     """Initialize a demo camera platform with streaming."""
     assert await async_setup_component(hass, "stream", {"stream": {}})
     await hass.async_block_till_done()
+
+
+class TestConfig(smart_home.AlexaConfig):
+    """Class to test overridden methods of the AbstarctConfig class."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize Alexa config."""
+        super().__init__(hass, config)
 
 
 def test_create_api_message_defaults(hass: HomeAssistant) -> None:
@@ -4372,3 +4382,24 @@ async def test_api_message_sets_authorized(hass: HomeAssistant) -> None:
     config._store.set_authorized.assert_not_called()
     await smart_home.async_handle_message(hass, config, msg)
     config._store.set_authorized.assert_called_once_with(True)
+
+
+async def test_alexa_config(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test all methods of the AlexaConfig class."""
+    config = {
+        "alexa": {
+            "smart_home": SMART_HOME_SCHEMA(
+                {
+                    "locale": "en-US",
+                }
+            )
+        }
+    }
+    test_config = TestConfig(hass, config)
+    await test_config.async_initialize()
+    assert not test_config.supports_auth
+    assert not test_config.should_report_state
+    assert test_config.endpoint is None
+    assert test_config.entity_config == {}
