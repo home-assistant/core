@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
@@ -141,10 +142,9 @@ class WaqiSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        if self._data is not None:
-            value = self._data.get("aqi")
-            if not isinstance(value, str):
-                return value
+        if value := self._data.get("aqi"):
+            with suppress(TypeError):
+                return float(value)
         return None
 
     @property
