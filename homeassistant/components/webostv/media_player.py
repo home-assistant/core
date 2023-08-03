@@ -8,7 +8,7 @@ from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import logging
-from ssl import SSLContext
+import ssl
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
@@ -476,7 +476,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         content = None
         ssl_context = None
         if url.startswith("https"):
-            ssl_context = SSLContext()
+            ssl_context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
 
         websession = async_get_clientsession(self.hass)
         with suppress(asyncio.TimeoutError):
