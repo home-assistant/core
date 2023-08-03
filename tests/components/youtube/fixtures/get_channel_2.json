@@ -1,47 +1,54 @@
 {
-  "kind": "youtube#SubscriptionListResponse",
-  "etag": "6C9iFE7CzKQqPrEoJlE0H2U27xI",
-  "nextPageToken": "CAEQAA",
+  "kind": "youtube#channelListResponse",
+  "etag": "en7FWhCsHOdM398MU6qRntH03cQ",
   "pageInfo": {
-    "totalResults": 525,
-    "resultsPerPage": 1
+    "totalResults": 1,
+    "resultsPerPage": 5
   },
   "items": [
     {
-      "kind": "youtube#subscription",
-      "etag": "4Hr8w5f03mLak3fZID0aXypQRDg",
-      "id": "l6YW-siEBx2rtBlTJ_ip10UA2t_d09UYkgtJsqbYblE",
+      "kind": "youtube#channel",
+      "etag": "PyFk-jpc2-v4mvG_6imAHx3y6TM",
+      "id": "UCXuqSBlHAE6Xw-yeJA0Tunw",
       "snippet": {
-        "publishedAt": "2015-08-09T21:37:44Z",
         "title": "Linus Tech Tips",
-        "description": "Linus Tech Tips is a passionate team of \"professionally curious\" experts in consumer technology and video production who aim to educate and entertain.",
-        "resourceId": {
-          "kind": "youtube#channel",
-          "channelId": "UCXuqSBlHAE6Xw-yeJA0Tunw"
-        },
-        "channelId": "UCXuqSBlHAE6Xw-yeJA0Tunw",
+        "description": "Linus Tech Tips is a passionate team of \"professionally curious\" experts in consumer technology and video production who aim to educate and entertain.\n",
+        "customUrl": "@linustechtips",
+        "publishedAt": "2008-11-25T00:46:52Z",
         "thumbnails": {
           "default": {
-            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s88-c-k-c0x00ffffff-no-rj"
+            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s88-c-k-c0x00ffffff-no-rj",
+            "width": 88,
+            "height": 88
           },
           "medium": {
-            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s240-c-k-c0x00ffffff-no-rj"
+            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s240-c-k-c0x00ffffff-no-rj",
+            "width": 240,
+            "height": 240
           },
           "high": {
-            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s800-c-k-c0x00ffffff-no-rj"
+            "url": "https://yt3.ggpht.com/Vy6KL7EM_apxPSxF0pPy5w_c87YDTOlBQo3MADDF0Wl51kwxmt9wmRotnt2xQXwlrcyO0Xe56w=s800-c-k-c0x00ffffff-no-rj",
+            "width": 800,
+            "height": 800
           }
-        }
+        },
+        "localized": {
+          "title": "Linus Tech Tips",
+          "description": "Linus Tech Tips is a passionate team of \"professionally curious\" experts in consumer technology and video production who aim to educate and entertain.\n"
+        },
+        "country": "CA"
       },
       "contentDetails": {
-        "totalItemCount": 6178,
-        "newItemCount": 0,
-        "activityType": "all"
+        "relatedPlaylists": {
+          "likes": "",
+          "uploads": "UUXuqSBlHAE6Xw-yeJA0Tunw"
+        }
       },
       "statistics": {
-        "viewCount": "214141263",
-        "subscriberCount": "2290000",
+        "viewCount": "7190986011",
+        "subscriberCount": "15600000",
         "hiddenSubscriberCount": false,
-        "videoCount": "5798"
+        "videoCount": "6541"
       }
     }
   ]

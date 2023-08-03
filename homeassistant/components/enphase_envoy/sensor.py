@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPower
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import COORDINATOR, DOMAIN, NAME, SENSORS
+from .const import COORDINATOR, DOMAIN, NAME
 
 ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +72,63 @@ INVERTER_SENSORS = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         value_fn=_inverter_last_report_time,
+    ),
+)
+
+SENSORS = (
+    SensorEntityDescription(
+        key="production",
+        name="Current Power Production",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SensorEntityDescription(
+        key="daily_production",
+        name="Today's Energy Production",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="seven_days_production",
+        name="Last Seven Days Energy Production",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="lifetime_production",
+        name="Lifetime Energy Production",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="consumption",
+        name="Current Power Consumption",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SensorEntityDescription(
+        key="daily_consumption",
+        name="Today's Energy Consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="seven_days_consumption",
+        name="Last Seven Days Energy Consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="lifetime_consumption",
+        name="Lifetime Energy Consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
     ),
 )
 

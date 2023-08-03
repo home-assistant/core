@@ -264,8 +264,8 @@ SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
     cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.make_entity_service_schema(
         {
-            vol.Optional(EVENT_START_DATETIME): datetime.datetime,
-            vol.Optional(EVENT_END_DATETIME): datetime.datetime,
+            vol.Optional(EVENT_START_DATETIME): cv.datetime,
+            vol.Optional(EVENT_END_DATETIME): cv.datetime,
             vol.Optional(EVENT_DURATION): vol.All(
                 cv.time_period, cv.positive_timedelta
             ),
@@ -422,7 +422,7 @@ def _list_events_dict_factory(
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     return {
         name: value
-        for name, value in obj
+        for name, value in _event_dict_factory(obj).items()
         if name in LIST_EVENT_FIELDS and value is not None
     }
 
@@ -455,7 +455,7 @@ def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.time
     if search and search.group(1):
         time = search.group(1)
         if ":" not in time:
-            if time[0] == "+" or time[0] == "-":
+            if time[0] in ("+", "-"):
                 time = f"{time[0]}0:{time[1:]}"
             else:
                 time = f"0:{time}"
@@ -793,7 +793,9 @@ async def async_list_events_service(
         end = start + service_call.data[EVENT_DURATION]
     else:
         end = service_call.data[EVENT_END_DATETIME]
-    calendar_event_list = await calendar.async_get_events(calendar.hass, start, end)
+    calendar_event_list = await calendar.async_get_events(
+        calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
+    )
     return {
         "events": [
             dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
