@@ -1,0 +1,38 @@
+{
+  "services": {
+    "submit_movie_request": {
+      "name": "Sumbit movie request",
+      "description": "Searches for a movie and requests the first result.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Search parameter."
+        }
+      }
+    },
+    "submit_tv_request": {
+      "name": "Submit TV request",
+      "description": "Searches for a TV show and requests the first result.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "[%key:component::ombi::services::submit_movie_request::fields::name::description%]"
+        },
+        "season": {
+          "name": "Season",
+          "description": "Which season(s) to request."
+        }
+      }
+    },
+    "submit_music_request": {
+      "name": "Submit music request",
+      "description": "Searches for a music album and requests the first result.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "[%key:component::ombi::services::submit_movie_request::fields::name::description%]"
+        }
+      }
+    }
+  }
+}

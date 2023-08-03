@@ -479,10 +479,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             ssl_context = SSLContext()
 
         websession = async_get_clientsession(self.hass)
-        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-            response = await websession.get(url, ssl=ssl_context)
-            if response.status == HTTPStatus.OK:
-                content = await response.read()
+        with suppress(asyncio.TimeoutError):
+            async with async_timeout.timeout(10):
+                response = await websession.get(url, ssl=ssl_context)
+                if response.status == HTTPStatus.OK:
+                    content = await response.read()
 
         if content is None:
             _LOGGER.warning("Error retrieving proxied image from %s", url)

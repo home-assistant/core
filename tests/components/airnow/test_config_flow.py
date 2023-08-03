@@ -1,7 +1,7 @@
 """Test the AirNow config flow."""
 from unittest.mock import AsyncMock
 
-from pyairnow.errors import AirNowError, InvalidKeyError
+from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -53,6 +53,17 @@ async def test_form_cannot_connect(hass: HomeAssistant, config, setup_airnow) ->
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=EmptyResponseError)])
+async def test_form_empty_result(hass: HomeAssistant, config, setup_airnow) -> None:
+    """Test we handle empty response error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_location"}
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=RuntimeError)])

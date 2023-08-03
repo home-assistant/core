@@ -37,7 +37,7 @@
     'original_name': 'Admin',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'admin',
     'unique_id': 'home-assistant.io_admin',
     'unit_of_measurement': None,
   })
@@ -107,7 +107,7 @@
     'original_name': 'Created',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'creation_date',
     'unique_id': 'home-assistant.io_creation_date',
     'unit_of_measurement': None,
   })
@@ -182,7 +182,7 @@
     'original_name': 'Days until expiration',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'days_until_expiration',
     'unique_id': 'home-assistant.io_days_until_expiration',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
@@ -252,7 +252,7 @@
     'original_name': 'Expires',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'expiration_date',
     'unique_id': 'home-assistant.io_expiration_date',
     'unit_of_measurement': None,
   })
@@ -322,7 +322,7 @@
     'original_name': 'Last updated',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_updated',
     'unique_id': 'home-assistant.io_last_updated',
     'unit_of_measurement': None,
   })
@@ -392,7 +392,7 @@
     'original_name': 'Owner',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'owner',
     'unique_id': 'home-assistant.io_owner',
     'unit_of_measurement': None,
   })
@@ -462,7 +462,7 @@
     'original_name': 'Registrant',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'registrant',
     'unique_id': 'home-assistant.io_registrant',
     'unit_of_measurement': None,
   })
@@ -532,7 +532,7 @@
     'original_name': 'Registrar',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'registrar',
     'unique_id': 'home-assistant.io_registrar',
     'unit_of_measurement': None,
   })
@@ -602,7 +602,7 @@
     'original_name': 'Reseller',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'reseller',
     'unique_id': 'home-assistant.io_reseller',
     'unit_of_measurement': None,
   })
@@ -672,7 +672,7 @@
     'original_name': 'Last updated',
     'platform': 'whois',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_updated',
     'unique_id': 'home-assistant.io_last_updated',
     'unit_of_measurement': None,
   })

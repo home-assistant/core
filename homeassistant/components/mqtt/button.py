@@ -35,7 +35,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_PRESS, default=DEFAULT_PAYLOAD_PRESS): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
@@ -70,6 +70,7 @@ async def _async_setup_entity(
 class MqttButton(MqttEntity, ButtonEntity):
     """Representation of a switch that can be toggled using MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = button.ENTITY_ID_FORMAT
 
     def __init__(

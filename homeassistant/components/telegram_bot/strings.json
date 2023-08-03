@@ -1,0 +1,596 @@
+{
+  "services": {
+    "send_message": {
+      "name": "Send message",
+      "description": "Sends a notification.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Optional title for your notification. Will be composed as '%title\\n%message'."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of pre-authorized chat_ids to send the notification to. If not present, first allowed chat_id is the default."
+        },
+        "parse_mode": {
+          "name": "Parse mode",
+          "description": "Parser for the message text."
+        },
+        "disable_notification": {
+          "name": "Disable notification",
+          "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound."
+        },
+        "disable_web_page_preview": {
+          "name": "Disable web page preview",
+          "description": "Disables link previews for links in the message."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for send message. Will help with timeout errors (poor internet connection, etc)s."
+        },
+        "keyboard": {
+          "name": "Keyboard",
+          "description": "List of rows of commands, comma-separated, to make a custom keyboard. Empty list clears a previously set keyboard."
+        },
+        "inline_keyboard": {
+          "name": "Inline keyboard",
+          "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data."
+        },
+        "message_tag": {
+          "name": "Message tag",
+          "description": "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}."
+        }
+      }
+    },
+    "send_photo": {
+      "name": "Send photo",
+      "description": "Sends a photo.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "Remote path to an image."
+        },
+        "file": {
+          "name": "File",
+          "description": "Local path to an image."
+        },
+        "caption": {
+          "name": "Caption",
+          "description": "The title of the image."
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "Username for a URL which require HTTP authentication."
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "Password (or bearer token) for a URL which require HTTP authentication."
+        },
+        "authentication": {
+          "name": "Authentication method",
+          "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default."
+        },
+        "parse_mode": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]"
+        },
+        "disable_notification": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
+        },
+        "verify_ssl": {
+          "name": "Verify SSL",
+          "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for send photo. Will help with timeout errors (poor internet connection, etc)."
+        },
+        "keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
+          "description": "List of rows of commands, comma-separated, to make a custom keyboard."
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        },
+        "message_tag": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        }
+      }
+    },
+    "send_sticker": {
+      "name": "Send sticker",
+      "description": "Sends a sticker.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "Remote path to a static .webp or animated .tgs sticker."
+        },
+        "file": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
+          "description": "Local path to a static .webp or animated .tgs sticker."
+        },
+        "sticker_id": {
+          "name": "Sticker ID",
+          "description": "ID of a sticker that exists on telegram servers."
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::username::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]"
+        },
+        "authentication": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::authentication::description%]"
+        },
+        "target": {
+          "name": "Target",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]"
+        },
+        "disable_notification": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
+        },
+        "verify_ssl": {
+          "name": "Verify SSL",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for send sticker. Will help with timeout errors (poor internet connection, etc)."
+        },
+        "keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        },
+        "message_tag": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        }
+      }
+    },
+    "send_animation": {
+      "name": "Send animation",
+      "description": "Sends an anmiation.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "Remote path to a GIF or H.264/MPEG-4 AVC video without sound."
+        },
+        "file": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
+          "description": "Local path to a GIF or H.264/MPEG-4 AVC video without sound."
+        },
+        "caption": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
+          "description": "The title of the animation."
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::username::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]"
+        },
+        "authentication": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::authentication::description%]"
+        },
+        "target": {
+          "name": "Target",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]"
+        },
+        "parse_mode": {
+          "name": "Parse Mode",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]"
+        },
+        "disable_notification": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
+        },
+        "verify_ssl": {
+          "name": "Verify SSL",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "[%key:component::telegram_bot::services::send_sticker::fields::timeout::description%]"
+        },
+        "keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        }
+      }
+    },
+    "send_video": {
+      "name": "Send video",
+      "description": "Sends a video.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "Remote path to a video."
+        },
+        "file": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
+          "description": "Local path to a video."
+        },
+        "caption": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
+          "description": "The title of the video."
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::username::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]"
+        },
+        "authentication": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::authentication::description%]"
+        },
+        "target": {
+          "name": "Target",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]"
+        },
+        "parse_mode": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]"
+        },
+        "disable_notification": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
+        },
+        "verify_ssl": {
+          "name": "Verify SSL",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for send video. Will help with timeout errors (poor internet connection, etc)."
+        },
+        "keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        },
+        "message_tag": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        }
+      }
+    },
+    "send_voice": {
+      "name": "Send voice",
+      "description": "Sends a voice message.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "Remote path to a voice message."
+        },
+        "file": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
+          "description": "Local path to a voice message."
+        },
+        "caption": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
+          "description": "The title of the voice message."
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::username::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]"
+        },
+        "authentication": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::authentication::description%]"
+        },
+        "target": {
+          "name": "Target",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]"
+        },
+        "disable_notification": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
+        },
+        "verify_ssl": {
+          "name": "Verify SSL",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for send voice. Will help with timeout errors (poor internet connection, etc)."
+        },
+        "keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        },
+        "message_tag": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        }
+      }
+    },
+    "send_document": {
+      "name": "Send document",
+      "description": "Sends a document.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "Remote path to a document."
+        },
+        "file": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
+          "description": "Local path to a document."
+        },
+        "caption": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
+          "description": "The title of the document."
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::username::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]"
+        },
+        "authentication": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::authentication::description%]"
+        },
+        "target": {
+          "name": "Target",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]"
+        },
+        "parse_mode": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]"
+        },
+        "disable_notification": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
+        },
+        "verify_ssl": {
+          "name": "Verify SSL",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for send document. Will help with timeout errors (poor internet connection, etc)."
+        },
+        "keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        },
+        "message_tag": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        }
+      }
+    },
+    "send_location": {
+      "name": "Send location",
+      "description": "Sends a location.",
+      "fields": {
+        "latitude": {
+          "name": "[%key:common::config_flow::data::latitude%]",
+          "description": "The latitude to send."
+        },
+        "longitude": {
+          "name": "[%key:common::config_flow::data::longitude%]",
+          "description": "The longitude to send."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of pre-authorized chat_ids to send the location to. If not present, first allowed chat_id is the default."
+        },
+        "disable_notification": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
+        },
+        "keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        },
+        "message_tag": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        }
+      }
+    },
+    "send_poll": {
+      "name": "Send poll",
+      "description": "Sends a poll.",
+      "fields": {
+        "target": {
+          "name": "Target",
+          "description": "[%key:component::telegram_bot::services::send_location::fields::target::description%]"
+        },
+        "question": {
+          "name": "Question",
+          "description": "Poll question, 1-300 characters."
+        },
+        "options": {
+          "name": "Options",
+          "description": "List of answer options, 2-10 strings 1-100 characters each."
+        },
+        "is_anonymous": {
+          "name": "Is anonymous",
+          "description": "If the poll needs to be anonymous, defaults to True."
+        },
+        "allows_multiple_answers": {
+          "name": "Allow multiple answers",
+          "description": "If the poll allows multiple answers, defaults to False."
+        },
+        "open_period": {
+          "name": "Open period",
+          "description": "Amount of time in seconds the poll will be active after creation, 5-600."
+        },
+        "disable_notification": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for send poll. Will help with timeout errors (poor internet connection, etc)."
+        }
+      }
+    },
+    "edit_message": {
+      "name": "Edit message",
+      "description": "Edits a previously sent message.",
+      "fields": {
+        "message_id": {
+          "name": "Message ID",
+          "description": "Id of the message to edit."
+        },
+        "chat_id": {
+          "name": "Chat ID",
+          "description": "The chat_id where to edit the message."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::title::description%]"
+        },
+        "parse_mode": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]"
+        },
+        "disable_web_page_preview": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_web_page_preview::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_web_page_preview::description%]"
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        }
+      }
+    },
+    "edit_caption": {
+      "name": "Edit caption",
+      "description": "Edits the caption of a previously sent message.",
+      "fields": {
+        "message_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]"
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "The chat_id where to edit the caption."
+        },
+        "caption": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
+          "description": "Message body of the notification."
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        }
+      }
+    },
+    "edit_replymarkup": {
+      "name": "Edit reply markup",
+      "description": "Edit the inline keyboard of a previously sent message.",
+      "fields": {
+        "message_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]"
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "The chat_id where to edit the reply_markup."
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        }
+      }
+    },
+    "answer_callback_query": {
+      "name": "Answer callback query",
+      "description": "Responds to a callback query originated by clicking on an online keyboard button. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Unformatted text message body of the notification."
+        },
+        "callback_query_id": {
+          "name": "Callback query ID",
+          "description": "Unique id of the callback response."
+        },
+        "show_alert": {
+          "name": "Show alert",
+          "description": "Show a permanent notification."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for sending the answer. Will help with timeout errors (poor internet connection, etc)."
+        }
+      }
+    },
+    "delete_message": {
+      "name": "Delete message",
+      "description": "Deletes a previously sent message.",
+      "fields": {
+        "message_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "Id of the message to delete."
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "The chat_id where to delete the message."
+        }
+      }
+    }
+  }
+}
