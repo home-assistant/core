@@ -774,10 +774,10 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230801.0
+home-assistant-frontend==20230802.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.7.25
+home-assistant-intents==2023.8.2
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1582,7 +1582,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.30.2
+python-roborock==0.31.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
