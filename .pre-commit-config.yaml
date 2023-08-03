@@ -5,7 +5,7 @@ repos:
       - id: ruff
         args:
           - --fix
-  - repo: https://github.com/psf/black
+  - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 23.7.0
     hooks:
       - id: black
@@ -43,7 +43,7 @@ repos:
     hooks:
       - id: prettier
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.5.0
+    rev: v0.6.0
     hooks:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.
@@ -52,7 +52,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py310-plus
+          - --py311-plus
           - --force
           - --keep-updates
         files: ^(homeassistant|tests|script)/.+\.py$
