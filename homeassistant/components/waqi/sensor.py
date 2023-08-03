@@ -143,7 +143,7 @@ class WaqiSensor(SensorEntity):
     def native_value(self):
         """Return the state of the device."""
         if value := self._data.get("aqi"):
-            with suppress(TypeError):
+            with suppress(ValueError):
                 return float(value)
         return None
 
