@@ -1,10 +1,13 @@
 """Test OpenSky config flow."""
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
+from homeassistant import data_entry_flow
 from homeassistant.components.opensky.const import (
     CONF_ALTITUDE,
+    CONF_CONTRIBUTING_USER,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -13,12 +16,15 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_RADIUS,
+    CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import patch_setup_entry
+from . import MockOpenSky, NonAuthenticatedMockOpenSky, patch_setup_entry
+from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
 
@@ -160,32 +166,73 @@ async def test_importing_already_exists_flow(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
-# @pytest.mark.parametrize(
-#     ("user_input", "error"),
-#     [
-#         (
-#                 {
-#                     CONF_USERNAME: "homeassistant",
-#                     CONF_CONTRIBUTING_USER: False
-#                 },
-#             "password_missing"
-#         )
-#     ]
-# )
-# async def test_options_flow_failures(
-#     hass: HomeAssistant,
-#     setup_integration: ComponentSetup,
-#     config_entry: MockConfigEntry,
-# ) -> None:
-#     """Test load and unload entry."""
-#     await setup_integration(config_entry)
-#     entry = hass.config_entries.async_entries(DOMAIN)[0]
-#
-#     state = hass.states.get("sensor.opensky")
-#     assert state
-#
-#     await hass.config_entries.async_remove(entry.entry_id)
-#     await hass.async_block_till_done()
-#
-#     state = hass.states.get("sensor.opensky")
-#     assert not state
+@pytest.mark.parametrize(
+    ("user_input", "error"),
+    [
+        (
+            {CONF_USERNAME: "homeassistant", CONF_CONTRIBUTING_USER: False},
+            "password_missing",
+        ),
+        ({CONF_PASSWORD: "secret", CONF_CONTRIBUTING_USER: False}, "username_missing"),
+        ({CONF_CONTRIBUTING_USER: True}, "no_authentication"),
+        (
+            {
+                CONF_USERNAME: "homeassistant",
+                CONF_PASSWORD: "secret",
+                CONF_CONTRIBUTING_USER: True,
+            },
+            "invalid_auth",
+        ),
+    ],
+)
+async def test_options_flow_failures(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    user_input: dict[str, Any],
+    error: str,
+) -> None:
+    """Test load and unload entry."""
+    await setup_integration(config_entry, MockOpenSky())
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    with patch(
+        "homeassistant.components.opensky.config_flow.OpenSky",
+        return_value=NonAuthenticatedMockOpenSky(),
+    ):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_RADIUS: 10000, **user_input},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"]["base"] == error
+    with patch(
+        "homeassistant.components.opensky.config_flow.OpenSky",
+        return_value=MockOpenSky(),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RADIUS: 10000,
+                CONF_USERNAME: "homeassistant",
+                CONF_PASSWORD: "secret",
+                CONF_CONTRIBUTING_USER: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["data"] == {
+            CONF_RADIUS: 10000,
+            CONF_USERNAME: "homeassistant",
+            CONF_PASSWORD: "secret",
+            CONF_CONTRIBUTING_USER: True,
+        }
