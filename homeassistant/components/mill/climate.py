@@ -114,7 +114,6 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
             model=heater.model,
             name=heater.name,
         )
-        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
 
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = PRECISION_TENTHS
