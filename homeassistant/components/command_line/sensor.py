@@ -213,11 +213,6 @@ class CommandSensor(ManualTriggerEntity, SensorEntity):
                 None,
             )
 
-        if value is None:
-            self._attr_native_value = None
-            self._process_manual_data(value)
-            return
-
         if self.device_class not in {
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
@@ -226,9 +221,11 @@ class CommandSensor(ManualTriggerEntity, SensorEntity):
             self._process_manual_data(value)
             return
 
-        self._attr_native_value = async_parse_date_datetime(
-            value, self.entity_id, self.device_class
-        )
+        self._attr_native_value = None
+        if value is not None:
+            self._attr_native_value = async_parse_date_datetime(
+                value, self.entity_id, self.device_class
+            )
         self._process_manual_data(value)
         self.async_write_ha_state()
 
