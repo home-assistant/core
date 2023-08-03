@@ -163,9 +163,6 @@ class FreeboxRouter:
         # None at first request
         try:
             fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
-
-            for fbx_raid in fbx_raids:
-                self.raids[fbx_raid["id"]] = fbx_raid
         except HttpRequestError:
             _LOGGER.warning("Unable to enumerate raid disks")
         else:
