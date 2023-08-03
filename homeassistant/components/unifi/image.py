@@ -83,6 +83,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up image platform for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    if controller.site_role != "admin":
+        return
+
     controller.register_platform_add_entities(
         UnifiImageEntity, ENTITY_DESCRIPTIONS, async_add_entities
     )
