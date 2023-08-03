@@ -3,12 +3,13 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 import pytest
-from python_opensky import StatesResponse
 
 from homeassistant.components.opensky.const import CONF_ALTITUDE, DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from . import MockOpenSky
 
 from tests.common import MockConfigEntry
 
@@ -38,11 +39,13 @@ async def mock_setup_integration(
 ) -> Callable[[MockConfigEntry], Awaitable[None]]:
     """Fixture for setting up the component."""
 
-    async def func(mock_config_entry: MockConfigEntry) -> None:
+    async def func(
+        mock_config_entry: MockConfigEntry, mock_opensky: MockOpenSky
+    ) -> None:
         mock_config_entry.add_to_hass(hass)
         with patch(
-            "python_opensky.OpenSky.get_states",
-            return_value=StatesResponse(states=[], time=0),
+            "homeassistant.components.opensky.OpenSky",
+            return_value=mock_opensky,
         ):
             assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()
