@@ -209,11 +209,14 @@ class ZHAGateway:
         self.async_load_devices()
 
         # Groups are attached to the coordinator device so we need to load it early
-        self.coordinator_zha_device = self._find_coordinator_device()
+        coordinator = self._find_coordinator_device()
         loaded_groups = False
 
         # We can only load groups if the coordinator's model has been stored in the DB
-        if self.coordinator_zha_device.model is not None:
+        if coordinator.model is not None:
+            self.coordinator_zha_device = self._async_get_or_create_device(
+                coordinator, restored=True
+            )
             self.async_load_groups()
             loaded_groups = True
 
@@ -238,7 +241,9 @@ class ZHAGateway:
             else:
                 break
 
-        self.coordinator_zha_device = self._find_coordinator_device()
+        self.coordinator_zha_device = self._async_get_or_create_device(
+            self._find_coordinator_device(), restored=True
+        )
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
 
         # If ZHA groups could not load early, we can safely load them now
@@ -248,7 +253,7 @@ class ZHAGateway:
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
 
-    def _find_coordinator_device(self) -> ZHADevice:
+    def _find_coordinator_device(self) -> zigpy.device.Device:
         if last_backup := self.application_controller.backups.most_recent_backup():
             zigpy_coordinator = self.application_controller.get_device(
                 ieee=last_backup.node_info.ieee
@@ -256,7 +261,7 @@ class ZHAGateway:
         else:
             zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
 
-        return self._async_get_or_create_device(zigpy_coordinator, restored=True)
+        return zigpy_coordinator
 
     @callback
     def async_load_devices(self) -> None:
