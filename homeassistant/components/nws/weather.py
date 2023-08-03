@@ -9,6 +9,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_IS_DAYTIME,
     ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
@@ -36,7 +37,6 @@ from homeassistant.util.unit_system import UnitSystem
 
 from . import base_unique_id, device_info
 from .const import (
-    ATTR_FORECAST_DAYTIME,
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -101,7 +101,6 @@ if TYPE_CHECKING:
         """Forecast with extra fields needed for NWS."""
 
         detailed_description: str | None
-        daytime: bool | None
 
 
 class NWSWeather(WeatherEntity):
@@ -268,7 +267,7 @@ class NWSWeather(WeatherEntity):
             data[ATTR_FORECAST_HUMIDITY] = forecast_entry.get("relativeHumidity")
 
             if self.mode == DAYNIGHT:
-                data[ATTR_FORECAST_DAYTIME] = forecast_entry.get("isDaytime")
+                data[ATTR_FORECAST_IS_DAYTIME] = forecast_entry.get("isDaytime")
 
             time = forecast_entry.get("iconTime")
             weather = forecast_entry.get("iconWeather")
