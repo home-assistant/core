@@ -930,8 +930,6 @@ class YeelightColorLightWithoutNightlightSwitch(
 ):
     """Representation of a Color Yeelight light."""
 
-    _attr_name = None
-
 
 class YeelightColorLightWithNightlightSwitch(
     YeelightNightLightSupport, YeelightColorLightSupport, YeelightGenericLight
