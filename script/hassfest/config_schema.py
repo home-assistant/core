@@ -20,7 +20,7 @@ def _has_assignment(module: ast.Module, name: str) -> bool:
             continue
         if type(item) == ast.Assign:
             for target in item.targets:
-                if target.id == name:
+                if type(target) == ast.Name and target.id == name:
                     return True
             continue
         if item.target.id == name:
