@@ -87,10 +87,7 @@ def update_attribute_cache(cluster):
 
 def get_zha_gateway(hass):
     """Return ZHA gateway from hass.data."""
-    try:
-        return hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-    except KeyError:
-        return None
+    return hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
 
 
 def make_attribute(attrid, value, status=0):
@@ -172,10 +169,8 @@ def async_find_group_entity_id(hass, domain, group):
     )
 
     entity_ids = hass.states.async_entity_ids(domain)
-
-    if entity_id in entity_ids:
-        return entity_id
-    return None
+    assert entity_id in entity_ids
+    return entity_id
 
 
 async def async_enable_traffic(hass, zha_devices, enabled=True):

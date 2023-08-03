@@ -233,7 +233,7 @@ async def test_list_devices(zha_client) -> None:
     msg = await zha_client.receive_json()
 
     devices = msg["result"]
-    assert len(devices) == 2
+    assert len(devices) == 2 + 1  # the coordinator is included as well
 
     msg_id = 100
     for device in devices:
@@ -479,6 +479,7 @@ async def app_controller(
 ) -> ControllerApplication:
     """Fixture for zigpy Application Controller."""
     await setup_zha()
+    zigpy_app_controller.permit.reset_mock()
     return zigpy_app_controller
 
 

@@ -234,9 +234,9 @@ async def test_gateway_create_group_with_id(
 @pytest.mark.parametrize(
     "startup",
     [
-        [asyncio.TimeoutError(), FileNotFoundError(), MagicMock()],
-        [asyncio.TimeoutError(), MagicMock()],
-        [MagicMock()],
+        [asyncio.TimeoutError(), FileNotFoundError(), None],
+        [asyncio.TimeoutError(), None],
+        [None],
     ],
 )
 async def test_gateway_initialize_success(
@@ -249,14 +249,13 @@ async def test_gateway_initialize_success(
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
 
-    zha_gateway.shutdown = AsyncMock()
-
     with patch(
-        "bellows.zigbee.application.ControllerApplication.new", side_effect=startup
-    ) as mock_new:
+        "bellows.zigbee.application.ControllerApplication.startup",
+        side_effect=startup,
+    ) as mock_startup:
         await zha_gateway.async_initialize()
 
-    assert mock_new.call_count == len(startup)
+    assert mock_startup.call_count == len(startup)
 
     device_light_1.async_cleanup_handles()
 
@@ -270,7 +269,7 @@ async def test_gateway_initialize_failure(
     assert zha_gateway is not None
 
     with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
+        "bellows.zigbee.application.ControllerApplication.startup",
         side_effect=[asyncio.TimeoutError(), FileNotFoundError(), RuntimeError()],
     ) as mock_new, pytest.raises(RuntimeError):
         await zha_gateway.async_initialize()
@@ -287,7 +286,7 @@ async def test_gateway_initialize_failure_transient(
     assert zha_gateway is not None
 
     with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
+        "bellows.zigbee.application.ControllerApplication.startup",
         side_effect=[RuntimeError(), zigpy.exceptions.TransientConnectionError()],
     ) as mock_new, pytest.raises(ConfigEntryNotReady):
         await zha_gateway.async_initialize()
@@ -324,15 +323,12 @@ async def test_gateway_initialize_bellows_thread(
     zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
 
     with patch(
-        "bellows.zigbee.application.ControllerApplication.new"
-    ) as controller_app_mock:
-        mock = AsyncMock()
-        mock.add_listener = MagicMock()
-        mock.groups = MagicMock()
-        controller_app_mock.return_value = mock
+        "bellows.zigbee.application.ControllerApplication.startup",
+        new=AsyncMock(),
+    ) as mock_new:
         await zha_gateway.async_initialize()
 
-    assert controller_app_mock.mock_calls[0].args[0]["use_thread"] is thread_state
+    assert mock_new.mock_calls[0].kwargs["config"]["use_thread"] is thread_state
 
 
 @pytest.mark.parametrize(

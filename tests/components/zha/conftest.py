@@ -15,6 +15,7 @@ import zigpy.group
 import zigpy.profiles
 import zigpy.quirks
 import zigpy.types
+from zigpy.zcl.clusters.general import Basic
 import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.const as zha_const
@@ -104,6 +105,9 @@ def zigpy_app_controller():
         {
             zigpy.config.CONF_DATABASE: None,
             zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/null"},
+            zigpy.config.CONF_STARTUP_ENERGY_SCAN: False,
+            zigpy.config.CONF_NWK_BACKUP_ENABLED: False,
+            zigpy.config.CONF_TOPO_SCAN_ENABLED: False,
         }
     )
 
@@ -115,6 +119,11 @@ def zigpy_app_controller():
     app.state.network_info.extended_pan_id = app.state.node_info.ieee
     app.state.network_info.channel = 15
     app.state.network_info.network_key.key = zigpy.types.KeyData(range(16))
+
+    # Create a fake coordinator device
+    dev = app.add_device(nwk=app.state.node_info.nwk, ieee=app.state.node_info.ieee)
+    ep = dev.add_endpoint(1)
+    ep.add_input_cluster(Basic.cluster_id)
 
     with patch("zigpy.device.Device.request"), patch.object(
         app, "permit", autospec=True
