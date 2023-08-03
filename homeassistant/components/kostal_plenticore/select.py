@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import Plenticore, SelectDataUpdateCoordinator
+from .helper import SelectDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add kostal plenticore Select widget."""
-    plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore = hass.data[DOMAIN][entry.entry_id]
 
     available_settings_data = await plenticore.client.get_settings()
     select_data_update_coordinator = SelectDataUpdateCoordinator(
@@ -111,7 +111,7 @@ class PlenticoreDataSelect(
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
-        self._device_info = device_info
+        self._attr_device_info = device_info
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
     @property
