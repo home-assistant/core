@@ -576,7 +576,7 @@ class HomeAssistant:
         """
         task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
-        task.add_done_callback(self._background_tasks.remove)
+        task.add_done_callback(self._background_tasks.discard)
         return task
 
     @callback
