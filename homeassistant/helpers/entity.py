@@ -15,6 +15,7 @@ from timeit import default_timer as timer
 from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
 
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.backports.functools import cached_property
 from homeassistant.config import DATA_CUSTOMIZE
@@ -34,18 +35,18 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
-from .device_registry import DeviceEntryType
+from .device_registry import DeviceEntryType, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .typing import UNDEFINED, StateType, UndefinedType
+from .typing import UNDEFINED, EventType, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
@@ -177,7 +178,7 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 class DeviceInfo(TypedDict, total=False):
     """Entity device information for device registry."""
 
-    configuration_url: str | None
+    configuration_url: str | URL | None
     connections: set[tuple[str, str]]
     default_manufacturer: str
     default_model: str
@@ -276,6 +277,9 @@ class Entity(ABC):
 
     # Entry in the entity registry
     registry_entry: er.RegistryEntry | None = None
+
+    # The device entry for this entity
+    device_entry: dr.DeviceEntry | None = None
 
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
@@ -763,18 +767,13 @@ class Entity(ABC):
         if name is UNDEFINED:
             name = None
 
-        if not self.has_entity_name or not self.registry_entry:
+        if not self.has_entity_name or not (device_entry := self.device_entry):
             return name
 
-        device_registry = dr.async_get(self.hass)
-        if not (device_id := self.registry_entry.device_id) or not (
-            device_entry := device_registry.async_get(device_id)
-        ):
-            return name
-
+        device_name = device_entry.name_by_user or device_entry.name
         if self.use_device_name:
-            return device_entry.name_by_user or device_entry.name
-        return f"{device_entry.name_by_user or device_entry.name} {name}"
+            return device_name
+        return f"{device_name} {name}" if device_name else name
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -1099,7 +1098,9 @@ class Entity(ABC):
         if self.platform:
             self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
-    async def _async_registry_updated(self, event: Event) -> None:
+    async def _async_registry_updated(
+        self, event: EventType[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle entity registry update."""
         data = event.data
         if data["action"] == "remove":
@@ -1115,22 +1116,26 @@ class Entity(ABC):
 
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
-        self.registry_entry = ent_reg.async_get(data["entity_id"])
-        assert self.registry_entry is not None
+        registry_entry = ent_reg.async_get(data["entity_id"])
+        assert registry_entry is not None
+        self.registry_entry = registry_entry
 
-        if self.registry_entry.disabled:
+        if device_id := registry_entry.device_id:
+            self.device_entry = dr.async_get(self.hass).async_get(device_id)
+
+        if registry_entry.disabled:
             await self.async_remove()
             return
 
         assert old is not None
-        if self.registry_entry.entity_id == old.entity_id:
+        if registry_entry.entity_id == old.entity_id:
             self.async_registry_entry_updated()
             self.async_write_ha_state()
             return
 
         await self.async_remove(force_remove=True)
 
-        self.entity_id = self.registry_entry.entity_id
+        self.entity_id = registry_entry.entity_id
         await self.platform.async_add_entities([self])
 
     @callback
@@ -1142,7 +1147,9 @@ class Entity(ABC):
         self._unsub_device_updates = None
 
     @callback
-    def _async_device_registry_updated(self, event: Event) -> None:
+    def _async_device_registry_updated(
+        self, event: EventType[EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle device registry update."""
         data = event.data
 
@@ -1152,6 +1159,7 @@ class Entity(ABC):
         if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
             return
 
+        self.device_entry = dr.async_get(self.hass).async_get(data["device_id"])
         self.async_write_ha_state()
 
     @callback

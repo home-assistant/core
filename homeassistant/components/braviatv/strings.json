@@ -15,14 +15,14 @@
         }
       },
       "pin": {
-        "title": "Authorize Sony Bravia TV",
+        "title": "[%key:component::braviatv::config::step::authorize::title%]",
         "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Deregister remote device.",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "psk": {
-        "title": "Authorize Sony Bravia TV",
+        "title": "[%key:component::braviatv::config::step::authorize::title%]",
         "description": "To set up PSK on your TV, go to: Settings -> Network -> Home Network Setup -> IP Control. Set «Authentication» to «Normal and Pre-Shared Key» or «Pre-Shared Key» and define your Pre-Shared-Key string (e.g. sony). \n\nThen enter your PSK here.",
         "data": {
           "pin": "PSK"
@@ -47,9 +47,6 @@
   },
   "entity": {
     "button": {
-      "restart": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      },
       "terminate_apps": {
         "name": "Terminate apps"
       }

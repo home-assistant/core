@@ -1,4 +1,4 @@
-"""Configure tests for the Google Mail integration."""
+"""Configure tests for the YouTube integration."""
 from collections.abc import Awaitable, Callable, Coroutine
 import time
 from typing import Any
@@ -15,12 +15,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.youtube import MockService
+from tests.components.youtube import MockYouTube
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ComponentSetup = Callable[[], Awaitable[None]]
+ComponentSetup = Callable[[], Awaitable[MockYouTube]]
 
-BUILD = "homeassistant.components.google_mail.api.build"
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 GOOGLE_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -28,7 +27,6 @@ GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",
 ]
-SENSOR = "sensor.example_gmail_com_vacation_end_date"
 TITLE = "Google for Developers"
 TOKEN = "homeassistant.components.youtube.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
 
@@ -59,7 +57,7 @@ def mock_expires_at() -> int:
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
-    """Create Google Mail entry in Home Assistant."""
+    """Create YouTube entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
@@ -79,7 +77,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 
 @pytest.fixture(autouse=True)
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock Google Mail connection."""
+    """Mock YouTube connection."""
     aioclient_mock.post(
         GOOGLE_TOKEN_URI,
         json={
@@ -94,7 +92,7 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Callable[[], Coroutine[Any, Any, None]]:
+) -> Callable[[], Coroutine[Any, Any, MockYouTube]]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
@@ -106,11 +104,11 @@ async def mock_setup_integration(
         DOMAIN,
     )
 
-    async def func() -> None:
-        with patch(
-            "homeassistant.components.youtube.api.build", return_value=MockService()
-        ):
+    async def func() -> MockYouTube:
+        mock = MockYouTube()
+        with patch("homeassistant.components.youtube.api.YouTube", return_value=mock):
             assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()
+        return mock
 
     return func

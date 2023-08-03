@@ -27,9 +27,9 @@
   "options": {
     "step": {
       "init": {
-        "description": "Select the channels you want to add.",
+        "description": "[%key:component::youtube::config::step::channels::description%]",
         "data": {
-          "channels": "YouTube channels"
+          "channels": "[%key:component::youtube::config::step::channels::data::channels%]"
         }
       }
     }
@@ -37,7 +37,15 @@
   "entity": {
     "sensor": {
       "latest_upload": {
-        "name": "Latest upload"
+        "name": "Latest upload",
+        "state_attributes": {
+          "video_id": {
+            "name": "Video ID"
+          },
+          "published_at": {
+            "name": "Published at"
+          }
+        }
       },
       "subscribers": {
         "name": "Subscribers"
