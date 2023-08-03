@@ -142,7 +142,7 @@ class HKDevice:
             function=self.async_update,
         )
 
-        self._all_subscribers: set[CALLBACK_TYPE] = set()
+        self._availability_callbacks: set[CALLBACK_TYPE] = set()
         self._subscriptions: dict[tuple[int, int], set[CALLBACK_TYPE]] = {}
 
     @property
@@ -189,7 +189,7 @@ class HKDevice:
         if self.available == available:
             return
         self.available = available
-        for callback_ in self._all_subscribers:
+        for callback_ in self._availability_callbacks:
             callback_()
 
     async def _async_populate_ble_accessory_state(self, event: Event) -> None:
@@ -811,16 +811,24 @@ class HKDevice:
         self, characteristics: Iterable[tuple[int, int]], callback_: CALLBACK_TYPE
     ) -> CALLBACK_TYPE:
         """Add characteristics to the watch list."""
-        self._all_subscribers.add(callback_)
         for aid_iid in characteristics:
             self._subscriptions.setdefault(aid_iid, set()).add(callback_)
 
         def _unsub():
-            self._all_subscribers.remove(callback_)
             for aid_iid in characteristics:
                 self._subscriptions[aid_iid].remove(callback_)
                 if not self._subscriptions[aid_iid]:
                     del self._subscriptions[aid_iid]
+
+        return _unsub
+
+    @callback
+    def async_subscribe_availability(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Add characteristics to the watch list."""
+        self._availability_callbacks.add(callback_)
+
+        def _unsub():
+            self._availability_callbacks.remove(callback_)
 
         return _unsub
 

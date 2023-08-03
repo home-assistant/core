@@ -1,6 +1,7 @@
 """Diagnostics support for discovergy."""
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from pydiscovergy.models import Meter
@@ -36,11 +37,11 @@ async def async_get_config_entry_diagnostics(
 
     for meter in meters:
         # make a dict of meter data and redact some data
-        flattened_meter.append(async_redact_data(meter.__dict__, TO_REDACT_METER))
+        flattened_meter.append(async_redact_data(asdict(meter), TO_REDACT_METER))
 
         # get last reading for meter and make a dict of it
         coordinator = data.coordinators[meter.meter_id]
-        last_readings[meter.meter_id] = coordinator.data.__dict__
+        last_readings[meter.meter_id] = asdict(coordinator.data)
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT_CONFIG_ENTRY),

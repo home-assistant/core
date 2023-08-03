@@ -626,6 +626,11 @@ class ManualTriggerEntity(TriggerBaseEntity):
     ) -> None:
         """Initialize the entity."""
         TriggerBaseEntity.__init__(self, hass, config)
+        # Need initial rendering on `name` as it influence the `entity_id`
+        self._rendered[CONF_NAME] = config[CONF_NAME].async_render(
+            {},
+            parse_result=CONF_NAME in self._parse_result,
+        )
 
     @callback
     def _process_manual_data(self, value: Any | None = None) -> None:
