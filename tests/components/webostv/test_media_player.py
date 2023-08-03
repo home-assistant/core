@@ -386,6 +386,34 @@ async def test_play_media_channel(hass: HomeAssistant, client, media_id, ch_id) 
     client.set_channel.assert_called_once_with(ch_id)
 
 
+async def test_play_media_video_no_media_player(
+    hass: HomeAssistant, client, monkeypatch
+) -> None:
+    """Test play media service."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    # remove media player app
+    apps = {
+        LIVE_TV_APP_ID: {
+            "title": "Live TV",
+            "id": "some_id",
+        }
+    }
+    monkeypatch.setattr(client, "apps", apps)
+    monkeypatch.setattr(client, "current_app_id", "some_id")
+    await client.mock_state_update()
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+        ATTR_MEDIA_CONTENT_ID: "file:///some/path",
+    }
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+
+    client.launch_app_with_params.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("fullPath"),
     [
