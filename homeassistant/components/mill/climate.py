@@ -115,8 +115,6 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
             name=heater.name,
         )
 
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        self._attr_target_temperature_step = PRECISION_TENTHS
         self._update_attr(heater)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
