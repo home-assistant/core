@@ -9,7 +9,12 @@ from homeassistant.components.opensky.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_RADIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_RADIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -153,3 +158,34 @@ async def test_importing_already_exists_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+# @pytest.mark.parametrize(
+#     ("user_input", "error"),
+#     [
+#         (
+#                 {
+#                     CONF_USERNAME: "homeassistant",
+#                     CONF_CONTRIBUTING_USER: False
+#                 },
+#             "password_missing"
+#         )
+#     ]
+# )
+# async def test_options_flow_failures(
+#     hass: HomeAssistant,
+#     setup_integration: ComponentSetup,
+#     config_entry: MockConfigEntry,
+# ) -> None:
+#     """Test load and unload entry."""
+#     await setup_integration(config_entry)
+#     entry = hass.config_entries.async_entries(DOMAIN)[0]
+#
+#     state = hass.states.get("sensor.opensky")
+#     assert state
+#
+#     await hass.config_entries.async_remove(entry.entry_id)
+#     await hass.async_block_till_done()
+#
+#     state = hass.states.get("sensor.opensky")
+#     assert not state

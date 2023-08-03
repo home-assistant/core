@@ -7,6 +7,7 @@ DOMAIN = "opensky"
 CLIENT = "client"
 
 CONF_ALTITUDE = "altitude"
+CONF_CONTRIBUTING_USER = "contributing_user"
 ATTR_ICAO24 = "icao24"
 ATTR_CALLSIGN = "callsign"
 ATTR_ALTITUDE = "altitude"
