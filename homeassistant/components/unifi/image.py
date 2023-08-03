@@ -95,7 +95,7 @@ class UnifiImageEntity(UnifiEntity[HandlerT, ApiItemT], ImageEntity):
     _attr_content_type = "image/png"
 
     current_image: bytes | None = None
-    previous_value: str | None = ""
+    previous_value: str | None = None
 
     def __init__(
         self,
