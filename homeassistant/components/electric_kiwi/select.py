@@ -6,7 +6,7 @@ import logging
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -56,11 +56,6 @@ class ElectricKiwiSelectHOPEntity(
         self._state = None
         self.values_dict = self.coordinator.get_hop_options()
         self._attr_options = list(self.values_dict.keys())
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update attributes when the coordinator updates."""
-        super()._handle_coordinator_update()
 
     @property
     def current_option(self) -> str | None:
