@@ -270,6 +270,7 @@ omit =
     homeassistant/components/electric_kiwi/oauth2.py
     homeassistant/components/electric_kiwi/sensor.py
     homeassistant/components/electric_kiwi/coordinator.py
+    homeassistant/components/electric_kiwi/select.py
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/__init__.py
     homeassistant/components/elkm1/alarm_control_panel.py
