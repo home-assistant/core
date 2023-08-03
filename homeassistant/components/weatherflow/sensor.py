@@ -96,7 +96,6 @@ class WeatherFlowWindSensorEntityDescription(WeatherFlowSensorEntityDescription)
         self.conversion_fn = lambda attr: attr.to(UnitOfSpeed.MILES_PER_HOUR)
         self.decimals = 2
         self.value_fn = lambda attr: attr.to(UnitOfSpeed.KILOMETERS_PER_HOUR)
-        self.has_entity_name = True
 
 
 SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
@@ -279,7 +278,7 @@ async def async_setup_entry(
         """Add WeatherFlow sensor."""
         LOGGER.debug("Adding sensors for %s", device)
 
-        devices = [
+        sensors = [
             WeatherFlowSensorEntity(
                 device=device,
                 description=description,
@@ -291,7 +290,12 @@ async def async_setup_entry(
                 description.key if description.attr is None else description.attr,
             )
         ]
-        async_add_entities(devices)
+        for sensor in sensors:
+            LOGGER.debug(
+                "Adding %s [%s]", sensor.name, sensor.native_unit_of_measurement
+            )
+
+        async_add_entities(sensors)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
