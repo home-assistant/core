@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 import holidays
-from holidays import HolidayBase
+from holidays import HolidayBase, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -25,7 +25,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
 )
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_DAYS,
@@ -41,6 +41,7 @@ from .const import (
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
     DOMAIN,
+    LOGGER,
 )
 
 NONE_SENTINEL = "none"
@@ -48,15 +49,14 @@ NONE_SENTINEL = "none"
 
 def add_province_to_schema(
     schema: vol.Schema,
-    options: dict[str, Any],
+    country: str,
 ) -> vol.Schema:
     """Update schema with province from country."""
-    year: int = dt.now().year
-    obj_holidays: HolidayBase = getattr(holidays, options[CONF_COUNTRY])(years=year)
-    if not obj_holidays.subdivisions:
+    all_countries = list_supported_countries()
+    if not all_countries[country]:
         return schema
 
-    province_list = [NONE_SENTINEL, *obj_holidays.subdivisions]
+    province_list = [NONE_SENTINEL, *all_countries[country]]
     add_schema = {
         vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
@@ -74,18 +74,18 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
     """Validate custom dates for add/remove holidays."""
 
     for add_date in user_input[CONF_ADD_HOLIDAYS]:
-        if dt.parse_date(add_date) is None:
+        if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
-    year: int = dt.now().year
-    obj_holidays: HolidayBase = getattr(holidays, user_input[CONF_COUNTRY])(years=year)
-    if user_input.get(CONF_PROVINCE):
-        obj_holidays = getattr(holidays, user_input[CONF_COUNTRY])(
-            subdiv=user_input[CONF_PROVINCE], years=year
-        )
+    cls: HolidayBase = getattr(holidays, user_input[CONF_COUNTRY])
+    year: int = dt_util.now().year
+
+    obj_holidays = cls(
+        subdiv=user_input.get(CONF_PROVINCE), years=year, language=cls.default_language
+    )  # type: ignore[operator]
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
-        if dt.parse_date(remove_date) is None:
+        if dt_util.parse_date(remove_date) is None:
             if obj_holidays.get_named(remove_date) == []:
                 raise RemoveDatesError("Incorrect date or name")
 
@@ -95,7 +95,7 @@ DATA_SCHEMA_SETUP = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Required(CONF_COUNTRY): SelectSelector(
             SelectSelectorConfig(
-                options=list(holidays.list_supported_countries()),
+                options=list(list_supported_countries()),
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
@@ -172,8 +172,17 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         new_config = config.copy()
         new_config[CONF_PROVINCE] = config.get(CONF_PROVINCE)
+        LOGGER.debug("Importing with %s", new_config)
 
         self._async_abort_entries_match(abort_match)
+
+        self.data[CONF_NAME] = config.get(CONF_NAME, DEFAULT_NAME)
+        self.data[CONF_COUNTRY] = config[CONF_COUNTRY]
+        LOGGER.debug(
+            "No duplicate, next step with name %s for country %s",
+            self.data[CONF_NAME],
+            self.data[CONF_COUNTRY],
+        )
         return await self.async_step_options(user_input=new_config)
 
     async def async_step_user(
@@ -221,9 +230,12 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
                 CONF_PROVINCE: combined_input[CONF_PROVINCE],
             }
-
+            LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
+
+            LOGGER.debug("Errors have occurred %s", errors)
             if not errors:
+                LOGGER.debug("No duplicate, no errors, creating entry")
                 return self.async_create_entry(
                     title=combined_input[CONF_NAME],
                     data={},
@@ -231,13 +243,17 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.data
+            add_province_to_schema, DATA_SCHEMA_OPT, self.data[CONF_COUNTRY]
         )
         new_schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
             step_id="options",
             data_schema=new_schema,
             errors=errors,
+            description_placeholders={
+                "name": self.data[CONF_NAME],
+                "country": self.data[CONF_COUNTRY],
+            },
         )
 
 
@@ -264,6 +280,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             except RemoveDatesError:
                 errors["remove_holidays"] = "remove_holiday_error"
             else:
+                LOGGER.debug("abort_check in options with %s", combined_input)
                 try:
                     self._async_abort_entries_match(
                         {
@@ -282,17 +299,21 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     return self.async_create_entry(data=combined_input)
 
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.options
+            add_province_to_schema, DATA_SCHEMA_OPT, self.options[CONF_COUNTRY]
         )
 
         new_schema = self.add_suggested_values_to_schema(
             schema, user_input or self.options
         )
-
+        LOGGER.debug("Errors have occurred in options %s", errors)
         return self.async_show_form(
             step_id="init",
             data_schema=new_schema,
             errors=errors,
+            description_placeholders={
+                "name": self.options[CONF_NAME],
+                "country": self.options[CONF_COUNTRY],
+            },
         )
 
 

@@ -14,6 +14,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -523,6 +524,26 @@ class CoverCapabilities(AlexaEntity):
             )
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(event.DOMAIN)
+class EventCapabilities(AlexaEntity):
+    """Class to represent doorbel event capabilities."""
+
+    def default_display_categories(self) -> list[str] | None:
+        """Return the display categories for this entity."""
+        attrs = self.entity.attributes
+        device_class: event.EventDeviceClass | None = attrs.get(ATTR_DEVICE_CLASS)
+        if device_class == event.EventDeviceClass.DOORBELL:
+            return [DisplayCategory.DOORBELL]
+        return None
+
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
+        """Yield the supported interfaces."""
+        if self.default_display_categories() is not None:
+            yield AlexaDoorbellEventSource(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

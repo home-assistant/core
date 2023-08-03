@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Literal, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -189,6 +189,13 @@ class BinarySensorEntity(Entity):
     _attr_device_class: BinarySensorDeviceClass | None
     _attr_is_on: bool | None = None
     _attr_state: None = None
+
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For binary sensors this is True if the entity has a device class.
+        """
+        return self.device_class is not None
 
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:

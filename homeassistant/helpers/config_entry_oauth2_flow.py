@@ -542,7 +542,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
 
 
 @callback
-def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
+def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
     """JWT encode data."""
     secret: str | None = hass.data.get(DATA_JWT_SECRET)
 
@@ -550,6 +550,6 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
         return None
 
     try:
-        return jwt.decode(encoded, secret, algorithms=["HS256"])
+        return jwt.decode(encoded, secret, algorithms=["HS256"])  # type: ignore[no-any-return]
     except jwt.InvalidTokenError:
         return None

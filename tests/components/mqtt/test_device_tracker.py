@@ -249,7 +249,7 @@ async def test_cleanup_device_tracker(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
     entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
     assert entity_entry is not None
@@ -273,7 +273,7 @@ async def test_cleanup_device_tracker(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
     assert entity_entry is None
@@ -403,16 +403,12 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the setting of the latitude and longitude via MQTT."""
+    """Test the setting of the latitude and longitude via MQTT without state topic."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
-        "{ "
-        '"name": "test", '
-        '"state_topic": "test-topic", '
-        '"json_attributes_topic": "attributes-topic" '
-        "}",
+        '{ "name": "test", "json_attributes_topic": "attributes-topic"}',
     )
     await hass.async_block_till_done()
 

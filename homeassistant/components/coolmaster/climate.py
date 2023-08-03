@@ -53,6 +53,8 @@ async def async_setup_entry(
 class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
+    _attr_name = None
+
     def __init__(self, coordinator, unit_id, info, supported_modes):
         """Initialize the climate device."""
         super().__init__(coordinator, unit_id, info)
@@ -62,11 +64,6 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     def unique_id(self):
         """Return unique ID for this device."""
         return self._unit_id
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self.unique_id
 
     @property
     def supported_features(self) -> ClimateEntityFeature:

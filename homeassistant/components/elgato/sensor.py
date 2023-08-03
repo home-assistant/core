@@ -45,7 +45,6 @@ class ElgatoSensorEntityDescription(
 SENSORS = [
     ElgatoSensorEntityDescription(
         key="battery",
-        translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,

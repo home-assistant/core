@@ -188,7 +188,7 @@ async def test_color_temperature_light(
         "turn_on",
         {
             "entity_id": entity_id,
-            "color_temp": 3000,
+            "color_temp": 300,
         },
         blocking=True,
     )
@@ -200,7 +200,7 @@ async def test_color_temperature_light(
                 node_id=light_node.node_id,
                 endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToColorTemperature(
-                    colorTemperature=3003,
+                    colorTemperatureMireds=300,
                     transitionTime=0,
                 ),
             ),

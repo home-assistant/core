@@ -11,6 +11,7 @@ from typing import Any, cast
 
 from aiolifx.aiolifx import (
     Light,
+    Message,
     MultiZoneDirection,
     MultiZoneEffectType,
     TileEffectType,
@@ -56,6 +57,8 @@ from .util import (
 LIGHT_UPDATE_INTERVAL = 10
 REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
+ZONES_PER_COLOR_UPDATE_REQUEST = 8
+
 RSSI_DBM_FW = AwesomeVersion("2.77")
 
 
@@ -208,18 +211,50 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     def get_number_of_zones(self) -> int:
         """Return the number of zones.
 
-        If the number of zones is not yet populated, return 0
+        If the number of zones is not yet populated, return 1 since
+        the device will have a least one zone.
         """
-        return len(self.device.color_zones) if self.device.color_zones else 0
+        return len(self.device.color_zones) if self.device.color_zones else 1
 
     @callback
     def _async_build_color_zones_update_requests(self) -> list[Callable]:
         """Build a color zones update request."""
         device = self.device
-        return [
-            partial(device.get_color_zones, start_index=zone)
-            for zone in range(0, self.get_number_of_zones(), 8)
-        ]
+        calls: list[Callable] = []
+        for zone in range(
+            0, self.get_number_of_zones(), ZONES_PER_COLOR_UPDATE_REQUEST
+        ):
+
+            def _wrap_get_color_zones(
+                callb: Callable[[Message, dict[str, Any] | None], None],
+                get_color_zones_args: dict[str, Any],
+            ) -> None:
+                """Capture the callback and make sure resp_set_multizonemultizone is called before."""
+
+                def _wrapped_callback(
+                    bulb: Light,
+                    response: Message,
+                    **kwargs: Any,
+                ) -> None:
+                    # We need to call resp_set_multizonemultizone to populate
+                    # the color_zones attribute before calling the callback
+                    device.resp_set_multizonemultizone(response)
+                    # Now call the original callback
+                    callb(bulb, response, **kwargs)
+
+                device.get_color_zones(**get_color_zones_args, callb=_wrapped_callback)
+
+            calls.append(
+                partial(
+                    _wrap_get_color_zones,
+                    get_color_zones_args={
+                        "start_index": zone,
+                        "end_index": zone + ZONES_PER_COLOR_UPDATE_REQUEST - 1,
+                    },
+                )
+            )
+
+        return calls
 
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""

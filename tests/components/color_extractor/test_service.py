@@ -139,9 +139,7 @@ async def _async_load_color_extractor_url(hass, service_data):
     assert state.state == STATE_OFF
 
     # Call the shared service, our above mock should return the base64 decoded fixture 1x1 pixel
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data, blocking=True)
 
     await hass.async_block_till_done()
 

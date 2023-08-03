@@ -7,14 +7,15 @@ from aioairzone.const import (
     API_MAC,
     API_SYSTEM_ID,
     API_SYSTEMS,
+    API_VERSION,
     API_WIFI_RSSI,
     AZD_ID,
     AZD_MASTER,
     AZD_SYSTEM,
     AZD_SYSTEMS,
     AZD_ZONES,
-    AZD_ZONES_NUM,
     RAW_HVAC,
+    RAW_VERSION,
     RAW_WEBSERVER,
 )
 
@@ -23,7 +24,13 @@ from homeassistant.components.diagnostics import REDACTED
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .util import CONFIG, HVAC_MOCK, HVAC_WEBSERVER_MOCK, async_init_integration
+from .util import (
+    CONFIG,
+    HVAC_MOCK,
+    HVAC_VERSION_MOCK,
+    HVAC_WEBSERVER_MOCK,
+    async_init_integration,
+)
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
@@ -41,6 +48,7 @@ async def test_config_entry_diagnostics(
         "homeassistant.components.airzone.AirzoneLocalApi.raw_data",
         return_value={
             RAW_HVAC: HVAC_MOCK,
+            RAW_VERSION: HVAC_VERSION_MOCK,
             RAW_WEBSERVER: HVAC_WEBSERVER_MOCK,
         },
     ):
@@ -50,6 +58,13 @@ async def test_config_entry_diagnostics(
         diag["api_data"][RAW_HVAC][API_SYSTEMS][0][API_DATA][0].items()
         >= {
             API_SYSTEM_ID: HVAC_MOCK[API_SYSTEMS][0][API_DATA][0][API_SYSTEM_ID],
+        }.items()
+    )
+
+    assert (
+        diag["api_data"][RAW_VERSION].items()
+        >= {
+            API_VERSION: HVAC_VERSION_MOCK[API_VERSION],
         }.items()
     )
 
@@ -77,7 +92,6 @@ async def test_config_entry_diagnostics(
         diag["coord_data"][AZD_SYSTEMS]["1"].items()
         >= {
             AZD_ID: 1,
-            AZD_ZONES_NUM: 5,
         }.items()
     )
 

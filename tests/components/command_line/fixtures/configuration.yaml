@@ -1,6 +1,7 @@
-cover:
-  - platform: command_line
-    covers:
-      from_yaml:
-        command_state: "echo closed"
-        value_template: "{{ value }}"
+command_line:
+  - "binary_sensor":
+      "name": "Test"
+      "command": "echo 1"
+      "payload_on": "1"
+      "payload_off": "0"
+      "command_timeout": 15

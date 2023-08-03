@@ -1,9 +1,12 @@
 """The ONVIF integration."""
 import asyncio
+from contextlib import suppress
+from http import HTTPStatus
 import logging
 
 from httpx import RequestError
-from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
+from onvif.exceptions import ONVIFError
+from onvif.util import is_auth_error, stringify_onvif_error
 from zeep.exceptions import Fault, TransportError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
@@ -18,9 +21,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
+from .const import (
+    CONF_ENABLE_WEBHOOKS,
+    CONF_SNAPSHOT_AUTH,
+    DEFAULT_ARGUMENTS,
+    DEFAULT_ENABLE_WEBHOOKS,
+    DOMAIN,
+)
 from .device import ONVIFDevice
-from .util import is_auth_error, stringify_onvif_error
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +64,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ONVIFError as err:
         await device.device.close()
         raise ConfigEntryNotReady(
-            f"Could not setup camera {device.device.host}:{device.device.port}: {err}"
+            f"Could not setup camera {device.device.host}:{device.device.port}: {stringify_onvif_error(err)}"
+        ) from err
+    except TransportError as err:
+        await device.device.close()
+        stringified_onvif_error = stringify_onvif_error(err)
+        if err.status_code in (
+            HTTPStatus.UNAUTHORIZED.value,
+            HTTPStatus.FORBIDDEN.value,
+        ):
+            raise ConfigEntryAuthFailed(
+                f"Auth Failed: {stringified_onvif_error}"
+            ) from err
+        raise ConfigEntryNotReady(
+            f"Could not setup camera {device.device.host}:{device.device.port}: {stringified_onvif_error}"
         ) from err
     except asyncio.CancelledError as err:
         # After https://github.com/agronholm/anyio/issues/374 is resolved
@@ -100,35 +121,36 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, device.platforms)
 
 
-async def _get_snapshot_auth(device):
+async def _get_snapshot_auth(device: ONVIFDevice) -> str | None:
     """Determine auth type for snapshots."""
-    if not device.capabilities.snapshot or not (device.username and device.password):
-        return HTTP_DIGEST_AUTHENTICATION
+    if not device.capabilities.snapshot:
+        return None
 
-    try:
-        snapshot = await device.device.get_snapshot(device.profiles[0].token)
+    for basic_auth in (False, True):
+        method = HTTP_BASIC_AUTHENTICATION if basic_auth else HTTP_DIGEST_AUTHENTICATION
+        with suppress(ONVIFError):
+            if await device.device.get_snapshot(device.profiles[0].token, basic_auth):
+                return method
 
-        if snapshot:
-            return HTTP_DIGEST_AUTHENTICATION
-        return HTTP_BASIC_AUTHENTICATION
-    except (ONVIFAuthError, ONVIFTimeoutError):
-        return HTTP_BASIC_AUTHENTICATION
-    except ONVIFError:
-        return HTTP_DIGEST_AUTHENTICATION
+    return None
 
 
-async def async_populate_snapshot_auth(hass, device, entry):
+async def async_populate_snapshot_auth(
+    hass: HomeAssistant, device: ONVIFDevice, entry: ConfigEntry
+) -> None:
     """Check if digest auth for snapshots is possible."""
-    auth = await _get_snapshot_auth(device)
-    new_data = {**entry.data, CONF_SNAPSHOT_AUTH: auth}
-    hass.config_entries.async_update_entry(entry, data=new_data)
+    if auth := await _get_snapshot_auth(device):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SNAPSHOT_AUTH: auth}
+        )
 
 
-async def async_populate_options(hass, entry):
+async def async_populate_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Populate default options for device."""
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
         CONF_RTSP_TRANSPORT: next(iter(RTSP_TRANSPORTS)),
+        CONF_ENABLE_WEBHOOKS: DEFAULT_ENABLE_WEBHOOKS,
     }
 
     hass.config_entries.async_update_entry(entry, options=options)

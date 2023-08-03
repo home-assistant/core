@@ -7,6 +7,6 @@
   "iot_class": "local_polling",
   "loggers": ["pydaikin"],
   "quality_scale": "platinum",
-  "requirements": ["pydaikin==2.9.0"],
+  "requirements": ["pydaikin==2.10.5"],
   "zeroconf": ["_dkapi._tcp.local."]
 }
