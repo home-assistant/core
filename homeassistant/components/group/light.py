@@ -1,6 +1,7 @@
 """Platform allowing several lights to be grouped into one light."""
 from __future__ import annotations
 
+import asyncio
 from collections import Counter
 import itertools
 import logging
@@ -54,10 +55,11 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import GroupEntity
-from .util import find_state_attributes, mean_tuple, reduce_attribute
+from .util import find_state_attributes, mean_int, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 CONF_ALL = "all"
+CONF_PRESERVE_RELATIVE_BRIGHTNESS = "preserve_relative_brightness"
 
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
@@ -68,6 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN),
         vol.Optional(CONF_ALL): cv.boolean,
+        vol.Optional(CONF_PRESERVE_RELATIVE_BRIGHTNESS): cv.boolean,
     }
 )
 
@@ -92,6 +95,7 @@ async def async_setup_platform(
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
                 config.get(CONF_ALL),
+                config.get(CONF_PRESERVE_RELATIVE_BRIGHTNESS),
             )
         ]
     )
@@ -108,9 +112,20 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_ENTITIES]
     )
     mode = config_entry.options.get(CONF_ALL, False)
+    preserve_relative_brightness = config_entry.options.get(
+        CONF_PRESERVE_RELATIVE_BRIGHTNESS, False
+    )
 
     async_add_entities(
-        [LightGroup(config_entry.entry_id, config_entry.title, entities, mode)]
+        [
+            LightGroup(
+                config_entry.entry_id,
+                config_entry.title,
+                entities,
+                mode,
+                preserve_relative_brightness,
+            )
+        ]
     )
 
 
@@ -141,7 +156,12 @@ class LightGroup(GroupEntity, LightEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], mode: str | None
+        self,
+        unique_id: str | None,
+        name: str,
+        entity_ids: list[str],
+        mode: bool | None,
+        preserve_relative_brightness: bool | None,
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
@@ -152,6 +172,7 @@ class LightGroup(GroupEntity, LightEntity):
         self.mode = any
         if mode:
             self.mode = all
+        self.preserve_relative_brightness = preserve_relative_brightness
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -181,13 +202,57 @@ class LightGroup(GroupEntity, LightEntity):
 
         _LOGGER.debug("Forwarded turn_on command: %s", data)
 
-        await self.hass.services.async_call(
-            light.DOMAIN,
-            SERVICE_TURN_ON,
-            data,
-            blocking=True,
-            context=self._context,
-        )
+        if (
+            self._attr_is_on
+            and ATTR_BRIGHTNESS in data
+            and self._attr_brightness
+            and self.preserve_relative_brightness
+        ):
+            # The group's brightness is the brightness of the brightest member
+            # of the group. For each entity, scale the requested brightness by
+            # the ratio of its current brightness to the maximum brightness in
+            # the group, clamped to [0, 255].
+            requested_max_brightness = data[ATTR_BRIGHTNESS]
+            current_max_brightness = self._attr_brightness
+            async with asyncio.TaskGroup() as tg:
+                for entity_id in self._entity_ids:
+                    state = self.hass.states.get(entity_id)
+                    if state is None or state.state != STATE_ON:
+                        continue
+                    current_entity_brightness = state.attributes.get(
+                        ATTR_BRIGHTNESS, current_max_brightness
+                    )
+                    requested_brightness = max(
+                        0,
+                        min(
+                            current_entity_brightness
+                            * requested_max_brightness
+                            / current_max_brightness,
+                            255,
+                        ),
+                    )
+                    tg.create_task(
+                        self.hass.services.async_call(
+                            light.DOMAIN,
+                            SERVICE_TURN_ON,
+                            {
+                                **data,
+                                ATTR_ENTITY_ID: entity_id,
+                                ATTR_BRIGHTNESS: requested_brightness,
+                            },
+                            blocking=True,
+                            context=self._context,
+                        )
+                    )
+
+        else:
+            await self.hass.services.async_call(
+                light.DOMAIN,
+                SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all lights in the light group."""
@@ -226,7 +291,14 @@ class LightGroup(GroupEntity, LightEntity):
             self._attr_is_on = self.mode(state.state == STATE_ON for state in states)
 
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
-        self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)
+        brightness_reducer = (
+            lambda *a: max(0, *a) if self.preserve_relative_brightness else mean_int
+        )
+        self._attr_brightness = reduce_attribute(
+            on_states,
+            ATTR_BRIGHTNESS,
+            reduce=brightness_reducer,
+        )
 
         self._attr_hs_color = reduce_attribute(
             on_states, ATTR_HS_COLOR, reduce=mean_tuple

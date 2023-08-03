@@ -44,9 +44,11 @@
       },
       "light": {
         "title": "[%key:component::group::config::step::user::title%]",
+        "description": "[%key:component::group::config::step::binary_sensor::description%]\n\nIf \"preserve relative brightness\" is enabled, then the group's brightness is the brightness of the brightest member of the group, and adjusting the brightness of the group will scale each member's brightness relative to that maximum. If \"preserve relative brightness\" is disabled, the group's brightness is the average of all entities, and adjusting the brightness of the group will set all members to that brightness level.",
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "preserve_relative_brightness": "Preserve relative brightness",
           "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
@@ -113,11 +115,12 @@
         }
       },
       "light": {
-        "description": "[%key:component::group::config::step::binary_sensor::description%]",
+        "description": "[%key:component::group::config::step::light::description%]",
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
-          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "preserve_relative_brightness": "[%key:component::group::config::step::light::data::preserve_relative_brightness%]"
         }
       },
       "lock": {

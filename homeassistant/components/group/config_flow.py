@@ -22,6 +22,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from . import DOMAIN
 from .binary_sensor import CONF_ALL
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
+from .light import CONF_PRESERVE_RELATIVE_BRIGHTNESS
 
 _STATISTIC_MEASURES = [
     "min",
@@ -78,6 +79,15 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
     }
 )
 
+LIGHT_CONFIG_SCHEMA = basic_group_config_schema("light").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+        vol.Required(
+            CONF_PRESERVE_RELATIVE_BRIGHTNESS, default=False
+        ): selector.BooleanSelector(),
+    }
+)
+
 SENSOR_CONFIG_EXTENDS = {
     vol.Required(CONF_TYPE): selector.SelectSelector(
         selector.SelectSelectorConfig(
@@ -109,14 +119,35 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
 ).extend(SENSOR_CONFIG_EXTENDS)
 
 
-async def light_switch_options_schema(
+async def light_options_schema(
     domain: str, handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
     return (await basic_group_options_schema(domain, handler)).extend(
         {
             vol.Required(
-                CONF_ALL, default=False, description={"advanced": True}
+                CONF_PRESERVE_RELATIVE_BRIGHTNESS,
+                default=False,
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_ALL,
+                default=False,
+                description={"advanced": True},
+            ): selector.BooleanSelector(),
+        }
+    )
+
+
+async def switch_options_schema(
+    domain: str, handler: SchemaCommonFlowHandler
+) -> vol.Schema:
+    """Generate options schema."""
+    return (await basic_group_options_schema(domain, handler)).extend(
+        {
+            vol.Required(
+                CONF_ALL,
+                default=False,
+                description={"advanced": True},
             ): selector.BooleanSelector(),
         }
     )
@@ -170,7 +201,7 @@ CONFIG_FLOW = {
         validate_user_input=set_group_type("fan"),
     ),
     "light": SchemaFlowFormStep(
-        basic_group_config_schema("light"),
+        LIGHT_CONFIG_SCHEMA,
         validate_user_input=set_group_type("light"),
     ),
     "lock": SchemaFlowFormStep(
@@ -197,13 +228,13 @@ OPTIONS_FLOW = {
     "binary_sensor": SchemaFlowFormStep(binary_sensor_options_schema),
     "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
     "fan": SchemaFlowFormStep(partial(basic_group_options_schema, "fan")),
-    "light": SchemaFlowFormStep(partial(light_switch_options_schema, "light")),
+    "light": SchemaFlowFormStep(partial(light_options_schema, "light")),
     "lock": SchemaFlowFormStep(partial(basic_group_options_schema, "lock")),
     "media_player": SchemaFlowFormStep(
         partial(basic_group_options_schema, "media_player")
     ),
     "sensor": SchemaFlowFormStep(partial(sensor_options_schema, "sensor")),
-    "switch": SchemaFlowFormStep(partial(light_switch_options_schema, "switch")),
+    "switch": SchemaFlowFormStep(partial(switch_options_schema, "switch")),
 }
 
 

@@ -27,7 +27,15 @@ from tests.common import MockConfigEntry
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         ("fan", "on", "on", {}, {}, {}, {}),
-        ("light", "on", "on", {}, {}, {}, {}),
+        (
+            "light",
+            "on",
+            "on",
+            {},
+            {},
+            {"all": False, "preserve_relative_brightness": False},
+            {},
+        ),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
         (
@@ -193,7 +201,7 @@ def get_suggested(schema, key):
         ("binary_sensor", "on", {"all": False}, {}),
         ("cover", "open", {}, {}),
         ("fan", "on", {}, {}),
-        ("light", "on", {"all": False}, {}),
+        ("light", "on", {"all": False, "preserve_relative_brightness": False}, {}),
         ("lock", "locked", {}, {}),
         ("media_player", "on", {}, {}),
         (
@@ -295,10 +303,30 @@ async def test_options(
 @pytest.mark.parametrize(
     ("group_type", "extra_options", "extra_options_after", "advanced"),
     (
-        ("light", {"all": False}, {"all": False}, False),
-        ("light", {"all": True}, {"all": True}, False),
-        ("light", {"all": False}, {"all": False}, True),
-        ("light", {"all": True}, {"all": False}, True),
+        (
+            "light",
+            {"all": False, "preserve_relative_brightness": False},
+            {"all": False, "preserve_relative_brightness": False},
+            False,
+        ),
+        (
+            "light",
+            {"all": True, "preserve_relative_brightness": False},
+            {"all": True, "preserve_relative_brightness": False},
+            False,
+        ),
+        (
+            "light",
+            {"all": False, "preserve_relative_brightness": False},
+            {"all": False, "preserve_relative_brightness": False},
+            True,
+        ),
+        (
+            "light",
+            {"all": True, "preserve_relative_brightness": False},
+            {"all": False, "preserve_relative_brightness": False},
+            True,
+        ),
         ("switch", {"all": False}, {"all": False}, False),
         ("switch", {"all": True}, {"all": True}, False),
         ("switch", {"all": False}, {"all": False}, True),

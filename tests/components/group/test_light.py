@@ -1435,6 +1435,81 @@ async def test_service_call_effect(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
 
+async def test_service_call_effect_with_preserve_relative_brightness(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test service calls."""
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("bed_light", STATE_OFF))
+    platform.ENTITIES.append(platform.MockLight("ceiling_lights", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("kitchen_lights", STATE_ON))
+
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_color_modes = {ColorMode.BRIGHTNESS}
+    entity0.color_mode = ColorMode.BRIGHTNESS
+    entity0.brightness = 0
+
+    entity1 = platform.ENTITIES[1]
+    entity1.supported_color_modes = {ColorMode.BRIGHTNESS}
+    entity1.color_mode = ColorMode.BRIGHTNESS
+    entity1.brightness = 128
+
+    entity2 = platform.ENTITIES[2]
+    entity2.supported_color_modes = {ColorMode.BRIGHTNESS}
+    entity2.color_mode = ColorMode.BRIGHTNESS
+    entity2.brightness = 255
+
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": [
+                        "light.bed_light",
+                        "light.ceiling_lights",
+                        "light.kitchen_lights",
+                    ],
+                    "all": "false",
+                    "preserve_relative_brightness": "true",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.light_group")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.light_group",
+            ATTR_BRIGHTNESS: 128,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("light.bed_light")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("light.ceiling_lights")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 64
+
+    state = hass.states.get("light.kitchen_lights")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+
+
 async def test_invalid_service_calls(hass: HomeAssistant) -> None:
     """Test invalid service call arguments get discarded."""
     add_entities = MagicMock()
