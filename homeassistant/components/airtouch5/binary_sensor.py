@@ -28,9 +28,8 @@ async def async_setup_entry(
 
     entities: list[BinarySensorEntity] = []
 
-    # Each AC has turbo, bypass, spill
+    # Each AC has bypass, spill
     for ac in client.ac:
-        entities.append(Airtouch5AcTurbo(client, ac))
         entities.append(Airtouch5AcBypass(client, ac))
         entities.append(Airtouch5AcSpill(client, ac))
 
@@ -40,47 +39,6 @@ async def async_setup_entry(
         entities.append(Airtouch5ZoneSpill(client, zone))
 
     async_add_entities(entities)
-
-
-class Airtouch5AcTurbo(BinarySensorEntity, Airtouch5Entity):
-    """Whether Turbo is active on a given AC device."""
-
-    _attr_device_class = BinarySensorDeviceClass.RUNNING
-    _attr_name = "Turbo"
-
-    def __init__(self, client: Airtouch5SimpleClient, ability: AcAbility) -> None:
-        """Initialise the Binary Sensor."""
-        super().__init__(client)
-        self._ability = ability
-
-        self._attr_unique_id = f"ac_{ability.ac_number}_turbo"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"ac_{ability.ac_number}")},
-            name=f"AC {ability.ac_number} {ability.ac_name}",
-            manufacturer="Polyaire",
-            model="AirTouch 5",
-        )
-
-    @callback
-    def _async_update_attrs(self, data: dict[int, AcStatus]) -> None:
-        if self._ability.ac_number not in data:
-            return
-        status = data[self._ability.ac_number]
-
-        self._attr_is_on = status.turbo_active
-
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Add data updated listener after this object has been initialized."""
-        await super().async_added_to_hass()
-        self._client.ac_status_callbacks.append(self._async_update_attrs)
-        self._async_update_attrs(self._client.latest_ac_status)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove data updated listener after this object has been initialized."""
-        await super().async_will_remove_from_hass()
-        self._client.ac_status_callbacks.remove(self._async_update_attrs)
 
 
 class Airtouch5AcBypass(BinarySensorEntity, Airtouch5Entity):
