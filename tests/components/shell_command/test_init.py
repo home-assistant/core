@@ -175,7 +175,9 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.shell_command._LOGGER.debug")
-async def test_non_text_stdout_capture(mock_output, hass: HomeAssistant) -> None:
+async def test_non_text_stdout_capture(
+    mock_output, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test handling of non-text output."""
     assert await async_setup_component(
         hass,
@@ -203,6 +205,7 @@ async def test_non_text_stdout_capture(mock_output, hass: HomeAssistant) -> None
 
     await hass.async_block_till_done()
     assert not response
+    assert "Unable to handle non-utf8 output of command" in caplog.text
 
 
 @patch("homeassistant.components.shell_command._LOGGER.debug")

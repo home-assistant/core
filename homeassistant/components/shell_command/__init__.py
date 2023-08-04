@@ -130,11 +130,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "stderr": "",
                 "returncode": process.returncode,
             }
-            if stdout_data:
-                service_response["stdout"] = stdout_data.decode("utf-8").strip()
-            if stderr_data:
-                service_response["stderr"] = stderr_data.decode("utf-8").strip()
-            return service_response
+            try:
+                if stdout_data:
+                    service_response["stdout"] = stdout_data.decode("utf-8").strip()
+                if stderr_data:
+                    service_response["stderr"] = stderr_data.decode("utf-8").strip()
+                return service_response
+            except UnicodeDecodeError:
+                _LOGGER.exception("Unable to handle non-utf8 output of command: `%s`")
+                raise
         return None
 
     for name in conf:
