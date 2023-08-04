@@ -177,10 +177,7 @@ class TractiveClient:
         if self._listen_task is None:
             return False
 
-        if self._listen_task.cancelled() is True:
-            return False
-
-        return True
+        return not self._listen_task.cancelled()
 
     async def trackable_objects(
         self,
