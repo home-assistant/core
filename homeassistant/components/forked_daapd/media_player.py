@@ -31,6 +31,7 @@ from homeassistant.components.spotify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -127,10 +128,10 @@ async def async_setup_entry(
     forked_daapd_updater = ForkedDaapdUpdater(
         hass, forked_daapd_api, config_entry.entry_id
     )
-    await forked_daapd_updater.async_init()
     hass.data[DOMAIN][config_entry.entry_id][
         HASS_DATA_UPDATER_KEY
     ] = forked_daapd_updater
+    await forked_daapd_updater.async_init()
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -914,7 +915,8 @@ class ForkedDaapdUpdater:
 
     async def async_init(self):
         """Perform async portion of class initialization."""
-        server_config = await self._api.get_request("config")
+        if not (server_config := await self._api.get_request("config")):
+            raise PlatformNotReady
         if websocket_port := server_config.get("websocket_port"):
             self.websocket_handler = asyncio.create_task(
                 self._api.start_websocket_handler(

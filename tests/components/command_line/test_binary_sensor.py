@@ -206,73 +206,19 @@ async def test_updating_to_often(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test handling updating when command already running."""
+
+    wait_till_event = asyncio.Event()
+    wait_till_event.set()
     called = []
 
     class MockCommandBinarySensor(CommandBinarySensor):
-        """Mock entity that updates slow."""
+        """Mock entity that updates."""
 
         async def _async_update(self) -> None:
-            """Update slow."""
+            """Update the entity."""
             called.append(1)
-            # Add waiting time
-            await asyncio.sleep(1)
-
-    with patch(
-        "homeassistant.components.command_line.binary_sensor.CommandBinarySensor",
-        side_effect=MockCommandBinarySensor,
-    ):
-        await setup.async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "command_line": [
-                    {
-                        "binary_sensor": {
-                            "name": "Test",
-                            "command": "echo 1",
-                            "payload_on": "1",
-                            "payload_off": "0",
-                            "scan_interval": 0.1,
-                        }
-                    }
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert len(called) == 1
-    assert (
-        "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
-        not in caplog.text
-    )
-
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
-    await hass.async_block_till_done()
-
-    assert len(called) == 2
-    assert (
-        "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
-        in caplog.text
-    )
-
-    await asyncio.sleep(0.2)
-
-
-async def test_updating_manually(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test handling manual updating using homeassistant udate_entity service."""
-    await setup.async_setup_component(hass, HA_DOMAIN, {})
-    called = []
-
-    class MockCommandBinarySensor(CommandBinarySensor):
-        """Mock entity that updates slow."""
-
-        async def _async_update(self) -> None:
-            """Update slow."""
-            called.append(1)
-            # Add waiting time
-            await asyncio.sleep(1)
+            # Wait till event is set
+            await wait_till_event.wait()
 
     with patch(
         "homeassistant.components.command_line.binary_sensor.CommandBinarySensor",
@@ -297,7 +243,68 @@ async def test_updating_manually(
         )
         await hass.async_block_till_done()
 
-    assert len(called) == 1
+    assert called
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
+    wait_till_event.set()
+    await asyncio.sleep(0)
+    assert (
+        "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
+        not in caplog.text
+    )
+
+    # Simulate update takes too long
+    wait_till_event.clear()
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    await asyncio.sleep(0)
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    wait_till_event.set()
+    await asyncio.sleep(0)
+
+    assert (
+        "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
+        in caplog.text
+    )
+
+
+async def test_updating_manually(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling manual updating using homeassistant udate_entity service."""
+    await setup.async_setup_component(hass, HA_DOMAIN, {})
+    called = []
+
+    class MockCommandBinarySensor(CommandBinarySensor):
+        """Mock entity that updates."""
+
+        async def _async_update(self) -> None:
+            """Update."""
+            called.append(1)
+
+    with patch(
+        "homeassistant.components.command_line.binary_sensor.CommandBinarySensor",
+        side_effect=MockCommandBinarySensor,
+    ):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "binary_sensor": {
+                            "name": "Test",
+                            "command": "echo 1",
+                            "payload_on": "1",
+                            "payload_off": "0",
+                            "scan_interval": 10,
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert called
+    called.clear
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -306,6 +313,4 @@ async def test_updating_manually(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert len(called) == 2
-
-    await asyncio.sleep(0.2)
+    assert called

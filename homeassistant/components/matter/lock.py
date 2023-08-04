@@ -34,6 +34,26 @@ class MatterLock(MatterEntity, LockEntity):
     features: int | None = None
 
     @property
+    def code_format(self) -> str | None:
+        """Regex for code format or None if no code is required."""
+        if self.get_matter_attribute_value(
+            clusters.DoorLock.Attributes.RequirePINforRemoteOperation
+        ):
+            min_pincode_length = int(
+                self.get_matter_attribute_value(
+                    clusters.DoorLock.Attributes.MinPINCodeLength
+                )
+            )
+            max_pincode_length = int(
+                self.get_matter_attribute_value(
+                    clusters.DoorLock.Attributes.MaxPINCodeLength
+                )
+            )
+            return f"^\\d{{{min_pincode_length},{max_pincode_length}}}$"
+
+        return None
+
+    @property
     def supports_door_position_sensor(self) -> bool:
         """Return True if the lock supports door position sensor."""
         if self.features is None:

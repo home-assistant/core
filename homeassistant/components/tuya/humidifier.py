@@ -86,6 +86,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
     _set_humidity: IntegerTypeData | None = None
     _switch_dpcode: DPCode | None = None
     entity_description: TuyaHumidifierEntityDescription
+    _attr_name = None
 
     def __init__(
         self,
