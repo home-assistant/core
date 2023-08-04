@@ -1,4 +1,4 @@
-"""Support for Duotecno switches."""
+"""Support for Duotecno lights."""
 from typing import Any
 
 from duotecno.unit import DimUnit
