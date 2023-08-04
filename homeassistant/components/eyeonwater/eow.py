@@ -1,3 +1,4 @@
+""" EyeOnWater API integration."""
 from __future__ import annotations
 
 import datetime
@@ -36,33 +37,28 @@ class EyeOnWaterException(Exception):
 
 class EyeOnWaterAuthError(EyeOnWaterException):
     """Exception for authentication failures.
+    
     Either wrong username or wrong password.
     """
-
-    ...
 
 
 class EyeOnWaterRateLimitError(EyeOnWaterException):
     """Exception for reaching the ratelimit.
+
     Either too many login attempts or too many requests.
     """
-
-    ...
 
 
 class EyeOnWaterAuthExpired(EyeOnWaterException):
     """Exception for when a token is no longer valid."""
 
-    ...
-
 
 class EyeOnWaterAPIError(EyeOnWaterException):
     """General exception for unknown API responses."""
 
-    ...
-
 
 def extract_json(line, prefix):
+    """Extract JSON responce."""
     line = line[line.find(prefix) + len(prefix) :]
     line = line[: line.find(";")]
     return json.loads(line)
@@ -78,7 +74,8 @@ class Meter:
         meter_uuid: str,
         meter_info: dict[str, Any],
         metric_measurement_system: bool,
-    ):
+    ) -> None:
+        """Initialize the meter."""
         self.meter_uuid = meter_uuid
         self.meter_info = meter_info
         self.metric_measurement_system = metric_measurement_system
@@ -103,9 +100,11 @@ class Meter:
 
     @property
     def attributes(self):
+        """Define attributes."""
         return self.meter_info
 
     def get_flags(self, flag) -> bool:
+        """Define flags."""
         flags = self.reading_data["flags"]
         if flag not in flags:
             raise EyeOnWaterAPIError(f"Cannot find {flag} field")
@@ -151,7 +150,8 @@ class Account:
         username: str,
         password: str,
         metric_measurement_system: bool,
-    ):
+    ) -> None:
+        """Initialize the account."""
         self.eow_hostname = eow_hostname
         self.username = username
         self.password = password
@@ -191,7 +191,8 @@ class Client:
         self,
         websession: ClientSession,
         account: Account,
-    ):
+    ) -> None:
+        """Initialize the client."""
         self.base_url = "https://" + account.eow_hostname + "/"
         self.websession = websession
         self.account = account
