@@ -51,7 +51,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add kostal plenticore Select widget."""
-    plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
 
     available_settings_data = await plenticore.client.get_settings()
     select_data_update_coordinator = SelectDataUpdateCoordinator(
