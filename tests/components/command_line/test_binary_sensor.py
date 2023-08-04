@@ -246,7 +246,7 @@ async def test_updating_to_often(
     assert called
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
     wait_till_event.set()
-    asyncio.wait(0)
+    await asyncio.sleep(0)
     assert (
         "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
         not in caplog.text
@@ -258,6 +258,7 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
     wait_till_event.set()
+    await asyncio.sleep(0)
 
     assert (
         "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
