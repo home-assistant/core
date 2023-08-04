@@ -35,11 +35,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import GroupEntity
 from .util import (
@@ -142,10 +145,13 @@ class FanGroup(GroupEntity, FanEntity):
         return self._oscillating
 
     @callback
-    def _update_supported_features_event(self, event: Event) -> None:
+    def _update_supported_features_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         self.async_set_context(event.context)
-        if (entity := event.data.get("entity_id")) is not None:
-            self.async_update_supported_features(entity, event.data.get("new_state"))
+        self.async_update_supported_features(
+            event.data["entity_id"], event.data["new_state"]
+        )
 
     @callback
     def async_update_supported_features(

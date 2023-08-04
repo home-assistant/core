@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Fill in the location to track.",
+        "data": {
+          "name": "[%key:common::config_flow::data::api_key%]",
+          "radius": "Radius",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "altitude": "Altitude"
+        }
+      }
+    }
+  }
+}

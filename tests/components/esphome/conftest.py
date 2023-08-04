@@ -211,13 +211,13 @@ async def _mock_generic_device_entry(
 
     mock_device = MockESPHomeDevice(entry)
 
-    device_info = DeviceInfo(
-        name="test",
-        friendly_name="Test",
-        mac_address="11:22:33:44:55:aa",
-        esphome_version="1.0.0",
-        **mock_device_info,
-    )
+    default_device_info = {
+        "name": "test",
+        "friendly_name": "Test",
+        "esphome_version": "1.0.0",
+        "mac_address": "11:22:33:44:55:aa",
+    }
+    device_info = DeviceInfo(**(default_device_info | mock_device_info))
 
     async def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""

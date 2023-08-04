@@ -26,7 +26,6 @@ CONF_STATION = "station"
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 
 ATTR_FORECAST_DETAILED_DESCRIPTION = "detailed_description"
-ATTR_FORECAST_DAYTIME = "daytime"
 
 CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_EXCEPTIONAL: [

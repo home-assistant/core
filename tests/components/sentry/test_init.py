@@ -47,8 +47,8 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     assert entry.options[CONF_ENVIRONMENT] == "production"
 
     assert sentry_logging_mock.call_count == 1
-    assert sentry_logging_mock.called_once_with(
-        level=logging.WARNING, event_level=logging.WARNING
+    sentry_logging_mock.assert_called_once_with(
+        level=logging.WARNING, event_level=logging.ERROR
     )
 
     assert sentry_aiohttp_mock.call_count == 1
