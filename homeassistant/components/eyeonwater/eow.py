@@ -93,11 +93,10 @@ class Meter:
         data = await client.request(path=SEARCH_ENDPOINT, method="post", json=query)
         data = json.loads(data)
         meters = data["elastic_results"]["hits"]["hits"]
-        if len(meters) > 1:
-            raise Exception("More than one meter reading found")
-
+        
         self.meter_info = meters[0]["_source"]
         self.reading_data = self.meter_info["register_0"]
+        return self.reading_data
 
     @property
     def attributes(self):
@@ -160,7 +159,7 @@ class Account:
         self.metric_measurement_system = metric_measurement_system
 
     async def fetch_meters(self, client: Client):
-        """Returns a list of the meters associated with the account."""
+        """Lists all meters associated with the account."""
         path = DASHBOARD_ENDPOINT + urllib.parse.quote(self.username)
         data = await client.request(path=path, method="get")
 
@@ -214,7 +213,7 @@ class Client:
         method: str,
         **kwargs,
     ):
-        """Helper method to make API calls against the eow API."""
+        """Make API calls against the eow API."""
         await self.authenticate()
         resp = await self.websession.request(
             method,
