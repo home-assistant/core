@@ -1,6 +1,4 @@
 """Support for EyeOnWater sensors."""
-from .eow import Meter
-
 from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -13,10 +11,10 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     DATA_COORDINATOR,
     DATA_SMART_METER,
+    DEVICE_CLASS_WATER,
     DOMAIN,
-    WATER_METER,
-    DEVICE_CLASS_WATER
 )
+from .eow import Meter
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -33,6 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class EyeOnWaterSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an EyeOnWater sensor."""
+
     _attr_has_entity_name = True
     _attr_device_class = DEVICE_CLASS_WATER
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
@@ -75,8 +74,7 @@ class EyeOnWaterSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._state_update))
+        self.async_on_remove(self.coordinator.async_add_listener(self._state_update))
 
         if self.coordinator.last_update_success:
             return
