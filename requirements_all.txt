@@ -360,7 +360,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==50
+aiounifi==51
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -1368,7 +1368,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.18
+opower==0.0.20
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1650,7 +1650,7 @@ pydrawise==2023.7.1
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.8.1
+pyduotecno==2023.8.3
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -2137,7 +2137,7 @@ python-mystrom==2.2.0
 python-opendata-transport==0.3.0
 
 # homeassistant.components.opensky
-python-opensky==0.0.10
+python-opensky==0.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
@@ -2752,7 +2752,7 @@ zamg==0.2.4
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.72.3
+zeroconf==0.74.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
@@ -2779,7 +2779,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.4
 
 # homeassistant.components.zha
-zigpy==0.56.3
+zigpy==0.56.4
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

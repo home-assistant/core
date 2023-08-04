@@ -1,5 +1,5 @@
 """The config flow tests for the forked_daapd media player platform."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -12,9 +12,11 @@ from homeassistant.components.forked_daapd.const import (
     CONF_TTS_VOLUME,
     DOMAIN,
 )
+from homeassistant.components.forked_daapd.media_player import async_setup_entry
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 
 from tests.common import MockConfigEntry
 
@@ -242,3 +244,18 @@ async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_async_setup_entry_not_ready(hass: HomeAssistant, config_entry) -> None:
+    """Test that a PlatformNotReady exception is thrown during platform setup."""
+
+    with patch(
+        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        mock_api.return_value.get_request.return_value = None
+        config_entry.add_to_hass(hass)
+        with pytest.raises(PlatformNotReady):
+            await async_setup_entry(hass, config_entry, MagicMock())
+        await hass.async_block_till_done()
+        mock_api.return_value.get_request.assert_called_once()
