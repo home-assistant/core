@@ -142,8 +142,7 @@ class WaqiSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        value = self._data.get("aqi")
-        if value is not None:
+        if (value := self._data.get("aqi")) is not None:
             with suppress(ValueError):
                 return float(value)
         return None
