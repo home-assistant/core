@@ -28,7 +28,7 @@ async def async_setup_entry(
 
 
 class DuotecnoLight(DuotecnoEntity, LightEntity):
-    """Representation of a switch."""
+    """Representation of a light."""
 
     _unit: DimUnit
     _attr_color_mode = ColorMode.BRIGHTNESS
