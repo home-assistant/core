@@ -135,7 +135,6 @@ async def test_form_exception(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-# Write a test for OptionsFlowHandler
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     entry = MockConfigEntry(domain=DOMAIN, data={"username": "test-username"})
