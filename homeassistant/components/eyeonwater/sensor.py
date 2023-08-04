@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class EyeOnWaterSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
+class EyeOnWaterSensor(CoordinatorEntity, SensorEntity):
     """Representation of an EyeOnWater sensor."""
 
     _attr_has_entity_name = True
