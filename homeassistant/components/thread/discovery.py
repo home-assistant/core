@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from python_otbr_api.mdns import StateBitmap
 from zeroconf import BadTypeInNameException, DNSPointer, ServiceListener, Zeroconf
@@ -58,14 +58,10 @@ def async_discovery_data_from_service(
             return None
 
     service_properties = service.properties
-    if TYPE_CHECKING:
-        # Service properties are always bytes if they are set from the network.
-        # For legacy backwards compatibility zeroconf allows properties to be set
-        # as strings but we never do that so we can safely cast here.
-        service_properties = cast(dict[bytes, bytes | None], service.properties)
-    else:
-        service_properties = service.properties
-
+    # Service properties are always bytes if they are set from the network.
+    # For legacy backwards compatibility zeroconf allows properties to be set
+    # as strings but we never do that so we can safely cast here.
+    service_properties = cast(dict[bytes, bytes | None], service.properties)
     ext_addr = service_properties.get(b"xa")
     ext_pan_id = service_properties.get(b"xp")
     network_name = try_decode(service_properties.get(b"nn"))
@@ -177,13 +173,10 @@ class ThreadRouterDiscovery:
                 return
 
             _LOGGER.debug("_add_update_service %s %s", name, service)
-            if TYPE_CHECKING:
-                # Service properties are always bytes if they are set from the network.
-                # For legacy backwards compatibility zeroconf allows properties to be set
-                # as strings but we never do that so we can safely cast here.
-                service_properties = cast(dict[bytes, bytes | None], service.properties)
-            else:
-                service_properties = service.properties
+            # Service properties are always bytes if they are set from the network.
+            # For legacy backwards compatibility zeroconf allows properties to be set
+            # as strings but we never do that so we can safely cast here.
+            service_properties = cast(dict[bytes, bytes | None], service.properties)
 
             if not (xa := service_properties.get(b"xa")):
                 _LOGGER.debug("_add_update_service failed to find xa in %s", service)

@@ -11,7 +11,7 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import Any, Final, cast
 
 import voluptuous as vol
 from zeroconf import (
@@ -554,14 +554,10 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     if not host:
         return None
 
-    service_properties = service.properties
-    if TYPE_CHECKING:
-        # Service properties are always bytes if they are set from the network.
-        # For legacy backwards compatibility zeroconf allows properties to be set
-        # as strings but we never do that so we can safely cast here.
-        service_properties = cast(dict[bytes, bytes | None], service.properties)
-    else:
-        service_properties = service.properties
+    # Service properties are always bytes if they are set from the network.
+    # For legacy backwards compatibility zeroconf allows properties to be set
+    # as strings but we never do that so we can safely cast here.
+    service_properties = cast(dict[bytes, bytes | None], service.properties)
 
     properties: dict[str, Any] = {
         k.decode("ascii", "replace"): None
