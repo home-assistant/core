@@ -580,7 +580,7 @@ async def test_updating_to_often(
     assert called
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
     wait_till_event.set()
-    asyncio.wait(0)
+    await asyncio.sleep(0)
 
     assert (
         "Updating Command Line Sensor Test took longer than the scheduled update interval"
@@ -593,6 +593,7 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
     wait_till_event.set()
+    await asyncio.sleep(0)
 
     assert (
         "Updating Command Line Sensor Test took longer than the scheduled update interval"
@@ -646,3 +647,54 @@ async def test_updating_manually(
     )
     await hass.async_block_till_done()
     assert called
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo 2022-12-22T13:15:30Z",
+                        "device_class": "timestamp",
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_scrape_sensor_device_timestamp(
+    hass: HomeAssistant, load_yaml_integration: None
+) -> None:
+    """Test Command Line sensor with a device of type TIMESTAMP."""
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "2022-12-22T13:15:30+00:00"
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo January 17, 2022",
+                        "device_class": "date",
+                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_scrape_sensor_device_date(
+    hass: HomeAssistant, load_yaml_integration: None
+) -> None:
+    """Test Command Line sensor with a device of type DATE."""
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "2022-01-17"
