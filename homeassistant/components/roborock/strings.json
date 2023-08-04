@@ -33,9 +33,6 @@
       }
     },
     "sensor": {
-      "battery": {
-        "name": "Battery"
-      },
       "cleaning_area": {
         "name": "Cleaning area"
       },

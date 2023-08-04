@@ -129,7 +129,6 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         key="battery",
-        translation_key="vacuum_battery",
         value_fn=lambda data: data.status.battery,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
