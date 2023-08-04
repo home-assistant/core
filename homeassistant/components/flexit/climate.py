@@ -177,9 +177,7 @@ class Flexit(ClimateEntity):
         self, register_type: str, register: int
     ) -> int:
         """Read register using the Modbus hub slave."""
-        result = await self._hub.async_pb_call(
-            self._slave, register, 1, register_type
-        )
+        result = await self._hub.async_pb_call(self._slave, register, 1, register_type)
         if result is None:
             _LOGGER.error("Error reading value from Flexit modbus adapter")
             return -1
