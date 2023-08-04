@@ -59,8 +59,8 @@ async def test_hop_sensors(
             config_entry.entry_id
         ]
         assert hop_coordinator
-        entry = entity_registry.async_get(sensor)
-        assert entry
+        entity = entity_registry.async_get(sensor)
+        assert entity
 
         state = hass.states.get(sensor)
         assert state
