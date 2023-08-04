@@ -112,7 +112,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="visibility_distance",
         name="Visibility distance",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        device_class=None,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
     ),
