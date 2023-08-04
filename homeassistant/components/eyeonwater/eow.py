@@ -92,7 +92,7 @@ class Meter:
         """Triggers an on-demand meter read and returns it when complete."""
         _LOGGER.debug("Requesting meter reading")
 
-        query = {"query": {"terms": {"meter.meter_uuid":[self.meter_uuid]}}}
+        query = {"query": {"terms": {"meter.meter_uuid": [self.meter_uuid]}}}
         data = await client.request(path=SEARCH_ENDPOINT, method="post", json=query)
         data = json.loads(data)
         meters = data["elastic_results"]["hits"]["hits"]
@@ -189,7 +189,7 @@ class Client:
     def __init__(
         self,
         websession: ClientSession,
-        account: "Account",
+        account: Account,
     ):
         self.base_url = "https://" + account.eow_hostname + "/"
         self.websession = websession
