@@ -62,7 +62,7 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
             ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Instruct the switch to turn off."""
+        """Instruct the light to turn off."""
         try:
             await self._unit.set_dimmer_state(0)
         except OSError as err:
