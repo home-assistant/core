@@ -7,9 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 import logging
-from typing import Any, Final, Literal, TypedDict, final
-
-from typing_extensions import Required
+from typing import Any, Final, Literal, Required, TypedDict, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -274,8 +272,6 @@ class WeatherEntity(Entity):
                 "visibility_unit",
                 "_attr_precipitation_unit",
                 "precipitation_unit",
-                "_attr_forecast",
-                "forecast",
             )
         ):
             if _reported is False:

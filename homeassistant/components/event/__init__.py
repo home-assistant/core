@@ -3,12 +3,10 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
-from typing import Any, final
+from typing import Any, Self, final
 
-from typing_extensions import Self
-
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -47,7 +45,6 @@ __all__ = [
     "EventDeviceClass",
     "EventEntity",
     "EventEntityDescription",
-    "EventEntityFeature",
 ]
 
 # mypy: disallow-any-generics
@@ -106,7 +103,7 @@ class EventExtraStoredData(ExtraStoredData):
 
 
 class EventEntity(RestoreEntity):
-    """Representation of a Event entity."""
+    """Representation of an Event entity."""
 
     entity_description: EventEntityDescription
     _attr_device_class: EventDeviceClass | None

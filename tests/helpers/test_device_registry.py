@@ -1,9 +1,11 @@
 """Tests for the Device Registry."""
+from contextlib import nullcontext
 import time
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -171,7 +173,7 @@ async def test_loading_from_storage(
                 {
                     "area_id": "12345A",
                     "config_entries": ["1234"],
-                    "configuration_url": "configuration_url",
+                    "configuration_url": "https://example.com/config",
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "disabled_by": dr.DeviceEntryDisabler.USER,
                     "entry_type": dr.DeviceEntryType.SERVICE,
@@ -213,7 +215,7 @@ async def test_loading_from_storage(
     assert entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={"1234"},
-        configuration_url="configuration_url",
+        configuration_url="https://example.com/config",
         connections={("Zigbee", "01.23.45.67.89")},
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -916,7 +918,7 @@ async def test_update(
         updated_entry = device_registry.async_update_device(
             entry.id,
             area_id="12345A",
-            configuration_url="configuration_url",
+            configuration_url="https://example.com/config",
             disabled_by=dr.DeviceEntryDisabler.USER,
             entry_type=dr.DeviceEntryType.SERVICE,
             hw_version="hw_version",
@@ -935,7 +937,7 @@ async def test_update(
     assert updated_entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={"1234"},
-        configuration_url="configuration_url",
+        configuration_url="https://example.com/config",
         connections={("mac", "12:34:56:ab:cd:ef")},
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -1670,3 +1672,102 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(
 
     entry1 = device_registry.async_get(entry1.id)
     assert not entry1.disabled
+
+
+@pytest.mark.parametrize(
+    ("configuration_url", "expectation"),
+    [
+        ("http://localhost", nullcontext()),
+        ("http://localhost:8123", nullcontext()),
+        ("https://example.com", nullcontext()),
+        ("http://localhost/config", nullcontext()),
+        ("http://localhost:8123/config", nullcontext()),
+        ("https://example.com/config", nullcontext()),
+        ("homeassistant://config", nullcontext()),
+        (URL("http://localhost"), nullcontext()),
+        (URL("http://localhost:8123"), nullcontext()),
+        (URL("https://example.com"), nullcontext()),
+        (URL("http://localhost/config"), nullcontext()),
+        (URL("http://localhost:8123/config"), nullcontext()),
+        (URL("https://example.com/config"), nullcontext()),
+        (URL("homeassistant://config"), nullcontext()),
+        (None, nullcontext()),
+        ("http://", pytest.raises(ValueError)),
+        ("https://", pytest.raises(ValueError)),
+        ("gopher://localhost", pytest.raises(ValueError)),
+        ("homeassistant://", pytest.raises(ValueError)),
+        (URL("http://"), pytest.raises(ValueError)),
+        (URL("https://"), pytest.raises(ValueError)),
+        (URL("gopher://localhost"), pytest.raises(ValueError)),
+        (URL("homeassistant://"), pytest.raises(ValueError)),
+        # Exception implements __str__
+        (Exception("https://example.com"), nullcontext()),
+        (Exception("https://"), pytest.raises(ValueError)),
+        (Exception(), pytest.raises(ValueError)),
+    ],
+)
+async def test_device_info_configuration_url_validation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    configuration_url: str | URL | None,
+    expectation,
+) -> None:
+    """Test configuration URL of device info is properly validated."""
+    with expectation:
+        device_registry.async_get_or_create(
+            config_entry_id="1234",
+            identifiers={("something", "1234")},
+            name="name",
+            configuration_url=configuration_url,
+        )
+
+    update_device = device_registry.async_get_or_create(
+        config_entry_id="5678",
+        identifiers={("something", "5678")},
+        name="name",
+    )
+    with expectation:
+        device_registry.async_update_device(
+            update_device.id, configuration_url=configuration_url
+        )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_invalid_configuration_url_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test loading stored devices with an invalid URL."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["1234"],
+                    "configuration_url": "invalid",
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": dr.DeviceEntryType.SERVICE,
+                    "hw_version": None,
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name_by_user": None,
+                    "name": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+    assert len(registry.devices) == 1
+    entry = registry.async_get_or_create(
+        config_entry_id="1234", identifiers={("serial", "12:34:56:AB:CD:EF")}
+    )
+    assert entry.configuration_url == "invalid"
