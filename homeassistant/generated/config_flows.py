@@ -331,6 +331,7 @@ FLOWS = {
         "openweathermap",
         "opower",
         "oralb",
+        "osc",
         "otbr",
         "overkiz",
         "ovo_energy",

@@ -4075,6 +4075,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "osc": {
+      "name": "OSC (Open Sound Control)",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "osramlightify": {
       "name": "Osramlightify",
       "integration_type": "hub",

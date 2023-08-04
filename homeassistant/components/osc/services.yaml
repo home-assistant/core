@@ -1,0 +1,25 @@
+osc_send:
+  name: Send OSC message
+  description: Send an OSC message to a specific entity
+  fields:
+    entity_id:
+      description: The entity_id of the OSC device
+      example: "sensor.my_osc_device"
+      selector:
+        entity:
+          integration: osc
+    value:
+      description: The value to send
+      required: true
+      example: "1"
+      selector:
+        text:
+    data_type:
+      description: The data type of the value
+      example: "float"
+      required: true
+      selector:
+        select:
+          options:
+            - "int"
+            - "float"
