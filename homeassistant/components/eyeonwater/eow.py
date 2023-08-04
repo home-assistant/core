@@ -33,8 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 class EyeOnWaterException(Exception):
     """Base exception for more specific exceptions to inherit from."""
 
-    ...
-
 
 class EyeOnWaterAuthError(EyeOnWaterException):
     """Exception for authentication failures.
@@ -71,13 +69,14 @@ def extract_json(line, prefix):
 
 
 class Meter:
+    """Class represents meter object."""
     meter_prefix = "var new_barInfo = "
     info_prefix = "AQ.Views.MeterPicker.meters = "
 
     def __init__(
         self,
         meter_uuid: str,
-        meter_info: Dict[str, Any],
+        meter_info: dict[str, Any],
         metric_measurement_system: bool,
     ):
         self.meter_uuid = meter_uuid
@@ -88,7 +87,7 @@ class Meter:
         )
         self.reading_data = None
 
-    async def read_meter(self, client: Client) -> Dict[str, Any]:
+    async def read_meter(self, client: Client) -> dict[str, Any]:
         """Triggers an on-demand meter read and returns it when complete."""
         _LOGGER.debug("Requesting meter reading")
 
@@ -145,6 +144,7 @@ class Meter:
 
 
 class Account:
+    """Class represents account object."""
     def __init__(
         self,
         eow_hostname: str,
@@ -186,6 +186,7 @@ class Account:
 
 
 class Client:
+    """Class represents client object."""
     def __init__(
         self,
         websession: ClientSession,
