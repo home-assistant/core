@@ -1,0 +1,137 @@
+"""Config flow for EyeOnWater integration."""
+import asyncio
+import logging
+from typing import Any, Dict
+
+from aiohttp import ClientError
+from .eow import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
+
+import voluptuous as vol
+
+from homeassistant import config_entries, core, exceptions
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_DOMAIN
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.selector import selector
+
+from .const import DOMAIN
+
+CONF_MEASUREMENT_SYSTEM = "measurement_system"
+CONF_MEASUREMENT_SYSTEM_METRIC = "metric"
+CONF_MEASUREMENT_SYSTEM_IMPERIAL = "imperial"
+
+CONF_EOW_HOSTNAME = "eow_hostname"
+CONF_EOW_HOSTNAME_COM = "eyeonwater.com"
+CONF_EOW_HOSTNAME_CA = "eyeonwater.ca"
+
+CONF_DOMAIN_COM = "com"
+CONF_DOMAIN_CA = "ca"
+
+_LOGGER = logging.getLogger(__name__)
+
+DATA_SCHEMA = vol.Schema(
+    {
+        CONF_EOW_HOSTNAME: selector({"select": {"options": [CONF_EOW_HOSTNAME_COM, CONF_EOW_HOSTNAME_CA]}}),
+        CONF_MEASUREMENT_SYSTEM: selector({"select": {"options": [CONF_MEASUREMENT_SYSTEM_METRIC, CONF_MEASUREMENT_SYSTEM_IMPERIAL]}}),
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+
+def create_account_from_config(data: Dict[str, Any]) -> Account:
+
+    # Backward compatibility code
+    try:
+        domain = data[CONF_DOMAIN]
+    except KeyError:
+        domain = CONF_DOMAIN_COM
+
+    if domain == CONF_DOMAIN_COM:
+        eow_hostname = CONF_EOW_HOSTNAME_COM
+        metric_measurement_system = False
+    elif domain == CONF_DOMAIN_CA:
+        eow_hostname = CONF_EOW_HOSTNAME_CA
+        metric_measurement_system = True
+    else:
+        raise Exception()(
+            f"Unsupported domain {domain}. Only 'com' and 'ca' are supported")
+
+    # Measurement system
+    try:
+        measurement_system = data[CONF_MEASUREMENT_SYSTEM]
+        metric_measurement_system = measurement_system == CONF_MEASUREMENT_SYSTEM_METRIC
+    except KeyError:
+        pass
+
+    # EOW hostname
+    try:
+        eow_hostname = data[CONF_EOW_HOSTNAME]
+    except KeyError:
+        pass
+
+    username = data[CONF_USERNAME]
+    password = data[CONF_PASSWORD]
+
+    account = Account(eow_hostname=eow_hostname, username=username,
+                      password=password, metric_measurement_system=metric_measurement_system)
+    return account
+
+
+async def validate_input(hass: core.HomeAssistant, data):
+    """Validate the user input allows us to connect.
+
+    Data has the keys from DATA_SCHEMA with values provided by the user.
+    """
+    client_session = aiohttp_client.async_get_clientsession(hass)
+    account = create_account_from_config(data=data)
+    client = Client(client_session, account)
+
+    try:
+        await client.authenticate()
+    except (asyncio.TimeoutError, ClientError, EyeOnWaterAPIError) as error:
+        raise CannotConnect from error
+    except EyeOnWaterAuthError as error:
+        raise InvalidAuth(error) from error
+
+    # Return info that you want to store in the config entry.
+    return {"title": account.username}
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for EyeOnWater."""
+
+    VERSION = 1
+
+    async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
+
+        errors = {}
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if not errors:
+                    # Ensure the same account cannot be setup more than once.
+                    await self.async_set_unique_id(user_input[CONF_USERNAME])
+                    self._abort_if_unique_id_configured()
+
+                    return self.async_create_entry(title=info["title"], data=user_input)
+
+        return self.async_show_form(
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
