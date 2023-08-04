@@ -1247,7 +1247,7 @@
       "iot_class": "local_polling"
     },
     "duotecno": {
-      "name": "duotecno",
+      "name": "Duotecno",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -3491,7 +3491,7 @@
     "moon": {
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "calculated"
     },
     "mopeka": {
       "name": "Mopeka",
@@ -6702,7 +6702,7 @@
     "tod": {
       "integration_type": "helper",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "calculated"
     },
     "utility_meter": {
       "integration_type": "helper",
