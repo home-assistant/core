@@ -2,7 +2,7 @@
 import asyncio
 import contextlib
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp import ClientError
 import voluptuous as vol
@@ -50,6 +50,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 def create_account_from_config(data: dict[str, Any]) -> Account:
+    """Create account login from config."""
     # Backward compatibility code
     try:
         domain = data[CONF_DOMAIN]
