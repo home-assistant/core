@@ -2,7 +2,7 @@
 import asyncio
 import contextlib
 import logging
-from typing import Any
+from typing import Any, Dict
 
 from aiohttp import ClientError
 import voluptuous as vol
