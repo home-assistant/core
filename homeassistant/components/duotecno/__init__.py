@@ -22,10 +22,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await controller.connect(
             entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_PASSWORD]
         )
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except (OSError, InvalidPassword, LoadFailure) as err:
         raise ConfigEntryNotReady from err
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = controller
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
