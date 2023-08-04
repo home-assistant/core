@@ -1,4 +1,4 @@
-"""Provide common test tools for WWD."""
+"""Provide common test tools for wake-word-detection."""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from tests.common import MockPlatform, mock_platform
 
 
-def mock_wwd_entity_platform(
+def mock_wake_word_entity_platform(
     hass: HomeAssistant,
     tmp_path: Path,
     integration: str,

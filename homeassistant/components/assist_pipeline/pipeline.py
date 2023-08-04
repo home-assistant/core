@@ -526,7 +526,12 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             if chunk_buffer:
+                # Add audio collected before detection
                 audio_buffer.extend(chunk_buffer)
+
+            if result.queued_audio:
+                # Add audio that was pending at detection
+                audio_buffer.extend(chunk_ts[0] for chunk_ts in result.queued_audio)
 
             wake_word_output = asdict(result)
 

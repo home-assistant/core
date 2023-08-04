@@ -1,4 +1,4 @@
-"""Test WWD component setup."""
+"""Test wake_word component setup."""
 from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 
@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 
-from .common import mock_wwd_entity_platform
+from .common import mock_wake_word_entity_platform
 
 from tests.common import (
     MockConfigEntry,
@@ -27,13 +27,16 @@ _BYTES_PER_CHUNK = _SAMPLES_PER_CHUNK * 2  # 16-bit
 _MS_PER_CHUNK = (_BYTES_PER_CHUNK // 2) // 16  # 16Khz
 
 
-class BaseProvider:
-    """Mock provider."""
+class MockProviderEntity(wake_word.WakeWordDetectionEntity):
+    """Mock provider entity."""
 
-    fail_process_audio = False
+    url_path = "wake_word.test"
+    _attr_name = "test"
 
-    def __init__(self) -> None:
+    def __init__(self, detect_timestamp: int) -> None:
         """Init test provider."""
+        super().__init__()
+        self._detect_timestamp = detect_timestamp
 
     @property
     def supported_wake_words(self) -> list[wake_word.WakeWord]:
@@ -45,8 +48,7 @@ class BaseProvider:
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         async for _chunk, timestamp in stream:
-            if timestamp >= 2000:
-                # Trigger a detection after 2 seconds of audio
+            if timestamp >= self._detect_timestamp:
                 return wake_word.DetectionResult(
                     ww_id=self.supported_wake_words[0].ww_id, timestamp=timestamp
                 )
@@ -55,20 +57,13 @@ class BaseProvider:
         return None
 
 
-class MockProviderEntity(BaseProvider, wake_word.WakeWordDetectionEntity):
-    """Mock provider entity."""
-
-    url_path = "wake_word.test"
-    _attr_name = "test"
-
-
 @pytest.fixture
 def mock_provider_entity() -> MockProviderEntity:
     """Test provider entity fixture."""
-    return MockProviderEntity()
+    return MockProviderEntity(detect_timestamp=2000)
 
 
-class WDDFlow(ConfigFlow):
+class WakeWordFlow(ConfigFlow):
     """Test flow."""
 
 
@@ -77,7 +72,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
-    with mock_config_flow(TEST_DOMAIN, WDDFlow):
+    with mock_config_flow(TEST_DOMAIN, WakeWordFlow):
         yield
 
 
@@ -137,7 +132,9 @@ async def mock_config_entry_setup(
         """Set up test stt platform via config entry."""
         async_add_entities([mock_provider_entity])
 
-    mock_wwd_entity_platform(hass, tmp_path, TEST_DOMAIN, async_setup_entry_platform)
+    mock_wake_word_entity_platform(
+        hass, tmp_path, TEST_DOMAIN, async_setup_entry_platform
+    )
 
     config_entry = MockConfigEntry(domain=TEST_DOMAIN)
     config_entry.add_to_hass(hass)
@@ -161,21 +158,18 @@ async def test_detected_entity(
     hass: HomeAssistant, mock_provider_entity: MockProviderEntity
 ) -> None:
     """Test successful detection through entity."""
-    last_timestamp = 0
 
     async def three_second_stream():
-        nonlocal last_timestamp
         timestamp = 0
         while timestamp < 3000:
             yield bytes(_BYTES_PER_CHUNK), timestamp
             timestamp += _MS_PER_CHUNK
-            last_timestamp = timestamp
 
     # Need 2 seconds to trigger
     result = await mock_provider_entity.async_process_audio_stream(
         three_second_stream()
     )
-    assert result == wake_word.DetectionResult("test_ww", last_timestamp)
+    assert result == wake_word.DetectionResult("test_ww", 2048)
 
 
 async def test_not_detected_entity(
