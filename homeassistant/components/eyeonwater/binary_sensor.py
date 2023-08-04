@@ -1,6 +1,9 @@
 """Support for EyeOnWater binary sensors."""
-from .eow import Meter
-
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -8,17 +11,13 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
-)
 
 from .const import (
     DATA_COORDINATOR,
     DATA_SMART_METER,
     DOMAIN,
 )
+from .eow import Meter
 
 FLAG_SENSORS = [
     BinarySensorEntityDescription(
@@ -31,7 +30,7 @@ FLAG_SENSORS = [
         name="Empty Pipe",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-        BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="Tamper",
         name="Tamper",
         device_class=BinarySensorDeviceClass.TAMPER,
@@ -79,7 +78,7 @@ class EyeOnWaterBinarySensor(CoordinatorEntity, RestoreEntity, BinarySensorEntit
         self,
         meter: Meter,
         coordinator: DataUpdateCoordinator,
-        description: BinarySensorEntityDescription
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -104,12 +103,8 @@ class EyeOnWaterBinarySensor(CoordinatorEntity, RestoreEntity, BinarySensorEntit
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._state_update))
+        self.async_on_remove(self.coordinator.async_add_listener(self._state_update))
 
-        # If the background update finished before
-        # we added the entity, there is no need to restore
-        # state.
         if self.coordinator.last_update_success:
             return
 
