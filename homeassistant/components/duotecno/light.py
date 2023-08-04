@@ -46,11 +46,9 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        if ATTR_BRIGHTNESS in kwargs:
+        if val := kwargs.get(ATTR_BRIGHTNESS) is not None:
             # set to a value
-            val = kwargs[ATTR_BRIGHTNESS]
-            if val > 0:
-                val = max(int((val * 100) / 255), 1)
+            val = max(int((val * 100) / 255), 1)
         else:
             # restore state
             val = None
