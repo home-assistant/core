@@ -31,7 +31,6 @@ from .util.thread import deadlock_safe_shutdown
 #
 MAX_EXECUTOR_WORKERS = 64
 TASK_CANCELATION_TIMEOUT = 5
-ALPINE_RELEASE_FILE = "/etc/alpine-release"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,7 +165,7 @@ def _enable_posix_spawn() -> None:
     # The subprocess module does not know about Alpine Linux/musl
     # and will use fork() instead of posix_spawn() which significantly
     # less efficient. This is a workaround to force posix_spawn()
-    # on Alpine Linux which is supported by musl.
+    # when using musl since cpython is not aware its supported.
     tag = next(packaging.tags.sys_tags())
     subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform
 
