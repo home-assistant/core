@@ -8,7 +8,7 @@ from aiohttp import ClientError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_DOMAIN
+from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import selector
 
@@ -49,7 +49,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def create_account_from_config(data: Dict[str, Any]) -> Account:
+def create_account_from_config(data: dict[str, Any]) -> Account:
     # Backward compatibility code
     try:
         domain = data[CONF_DOMAIN]
@@ -63,7 +63,7 @@ def create_account_from_config(data: Dict[str, Any]) -> Account:
         eow_hostname = CONF_EOW_HOSTNAME_CA
         metric_measurement_system = True
     else:
-        raise Exception()(
+        raise Exception(
             f"Unsupported domain {domain}. Only 'com' and 'ca' are supported"
         )
 
