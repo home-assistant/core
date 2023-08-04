@@ -40,8 +40,8 @@ async def test_hop_sensors(
     config_entry: MockConfigEntry,
     ek_api: AsyncMock,
     entity_registry: EntityRegistry,
-    sensor,
-    sensor_state,
+    sensor: str,
+    sensor_state: str,
 ) -> None:
     """Test HOP sensors for the Electric Kiwi integration."""
 
