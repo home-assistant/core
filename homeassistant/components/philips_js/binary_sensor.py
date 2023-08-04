@@ -1,6 +1,8 @@
 """Philips TV binary sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from haphilipsjs import PhilipsTV
 
 from homeassistant.components.binary_sensor import (
@@ -16,6 +18,7 @@ from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
 
 
+@dataclass
 class PhilipsTVBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A entity description for Philips TV binary sensor."""
 
