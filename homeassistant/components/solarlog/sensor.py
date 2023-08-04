@@ -218,6 +218,8 @@ async def async_setup_entry(
 class SolarlogSensor(CoordinatorEntity[SolarlogData], SensorEntity):
     """Representation of a Sensor."""
 
+    _attr_has_entity_name = True
+
     entity_description: SolarLogSensorEntityDescription
 
     def __init__(
@@ -228,7 +230,6 @@ class SolarlogSensor(CoordinatorEntity[SolarlogData], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
