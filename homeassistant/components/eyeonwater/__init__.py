@@ -6,12 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    Debouncer,
-    UpdateFailed,
-)
+from homeassistant.helpers import aiohttp_client, debounce
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config_flow import create_account_from_config
 from .const import (
@@ -54,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="EyeOnWater",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
-        request_refresh_debouncer=Debouncer(
+        request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_COOLDOWN, immediate=True
         ),
     )
