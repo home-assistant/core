@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -126,7 +126,7 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
                     friendly_name="HomeW Current Temperature",
                     unique_id="00:00:00:00:00:00_1_16_19",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=TEMP_CELSIUS,
+                    unit_of_measurement=UnitOfTemperature.CELSIUS,
                     state="21.8",
                 ),
                 EntityTestInfo(
