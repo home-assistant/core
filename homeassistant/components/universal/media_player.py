@@ -87,6 +87,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
     TrackTemplate,
+    TrackTemplateResult,
     async_track_state_change_event,
     async_track_template_result,
 )
@@ -192,7 +193,10 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def _async_on_template_update(event, updates):
+        def _async_on_template_update(
+            event: EventType[EventStateChangedData] | None,
+            updates: list[TrackTemplateResult],
+        ) -> None:
             """Update state when template state changes."""
             for data in updates:
                 template = data.template

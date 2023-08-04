@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 from requests.exceptions import ConnectTimeout
 
-from homeassistant import data_entry_flow
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import CONF_DATA, patch_async_setup_entry
 
@@ -22,7 +22,7 @@ async def test_full_user_flow_implementation(hass: HomeAssistant, connection) ->
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch_async_setup_entry():
@@ -30,7 +30,7 @@ async def test_full_user_flow_implementation(hass: HomeAssistant, connection) ->
             result["flow_id"], user_input=CONF_DATA
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "DREMEL 3D45"
     assert result["data"] == CONF_DATA
 
@@ -42,7 +42,7 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -53,7 +53,7 @@ async def test_cannot_connect(hass: HomeAssistant, connection) -> None:
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -62,7 +62,7 @@ async def test_cannot_connect(hass: HomeAssistant, connection) -> None:
             result["flow_id"], user_input=CONF_DATA
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA
 
 
@@ -73,7 +73,7 @@ async def test_unknown_error(hass: HomeAssistant, connection) -> None:
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
@@ -82,6 +82,6 @@ async def test_unknown_error(hass: HomeAssistant, connection) -> None:
             result["flow_id"], user_input=CONF_DATA
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "DREMEL 3D45"
     assert result["data"] == CONF_DATA

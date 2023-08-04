@@ -179,7 +179,7 @@ class Plant(Entity):
         self._brightness_history = DailyHistory(self._conf_check_days)
 
     @callback
-    def _state_changed_event(self, event: EventType[EventStateChangedData]):
+    def _state_changed_event(self, event: EventType[EventStateChangedData]) -> None:
         """Sensor state change event."""
         self.state_changed(event.data["entity_id"], event.data["new_state"])
 

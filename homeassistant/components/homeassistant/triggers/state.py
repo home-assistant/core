@@ -129,7 +129,7 @@ async def async_attach_trigger(
     _variables = trigger_info["variables"] or {}
 
     @callback
-    def state_automation_listener(event: EventType[EventStateChangedData]):
+    def state_automation_listener(event: EventType[EventStateChangedData]) -> None:
         """Listen for state changes and calls action."""
         entity = event.data["entity_id"]
         from_s = event.data["old_state"]

@@ -3,4 +3,3 @@ from __future__ import annotations
 
 DOMAIN = "discovergy"
 MANUFACTURER = "Discovergy"
-APP_NAME = "homeassistant"
