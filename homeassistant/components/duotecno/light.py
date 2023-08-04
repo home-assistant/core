@@ -36,7 +36,7 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return true if the switch is on."""
+        """Return true if the light is on."""
         return self._unit.is_on()
 
     @property
