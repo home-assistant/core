@@ -76,7 +76,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:1.7.0*255",
-        name="Positive active instantaneous power",
+        translation_key="positive_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
