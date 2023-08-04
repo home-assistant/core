@@ -1,10 +1,10 @@
-""" EyeOnWater API integration."""
+"""EyeOnWater API integration."""
 from __future__ import annotations
 
 import datetime
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 import urllib.parse
 
 from aiohttp import ClientSession
@@ -37,7 +37,7 @@ class EyeOnWaterException(Exception):
 
 class EyeOnWaterAuthError(EyeOnWaterException):
     """Exception for authentication failures.
-    
+
     Either wrong username or wrong password.
     """
 
@@ -66,6 +66,7 @@ def extract_json(line, prefix):
 
 class Meter:
     """Class represents meter object."""
+
     meter_prefix = "var new_barInfo = "
     info_prefix = "AQ.Views.MeterPicker.meters = "
 
@@ -144,6 +145,7 @@ class Meter:
 
 class Account:
     """Class represents account object."""
+
     def __init__(
         self,
         eow_hostname: str,
@@ -187,6 +189,7 @@ class Account:
 
 class Client:
     """Class represents client object."""
+
     def __init__(
         self,
         websession: ClientSession,
@@ -233,6 +236,7 @@ class Client:
         return data
 
     async def authenticate(self):
+        """Authenticate the client."""
         if not self.token_valid:
             _LOGGER.debug("Requesting login token")
 
@@ -260,6 +264,7 @@ class Client:
 
     @property
     def token_valid(self):
+        """Validate the token."""
         if self.authenticated or (datetime.datetime.now() < self.token_expiration):
             return True
 
