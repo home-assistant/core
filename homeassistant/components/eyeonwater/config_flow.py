@@ -1,7 +1,7 @@
 """Config flow for EyeOnWater integration."""
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp import ClientError
 from .eow import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
