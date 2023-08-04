@@ -7,6 +7,8 @@ from wyoming.info import (
     TtsProgram,
     TtsVoice,
     TtsVoiceSpeaker,
+    WakeModel,
+    WakeProgram,
 )
 
 TEST_ATTR = Attribution(name="Test", url="http://www.test.com")
@@ -44,6 +46,25 @@ TTS_INFO = Info(
                     attribution=TEST_ATTR,
                     languages=["en-US"],
                     speakers=[TtsVoiceSpeaker(name="Test Speaker")],
+                )
+            ],
+        )
+    ]
+)
+WAKE_WORD_INFO = Info(
+    wake=[
+        WakeProgram(
+            name="Test Wake Word",
+            description="Test Wake Word",
+            installed=True,
+            attribution=TEST_ATTR,
+            models=[
+                WakeModel(
+                    name="Test Model",
+                    description="Test Model",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
                 )
             ],
         )

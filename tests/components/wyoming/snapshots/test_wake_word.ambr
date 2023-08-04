@@ -1,0 +1,8 @@
+# serializer version: 1
+# name: test_streaming_audio
+  dict({
+    'queued_audio': None,
+    'timestamp': 1000,
+    'ww_id': 'Test Model',
+  })
+# ---
