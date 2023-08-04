@@ -58,7 +58,7 @@ class EyeOnWaterAPIError(EyeOnWaterException):
 
 
 def extract_json(line, prefix):
-    """Extract JSON responce."""
+    """Extract JSON response."""
     line = line[line.find(prefix) + len(prefix) :]
     line = line[: line.find(";")]
     return json.loads(line)
@@ -159,7 +159,7 @@ class Account:
         self.metric_measurement_system = metric_measurement_system
 
     async def fetch_meters(self, client: Client):
-        """Lists all meters associated with the account."""
+        """List all meters associated with the account."""
         path = DASHBOARD_ENDPOINT + urllib.parse.quote(self.username)
         data = await client.request(path=path, method="get")
 
