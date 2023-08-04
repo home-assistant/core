@@ -1,11 +1,10 @@
 """Config flow for EyeOnWater integration."""
 import asyncio
+import contextlib
 import logging
 from typing import Any
 
 from aiohttp import ClientError
-from .eow import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
-
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -14,6 +13,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import selector
 
 from .const import DOMAIN
+from .eow import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 
 CONF_MEASUREMENT_SYSTEM = "measurement_system"
 CONF_MEASUREMENT_SYSTEM_METRIC = "metric"
@@ -38,7 +38,7 @@ DATA_SCHEMA = vol.Schema(
                 "select": {
                     "options": [
                         CONF_MEASUREMENT_SYSTEM_METRIC,
-                        CONF_MEASUREMENT_SYSTEM_IMPERIAL
+                        CONF_MEASUREMENT_SYSTEM_IMPERIAL,
                     ]
                 }
             }
@@ -75,10 +75,8 @@ def create_account_from_config(data: Dict[str, Any]) -> Account:
         pass
 
     # EOW hostname
-    try:
+    with contextlib.suppress(KeyError):
         eow_hostname = data[CONF_EOW_HOSTNAME]
-    except KeyError:
-        pass
 
     username = data[CONF_USERNAME]
     password = data[CONF_PASSWORD]
@@ -87,7 +85,7 @@ def create_account_from_config(data: Dict[str, Any]) -> Account:
         eow_hostname=eow_hostname,
         username=username,
         password=password,
-        metric_measurement_system=metric_measurement_system
+        metric_measurement_system=metric_measurement_system,
     )
     return account
 
