@@ -50,7 +50,8 @@ class ElectricKiwiSelectHOPEntity(
     ) -> None:
         """Initialise the HOP selection entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator._ek_api.customer_number}_{coordinator._ek_api.connection_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator._ek_api.customer_number}\
+            _{coordinator._ek_api.connection_id}_{description.key}"
         self.entity_description = description
         self.values_dict = coordinator.get_hop_options()
         self._attr_options = list(self.values_dict)
@@ -58,7 +59,8 @@ class ElectricKiwiSelectHOPEntity(
     @property
     def current_option(self) -> str | None:
         """Return the currently selected option."""
-        return f"{self.coordinator.data.start.start_time} - {self.coordinator.data.end.end_time}"
+        return f"{self.coordinator.data.start.start_time}\
+            - {self.coordinator.data.end.end_time}"
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
