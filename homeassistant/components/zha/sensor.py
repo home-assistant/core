@@ -968,6 +968,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Device run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
@@ -980,6 +981,7 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Filter run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 class AqaraFeedingSource(types.enum8):
