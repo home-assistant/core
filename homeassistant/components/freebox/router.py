@@ -161,10 +161,13 @@ class FreeboxRouter:
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
         # None at first request
-        fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
-
-        for fbx_raid in fbx_raids:
-            self.raids[fbx_raid["id"]] = fbx_raid
+        try:
+            fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
+        except HttpRequestError:
+            _LOGGER.warning("Unable to enumerate raid disks")
+        else:
+            for fbx_raid in fbx_raids:
+                self.raids[fbx_raid["id"]] = fbx_raid
 
     async def update_home_devices(self) -> None:
         """Update Home devices (alarm, light, sensor, switch, remote ...)."""
