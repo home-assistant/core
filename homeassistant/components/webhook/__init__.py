@@ -14,7 +14,6 @@ from aiohttp.web import Request, Response
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.cloud import DOMAIN as CLOUD_DOMAIN
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -146,7 +145,7 @@ async def async_handle_webhook(
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     if webhook["local_only"] in (True, None) and not isinstance(request, MockRequest):
-        if has_cloud := CLOUD_DOMAIN in hass.config.components:
+        if has_cloud := "cloud" in hass.config.components:
             from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
 
         is_local = True
