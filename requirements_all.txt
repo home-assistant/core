@@ -360,7 +360,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==50
+aiounifi==51
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -632,7 +632,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.87.5
+dbus-fast==1.90.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -988,10 +988,10 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230801.0
+home-assistant-frontend==20230802.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.7.25
+home-assistant-intents==2023.8.2
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1368,7 +1368,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.18
+opower==0.0.20
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1572,7 +1572,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.13.2
+pyatv==0.13.3
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1650,7 +1650,7 @@ pydrawise==2023.7.1
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.8.0
+pyduotecno==2023.8.3
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -1842,7 +1842,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.3.1
+pymodbus==3.4.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2137,7 +2137,7 @@ python-mystrom==2.2.0
 python-opendata-transport==0.3.0
 
 # homeassistant.components.opensky
-python-opensky==0.0.10
+python-opensky==0.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
@@ -2153,7 +2153,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.30.2
+python-roborock==0.31.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2752,13 +2752,13 @@ zamg==0.2.4
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.71.4
+zeroconf==0.74.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.101
+zha-quirks==0.0.102
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9
@@ -2779,7 +2779,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.4
 
 # homeassistant.components.zha
-zigpy==0.56.3
+zigpy==0.56.4
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
