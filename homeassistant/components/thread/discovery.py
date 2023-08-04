@@ -57,7 +57,6 @@ def async_discovery_data_from_service(
         except UnicodeDecodeError:
             return None
 
-    service_properties = service.properties
     # Service properties are always bytes if they are set from the network.
     # For legacy backwards compatibility zeroconf allows properties to be set
     # as strings but we never do that so we can safely cast here.
