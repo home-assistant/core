@@ -45,7 +45,7 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
         return int((self._unit.get_dimmer_state() * 255) / 100)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Instruct the switch to turn on."""
+        """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
             # set to a value
             val = kwargs[ATTR_BRIGHTNESS]
