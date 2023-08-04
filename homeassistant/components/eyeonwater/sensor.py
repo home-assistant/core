@@ -1,5 +1,5 @@
 """Support for EyeOnWater sensors."""
-from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity, SensorStateClass
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -34,7 +34,7 @@ class EyeOnWaterSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
 
     _attr_has_entity_name = True
     _attr_device_class = DEVICE_CLASS_WATER
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the sensor."""
