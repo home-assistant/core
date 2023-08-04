@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Trackables
+from . import Trackables, TractiveClient
 from .const import (
     CLIENT,
     DOMAIN,
@@ -28,7 +28,7 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry.entry_id][CLIENT]
     trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
-    entities = [TractiveDeviceTracker(client.user_id, item) for item in trackables]
+    entities = [TractiveDeviceTracker(client, item) for item in trackables]
 
     async_add_entities(entities)
 
@@ -39,9 +39,9 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     _attr_icon = "mdi:paw"
     _attr_translation_key = "tracker"
 
-    def __init__(self, user_id: str, item: Trackables) -> None:
+    def __init__(self, client: TractiveClient, item: Trackables) -> None:
         """Initialize tracker entity."""
-        super().__init__(user_id, item.trackable, item.tracker_details)
+        super().__init__(client.user_id, item.trackable, item.tracker_details)
 
         self._battery_level: int | None = item.hw_info.get("battery_level")
         self._latitude: float = item.pos_report["latlong"][0]
@@ -49,6 +49,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._accuracy: int = item.pos_report["pos_uncertainty"]
         self._source_type: str = item.pos_report["sensor_used"]
         self._attr_unique_id = item.trackable["_id"]
+        self._client = client
 
     @property
     def source_type(self) -> SourceType:
@@ -96,6 +97,8 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
+        if not self._client.subscribed:
+            self._client.subscribe()
 
         self.async_on_remove(
             async_dispatcher_connect(

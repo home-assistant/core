@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Trackables
+from . import Trackables, TractiveClient
 from .const import (
     ATTR_BUZZER,
     ATTR_LED,
@@ -77,7 +77,7 @@ async def async_setup_entry(
     trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
     entities = [
-        TractiveSwitch(client.user_id, item, description)
+        TractiveSwitch(client, item, description)
         for description in SWITCH_TYPES
         for item in trackables
     ]
@@ -92,18 +92,19 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     def __init__(
         self,
-        user_id: str,
+        client: TractiveClient,
         item: Trackables,
         description: TractiveSwitchEntityDescription,
     ) -> None:
         """Initialize switch entity."""
-        super().__init__(user_id, item.trackable, item.tracker_details)
+        super().__init__(client.user_id, item.trackable, item.tracker_details)
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self._attr_available = False
         self._tracker = item.tracker
         self._method = getattr(self, description.method)
         self.entity_description = description
+        self._client = client
 
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
@@ -114,6 +115,8 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
+        if not self._client.subscribed:
+            self._client.subscribe()
 
         self.async_on_remove(
             async_dispatcher_connect(
