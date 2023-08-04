@@ -2125,6 +2125,9 @@ python-opendata-transport==0.3.0
 # homeassistant.components.opensky
 python-opensky==0.0.10
 
+# homeassistant.components.osc
+python-osc==1.8.1
+
 # homeassistant.components.otbr
 # homeassistant.components.thread
 python-otbr-api==2.2.0
