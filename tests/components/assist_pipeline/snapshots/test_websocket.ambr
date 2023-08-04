@@ -181,14 +181,14 @@
   dict({
     'wake_word_output': dict({
       'queued_audio': None,
-      'timestamp': 2000,
+      'timestamp': 1000,
       'ww_id': 'test_ww',
     }),
   })
 # ---
 # name: test_audio_pipeline_with_wake_word.3
   dict({
-    'engine': 'stt.mock_stt',
+    'engine': 'test',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,
