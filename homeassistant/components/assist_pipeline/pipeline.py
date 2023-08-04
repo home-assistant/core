@@ -832,9 +832,10 @@ class PipelineInput:
                 )
                 if detect_result is None:
                     # No wake word. Abort the rest of the pipeline.
-                    current_stage = None
-                else:
-                    current_stage = PipelineStage.STT
+                    self.run.end()
+                    return
+
+                current_stage = PipelineStage.STT
 
             # speech-to-text
             intent_input = self.intent_input
@@ -853,7 +854,6 @@ class PipelineInput:
                             yield chunk
 
                     stt_stream = cast(AsyncIterable[bytes], buffered_stream())
-
                 else:
                     stt_stream = self.stt_stream
 

@@ -50,7 +50,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-stt"
+        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
 
     @property
     def supported_wake_words(self) -> list[wake_word.WakeWord]:
@@ -91,6 +91,35 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                             pending, return_when=asyncio.FIRST_COMPLETED
                         )
 
+                        if wake_task in done:
+                            event = wake_task.result()
+                            if event is None:
+                                _LOGGER.debug("Connection lost")
+                                break
+
+                            if Detection.is_type(event.type):
+                                # Successful detection
+                                detection = Detection.from_event(event)
+                                _LOGGER.info(detection)
+
+                                # Retrieve queued audio
+                                queued_audio: list[tuple[bytes, int]] | None = None
+                                if audio_task in pending:
+                                    # Save queued audio
+                                    await audio_task
+                                    pending.remove(audio_task)
+                                    queued_audio = [audio_task.result()]
+
+                                return wake_word.DetectionResult(
+                                    ww_id=detection.name,
+                                    timestamp=detection.timestamp,
+                                    queued_audio=queued_audio,
+                                )
+
+                            # Next event
+                            wake_task = asyncio.create_task(client.read_event())
+                            pending.add(wake_task)
+
                         if audio_task in done:
                             # Forward audio to wake service
                             chunk_info = audio_task.result()
@@ -110,24 +139,6 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                             # Next chunk
                             audio_task = asyncio.create_task(next_chunk())
                             pending.add(audio_task)
-
-                        if wake_task in done:
-                            event = wake_task.result()
-                            if event is None:
-                                _LOGGER.debug("Connection lost")
-                                break
-
-                            if Detection.is_type(event.type):
-                                # Successful detection
-                                detection = Detection.from_event(event)
-                                _LOGGER.info(detection)
-                                return wake_word.DetectionResult(
-                                    ww_id=detection.name, timestamp=detection.timestamp
-                                )
-
-                            # Next event
-                            wake_task = asyncio.create_task(client.read_event())
-                            pending.add(wake_task)
                 finally:
                     # Clean up
                     if audio_task in pending:

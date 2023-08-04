@@ -19,3 +19,6 @@ class DetectionResult:
 
     timestamp: int | None
     """Timestamp of audio chunk with detected wake word"""
+
+    queued_audio: list[tuple[bytes, int]] | None = None
+    """Audio chunks that were queued when wake word was detected."""

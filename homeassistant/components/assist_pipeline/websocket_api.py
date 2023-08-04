@@ -26,12 +26,12 @@ from .pipeline import (
     PipelineInput,
     PipelineRun,
     PipelineStage,
-    WakeSettings,
+    WakeWordSettings,
     async_get_pipeline,
 )
 
 DEFAULT_TIMEOUT = 30
-DEFAULT_WAKE_TIMEOUT = 3
+DEFAULT_WAKE_WORD_TIMEOUT = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         cv.key_value_schemas(
             "start_stage",
             {
-                PipelineStage.WAKE: vol.Schema(
+                PipelineStage.WAKE_WORD: vol.Schema(
                     {
                         vol.Required("input"): {
                             vol.Required("sample_rate"): int,
@@ -112,7 +112,7 @@ async def websocket_run(
     end_stage = PipelineStage(msg["end_stage"])
     handler_id: int | None = None
     unregister_handler: Callable[[], None] | None = None
-    wake_settings: WakeSettings | None = None
+    wake_word_settings: WakeWordSettings | None = None
 
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
@@ -120,14 +120,14 @@ async def websocket_run(
         "device_id": msg.get("device_id"),
     }
 
-    if start_stage in (PipelineStage.WAKE, PipelineStage.STT):
+    if start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
         # Audio pipeline that will receive audio as binary websocket messages
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
 
-        if start_stage == PipelineStage.WAKE:
-            wake_settings = WakeSettings(
-                timeout=msg["input"].get("timeout", DEFAULT_WAKE_TIMEOUT)
+        if start_stage == PipelineStage.WAKE_WORD:
+            wake_word_settings = WakeWordSettings(
+                timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT)
             )
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
@@ -180,7 +180,7 @@ async def websocket_run(
             "stt_binary_handler_id": handler_id,
             "timeout": timeout,
         },
-        wake_settings=wake_settings,
+        wake_word_settings=wake_word_settings,
     )
 
     pipeline_input = PipelineInput(**input_args)
