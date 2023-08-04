@@ -2,18 +2,37 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 
 import async_timeout
 from iammeter.client import IamMeter
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    PERCENTAGE,
+    Platform,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import debounce, update_coordinator
+from homeassistant.helpers import debounce, entity_registry as er, update_coordinator
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,9 +46,6 @@ from .const import (
     DEVICE_3080,
     DEVICE_3080T,
     DOMAIN,
-    SENSOR_TYPES_3080,
-    SENSOR_TYPES_3080T,
-    IammeterSensorEntityDescription,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +63,51 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 SCAN_INTERVAL = timedelta(seconds=30)
 PLATFORM_TIMEOUT = 8
+
+
+def _migrate_to_new_unique_id(
+    hass: HomeAssistant, model=DEVICE_3080, serial_number: str = ""
+) -> None:
+    """Migrate old unique ids to new unique ids."""
+    ent_reg = er.async_get(hass)
+    name_list = [
+        "Voltage",
+        "Current",
+        "Power",
+        "ImportEnergy",
+        "ExportGrid",
+        "Frequency",
+        "PF",
+    ]
+    phase_list = ["A", "B", "C", "NET"]
+    id_phase_range = 1 if model == DEVICE_3080 else 4
+    id_name_range = 5 if model == DEVICE_3080 else 7
+    for row in range(0, id_phase_range):
+        for idx in range(0, id_name_range):
+            old_unique_id = f"{serial_number}-{row}-{idx}"
+            new_unique_id = (
+                f"{serial_number}_{name_list[idx]}"
+                if model == DEVICE_3080
+                else f"{serial_number}_{name_list[idx]}_{phase_list[row]}"
+            )
+            entity_id = ent_reg.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, old_unique_id
+            )
+            if entity_id is not None:
+                try:
+                    ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+                except ValueError:
+                    _LOGGER.warning(
+                        "Skip migration of id [%s] to [%s] because it already exists",
+                        old_unique_id,
+                        new_unique_id,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Migrating unique_id from [%s] to [%s]",
+                        old_unique_id,
+                        new_unique_id,
+                    )
 
 
 async def async_setup_platform(
@@ -85,12 +146,15 @@ async def async_setup_platform(
         ),
     )
     await coordinator.async_refresh()
-    if coordinator.data["Model"] == DEVICE_3080:
+    model = coordinator.data["Model"]
+    serial_number = coordinator.data["sn"]
+    _migrate_to_new_unique_id(hass, model, serial_number)
+    if model == DEVICE_3080:
         async_add_entities(
             IammeterSensor(coordinator, description)
             for description in SENSOR_TYPES_3080
         )
-    if coordinator.data["Model"] == DEVICE_3080T:
+    elif model == DEVICE_3080T:
         async_add_entities(
             IammeterSensor(coordinator, description)
             for description in SENSOR_TYPES_3080T
@@ -101,6 +165,8 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: IammeterSensorEntityDescription
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -110,7 +176,6 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_unique_id = f"{coordinator.data['sn']}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data["sn"])},
@@ -125,3 +190,272 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         if self.entity_description.value:
             return self.entity_description.value(raw_attr)
         return raw_attr
+
+
+@dataclass
+class IammeterSensorEntityDescription(SensorEntityDescription):
+    """Describes Iammeter sensor entity."""
+
+    value: Callable[[float | int], float] | Callable[[datetime], datetime] | None = None
+
+
+SENSOR_TYPES_3080: tuple[IammeterSensorEntityDescription, ...] = (
+    IammeterSensorEntityDescription(
+        key="Voltage",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Current",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Power",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    IammeterSensorEntityDescription(
+        key="ImportEnergy",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="ExportGrid",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+)
+SENSOR_TYPES_3080T: tuple[IammeterSensorEntityDescription, ...] = (
+    IammeterSensorEntityDescription(
+        key="Voltage_A",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Current_A",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Power_A",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    IammeterSensorEntityDescription(
+        key="ImportEnergy_A",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="ExportGrid_A",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Frequency_A",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="PF_A",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        value=lambda value: value * 100,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Voltage_B",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Current_B",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Power_B",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    IammeterSensorEntityDescription(
+        key="ImportEnergy_B",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="ExportGrid_B",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Frequency_B",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="PF_B",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        value=lambda value: value * 100,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Voltage_C",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Current_C",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Power_C",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    IammeterSensorEntityDescription(
+        key="ImportEnergy_C",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="ExportGrid_C",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Frequency_C",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="PF_C",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        value=lambda value: value * 100,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Voltage_Net",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Power_Net",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="ImportEnergy_Net",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="ExportGrid_Net",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="Frequency_Net",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    IammeterSensorEntityDescription(
+        key="PF_Net",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        value=lambda value: value * 100,
+        entity_registry_enabled_default=False,
+    ),
+)
