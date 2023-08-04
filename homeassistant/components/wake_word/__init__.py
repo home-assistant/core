@@ -4,13 +4,16 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import AsyncIterable
 import logging
+from typing import final
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .models import DetectionResult, WakeWord
@@ -39,7 +42,7 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
 def async_get_wake_word_detection_entity(
     hass: HomeAssistant, entity_id: str
 ) -> WakeWordDetectionEntity | None:
-    """Return wwd entity."""
+    """Return wake word entity."""
     component: EntityComponent = hass.data[DOMAIN]
 
     return component.get_entity(entity_id)
@@ -66,9 +69,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class WakeWordDetectionEntity(RestoreEntity):
-    """Represent a single WWD provider."""
+    """Represent a single wake word provider."""
 
     _attr_should_poll = False
+    __last_processed: str | None = None
+
+    @property
+    @final
+    def state(self) -> str | None:
+        """Return the state of the entity."""
+        if self.__last_processed is None:
+            return None
+        return self.__last_processed
 
     @property
     @abstractmethod
@@ -76,6 +88,14 @@ class WakeWordDetectionEntity(RestoreEntity):
         """Return a list of supported wake words."""
 
     @abstractmethod
+    async def _async_process_audio_stream(
+        self, stream: AsyncIterable[tuple[bytes, int]]
+    ) -> DetectionResult | None:
+        """Try to detect wake word(s) in an audio stream with timestamps.
+
+        Audio must be 16Khz sample rate with 16-bit mono PCM samples.
+        """
+
     async def async_process_audio_stream(
         self, stream: AsyncIterable[tuple[bytes, int]]
     ) -> DetectionResult | None:
@@ -83,3 +103,17 @@ class WakeWordDetectionEntity(RestoreEntity):
 
         Audio must be 16Khz sample rate with 16-bit mono PCM samples.
         """
+        self.__last_processed = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        return await self._async_process_audio_stream(stream)
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        state = await self.async_get_last_state()
+        if (
+            state is not None
+            and state.state is not None
+            and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        ):
+            self.__last_processed = state.state

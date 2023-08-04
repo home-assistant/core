@@ -57,7 +57,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         """Return a list of supported wake words."""
         return self._supported_wake_words
 
-    async def async_process_audio_stream(
+    async def _async_process_audio_stream(
         self, stream: AsyncIterable[tuple[bytes, int]]
     ) -> wake_word.DetectionResult | None:
         """Try to detect one or more wake words in an audio stream.

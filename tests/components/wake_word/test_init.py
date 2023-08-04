@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 
@@ -18,6 +18,7 @@ from tests.common import (
     mock_config_flow,
     mock_integration,
     mock_platform,
+    mock_restore_cache,
 )
 
 TEST_DOMAIN = "test"
@@ -33,22 +34,17 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     url_path = "wake_word.test"
     _attr_name = "test"
 
-    def __init__(self, detect_timestamp: int) -> None:
-        """Init test provider."""
-        super().__init__()
-        self._detect_timestamp = detect_timestamp
-
     @property
     def supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         return [wake_word.WakeWord(ww_id="test_ww", name="Test Wake Word")]
 
-    async def async_process_audio_stream(
+    async def _async_process_audio_stream(
         self, stream: AsyncIterable[tuple[bytes, int]]
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         async for _chunk, timestamp in stream:
-            if timestamp >= self._detect_timestamp:
+            if timestamp >= 2000:
                 return wake_word.DetectionResult(
                     ww_id=self.supported_wake_words[0].ww_id, timestamp=timestamp
                 )
@@ -60,7 +56,7 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
 @pytest.fixture
 def mock_provider_entity() -> MockProviderEntity:
     """Test provider entity fixture."""
-    return MockProviderEntity(detect_timestamp=2000)
+    return MockProviderEntity()
 
 
 class WakeWordFlow(ConfigFlow):
@@ -80,14 +76,10 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 async def setup_fixture(
     hass: HomeAssistant,
     tmp_path: Path,
-    request: pytest.FixtureRequest,
 ) -> MockProviderEntity:
     """Set up the test environment."""
-    if request.param == "mock_config_entry_setup":
-        provider = MockProviderEntity()
-        await mock_config_entry_setup(hass, tmp_path, provider)
-    else:
-        raise RuntimeError("Invalid setup fixture")
+    provider = MockProviderEntity()
+    await mock_config_entry_setup(hass, tmp_path, provider)
 
     return provider
 
@@ -155,7 +147,7 @@ async def test_config_entry_unload(
 
 
 async def test_detected_entity(
-    hass: HomeAssistant, mock_provider_entity: MockProviderEntity
+    hass: HomeAssistant, tmp_path: Path, setup: MockProviderEntity
 ) -> None:
     """Test successful detection through entity."""
 
@@ -166,14 +158,12 @@ async def test_detected_entity(
             timestamp += _MS_PER_CHUNK
 
     # Need 2 seconds to trigger
-    result = await mock_provider_entity.async_process_audio_stream(
-        three_second_stream()
-    )
+    result = await setup.async_process_audio_stream(three_second_stream())
     assert result == wake_word.DetectionResult("test_ww", 2048)
 
 
 async def test_not_detected_entity(
-    hass: HomeAssistant, mock_provider_entity: MockProviderEntity
+    hass: HomeAssistant, setup: MockProviderEntity
 ) -> None:
     """Test unsuccessful detection through entity."""
 
@@ -184,7 +174,7 @@ async def test_not_detected_entity(
             timestamp += _MS_PER_CHUNK
 
     # Need 2 seconds to trigger
-    result = await mock_provider_entity.async_process_audio_stream(one_second_stream())
+    result = await setup.async_process_audio_stream(one_second_stream())
     assert result is None
 
 
@@ -215,3 +205,22 @@ async def test_get_engine_entity(
         wake_word.async_get_wake_word_detection_entity(hass, f"{wake_word.DOMAIN}.test")
         is mock_provider_entity
     )
+
+
+async def test_restore_state(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_entity: MockProviderEntity,
+) -> None:
+    """Test we restore state in the integration."""
+    entity_id = f"{wake_word.DOMAIN}.{TEST_DOMAIN}"
+    timestamp = "2023-01-01T23:59:59+00:00"
+    mock_restore_cache(hass, (State(entity_id, timestamp),))
+
+    config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == timestamp
