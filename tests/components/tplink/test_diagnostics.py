@@ -20,7 +20,7 @@ from tests.typing import ClientSessionGenerator
             _mocked_bulb(),
             "tplink-diagnostics-data-bulb-kl130.json",
             ["mic_mac", "deviceId", "oemId", "hwId", "alias"],
-            None,
+            "AA:BB:CC",
         ),
         (
             _mocked_plug(),
