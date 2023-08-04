@@ -1,9 +1,9 @@
 {
   "domain": "eyeonwater",
   "name": "EyeOnWater",
+  "codeowners": ["@disforw"],
   "config_flow": true,
-  "documentation": "https://github.com/kdeyev/eyeonwater",
-  "requirements": [],
-  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/eyeonwater",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
 }
