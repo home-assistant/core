@@ -21,6 +21,9 @@ def setup_headers(app: Application, use_x_frame_options: bool) -> None:
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Content-Type-Options"] = "nosniff"
 
+        # Set an empty server header, to prevent aiohttp of setting one.
+        response.headers["Server"] = ""
+
         if use_x_frame_options:
             response.headers["X-Frame-Options"] = "SAMEORIGIN"
 

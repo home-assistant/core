@@ -25,6 +25,7 @@ async def test_headers_added(aiohttp_client: ClientSessionGenerator) -> None:
 
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Referrer-Policy"] == "no-referrer"
+    assert resp.headers["Server"] == ""
     assert resp.headers["X-Content-Type-Options"] == "nosniff"
     assert resp.headers["X-Frame-Options"] == "SAMEORIGIN"
 
