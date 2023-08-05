@@ -515,6 +515,9 @@ class _ScriptRun:
         if not isinstance(exception, exceptions.HomeAssistantError):
             raise exception
 
+        # Store the error as variable for future steps.
+        self._variables["last_error"] = f"Error: {exception}"
+
     def _log_exception(self, exception):
         action_type = cv.determine_script_action(self._action)
 

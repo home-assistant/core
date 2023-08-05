@@ -5055,9 +5055,15 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
                         },
                         "running_script": False,
                     },
+                    "changed_variables": {"last_error": "Error: It is not working!"},
                 }
             ],
-            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+            "2": [
+                {
+                    "result": {"event": "test_event", "event_data": {}},
+                    "variables": {"last_error": "Error: It is not working!"},
+                }
+            ],
             "3": [
                 {
                     "error_type": HomeAssistantError,
