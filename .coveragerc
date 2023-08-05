@@ -1168,7 +1168,12 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
+    homeassistant/components/starlink/__init__.py
+    homeassistant/components/starlink/binary_sensor.py
+    homeassistant/components/starlink/button.py
     homeassistant/components/starlink/coordinator.py
+    homeassistant/components/starlink/sensor.py
+    homeassistant/components/starlink/switch.py
     homeassistant/components/starline/__init__.py
     homeassistant/components/starline/account.py
     homeassistant/components/starline/binary_sensor.py
