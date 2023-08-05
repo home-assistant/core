@@ -7,14 +7,17 @@ from typing import Any
 
 from pyenphase import (
     Envoy,
-    EnvoyAuthenticationError,
-    EnvoyAuthenticationRequired,
     EnvoyError,
+    EnvoyTokenAuth,
 )
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import CONF_TOKEN, INVALID_AUTH_ERRORS
 
 SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
@@ -25,24 +28,18 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     envoy_serial_number: str
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        envoy: Envoy,
-        name: str,
-        username: str,
-        password: str,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, envoy: Envoy, entry: ConfigEntry) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
-        self.username = username
-        self.password = password
-        self.name = name
+        entry_data = entry.data
+        self.entry = entry
+        self.username = entry_data[CONF_USERNAME]
+        self.password = entry_data[CONF_PASSWORD]
         self._setup_complete = False
         super().__init__(
             hass,
             _LOGGER,
-            name=name,
+            name=entry_data[CONF_NAME],
             update_interval=SCAN_INTERVAL,
             always_update=False,
         )
@@ -53,7 +50,31 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await envoy.setup()
         assert envoy.serial_number is not None
         self.envoy_serial_number = envoy.serial_number
+
+        if token := self.entry.data.get(CONF_TOKEN):
+            try:
+                await envoy.authenticate(token=token)
+            except INVALID_AUTH_ERRORS:
+                # token likely expired or firmware changed
+                pass
+            else:
+                self._setup_complete = True
+                return
+
         await envoy.authenticate(username=self.username, password=self.password)
+        assert envoy.auth is not None
+
+        if isinstance(envoy.auth, EnvoyTokenAuth):
+            # update token in config entry so we can
+            # startup without hitting the Cloud API
+            # as long as the token is valid
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                data={
+                    **self.entry.data,
+                    CONF_TOKEN: envoy.auth.token,
+                },
+            )
         self._setup_complete = True
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -64,7 +85,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if not self._setup_complete:
                     await self._async_setup_and_authenticate()
                 return (await envoy.update()).raw
-            except (EnvoyAuthenticationError, EnvoyAuthenticationRequired) as err:
+            except INVALID_AUTH_ERRORS as err:
                 if self._setup_complete and tries == 0:
                     # token likely expired or firmware changed, try to re-authenticate
                     self._setup_complete = False
