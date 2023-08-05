@@ -47,7 +47,7 @@ async def async_create_import_issue(
         translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "Melcloud",
+            "integration_title": "MELCloud",
         },
     )
 
