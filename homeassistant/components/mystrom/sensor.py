@@ -30,7 +30,7 @@ from .const import (
 class MyStromSwitchSensorEntityDescription(SensorEntityDescription):
     """Class describing mystrom switch sensor entities."""
 
-    value_fn: Callable[[MyStromSwitch], float] = lambda device: 0
+    value_fn: Callable[[MyStromSwitch], float | None] = lambda _: None
 
 
 SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
@@ -76,7 +76,7 @@ class MyStromSwitchSensor(SensorEntity):
     def __init__(
         self,
         device: MyStromSwitch,
-        name,
+        name: str,
         description: MyStromSwitchSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -91,7 +91,7 @@ class MyStromSwitchSensor(SensorEntity):
             sw_version=self.device.firmware,
         )
 
-    async def async_update(self) -> None:
-        """Get the latest data from the device and update the data."""
-
-        self._attr_native_value = self.entity_description.value_fn(self.device)
+    @property
+    def native_value(self) -> float | None:
+        """Return the value of the sensor"""
+        return self.entity_description.value_fn(self.device)
