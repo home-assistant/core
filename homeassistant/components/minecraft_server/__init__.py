@@ -84,6 +84,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new_unique_id = config_entry.entry_id
 
         # Migrate config entry.
+        _LOGGER.debug(
+            "Migrating config entry unique ID from %s to %s",
+            old_unique_id,
+            new_unique_id,
+        )
         config_entry.unique_id = new_unique_id
         config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)
