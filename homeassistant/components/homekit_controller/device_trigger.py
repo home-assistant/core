@@ -80,11 +80,11 @@ class TriggerSource:
             self._iid_trigger_keys.setdefault(iid, set()).add(trigger_key)
             await connection.add_watchable_characteristics([(aid, iid)])
 
-    def fire(self, iid: int, value: dict[str, Any]) -> None:
+    def fire(self, iid: int, ev: dict[str, Any]) -> None:
         """Process events that have been received from a HomeKit accessory."""
         for trigger_key in self._iid_trigger_keys.get(iid, set()):
             for event_handler in self._callbacks.get(trigger_key, []):
-                event_handler(value)
+                event_handler(ev)
 
     def async_get_triggers(self) -> Generator[tuple[str, str], None, None]:
         """List device triggers for HomeKit devices."""
@@ -99,20 +99,23 @@ class TriggerSource:
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
         trigger_data = trigger_info["trigger_data"]
-        trigger_key = (config[CONF_TYPE], config[CONF_SUBTYPE])
+        type_: str = config[CONF_TYPE]
+        sub_type: str = config[CONF_SUBTYPE]
+        trigger_key = (type_, sub_type)
         job = HassJob(action)
+        trigger_callbacks = self._callbacks.setdefault(trigger_key, [])
+        hass = self._hass
 
         @callback
-        def event_handler(char: dict[str, Any]) -> None:
-            if config[CONF_SUBTYPE] != HK_TO_HA_INPUT_EVENT_VALUES[char["value"]]:
+        def event_handler(ev: dict[str, Any]) -> None:
+            if sub_type != HK_TO_HA_INPUT_EVENT_VALUES[ev["value"]]:
                 return
-            self._hass.async_run_hass_job(job, {"trigger": {**trigger_data, **config}})
+            hass.async_run_hass_job(job, {"trigger": {**trigger_data, **config}})
 
-        self._callbacks.setdefault(trigger_key, []).append(event_handler)
+        trigger_callbacks.append(event_handler)
 
         def async_remove_handler():
-            if trigger_key in self._callbacks:
-                self._callbacks[trigger_key].remove(event_handler)
+            trigger_callbacks.remove(event_handler)
 
         return async_remove_handler
 
@@ -259,6 +262,10 @@ def async_fire_triggers(conn: HKDevice, events: dict[tuple[int, int], dict[str, 
     if not trigger_sources:
         return
     for (aid, iid), ev in events.items():
+        # If the value is None, we received the event via polling
+        # and we don't want to trigger on that
+        if ev["value"] is None:
+            continue
         if aid in conn.devices:
             device_id = conn.devices[aid]
             if source := trigger_sources.get(device_id):
