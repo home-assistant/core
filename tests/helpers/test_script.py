@@ -1169,7 +1169,6 @@ async def test_wait_template_not_schedule(hass: HomeAssistant) -> None:
                 }
             ],
         },
-        expected_script_execution="cancelled",
     )
 
 
@@ -1400,7 +1399,8 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
     assert_action_trace(
         {
             "0": [{"result": {"wait": {"completed": False, "remaining": None}}}],
-        }
+        },
+        expected_script_execution="cancelled",
     )
 
 
