@@ -1474,7 +1474,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.32
+pysensibo==1.0.33
 
 # homeassistant.components.serial
 # homeassistant.components.zha
