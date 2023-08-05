@@ -2,7 +2,7 @@
 import json
 from unittest.mock import patch
 
-from python_opensky import BoundingBox, StatesResponse
+from python_opensky import BoundingBox, OpenSkyError, StatesResponse
 
 from tests.common import load_fixture
 
@@ -17,7 +17,9 @@ def patch_setup_entry() -> bool:
 class MockOpenSky:
     """Mock object for OpenSky."""
 
-    def __init__(self, states_fixture_cycle: list[str] = ["opensky/states.json"]):
+    def __init__(
+        self, states_fixture_cycle: list[str] | None = ["opensky/states.json"]
+    ):
         """Initialize mock object."""
         self._states_fixture_cycle = states_fixture_cycle
         self._states_fixture_cycle_count = 0
@@ -30,3 +32,11 @@ class MockOpenSky:
         return StatesResponse.parse_obj(
             json.loads(load_fixture(self._states_fixture_cycle[item_num]))
         )
+
+
+class MockOpenSkyUpdateFailure(MockOpenSky):
+    """Mock object for OpenSky."""
+
+    async def get_states(self, bounding_box: BoundingBox) -> StatesResponse:
+        """Mock get states."""
+        raise OpenSkyError()

@@ -16,7 +16,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import MockOpenSky
+from . import MockOpenSky, MockOpenSkyUpdateFailure
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -80,16 +80,6 @@ async def test_sensor_updating(
     snapshot: SnapshotAssertion,
 ):
     """Test updating sensor."""
-    await setup_integration(
-        config_entry,
-        MockOpenSky(
-            states_fixture_cycle=[
-                "opensky/states.json",
-                "opensky/states_1.json",
-                "opensky/states.json",
-            ]
-        ),
-    )
     events = []
 
     async def event_listener(event: Event) -> None:
@@ -97,6 +87,17 @@ async def test_sensor_updating(
 
     hass.bus.async_listen(EVENT_OPENSKY_ENTRY, event_listener)
     hass.bus.async_listen(EVENT_OPENSKY_EXIT, event_listener)
+    await setup_integration(
+        config_entry,
+        MockOpenSky(
+            states_fixture_cycle=[
+                "opensky/states.json",
+                "opensky/states.json",
+                "opensky/states_1.json",
+                "opensky/states.json",
+            ]
+        ),
+    )
 
     async def skip_time_and_check_events() -> None:
         future = dt_util.utcnow() + timedelta(minutes=15)
@@ -107,3 +108,15 @@ async def test_sensor_updating(
 
     await skip_time_and_check_events()
     await skip_time_and_check_events()
+
+
+async def test_sensor_update_failed(
+    hass: HomeAssistant,
+    config_entry_altitude: MockConfigEntry,
+    setup_integration: ComponentSetup,
+):
+    """Test updating sensor with failed update."""
+    await setup_integration(config_entry_altitude, MockOpenSkyUpdateFailure())
+
+    state = hass.states.get("sensor.opensky")
+    assert state is None
