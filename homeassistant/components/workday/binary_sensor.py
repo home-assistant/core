@@ -148,15 +148,6 @@ async def async_setup_entry(
         SupportsResponse.ONLY,
     )
 
-    entity = IsWorkdaySensor(
-        obj_holidays,
-        workdays,
-        excludes,
-        days_offset,
-        sensor_name,
-        entry.entry_id,
-    )
-
     async_add_entities(
         [entity],
         True,
