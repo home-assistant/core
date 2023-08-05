@@ -1,11 +1,12 @@
 """Config flow for AirNow integration."""
 import logging
+from typing import Any
 
 from pyairnow import WebServiceAPI
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core, data_entry_flow, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -115,24 +116,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle an options flow for AirNow."""
 
-    async def async_step_init(self, user_input: dict[str,Any] | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
+        options_schema = vol.Schema(
+            {
+                vol.Optional(CONF_RADIUS): vol.All(
+                    int,
+                    vol.Range(min=5),
+                ),
+            }
+        )
+
         return self.async_show_form(
             step_id="init",
-            options_schema = vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_RADIUS
-                        ): vol.All(
-                            int,
-                            vol.Range(min=5),
-                        ),
-                    }
-                )
-            data_schema=self.add_suggested_values_to_schema(options_schema, self.entry.options)
+            data_schema=self.add_suggested_values_to_schema(
+                options_schema, self.config_entry.options
+            ),
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
