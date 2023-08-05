@@ -249,7 +249,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.12
+aiohomekit==2.6.13
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1985,7 +1985,7 @@ pysaj==0.0.16
 pyschlage==2023.7.0
 
 # homeassistant.components.sensibo
-pysensibo==1.0.32
+pysensibo==1.0.33
 
 # homeassistant.components.serial
 # homeassistant.components.zha

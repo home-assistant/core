@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import subprocess
 from typing import Any
 from unittest.mock import patch
 
@@ -16,7 +17,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
@@ -698,3 +699,40 @@ async def test_scrape_sensor_device_date(
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == "2022-01-17"
+
+
+async def test_template_not_error_when_data_is_none(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test command sensor with template not logging error when data is None."""
+
+    with patch(
+        "homeassistant.components.command_line.utils.subprocess.check_output",
+        side_effect=subprocess.CalledProcessError,
+    ):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "sensor": {
+                            "name": "Test",
+                            "command": "failed command",
+                            "unit_of_measurement": "MB",
+                            "value_template": "{{ (value.split('\t')[0]|int(0)/1000)|round(3) }}",
+                        }
+                    }
+                ]
+            },
+        )
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+
+    assert (
+        "Template variable error: 'None' has no attribute 'split' when rendering"
+        not in caplog.text
+    )
