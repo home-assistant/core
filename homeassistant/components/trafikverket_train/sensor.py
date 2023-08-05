@@ -3,9 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
-
-from pytrafikverket.trafikverket_train import StationInfo
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -108,42 +106,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
 )
 
 
-@dataclass
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[TrainData], StateType | datetime]
-    extra_fn: Callable[[TrainData], dict[str, StateType | datetime]]
-
-
-@dataclass
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
-    """Describes Trafikverket sensor entity."""
-
-
-SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
-    TrafikverketSensorEntityDescription(
-        key="departure_time",
-        translation_key="departure_time",
-        icon="mdi:clock",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.departure_time,
-        extra_fn=lambda data: {
-            ATTR_DEPARTURE_STATE: data.departure_state,
-            ATTR_CANCELED: data.cancelled,
-            ATTR_DELAY_TIME: data.delayed_time,
-            ATTR_PLANNED_TIME: data.planned_time,
-            ATTR_ESTIMATED_TIME: data.estimated_time,
-            ATTR_ACTUAL_TIME: data.actual_time,
-            ATTR_OTHER_INFORMATION: data.other_info,
-            ATTR_DEVIATIONS: data.deviation,
-        },
-    ),
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -165,7 +127,6 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     entity_description: TrafikverketSensorEntityDescription
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    entity_description: TrafikverketSensorEntityDescription
 
     def __init__(
         self,
@@ -197,16 +158,3 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     def _handle_coordinator_update(self) -> None:
         self._update_attr()
         return super()._handle_coordinator_update()
-<<<<<<< HEAD
-
-    @callback
-    def _update_attr(self) -> None:
-        """Retrieve latest states."""
-        self._attr_native_value = self.entity_description.value_fn(
-            self.coordinator.data
-        )
-        self._attr_extra_state_attributes = self.entity_description.extra_fn(
-            self.coordinator.data
-        )
-=======
->>>>>>> 9abaf9daae (cleanup from rebase)

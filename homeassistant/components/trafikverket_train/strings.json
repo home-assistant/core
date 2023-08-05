@@ -57,6 +57,9 @@
           }
         }
       },
+      "departure_state": {
+        "name": "Departure state"
+      },
       "cancelled": {
         "name": "Cancelled"
       },
