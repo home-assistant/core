@@ -99,20 +99,23 @@ class TriggerSource:
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
         trigger_data = trigger_info["trigger_data"]
-        trigger_key = (config[CONF_TYPE], config[CONF_SUBTYPE])
+        type_: str = config[CONF_TYPE]
+        sub_type: str = config[CONF_SUBTYPE]
+        trigger_key = (type_, sub_type)
         job = HassJob(action)
+        trigger_callbacks = self._callbacks.setdefault(trigger_key, [])
+        hass = self._hass
 
         @callback
         def event_handler(char: dict[str, Any]) -> None:
-            if config[CONF_SUBTYPE] != HK_TO_HA_INPUT_EVENT_VALUES[char["value"]]:
+            if sub_type != HK_TO_HA_INPUT_EVENT_VALUES.get(char["value"]):
                 return
-            self._hass.async_run_hass_job(job, {"trigger": {**trigger_data, **config}})
+            hass.async_run_hass_job(job, {"trigger": {**trigger_data, **config}})
 
-        self._callbacks.setdefault(trigger_key, []).append(event_handler)
+        trigger_callbacks.append(event_handler)
 
         def async_remove_handler():
-            if trigger_key in self._callbacks:
-                self._callbacks[trigger_key].remove(event_handler)
+            trigger_callbacks.remove(event_handler)
 
         return async_remove_handler
 
