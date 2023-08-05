@@ -188,7 +188,7 @@ async def async_setup_entry(
             sensors = ELEC_SENSORS
         elif (
             forecast.account.meter_type == MeterType.GAS
-            and forecast.unit_of_measure == UnitOfMeasure.THERM
+            and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
         ):
             sensors = GAS_SENSORS
         for sensor in sensors:
