@@ -482,6 +482,7 @@ class _ScriptRun:
         """Stop script run."""
         self._stop.set()
         await self._stopped.wait()
+        script_execution_set("cancelled")
 
     def _handle_exception(
         self, exception: Exception, continue_on_error: bool, log_exceptions: bool
