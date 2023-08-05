@@ -2452,7 +2452,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.1.1
+starlink-grpc-core==1.1.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
