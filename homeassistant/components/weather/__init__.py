@@ -326,6 +326,7 @@ class WeatherEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
         await super().async_internal_added_to_hass()
+        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
         if not self.registry_entry:
             return
         self.async_registry_entry_updated()
