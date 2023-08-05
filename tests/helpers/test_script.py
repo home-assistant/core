@@ -1012,13 +1012,15 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
         assert_action_trace(
             {
                 "0": [{"result": {"wait": {"completed": False, "remaining": None}}}],
-            }
+            },
+            expected_script_execution="cancelled",
         )
     else:
         assert_action_trace(
             {
                 "0": [{"result": {"wait": {"trigger": None, "remaining": None}}}],
-            }
+            },
+            expected_script_execution="cancelled",
         )
 
 
@@ -1166,7 +1168,8 @@ async def test_wait_template_not_schedule(hass: HomeAssistant) -> None:
                     "variables": {"wait": {"completed": True, "remaining": None}},
                 }
             ],
-        }
+        },
+        expected_script_execution="cancelled",
     )
 
 
@@ -4321,10 +4324,12 @@ async def test_shutdown_at(
         assert not script_obj.is_running
         assert "Stopping scripts running at shutdown: test script" in caplog.text
 
-    expected_trace = {
-        "0": [{"result": {"delay": 120.0, "done": False}}],
-    }
-    assert_action_trace(expected_trace)
+    assert_action_trace(
+        {
+            "0": [{"result": {"delay": 120.0, "done": False}}],
+        },
+        expected_script_execution="cancelled",
+    )
 
 
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
@@ -4360,10 +4365,12 @@ async def test_shutdown_after(
             in caplog.text
         )
 
-    expected_trace = {
-        "0": [{"result": {"delay": 120.0, "done": False}}],
-    }
-    assert_action_trace(expected_trace)
+    assert_action_trace(
+        {
+            "0": [{"result": {"delay": 120.0, "done": False}}],
+        },
+        expected_script_execution="cancelled",
+    )
 
 
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
