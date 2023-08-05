@@ -74,7 +74,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
 
     async def _insert_statistics(self) -> None:
         """Insert Opower statistics."""
-        for account in self.api.async_get_accounts():
+        for account in await self.api.async_get_accounts():
             id_prefix = "_".join(
                 (
                     self.api.utility.subdomain(),
