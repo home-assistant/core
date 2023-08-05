@@ -56,6 +56,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 await envoy.authenticate(token=token)
             except INVALID_AUTH_ERRORS:
                 # token likely expired or firmware changed
+                # so we fall through to authenticate with username/password
                 pass
             else:
                 self._setup_complete = True
