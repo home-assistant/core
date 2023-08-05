@@ -45,20 +45,15 @@
   "entity": {
     "sensor": {
       "departure_time": {
-        "name": "Departure time",
-        "state_attributes": {
-          "departure_state": {
-            "name": "Departure state",
-            "state": {
-              "on_time": "On time",
-              "delayed": "Delayed",
-              "canceled": "Cancelled"
-            }
-          }
-        }
+        "name": "Departure time"
       },
       "departure_state": {
-        "name": "Departure state"
+        "name": "Departure state",
+        "state": {
+          "on_time": "On time",
+          "delayed": "Delayed",
+          "canceled": "Cancelled"
+        }
       },
       "cancelled": {
         "name": "Cancelled"
