@@ -51,6 +51,7 @@ class EnvoyInverterSensorEntityDescription(
 INVERTER_SENSORS = (
     EnvoyInverterSensorEntityDescription(
         key=INVERTERS_KEY,
+        name=None,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -58,7 +59,7 @@ INVERTER_SENSORS = (
     ),
     EnvoyInverterSensorEntityDescription(
         key=LAST_REPORTED_KEY,
-        name="Last Reported",
+        translation_key=LAST_REPORTED_KEY,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         value_fn=lambda inverter: dt_util.utc_from_timestamp(inverter.last_report_date),
@@ -83,7 +84,7 @@ class EnvoyProductionSensorEntityDescription(
 PRODUCTION_SENSORS = (
     EnvoyProductionSensorEntityDescription(
         key="production",
-        name="Current Power Production",
+        translation_key="current_power_production",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -93,7 +94,7 @@ PRODUCTION_SENSORS = (
     ),
     EnvoyProductionSensorEntityDescription(
         key="daily_production",
-        name="Today's Energy Production",
+        translation_key="daily_production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -103,7 +104,7 @@ PRODUCTION_SENSORS = (
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
-        name="Last Seven Days Energy Production",
+        translation_key="seven_days_production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -112,7 +113,7 @@ PRODUCTION_SENSORS = (
     ),
     EnvoyProductionSensorEntityDescription(
         key="lifetime_production",
-        name="Lifetime Energy Production",
+        translation_key="lifetime_production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -140,7 +141,7 @@ class EnvoyConsumptionSensorEntityDescription(
 CONSUMPTION_SENSORS = (
     EnvoyConsumptionSensorEntityDescription(
         key="consumption",
-        name="Current Power Consumption",
+        translation_key="current_power_consumption",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -150,7 +151,7 @@ CONSUMPTION_SENSORS = (
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="daily_consumption",
-        name="Today's Energy Consumption",
+        translation_key="daily_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -160,7 +161,7 @@ CONSUMPTION_SENSORS = (
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
-        name="Last Seven Days Energy Consumption",
+        translation_key="seven_days_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -169,7 +170,7 @@ CONSUMPTION_SENSORS = (
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="lifetime_consumption",
-        name="Lifetime Energy Consumption",
+        translation_key="lifetime_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -216,6 +217,7 @@ class EnvoyEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
     """Envoy inverter entity."""
 
     _attr_icon = ICON
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -227,7 +229,6 @@ class EnvoyEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
         envoy_name = coordinator.name
         envoy_serial_num = coordinator.envoy.serial_number
         assert envoy_serial_num is not None
-        self._attr_name = f"{envoy_name} {description.name}"
         self._attr_unique_id = f"{envoy_serial_num}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, envoy_serial_num)},
@@ -271,6 +272,7 @@ class EnvoyInverterEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEnt
     """Envoy inverter entity."""
 
     _attr_icon = ICON
+    _attr_has_entity_name = True
     entity_description: EnvoyInverterSensorEntityDescription
 
     def __init__(
@@ -283,25 +285,22 @@ class EnvoyInverterEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEnt
         self.entity_description = description
         envoy_name = coordinator.name
         self._serial_number = serial_number
-        name = description.name
         key = description.key
 
         if key == INVERTERS_KEY:
             # Originally there was only one inverter sensor, so we don't want to
-            # break existing installations by changing the name or unique_id.
-            self._attr_name = f"{envoy_name} Inverter {serial_number}"
+            # break existing installations by changing the unique_id.
             self._attr_unique_id = serial_number
         else:
-            # Additional sensors have a name and unique_id that includes the
+            # Additional sensors have a unique_id that includes the
             # sensor key.
-            self._attr_name = f"{envoy_name} Inverter {serial_number} {name}"
             self._attr_unique_id = f"{serial_number}_{key}"
 
         envoy_serial_num = coordinator.envoy.serial_number
         assert envoy_serial_num is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
-            name=f"Inverter {serial_number}",
+            name=f"{envoy_name} Inverter {serial_number}",
             manufacturer="Enphase",
             model="Inverter",
             via_device=(DOMAIN, envoy_serial_num),
