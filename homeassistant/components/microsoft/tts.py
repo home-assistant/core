@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_API_KEY, CONF_REGION, CONF_TYPE, PERCENTAGE
-from homeassistant.generated.microsoft_tts import SUPPORTED_LANGUAGES
+from homeassistant.generated.microsoft_tts import DEFAULT_LANGUAGES_TYPES
 import homeassistant.helpers.config_validation as cv
 
 CONF_GENDER = "gender"
@@ -19,10 +19,10 @@ CONF_CONTOUR = "contour"
 _LOGGER = logging.getLogger(__name__)
 
 GENDERS = ["Female", "Male"]
+SUPPORTED_LANGUAGES = DEFAULT_LANGUAGES_TYPES.keys()
 
 DEFAULT_LANG = "en-us"
 DEFAULT_GENDER = "Female"
-DEFAULT_TYPE = "JennyNeural"
 DEFAULT_OUTPUT = "audio-24khz-96kbitrate-mono-mp3"
 DEFAULT_RATE = 0
 DEFAULT_VOLUME = 0
@@ -35,7 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
         vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): vol.In(GENDERS),
-        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
+        vol.Optional(
+            CONF_TYPE, default=DEFAULT_LANGUAGES_TYPES[DEFAULT_LANG]
+        ): cv.string,
         vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
             vol.Coerce(int), vol.Range(-100, 100)
         ),
@@ -105,15 +107,21 @@ class MicrosoftProvider(Provider):
 
     def get_tts_audio(self, message, language, options):
         """Load TTS from Microsoft."""
-        if language is None:
+        if language is None or language == self._lang:
             language = self._lang
+            voiceType = options[CONF_TYPE]
+            gender = options[CONF_GENDER]
+        else:
+            # fallback to default type
+            voiceType = DEFAULT_LANGUAGES_TYPES[language]
+            gender = "female"
 
         try:
             trans = pycsspeechtts.TTSTranslator(self._apikey, self._region)
             data = trans.speak(
                 language=language,
-                gender=options[CONF_GENDER],
-                voiceType=options[CONF_TYPE],
+                gender=gender,
+                voiceType=voiceType,
                 output=self._output,
                 rate=self._rate,
                 volume=self._volume,
