@@ -1,24 +1,29 @@
 """Train information for departures and delays, provided by Trafikverket."""
 from __future__ import annotations
 
-from datetime import time, timedelta
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, time, timedelta
 
 from pytrafikverket.trafikverket_train import StationInfo
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_WEEKDAY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_TIME, DOMAIN
-from .coordinator import TVDataUpdateCoordinator
-from .util import create_unique_id
+from .coordinator import TrainData, TVDataUpdateCoordinator
 
 ATTR_DEPARTURE_STATE = "departure_state"
 ATTR_CANCELED = "canceled"
@@ -31,6 +36,42 @@ ATTR_DEVIATIONS = "deviations"
 
 ICON = "mdi:train"
 SCAN_INTERVAL = timedelta(minutes=5)
+
+
+@dataclass
+class TrafikverketRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[TrainData], StateType | datetime]
+    extra_fn: Callable[[TrainData], dict[str, StateType | datetime]]
+
+
+@dataclass
+class TrafikverketSensorEntityDescription(
+    SensorEntityDescription, TrafikverketRequiredKeysMixin
+):
+    """Describes Trafikverket sensor entity."""
+
+
+SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
+    TrafikverketSensorEntityDescription(
+        key="departure_time",
+        translation_key="departure_time",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.departure_time,
+        extra_fn=lambda data: {
+            ATTR_DEPARTURE_STATE: data.departure_state,
+            ATTR_CANCELED: data.cancelled,
+            ATTR_DELAY_TIME: data.delayed_time,
+            ATTR_PLANNED_TIME: data.planned_time,
+            ATTR_ESTIMATED_TIME: data.estimated_time,
+            ATTR_ACTUAL_TIME: data.actual_time,
+            ATTR_OTHER_INFORMATION: data.other_info,
+            ATTR_DEVIATIONS: data.deviation,
+        },
+    ),
+)
 
 
 async def async_setup_entry(
@@ -55,7 +96,9 @@ async def async_setup_entry(
                 entry.data[CONF_WEEKDAY],
                 train_time,
                 entry.entry_id,
+                description,
             )
+            for description in SENSOR_TYPES
         ],
         True,
     )
@@ -64,10 +107,8 @@ async def async_setup_entry(
 class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     """Contains data about a train depature."""
 
-    _attr_icon = ICON
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_has_entity_name = True
-    _attr_name = None
+    entity_description: TrafikverketSensorEntityDescription
 
     def __init__(
         self,
@@ -78,9 +119,11 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         weekday: list,
         departuretime: time | None,
         entry_id: str,
+        entity_description: TrafikverketSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
@@ -89,11 +132,7 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
-        if TYPE_CHECKING:
-            assert from_station.name and to_station.name
-        self._attr_unique_id = create_unique_id(
-            from_station.name, to_station.name, departuretime, weekday
-        )
+        self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self._update_attr()
 
     @callback
@@ -103,19 +142,10 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
 
     @callback
     def _update_attr(self) -> None:
-        """Retrieve latest state."""
-
-        data = self.coordinator.data
-
-        self._attr_native_value = data.departure_time
-
-        self._attr_extra_state_attributes = {
-            ATTR_DEPARTURE_STATE: data.departure_state,
-            ATTR_CANCELED: data.cancelled,
-            ATTR_DELAY_TIME: data.delayed_time,
-            ATTR_PLANNED_TIME: data.planned_time,
-            ATTR_ESTIMATED_TIME: data.estimated_time,
-            ATTR_ACTUAL_TIME: data.actual_time,
-            ATTR_OTHER_INFORMATION: data.other_info,
-            ATTR_DEVIATIONS: data.deviation,
-        }
+        """Retrieve latest states."""
+        self._attr_native_value = self.entity_description.value_fn(
+            self.coordinator.data
+        )
+        self._attr_extra_state_attributes = self.entity_description.extra_fn(
+            self.coordinator.data
+        )
