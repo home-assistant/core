@@ -41,7 +41,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     def __init__(self, client: TractiveClient, item: Trackables) -> None:
         """Initialize tracker entity."""
-        super().__init__(client.user_id, item.trackable, item.tracker_details)
+        super().__init__(client, item.trackable, item.tracker_details)
 
         self._battery_level: int | None = item.hw_info.get("battery_level")
         self._latitude: float = item.pos_report["latlong"][0]
@@ -49,7 +49,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._accuracy: int = item.pos_report["pos_uncertainty"]
         self._source_type: str = item.pos_report["sensor_used"]
         self._attr_unique_id = item.trackable["_id"]
-        self._client = client
 
     @property
     def source_type(self) -> SourceType:
@@ -97,8 +96,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        if not self._client.subscribed:
-            self._client.subscribe()
+        await super().async_added_to_hass()
 
         self.async_on_remove(
             async_dispatcher_connect(

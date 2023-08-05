@@ -7,6 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from . import TractiveClient
 from .const import DOMAIN
 
 
@@ -16,7 +17,10 @@ class TractiveEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, user_id: str, trackable: dict[str, Any], tracker_details: dict[str, Any]
+        self,
+        client: TractiveClient,
+        trackable: dict[str, Any],
+        tracker_details: dict[str, Any],
     ) -> None:
         """Initialize tracker entity."""
         self._attr_device_info = DeviceInfo(
@@ -27,9 +31,15 @@ class TractiveEntity(Entity):
             sw_version=tracker_details["fw_version"],
             model=tracker_details["model_number"],
         )
-        self._user_id = user_id
+        self._user_id = client.user_id
         self._tracker_id = tracker_details["_id"]
         self._trackable = trackable
+        self._client = client
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        if not self._client.subscribed:
+            self._client.subscribe()
 
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
