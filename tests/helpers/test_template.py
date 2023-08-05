@@ -3437,7 +3437,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(
     template_complex_str = r"""
 
 {% for state in states.cover %}
-  {% if state.entity_id | regex_match('.*\.office_') %}
+  {% if state.entity_id | regex_match('.*\\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
