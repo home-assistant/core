@@ -73,11 +73,13 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
+    """Migrate old config entry to a new format."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     # 1 --> 2: Use config entry ID as base for unique IDs.
     if config_entry.version == 1:
+        assert config_entry.unique_id
+        assert config_entry.entry_id
         old_unique_id = config_entry.unique_id
         new_unique_id = config_entry.entry_id
 
@@ -102,13 +104,15 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 async def _async_migrate_device_identifiers(
     hass: HomeAssistant, config_entry: ConfigEntry, old_unique_id: str | None
 ) -> None:
-    """Migrate the device identifiers to a new format."""
+    """Migrate the device identifiers to the new format."""
     device_registry = dr.async_get(hass)
     for device_entry in dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     ):
+        assert device_entry
         for identifier in device_entry.identifiers:
             if identifier[1] == old_unique_id:
+                # Device found in registry. Update identifiers.
                 new_identifiers = {
                     (
                         DOMAIN,
@@ -123,12 +127,14 @@ async def _async_migrate_device_identifiers(
                 device_registry.async_update_device(
                     device_entry.id, new_identifiers=new_identifiers
                 )
+                # Leave for loop, as each server has only one device.
                 break
 
 
 @callback
 def _migrate_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
-    """Migrate the unique ID to a new format."""
+    """Migrate the unique ID of an entity to the new format."""
+    assert entity_entry
 
     # Different variants of unique IDs are available in version 1:
     # 1) SRV record: '<host>-srv-<entity_type>'
@@ -137,8 +143,8 @@ def _migrate_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
     unique_id_pieces = entity_entry.unique_id.split("-")
     entity_type = unique_id_pieces[2]
 
-    # Correct fault in version 1: Entity type names were used instead of keys
-    # (e.g. "Protocol Version" instead of "protocol_version").
+    # Handle bug in version 1: Entity type names were used instead of
+    # keys (e.g. "Protocol Version" instead of "protocol_version").
     new_entity_type = entity_type.lower()
     new_entity_type = new_entity_type.replace(" ", "_")
 
@@ -146,12 +152,11 @@ def _migrate_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
     if new_entity_type == "world_message":
         new_entity_type = KEY_MOTD
 
-    # Key 'latency_time' renamed to 'latency'.
+    # Special case 'latency_time': Renamed to 'latency'.
     if new_entity_type == "latency_time":
         new_entity_type = KEY_LATENCY
 
     new_unique_id = f"{entity_entry.config_entry_id}-{new_entity_type}"
-
     _LOGGER.debug(
         "Migrating entity unique ID from %s to %s",
         entity_entry.unique_id,

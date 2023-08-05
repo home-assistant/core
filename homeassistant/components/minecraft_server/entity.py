@@ -30,7 +30,7 @@ class MinecraftServerEntity(Entity):
         self._server = server
         self._attr_icon = icon
         self._attr_unique_id = f"{self._server.unique_id}-{entity_type}"
-        _LOGGER.debug("Unique ID of sensor type %s: %s", entity_type, self.unique_id)
+        _LOGGER.debug("Unique ID of entity type %s: %s", entity_type, self.unique_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._server.unique_id)},
             manufacturer=MANUFACTURER,
