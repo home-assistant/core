@@ -50,6 +50,14 @@ async def test_sensor(
 
     state = hass.states.get("sensor.opensky")
     assert state == snapshot
+    events = []
+
+    async def event_listener(event: Event) -> None:
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_OPENSKY_ENTRY, event_listener)
+    hass.bus.async_listen(EVENT_OPENSKY_EXIT, event_listener)
+    assert events == []
 
 
 async def test_sensor_altitude(
