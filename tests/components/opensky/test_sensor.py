@@ -1,7 +1,9 @@
 """OpenSky sensor tests."""
 from datetime import timedelta
+import json
 from unittest.mock import patch
 
+from python_opensky import StatesResponse
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.opensky.const import (
@@ -16,19 +18,19 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import MockOpenSky
 from .conftest import ComponentSetup
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 LEGACY_CONFIG = {Platform.SENSOR: [{CONF_PLATFORM: DOMAIN, CONF_RADIUS: 10.0}]}
 
 
 async def test_legacy_migration(hass: HomeAssistant) -> None:
     """Test migration from yaml to config flow."""
+    json_fixture = load_fixture("opensky/states.json")
     with patch(
-        "homeassistant.components.opensky.OpenSky",
-        return_value=MockOpenSky(),
+        "python_opensky.OpenSky.get_states",
+        return_value=StatesResponse.parse_obj(json.loads(json_fixture)),
     ):
         assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
         await hass.async_block_till_done()
@@ -46,7 +48,7 @@ async def test_sensor(
     snapshot: SnapshotAssertion,
 ):
     """Test setup sensor."""
-    await setup_integration(config_entry, MockOpenSky())
+    await setup_integration(config_entry)
 
     state = hass.states.get("sensor.opensky")
     assert state == snapshot
@@ -67,7 +69,7 @@ async def test_sensor_altitude(
     snapshot: SnapshotAssertion,
 ):
     """Test setup sensor with a set altitude."""
-    await setup_integration(config_entry_altitude, MockOpenSky())
+    await setup_integration(config_entry_altitude)
 
     state = hass.states.get("sensor.opensky")
     assert state == snapshot
@@ -80,16 +82,12 @@ async def test_sensor_updating(
     snapshot: SnapshotAssertion,
 ):
     """Test updating sensor."""
-    await setup_integration(
-        config_entry,
-        MockOpenSky(
-            states_fixture_cycle=[
-                "opensky/states.json",
-                "opensky/states_1.json",
-                "opensky/states.json",
-            ]
-        ),
-    )
+    await setup_integration(config_entry)
+
+    def get_states_response_fixture(fixture: str) -> StatesResponse:
+        json_fixture = load_fixture(fixture)
+        return StatesResponse.parse_obj(json.loads(json_fixture))
+
     events = []
 
     async def event_listener(event: Event) -> None:
@@ -105,5 +103,13 @@ async def test_sensor_updating(
 
         assert events == snapshot
 
-    await skip_time_and_check_events()
-    await skip_time_and_check_events()
+    with patch(
+        "python_opensky.OpenSky.get_states",
+        return_value=get_states_response_fixture("opensky/states_1.json"),
+    ):
+        await skip_time_and_check_events()
+    with patch(
+        "python_opensky.OpenSky.get_states",
+        return_value=get_states_response_fixture("opensky/states.json"),
+    ):
+        await skip_time_and_check_events()
