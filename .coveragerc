@@ -234,6 +234,7 @@ omit =
     homeassistant/components/duotecno/entity.py
     homeassistant/components/duotecno/switch.py
     homeassistant/components/duotecno/cover.py
+    homeassistant/components/duotecno/light.py
     homeassistant/components/dwd_weather_warnings/const.py
     homeassistant/components/dwd_weather_warnings/coordinator.py
     homeassistant/components/dwd_weather_warnings/sensor.py
@@ -1168,7 +1169,12 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
+    homeassistant/components/starlink/__init__.py
+    homeassistant/components/starlink/binary_sensor.py
+    homeassistant/components/starlink/button.py
     homeassistant/components/starlink/coordinator.py
+    homeassistant/components/starlink/sensor.py
+    homeassistant/components/starlink/switch.py
     homeassistant/components/starline/__init__.py
     homeassistant/components/starline/account.py
     homeassistant/components/starline/binary_sensor.py
