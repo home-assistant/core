@@ -1,17 +1,25 @@
 """Test ZHA registries."""
+from __future__ import annotations
+
 import importlib
 import inspect
+import typing
 from unittest import mock
 
 import pytest
 import zhaquirks
 
+from homeassistant.components.zha.binary_sensor import IASZone
 import homeassistant.components.zha.core.registries as registries
 from homeassistant.helpers import entity_registry as er
 
+if typing.TYPE_CHECKING:
+    from homeassistant.components.zha.core.entity import ZhaEntity
+
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
-QUIRK_CLASS = "mock.class"
+QUIRK_CLASS = "mock.test.quirk.class"
+QUIRK_CLASS_SHORT = "quirk.class"
 
 
 @pytest.fixture
@@ -201,6 +209,12 @@ def cluster_handlers(cluster_handler):
                 cluster_handler_names="on_off", quirk_classes=lambda x: x != QUIRK_CLASS
             ),
             False,
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names="on_off", quirk_classes=QUIRK_CLASS_SHORT
+            ),
+            True,
         ),
     ],
 )
@@ -521,6 +535,24 @@ def test_multi_sensor_match(
     }
 
 
+def iter_all_rules() -> typing.Iterable[registries.MatchRule, list[type[ZhaEntity]]]:
+    """Iterate over all match rules and their corresponding entities."""
+
+    for rules in registries.ZHA_ENTITIES._strict_registry.values():
+        for rule, entity in rules.items():
+            yield rule, [entity]
+
+    for rules in registries.ZHA_ENTITIES._multi_entity_registry.values():
+        for multi in rules.values():
+            for rule, entities in multi.items():
+                yield rule, entities
+
+    for rules in registries.ZHA_ENTITIES._config_diagnostic_entity_registry.values():
+        for multi in rules.values():
+            for rule, entities in multi.items():
+                yield rule, entities
+
+
 def test_quirk_classes() -> None:
     """Make sure that quirk_classes in components matches are valid."""
 
@@ -552,16 +584,18 @@ def test_quirk_classes() -> None:
         if not find_quirk_class(zhaquirks, quirk_tok[0], quirk_tok[1]):
             raise ValueError(f"Quirk class '{value}' does not exists.")
 
-    for component in registries.ZHA_ENTITIES._strict_registry.items():
-        for rule in component[1].items():
-            quirk_class_validator(rule[0].quirk_classes)
+    for rule, _ in iter_all_rules():
+        quirk_class_validator(rule.quirk_classes)
 
-    for component in registries.ZHA_ENTITIES._multi_entity_registry.items():
-        for item in component[1].items():
-            for rule in item[1].items():
-                quirk_class_validator(rule[0].quirk_classes)
 
-    for component in registries.ZHA_ENTITIES._config_diagnostic_entity_registry.items():
-        for item in component[1].items():
-            for rule in item[1].items():
-                quirk_class_validator(rule[0].quirk_classes)
+def test_entity_names() -> None:
+    """Make sure that all handlers expose entities with valid names."""
+
+    for _, entities in iter_all_rules():
+        for entity in entities:
+            if hasattr(entity, "_attr_name"):
+                # The entity has a name
+                assert isinstance(entity._attr_name, str) and entity._attr_name
+            else:
+                # The only exception (for now) is IASZone
+                assert entity is IASZone

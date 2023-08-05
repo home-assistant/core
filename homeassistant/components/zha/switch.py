@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
@@ -63,6 +62,8 @@ async def async_setup_entry(
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)
 class Switch(ZhaEntity, SwitchEntity):
     """ZHA switch."""
+
+    _attr_name: str = "Switch"
 
     def __init__(
         self,
@@ -190,6 +191,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._zcl_attribute in cluster_handler.cluster.unsupported_attributes
+            or cls._zcl_attribute not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._zcl_attribute) is None
         ):
             _LOGGER.debug(
@@ -286,6 +288,7 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 
     _zcl_attribute: str = "window_detection_function"
     _zcl_inverter_attribute: str = "window_detection_function_inverter"
+    _attr_name: str = "Invert window detection"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

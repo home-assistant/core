@@ -9,7 +9,7 @@ from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_get_persistent_notifications
 
 
 @pytest.fixture
@@ -162,6 +162,6 @@ async def test_security_vuln_check(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("persistent_notification.hue_hub_firmware")
-    assert state is not None
-    assert "CVE-2020-6007" in state.attributes["message"]
+    notifications = async_get_persistent_notifications(hass)
+    assert "hue_hub_firmware" in notifications
+    assert "CVE-2020-6007" in notifications["hue_hub_firmware"]["message"]

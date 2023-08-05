@@ -5,12 +5,10 @@ import asyncio
 from collections.abc import Callable
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Self
 
 from homeassistant.const import ATTR_NAME
-from homeassistant.core import CALLBACK_TYPE, Event, callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -18,8 +16,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import EventType
 
 from .core.const import (
     ATTR_MANUFACTURER,
@@ -52,7 +54,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
-        self._name: str = ""
         self._unique_id: str = unique_id
         if self.unique_id_suffix:
             self._unique_id += f"-{self.unique_id_suffix}"
@@ -61,13 +62,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._zha_device = zha_device
         self._unsubs: list[Callable[[], None]] = []
         self.remove_future: asyncio.Future[Any] = asyncio.Future()
-
-    @property
-    def name(self) -> str:
-        """Return Entity's default name."""
-        if hasattr(self, "_attr_name") and self._attr_name is not None:
-            return self._attr_name
-        return self._name
 
     @property
     def unique_id(self) -> str:
@@ -167,13 +161,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     ) -> None:
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
-        self._name: str = (
-            self.__class__.__name__.lower()
-            .replace("zha", "")
-            .replace("entity", "")
-            .replace("sensor", "")
-            .capitalize()
-        )
+
         self.cluster_handlers: dict[str, ClusterHandler] = {}
         for cluster_handler in cluster_handlers:
             self.cluster_handlers[cluster_handler.name] = cluster_handler
@@ -249,6 +237,9 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 class ZhaGroupEntity(BaseZhaEntity):
     """A base class for ZHA group entities."""
 
+    # The group name is set in the initializer
+    _attr_name: str
+
     def __init__(
         self,
         entity_ids: list[str],
@@ -261,15 +252,14 @@ class ZhaGroupEntity(BaseZhaEntity):
         super().__init__(unique_id, zha_device, **kwargs)
         self._available = False
         self._group = zha_device.gateway.groups.get(group_id)
-        self._name = (
-            f"{self._group.name}_zha_group_0x{group_id:04x}".lower().capitalize()
-        )
         self._group_id: int = group_id
         self._entity_ids: list[str] = entity_ids
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
         self._handled_group_membership = False
         self._change_listener_debouncer: Debouncer | None = None
         self._update_group_from_child_delay = DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY
+
+        self._attr_name = self._group.name
 
     @property
     def available(self) -> bool:
@@ -333,7 +323,9 @@ class ZhaGroupEntity(BaseZhaEntity):
         self.async_on_remove(send_removed_signal)
 
     @callback
-    def async_state_changed_listener(self, event: Event):
+    def async_state_changed_listener(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
         assert self._change_listener_debouncer

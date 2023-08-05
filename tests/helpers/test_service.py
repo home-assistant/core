@@ -1,6 +1,8 @@
 """Test service helpers."""
 from collections import OrderedDict
+from collections.abc import Iterable
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -18,7 +20,7 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.core import Context, HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -556,13 +558,235 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}
-    await async_setup_component(hass, logger.DOMAIN, logger_config)
-    descriptions = await service.async_get_all_descriptions(hass)
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        translation_key_prefix = f"component.{logger.DOMAIN}.services.set_default_level"
+        return {
+            f"{translation_key_prefix}.name": "Translated name",
+            f"{translation_key_prefix}.description": "Translated description",
+            f"{translation_key_prefix}.fields.level.name": "Field name",
+            f"{translation_key_prefix}.fields.level.description": "Field description",
+            f"{translation_key_prefix}.fields.level.example": "Field example",
+        }
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await async_setup_component(hass, logger.DOMAIN, logger_config)
+        descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 2
 
-    assert "description" in descriptions[logger.DOMAIN]["set_level"]
-    assert "fields" in descriptions[logger.DOMAIN]["set_level"]
+    assert descriptions[logger.DOMAIN]["set_default_level"]["name"] == "Translated name"
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["description"]
+        == "Translated description"
+    )
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"]["name"]
+        == "Field name"
+    )
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"][
+            "description"
+        ]
+        == "Field description"
+    )
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"]["example"]
+        == "Field example"
+    )
+
+    hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
+    service.async_set_service_schema(
+        hass, logger.DOMAIN, "new_service", {"description": "new service"}
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "description" in descriptions[logger.DOMAIN]["new_service"]
+    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
+
+    hass.services.async_register(
+        logger.DOMAIN, "another_new_service", lambda x: None, None
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_optional_response",
+        lambda x: None,
+        None,
+        SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_only_response",
+        lambda x: None,
+        None,
+        SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "another_service_with_response",
+        lambda x: None,
+        None,
+        SupportsResponse.OPTIONAL,
+    )
+    service.async_set_service_schema(
+        hass,
+        logger.DOMAIN,
+        "another_service_with_response",
+        {"description": "response service"},
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "another_new_service" in descriptions[logger.DOMAIN]
+    assert "service_with_optional_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_optional_response"][
+        "response"
+    ] == {"optional": True}
+    assert "service_with_only_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_only_response"]["response"] == {
+        "optional": False
+    }
+    assert "another_service_with_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["another_service_with_response"]["response"] == {
+        "optional": True
+    }
+
+    # Verify the cache returns the same object
+    assert await service.async_get_all_descriptions(hass) is descriptions
+
+
+async def test_async_get_all_descriptions_failing_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_get_all_descriptions when async_get_integrations returns an exception."""
+    group = hass.components.group
+    group_config = {group.DOMAIN: {}}
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert "description" in descriptions["group"]["reload"]
+    assert "fields" in descriptions["group"]["reload"]
+
+    logger = hass.components.logger
+    logger_config = {logger.DOMAIN: {}}
+    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    with patch(
+        "homeassistant.helpers.service.async_get_integrations",
+        return_value={"logger": ImportError},
+    ), patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={},
+    ):
+        descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 2
+    assert "Failed to load integration: logger" in caplog.text
+
+    # Services are empty defaults if the load fails but should
+    # not raise
+    assert descriptions[logger.DOMAIN]["set_level"] == {
+        "description": "",
+        "fields": {},
+        "name": "",
+    }
+
+    hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
+    service.async_set_service_schema(
+        hass, logger.DOMAIN, "new_service", {"description": "new service"}
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "description" in descriptions[logger.DOMAIN]["new_service"]
+    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
+
+    hass.services.async_register(
+        logger.DOMAIN, "another_new_service", lambda x: None, None
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_optional_response",
+        lambda x: None,
+        None,
+        SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_only_response",
+        lambda x: None,
+        None,
+        SupportsResponse.ONLY,
+    )
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "another_new_service" in descriptions[logger.DOMAIN]
+    assert "service_with_optional_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_optional_response"][
+        "response"
+    ] == {"optional": True}
+    assert "service_with_only_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_only_response"]["response"] == {
+        "optional": False
+    }
+
+    # Verify the cache returns the same object
+    assert await service.async_get_all_descriptions(hass) is descriptions
+
+
+async def test_async_get_all_descriptions_dynamically_created_services(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_get_all_descriptions when async_get_integrations when services are dynamic."""
+    group = hass.components.group
+    group_config = {group.DOMAIN: {}}
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert "description" in descriptions["group"]["reload"]
+    assert "fields" in descriptions["group"]["reload"]
+
+    shell_command = hass.components.shell_command
+    shell_command_config = {shell_command.DOMAIN: {"test_service": "ls /bin"}}
+    await async_setup_component(hass, shell_command.DOMAIN, shell_command_config)
+    descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 2
+    assert descriptions[shell_command.DOMAIN]["test_service"] == {
+        "description": "",
+        "fields": {},
+        "name": "",
+        "response": {"optional": True},
+    }
+
+
+async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
+    """Test registering a service with mixed case.
+
+    For backwards compatibility, we have historically allowed mixed case,
+    and automatically converted it to lowercase.
+    """
+    logger = hass.components.logger
+    logger_config = {logger.DOMAIN: {}}
+    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    logger_domain_mixed = "LoGgEr"
+    hass.services.async_register(
+        logger_domain_mixed, "NeW_SeRVICE", lambda x: None, None
+    )
+    service.async_set_service_schema(
+        hass, logger_domain_mixed, "NeW_SeRVICE", {"description": "new service"}
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "description" in descriptions[logger.DOMAIN]["new_service"]
+    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
 
 
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
@@ -697,7 +921,8 @@ async def test_call_context_target_all(
         return_value=Mock(
             permissions=PolicyPermissions(
                 {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-            )
+            ),
+            is_admin=False,
         ),
     ):
         await service.entity_service_call(
@@ -750,7 +975,7 @@ async def test_call_context_target_specific_no_auth(
     """Check targeting specific entities without auth."""
     with pytest.raises(exceptions.Unauthorized) as err, patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=Mock(permissions=PolicyPermissions({}, None)),
+        return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
     ):
         await service.entity_service_call(
             hass,
@@ -1197,9 +1422,9 @@ async def test_entity_service_call_warn_referenced(
     )
     await service.entity_service_call(hass, {}, "", call)
     assert (
-        "Unable to find referenced areas non-existent-area, devices"
-        " non-existent-device, entities non.existent" in caplog.text
-    )
+        "Referenced areas non-existent-area, devices non-existent-device, "
+        "entities non.existent are missing or not currently available"
+    ) in caplog.text
 
 
 async def test_async_extract_entities_warn_referenced(
@@ -1218,9 +1443,9 @@ async def test_async_extract_entities_warn_referenced(
     extracted = await service.async_extract_entities(hass, {}, call)
     assert len(extracted) == 0
     assert (
-        "Unable to find referenced areas non-existent-area, devices"
-        " non-existent-device, entities non.existent" in caplog.text
-    )
+        "Referenced areas non-existent-area, devices non-existent-device, "
+        "entities non.existent are missing or not currently available"
+    ) in caplog.text
 
 
 async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:

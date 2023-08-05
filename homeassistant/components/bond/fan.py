@@ -89,7 +89,8 @@ class BondFan(BondEntity, FanEntity):
             features |= FanEntityFeature.SET_SPEED
         if self._device.supports_direction():
             features |= FanEntityFeature.DIRECTION
-
+        if self._device.has_action(Action.BREEZE_ON):
+            features |= FanEntityFeature.PRESET_MODE
         return features
 
     @property
@@ -152,7 +153,7 @@ class BondFan(BondEntity, FanEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_power_state_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex
 
     async def async_set_speed_belief(self, speed: int) -> None:

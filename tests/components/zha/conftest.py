@@ -116,7 +116,9 @@ def zigpy_app_controller():
     app.state.network_info.channel = 15
     app.state.network_info.network_key.key = zigpy.types.KeyData(range(16))
 
-    with patch("zigpy.device.Device.request"):
+    with patch("zigpy.device.Device.request"), patch.object(
+        app, "permit", autospec=True
+    ), patch.object(app, "permit_with_key", autospec=True):
         yield app
 
 
@@ -199,6 +201,7 @@ def zigpy_device_mock(zigpy_app_controller):
         nwk=0xB79C,
         patch_cluster=True,
         quirk=None,
+        attributes=None,
     ):
         """Make a fake device using the specified cluster classes."""
         device = zigpy.device.Device(
@@ -236,6 +239,15 @@ def zigpy_device_mock(zigpy_app_controller):
                     endpoint.in_clusters.values(), endpoint.out_clusters.values()
                 ):
                     common.patch_cluster(cluster)
+
+        if attributes is not None:
+            for ep_id, clusters in attributes.items():
+                for cluster_name, attrs in clusters.items():
+                    cluster = getattr(device.endpoints[ep_id], cluster_name)
+
+                    for name, value in attrs.items():
+                        attr_id = cluster.find_attribute(name).id
+                        cluster._attr_cache[attr_id] = value
 
         return device
 
@@ -320,8 +332,8 @@ def zha_device_mock(
 
 @pytest.fixture
 def hass_disable_services(hass):
-    """Mock service register."""
-    with patch.object(hass.services, "async_register"), patch.object(
-        hass.services, "has_service", return_value=True
+    """Mock services."""
+    with patch.object(
+        hass, "services", MagicMock(has_service=MagicMock(return_value=True))
     ):
         yield hass

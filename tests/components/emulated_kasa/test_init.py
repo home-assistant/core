@@ -2,6 +2,8 @@
 import math
 from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+
 from homeassistant.components import emulated_kasa
 from homeassistant.components.emulated_kasa.const import (
     CONF_POWER,
@@ -130,6 +132,12 @@ CONFIG_SENSOR = {
         }
     }
 }
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 def nested_value(ndict, *keys):

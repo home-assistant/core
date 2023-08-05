@@ -116,6 +116,32 @@ def manager_bypass_login(hass, store, provider_bypass_login):
     )
 
 
+async def test_config_schema():
+    """Test CONFIG_SCHEMA."""
+    # Valid configuration
+    tn_auth.CONFIG_SCHEMA(
+        {
+            "type": "trusted_networks",
+            "trusted_networks": ["192.168.0.1"],
+            "trusted_users": {
+                "192.168.0.1": [
+                    "a1ab982744b64757bf80515589258924",
+                    {"group": "system-group"},
+                ]
+            },
+        }
+    )
+    # Wrong user id format
+    with pytest.raises(vol.Invalid):
+        tn_auth.CONFIG_SCHEMA(
+            {
+                "type": "trusted_networks",
+                "trusted_networks": ["192.168.0.1"],
+                "trusted_users": {"192.168.0.1": ["abcde"]},
+            }
+        )
+
+
 async def test_trusted_networks_credentials(manager, provider) -> None:
     """Test trusted_networks credentials related functions."""
     owner = await manager.async_create_user("test-owner")

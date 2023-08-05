@@ -113,7 +113,7 @@ class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
     _FORCE_ON = False
-    _DEFAULT_MIN_TRANSITION_TIME = 0
+    _DEFAULT_MIN_TRANSITION_TIME: float = 0
 
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
@@ -181,9 +181,7 @@ class BaseLight(LogMixin, light.LightEntity):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = (
-            transition * 10
-            if transition is not None
-            else self._zha_config_transition * 10
+            transition if transition is not None else self._zha_config_transition
         ) or (
             # if 0 is passed in some devices still need the minimum default
             self._DEFAULT_MIN_TRANSITION_TIME
@@ -210,7 +208,7 @@ class BaseLight(LogMixin, light.LightEntity):
         ) and self._zha_config_enable_light_transitioning_flag
         transition_time = (
             (
-                duration / 10 + DEFAULT_EXTRA_TRANSITION_DELAY_SHORT
+                duration + DEFAULT_EXTRA_TRANSITION_DELAY_SHORT
                 if (
                     (brightness is not None or transition is not None)
                     and brightness_supported(self._attr_supported_color_modes)
@@ -297,7 +295,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # After that, we set it to the desired color/temperature with no transition.
             result = await self._level_cluster_handler.move_to_level_with_on_off(
                 level=DEFAULT_MIN_BRIGHTNESS,
-                transition_time=self._DEFAULT_MIN_TRANSITION_TIME,
+                transition_time=int(10 * self._DEFAULT_MIN_TRANSITION_TIME),
             )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -331,13 +329,13 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
 
         if (
-            (brightness is not None or transition)
+            (brightness is not None or transition is not None)
             and not new_color_provided_while_off
             and brightness_supported(self._attr_supported_color_modes)
         ):
             result = await self._level_cluster_handler.move_to_level_with_on_off(
                 level=level,
-                transition_time=duration,
+                transition_time=int(10 * duration),
             )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -352,11 +350,11 @@ class BaseLight(LogMixin, light.LightEntity):
                 self._attr_brightness = level
 
         if (
-            brightness is None
+            (brightness is None and transition is None)
             and not new_color_provided_while_off
-            or (self._FORCE_ON and brightness)
+            or (self._FORCE_ON and brightness != 0)
         ):
-            # since some lights don't always turn on with move_to_level_with_on_off,
+            # since FORCE_ON lights don't turn on with move_to_level_with_on_off,
             # we should call the on command on the on_off cluster
             # if brightness is not 0.
             result = await self._on_off_cluster_handler.on()
@@ -387,10 +385,10 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
 
         if new_color_provided_while_off:
-            # The light is has the correct color, so we can now transition
+            # The light has the correct color, so we can now transition
             # it to the correct brightness level.
             result = await self._level_cluster_handler.move_to_level(
-                level=level, transition_time=duration
+                level=level, transition_time=int(10 * duration)
             )
             t_log["move_to_level_if_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -465,7 +463,9 @@ class BaseLight(LogMixin, light.LightEntity):
         if transition is not None and supports_level:
             result = await self._level_cluster_handler.move_to_level_with_on_off(
                 level=0,
-                transition_time=(transition * 10 or self._DEFAULT_MIN_TRANSITION_TIME),
+                transition_time=int(
+                    10 * (transition or self._DEFAULT_MIN_TRANSITION_TIME)
+                ),
             )
         else:
             result = await self._on_off_cluster_handler.off()
@@ -511,7 +511,7 @@ class BaseLight(LogMixin, light.LightEntity):
         if temperature is not None:
             result = await self._color_cluster_handler.move_to_color_temp(
                 color_temp_mireds=temperature,
-                transition_time=transition_time,
+                transition_time=int(10 * transition_time),
             )
             t_log["move_to_color_temp"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -529,14 +529,14 @@ class BaseLight(LogMixin, light.LightEntity):
                 result = await self._color_cluster_handler.enhanced_move_to_hue_and_saturation(
                     enhanced_hue=int(hs_color[0] * 65535 / 360),
                     saturation=int(hs_color[1] * 2.54),
-                    transition_time=transition_time,
+                    transition_time=int(10 * transition_time),
                 )
                 t_log["enhanced_move_to_hue_and_saturation"] = result
             else:
                 result = await self._color_cluster_handler.move_to_hue_and_saturation(
                     hue=int(hs_color[0] * 254 / 360),
                     saturation=int(hs_color[1] * 2.54),
-                    transition_time=transition_time,
+                    transition_time=int(10 * transition_time),
                 )
                 t_log["move_to_hue_and_saturation"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -551,7 +551,7 @@ class BaseLight(LogMixin, light.LightEntity):
             result = await self._color_cluster_handler.move_to_color(
                 color_x=int(xy_color[0] * 65535),
                 color_y=int(xy_color[1] * 65535),
-                transition_time=transition_time,
+                transition_time=int(10 * transition_time),
             )
             t_log["move_to_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -622,7 +622,7 @@ class BaseLight(LogMixin, light.LightEntity):
             )
             if self._debounced_member_refresh is not None:
                 self.debug("transition complete - refreshing group member states")
-                assert self.platform and self.platform.config_entry
+                assert self.platform.config_entry
                 self.platform.config_entry.async_create_background_task(
                     self.hass,
                     self._debounced_member_refresh.async_call(),
@@ -637,6 +637,7 @@ class BaseLight(LogMixin, light.LightEntity):
 class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
+    _attr_name: str = "Light"
     _attr_supported_color_modes: set[ColorMode]
     _REFRESH_INTERVAL = (45, 75)
 
@@ -1065,6 +1066,7 @@ class Light(BaseLight, ZhaEntity):
 class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""
 
+    _attr_name: str = "Light"
     _REFRESH_INTERVAL = (3, 5)
 
 
@@ -1074,8 +1076,9 @@ class HueLight(Light):
     manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink"},
 )
 class ForceOnLight(Light):
-    """Representation of a light which does not respect move_to_level_with_on_off."""
+    """Representation of a light which does not respect on/off for move_to_level_with_on_off commands."""
 
+    _attr_name: str = "Light"
     _FORCE_ON = True
 
 
@@ -1087,7 +1090,10 @@ class ForceOnLight(Light):
 class MinTransitionLight(Light):
     """Representation of a light which does not react to any "move to" calls with 0 as a transition."""
 
-    _DEFAULT_MIN_TRANSITION_TIME = 1
+    _attr_name: str = "Light"
+
+    # Transitions are counted in 1/10th of a second increments, so this is the smallest
+    _DEFAULT_MIN_TRANSITION_TIME = 0.1
 
 
 @GROUP_MATCH()
@@ -1107,10 +1113,18 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         group = self.zha_device.gateway.get_group(self._group_id)
 
         self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True  # pylint: disable=invalid-name
-        # Check all group members to see if they support execute_if_off.
-        # If at least one member has a color cluster and doesn't support it,
-        # it's not used.
+
         for member in group.members:
+            # Ensure we do not send group commands that violate the minimum transition
+            # time of any members.
+            if member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS:
+                self._DEFAULT_MIN_TRANSITION_TIME = (  # pylint: disable=invalid-name
+                    MinTransitionLight._DEFAULT_MIN_TRANSITION_TIME
+                )
+
+            # Check all group members to see if they support execute_if_off.
+            # If at least one member has a color cluster and doesn't support it,
+            # it's not used.
             for endpoint in member.device._endpoints.values():
                 for cluster_handler in endpoint.all_cluster_handlers.values():
                     if (
@@ -1120,10 +1134,6 @@ class LightGroup(BaseLight, ZhaGroupEntity):
                         self._GROUP_SUPPORTS_EXECUTE_IF_OFF = False
                         break
 
-        self._DEFAULT_MIN_TRANSITION_TIME = any(  # pylint: disable=invalid-name
-            member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS
-            for member in group.members
-        )
         self._on_off_cluster_handler = group.endpoint[OnOff.cluster_id]
         self._level_cluster_handler = group.endpoint[LevelControl.cluster_id]
         self._color_cluster_handler = group.endpoint[Color.cluster_id]

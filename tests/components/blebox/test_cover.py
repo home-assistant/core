@@ -427,7 +427,7 @@ async def test_closed_state(feature, hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
 
-async def test_tilt_position(shutterbox, hass):
+async def test_tilt_position(shutterbox, hass: HomeAssistant) -> None:
     """Test tilt capability is available."""
 
     feature_mock, entity_id = shutterbox
@@ -443,7 +443,7 @@ async def test_tilt_position(shutterbox, hass):
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 10
 
 
-async def test_set_tilt_position(shutterbox, hass):
+async def test_set_tilt_position(shutterbox, hass: HomeAssistant) -> None:
     """Test tilt position setting."""
 
     feature_mock, entity_id = shutterbox

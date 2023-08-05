@@ -67,7 +67,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery",
         device_class=SensorDeviceClass.ENUM,
-        options=["full", "normal", "low", "verylow"],
+        options=["full", "normal", "medium", "low", "verylow"],
         translation_key="battery",
     ),
     OverkizSensorDescription(
@@ -116,8 +116,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.IO_OUTLET_ENGINE,
         name="Outlet engine",
         icon="mdi:fan-chevron-down",
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
@@ -528,6 +527,6 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         # By default this sensor will be listed at a virtual HomekitStack device,
         # but it makes more sense to show this at the gateway device
         # in the entity registry.
-        return {
-            "identifiers": {(DOMAIN, self.executor.get_gateway_id())},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.executor.get_gateway_id())},
+        )

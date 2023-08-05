@@ -4,9 +4,8 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -20,9 +19,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
-    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
@@ -176,6 +175,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._select_attr in cluster_handler.cluster.unsupported_attributes
+            or cls._select_attr not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._select_attr) is None
         ):
             _LOGGER.debug(
@@ -367,7 +367,7 @@ class HueV1MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY,
+    cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML001"},
 )
@@ -390,7 +390,7 @@ class HueV2MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY,
+    cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML002", "SML003", "SML004"},
 )

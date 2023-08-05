@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass: HomeAssistant):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,

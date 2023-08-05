@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -33,7 +33,6 @@ from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
-from typing_extensions import Self
 
 from homeassistant.const import (
     MAX_LENGTH_EVENT_EVENT_TYPE,
@@ -152,10 +151,9 @@ def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     return "CHAR(0)"  # Uses 1 byte on MySQL (no change on sqlite)
 
 
-@compiles(UnusedDateTime, "postgresql")  # type: ignore[misc,no-untyped-call]
 @compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
-    """Compile UnusedDateTime and Unused as CHAR(1) on postgresql."""
+    """Compile Unused as CHAR(1) on postgresql."""
     return "CHAR(1)"  # Uses 1 byte
 
 
@@ -199,6 +197,7 @@ DOUBLE_TYPE = (
 )
 UNUSED_LEGACY_COLUMN = Unused(0)
 UNUSED_LEGACY_DATETIME_COLUMN = UnusedDateTime(timezone=True)
+UNUSED_LEGACY_INTEGER_COLUMN = SmallInteger()
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 CONTEXT_BINARY_TYPE = LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH).with_variant(
     NativeLargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), "mysql", "mariadb", "sqlite"
@@ -420,7 +419,7 @@ class States(Base):
     entity_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
-    event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_INTEGER_COLUMN)
     last_changed: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_changed_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
     last_updated: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)

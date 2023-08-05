@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -125,7 +125,7 @@ class LIFXDiscoveryManager:
             self.migrating,
         )
         self._cancel_discovery = async_track_time_interval(
-            self.hass, self.async_discovery, discovery_interval
+            self.hass, self.async_discovery, discovery_interval, cancel_on_shutdown=True
         )
 
     async def async_discovery(self, *_: Any) -> None:
@@ -174,7 +174,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # to reduce the risk we miss devices because the event
     # loop is blocked at startup.
     discovery_manager.async_setup_discovery_interval()
-    async_call_later(hass, DISCOVERY_COOLDOWN, _async_delayed_discovery)
+    async_call_later(
+        hass,
+        DISCOVERY_COOLDOWN,
+        HassJob(_async_delayed_discovery, cancel_on_shutdown=True),
+    )
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STARTED, discovery_manager.async_discovery
     )

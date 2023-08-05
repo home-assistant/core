@@ -1,6 +1,4 @@
 """The tests for Lidarr sensor platform."""
-from unittest.mock import AsyncMock
-
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -11,9 +9,9 @@ from .conftest import ComponentSetup
 async def test_sensors(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     connection,
-):
+) -> None:
     """Test for successfully setting up the Lidarr platform."""
     await setup_integration()
 

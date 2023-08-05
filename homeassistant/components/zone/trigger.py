@@ -14,10 +14,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Event,
     HassJob,
     HomeAssistant,
-    State,
     callback,
 )
 from homeassistant.helpers import (
@@ -26,9 +24,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     location,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
@@ -78,11 +79,11 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    def zone_automation_listener(zone_event: Event) -> None:
+    def zone_automation_listener(zone_event: EventType[EventStateChangedData]) -> None:
         """Listen for state changes and calls action."""
-        entity = zone_event.data.get("entity_id")
-        from_s: State | None = zone_event.data.get("old_state")
-        to_s: State | None = zone_event.data.get("new_state")
+        entity = zone_event.data["entity_id"]
+        from_s = zone_event.data["old_state"]
+        to_s = zone_event.data["new_state"]
 
         if (
             from_s

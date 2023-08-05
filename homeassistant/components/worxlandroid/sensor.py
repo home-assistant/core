@@ -129,9 +129,8 @@ class WorxLandroidSensor(SensorEntity):
             elif self.sensor == "state":
                 self._state = self.get_state(data)
 
-        else:
-            if self.sensor == "error":
-                self._state = "no"
+        elif self.sensor == "error":
+            self._state = "no"
 
     @staticmethod
     def get_error(obj):

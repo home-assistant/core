@@ -32,10 +32,8 @@ from .const import (
     CONF_NETWORK,
     CONF_SENSOR_STRING,
     CONF_TLS_VER,
-    CONF_VAR_SENSOR_STRING,
     DEFAULT_IGNORE_STRING,
     DEFAULT_SENSOR_STRING,
-    DEFAULT_VAR_SENSOR_STRING,
     DOMAIN,
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
@@ -45,7 +43,7 @@ from .const import (
     SCHEME_HTTP,
     SCHEME_HTTPS,
 )
-from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
+from .helpers import _categorize_nodes, _categorize_programs
 from .models import IsyData
 from .services import async_setup_services, async_unload_services
 from .util import _async_cleanup_registry_entries
@@ -75,9 +73,6 @@ async def async_setup_entry(
     tls_version = isy_config.get(CONF_TLS_VER)
     ignore_identifier = isy_options.get(CONF_IGNORE_STRING, DEFAULT_IGNORE_STRING)
     sensor_identifier = isy_options.get(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
-    variable_identifier = isy_options.get(
-        CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING
-    )
 
     if host.scheme == SCHEME_HTTP:
         https = False
@@ -132,9 +127,7 @@ async def async_setup_entry(
 
     _categorize_nodes(isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(isy_data, isy.programs)
-    # Categorize variables call to be removed with variable sensors in 2023.5.0
-    _categorize_variables(isy_data, isy.variables, variable_identifier)
-    # Gather ISY Variables to be added. Identifier used to enable by default.
+    # Gather ISY Variables to be added.
     if isy.variables.children:
         isy_data.devices[CONF_VARIABLES] = _create_service_device_info(
             isy, name=CONF_VARIABLES.title(), unique_id=CONF_VARIABLES

@@ -240,6 +240,22 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
                 "filter": [
                     {
                         "supported_features": [
+                            [
+                                "light.LightEntityFeature.EFFECT",
+                                "light.LightEntityFeature.TRANSITION",
+                            ]
+                        ]
+                    },
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "supported_features": [
                             "light.LightEntityFeature.EFFECT",
                             "light.LightEntityFeature.TRANSITION",
                         ]
@@ -346,6 +362,23 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections) -> N
     ("schema", "valid_selections", "invalid_selections"),
     (
         (
+            {},
+            ("23ouih2iu23ou2", "2j4hp3uy4p87wyrpiuhk34"),
+            (None, True, 1),
+        ),
+    ),
+)
+def test_assist_pipeline_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test assist pipeline selector."""
+    _test_selector("assist_pipeline", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
             {"min": 10, "max": 50},
             (
                 10,
@@ -400,6 +433,17 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> 
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
+    (({}, ("abc123", "/backup"), (None, "abc@123", "abc 123", "")),),
+)
+def test_backup_location_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test backup location selector."""
+    _test_selector("backup_location", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, (1, "one", None), ()),),  # Everything can be coerced to bool
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -431,7 +475,7 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections) -
 def test_config_entry_selector_schema(
     schema, valid_selections, invalid_selections
 ) -> None:
-    """Test boolean selector."""
+    """Test config entry selector."""
     _test_selector("config_entry", schema, valid_selections, invalid_selections)
 
 
@@ -537,6 +581,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
         ({}, ("abc123",), (None,)),
         ({"multiline": True}, (), ()),
         ({"multiline": False, "type": "email"}, (), ()),
+        ({"prefix": "before", "suffix": "after"}, (), ()),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -609,6 +654,11 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections) -> N
             {"options": [], "custom_value": True, "multiple": True, "mode": "list"},
             (["red"], ["green", "blue"], []),
             (0, None, "red"),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "sort": True},
+            ("red", "blue"),
+            (0, None, ["red"]),
         ),
     ),
 )
@@ -702,6 +752,11 @@ def test_icon_selector_schema(schema, valid_selections, invalid_selections) -> N
             ("abc",),
             (None,),
         ),
+        (
+            {"include_default": True},
+            ("abc",),
+            (None,),
+        ),
     ),
 )
 def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -746,6 +801,26 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
         invalid_selections,
         drop_metadata,
     )
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            ("nl", "fr"),
+            (None, True, 1),
+        ),
+        (
+            {"languages": ["nl", "fr"]},
+            ("nl", "fr"),
+            (None, True, 1, "de", "en"),
+        ),
+    ),
+)
+def test_language_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test language selector."""
+    _test_selector("language", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -931,3 +1006,51 @@ def test_constant_selector_schema_error(schema) -> None:
     """Test constant selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"constant": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            ("home_assistant", "2j4hp3uy4p87wyrpiuhk34"),
+            (None, True, 1),
+        ),
+        (
+            {"language": "nl"},
+            ("home_assistant", "2j4hp3uy4p87wyrpiuhk34"),
+            (None, True, 1),
+        ),
+    ),
+)
+def test_conversation_agent_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test conversation agent selector."""
+    _test_selector("conversation_agent", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            (
+                [
+                    {
+                        "condition": "numeric_state",
+                        "entity_id": ["sensor.temperature"],
+                        "below": 20,
+                    }
+                ],
+                [],
+            ),
+            ("abc"),
+        ),
+    ),
+)
+def test_condition_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test condition sequence selector."""
+    _test_selector("condition", schema, valid_selections, invalid_selections)

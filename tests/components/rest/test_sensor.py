@@ -899,7 +899,7 @@ async def test_update_with_xml_convert_bad_xml(
     state = hass.states.get("sensor.foo")
 
     assert state.state == STATE_UNKNOWN
-    assert "Erroneous XML" in caplog.text
+    assert "REST xml result could not be parsed" in caplog.text
     assert "Empty reply" in caplog.text
 
 
@@ -936,7 +936,7 @@ async def test_update_with_failed_get(
     state = hass.states.get("sensor.foo")
 
     assert state.state == STATE_UNKNOWN
-    assert "Erroneous XML" in caplog.text
+    assert "REST xml result could not be parsed" in caplog.text
     assert "Empty reply" in caplog.text
 
 

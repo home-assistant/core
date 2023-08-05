@@ -15,6 +15,19 @@ PARSERS: Registry[
     str, Callable[[str, Any], Coroutine[Any, Any, Event | None]]
 ] = Registry()
 
+VIDEO_SOURCE_MAPPING = {
+    "vsconf": "VideoSourceToken",
+}
+
+
+def _normalize_video_source(source: str) -> str:
+    """Normalize video source.
+
+    Some cameras do not set the VideoSourceToken correctly so we get duplicate
+    sensors, so we need to normalize it to the correct value.
+    """
+    return VIDEO_SOURCE_MAPPING.get(source, source)
+
 
 def local_datetime_or_none(value: str) -> datetime.datetime | None:
     """Convert strings to datetimes, if invalid, return None."""
@@ -188,7 +201,7 @@ async def async_parse_field_detector(uid: str, msg) -> Event | None:
         rule = ""
         for source in msg.Message._value_1.Source.SimpleItem:
             if source.Name == "VideoSourceConfigurationToken":
-                video_source = source.Value
+                video_source = _normalize_video_source(source.Value)
             if source.Name == "VideoAnalyticsConfigurationToken":
                 video_analytics = source.Value
             if source.Name == "Rule":
@@ -220,7 +233,7 @@ async def async_parse_cell_motion_detector(uid: str, msg) -> Event | None:
         rule = ""
         for source in msg.Message._value_1.Source.SimpleItem:
             if source.Name == "VideoSourceConfigurationToken":
-                video_source = source.Value
+                video_source = _normalize_video_source(source.Value)
             if source.Name == "VideoAnalyticsConfigurationToken":
                 video_analytics = source.Value
             if source.Name == "Rule":
@@ -251,7 +264,7 @@ async def async_parse_motion_region_detector(uid: str, msg) -> Event | None:
         rule = ""
         for source in msg.Message._value_1.Source.SimpleItem:
             if source.Name == "VideoSourceConfigurationToken":
-                video_source = source.Value
+                video_source = _normalize_video_source(source.Value)
             if source.Name == "VideoAnalyticsConfigurationToken":
                 video_analytics = source.Value
             if source.Name == "Rule":
@@ -282,7 +295,7 @@ async def async_parse_tamper_detector(uid: str, msg) -> Event | None:
         rule = ""
         for source in msg.Message._value_1.Source.SimpleItem:
             if source.Name == "VideoSourceConfigurationToken":
-                video_source = source.Value
+                video_source = _normalize_video_source(source.Value)
             if source.Name == "VideoAnalyticsConfigurationToken":
                 video_analytics = source.Value
             if source.Name == "Rule":
@@ -312,7 +325,7 @@ async def async_parse_dog_cat_detector(uid: str, msg) -> Event | None:
         video_source = ""
         for source in msg.Message._value_1.Source.SimpleItem:
             if source.Name == "Source":
-                video_source = source.Value
+                video_source = _normalize_video_source(source.Value)
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}",
@@ -337,7 +350,7 @@ async def async_parse_vehicle_detector(uid: str, msg) -> Event | None:
         video_source = ""
         for source in msg.Message._value_1.Source.SimpleItem:
             if source.Name == "Source":
-                video_source = source.Value
+                video_source = _normalize_video_source(source.Value)
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}",
@@ -362,7 +375,7 @@ async def async_parse_person_detector(uid: str, msg) -> Event | None:
         video_source = ""
         for source in msg.Message._value_1.Source.SimpleItem:
             if source.Name == "Source":
-                video_source = source.Value
+                video_source = _normalize_video_source(source.Value)
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}",
@@ -387,13 +400,38 @@ async def async_parse_face_detector(uid: str, msg) -> Event | None:
         video_source = ""
         for source in msg.Message._value_1.Source.SimpleItem:
             if source.Name == "Source":
-                video_source = source.Value
+                video_source = _normalize_video_source(source.Value)
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}",
             "Face Detection",
             "binary_sensor",
             "motion",
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:RuleEngine/MyRuleDetector/Visitor")
+# pylint: disable=protected-access
+async def async_parse_visitor_detector(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/MyRuleDetector/Visitor
+    """
+    try:
+        video_source = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "Source":
+                video_source = _normalize_video_source(source.Value)
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}",
+            "Visitor Detection",
+            "binary_sensor",
+            "occupancy",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
         )
@@ -607,6 +645,70 @@ async def async_parse_jobstate(uid: str, msg) -> Event | None:
             None,
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "Active",
+            EntityCategory.DIAGNOSTIC,
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:RuleEngine/LineDetector/Crossed")
+# pylint: disable=protected-access
+async def async_parse_linedetector_crossed(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/LineDetector/Crossed
+    """
+    try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = source.Value
+            if source.Name == "VideoAnalyticsConfigurationToken":
+                video_analytics = source.Value
+            if source.Name == "Rule":
+                rule = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "Line Detector Crossed",
+            "sensor",
+            None,
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value,
+            EntityCategory.DIAGNOSTIC,
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:RuleEngine/CountAggregation/Counter")
+# pylint: disable=protected-access
+async def async_parse_count_aggregation_counter(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/CountAggregation/Counter
+    """
+    try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = _normalize_video_source(source.Value)
+            if source.Name == "VideoAnalyticsConfigurationToken":
+                video_analytics = source.Value
+            if source.Name == "Rule":
+                rule = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "Count Aggregation Counter",
+            "sensor",
+            None,
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value,
             EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):

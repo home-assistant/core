@@ -1,6 +1,8 @@
 """Assist pipeline Websocket API."""
 import asyncio
-import audioop
+
+# Suppressing disable=deprecated-module is needed for Python 3.11
+import audioop  # pylint: disable=deprecated-module
 from collections.abc import AsyncGenerator, Callable
 import logging
 from typing import Any
@@ -15,6 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import language as language_util
 
 from .const import DOMAIN
+from .error import PipelineNotFound
 from .pipeline import (
     PipelineData,
     PipelineError,
@@ -53,6 +56,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                 vol.Optional("input"): dict,
                 vol.Optional("pipeline"): str,
                 vol.Optional("conversation_id"): vol.Any(str, None),
+                vol.Optional("device_id"): vol.Any(str, None),
                 vol.Optional("timeout"): vol.Any(float, int),
             },
         ),
@@ -83,8 +87,9 @@ async def websocket_run(
 ) -> None:
     """Run a pipeline."""
     pipeline_id = msg.get("pipeline")
-    pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
-    if pipeline is None:
+    try:
+        pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
+    except PipelineNotFound:
         connection.send_error(
             msg["id"],
             "pipeline-not-found",
@@ -101,11 +106,12 @@ async def websocket_run(
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
         "conversation_id": msg.get("conversation_id"),
+        "device_id": msg.get("device_id"),
     }
 
     if start_stage == PipelineStage.STT:
         # Audio pipeline that will receive audio as binary websocket messages
-        audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
+        audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
@@ -137,7 +143,7 @@ async def websocket_run(
 
         # Audio input must be raw PCM at 16Khz with 16-bit mono samples
         input_args["stt_metadata"] = stt.SpeechMetadata(
-            language=pipeline.language,
+            language=pipeline.stt_language or pipeline.language,
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
             bit_rate=stt.AudioBitRates.BITRATE_16,
@@ -149,7 +155,7 @@ async def websocket_run(
         # Input to conversation agent
         input_args["intent_input"] = msg["input"]["text"]
     elif start_stage == PipelineStage.TTS:
-        # Input to text to speech system
+        # Input to text-to-speech system
         input_args["tts_input"] = msg["input"]["text"]
 
     input_args["run"] = PipelineRun(
@@ -276,7 +282,6 @@ def websocket_get_run(
     )
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_pipeline/language/list",

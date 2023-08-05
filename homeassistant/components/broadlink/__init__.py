@@ -5,11 +5,14 @@ from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .device import BroadlinkDevice
 from .heartbeat import BroadlinkHeartbeat
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -31,12 +34,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Broadlink device from a config entry."""
     data: BroadlinkData = hass.data[DOMAIN]
 
+    device = BroadlinkDevice(hass, entry)
+    if not await device.async_setup():
+        return False
     if data.heartbeat is None:
         data.heartbeat = BroadlinkHeartbeat(hass)
         hass.async_create_task(data.heartbeat.async_setup())
-
-    device = BroadlinkDevice(hass, entry)
-    return await device.async_setup()
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

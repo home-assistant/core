@@ -43,6 +43,12 @@ MOCK_START_STREAM_SESSION_UUID = UUID("3303d503-17cc-469a-b672-92436a71a2f6")
 PID_THAT_WILL_NEVER_BE_ALIVE = 2147483647
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 async def _async_start_streaming(hass, acc):
     """Start streaming a camera."""
     acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)

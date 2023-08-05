@@ -1,4 +1,6 @@
 """Support for device connected via Lightwave WiFi-link hub."""
+import logging
+
 from lightwave.lightwave import LWLink
 import voluptuous as vol
 
@@ -20,11 +22,12 @@ CONF_PROXY_PORT = "proxy_port"
 CONF_TRV = "trv"
 CONF_TRVS = "trvs"
 DEFAULT_PROXY_PORT = 7878
-DEFAULT_PROXY_IP = "127.0.0.1"
 DOMAIN = "lightwave"
 LIGHTWAVE_LINK = f"{DOMAIN}_link"
 LIGHTWAVE_TRV_PROXY = f"{DOMAIN}_proxy"
 LIGHTWAVE_TRV_PROXY_PORT = f"{DOMAIN}_proxy_port"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -44,9 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(
                             CONF_PROXY_PORT, default=DEFAULT_PROXY_PORT
                         ): cv.port,
-                        vol.Optional(
-                            CONF_PROXY_IP, default=DEFAULT_PROXY_IP
-                        ): cv.string,
+                        vol.Optional(CONF_PROXY_IP): cv.string,
                         vol.Required(CONF_TRVS, default={}): {
                             cv.string: vol.Schema(
                                 {
@@ -84,9 +85,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if trv := config[DOMAIN][CONF_TRV]:
         trvs = trv[CONF_TRVS]
-        proxy_ip = trv[CONF_PROXY_IP]
+        proxy_ip = trv.get(CONF_PROXY_IP)
         proxy_port = trv[CONF_PROXY_PORT]
-        lwlink.set_trv_proxy(proxy_ip, proxy_port)
+        if proxy_ip is None:
+            await lwlink.LW_listen()
+        else:
+            lwlink.set_trv_proxy(proxy_ip, proxy_port)
+            _LOGGER.warning(
+                "Proxy no longer required, remove `proxy_ip` from config to use builtin listener"
+            )
 
         for platform in PLATFORMS:
             hass.async_create_task(

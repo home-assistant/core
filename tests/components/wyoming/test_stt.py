@@ -3,50 +3,21 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from wyoming.event import Event
+from wyoming.asr import Transcript
 
 from homeassistant.components import stt
 from homeassistant.core import HomeAssistant
 
-
-class MockAsyncTcpClient:
-    """Mock AsyncTcpClient."""
-
-    def __init__(self, responses) -> None:
-        """Initialize."""
-        self.host = None
-        self.port = None
-        self.written = []
-        self.responses = responses
-
-    async def write_event(self, event):
-        """Send."""
-        self.written.append(event)
-
-    async def read_event(self):
-        """Receive."""
-        return self.responses.pop(0)
-
-    async def __aenter__(self):
-        """Enter."""
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        """Exit."""
-
-    def __call__(self, host, port):
-        """Call."""
-        self.host = host
-        self.port = port
-        return self
+from . import MockAsyncTcpClient
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_stt) -> None:
-    """Test streaming audio."""
-    state = hass.states.get("stt.wyoming")
+    """Test supported properties."""
+    state = hass.states.get("stt.test_asr")
     assert state is not None
 
-    entity = stt.async_get_speech_to_text_entity(hass, "stt.wyoming")
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
+    assert entity is not None
 
     assert entity.supported_languages == ["en-US"]
     assert entity.supported_formats == [stt.AudioFormats.WAV]
@@ -56,9 +27,12 @@ async def test_support(hass: HomeAssistant, init_wyoming_stt) -> None:
     assert entity.supported_channels == [stt.AudioChannels.CHANNEL_MONO]
 
 
-async def test_streaming_audio(hass: HomeAssistant, init_wyoming_stt, snapshot) -> None:
+async def test_streaming_audio(
+    hass: HomeAssistant, init_wyoming_stt, metadata, snapshot
+) -> None:
     """Test streaming audio."""
-    entity = stt.async_get_speech_to_text_entity(hass, "stt.wyoming")
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
+    assert entity is not None
 
     async def audio_stream():
         yield "chunk1"
@@ -66,9 +40,9 @@ async def test_streaming_audio(hass: HomeAssistant, init_wyoming_stt, snapshot) 
 
     with patch(
         "homeassistant.components.wyoming.stt.AsyncTcpClient",
-        MockAsyncTcpClient([Event(type="transcript", data={"text": "Hello world"})]),
+        MockAsyncTcpClient([Transcript(text="Hello world").event()]),
     ) as mock_client:
-        result = await entity.async_process_audio_stream(None, audio_stream())
+        result = await entity.async_process_audio_stream(metadata, audio_stream())
 
     assert result.result == stt.SpeechResultState.SUCCESS
     assert result.text == "Hello world"
@@ -76,10 +50,11 @@ async def test_streaming_audio(hass: HomeAssistant, init_wyoming_stt, snapshot) 
 
 
 async def test_streaming_audio_connection_lost(
-    hass: HomeAssistant, init_wyoming_stt
+    hass: HomeAssistant, init_wyoming_stt, metadata
 ) -> None:
     """Test streaming audio and losing connection."""
-    entity = stt.async_get_speech_to_text_entity(hass, "stt.wyoming")
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
+    assert entity is not None
 
     async def audio_stream():
         yield "chunk1"
@@ -88,28 +63,29 @@ async def test_streaming_audio_connection_lost(
         "homeassistant.components.wyoming.stt.AsyncTcpClient",
         MockAsyncTcpClient([None]),
     ):
-        result = await entity.async_process_audio_stream(None, audio_stream())
+        result = await entity.async_process_audio_stream(metadata, audio_stream())
 
     assert result.result == stt.SpeechResultState.ERROR
     assert result.text is None
 
 
-async def test_streaming_audio_oserror(hass: HomeAssistant, init_wyoming_stt) -> None:
+async def test_streaming_audio_oserror(
+    hass: HomeAssistant, init_wyoming_stt, metadata
+) -> None:
     """Test streaming audio and error raising."""
-    entity = stt.async_get_speech_to_text_entity(hass, "stt.wyoming")
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
+    assert entity is not None
 
     async def audio_stream():
         yield "chunk1"
 
-    mock_client = MockAsyncTcpClient(
-        [Event(type="transcript", data={"text": "Hello world"})]
-    )
+    mock_client = MockAsyncTcpClient([Transcript(text="Hello world").event()])
 
     with patch(
         "homeassistant.components.wyoming.stt.AsyncTcpClient",
         mock_client,
     ), patch.object(mock_client, "read_event", side_effect=OSError("Boom!")):
-        result = await entity.async_process_audio_stream(None, audio_stream())
+        result = await entity.async_process_audio_stream(metadata, audio_stream())
 
     assert result.result == stt.SpeechResultState.ERROR
     assert result.text is None

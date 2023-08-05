@@ -74,6 +74,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda device: None,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
         state_fn=lambda api, device: device.state == 4,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"device_update-{obj_id}",

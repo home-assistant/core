@@ -112,6 +112,7 @@ class LIFXLight(LIFXEntity, LightEntity):
     """Representation of a LIFX light."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+    _attr_name = None
 
     def __init__(
         self,
@@ -131,7 +132,6 @@ class LIFXLight(LIFXEntity, LightEntity):
         self.postponed_update: CALLBACK_TYPE | None = None
         self.entry = entry
         self._attr_unique_id = self.coordinator.serial_number
-        self._attr_name = self.bulb.label
         self._attr_min_color_temp_kelvin = bulb_features["min_kelvin"]
         self._attr_max_color_temp_kelvin = bulb_features["max_kelvin"]
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
@@ -170,9 +170,7 @@ class LIFXLight(LIFXEntity, LightEntity):
 
     async def update_during_transition(self, when: int) -> None:
         """Update state at the start and end of a transition."""
-        if self.postponed_update:
-            self.postponed_update()
-            self.postponed_update = None
+        self._cancel_postponed_update()
 
         # Transition has started
         self.async_write_ha_state()
@@ -327,6 +325,17 @@ class LIFXLight(LIFXEntity, LightEntity):
         )
         return await super().async_added_to_hass()
 
+    def _cancel_postponed_update(self) -> None:
+        """Cancel postponed update, if applicable."""
+        if self.postponed_update:
+            self.postponed_update()
+            self.postponed_update = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        self._cancel_postponed_update()
+        return await super().async_will_remove_from_hass()
+
 
 class LIFXWhite(LIFXLight):
     """Representation of a white-only LIFX light."""
@@ -382,7 +391,7 @@ class LIFXMultiZone(LIFXColor):
         """Send a color change to the bulb."""
         bulb = self.bulb
         color_zones = bulb.color_zones
-        num_zones = len(color_zones)
+        num_zones = self.coordinator.get_number_of_zones()
 
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:

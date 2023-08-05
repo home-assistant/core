@@ -137,7 +137,19 @@ class Endpoint:
             ):
                 cluster_handler_class = MultistateInput
             # end of ugly hack
-            cluster_handler = cluster_handler_class(cluster, self)
+
+            try:
+                cluster_handler = cluster_handler_class(cluster, self)
+            except KeyError as err:
+                _LOGGER.warning(
+                    "Cluster handler %s for cluster %s on endpoint %s is invalid: %s",
+                    cluster_handler_class,
+                    cluster,
+                    self,
+                    err,
+                )
+                continue
+
             if cluster_handler.name == const.CLUSTER_HANDLER_POWER_CONFIGURATION:
                 self._device.power_configuration_ch = cluster_handler
             elif cluster_handler.name == const.CLUSTER_HANDLER_IDENTIFY:
@@ -205,11 +217,13 @@ class Endpoint:
 
     def send_event(self, signal: dict[str, Any]) -> None:
         """Broadcast an event from this endpoint."""
-        signal["endpoint"] = {
-            "id": self.id,
-            "unique_id": self.unique_id,
-        }
-        self.device.zha_send_event(signal)
+        self.device.zha_send_event(
+            {
+                const.ATTR_UNIQUE_ID: self.unique_id,
+                const.ATTR_ENDPOINT_ID: self.id,
+                **signal,
+            }
+        )
 
     def claim_cluster_handlers(self, cluster_handlers: list[ClusterHandler]) -> None:
         """Claim cluster handlers."""

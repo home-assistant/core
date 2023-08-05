@@ -11,6 +11,7 @@ from elmax_api.exceptions import (
     ElmaxBadLoginError,
     ElmaxBadPinError,
     ElmaxNetworkError,
+    ElmaxPanelBusyError,
 )
 from elmax_api.http import Elmax
 from elmax_api.model.actuator import Actuator
@@ -21,6 +22,7 @@ from elmax_api.model.panel import PanelEntry, PanelStatus
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -131,6 +133,10 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             raise ConfigEntryAuthFailed("Refused username/password") from err
         except ElmaxApiError as err:
             raise UpdateFailed(f"Error communicating with ELMAX API: {err}") from err
+        except ElmaxPanelBusyError as err:
+            raise UpdateFailed(
+                "Communication with the panel failed, as it is currently busy"
+            ) from err
         except ElmaxNetworkError as err:
             raise UpdateFailed(
                 "A network error occurred while communicating with Elmax cloud."
@@ -170,17 +176,17 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
         return self._device.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "identifiers": {(DOMAIN, self._panel.hash)},
-            "name": self._panel.get_name_by_user(
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._panel.hash)},
+            name=self._panel.get_name_by_user(
                 self.coordinator.http_client.get_authenticated_username()
             ),
-            "manufacturer": "Elmax",
-            "model": self._panel_version,
-            "sw_version": self._panel_version,
-        }
+            manufacturer="Elmax",
+            model=self._panel_version,
+            sw_version=self._panel_version,
+        )
 
     @property
     def available(self) -> bool:

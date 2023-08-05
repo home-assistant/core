@@ -34,6 +34,20 @@
         "name": "Connected to router"
       }
     },
+    "button": {
+      "identify": {
+        "name": "Identify device with a blinking LED"
+      },
+      "pairing": {
+        "name": "Start PLC pairing"
+      },
+      "restart": {
+        "name": "Restart device"
+      },
+      "start_wps": {
+        "name": "Start WPS"
+      }
+    },
     "sensor": {
       "connected_plc_devices": {
         "name": "Connected PLC devices"
