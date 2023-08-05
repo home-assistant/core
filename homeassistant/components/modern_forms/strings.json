@@ -21,6 +21,42 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "light_sleep_timer_active": {
+        "name": "Light sleep timer active"
+      },
+      "fan_sleep_timer_active": {
+        "name": "Fan sleep timer active"
+      }
+    },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::title%]"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "sensor": {
+      "light_timer_remaining_time": {
+        "name": "Light sleep time"
+      },
+      "fan_timer_remaining_time": {
+        "name": "Fan sleep time"
+      }
+    },
+    "switch": {
+      "away_mode": {
+        "name": "Away mode"
+      },
+      "adaptive_learning": {
+        "name": "Adaptive learning"
+      }
+    }
+  },
   "services": {
     "set_light_sleep_timer": {
       "name": "Set light sleep timer",

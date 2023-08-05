@@ -425,8 +425,8 @@
       }
     },
     "warning_device_warn": {
-      "name": "Warning device warn",
-      "description": "This service starts the WD operation. The WD alerts the surrounding area by audible (siren) and visual (strobe) signals.",
+      "name": "Warning device starts alert",
+      "description": "This service starts the operation of the warning device. The warning device alerts the surrounding area by audible (siren) and visual (strobe) signals.",
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
@@ -434,11 +434,11 @@
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "The Warning Mode field is used as an 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards."
+          "description": "The Warning Mode field is used as a 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the warning device in each mode is according to the relevant security standards."
         },
         "strobe": {
           "name": "[%key:component::zha::services::warning_device_squawk::fields::strobe::name%]",
-          "description": "The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. \"0\" means no strobe, \"1\" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated."
+          "description": "The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. \"0\" means no strobe, \"1\" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”), then only the strobe is activated."
         },
         "level": {
           "name": "Level",
@@ -446,11 +446,11 @@
         },
         "duration": {
           "name": "Duration",
-          "description": "Requested duration of warning, in seconds (16 bit). If both Strobe and Warning Mode are \"0\" this field SHALL be ignored."
+          "description": "Requested duration of warning, in seconds (16 bit). If both Strobe and Warning Mode are \"0\" this field is ignored."
         },
         "duty_cycle": {
           "name": "Duty cycle",
-          "description": "Indicates the length of the flash cycle. This allows you to vary the flash duration for different alarm types (e.g., fire, police, burglar). The valid range is 0-100 in increments of 10. All other values must be rounded to the nearest valid value. Strobe calculates a duty cycle over a duration of one second. The ON state must precede the OFF state. For example, if Strobe Duty Cycle Field specifies “40,”, then the strobe flashes ON for 4/10ths of a second and then turns OFF for 6/10ths of a second."
+          "description": "Indicates the length of the flash cycle. This allows you to vary the flash duration for different alarm types (e.g., fire, police, burglar). The valid range is 0-100 in increments of 10. All other values must be rounded to the nearest valid value. Strobe calculates a duty cycle over a duration of one second. The ON state must precede the OFF state. For example, if the Strobe Duty Cycle field specifies “40,”, then the strobe flashes ON for 4/10ths of a second and then turns OFF for 6/10ths of a second."
         },
         "intensity": {
           "name": "Intensity",

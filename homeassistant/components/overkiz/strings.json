@@ -79,6 +79,7 @@
           "full": "Full",
           "low": "Low",
           "normal": "Normal",
+          "medium": "Medium",
           "verylow": "Very low"
         }
       },

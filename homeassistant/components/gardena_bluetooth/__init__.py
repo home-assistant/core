@@ -20,7 +20,13 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN
 from .coordinator import Coordinator, DeviceUnavailable
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 LOGGER = logging.getLogger(__name__)
 TIMEOUT = 20.0
 DISCONNECT_DELAY = 5
