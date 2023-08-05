@@ -13,7 +13,7 @@ from . import MockOpenSky
 
 from tests.common import MockConfigEntry
 
-ComponentSetup = Callable[[MockConfigEntry], Awaitable[None]]
+ComponentSetup = Callable[[MockConfigEntry, MockOpenSky], Awaitable[None]]
 
 
 @pytest.fixture(name="config_entry")
@@ -33,10 +33,27 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture(name="config_entry_altitude")
+def mock_config_entry_altitude() -> MockConfigEntry:
+    """Create Opensky entry with altitude in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenSky",
+        data={
+            CONF_LATITUDE: 0.0,
+            CONF_LONGITUDE: 0.0,
+        },
+        options={
+            CONF_RADIUS: 10.0,
+            CONF_ALTITUDE: 12500.0,
+        },
+    )
+
+
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant,
-) -> Callable[[MockConfigEntry], Awaitable[None]]:
+) -> Callable[[MockConfigEntry, MockOpenSky], Awaitable[None]]:
     """Fixture for setting up the component."""
 
     async def func(
