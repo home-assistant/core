@@ -115,28 +115,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle an options flow for AirNow."""
 
-    async def async_step_init(self, user_input):
+    async def async_step_init(self, user_input: dict[str,Any] | None = None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+            options_schema = vol.Schema(
                     {
                         vol.Optional(
-                            CONF_RADIUS,
-                            default=self.config_entry.options.get(CONF_RADIUS),
+                            CONF_RADIUS
                         ): vol.All(
                             int,
                             vol.Range(min=5),
                         ),
                     }
-                ),
-                {CONF_RADIUS: self.config_entry.options[CONF_RADIUS]},
-            ),
-        )
+                )
+            data_schema=self.add_suggested_values_to_schema(options_schema, self.entry.options)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
