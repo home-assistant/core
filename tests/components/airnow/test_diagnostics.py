@@ -20,7 +20,6 @@ async def test_entry_diagnostics(
                 "api_key": REDACTED,
                 "latitude": REDACTED,
                 "longitude": REDACTED,
-                "radius": 75,
             },
             "options": {"radius": 75},
             "pref_disable_new_entities": False,

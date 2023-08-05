@@ -75,13 +75,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Create Entry
+                radius = user_input.pop(CONF_RADIUS)
                 return self.async_create_entry(
                     title=(
                         f"AirNow Sensor at {user_input[CONF_LATITUDE]},"
                         f" {user_input[CONF_LONGITUDE]}"
                     ),
                     data=user_input,
-                    options={CONF_RADIUS: user_input[CONF_RADIUS]},
+                    options={CONF_RADIUS: radius},
                 )
 
         return self.async_show_form(
