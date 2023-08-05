@@ -118,11 +118,17 @@ async def test_climate(
     assert state2.state == "off"
 
     assert not state3
+    found_log = False
     logs = caplog.get_records("setup")
-    assert (
-        logs[0].message
-        == "Device Bedroom not correctly registered with Sensibo cloud. Skipping device"
-    )
+    for log in logs:
+        if (
+            log.message
+            == "Device Bedroom not correctly registered with Sensibo cloud. Skipping device"
+        ):
+            found_log = True
+            break
+
+    assert found_log
 
 
 async def test_climate_fan(
