@@ -100,10 +100,9 @@ async def test_options_flow(hass: HomeAssistant, config, setup_airnow) -> None:
             CONF_API_KEY: "1234",
             CONF_LATITUDE: 33.6,
             CONF_LONGITUDE: -118.1,
-            CONF_RADIUS: 10,
         },
         source=config_entries.SOURCE_USER,
-        options={},
+        options={CONF_RADIUS: 10},
         unique_id="1234",
     )
     config_entry.add_to_hass(hass)
