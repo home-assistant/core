@@ -226,7 +226,6 @@ HISTORIC_CURRENCIES = {
     "ITL",
     "LAJ",
     "LSM",
-    "LTL",
     "LTT",
     "LUC",
     "LUF",
