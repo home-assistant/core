@@ -296,6 +296,7 @@ homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.sql.*
 homeassistant.components.ssdp.*
+homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*

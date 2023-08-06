@@ -2224,7 +2224,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
             return "mysql"
 
         @classmethod
-        def dbapi(cls):
+        def import_dbapi(cls):
             ...
 
         def engine_created(*args):

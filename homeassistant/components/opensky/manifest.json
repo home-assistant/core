@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opensky",
   "iot_class": "cloud_polling",
-  "requirements": ["python-opensky==0.0.10"]
+  "requirements": ["python-opensky==0.2.0"]
 }
