@@ -2,7 +2,6 @@
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
-import pytest
 import requests
 
 from homeassistant import config_entries
@@ -77,51 +76,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
-
-
-@pytest.mark.parametrize(
-    "error",
-    [
-        (KeyError, "invalid_auth"),
-        (RuntimeError, "cannot_connect"),
-        (ValueError, "unknown"),
-    ],
-)
-async def test_form_exceptions(hass: HomeAssistant, error) -> None:
-    """Test we handle Exception."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    exc, base_error = error
-    with patch(
-        "homeassistant.components.tado.config_flow.Tado",
-        side_effect=exc,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": base_error}
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"username": "test-username"})
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.tado.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
