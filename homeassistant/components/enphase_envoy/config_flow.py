@@ -9,8 +9,6 @@ from awesomeversion import AwesomeVersion
 from pyenphase import (
     AUTH_TOKEN_MIN_VERSION,
     Envoy,
-    EnvoyAuthenticationError,
-    EnvoyAuthenticationRequired,
     EnvoyError,
 )
 import voluptuous as vol
@@ -23,15 +21,13 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util.network import is_ipv4_address
 
-from .const import DOMAIN
+from .const import DOMAIN, INVALID_AUTH_ERRORS
 
 _LOGGER = logging.getLogger(__name__)
 
 ENVOY = "Envoy"
 
 CONF_SERIAL = "serial"
-
-INVALID_AUTH_ERRORS = (EnvoyAuthenticationError, EnvoyAuthenticationRequired)
 
 INSTALLER_AUTH_USERNAME = "installer"
 
