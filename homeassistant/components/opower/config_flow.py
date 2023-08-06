@@ -14,15 +14,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_UTILITY, DOMAIN
+from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_UTILITY): vol.In(get_supported_utility_names()),
+        vol.Required(CONF_UTILITY): vol.In(
+            get_supported_utility_names(supports_mfa=True)
+        ),
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_TOTP_SECRET): str,
     }
 )
 
@@ -36,6 +39,7 @@ async def _validate_login(
         login_data[CONF_UTILITY],
         login_data[CONF_USERNAME],
         login_data[CONF_PASSWORD],
+        login_data.get(CONF_TOTP_SECRET, None),
     )
     errors: dict[str, str] = {}
     try:
@@ -106,6 +110,7 @@ class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_USERNAME): self.reauth_entry.data[CONF_USERNAME],
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_TOTP_SECRET): str,
                 }
             ),
             errors=errors,
