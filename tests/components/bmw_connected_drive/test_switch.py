@@ -7,9 +7,6 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bmw_connected_drive.coordinator import (
-    BMWDataUpdateCoordinator,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -31,35 +28,37 @@ async def test_entity_state_attrs(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "value"),
+    ("entity_id", "new_value", "old_value"),
     [
-        ("switch.i4_edrive40_climate", "ON"),
-        ("switch.i4_edrive40_climate", "OFF"),
-        ("switch.iX_xdrive50_charging", "ON"),
-        ("switch.iX_xdrive50_charging", "OFF"),
+        ("switch.i4_edrive40_climate", "on", "off"),
+        ("switch.i4_edrive40_climate", "off", "on"),
+        ("switch.iX_xdrive50_charging", "on", "off"),
+        ("switch.iX_xdrive50_charging", "off", "on"),
     ],
 )
-async def test_update_triggers_success(
+async def test_service_call_success(
     hass: HomeAssistant,
     entity_id: str,
-    value: str,
+    new_value: str,
+    old_value: str,
     bmw_fixture: respx.Router,
 ) -> None:
-    """Test allowed values for switch inputs."""
+    """Test successful switch change."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
-    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
+    hass.states.async_set(entity_id, old_value)
+    assert hass.states.get(entity_id).state == old_value
 
     # Test
     await hass.services.async_call(
         "switch",
-        f"turn_{value.lower()}",
+        f"turn_{new_value}",
         blocking=True,
         target={"entity_id": entity_id},
     )
     check_remote_service_call(bmw_fixture)
-    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 1
+    assert hass.states.get(entity_id).state == new_value
 
 
 @pytest.mark.parametrize(
@@ -70,18 +69,19 @@ async def test_update_triggers_success(
         (ValueError, ValueError),
     ],
 )
-async def test_update_triggers_exceptions(
+async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
     bmw_fixture: respx.Router,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test not allowed values for switch inputs."""
+    """Test exception handling."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
-    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
+    entity_id = "switch.i4_edrive40_climate"
+    old_value = hass.states.get(entity_id).state
 
     # Setup exception
     monkeypatch.setattr(
@@ -94,15 +94,8 @@ async def test_update_triggers_exceptions(
     with pytest.raises(expected):
         await hass.services.async_call(
             "switch",
-            "turn_on",
-            blocking=True,
-            target={"entity_id": "switch.i4_edrive40_climate"},
-        )
-    with pytest.raises(expected):
-        await hass.services.async_call(
-            "switch",
             "turn_off",
             blocking=True,
-            target={"entity_id": "switch.i4_edrive40_climate"},
+            target={"entity_id": entity_id},
         )
-    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 0
+    assert hass.states.get(entity_id).state == old_value

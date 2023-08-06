@@ -7,9 +7,6 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bmw_connected_drive.coordinator import (
-    BMWDataUpdateCoordinator,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -31,44 +28,47 @@ async def test_entity_state_attrs(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "value"),
+    ("entity_id", "new_value", "old_value"),
     [
-        ("select.i3_rex_charging_mode", "IMMEDIATE_CHARGING"),
-        ("select.i4_edrive40_ac_charging_limit", "16"),
-        ("select.i4_edrive40_charging_mode", "DELAYED_CHARGING"),
+        ("select.i3_rex_charging_mode", "IMMEDIATE_CHARGING", "DELAYED_CHARGING"),
+        ("select.i4_edrive40_ac_charging_limit", "12", "16"),
+        ("select.i4_edrive40_charging_mode", "DELAYED_CHARGING", "IMMEDIATE_CHARGING"),
     ],
 )
-async def test_update_triggers_success(
+async def test_service_call_success(
     hass: HomeAssistant,
     entity_id: str,
-    value: str,
+    new_value: str,
+    old_value: str,
     bmw_fixture: respx.Router,
 ) -> None:
-    """Test allowed values for select inputs."""
+    """Test successful input change."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
-    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
+    hass.states.async_set(entity_id, old_value)
+    assert hass.states.get(entity_id).state == old_value
 
     # Test
     await hass.services.async_call(
         "select",
         "select_option",
-        service_data={"option": value},
+        service_data={"option": new_value},
         blocking=True,
         target={"entity_id": entity_id},
     )
     check_remote_service_call(bmw_fixture)
-    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 1
+    assert hass.states.get(entity_id).state == new_value
 
 
 @pytest.mark.parametrize(
     ("entity_id", "value"),
     [
         ("select.i4_edrive40_ac_charging_limit", "17"),
+        ("select.i4_edrive40_charging_mode", "BONKERS_MODE"),
     ],
 )
-async def test_update_triggers_fail(
+async def test_service_call_invalid_input(
     hass: HomeAssistant,
     entity_id: str,
     value: str,
@@ -78,7 +78,7 @@ async def test_update_triggers_fail(
 
     # Setup component
     assert await setup_mocked_integration(hass)
-    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
+    old_value = hass.states.get(entity_id).state
 
     # Test
     with pytest.raises(ValueError):
@@ -89,7 +89,7 @@ async def test_update_triggers_fail(
             blocking=True,
             target={"entity_id": entity_id},
         )
-    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 0
+    assert hass.states.get(entity_id).state == old_value
 
 
 @pytest.mark.parametrize(
@@ -100,17 +100,19 @@ async def test_update_triggers_fail(
         (ValueError, ValueError),
     ],
 )
-async def test_remote_service_exceptions(
+async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
     bmw_fixture: respx.Router,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test exception handling for remote services."""
+    """Test exception handling."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
+    entity_id = "select.i4_edrive40_ac_charging_limit"
+    old_value = hass.states.get(entity_id).state
 
     # Setup exception
     monkeypatch.setattr(
@@ -126,5 +128,6 @@ async def test_remote_service_exceptions(
             "select_option",
             service_data={"option": "16"},
             blocking=True,
-            target={"entity_id": "select.i4_edrive40_ac_charging_limit"},
+            target={"entity_id": entity_id},
         )
+    assert hass.states.get(entity_id).state == old_value

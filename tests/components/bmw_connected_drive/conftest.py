@@ -2,17 +2,12 @@
 
 
 from collections.abc import Generator
-from unittest.mock import Mock
 
 from bimmer_connected.tests import ALL_CHARGING_SETTINGS, ALL_STATES
 from bimmer_connected.tests.common import MyBMWMockRouter
 from bimmer_connected.vehicle import remote_services
 import pytest
 import respx
-
-from homeassistant.components.bmw_connected_drive.coordinator import (
-    BMWDataUpdateCoordinator,
-)
 
 
 @pytest.fixture
@@ -38,13 +33,6 @@ def bmw_fixture(
         remote_services,
         "_POLLING_CYCLE",
         0,
-    )
-
-    # needed to check if the coordinator update is triggered
-    monkeypatch.setattr(
-        BMWDataUpdateCoordinator,
-        "async_update_listeners",
-        Mock(),
     )
 
     with router:
