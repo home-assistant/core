@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
+import pytest
 from whirlpool.washerdryer import MachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
@@ -325,6 +326,7 @@ async def test_no_restore_state(
     assert state.state != "unknown"
 
 
+@pytest.mark.freeze_time("2022-11-30 00:00:00")
 async def test_callback(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
@@ -377,8 +379,8 @@ async def test_callback(
     assert state.state == time
 
     # Test timestamp change for > 60 seconds.
-    mock_sensor1_api.get_attribute.return_value = "120"
+    mock_sensor1_api.get_attribute.return_value = "125"
     callback()
     state = hass.states.get("sensor.washer_end_time")
-    newtime = utc_from_timestamp(as_timestamp(time) + 60)
+    newtime = utc_from_timestamp(as_timestamp(time) + 65)
     assert state.state == newtime.isoformat()

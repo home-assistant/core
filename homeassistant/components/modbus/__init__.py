@@ -82,6 +82,7 @@ from .const import (  # noqa: F401
     CONF_MIN_TEMP,
     CONF_MIN_VALUE,
     CONF_MSG_WAIT,
+    CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_RETRIES,
@@ -123,6 +124,7 @@ from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_entity_validator,
     duplicate_modbus_validator,
+    nan_validator,
     number_validator,
     scan_interval_validator,
     struct_validator,
@@ -298,6 +300,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
             vol.Optional(CONF_MIN_VALUE): number_validator,
             vol.Optional(CONF_MAX_VALUE): number_validator,
+            vol.Optional(CONF_NAN_VALUE): nan_validator,
             vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
         }
     ),
