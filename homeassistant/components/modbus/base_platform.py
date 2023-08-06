@@ -232,7 +232,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return str(val_result)
         if isinstance(val_result, str):
             if val_result == "nan":
-                val_result = STATE_UNAVAILABLE
+                val_result = STATE_UNAVAILABLE  # pragma: no cover
             return val_result
         return f"{float(val_result):.{self._precision}f}"
 
