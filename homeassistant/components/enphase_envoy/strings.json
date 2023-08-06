@@ -20,5 +20,36 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "last_reported": {
+        "name": "Last reported"
+      },
+      "current_power_production": {
+        "name": "Current power production"
+      },
+      "daily_production": {
+        "name": "Energy production today"
+      },
+      "seven_days_production": {
+        "name": "Energy production last seven days"
+      },
+      "lifetime_production": {
+        "name": "Lifetime energy production"
+      },
+      "current_power_consumption": {
+        "name": "Current power consumption"
+      },
+      "daily_consumption": {
+        "name": "Energy consumption today"
+      },
+      "seven_days_consumption": {
+        "name": "Energy consumption last seven days"
+      },
+      "lifetime_consumption": {
+        "name": "Lifetime energy consumption"
+      }
+    }
   }
 }
