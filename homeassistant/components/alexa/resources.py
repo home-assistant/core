@@ -1,6 +1,9 @@
 """Alexa Resources and Assets."""
 
 
+from typing import Any
+
+
 class AlexaGlobalCatalog:
     """The Global Alexa catalog.
 
@@ -207,13 +210,13 @@ class AlexaCapabilityResource:
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#capability-resources
     """
 
-    def __init__(self, labels):
+    def __init__(self, labels) -> None:
         """Initialize an Alexa resource."""
         self._resource_labels = []
         for label in labels:
             self._resource_labels.append(label)
 
-    def serialize_capability_resources(self):
+    def serialize_capability_resources(self) -> dict[str, list[str]]:
         """Return capabilityResources object serialized for an API response."""
         return self.serialize_labels(self._resource_labels)
 
@@ -224,12 +227,12 @@ class AlexaCapabilityResource:
         """
         return []
 
-    def serialize_labels(self, resources):
+    def serialize_labels(self, resources) -> dict[str, list[str]]:
         """Return serialized labels for an API response.
 
         Returns resource label objects for friendlyNames serialized.
         """
-        labels = []
+        labels: list[str] = []
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
                 label = {"@type": "asset", "value": {"assetId": label}}
@@ -411,7 +414,7 @@ class AlexaSemantics:
             }
         )
 
-    def serialize_semantics(self):
+    def serialize_semantics(self) -> dict[str, Any]:
         """Return semantics object serialized for an API response."""
         semantics = {}
         if self._action_mappings:

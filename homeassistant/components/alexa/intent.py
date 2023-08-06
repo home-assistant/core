@@ -3,8 +3,10 @@ import enum
 import logging
 from typing import Any
 
+from aiohttp.web import Response
+
 from homeassistant.components import http
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
 from homeassistant.util.decorator import Registry
@@ -18,7 +20,7 @@ HANDLERS = Registry()  # type: ignore[var-annotated]
 INTENTS_API_ENDPOINT = "/api/alexa"
 
 
-class SpeechType(enum.Enum):
+class SpeechType(enum.StrEnum):
     """The Alexa speech types."""
 
     plaintext = "PlainText"
@@ -28,7 +30,7 @@ class SpeechType(enum.Enum):
 SPEECH_MAPPINGS = {"plain": SpeechType.plaintext, "ssml": SpeechType.ssml}
 
 
-class CardType(enum.Enum):
+class CardType(enum.StrEnum):
     """The Alexa card types."""
 
     simple = "Simple"
@@ -36,12 +38,12 @@ class CardType(enum.Enum):
 
 
 @callback
-def async_setup(hass):
+def async_setup(hass: HomeAssistant) -> None:
     """Activate Alexa component."""
     hass.http.register_view(AlexaIntentsView)
 
 
-async def async_setup_intents(hass):
+async def async_setup_intents(hass: HomeAssistant) -> None:
     """Do intents setup.
 
     Right now this module does not expose any, but the intent component breaks
@@ -60,15 +62,15 @@ class AlexaIntentsView(http.HomeAssistantView):
     url = INTENTS_API_ENDPOINT
     name = "api:alexa"
 
-    async def post(self, request):
+    async def post(self, request: http.HomeAssistantRequest) -> Response | bytes:
         """Handle Alexa."""
-        hass = request.app["hass"]
-        message = await request.json()
+        hass: HomeAssistant = request.app["hass"]
+        message: dict[str, Any] = await request.json()
 
         _LOGGER.debug("Received Alexa request: %s", message)
 
         try:
-            response = await async_handle_message(hass, message)
+            response: dict[str, Any] = await async_handle_message(hass, message)
             return b"" if response is None else self.json(response)
         except UnknownRequest as err:
             _LOGGER.warning(str(err))
@@ -99,15 +101,19 @@ class AlexaIntentsView(http.HomeAssistantView):
             )
 
 
-def intent_error_response(hass, message, error):
+def intent_error_response(
+    hass: HomeAssistant, message: dict[str, Any], error: str
+) -> dict[str, Any]:
     """Return an Alexa response that will speak the error message."""
-    alexa_intent_info = message.get("request").get("intent")
-    alexa_response = AlexaResponse(hass, alexa_intent_info)
+    alexa_intent_info = message["request"].get("intent")
+    alexa_response = AlexaIntentResponse(hass, alexa_intent_info)
     alexa_response.add_speech(SpeechType.plaintext, error)
     return alexa_response.as_dict()
 
 
-async def async_handle_message(hass, message):
+async def async_handle_message(
+    hass: HomeAssistant, message: dict[str, Any]
+) -> dict[str, Any]:
     """Handle an Alexa intent.
 
     Raises:
@@ -117,7 +123,7 @@ async def async_handle_message(hass, message):
      - intent.IntentError
 
     """
-    req = message.get("request")
+    req = message["request"]
     req_type = req["type"]
 
     if not (handler := HANDLERS.get(req_type)):
@@ -129,7 +135,9 @@ async def async_handle_message(hass, message):
 @HANDLERS.register("SessionEndedRequest")
 @HANDLERS.register("IntentRequest")
 @HANDLERS.register("LaunchRequest")
-async def async_handle_intent(hass, message):
+async def async_handle_intent(
+    hass: HomeAssistant, message: dict[str, Any]
+) -> dict[str, Any]:
     """Handle an intent request.
 
     Raises:
@@ -138,9 +146,9 @@ async def async_handle_intent(hass, message):
      - intent.IntentError
 
     """
-    req = message.get("request")
+    req = message["request"]
     alexa_intent_info = req.get("intent")
-    alexa_response = AlexaResponse(hass, alexa_intent_info)
+    alexa_response = AlexaIntentResponse(hass, alexa_intent_info)
 
     if req["type"] == "LaunchRequest":
         intent_name = (
@@ -187,7 +195,7 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
     # passes the id and name of the nearest possible slot resolution. For
     # reference to the request object structure, see the Alexa docs:
     # https://tinyurl.com/ybvm7jhs
-    resolved_data = {}
+    resolved_data: dict[str, Any] = {}
     resolved_data["value"] = request["value"]
     resolved_data["id"] = ""
 
@@ -226,18 +234,18 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
     return resolved_data
 
 
-class AlexaResponse:
+class AlexaIntentResponse:
     """Help generating the response for Alexa."""
 
-    def __init__(self, hass, intent_info):
+    def __init__(self, hass: HomeAssistant, intent_info: dict[str, Any] | None) -> None:
         """Initialize the response."""
         self.hass = hass
-        self.speech = None
-        self.card = None
-        self.reprompt = None
-        self.session_attributes = {}
+        self.speech: dict[str, Any] | None = None
+        self.card: dict[str, Any] | None = None
+        self.reprompt: dict[str, Any] | None = None
+        self.session_attributes: dict[str, Any] = {}
         self.should_end_session = True
-        self.variables = {}
+        self.variables: dict[str, Any] = {}
 
         # Intent is None if request was a LaunchRequest or SessionEndedRequest
         if intent_info is not None:
@@ -252,7 +260,7 @@ class AlexaResponse:
                 self.variables[_key] = _slot_data["value"]
                 self.variables[_key + "_Id"] = _slot_data["id"]
 
-    def add_card(self, card_type, title, content):
+    def add_card(self, card_type: CardType, title: str, content: str) -> None:
         """Add a card to the response."""
         assert self.card is None
 
@@ -266,7 +274,7 @@ class AlexaResponse:
         card["content"] = content
         self.card = card
 
-    def add_speech(self, speech_type, text):
+    def add_speech(self, speech_type: SpeechType, text: str) -> None:
         """Add speech to the response."""
         assert self.speech is None
 
@@ -274,7 +282,7 @@ class AlexaResponse:
 
         self.speech = {"type": speech_type.value, key: text}
 
-    def add_reprompt(self, speech_type, text):
+    def add_reprompt(self, speech_type, text) -> None:
         """Add reprompt if user does not answer."""
         assert self.reprompt is None
 
@@ -284,9 +292,9 @@ class AlexaResponse:
 
         self.reprompt = {"type": speech_type.value, key: text}
 
-    def as_dict(self):
+    def as_dict(self) -> dict[str, Any]:
         """Return response in an Alexa valid dict."""
-        response = {"shouldEndSession": self.should_end_session}
+        response: dict[str, Any] = {"shouldEndSession": self.should_end_session}
 
         if self.card is not None:
             response["card"] = self.card
