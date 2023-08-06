@@ -152,8 +152,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step via config flow."""
-        errors: dict[str, str] = {}
-
         if user_input:
             self._server = user_input[CONF_SERVER]
 
@@ -173,7 +171,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors=errors,
         )
 
     async def async_step_local_or_cloud(
@@ -193,12 +190,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_API_TYPE): vol.In(
-                        dict(
-                            {
-                                APIType.LOCAL: "Local API",
-                                APIType.CLOUD: "Cloud API",
-                            }.items()
-                        )
+                        {
+                            APIType.LOCAL: "Local API",
+                            APIType.CLOUD: "Cloud API",
+                        }
                     ),
                 }
             ),
