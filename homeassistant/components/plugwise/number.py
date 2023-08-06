@@ -86,7 +86,6 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     ) -> None:
         """Initiate Plugwise Number."""
         super().__init__(coordinator, device_id)
-        self.actuator = self.device[description.key]
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX

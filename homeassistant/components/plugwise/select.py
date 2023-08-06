@@ -30,7 +30,7 @@ class PlugwiseSelectDescriptionMixin:
 class PlugwiseSelectEntityDescription(
     SelectEntityDescription, PlugwiseSelectDescriptionMixin
 ):
-    """Class describing Plugwise Number entities."""
+    """Class describing Plugwise Select entities."""
 
     key: SelectType
 
