@@ -3,7 +3,6 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 from pyschlage.lock import Lock
-from pyschlage.user import User
 import pytest
 
 from homeassistant.components.schlage.const import DOMAIN
@@ -82,18 +81,6 @@ def mock_lock():
         battery_level=20,
         firmware_version="1.0",
     )
-    mock_lock.access_codes.return_value = []
     mock_lock.logs.return_value = []
+    mock_lock.last_changed_by.return_value = "thumbturn"
     return mock_lock
-
-
-@pytest.fixture
-def mock_user():
-    """Mock User fixture."""
-    mock_user = create_autospec(User)
-    mock_user.configure_mock(
-        name="robot",
-        email="robot@cyb.org",
-        user_id="__user-id__",
-    )
-    return mock_user
