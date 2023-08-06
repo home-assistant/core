@@ -449,3 +449,117 @@ time.sleep(5)
         await hass.async_block_till_done()
 
     assert caplog.text.count("time.sleep") == 1
+
+
+async def test_execute_with_output(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test executing a script with a return value."""
+    caplog.set_level(logging.WARNING)
+
+    scripts = [
+        "/some/config/dir/python_scripts/hello.py",
+    ]
+    with patch(
+        "homeassistant.components.python_script.os.path.isdir", return_value=True
+    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+        await async_setup_component(hass, "python_script", {})
+
+    source = """
+output = {"result": f"hello {data.get('name', 'World')}"}
+    """
+
+    with patch(
+        "homeassistant.components.python_script.open",
+        mock_open(read_data=source),
+        create=True,
+    ):
+        response = await hass.services.async_call(
+            "python_script",
+            "hello",
+            {"name": "paulus"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert isinstance(response, dict)
+    assert len(response) == 1
+    assert response["result"] == "hello paulus"
+
+    # No errors logged = good
+    assert caplog.text == ""
+
+
+async def test_execute_no_output(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test executing a script without a return value."""
+    caplog.set_level(logging.WARNING)
+
+    scripts = [
+        "/some/config/dir/python_scripts/hello.py",
+    ]
+    with patch(
+        "homeassistant.components.python_script.os.path.isdir", return_value=True
+    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+        await async_setup_component(hass, "python_script", {})
+
+    source = """
+no_output = {"result": f"hello {data.get('name', 'World')}"}
+    """
+
+    with patch(
+        "homeassistant.components.python_script.open",
+        mock_open(read_data=source),
+        create=True,
+    ):
+        response = await hass.services.async_call(
+            "python_script",
+            "hello",
+            {"name": "paulus"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert isinstance(response, dict)
+    assert len(response) == 0
+
+    # No errors logged = good
+    assert caplog.text == ""
+
+
+async def test_execute_wrong_output_type(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test executing a script without a return value."""
+    caplog.set_level(logging.WARNING)
+
+    scripts = [
+        "/some/config/dir/python_scripts/hello.py",
+    ]
+    with patch(
+        "homeassistant.components.python_script.os.path.isdir", return_value=True
+    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+        await async_setup_component(hass, "python_script", {})
+
+    source = """
+output = f"hello {data.get('name', 'World')}"
+    """
+
+    with patch(
+        "homeassistant.components.python_script.open",
+        mock_open(read_data=source),
+        create=True,
+    ):
+        response = await hass.services.async_call(
+            "python_script",
+            "hello",
+            {"name": "paulus"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert isinstance(response, dict)
+    assert len(response) == 0
+
+    assert "Expected `output` to be a dictionary, was <class 'str'>" in caplog.text
