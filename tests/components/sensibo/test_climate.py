@@ -76,31 +76,35 @@ async def test_climate_find_valid_targets() -> None:
 
 
 async def test_climate(
-    hass: HomeAssistant, load_int: ConfigEntry, get_data: SensiboData
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    get_data: SensiboData,
+    load_int: ConfigEntry,
 ) -> None:
     """Test the Sensibo climate."""
 
     state1 = hass.states.get("climate.hallway")
     state2 = hass.states.get("climate.kitchen")
+    state3 = hass.states.get("climate.bedroom")
 
     assert state1.state == "heat"
     assert state1.attributes == {
         "hvac_modes": [
-            "cool",
-            "heat",
-            "dry",
             "heat_cool",
+            "cool",
+            "dry",
             "fan_only",
+            "heat",
             "off",
         ],
         "min_temp": 10,
         "max_temp": 20,
         "target_temp_step": 1,
-        "fan_modes": ["quiet", "low", "medium"],
+        "fan_modes": ["low", "medium", "quiet"],
         "swing_modes": [
-            "stopped",
-            "fixedtop",
             "fixedmiddletop",
+            "fixedtop",
+            "stopped",
         ],
         "current_temperature": 21.2,
         "temperature": 25,
@@ -112,6 +116,19 @@ async def test_climate(
     }
 
     assert state2.state == "off"
+
+    assert not state3
+    found_log = False
+    logs = caplog.get_records("setup")
+    for log in logs:
+        if (
+            log.message
+            == "Device Bedroom not correctly registered with Sensibo cloud. Skipping device"
+        ):
+            found_log = True
+            break
+
+    assert found_log
 
 
 async def test_climate_fan(

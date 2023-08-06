@@ -155,6 +155,7 @@
         "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
         "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+        "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",

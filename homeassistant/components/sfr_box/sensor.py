@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -179,7 +180,6 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        translation_key="voltage",
         value_fn=lambda x: x.alimvoltage,
     ),
     SFRBoxSensorEntityDescription[SystemInfo](
@@ -188,7 +188,6 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        translation_key="temperature",
         value_fn=lambda x: x.temperature / 1000,
     ),
 )
@@ -252,7 +251,9 @@ class SFRBoxSensor(CoordinatorEntity[SFRDataUpdateCoordinator[_T]], SensorEntity
         self._attr_unique_id = (
             f"{system_info.mac_addr}_{coordinator.name}_{description.key}"
         )
-        self._attr_device_info = {"identifiers": {(DOMAIN, system_info.mac_addr)}}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, system_info.mac_addr)},
+        )
 
     @property
     def native_value(self) -> StateType:
