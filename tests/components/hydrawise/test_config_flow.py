@@ -26,7 +26,7 @@ async def test_form(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"api_key": "abc123"}
@@ -51,8 +51,8 @@ async def test_form_api_error(mock_api: MagicMock, hass: HomeAssistant) -> None:
         result["flow_id"], {"api_key": "abc123"}
     )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "cannot_connect"
 
 
 @patch("pydrawise.legacy.LegacyHydrawise", side_effect=ConnectTimeout)
@@ -65,8 +65,8 @@ async def test_form_connect_timeout(mock_api: MagicMock, hass: HomeAssistant) ->
         result["flow_id"], {"api_key": "abc123"}
     )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "timeout_connect"}
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "timeout_connect"
 
 
 @patch("pydrawise.legacy.LegacyHydrawise")
@@ -80,8 +80,8 @@ async def test_form_no_status(mock_api: MagicMock, hass: HomeAssistant) -> None:
         result["flow_id"], {"api_key": "abc123"}
     )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "unknown"
 
 
 @patch("pydrawise.legacy.LegacyHydrawise")
@@ -116,9 +116,11 @@ async def test_flow_import_already_imported(
         data={
             CONF_API_KEY: "__api_key__",
         },
+        unique_id="hydrawise-CUSTOMER_ID",
     )
     mock_config_entry.add_to_hass(hass)
 
+    mock_api.return_value.customer_id = "CUSTOMER_ID"
     mock_api.return_value.status = "All good!"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
