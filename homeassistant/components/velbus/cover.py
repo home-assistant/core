@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import VelbusEntity, cmd
+from .entity import VelbusEntity, api_call
 
 
 async def async_setup_entry(
@@ -81,22 +81,22 @@ class VelbusCover(VelbusEntity, CoverEntity):
             return 100 - pos
         return None
 
-    @cmd
+    @api_call
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._channel.open()
 
-    @cmd
+    @api_call
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._channel.close()
 
-    @cmd
+    @api_call
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._channel.stop()
 
-    @cmd
+    @api_call
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._channel.set_position(100 - kwargs[ATTR_POSITION])

@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, PRESET_MODES
-from .entity import VelbusEntity, cmd
+from .entity import VelbusEntity, api_call
 
 
 async def async_setup_entry(
@@ -64,7 +64,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         """Return the current temperature."""
         return self._channel.get_state()
 
-    @cmd
+    @api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -72,7 +72,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         await self._channel.set_temp(temp)
         self.async_write_ha_state()
 
-    @cmd
+    @api_call
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the new preset mode."""
         await self._channel.set_preset(PRESET_MODES[preset_mode])

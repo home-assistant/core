@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import VelbusEntity, cmd
+from .entity import VelbusEntity, api_call
 
 
 async def async_setup_entry(
@@ -34,7 +34,7 @@ class VelbusButton(VelbusEntity, ButtonEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.CONFIG
 
-    @cmd
+    @api_call
     async def async_press(self) -> None:
         """Handle the button press."""
         await self._channel.press()
