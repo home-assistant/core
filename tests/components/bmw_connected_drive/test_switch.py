@@ -81,7 +81,6 @@ async def test_service_call_fail(
     # Setup component
     assert await setup_mocked_integration(hass)
     entity_id = "switch.i4_edrive40_climate"
-    old_value = hass.states.get(entity_id).state
 
     # Setup exception
     monkeypatch.setattr(
@@ -89,6 +88,26 @@ async def test_service_call_fail(
         "trigger_remote_service",
         AsyncMock(side_effect=raised),
     )
+
+    # Turning switch to ON
+    old_value = "off"
+    hass.states.async_set(entity_id, old_value)
+    assert hass.states.get(entity_id).state == old_value
+
+    # Test
+    with pytest.raises(expected):
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
+    assert hass.states.get(entity_id).state == old_value
+
+    # Turning switch to OFF
+    old_value = "on"
+    hass.states.async_set(entity_id, old_value)
+    assert hass.states.get(entity_id).state == old_value
 
     # Test
     with pytest.raises(expected):
