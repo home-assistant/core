@@ -16,14 +16,13 @@ from .coordinator import EnphaseUpdateCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Enphase Envoy from a config entry."""
 
-    envoy = Envoy(entry.data[CONF_HOST], get_async_client(hass, verify_ssl=False))
+    host = entry.data[CONF_HOST]
+    envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
     coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
 
     await coordinator.async_config_entry_first_refresh()
     if not entry.unique_id:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=coordinator.envoy.serial_number
-        )
+        hass.config_entries.async_update_entry(entry, unique_id=envoy.serial_number)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
