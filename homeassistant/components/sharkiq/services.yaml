@@ -11,7 +11,7 @@ clean_room:
       name: Rooms
       description: List of rooms to clean
       required: true
-      advanced: false
+      advanced: true
       example: "Kitchen"
       default: ""
       selector:

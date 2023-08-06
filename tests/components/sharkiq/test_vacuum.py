@@ -11,6 +11,7 @@ from unittest.mock import patch
 import pytest
 from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
 
+from homeassistant import exceptions
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.sharkiq import DOMAIN
 from homeassistant.components.sharkiq.vacuum import (
@@ -19,7 +20,6 @@ from homeassistant.components.sharkiq.vacuum import (
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
     ATTR_ROOMS,
-    ATTR_RSSI,
     FAN_SPEEDS_MAP,
     SERVICE_CLEAN_ROOM,
 )
@@ -172,7 +172,6 @@ async def test_simple_properties(hass: HomeAssistant) -> None:
         (ATTR_ERROR_MSG, "Cliff sensor is blocked"),
         (ATTR_LOW_LIGHT, False),
         (ATTR_RECHARGE_RESUME, True),
-        (ATTR_RSSI, -46),
         (ATTR_ROOMS, ROOM_LIST),
     ],
 )
@@ -232,6 +231,39 @@ async def test_device_properties(
     assert getattr(device, device_property) == target_value
 
 
+@pytest.mark.parametrize(
+    ("room_list", "exception"),
+    [
+        (["KITCHEN"], None),
+        (["Office"], exceptions.HomeAssistantError),
+        ([], exceptions.HomeAssistantError),
+    ],
+)
+async def test_clean_room_error(
+    hass: HomeAssistant, room_list: list, exception: Exception
+) -> None:
+    """Test clean_room errors."""
+    if exception is None:
+        data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+        with patch.object(SharkIqVacuum, "async_clean_rooms") as mock_clean_room:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True
+            )
+            mock_clean_room.assert_called_once()
+    else:
+        with pytest.raises(exception):
+            if room_list:
+                data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+                await hass.services.async_call(
+                    DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True
+                )
+            elif not room_list:
+                data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+                await hass.services.async_call(
+                    DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True
+                )
+
+
 async def test_locate(hass: HomeAssistant) -> None:
     """Test that the locate command works."""
     with patch.object(SharkIqVacuum, "async_find_device") as mock_locate:
@@ -250,25 +282,6 @@ async def test_clean_room(hass: HomeAssistant, room_list: list) -> None:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
         await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
         mock_clean_room.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    ("room_list"),
-    [(["KITCHEN"]), (["Office"]), ([]), (None), ("Office")],
-)
-async def test_form_error(hass: HomeAssistant, room_list: list) -> None:
-    """Test clean_room errors."""
-    with pytest.raises(Exception):
-        if room_list:
-            data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
-            await hass.services.async_call(
-                DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True
-            )
-        elif not room_list:
-            data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
-            await hass.services.async_call(
-                DOMAIN, SERVICE_CLEAN_ROOM, {}, blocking=True
-            )
 
 
 @pytest.mark.parametrize(

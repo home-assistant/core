@@ -47,7 +47,6 @@ ATTR_ERROR_CODE = "last_error_code"
 ATTR_ERROR_MSG = "last_error_message"
 ATTR_LOW_LIGHT = "low_light"
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
-ATTR_RSSI = "rssi"
 ATTR_ROOMS = "rooms"
 
 
@@ -218,28 +217,33 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Cause the device to generate a loud chirp."""
         await self.sharkiq.async_find_device()
 
-    async def async_clean_room(self, **kwargs):
+    async def async_clean_room(self, rooms: list[str], **kwargs: Any) -> None:
         """Clean a specific room."""
-        rooms_cleaned = []
+        if len(rooms) == 0:
+            raise exceptions.HomeAssistantError("No rooms to clean were provided.")
+        rooms_to_clean = []
+        valid_rooms = []
+        if self.available_rooms is not None:
+            valid_rooms = self.available_rooms
         all_rooms_reachable = True
-        for room in kwargs.get(ATTR_ROOMS):
-            if room in self.available_rooms:
-                rooms_cleaned.append(room)
-            elif room.capitalize() in self.available_rooms:
-                rooms_cleaned.append(room.capitalize())
+        for room in rooms:
+            if room in valid_rooms:
+                rooms_to_clean.append(room)
+            elif room.capitalize() in valid_rooms:
+                rooms_to_clean.append(room.capitalize())
             else:
                 all_rooms_reachable = False
                 LOGGER.error("Room not reachable: %s", room)
 
         if all_rooms_reachable:
-            LOGGER.info("Cleaning room(s): %s", rooms_cleaned)
-            await self.sharkiq.async_clean_rooms(rooms_cleaned)
+            LOGGER.info("Cleaning room(s): %s", rooms_to_clean)
+            await self.sharkiq.async_clean_rooms(rooms_to_clean)
         else:
             LOGGER.error("Invalid room selection - service not run")
-            raise self.InvalidRoomSelection(
-                "One or more of the rooms listed is not available to your vacuum.  Make sure all rooms match the Shark App including capitalization."
+            raise exceptions.HomeAssistantError(
+                "One or more of the rooms listed is not available to your vacuum. "
+                "Make sure all rooms match the Shark App including capitalization."
             )
-
         await self.coordinator.async_refresh()
 
     @property
@@ -288,7 +292,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
             ATTR_ERROR_MSG: self.sharkiq.error_text,
             ATTR_LOW_LIGHT: self.low_light,
             ATTR_RECHARGE_RESUME: self.recharge_resume,
-            ATTR_RSSI: self.rssi,
             ATTR_ROOMS: self.available_rooms,
         }
         return data
