@@ -446,7 +446,9 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get("switch.rest_switch").unique_id == "very_unique"
 
-    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
+    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL * 2)
+    await hass.async_block_till_done()
+
     state = hass.states.get("switch.rest_switch")
     assert state.state == "unknown"
     assert state.attributes == {
