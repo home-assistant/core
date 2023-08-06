@@ -14,11 +14,10 @@ from pyenphase import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -37,13 +36,15 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     envoy_serial_number: str
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, envoy: Envoy, entry: ConfigEntry) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
         entry_data = entry.data
         self.entry = entry
-        self.host = entry_data[CONF_HOST]
         self.username = entry_data[CONF_USERNAME]
         self.password = entry_data[CONF_PASSWORD]
+        self.envoy = envoy
+        self._setup_complete = False
+        self._cancel_token_refresh: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -51,15 +52,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=SCAN_INTERVAL,
             always_update=False,
         )
-        envoy = self._async_make_envoy()
-        self.envoy = envoy
-        self._setup_complete = False
-        self._cancel_token_refresh: CALLBACK_TYPE | None = None
-
-    @callback
-    def _async_make_envoy(self) -> Envoy:
-        """Make a new envoy instance."""
-        return Envoy(self.host, get_async_client(self.hass, verify_ssl=False))
 
     @callback
     def _async_refresh_token_if_needed(self, now: datetime.datetime) -> None:
