@@ -24,6 +24,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
+from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     ATTR_CODE_FORMAT,
     ATTR_SUPPORTED_FEATURES,
@@ -1132,8 +1133,7 @@ class AlexaThermostatController(AlexaCapability):
             elif self.entity.state == STATE_UNKNOWN:
                 return None
             else:
-                mode = API_THERMOSTAT_MODES.get(self.entity.state)
-                if mode is None:
+                if self.entity.state not in API_THERMOSTAT_MODES:
                     _LOGGER.error(
                         "%s (%s) has unsupported state value '%s'",
                         self.entity.entity_id,
@@ -1141,6 +1141,7 @@ class AlexaThermostatController(AlexaCapability):
                         self.entity.state,
                     )
                     raise UnsupportedProperty(name)
+                mode = API_THERMOSTAT_MODES[HVACMode(self.entity.state)]
             return mode
 
         unit = self.hass.config.units.temperature_unit
