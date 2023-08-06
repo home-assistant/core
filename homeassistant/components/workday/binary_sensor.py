@@ -120,21 +120,10 @@ async def async_setup_entry(
         _holiday_string = holiday_date.strftime("%Y-%m-%d")
         LOGGER.debug("%s %s", _holiday_string, name)
 
-    entity = IsWorkdaySensor(
-        obj_holidays,
-        workdays,
-        excludes,
-        days_offset,
-        sensor_name,
-        entry.entry_id,
-    )
-
     async def check_date(service_call: ServiceCall) -> ServiceResponse:
         """Check if date is workday or not."""
         date_to_test: date = service_call.data[CHECK_DATE]
-        holiday_date = (
-            date_to_test in entity._obj_holidays  # pylint: disable=protected-access
-        )
+        holiday_date = date_to_test in obj_holidays
 
         date_string = date_to_test.strftime("%Y-%m-%d")
 
@@ -149,7 +138,16 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        [entity],
+        [
+            IsWorkdaySensor(
+                obj_holidays,
+                workdays,
+                excludes,
+                days_offset,
+                sensor_name,
+                entry.entry_id,
+            )
+        ],
         True,
     )
 
