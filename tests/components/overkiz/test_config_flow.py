@@ -105,6 +105,37 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_only_cloud_supported(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"server": TEST_SERVER2},
+    )
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "cloud"
+
+    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
+        "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_local_happy_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -256,6 +287,49 @@ async def test_form_invalid_auth_local(
 
     assert result4["type"] == data_entry_flow.FlowResultType.FORM
     assert result4["errors"] == {"base": error}
+
+
+async def test_form_local_developer_mode_disabled(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"server": TEST_SERVER},
+    )
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "local_or_cloud"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_type": "local"},
+    )
+
+    assert result3["type"] == "form"
+    assert result3["step_id"] == "local"
+
+    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
+        "pyoverkiz.client.OverkizClient.get_gateways",
+        return_value=MOCK_GATEWAY_RESPONSE,
+    ), patch("pyoverkiz.client.OverkizClient.get_setup_option", return_value=None):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": TEST_EMAIL,
+                "password": TEST_PASSWORD,
+                "host": "gateway-1234-5678-1234.local:8443",
+            },
+        )
+
+    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["errors"] == {"base": "developer_mode_disabled"}
 
 
 # @pytest.mark.parametrize(
