@@ -184,12 +184,12 @@ class AirthingsSensor(
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        _LOGGER.debug(
-            "updating %s, data: %s", self.entity_description.key, self.coordinator.data
-        )
         current_value = self.coordinator.data.sensors.get(self.entity_description.key)
 
-        if current_value is not None:
+        if current_value:
+            self._attr_assumed_state = False
             self._last_valid_value = current_value
+        else:
+            self._attr_assumed_state = True
 
         return self._last_valid_value
