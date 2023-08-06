@@ -167,15 +167,13 @@ async def test_form_local_happy_flow(
     assert result3["type"] == "form"
     assert result3["step_id"] == "local"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch(
-        "pyoverkiz.client.OverkizClient.get_setup_option", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.generate_local_token", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.activate_local_token", return_value=True
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+        get_setup_option=AsyncMock(return_value=True),
+        generate_local_token=AsyncMock(return_value="1234123412341234"),
+        activate_local_token=AsyncMock(return_value=True),
     ):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -458,15 +456,13 @@ async def test_local_abort_on_duplicate_entry(
     assert result3["type"] == "form"
     assert result3["step_id"] == "local"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch(
-        "pyoverkiz.client.OverkizClient.get_setup_option", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.generate_local_token", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.activate_local_token", return_value=True
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+        get_setup_option=AsyncMock(return_value=True),
+        generate_local_token=AsyncMock(return_value="1234123412341234"),
+        activate_local_token=AsyncMock(return_value=True),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -658,15 +654,13 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
 
     assert result2["step_id"] == "local"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch(
-        "pyoverkiz.client.OverkizClient.get_setup_option", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.generate_local_token", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.activate_local_token", return_value=True
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+        get_setup_option=AsyncMock(return_value=True),
+        generate_local_token=AsyncMock(return_value="1234123412341234"),
+        activate_local_token=AsyncMock(return_value=True),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -717,15 +711,13 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
 
     assert result2["step_id"] == "local"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY2_RESPONSE,
-    ), patch(
-        "pyoverkiz.client.OverkizClient.get_setup_option", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.generate_local_token", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.activate_local_token", return_value=True
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+        get_setup_option=AsyncMock(return_value=True),
+        generate_local_token=AsyncMock(return_value="1234123412341234"),
+        activate_local_token=AsyncMock(return_value=True),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -890,16 +882,13 @@ async def test_local_zeroconf_flow(
     assert result3["type"] == "form"
     assert result3["step_id"] == "local"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch(
-        "pyoverkiz.client.OverkizClient.get_setup_option", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.generate_local_token",
-        return_value="1234123412341234",
-    ), patch(
-        "pyoverkiz.client.OverkizClient.activate_local_token", return_value=True
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+        get_setup_option=AsyncMock(return_value=True),
+        generate_local_token=AsyncMock(return_value="1234123412341234"),
+        activate_local_token=AsyncMock(return_value=True),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
