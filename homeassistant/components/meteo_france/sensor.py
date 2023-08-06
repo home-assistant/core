@@ -141,7 +141,8 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:water-percent",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         data_path="current_forecast:humidity",
     ),
 )

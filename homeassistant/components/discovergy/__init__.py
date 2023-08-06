@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import APP_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import DiscovergyUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -38,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api_client=pydiscovergy.Discovergy(
             email=entry.data[CONF_EMAIL],
             password=entry.data[CONF_PASSWORD],
-            app_name=APP_NAME,
             httpx_client=get_async_client(hass),
             authentication=BasicAuth(),
         ),
@@ -49,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # try to get meters from api to check if credentials are still valid and for later use
         # if no exception is raised everything is fine to go
-        discovergy_data.meters = await discovergy_data.api_client.get_meters()
+        discovergy_data.meters = await discovergy_data.api_client.meters()
     except discovergyError.InvalidLogin as err:
         raise ConfigEntryAuthFailed("Invalid email or password") from err
     except Exception as err:  # pylint: disable=broad-except
@@ -69,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         await coordinator.async_config_entry_first_refresh()
 
-        discovergy_data.coordinators[meter.get_meter_id()] = coordinator
+        discovergy_data.coordinators[meter.meter_id] = coordinator
 
     hass.data[DOMAIN][entry.entry_id] = discovergy_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

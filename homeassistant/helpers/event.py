@@ -416,7 +416,7 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
 ) -> None:
     """Dispatch to listeners."""
     if not (
-        callbacks_list := callbacks.get(
+        callbacks_list := callbacks.get(  # type: ignore[call-overload]  # mypy bug?
             event.data.get("old_entity_id", event.data["entity_id"])
         )
     ):
@@ -888,9 +888,7 @@ class TrackTemplateResultInfo:
         self,
         hass: HomeAssistant,
         track_templates: Sequence[TrackTemplate],
-        action: Callable[
-            [EventType[EventStateChangedData] | None, list[TrackTemplateResult]], None
-        ],
+        action: TrackTemplateResultListener,
         has_super_template: bool = False,
     ) -> None:
         """Handle removal / refresh of tracker init."""
@@ -1209,7 +1207,7 @@ TrackTemplateResultListener = Callable[
         EventType[EventStateChangedData] | None,
         list[TrackTemplateResult],
     ],
-    None,
+    Coroutine[Any, Any, None] | None,
 ]
 """Type for the listener for template results.
 

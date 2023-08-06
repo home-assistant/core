@@ -63,7 +63,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 
@@ -888,7 +892,7 @@ async def wait_for_state_change_or_timeout(
     ev = asyncio.Event()
 
     @core.callback
-    def _async_event_changed(event: core.Event) -> None:
+    def _async_event_changed(event: EventType[EventStateChangedData]) -> None:
         ev.set()
 
     unsub = async_track_state_change_event(hass, [entity_id], _async_event_changed)

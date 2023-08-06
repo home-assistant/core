@@ -108,6 +108,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
+homeassistant.components.electric_kiwi.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
@@ -295,6 +296,7 @@ homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.sql.*
 homeassistant.components.ssdp.*
+homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*

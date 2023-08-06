@@ -539,7 +539,7 @@ class ConversationAgentSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("conversation_agent")
-class COnversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
+class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
     """Selector for a conversation agent."""
 
     selector_type = "conversation_agent"
@@ -988,6 +988,7 @@ class SelectSelectorConfig(TypedDict, total=False):
     custom_value: bool
     mode: SelectSelectorMode
     translation_key: str
+    sort: bool
 
 
 @SELECTORS.register("select")
@@ -1005,6 +1006,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
             vol.Optional("translation_key"): cv.string,
+            vol.Optional("sort", default=False): cv.boolean,
         }
     )
 

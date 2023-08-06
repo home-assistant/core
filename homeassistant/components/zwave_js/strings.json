@@ -150,6 +150,17 @@
     "invalid_server_version": {
       "title": "Newer version of Z-Wave JS Server needed",
       "description": "The version of Z-Wave JS Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave JS Server to the latest version to fix this issue."
+    },
+    "dry_fan_presets_deprecation": {
+      "title": "Dry and Fan preset modes will be removed: {entity_id}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Dry and Fan preset modes will be removed: {entity_id}",
+            "description": "You are using the Dry or Fan preset modes in your entity `{entity_id}`.\n\nDry and Fan preset modes are deprecated and will be removed. Please update your automations to use the corresponding Dry and Fan **HVAC modes** instead.\n\nClick on SUBMIT below once you have manually fixed this issue."
+          }
+        }
+      }
     }
   },
   "services": {
