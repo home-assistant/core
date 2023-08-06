@@ -318,10 +318,12 @@ async def test_form_local_developer_mode_disabled(
     assert result3["type"] == "form"
     assert result3["step_id"] == "local"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch("pyoverkiz.client.OverkizClient.get_setup_option", return_value=None):
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+        get_setup_option=AsyncMock(return_value=None),
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -681,7 +683,7 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
+        unique_id=TEST_GATEWAY_ID2,
         version=2,
         data={
             "username": TEST_EMAIL,
