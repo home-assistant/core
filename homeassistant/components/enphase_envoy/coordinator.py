@@ -113,6 +113,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.hass,
             self._async_refresh_token_if_needed,
             TOKEN_REFRESH_CHECK_INTERVAL,
+            cancel_on_shutdown=True,
         )
 
     async def _async_setup_and_authenticate(self) -> None:
