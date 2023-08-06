@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime, time
+import logging
 from typing import Any
 
 from pytrafikverket import TrafikverketTrain
@@ -33,6 +34,8 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id, next_departuredate
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -96,9 +99,11 @@ async def validate_input(
         errors["base"] = "no_trains"
     except MultipleTrainAnnouncementFound:
         errors["base"] = "multiple_trains"
-    except UnknownError:
+    except UnknownError as error:
+        _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception as error:  # pylint: disable=broad-exception-caught
+        _LOGGER.error("Unknown exception occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
 
     return errors
