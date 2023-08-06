@@ -58,17 +58,15 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Refresh token so we can still talk to the device if the cloud service goes offline."""
         assert isinstance(self.envoy.auth, EnvoyTokenAuth)
         expire_time = self.envoy.auth.expire_timestamp
-        if (remain := expire_time - now.timestamp()) > STALE_TOKEN_THRESHOLD:
-            _LOGGER.debug(
-                "%s: Token is not stale (%s seconds remain), skipping refresh",
-                self.name,
-                remain,
-            )
-            return
-        _LOGGER.debug("%s: Refreshing token (%s seconds remain)", self.name, remain)
-        self.hass.async_create_background_task(
-            self._async_try_refresh_token(), "{self.name} token refresh"
+        remain = expire_time - now.timestamp()
+        fresh = remain > STALE_TOKEN_THRESHOLD
+        _LOGGER.debug(
+            "%s: Token has %s seconds remaining (fresh=%s)", self.name, remain, fresh
         )
+        if not fresh:
+            self.hass.async_create_background_task(
+                self._async_try_refresh_token(), "{self.name} token refresh"
+            )
 
     async def _async_try_refresh_token(self) -> None:
         """Try to refresh token."""
@@ -76,15 +74,13 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("%s: Trying to refresh token", self.name)
         try:
             await self.envoy.auth.refresh()
-        except INVALID_AUTH_ERRORS as err:
-            _LOGGER.debug("%s: Failed to refresh token: %s", err, self.name)
-            return
         except EnvoyError as err:
-            _LOGGER.debug(
-                "%s: Error communicating with API to refresh token: %s", err, self.name
-            )
+            # If we can't refresh the token, we try again later
+            # If the token actually ends up expiring, we'll
+            # re-authenticate with username/password and get a new token
+            # or log an error if that fails
+            _LOGGER.debug("%s: Error refreshing token: %s", err, self.name)
             return
-        _LOGGER.debug("%s: Token refreshed", self.name)
         self._async_update_saved_token()
 
     @callback
@@ -96,11 +92,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._cancel_token_refresh = None
         if not isinstance(self.envoy.auth, EnvoyTokenAuth):
             return
-        _LOGGER.debug(
-            "%s: Scheduling token refresh at interval: %s",
-            self.name,
-            TOKEN_REFRESH_CHECK_INTERVAL,
-        )
         self._cancel_token_refresh = async_track_time_interval(
             self.hass,
             self._async_refresh_token_if_needed,
