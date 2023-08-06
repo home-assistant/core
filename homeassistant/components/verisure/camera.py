@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
@@ -38,7 +39,7 @@ async def async_setup_entry(
 
     assert hass.config.config_dir
     async_add_entities(
-        VerisureSmartcam(coordinator, serial_number, hass.config.config_dir)
+        VerisureSmartcam(coordinator, serial_number, hass.config.path(STORAGE_DIR))
         for serial_number in coordinator.data["cameras"]
     )
 
@@ -112,7 +113,7 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
 
         LOGGER.debug("Download new image %s", new_image_id)
         new_image_path = os.path.join(
-            self._directory_path, "{}{}".format(new_image_id, ".jpg")
+            self._directory_path, "verisure_{}{}".format(new_image_id, ".jpg")
         )
         new_image_url = new_image["contentUrl"]
         self.coordinator.verisure.download_image(new_image_url, new_image_path)
@@ -125,7 +126,7 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
     def delete_image(self, _=None) -> None:
         """Delete an old image."""
         remove_image = os.path.join(
-            self._directory_path, "{}{}".format(self._image_id, ".jpg")
+            self._directory_path, "verisure_{}{}".format(self._image_id, ".jpg")
         )
         try:
             os.remove(remove_image)
