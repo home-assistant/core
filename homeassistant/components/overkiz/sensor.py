@@ -67,7 +67,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery",
         device_class=SensorDeviceClass.ENUM,
-        options=["full", "normal", "low", "verylow"],
+        options=["full", "normal", "medium", "low", "verylow"],
         translation_key="battery",
     ),
     OverkizSensorDescription(

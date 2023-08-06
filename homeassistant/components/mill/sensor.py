@@ -172,13 +172,10 @@ class MillSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mill_device.device_id)},
-            name=self.name,
+            name=mill_device.name,
             manufacturer=MANUFACTURER,
+            model=mill_device.model,
         )
-        if isinstance(mill_device, mill.Heater):
-            self._attr_device_info["model"] = f"Generation {mill_device.generation}"
-        elif isinstance(mill_device, mill.Sensor):
-            self._attr_device_info["model"] = "Mill Sense Air"
         self._update_attr(mill_device)
 
     @callback

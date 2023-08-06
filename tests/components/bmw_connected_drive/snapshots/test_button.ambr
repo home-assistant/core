@@ -64,18 +64,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Refresh from cloud',
-        'icon': 'mdi:refresh',
-      }),
-      'context': <ANY>,
-      'entity_id': 'button.i4_edrive40_refresh_from_cloud',
-      'last_changed': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i3 (+ REX) Flash lights',
         'icon': 'mdi:car-light-alert',
       }),
@@ -117,18 +105,6 @@
       }),
       'context': <ANY>,
       'entity_id': 'button.i3_rex_find_vehicle',
-      'last_changed': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Refresh from cloud',
-        'icon': 'mdi:refresh',
-      }),
-      'context': <ANY>,
-      'entity_id': 'button.i3_rex_refresh_from_cloud',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',

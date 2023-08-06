@@ -9,6 +9,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import async_update_suggested_units
 from homeassistant.config import async_check_ha_config_file
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location, unit_system
@@ -30,6 +31,9 @@ class CheckConfigView(HomeAssistantView):
 
     async def post(self, request):
         """Validate configuration and return results."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized()
+
         errors = await async_check_ha_config_file(request.app["hass"])
 
         state = "invalid" if errors else "valid"

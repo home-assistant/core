@@ -469,6 +469,11 @@ class FritzBoxTools(
             if not host.get("MACAddress"):
                 continue
 
+            if (wan_access := host.get("X_AVM-DE_WANAccess")) is not None:
+                wan_access_result = "granted" in wan_access
+            else:
+                wan_access_result = None
+
             hosts[host["MACAddress"]] = Device(
                 name=host["HostName"],
                 connected=host["Active"],
@@ -476,7 +481,7 @@ class FritzBoxTools(
                 connection_type="",
                 ip_address=host["IPAddress"],
                 ssid=None,
-                wan_access="granted" in host["X_AVM-DE_WANAccess"],
+                wan_access=wan_access_result,
             )
 
         if not self.fritz_status.device_has_mesh_support or (

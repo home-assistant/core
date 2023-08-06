@@ -111,7 +111,7 @@ class PlenticoreDataSelect(
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
-        self._device_info = device_info
+        self._attr_device_info = device_info
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
     @property
