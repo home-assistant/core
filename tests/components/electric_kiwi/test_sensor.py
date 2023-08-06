@@ -65,8 +65,8 @@ async def test_hop_sensors(
         state = hass.states.get(sensor)
         assert state
         value = _check_and_move_time(hop_coordinator.data, sensor_state)
-        if value.tzinfo != timezone.utc:
-            value = value.astimezone(timezone.utc)
+
+        value = value.astimezone(timezone.utc)
         assert state.state == value.isoformat(timespec="seconds")
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
         assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
