@@ -20,6 +20,7 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import (
+    CALLBACK_TYPE,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -34,6 +35,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -478,6 +480,8 @@ def is_offset_reached(
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
+    _alarm_unsubs: list[CALLBACK_TYPE] = []
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -503,6 +507,7 @@ class CalendarEntity(Entity):
     @property
     def state(self) -> str:
         """Return the state of the calendar event."""
+        _LOGGER.debug("state property called: %s", self.event)
         if (event := self.event) is None:
             return STATE_OFF
 
@@ -512,6 +517,47 @@ class CalendarEntity(Entity):
             return STATE_ON
 
         return STATE_OFF
+
+    async def async_update_ha_state(self, force_refresh: bool = False) -> None:
+        """Update Home Assistant with current state of entity.
+
+        This sets up listeners to handle state transitions for start or end of
+        the current or upcoming event.
+        """
+        await super().async_update_ha_state(force_refresh)
+
+        for unsub in self._alarm_unsubs:
+            unsub()
+
+        now = dt_util.now()
+        event = self.event
+        if event is None or now >= event.end_datetime_local:
+            return
+        if now < event.start_datetime_local:
+            self._alarm_unsubs.append(
+                async_track_point_in_time(
+                    self.hass,
+                    self._event_start_or_end_trigger,
+                    event.start_datetime_local,
+                )
+            )
+        self._alarm_unsubs.append(
+            async_track_point_in_time(
+                self.hass, self._event_start_or_end_trigger, event.end_datetime_local
+            )
+        )
+
+    async def _event_start_or_end_trigger(self, _: datetime.datetime) -> None:
+        """Run when the active or upcoming event starts or ends."""
+        self._async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass.
+
+        To be extended by integrations.
+        """
+        for unsub in self._alarm_unsubs:
+            unsub()
 
     async def async_get_events(
         self,
@@ -646,7 +692,7 @@ async def handle_calendar_event_create(
             )
         )
         return
-
+    _LOGGER.debug("async_create_event: %s", msg[CONF_EVENT])
     try:
         await entity.async_create_event(**msg[CONF_EVENT])
     except HomeAssistantError as ex:
