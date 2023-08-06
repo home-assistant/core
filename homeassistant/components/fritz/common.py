@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+import re
 from types import MappingProxyType
 from typing import Any, TypedDict, cast
 
@@ -259,7 +260,12 @@ class FritzBoxTools(
             self._unique_id = info.serial_number
 
         self._model = info.model_name
-        self._current_firmware = info.software_version
+        if (
+            version_normalized := re.search(r"^\d+\.[0]?(.*)", info.software_version)
+        ) is not None:
+            self._current_firmware = version_normalized.group(1)
+        else:
+            self._current_firmware = info.software_version
 
         (
             self._update_available,
@@ -463,6 +469,11 @@ class FritzBoxTools(
             if not host.get("MACAddress"):
                 continue
 
+            if (wan_access := host.get("X_AVM-DE_WANAccess")) is not None:
+                wan_access_result = "granted" in wan_access
+            else:
+                wan_access_result = None
+
             hosts[host["MACAddress"]] = Device(
                 name=host["HostName"],
                 connected=host["Active"],
@@ -470,7 +481,7 @@ class FritzBoxTools(
                 connection_type="",
                 ip_address=host["IPAddress"],
                 ssid=None,
-                wan_access="granted" in host["X_AVM-DE_WANAccess"],
+                wan_access=wan_access_result,
             )
 
         if not self.fritz_status.device_has_mesh_support or (

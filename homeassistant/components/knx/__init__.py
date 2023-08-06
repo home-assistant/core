@@ -80,6 +80,8 @@ from .schema import (
     ButtonSchema,
     ClimateSchema,
     CoverSchema,
+    DateSchema,
+    DateTimeSchema,
     EventSchema,
     ExposeSchema,
     FanSchema,
@@ -136,6 +138,8 @@ CONFIG_SCHEMA = vol.Schema(
                     **ButtonSchema.platform_node(),
                     **ClimateSchema.platform_node(),
                     **CoverSchema.platform_node(),
+                    **DateSchema.platform_node(),
+                    **DateTimeSchema.platform_node(),
                     **FanSchema.platform_node(),
                     **LightSchema.platform_node(),
                     **NotifySchema.platform_node(),
@@ -338,10 +342,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
         [
-            platform
-            for platform in SUPPORTED_PLATFORMS
-            if platform in hass.data[DATA_KNX_CONFIG]
-            and platform is not Platform.NOTIFY
+            Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
+            *[
+                platform
+                for platform in SUPPORTED_PLATFORMS
+                if platform in hass.data[DATA_KNX_CONFIG]
+                and platform not in (Platform.SENSOR, Platform.NOTIFY)
+            ],
         ],
     )
     if unload_ok:

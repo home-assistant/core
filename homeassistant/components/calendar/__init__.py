@@ -455,7 +455,7 @@ def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.time
     if search and search.group(1):
         time = search.group(1)
         if ":" not in time:
-            if time[0] == "+" or time[0] == "-":
+            if time[0] in ("+", "-"):
                 time = f"{time[0]}0:{time[1:]}"
             else:
                 time = f"0:{time}"

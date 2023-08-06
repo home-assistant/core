@@ -1,4 +1,7 @@
 """Test BMW buttons."""
+from unittest.mock import AsyncMock
+
+from bimmer_connected.models import MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
 import pytest
 import respx
@@ -8,6 +11,7 @@ from homeassistant.components.bmw_connected_drive.coordinator import (
     BMWDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_mocked_integration
 
@@ -58,22 +62,31 @@ async def test_update_triggers_success(
     assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 1
 
 
-async def test_refresh_from_cloud(
+async def test_update_failed(
     hass: HomeAssistant,
     bmw_fixture: respx.Router,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test button press for deprecated service."""
+    """Test button press."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
     BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
-    # Test
-    await hass.services.async_call(
-        "button",
-        "press",
-        blocking=True,
-        target={"entity_id": "button.i4_edrive40_refresh_from_cloud"},
+    # Setup exception
+    monkeypatch.setattr(
+        RemoteServices,
+        "trigger_remote_service",
+        AsyncMock(side_effect=MyBMWRemoteServiceError),
     )
-    assert RemoteServices.trigger_remote_service.call_count == 0
-    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 2
+
+    # Test
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "button",
+            "press",
+            blocking=True,
+            target={"entity_id": "button.i4_edrive40_flash_lights"},
+        )
+    assert RemoteServices.trigger_remote_service.call_count == 1
+    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 0
