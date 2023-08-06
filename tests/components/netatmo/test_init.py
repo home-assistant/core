@@ -415,7 +415,7 @@ async def test_setup_component_invalid_token(hass: HomeAssistant, config_entry) 
                 headers={},
                 real_url="http://example.com",
             ),
-            code=400,
+            status=400,
             history=(),
         )
 

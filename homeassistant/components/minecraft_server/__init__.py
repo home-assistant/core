@@ -86,7 +86,7 @@ class MinecraftServer:
         # Data provided by 3rd party library
         self.version: str | None = None
         self.protocol_version: int | None = None
-        self.latency_time: float | None = None
+        self.latency: float | None = None
         self.players_online: int | None = None
         self.players_max: int | None = None
         self.players_list: list[str] | None = None
@@ -174,7 +174,7 @@ class MinecraftServer:
             self.protocol_version = status_response.version.protocol
             self.players_online = status_response.players.online
             self.players_max = status_response.players.max
-            self.latency_time = status_response.latency
+            self.latency = status_response.latency
             self.motd = status_response.motd.to_plain()
 
             self.players_list = []
@@ -197,7 +197,7 @@ class MinecraftServer:
             self.protocol_version = None
             self.players_online = None
             self.players_max = None
-            self.latency_time = None
+            self.latency = None
             self.players_list = None
             self.motd = None
 
