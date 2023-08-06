@@ -38,11 +38,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def __init__(self, hass: HomeAssistant, envoy: Envoy, entry: ConfigEntry) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
+        self.envoy = envoy
         entry_data = entry.data
         self.entry = entry
         self.username = entry_data[CONF_USERNAME]
         self.password = entry_data[CONF_PASSWORD]
-        self.envoy = envoy
         self._setup_complete = False
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
         super().__init__(
