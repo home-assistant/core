@@ -10,11 +10,10 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import VelbusEntity
+from .entity import VelbusEntity, cmd
 
 
 async def async_setup_entry(
@@ -35,9 +34,7 @@ class VelbusButton(VelbusEntity, ButtonEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.CONFIG
 
+    @cmd
     async def async_press(self) -> None:
         """Handle the button press."""
-        try:
-            await self._channel.press()
-        except OSError as err:
-            raise HomeAssistantError("Transmit for the press packet failed") from err
+        await self._channel.press()

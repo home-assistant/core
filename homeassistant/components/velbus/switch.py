@@ -6,11 +6,10 @@ from velbusaio.channels import Relay as VelbusRelay
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import VelbusEntity
+from .entity import VelbusEntity, cmd
 
 
 async def async_setup_entry(
@@ -37,16 +36,12 @@ class VelbusSwitch(VelbusEntity, SwitchEntity):
         """Return true if the switch is on."""
         return self._channel.is_on()
 
+    @cmd
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
-        try:
-            await self._channel.turn_on()
-        except OSError as err:
-            raise HomeAssistantError("Transmit for the turn_on packet failed") from err
+        await self._channel.turn_on()
 
+    @cmd
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
-        try:
-            await self._channel.turn_off()
-        except OSError as err:
-            raise HomeAssistantError("Transmit for the turn_off packet failed") from err
+        await self._channel.turn_off()

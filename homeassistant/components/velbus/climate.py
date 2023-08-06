@@ -13,11 +13,10 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, PRESET_MODES
-from .entity import VelbusEntity
+from .entity import VelbusEntity, cmd
 
 
 async def async_setup_entry(
@@ -65,20 +64,16 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         """Return the current temperature."""
         return self._channel.get_state()
 
+    @cmd
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        try:
-            await self._channel.set_temp(temp)
-        except OSError as err:
-            raise HomeAssistantError("Transmit for the set_temp packet failed") from err
+        await self._channel.set_temp(temp)
         self.async_write_ha_state()
 
+    @cmd
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the new preset mode."""
-        try:
-            await self._channel.set_preset(PRESET_MODES[preset_mode])
-        except OSError as err:
-            raise HomeAssistantError("Transmit for the set_mode packet failed") from err
+        await self._channel.set_preset(PRESET_MODES[preset_mode])
         self.async_write_ha_state()

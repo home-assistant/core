@@ -1,8 +1,13 @@
 """Support for Velbus devices."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
+from functools import wraps
+from typing import Any, Concatenate, ParamSpec, TypeVar
+
 from velbusaio.channels import Channel as VelbusChannel
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
@@ -35,3 +40,28 @@ class VelbusEntity(Entity):
 
     async def _on_update(self) -> None:
         self.async_write_ha_state()
+
+
+_T = TypeVar("_T", bound="VelbusEntity")
+_P = ParamSpec("_P")
+
+
+def cmd(
+    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+    """Catch command exceptions."""
+
+    @wraps(func)
+    async def cmd_wrapper(
+        self: _T, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        """Wrap all command methods."""
+        try:
+            await func(self, *args, **kwargs)
+        except OSError as exc:
+            raise HomeAssistantError(
+                f"Error calling {func.__name__} on entity {self.entity_id},"
+                f" packet transmit failed"
+            ) from exc
+
+    return cmd_wrapper
