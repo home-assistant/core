@@ -103,7 +103,7 @@ class BasePlatform(Entity):
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
-        self._nan_value = entry.get(CONF_NAN_VALUE)
+        self._nan_value = entry.get(CONF_NAN_VALUE, None)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
@@ -160,10 +160,6 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
         self._count = config[CONF_COUNT]
-        if self._nan_value is not None:
-            self._nan_value = struct.unpack(
-                self._structure, bytes.fromhex(self._nan_value[2:])
-            )[0]
 
     def _swap_registers(self, registers: list[int]) -> list[int]:
         """Do swap as needed."""
@@ -182,7 +178,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
     def __process_raw_value(self, entry: float | int | str) -> float | int | str:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
-        if self._nan_value and entry == self._nan_value:
+        if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return STATE_UNAVAILABLE
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
@@ -235,6 +231,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         if isinstance(val_result, int) and self._precision == 0:
             return str(val_result)
         if isinstance(val_result, str):
+            if val_result == "nan":
+                val_result = STATE_UNAVAILABLE
             return val_result
         return f"{float(val_result):.{self._precision}f}"
 
