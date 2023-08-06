@@ -32,7 +32,6 @@ async def test_entity_state_attrs(
     [
         ("button.i4_edrive40_flash_lights"),
         ("button.i4_edrive40_sound_horn"),
-        ("button.i4_edrive40_find_vehicle"),
     ],
 )
 async def test_service_call_success(
@@ -100,6 +99,12 @@ async def test_service_call_fail(
             "off",
             "on",
         ),
+        (
+            "button.i4_edrive40_find_vehicle",
+            "device_tracker.i4_edrive40",
+            "not_home",
+            "home",
+        ),
     ],
 )
 async def test_service_call_success_state_change(
@@ -126,3 +131,48 @@ async def test_service_call_success_state_change(
     )
     check_remote_service_call(bmw_fixture)
     assert hass.states.get(state_entity_id).state == new_value
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "state_entity_id", "new_attrs", "old_attrs"),
+    [
+        (
+            "button.i4_edrive40_find_vehicle",
+            "device_tracker.i4_edrive40",
+            {"latitude": 123.456, "longitude": 34.5678, "direction": 121},
+            {"latitude": 48.177334, "longitude": 11.556274, "direction": 180},
+        ),
+    ],
+)
+async def test_service_call_success_attr_change(
+    hass: HomeAssistant,
+    entity_id: str,
+    state_entity_id: str,
+    new_attrs: dict,
+    old_attrs: dict,
+    bmw_fixture: respx.Router,
+) -> None:
+    """Test successful button press with attribute change."""
+
+    # Setup component
+    assert await setup_mocked_integration(hass)
+
+    assert {
+        k: v
+        for k, v in hass.states.get(state_entity_id).attributes.items()
+        if k in old_attrs
+    } == old_attrs
+
+    # Test
+    await hass.services.async_call(
+        "button",
+        "press",
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    check_remote_service_call(bmw_fixture)
+    assert {
+        k: v
+        for k, v in hass.states.get(state_entity_id).attributes.items()
+        if k in new_attrs
+    } == new_attrs
