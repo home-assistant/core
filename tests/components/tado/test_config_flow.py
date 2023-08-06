@@ -2,6 +2,7 @@
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
+import pytest
 import requests
 
 from homeassistant import config_entries
@@ -78,53 +79,24 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_key_error(hass: HomeAssistant) -> None:
-    """Test we handle KeyError."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.tado.config_flow.Tado",
-        side_effect=KeyError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_runtime_error(hass: HomeAssistant) -> None:
-    """Test we handle RuntimeError."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.tado.config_flow.Tado",
-        side_effect=RuntimeError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_exception(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "error",
+    [
+        (KeyError, "invalid_auth"),
+        (RuntimeError, "cannot_connect"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_form_exceptions(hass: HomeAssistant, error) -> None:
     """Test we handle Exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    exc, base_error = error
     with patch(
         "homeassistant.components.tado.config_flow.Tado",
-        side_effect=Exception,
+        side_effect=exc,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -132,7 +104,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": base_error}
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
