@@ -20,7 +20,12 @@ from RestrictedPython.Guards import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
@@ -107,9 +112,9 @@ def discover_scripts(hass):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
         return False
 
-    def python_script_service_handler(call: ServiceCall) -> None:
+    def python_script_service_handler(call: ServiceCall) -> ServiceResponse:
         """Handle python script service calls."""
-        execute_script(hass, call.service, call.data)
+        return execute_script(hass, call.service, call.data)
 
     existing = hass.services.services.get(DOMAIN, {}).keys()
     for existing_service in existing:
@@ -126,7 +131,12 @@ def discover_scripts(hass):
 
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
-        hass.services.register(DOMAIN, name, python_script_service_handler)
+        hass.services.register(
+            DOMAIN,
+            name,
+            python_script_service_handler,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
 
         service_desc = {
             CONF_NAME: services_dict.get(name, {}).get("name", name),
@@ -143,7 +153,7 @@ def execute_script(hass, name, data=None):
     raise_if_invalid_filename(filename)
     with open(hass.config.path(FOLDER, filename), encoding="utf8") as fil:
         source = fil.read()
-    execute(hass, filename, source, data)
+    return execute(hass, filename, source, data)
 
 
 @bind_hass
@@ -216,16 +226,26 @@ def execute(hass, filename, source, data=None):
         "hass": hass,
         "data": data or {},
         "logger": logger,
+        "output": {},
     }
 
     try:
         _LOGGER.info("Executing %s: %s", filename, data)
         # pylint: disable-next=exec-used
         exec(compiled.code, restricted_globals)  # noqa: S102
+        _LOGGER.debug(
+            "Output of python_script: `%s`:\n%s",
+            filename,
+            restricted_globals["output"],
+        )
+        if not isinstance(restricted_globals["output"], dict):
+            raise ScriptError("Expected 'output' to be a dictionary")
     except ScriptError as err:
         logger.error("Error executing script: %s", err)
     except Exception as err:  # pylint: disable=broad-except
         logger.exception("Error executing script: %s", err)
+
+    return restricted_globals["output"]
 
 
 class StubPrinter:
