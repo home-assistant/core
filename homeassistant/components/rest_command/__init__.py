@@ -146,12 +146,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             payload,
                         )
 
-                    _content = None
-                    if response.content_type == "application/json":
-                        _content = await response.json()
-                    elif response.content_type.startswith("text/"):
-                        _content = await response.text()
-                    return {"content": _content, "status": response.status}
+                    if service.return_response:
+                        _content = None
+                        if response.content_type == "application/json":
+                            _content = await response.json()
+                        else:
+                            try:
+                                _content = await response.text()
+                            except (LookupError, UnicodeDecodeError):
+                                _LOGGER.exception(
+                                    "Response of `%s` could not be interpreted as text",
+                                    request_url,
+                                )
+                                raise
+                        return {"content": _content, "status": response.status}
+                    return None
 
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s", request_url)

@@ -1,8 +1,10 @@
 """The tests for the rest command platform."""
 import asyncio
+import base64
 from http import HTTPStatus
 
 import aiohttp
+import pytest
 
 import homeassistant.components.rest_command as rc
 from homeassistant.const import CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN
@@ -368,17 +370,26 @@ class TestRestCommandComponent:
         with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
+        png = base64.decodebytes(
+            b"iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAAPSURBVBhXY/h/ku////8AECAE1JZPvDAAAAAASUVORK5CYII="
+        )
+
         aioclient_mock.get(
             self.url,
-            content=b"success",
-            headers={"content-type": "some/nonsense"},
+            content=png,
+            headers={"content-type": "text/plain"},
         )
 
-        response = self.hass.services.call(
-            rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
-        )
+        # No problem without 'return_response'
+        response = self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
         self.hass.block_till_done()
+        assert not response
 
-        assert len(aioclient_mock.mock_calls) == 1
-        assert not response["content"]
-        assert response["status"] == 200
+        # Throws Decode error when requesting response
+        with pytest.raises(UnicodeDecodeError):
+            response = self.hass.services.call(
+                rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+            )
+            self.hass.block_till_done()
+
+        assert not response
