@@ -226,6 +226,7 @@ class EnvoyEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
     ) -> None:
         """Initialize Envoy entity."""
         self.entity_description = description
+        envoy_name = coordinator.name
         envoy_serial_num = coordinator.envoy.serial_number
         assert envoy_serial_num is not None
         self._attr_unique_id = f"{envoy_serial_num}_{description.key}"
@@ -282,7 +283,6 @@ class EnvoyInverterEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEnt
     ) -> None:
         """Initialize Envoy inverter entity."""
         self.entity_description = description
-        envoy_name = coordinator.name
         self._serial_number = serial_number
         key = description.key
 
