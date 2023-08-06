@@ -24,7 +24,7 @@ async def test_entry_diagnostics(
                 "name": REDACTED,
                 "username": REDACTED,
                 "password": REDACTED,
-                "token": "abc",
+                "token": REDACTED,
             },
             "options": {},
             "pref_disable_new_entities": False,
