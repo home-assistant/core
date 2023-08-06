@@ -335,38 +335,6 @@ async def test_form_local_developer_mode_disabled(
 # @pytest.mark.parametrize(
 #     ("side_effect", "error"),
 #     [
-#         (BadCredentialsException, "invalid_auth"),
-#         (TooManyRequestsException, "too_many_requests"),
-#         (TimeoutError, "cannot_connect"),
-#         (ClientError, "cannot_connect"),
-#         (MaintenanceException, "server_in_maintenance"),
-#         (TooManyAttemptsBannedException, "too_many_attempts"),
-#         (UnknownUserException, "unsupported_hardware"),
-#         (Exception, "unknown"),
-#     ],
-# )
-# async def test_form_invalid_auth(
-#     hass: HomeAssistant, side_effect: Exception, error: str
-# ) -> None:
-#     """Test we handle invalid auth."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
-
-#     with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
-#         result2 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
-#         )
-
-#     assert result["step_id"] == config_entries.SOURCE_USER
-#     assert result["type"] == data_entry_flow.FlowResultType.FORM
-#     assert result2["errors"] == {"base": error}
-
-
-# @pytest.mark.parametrize(
-#     ("side_effect", "error"),
-#     [
 #         (BadCredentialsException, "unsupported_hardware"),
 #     ],
 # )
