@@ -107,5 +107,8 @@ class LutronFan(LutronDevice, FanEntity):
     
     @property
     def extra_state_attributes(self):
-        """Return the state attributes."""
+        """The Lutron Integration ID is the unique identifier that is 
+        visible to the consumer in the Lutron software.  As such
+        we also expose it here to allow the user to accurately identify
+        which entity ties to which device in the Lutron software"""
         return {"lutron_integration_id": self._lutron_device.id}
