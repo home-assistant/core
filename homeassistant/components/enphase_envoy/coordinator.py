@@ -55,7 +55,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _async_refresh_token_if_needed(self, now: datetime.datetime) -> None:
-        """Refresh token so we can still talk to the device if the cloud service goes offline."""
+        """Proactively refresh token if its stale in case cloud services goes down."""
         assert isinstance(self.envoy.auth, EnvoyTokenAuth)
         expire_time = self.envoy.auth.expire_timestamp
         remain = expire_time - now.timestamp()
