@@ -3,6 +3,10 @@ import asyncio
 import logging
 
 from aiohttp import ClientError
+from yalexs.activity import (
+    Activity,
+    ActivityType,
+)
 from yalexs.util import get_latest_activity
 
 from homeassistant.core import callback
@@ -30,7 +34,7 @@ class ActivityStream(AugustSubscriberMixin):
         self._august_gateway = august_gateway
         self._api = api
         self._house_ids = house_ids
-        self._latest_activities = {}
+        self._latest_activities: dict[str, dict[ActivityType, Activity]] = {}
         self._last_update_time = None
         self.pubnub = pubnub
         self._update_debounce = {}
@@ -67,13 +71,15 @@ class ActivityStream(AugustSubscriberMixin):
                 updater()
                 self._schedule_updates[house_id] = None
 
-    def get_latest_device_activity(self, device_id, activity_types):
+    def get_latest_device_activity(
+        self, device_id: str, activity_types: set[ActivityType]
+    ) -> Activity | None:
         """Return latest activity that is one of the activity_types."""
         if device_id not in self._latest_activities:
             return None
 
         latest_device_activities = self._latest_activities[device_id]
-        latest_activity = None
+        latest_activity: Activity | None = None
 
         for activity_type in activity_types:
             if activity_type in latest_device_activities:
