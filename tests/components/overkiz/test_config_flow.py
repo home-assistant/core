@@ -4,9 +4,18 @@ from __future__ import annotations
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientError
+from pyoverkiz.exceptions import (
+    BadCredentialsException,
+    MaintenanceException,
+    NotSuchTokenException,
+    TooManyAttemptsBannedException,
+    TooManyRequestsException,
+    UnknownUserException,
+)
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
@@ -66,7 +75,6 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     )
 
     assert result["type"] == "form"
-    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -106,7 +114,6 @@ async def test_form_local_happy_flow(
     )
 
     assert result["type"] == "form"
-    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -146,6 +153,109 @@ async def test_form_local_happy_flow(
     await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (BadCredentialsException, "invalid_auth"),
+        (TooManyRequestsException, "too_many_requests"),
+        (TimeoutError, "cannot_connect"),
+        (ClientError, "cannot_connect"),
+        (MaintenanceException, "server_in_maintenance"),
+        (TooManyAttemptsBannedException, "too_many_attempts"),
+        (UnknownUserException, "unsupported_hardware"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_invalid_auth_cloud(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
+    """Test we handle invalid auth (cloud)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"server": TEST_SERVER},
+    )
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "local_or_cloud"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_type": "cloud"},
+    )
+
+    assert result3["type"] == "form"
+    assert result3["step_id"] == "cloud"
+
+    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    await hass.async_block_till_done()
+
+    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["errors"] == {"base": error}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (BadCredentialsException, "invalid_auth"),
+        (TooManyRequestsException, "too_many_requests"),
+        (TimeoutError, "cannot_connect"),
+        (ClientError, "cannot_connect"),
+        (MaintenanceException, "server_in_maintenance"),
+        (TooManyAttemptsBannedException, "too_many_attempts"),
+        (UnknownUserException, "unsupported_hardware"),
+        (NotSuchTokenException, "not_such_token"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_invalid_auth_local(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
+    """Test we handle invalid auth (local)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"server": TEST_SERVER},
+    )
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "local_or_cloud"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_type": "local"},
+    )
+
+    assert result3["type"] == "form"
+    assert result3["step_id"] == "local"
+
+    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": TEST_HOST, "username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    await hass.async_block_till_done()
+
+    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["errors"] == {"base": error}
 
 
 # @pytest.mark.parametrize(
