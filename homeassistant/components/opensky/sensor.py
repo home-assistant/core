@@ -26,7 +26,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_ALTITUDE,
-    COORDINATOR,
     DEFAULT_ALTITUDE,
     DOMAIN,
     MANUFACTURER,
@@ -81,7 +80,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             OpenSkySensor(
@@ -89,7 +88,6 @@ async def async_setup_entry(
                 entry,
             )
         ],
-        True,
     )
 
 
@@ -101,6 +99,9 @@ class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntit
     )
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_icon = "mdi:airplane"
+    _attr_native_unit_of_measurement = "flights"
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -116,9 +117,6 @@ class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntit
             name=config_entry.title,
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_icon = "mdi:airplane"
-        self._attr_native_unit_of_measurement = "flights"
-        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> int:

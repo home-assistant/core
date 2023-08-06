@@ -8,7 +8,6 @@ LOGGER = logging.getLogger(__package__)
 PLATFORMS = [Platform.SENSOR]
 DEFAULT_NAME = "OpenSky"
 DOMAIN = "opensky"
-COORDINATOR = "coordinator"
 MANUFACTURER = "OpenSky Network"
 CONF_ALTITUDE = "altitude"
 ATTR_ICAO24 = "icao24"
