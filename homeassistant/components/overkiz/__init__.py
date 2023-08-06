@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import cast
 
 from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
@@ -36,7 +35,6 @@ from .const import (
     CONF_API_TYPE,
     CONF_HUB,
     CONF_SERVER,
-    CONF_TOKEN_UUID,
     DOMAIN,
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
@@ -261,25 +259,3 @@ async def _async_migrate_entries(
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
     return True
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove local token if applicable, before removing the Config Entry."""
-
-    if token_uuid := entry.data.get(CONF_TOKEN_UUID):
-        # Create Overkiz cloud client for removal of the local token
-        username = entry.data[CONF_USERNAME]
-        password = entry.data[CONF_PASSWORD]
-        server = SUPPORTED_SERVERS[entry.data[CONF_SERVER]]
-
-        session = async_create_clientsession(hass)
-        client = OverkizClient(
-            username=username, password=password, session=session, server=server
-        )
-
-        try:
-            await client.delete_local_token(
-                gateway_id=cast(str, entry.unique_id), uuid=token_uuid
-            )
-        except NotSuchTokenException:
-            LOGGER.debug("Token is invalid / has been already removed")

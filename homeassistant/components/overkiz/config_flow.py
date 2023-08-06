@@ -33,7 +33,6 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import (
     CONF_API_TYPE,
     CONF_SERVER,
-    CONF_TOKEN_UUID,
     DEFAULT_SERVER,
     DOMAIN,
     LOGGER,
@@ -99,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise DeveloperModeDisabled
 
             token = await client.generate_local_token(gateway_id)
-            uuid = await client.activate_local_token(
+            await client.activate_local_token(
                 gateway_id=gateway_id, token=token, label="Home Assistant/local"
             )
 
@@ -116,20 +115,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 server=generate_local_server(host=user_input[CONF_HOST]),
             )
 
-            try:
-                await local_client.login()
-            except Exception as exception:  # pylint: disable=broad-except
-                try:
-                    # Remove local token when login is not successful
-                    await client.delete_local_token(gateway_id, uuid)
-                except NotSuchTokenException:
-                    LOGGER.debug("Token is invalid / has been already removed")
-
-                raise exception
+            await local_client.login()
 
             user_input[CONF_TOKEN] = token
-            user_input[CONF_TOKEN_UUID] = uuid
-
         else:
             server = SUPPORTED_SERVERS[user_input[CONF_SERVER]]
             client = self._create_cloud_client(
