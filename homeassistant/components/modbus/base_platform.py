@@ -73,10 +73,6 @@ class BasePlatform(Entity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        # temporary fix,
-        # make sure slave is always defined to avoid an error in pymodbus
-        # attr(in_waiting) not defined.
-        # see issue #657 and PR #660 in riptideio/pymodbus
         self._slave = entry.get(CONF_SLAVE, 0)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
@@ -287,7 +283,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, command, self._write_type
         )
         if result is None:
@@ -323,7 +319,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         if self._call_active:
             return
         self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._verify_address, 1, self._verify_type
         )
         self._call_active = False
