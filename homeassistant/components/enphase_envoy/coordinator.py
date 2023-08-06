@@ -60,12 +60,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         expire_time = self.envoy.auth.expire_timestamp
         remain = expire_time - now.timestamp()
         fresh = remain > STALE_TOKEN_THRESHOLD
-        _LOGGER.debug(
-            "%s: Token has %s seconds remaining (fresh=%s)", self.name, remain, fresh
-        )
+        name = self.name
+        _LOGGER.debug("%s: %s seconds remaining on token fresh=%s", name, remain, fresh)
         if not fresh:
             self.hass.async_create_background_task(
-                self._async_try_refresh_token(), "{self.name} token refresh"
+                self._async_try_refresh_token(), "{name} token refresh"
             )
 
     async def _async_try_refresh_token(self) -> None:
