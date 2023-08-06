@@ -63,7 +63,12 @@
   "entity": {
     "sensor": {
       "departure_time": {
-        "name": "Departure time"
+        "name": "Departure time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "Train filtering"
+          }
+        }
       },
       "departure_state": {
         "name": "Departure state",
@@ -71,28 +76,68 @@
           "on_time": "On time",
           "delayed": "Delayed",
           "canceled": "Cancelled"
+        },
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
         }
       },
       "cancelled": {
-        "name": "Cancelled"
+        "name": "Cancelled",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "delayed_time": {
-        "name": "Delayed time"
+        "name": "Delayed time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "planned_time": {
-        "name": "Planned time"
+        "name": "Planned time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "estimated_time": {
-        "name": "Estimated time"
+        "name": "Estimated time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "actual_time": {
-        "name": "Actual time"
+        "name": "Actual time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "other_info": {
-        "name": "Other information"
+        "name": "Other information",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       },
       "deviation": {
-        "name": "Deviation"
+        "name": "Deviation",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
       }
     }
   }
