@@ -52,9 +52,7 @@ def cmd(
     """Catch command exceptions."""
 
     @wraps(func)
-    async def cmd_wrapper(
-        self: _T, *args: _P.args, **kwargs: _P.kwargs
-    ) -> None:
+    async def cmd_wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap all command methods."""
         try:
             await func(self, *args, **kwargs)
