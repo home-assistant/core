@@ -128,11 +128,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # token likely expired or firmware changed
             # so we fall through to authenticate with
             # username/password
-        await self._async_authenticate_with_username_password()
-
-    async def _async_authenticate_with_username_password(self) -> None:
-        """Authenticate with username/password."""
         await self.envoy.authenticate(username=self.username, password=self.password)
+        # Password auth succeeded, so we can update the token
+        # if we are using EnvoyTokenAuth
         self._async_update_saved_token()
 
     def _async_update_saved_token(self) -> None:
