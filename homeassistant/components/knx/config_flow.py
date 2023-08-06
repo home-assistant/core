@@ -56,7 +56,7 @@ from .const import (
     TELEGRAM_LOG_MAX,
     KNXConfigEntryData,
 )
-from .helpers.keyfile import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
+from .helpers.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
 from .schema import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"
