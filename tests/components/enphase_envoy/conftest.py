@@ -7,6 +7,7 @@ from pyenphase import (
     EnvoyInverter,
     EnvoySystemConsumption,
     EnvoySystemProduction,
+    EnvoyTokenAuth,
 )
 import pytest
 
@@ -43,12 +44,13 @@ def config_fixture():
 
 
 @pytest.fixture(name="mock_envoy")
-def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup):
+def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
     mock_envoy.serial_number = serial_number
     mock_envoy.authenticate = mock_authenticate
     mock_envoy.setup = mock_setup
+    mock_envoy.auth = mock_auth
     mock_envoy.data = EnvoyData(
         system_consumption=EnvoySystemConsumption(
             watt_hours_last_7_days=1234,
@@ -97,6 +99,12 @@ async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
 def mock_authenticate():
     """Define a mocked Envoy.authenticate fixture."""
     return AsyncMock()
+
+
+@pytest.fixture(name="mock_auth")
+def mock_auth(serial_number):
+    """Define a mocked EnvoyAuth fixture."""
+    return EnvoyTokenAuth("127.0.0.1", token="abc", envoy_serial=serial_number)
 
 
 @pytest.fixture(name="mock_setup")

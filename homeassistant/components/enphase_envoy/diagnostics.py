@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_TOKEN, DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
 
 CONF_TITLE = "title"
@@ -20,6 +20,7 @@ TO_REDACT = {
     CONF_TITLE,
     CONF_UNIQUE_ID,
     CONF_USERNAME,
+    CONF_TOKEN,
 }
 
 
