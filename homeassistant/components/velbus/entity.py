@@ -58,8 +58,7 @@ def cmd(
             await func(self, *args, **kwargs)
         except OSError as exc:
             raise HomeAssistantError(
-                f"Error calling {func.__name__} on entity {self.entity_id},"
-                f" packet transmit failed"
+                f"Could not execute {func.__name__} service for {self.name}"
             ) from exc
 
     return cmd_wrapper
