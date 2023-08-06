@@ -17,6 +17,7 @@ from pyoverkiz.exceptions import (
     TooManyRequestsException,
     UnknownUserException,
 )
+from pyoverkiz.models import OverkizServer
 from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import generate_local_server, is_overkiz_gateway
 import voluptuous as vol
@@ -76,8 +77,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Create session on Somfy cloud server to generate an access token for local API
             session = async_create_clientsession(self.hass)
             server = SUPPORTED_SERVERS[self._server]
-            client = OverkizClient(
-                username=username, password=password, server=server, session=session
+            client = self._create_cloud_client(
+                username=username, password=password, server=server
             )
 
             await client.login(register_event_listener=False)
@@ -131,10 +132,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         else:
             server = SUPPORTED_SERVERS[user_input[CONF_SERVER]]
-
-            session = async_create_clientsession(self.hass)
-            client = OverkizClient(
-                username=username, password=password, server=server, session=session
+            client = self._create_cloud_client(
+                username=username, password=password, server=server
             )
 
             await client.login(register_event_listener=False)
@@ -420,3 +419,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._api_type = self._config_entry.data[CONF_API_TYPE]
 
         return await self.async_step_user(dict(entry_data))
+
+    def _create_cloud_client(
+        self, username: str, password: str, server: OverkizServer
+    ) -> OverkizClient:
+        session = async_create_clientsession(self.hass)
+        client = OverkizClient(
+            username=username, password=password, server=server, session=session
+        )
+
+        return client
