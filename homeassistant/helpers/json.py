@@ -53,6 +53,8 @@ def json_encoder_default(obj: Any) -> Any:
         return obj.as_dict()
     if isinstance(obj, Path):
         return obj.as_posix()
+    if isinstance(obj, datetime.datetime):
+        return obj.isoformat()
     raise TypeError
 
 
