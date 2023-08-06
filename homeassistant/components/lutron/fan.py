@@ -13,14 +13,10 @@ from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-FULL_SUPPORT = (
-    FanEntityFeature.SET_SPEED
-)
-
-async def async_setup_platform(
+def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Lutron fans."""
@@ -30,21 +26,12 @@ async def async_setup_platform(
             area_name, 
             device, 
             hass.data[LUTRON_CONTROLLER],
-            hass, 
             device.uuid, 
             device.name, 
-            FULL_SUPPORT, 
             None)
         devs.append(dev)
 
-    async_add_entities(devs, True)
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    await async_setup_platform(hass, {}, async_add_entities)
+    add_entities(devs, True)
 
 
 class LutronFan(LutronDevice, FanEntity):
@@ -52,15 +39,14 @@ class LutronFan(LutronDevice, FanEntity):
 
     def __init__(
         self, area_name, lutron_device, controller,
-        hass: HomeAssistant,
         unique_id: str,
         name: str,
-        supported_features: FanEntityFeature,
         preset_modes: list[str] | None,
     ) -> None:
-        self.hass = hass
-        self._unique_id = unique_id
-        self._attr_supported_features = supported_features
+        super().__init__(area_name, lutron_device, controller)
+        self._attr_unique_id = unique_id
+        self._attr_supported_features = FanEntityFeature.SET_SPEED
+        self._attr_speed_count = 4
         self._prev_percentage: int | None = None
         self._percentage: int | None = None
         self._preset_modes = preset_modes
@@ -68,13 +54,6 @@ class LutronFan(LutronDevice, FanEntity):
         self._oscillating: bool | None = None
         self._direction: str | None = None
         self._attr_name = name
-        _LOGGER.info("FANDATA: A %s B %s", (unique_id,name))
-        super().__init__(area_name, lutron_device, controller)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id."""
-        return self._unique_id
 
     @property
     def percentage(self) -> int | None:
@@ -84,11 +63,6 @@ class LutronFan(LutronDevice, FanEntity):
         if new_percentage != 0:
             self._prev_percentage = new_percentage
         return new_percentage
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return 4
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
