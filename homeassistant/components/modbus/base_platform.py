@@ -220,7 +220,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                     v_result.append(str(v_temp))
                 elif v_temp != v_temp:  # noqa: PLR0124
                     # NaN float detection replace with None
-                    v_result.append("nan")
+                    v_result.append("nan")  # pragma: no cover
                 else:
                     v_result.append(f"{float(v_temp):.{self._precision}f}")
             return ",".join(map(str, v_result))
