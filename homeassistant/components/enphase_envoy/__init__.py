@@ -1,13 +1,9 @@
 """The Enphase Envoy integration."""
 from __future__ import annotations
 
-from pyenphase import Envoy
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseUpdateCoordinator
@@ -16,13 +12,13 @@ from .coordinator import EnphaseUpdateCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Enphase Envoy from a config entry."""
 
-    host = entry.data[CONF_HOST]
-    envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
-    coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
+    coordinator = EnphaseUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
     if not entry.unique_id:
-        hass.config_entries.async_update_entry(entry, unique_id=envoy.serial_number)
+        hass.config_entries.async_update_entry(
+            entry, unique_id=coordinator.envoy.serial_number
+        )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
