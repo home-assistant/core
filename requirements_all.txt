@@ -378,7 +378,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.5.3
+airthings-ble==0.5.6-2
 
 # homeassistant.components.airthings
 airthings-cloud==0.1.0
