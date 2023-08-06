@@ -576,6 +576,168 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
         assert mock_entry.data["password"] == TEST_PASSWORD2
 
 
+async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
+    """Test reauthentication flow."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "server": TEST_SERVER2,
+            "api_type": "cloud",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=mock_entry.data,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "cloud"
+
+    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
+        "pyoverkiz.client.OverkizClient.get_gateways",
+        return_value=MOCK_GATEWAY2_RESPONSE,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "username": TEST_EMAIL,
+                "password": TEST_PASSWORD2,
+            },
+        )
+
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["reason"] == "reauth_wrong_account"
+
+
+async def test_local_reauth_success(hass: HomeAssistant) -> None:
+    """Test reauthentication flow."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "server": TEST_SERVER,
+            "api_type": "local",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=mock_entry.data,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_type": "local"},
+    )
+
+    assert result2["step_id"] == "local"
+
+    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
+        "pyoverkiz.client.OverkizClient.get_gateways",
+        return_value=MOCK_GATEWAY_RESPONSE,
+    ), patch(
+        "pyoverkiz.client.OverkizClient.get_setup_option", return_value=True
+    ), patch(
+        "pyoverkiz.client.OverkizClient.generate_local_token", return_value=True
+    ), patch(
+        "pyoverkiz.client.OverkizClient.activate_local_token", return_value=True
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "username": TEST_EMAIL,
+                "password": TEST_PASSWORD2,
+            },
+        )
+
+        assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result3["reason"] == "reauth_successful"
+        assert mock_entry.data["username"] == TEST_EMAIL
+        assert mock_entry.data["password"] == TEST_PASSWORD2
+
+
+async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
+    """Test reauthentication flow."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "server": TEST_SERVER,
+            "api_type": "local",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=mock_entry.data,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_type": "local"},
+    )
+
+    assert result2["step_id"] == "local"
+
+    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
+        "pyoverkiz.client.OverkizClient.get_gateways",
+        return_value=MOCK_GATEWAY2_RESPONSE,
+    ), patch(
+        "pyoverkiz.client.OverkizClient.get_setup_option", return_value=True
+    ), patch(
+        "pyoverkiz.client.OverkizClient.generate_local_token", return_value=True
+    ), patch(
+        "pyoverkiz.client.OverkizClient.activate_local_token", return_value=True
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "username": TEST_EMAIL,
+                "password": TEST_PASSWORD2,
+            },
+        )
+
+        assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result3["reason"] == "reauth_wrong_account"
+
+
 # async def test_reauth_wrong_account(hass: HomeAssistant) -> None:
 #     """Test reauthentication flow."""
 
