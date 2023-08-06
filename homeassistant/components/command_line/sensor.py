@@ -15,9 +15,11 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_DEVICE_CLASS,
@@ -205,15 +207,25 @@ class CommandSensor(ManualTriggerEntity, SensorEntity):
                 self._process_manual_data(value)
                 return
 
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.async_render_with_possible_json_value(
-                    value,
-                    None,
-                )
+        self._attr_native_value = None
+        if self._value_template is not None and value is not None:
+            value = self._value_template.async_render_with_possible_json_value(
+                value,
+                None,
             )
-        else:
+
+        if self.device_class not in {
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        }:
             self._attr_native_value = value
+            self._process_manual_data(value)
+            return
+
+        if value is not None:
+            self._attr_native_value = async_parse_date_datetime(
+                value, self.entity_id, self.device_class
+            )
         self._process_manual_data(value)
         self.async_write_ha_state()
 
