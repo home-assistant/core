@@ -13,7 +13,7 @@ from homeassistant.components.bmw_connected_drive.coordinator import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import setup_mocked_integration
+from . import check_remote_service_call, setup_mocked_integration
 
 
 async def test_entity_state_attrs(
@@ -25,7 +25,6 @@ async def test_entity_state_attrs(
 
     # Setup component
     assert await setup_mocked_integration(hass)
-    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
     # Get all switch entities
     assert hass.states.async_all("switch") == snapshot
@@ -36,8 +35,8 @@ async def test_entity_state_attrs(
     [
         ("switch.i4_edrive40_climate", "ON"),
         ("switch.i4_edrive40_climate", "OFF"),
-        ("switch.i4_edrive40_charging", "ON"),
-        ("switch.i4_edrive40_charging", "OFF"),
+        ("switch.iX_xdrive50_charging", "ON"),
+        ("switch.iX_xdrive50_charging", "OFF"),
     ],
 )
 async def test_update_triggers_success(
@@ -59,7 +58,7 @@ async def test_update_triggers_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert RemoteServices.trigger_remote_service.call_count == 1
+    check_remote_service_call(bmw_fixture)
     assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 1
 
 
@@ -106,5 +105,4 @@ async def test_update_triggers_exceptions(
             blocking=True,
             target={"entity_id": "switch.i4_edrive40_climate"},
         )
-    assert RemoteServices.trigger_remote_service.call_count == 2
     assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 0

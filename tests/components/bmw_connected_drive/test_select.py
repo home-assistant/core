@@ -13,7 +13,7 @@ from homeassistant.components.bmw_connected_drive.coordinator import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import setup_mocked_integration
+from . import check_remote_service_call, setup_mocked_integration
 
 
 async def test_entity_state_attrs(
@@ -58,7 +58,7 @@ async def test_update_triggers_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert RemoteServices.trigger_remote_service.call_count == 1
+    check_remote_service_call(bmw_fixture)
     assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 1
 
 
@@ -89,7 +89,6 @@ async def test_update_triggers_fail(
             blocking=True,
             target={"entity_id": entity_id},
         )
-    assert RemoteServices.trigger_remote_service.call_count == 0
     assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 0
 
 
@@ -129,4 +128,3 @@ async def test_remote_service_exceptions(
             blocking=True,
             target={"entity_id": "select.i4_edrive40_ac_charging_limit"},
         )
-    assert RemoteServices.trigger_remote_service.call_count == 1

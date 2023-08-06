@@ -18,5 +18,22 @@
       'last_updated': <ANY>,
       'state': '80',
     }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'device_class': 'battery',
+        'friendly_name': 'iX xDrive50 Target SoC',
+        'icon': 'mdi:battery-charging-medium',
+        'max': 100.0,
+        'min': 20.0,
+        'mode': <NumberMode.SLIDER: 'slider'>,
+        'step': 5.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'number.ix_xdrive50_target_soc',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '80',
+    }),
   ])
 # ---
