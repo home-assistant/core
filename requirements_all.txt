@@ -249,7 +249,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.13
+aiohomekit==2.6.14
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -2153,7 +2153,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.31.1
+python-roborock==0.32.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
