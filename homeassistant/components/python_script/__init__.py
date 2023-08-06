@@ -238,8 +238,13 @@ def execute(hass, filename, source, data=None):
             filename,
             restricted_globals["output"],
         )
+        # Ensure that we're always returning a dictionary
         if not isinstance(restricted_globals["output"], dict):
-            raise ScriptError("Expected 'output' to be a dictionary")
+            output_type = type(restricted_globals["output"])
+            restricted_globals["output"] = {}
+            raise ScriptError(
+                f"Expected `output` to be a dictionary, was {output_type}"
+            )
     except ScriptError as err:
         logger.error("Error executing script: %s", err)
     except Exception as err:  # pylint: disable=broad-except
