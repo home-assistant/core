@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@patch("hydrawiser.core.Hydrawiser")
+@patch("pydrawise.legacy.LegacyHydrawise")
 async def test_form(
     mock_api: MagicMock, hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -41,7 +41,7 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@patch("hydrawiser.core.Hydrawiser", side_effect=HTTPError)
+@patch("pydrawise.legacy.LegacyHydrawise", side_effect=HTTPError)
 async def test_form_api_error(mock_api: MagicMock, hass: HomeAssistant) -> None:
     """Test we handle API errors."""
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +55,7 @@ async def test_form_api_error(mock_api: MagicMock, hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@patch("hydrawiser.core.Hydrawiser", side_effect=ConnectTimeout)
+@patch("pydrawise.legacy.LegacyHydrawise", side_effect=ConnectTimeout)
 async def test_form_connect_timeout(mock_api: MagicMock, hass: HomeAssistant) -> None:
     """Test we handle API errors."""
     result = await hass.config_entries.flow.async_init(
@@ -69,7 +69,7 @@ async def test_form_connect_timeout(mock_api: MagicMock, hass: HomeAssistant) ->
     assert result2["errors"] == {"base": "timeout_connect"}
 
 
-@patch("hydrawiser.core.Hydrawiser")
+@patch("pydrawise.legacy.LegacyHydrawise")
 async def test_form_no_status(mock_api: MagicMock, hass: HomeAssistant) -> None:
     """Test we handle API errors."""
     mock_api.return_value.status = None
@@ -84,7 +84,7 @@ async def test_form_no_status(mock_api: MagicMock, hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-@patch("hydrawiser.core.Hydrawiser")
+@patch("pydrawise.legacy.LegacyHydrawise")
 async def test_flow_import_success(mock_api: MagicMock, hass: HomeAssistant) -> None:
     """Test that we can import a YAML config."""
     mock_api.return_value.status = "All good!"
@@ -105,7 +105,7 @@ async def test_flow_import_success(mock_api: MagicMock, hass: HomeAssistant) -> 
     }
 
 
-@patch("hydrawiser.core.Hydrawiser")
+@patch("pydrawise.legacy.LegacyHydrawise")
 async def test_flow_import_already_imported(
     mock_api: MagicMock, hass: HomeAssistant
 ) -> None:

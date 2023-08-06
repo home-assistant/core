@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from hydrawiser import core as hydrawiser_core
+from pydrawise import legacy
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -31,7 +31,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
             try:
                 api = await self.hass.async_add_executor_job(
-                    hydrawiser_core.Hydrawiser, api_key
+                    legacy.LegacyHydrawise, api_key
                 )
             except ConnectTimeout:
                 errors["base"] = "timeout_connect"
