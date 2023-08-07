@@ -103,6 +103,7 @@ SENSORS: Final = {
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ("light", "power"): BlockSensorDescription(
         key="light|power",
