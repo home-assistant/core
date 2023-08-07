@@ -9,6 +9,7 @@ from homeassistant.components.modbus.const import (
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
+    CONF_NAN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
@@ -557,6 +558,15 @@ async def test_config_wrong_struct_sensor(
             [0x0201, 0x0403],
             False,
             str(int(0x02010404)),
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_NAN_VALUE: "0x80000000",
+            },
+            [0x8000, 0x0000],
+            False,
+            STATE_UNAVAILABLE,
         ),
         (
             {
