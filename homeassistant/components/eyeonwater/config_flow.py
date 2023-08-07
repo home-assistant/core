@@ -8,28 +8,20 @@ from aiohttp import ClientError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.selector import selector
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN
 from .eow import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 
-CONF_EOW_HOSTNAME = "eow_hostname"
 CONF_EOW_HOSTNAME_COM = "eyeonwater.com"
 CONF_EOW_HOSTNAME_CA = "eyeonwater.ca"
-
-CONF_DOMAIN_COM = "com"
-CONF_DOMAIN_CA = "ca"
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        CONF_EOW_HOSTNAME: selector(
-            {"select": {"options": [CONF_EOW_HOSTNAME_COM, CONF_EOW_HOSTNAME_CA]}}
-        ),
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
     }
@@ -38,30 +30,17 @@ DATA_SCHEMA = vol.Schema(
 
 def create_account_from_config(data: dict[str, Any]) -> Account:
     """Create account login from config."""
-    # Backward compatibility code
-    try:
-        domain = data[CONF_DOMAIN]
-    except KeyError:
-        domain = CONF_DOMAIN_COM
-
-    if domain == CONF_DOMAIN_COM:
+    CountryCode = hass.config.country
+    if CountryCode == "US":
         eow_hostname = CONF_EOW_HOSTNAME_COM
-        metric_measurement_system = False
-    elif domain == CONF_DOMAIN_CA:
+    elif CountryCode == "CA":
         eow_hostname = CONF_EOW_HOSTNAME_CA
-        metric_measurement_system = True
     else:
         raise Exception(
             f"Unsupported domain {domain}. Only 'com' and 'ca' are supported"
         )
 
-    # Measurement system
-    metric_measurement_system = False if hass.config.units is US_CUSTOMARY_SYSTEM else True
-    
-    # EOW hostname
-    with contextlib.suppress(KeyError):
-        eow_hostname = data[CONF_EOW_HOSTNAME]
-
+    metric_measurement_system = hass.config.units is METRIC_SYSTEM
     username = data[CONF_USERNAME]
     password = data[CONF_PASSWORD]
 
