@@ -186,7 +186,6 @@ async def async_setup_entry(
 
     for door in data.locks:
         detail = data.get_device_detail(door.device_id)
-        assert isinstance(detail, LockDetail)
         if not detail.doorsense:
             _LOGGER.debug(
                 (
@@ -210,7 +209,6 @@ async def async_setup_entry(
                 entities.append(AugustDoorbellBinarySensor(data, door, description))
 
     for doorbell in data.doorbells:
-        assert isinstance(detail, DoorbellDetail)
         for description in SENSOR_TYPES_DOORBELL + SENSOR_TYPES_VIDEO_DOORBELL:
             _LOGGER.debug(
                 "Adding doorbell sensor class %s for %s",
