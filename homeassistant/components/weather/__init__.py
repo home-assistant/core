@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 import logging
-from typing import Any, Final, Literal, Required, TypedDict, cast, final
+from typing import Any, Final, Literal, Required, TypedDict, final
 
 import voluptuous as vol
 
@@ -262,7 +262,7 @@ class WeatherEntity(Entity):
 
     _forecast_listeners: dict[
         Literal["daily", "hourly", "twice_daily"],
-        list[Callable[[list[dict[str, Any]] | None], None]],
+        list[Callable[[list[JsonValueType] | None], None]],
     ]
 
     _weather_option_temperature_unit: str | None = None
@@ -815,9 +815,9 @@ class WeatherEntity(Entity):
     @final
     def _convert_forecast(
         self, native_forecast_list: list[Forecast]
-    ) -> list[dict[str, Any]]:
+    ) -> list[JsonValueType]:
         """Convert a forecast in native units to the unit configured by the user."""
-        converted_forecast_list: list[dict[str, Any]] = []
+        converted_forecast_list: list[JsonValueType] = []
         precision = self.precision
 
         from_temp_unit = self.native_temperature_unit or self._default_temperature_unit
@@ -1055,7 +1055,7 @@ class WeatherEntity(Entity):
     def async_subscribe_forecast(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
-        forecast_listener: Callable[[list[dict[str, Any]] | None], None],
+        forecast_listener: Callable[[list[JsonValueType] | None], None],
     ) -> CALLBACK_TYPE:
         """Subscribe to forecast updates.
 
@@ -1133,5 +1133,5 @@ async def async_get_forecast_service(
         converted_forecast_list = weather._convert_forecast(native_forecast_list)
     return {
         "type": forecast_type,
-        "forecast": cast(JsonValueType, converted_forecast_list),
+        "forecast": converted_forecast_list,
     }
