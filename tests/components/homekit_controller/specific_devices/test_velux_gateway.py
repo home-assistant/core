@@ -7,7 +7,7 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 
@@ -73,7 +73,7 @@ async def test_velux_cover_setup(hass: HomeAssistant) -> None:
                             friendly_name="VELUX Sensor Temperature sensor",
                             capabilities={"state_class": SensorStateClass.MEASUREMENT},
                             unique_id="00:00:00:00:00:00_2_8",
-                            unit_of_measurement=TEMP_CELSIUS,
+                            unit_of_measurement=UnitOfTemperature.CELSIUS,
                             state="18.9",
                         ),
                         EntityTestInfo(
