@@ -1,6 +1,7 @@
 """Alexa Resources and Assets."""
 
 
+from abc import ABC, abstractmethod
 from typing import Any
 
 
@@ -196,7 +197,7 @@ class AlexaGlobalCatalog:
     VALUE_QUICK_WASH = "Alexa.Value.QuickWash"
 
 
-class AlexaCapabilityResource:
+class AlexaCapabilityResource(ABC):
     """Base class for Alexa capabilityResources, modeResources, and presetResources.
 
     Resources objects labels must be unique across all modeResources and
@@ -210,7 +211,7 @@ class AlexaCapabilityResource:
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#capability-resources
     """
 
-    def __init__(self, labels) -> None:
+    def __init__(self, labels: list[str]) -> None:
         """Initialize an Alexa resource."""
         self._resource_labels = []
         for label in labels:
@@ -220,12 +221,12 @@ class AlexaCapabilityResource:
         """Return capabilityResources object serialized for an API response."""
         return self.serialize_labels(self._resource_labels)
 
-    def serialize_configuration(self):
+    @abstractmethod
+    def serialize_configuration(self) -> dict[str, Any]:
         """Return serialized configuration for an API response.
 
         Return ModeResources, PresetResources friendlyNames serialized.
         """
-        return []
 
     def serialize_labels(self, resources) -> dict[str, list[str]]:
         """Return serialized labels for an API response.
@@ -250,22 +251,22 @@ class AlexaModeResource(AlexaCapabilityResource):
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#capability-resources
     """
 
-    def __init__(self, labels, ordered=False):
+    def __init__(self, labels: list[str], ordered: bool = False) -> None:
         """Initialize an Alexa modeResource."""
         super().__init__(labels)
-        self._supported_modes = []
-        self._mode_ordered = ordered
+        self._supported_modes: list[dict[str, Any]] = []
+        self._mode_ordered: bool = ordered
 
-    def add_mode(self, value, labels):
+    def add_mode(self, value, labels: list[str]) -> None:
         """Add mode to the supportedModes object."""
         self._supported_modes.append({"value": value, "labels": labels})
 
-    def serialize_configuration(self):
+    def serialize_configuration(self) -> dict[str, Any]:
         """Return serialized configuration for an API response.
 
         Returns configuration for ModeResources friendlyNames serialized.
         """
-        mode_resources = []
+        mode_resources: list[dict[str, Any]] = []
         for mode in self._supported_modes:
             result = {
                 "value": mode["value"],
@@ -285,10 +286,17 @@ class AlexaPresetResource(AlexaCapabilityResource):
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#presetresources
     """
 
-    def __init__(self, labels, min_value, max_value, precision, unit=None):
+    def __init__(
+        self,
+        labels: list[str],
+        min_value: int | float,
+        max_value: int | float,
+        precision,
+        unit: str | None = None,
+    ) -> None:
         """Initialize an Alexa presetResource."""
         super().__init__(labels)
-        self._presets = []
+        self._presets: list[dict[str, Any]] = []
         self._minimum_value = min_value
         self._maximum_value = max_value
         self._precision = precision
@@ -296,16 +304,16 @@ class AlexaPresetResource(AlexaCapabilityResource):
         if unit in AlexaGlobalCatalog.__dict__.values():
             self._unit_of_measure = unit
 
-    def add_preset(self, value, labels):
+    def add_preset(self, value: int | float, labels: list[str]) -> None:
         """Add preset to configuration presets array."""
         self._presets.append({"value": value, "labels": labels})
 
-    def serialize_configuration(self):
+    def serialize_configuration(self) -> dict[str, Any]:
         """Return serialized configuration for an API response.
 
         Returns configuration for PresetResources friendlyNames serialized.
         """
-        configuration = {
+        configuration: dict[str, Any] = {
             "supportedRange": {
                 "minimumValue": self._minimum_value,
                 "maximumValue": self._maximum_value,
@@ -375,26 +383,28 @@ class AlexaSemantics:
     DIRECTIVE_MODE_SET_MODE = "SetMode"
     DIRECTIVE_MODE_ADJUST_MODE = "AdjustMode"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an Alexa modeResource."""
-        self._action_mappings = []
-        self._state_mappings = []
+        self._action_mappings: list[dict[str, Any]] = []
+        self._state_mappings: list[dict[str, Any]] = []
 
-    def _add_action_mapping(self, semantics):
+    def _add_action_mapping(self, semantics: dict[str, Any]) -> None:
         """Add action mapping between actions and interface directives."""
         self._action_mappings.append(semantics)
 
-    def _add_state_mapping(self, semantics):
+    def _add_state_mapping(self, semantics: dict[str, Any]) -> None:
         """Add state mapping between states and interface directives."""
         self._state_mappings.append(semantics)
 
-    def add_states_to_value(self, states, value):
+    def add_states_to_value(self, states: list[str], value: int | float) -> None:
         """Add StatesToValue stateMappings."""
         self._add_state_mapping(
             {"@type": self.STATES_TO_VALUE, "states": states, "value": value}
         )
 
-    def add_states_to_range(self, states, min_value, max_value):
+    def add_states_to_range(
+        self, states: list[str], min_value: int | float, max_value: int | float
+    ) -> None:
         """Add StatesToRange stateMappings."""
         self._add_state_mapping(
             {
@@ -404,7 +414,9 @@ class AlexaSemantics:
             }
         )
 
-    def add_action_to_directive(self, actions, directive, payload):
+    def add_action_to_directive(
+        self, actions: list[str], directive: str, payload: dict[str, Any]
+    ) -> None:
         """Add ActionsToDirective actionMappings."""
         self._add_action_mapping(
             {
@@ -416,7 +428,7 @@ class AlexaSemantics:
 
     def serialize_semantics(self) -> dict[str, Any]:
         """Return semantics object serialized for an API response."""
-        semantics = {}
+        semantics: dict[str, Any] = {}
         if self._action_mappings:
             semantics[self.MAPPINGS_ACTION] = self._action_mappings
         if self._state_mappings:
