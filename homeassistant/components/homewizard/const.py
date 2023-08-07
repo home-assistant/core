@@ -20,7 +20,7 @@ CONF_PRODUCT_NAME = "product_name"
 CONF_PRODUCT_TYPE = "product_type"
 CONF_SERIAL = "serial"
 
-UPDATE_INTERVAL = timedelta(seconds=5)
+UPDATE_INTERVAL = timedelta(seconds=1)
 
 
 @dataclass
