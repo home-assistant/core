@@ -53,6 +53,7 @@ from .const import (  # noqa: F401
 )
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
+from .headers import setup_headers
 from .request_context import current_request, setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
@@ -69,6 +70,7 @@ CONF_SSL_PEER_CERTIFICATE: Final = "ssl_peer_certificate"
 CONF_SSL_KEY: Final = "ssl_key"
 CONF_CORS_ORIGINS: Final = "cors_allowed_origins"
 CONF_USE_X_FORWARDED_FOR: Final = "use_x_forwarded_for"
+CONF_USE_X_FRAME_OPTIONS: Final = "use_x_frame_options"
 CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
@@ -118,6 +120,7 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
+            vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
         }
     ),
 )
@@ -136,6 +139,7 @@ class ConfData(TypedDict, total=False):
     ssl_key: str
     cors_allowed_origins: list[str]
     use_x_forwarded_for: bool
+    use_x_frame_options: bool
     trusted_proxies: list[IPv4Network | IPv6Network]
     login_attempts_threshold: int
     ip_ban_enabled: bool
@@ -180,6 +184,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
+    use_x_frame_options = conf[CONF_USE_X_FRAME_OPTIONS]
     trusted_proxies = conf.get(CONF_TRUSTED_PROXIES) or []
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
@@ -200,6 +205,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         use_x_forwarded_for=use_x_forwarded_for,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
+        use_x_frame_options=use_x_frame_options,
     )
 
     async def stop_server(event: Event) -> None:
@@ -331,6 +337,7 @@ class HomeAssistantHTTP:
         use_x_forwarded_for: bool,
         login_threshold: int,
         is_ban_enabled: bool,
+        use_x_frame_options: bool,
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -348,6 +355,7 @@ class HomeAssistantHTTP:
 
         await async_setup_auth(self.hass, self.app)
 
+        setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)
 
         if self.ssl_certificate:
