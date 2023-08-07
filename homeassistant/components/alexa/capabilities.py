@@ -168,7 +168,7 @@ class AlexaCapability:
         Applicable to DoorbellEventSource.
         """
 
-    def capability_resources(self) -> dict[str, list[str]]:
+    def capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return the capability object.
 
         Applicable to ToggleController, RangeController, and ModeController interfaces.
@@ -1428,7 +1428,7 @@ class AlexaModeController(AlexaCapability):
 
         return None
 
-    def capability_resources(self) -> dict[str, list[str]]:
+    def capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return capabilityResources object."""
 
         # Fan Direction Resource
@@ -1655,7 +1655,7 @@ class AlexaRangeController(AlexaCapability):
 
         return None
 
-    def capability_resources(self) -> dict[str, list[str]]:
+    def capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return capabilityResources object."""
 
         # Fan Speed Percentage Resources
@@ -1920,7 +1920,7 @@ class AlexaToggleController(AlexaCapability):
 
         return None
 
-    def capability_resources(self) -> dict[str, list[str]]:
+    def capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return capabilityResources object."""
 
         # Fan Oscillating Resource
