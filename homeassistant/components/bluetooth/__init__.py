@@ -38,7 +38,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.loader import async_get_bluetooth
 
-from . import models
+from . import models, passive_update_processor
 from .api import (
     _get_manager,
     async_address_present,
@@ -125,6 +125,7 @@ async def _async_get_adapter_from_address(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    await passive_update_processor.async_setup(hass)
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     integration_matcher.async_setup()
     bluetooth_adapters = get_adapters()
