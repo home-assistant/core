@@ -1,6 +1,6 @@
 """Test for smart home alexa support."""
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -4393,6 +4393,7 @@ async def test_alexa_config(
     assert test_config.should_expose("sensor.test")
     assert not test_config.should_expose("switch.test")
     with patch.object(test_config, "_auth", AsyncMock()):
+        test_config._auth.async_invalidate_access_token = MagicMock()
         test_config.async_invalidate_access_token()
         assert len(test_config._auth.async_invalidate_access_token.mock_calls)
         await test_config.async_accept_grant("grant_code")
