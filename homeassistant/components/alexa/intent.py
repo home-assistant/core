@@ -282,7 +282,7 @@ class AlexaIntentResponse:
 
         self.speech = {"type": speech_type.value, key: text}
 
-    def add_reprompt(self, speech_type, text) -> None:
+    def add_reprompt(self, speech_type: SpeechType, text) -> None:
         """Add reprompt if user does not answer."""
         assert self.reprompt is None
 
