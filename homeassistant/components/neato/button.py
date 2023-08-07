@@ -43,7 +43,7 @@ class NeatoDismissAlertButton(ButtonEntity):
         """Initialize a dismiss_alert Neato button entity."""
         self.robot = robot
         self._attr_name = f"{self.robot.name} Dismiss Alert"
-        self._attr_unique_id = self.robot.serial
+        self._attr_unique_id = f"{self.robot.serial}_dismiss_alert"
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_info = DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
 
