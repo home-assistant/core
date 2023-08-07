@@ -366,7 +366,7 @@ aiounifi==51
 aiovlc==0.1.0
 
 # homeassistant.components.waqi
-aiowaqi==0.2.0
+aiowaqi==0.2.1
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
