@@ -163,8 +163,8 @@ class AirthingsSensor(
         self.entity_description = entity_description
 
         name = airthings_device.name
-        if airthings_device.identifier != "":
-            name += f" ({airthings_device.identifier})"
+        if identifier := airthings_device.identifier:
+            name += f" ({identifier})"
 
         self._attr_unique_id = f"{name}_{entity_description.key}"
         self._id = airthings_device.address
