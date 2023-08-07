@@ -11,13 +11,10 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import selector
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import DOMAIN
 from .eow import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
-
-CONF_MEASUREMENT_SYSTEM = "measurement_system"
-CONF_MEASUREMENT_SYSTEM_METRIC = "metric"
-CONF_MEASUREMENT_SYSTEM_IMPERIAL = "imperial"
 
 CONF_EOW_HOSTNAME = "eow_hostname"
 CONF_EOW_HOSTNAME_COM = "eyeonwater.com"
@@ -32,16 +29,6 @@ DATA_SCHEMA = vol.Schema(
     {
         CONF_EOW_HOSTNAME: selector(
             {"select": {"options": [CONF_EOW_HOSTNAME_COM, CONF_EOW_HOSTNAME_CA]}}
-        ),
-        CONF_MEASUREMENT_SYSTEM: selector(
-            {
-                "select": {
-                    "options": [
-                        CONF_MEASUREMENT_SYSTEM_METRIC,
-                        CONF_MEASUREMENT_SYSTEM_IMPERIAL,
-                    ]
-                }
-            }
         ),
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
@@ -69,12 +56,8 @@ def create_account_from_config(data: dict[str, Any]) -> Account:
         )
 
     # Measurement system
-    try:
-        measurement_system = data[CONF_MEASUREMENT_SYSTEM]
-        metric_measurement_system = measurement_system == CONF_MEASUREMENT_SYSTEM_METRIC
-    except KeyError:
-        pass
-
+    metric_measurement_system = False if hass.config.units is US_CUSTOMARY_SYSTEM else True
+    
     # EOW hostname
     with contextlib.suppress(KeyError):
         eow_hostname = data[CONF_EOW_HOSTNAME]
@@ -97,7 +80,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     client_session = aiohttp_client.async_get_clientsession(hass)
-    account = create_account_from_config(data=data)
+    account = create_account_from_config(hass, data)
     client = Client(client_session, account)
 
     try:
