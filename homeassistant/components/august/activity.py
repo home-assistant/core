@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 ACTIVITY_STREAM_FETCH_LIMIT = 10
 ACTIVITY_CATCH_UP_FETCH_LIMIT = 2500
 
+ACTIVITY_DEBOUNCE_COOLDOWN = ACTIVITY_UPDATE_INTERVAL.total_seconds() / 2 + 1
+
 
 class ActivityStream(AugustSubscriberMixin):
     """August activity stream handler."""
@@ -66,7 +68,7 @@ class ActivityStream(AugustSubscriberMixin):
         return Debouncer(
             self._hass,
             _LOGGER,
-            cooldown=ACTIVITY_UPDATE_INTERVAL.total_seconds(),
+            cooldown=ACTIVITY_DEBOUNCE_COOLDOWN,
             immediate=True,
             function=_async_update_house_id,
         )
@@ -138,7 +140,7 @@ class ActivityStream(AugustSubscriberMixin):
         # not updated or the lock failed
         self._schedule_updates[house_id] = async_call_later(
             self._hass,
-            ACTIVITY_UPDATE_INTERVAL.total_seconds() + 1,
+            ACTIVITY_DEBOUNCE_COOLDOWN + 0.1,
             _update_house_activities,
         )
 
