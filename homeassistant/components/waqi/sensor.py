@@ -36,17 +36,6 @@ ATTR_PM2_5 = "pm_2_5"
 ATTR_PRESSURE = "pressure"
 ATTR_SULFUR_DIOXIDE = "sulfur_dioxide"
 
-KEY_TO_ATTR = {
-    "pm25": ATTR_PM2_5,
-    "pm10": ATTR_PM10,
-    "h": ATTR_HUMIDITY,
-    "p": ATTR_PRESSURE,
-    "t": ATTR_TEMPERATURE,
-    "o3": ATTR_OZONE,
-    "no2": ATTR_NITROGEN_DIOXIDE,
-    "so2": ATTR_SULFUR_DIOXIDE,
-}
-
 ATTRIBUTION = "Data provided by the World Air Quality Index project"
 
 ATTR_ICON = "mdi:cloud"
