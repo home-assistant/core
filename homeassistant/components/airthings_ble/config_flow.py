@@ -36,9 +36,9 @@ class Discovery:
 def get_name(device: AirthingsDevice) -> str:
     """Generate name with model and identifier for device."""
 
-    name = f"{device.friendly_name()}"
-    if device.identifier is not None and device.identifier != "":
-        name += f" ({device.identifier})"
+    name = device.friendly_name()
+    if identifier := device.identifier:
+        name += f" ({identifier})"
     return name
 
 
