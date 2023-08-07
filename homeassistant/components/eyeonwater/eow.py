@@ -104,7 +104,6 @@ class Meter:
 
     def get_flags(self, flag) -> bool:
         """Define flags."""
-        flags = []
         flags = self.reading_data["flags"]
         if flag not in flags:
             raise EyeOnWaterAPIError(f"Cannot find {flag} field")
