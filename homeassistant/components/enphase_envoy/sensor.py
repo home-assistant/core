@@ -414,7 +414,6 @@ class EnvoyEnchargeEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEnt
     """Envoy Encharge sensor entity."""
 
     entity_description: EnvoyEnchargeSensorEntityDescription
-    _attr_icon = ICON
     _attr_has_entity_name = True
 
     def __init__(
@@ -458,7 +457,6 @@ class EnvoyEnchargePowerEntity(
     """Envoy Encharge power sensor entity."""
 
     entity_description: EnvoyEnchargePowerSensorEntityDescription
-    _attr_icon = ICON
     _attr_has_entity_name = True
 
     def __init__(
