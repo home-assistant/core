@@ -1,7 +1,6 @@
 """Alexa Resources and Assets."""
 
 
-from abc import ABC, abstractmethod
 from typing import Any
 
 
@@ -197,7 +196,7 @@ class AlexaGlobalCatalog:
     VALUE_QUICK_WASH = "Alexa.Value.QuickWash"
 
 
-class AlexaCapabilityResource(ABC):
+class AlexaCapabilityResource:
     """Base class for Alexa capabilityResources, modeResources, and presetResources.
 
     Resources objects labels must be unique across all modeResources and
@@ -221,12 +220,12 @@ class AlexaCapabilityResource(ABC):
         """Return capabilityResources object serialized for an API response."""
         return self.serialize_labels(self._resource_labels)
 
-    @abstractmethod
     def serialize_configuration(self) -> dict[str, Any]:
         """Return serialized configuration for an API response.
 
         Return ModeResources, PresetResources friendlyNames serialized.
         """
+        return {}
 
     def serialize_labels(self, resources: list[str]) -> dict[str, list[dict[str, Any]]]:
         """Return serialized labels for an API response.
