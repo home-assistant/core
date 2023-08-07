@@ -36,6 +36,7 @@ async def mock_added_config_entry(
 ) -> MockConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
     mock_schlage.locks.return_value = [mock_lock]
+    mock_schlage.users.return_value = []
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -80,4 +81,6 @@ def mock_lock():
         battery_level=20,
         firmware_version="1.0",
     )
+    mock_lock.logs.return_value = []
+    mock_lock.last_changed_by.return_value = "thumbturn"
     return mock_lock
