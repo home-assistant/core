@@ -27,14 +27,16 @@ BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 
-BINARY_SENSOR_IS_WATERING = BinarySensorEntityDescription(
-    key="is_watering",
-    name="Watering",
-    device_class=BinarySensorDeviceClass.MOISTURE,
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="is_watering",
+        name="Watering",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
 )
 
 BINARY_SENSOR_KEYS: list[str] = [
-    desc.key for desc in (BINARY_SENSOR_STATUS, BINARY_SENSOR_IS_WATERING)
+    desc.key for desc in (BINARY_SENSOR_STATUS, *BINARY_SENSOR_TYPES)
 ]
 
 # Deprecated since Home Assistant 2023.8.0
@@ -79,13 +81,12 @@ async def async_setup_entry(
 
     # create a sensor for each zone
     for zone in hydrawise.relays:
-        entities.append(
-            HydrawiseBinarySensor(
-                data=zone,
-                coordinator=coordinator,
-                description=BINARY_SENSOR_IS_WATERING,
+        for description in BINARY_SENSOR_TYPES:
+            entities.append(
+                HydrawiseBinarySensor(
+                    data=zone, coordinator=coordinator, description=description
+                )
             )
-        )
 
     async_add_entities(entities)
 
