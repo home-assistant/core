@@ -1,6 +1,8 @@
 """The sensor tests for the AEMET OpenData platform."""
 from unittest.mock import patch
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.aemet.const import ATTRIBUTION
 from homeassistant.components.weather import (
     ATTR_CONDITION_PARTLYCLOUDY,
@@ -19,6 +21,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
+    DOMAIN as WEATHER_DOMAIN,
+    SERVICE_GET_FORECAST,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
@@ -61,3 +65,40 @@ async def test_aemet_weather(hass: HomeAssistant) -> None:
 
     state = hass.states.get("weather.aemet_hourly")
     assert state is None
+
+
+async def test_forecast_services(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test multiple forecast."""
+    hass.config.set_time_zone("UTC")
+    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
+    with patch("homeassistant.util.dt.now", return_value=now), patch(
+        "homeassistant.util.dt.utcnow", return_value=now
+    ):
+        await async_init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": "weather.aemet_daily",
+            "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": "weather.aemet_daily",
+            "type": "hourly",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
