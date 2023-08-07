@@ -297,8 +297,8 @@ build.json @home-assistant/supervisor
 /tests/components/dunehd/ @bieniu
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
-/homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95 @andarotajo
-/tests/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95 @andarotajo
+/homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
+/tests/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
 /homeassistant/components/dynalite/ @ziv1234
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k

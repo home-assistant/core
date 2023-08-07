@@ -45,38 +45,36 @@
   "entity": {
     "sensor": {
       "departure_time": {
-        "name": "Departure time",
-        "state_attributes": {
-          "departure_state": {
-            "name": "Departure state",
-            "state": {
-              "on_time": "On time",
-              "delayed": "Delayed",
-              "canceled": "Cancelled"
-            }
-          },
-          "canceled": {
-            "name": "Cancelled"
-          },
-          "number_of_minutes_delayed": {
-            "name": "Minutes delayed"
-          },
-          "planned_time": {
-            "name": "Planned time"
-          },
-          "estimated_time": {
-            "name": "Estimated time"
-          },
-          "actual_time": {
-            "name": "Actual time"
-          },
-          "other_information": {
-            "name": "Other information"
-          },
-          "deviations": {
-            "name": "Deviations"
-          }
+        "name": "Departure time"
+      },
+      "departure_state": {
+        "name": "Departure state",
+        "state": {
+          "on_time": "On time",
+          "delayed": "Delayed",
+          "canceled": "Cancelled"
         }
+      },
+      "cancelled": {
+        "name": "Cancelled"
+      },
+      "delayed_time": {
+        "name": "Delayed time"
+      },
+      "planned_time": {
+        "name": "Planned time"
+      },
+      "estimated_time": {
+        "name": "Estimated time"
+      },
+      "actual_time": {
+        "name": "Actual time"
+      },
+      "other_info": {
+        "name": "Other information"
+      },
+      "deviation": {
+        "name": "Deviation"
       }
     }
   }
