@@ -66,7 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "time": "10:00",
         "weekday": ["mon", "fri"],
     }
-    assert result2["options"] == {"filter_product": None}
+    assert result["options"] == {"filter_product": None}
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["result"].unique_id == "{}-{}-{}-{}".format(
         "stockholmc", "uppsalac", "10:00", "['mon', 'fri']"
@@ -488,16 +488,16 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {"filter_product": "SJ Regionaltåg"}
 
-    result2 = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "init"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-    result2 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
         user_input={"filter_product": ""},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {"filter_product": None}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"filter_product": None}
