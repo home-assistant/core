@@ -148,7 +148,7 @@ class AlexaCapability:
         """Return True if non controllable."""
         return self._non_controllable_properties
 
-    def get_property(self, name) -> dict[str, Any]:
+    def get_property(self, name: str) -> dict[str, Any]:
         """Read and return a property.
 
         Return value should be a dict, or raise UnsupportedProperty.
