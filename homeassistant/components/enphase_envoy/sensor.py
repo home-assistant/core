@@ -224,7 +224,6 @@ class EnvoyEnchargePowerSensorEntityDescription(
 ENCHARGE_INVENTORY_SENSORS = (
     EnvoyEnchargeSensorEntityDescription(
         key="temperature",
-        translation_key="current_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda encharge: encharge.temperature,
@@ -240,21 +239,18 @@ ENCHARGE_INVENTORY_SENSORS = (
 ENCHARGE_POWER_SENSORS = (
     EnvoyEnchargePowerSensorEntityDescription(
         key="soc",
-        translation_key="state_of_charge",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=lambda encharge: encharge.soc,
     ),
     EnvoyEnchargePowerSensorEntityDescription(
         key="apparent_power_mva",
-        translation_key="apparent_power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         value_fn=lambda encharge: encharge.apparent_power_mva * 0.001,
     ),
     EnvoyEnchargePowerSensorEntityDescription(
         key="real_power_mw",
-        translation_key="real_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda encharge: encharge.real_power_mw * 0.001,

@@ -49,18 +49,6 @@
       },
       "lifetime_consumption": {
         "name": "Lifetime energy consumption"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "state_of_charge": {
-        "name": "State of charge"
-      },
-      "apparent_power": {
-        "name": "Apparent power"
-      },
-      "real_power": {
-        "name": "Real power"
       }
     }
   }
