@@ -32,7 +32,7 @@ from homeassistant.helpers.selector import (
 )
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN, CONF_FILTER_PRODUCT
+from .const import CONF_FILTER_PRODUCT, CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id, next_departuredate
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +71,7 @@ async def validate_input(
     train_to: str,
     train_time: str | None,
     weekdays: list[str],
+    product_filter: str | None,
 ) -> dict[str, str]:
     """Validate input from user input."""
     errors: dict[str, str] = {}
@@ -91,9 +92,13 @@ async def validate_input(
         from_station = await train_api.async_get_train_station(train_from)
         to_station = await train_api.async_get_train_station(train_to)
         if train_time:
-            await train_api.async_get_train_stop(from_station, to_station, when)
+            await train_api.async_get_train_stop(
+                from_station, to_station, when, product_filter
+            )
         else:
-            await train_api.async_get_next_train_stop(from_station, to_station, when)
+            await train_api.async_get_next_train_stop(
+                from_station, to_station, when, product_filter
+            )
     except InvalidAuthentication:
         errors["base"] = "invalid_auth"
     except NoTrainStationFound:
@@ -152,6 +157,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.entry.data[CONF_TO],
                 self.entry.data.get(CONF_TIME),
                 self.entry.data[CONF_WEEKDAY],
+                self.entry.options.get(CONF_FILTER_PRODUCT),
             )
             if not errors:
                 self.hass.config_entries.async_update_entry(
@@ -195,6 +201,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 train_to,
                 train_time,
                 train_days,
+                filter_product,
             )
             if not errors:
                 unique_id = create_unique_id(
