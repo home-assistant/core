@@ -9,6 +9,8 @@ import inspect
 import logging
 from typing import Any, Final, Literal, Required, TypedDict, final
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRECISION_HALVES,
@@ -18,7 +20,15 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -26,6 +36,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (  # noqa: F401
@@ -103,6 +114,8 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
 
+SERVICE_GET_FORECAST: Final = "get_forecast"
+
 # mypy: disallow-any-generics
 
 
@@ -157,6 +170,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
+    component.async_register_entity_service(
+        SERVICE_GET_FORECAST,
+        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
+        async_get_forecast_service,
+        required_features=[
+            WeatherEntityFeature.FORECAST_DAILY,
+            WeatherEntityFeature.FORECAST_HOURLY,
+            WeatherEntityFeature.FORECAST_TWICE_DAILY,
+        ],
+        supports_response=SupportsResponse.ONLY,
     )
     async_setup_ws_api(hass)
     await component.async_setup(config)
@@ -238,7 +262,7 @@ class WeatherEntity(Entity):
 
     _forecast_listeners: dict[
         Literal["daily", "hourly", "twice_daily"],
-        list[Callable[[list[dict[str, Any]] | None], None]],
+        list[Callable[[list[JsonValueType] | None], None]],
     ]
 
     _weather_option_temperature_unit: str | None = None
@@ -789,9 +813,9 @@ class WeatherEntity(Entity):
     @final
     def _convert_forecast(
         self, native_forecast_list: list[Forecast]
-    ) -> list[dict[str, Any]]:
+    ) -> list[JsonValueType]:
         """Convert a forecast in native units to the unit configured by the user."""
-        converted_forecast_list: list[dict[str, Any]] = []
+        converted_forecast_list: list[JsonValueType] = []
         precision = self.precision
 
         from_temp_unit = self.native_temperature_unit or self._default_temperature_unit
@@ -1029,7 +1053,7 @@ class WeatherEntity(Entity):
     def async_subscribe_forecast(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
-        forecast_listener: Callable[[list[dict[str, Any]] | None], None],
+        forecast_listener: Callable[[list[JsonValueType] | None], None],
     ) -> CALLBACK_TYPE:
         """Subscribe to forecast updates.
 
@@ -1048,6 +1072,12 @@ class WeatherEntity(Entity):
         self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
     ) -> None:
         """Push updated forecast to all listeners."""
+        if not hasattr(self, "_forecast_listeners"):
+            # Required for entities initiated with `update_before_add`
+            # as `self._forecast_listeners` has not yet been set.
+            # `async_internal_added_to_hass()` will execute once entity has been added.
+            return
+
         if forecast_types is None:
             forecast_types = {"daily", "hourly", "twice_daily"}
         for forecast_type in forecast_types:
@@ -1073,3 +1103,38 @@ class WeatherEntity(Entity):
             converted_forecast_list = self._convert_forecast(native_forecast_list)
             for listener in self._forecast_listeners[forecast_type]:
                 listener(converted_forecast_list)
+
+
+def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
+    """Raise error on attempt to get an unsupported forecast."""
+    raise HomeAssistantError(
+        f"Weather entity '{entity_id}' does not support '{forecast_type}' forecast"
+    )
+
+
+async def async_get_forecast_service(
+    weather: WeatherEntity, service_call: ServiceCall
+) -> ServiceResponse:
+    """Get weather forecast."""
+    forecast_type = service_call.data["type"]
+    supported_features = weather.supported_features or 0
+    if forecast_type == "daily":
+        if (supported_features & WeatherEntityFeature.FORECAST_DAILY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
+        native_forecast_list = await weather.async_forecast_daily()
+    elif forecast_type == "hourly":
+        if (supported_features & WeatherEntityFeature.FORECAST_HOURLY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
+        native_forecast_list = await weather.async_forecast_hourly()
+    else:
+        if (supported_features & WeatherEntityFeature.FORECAST_TWICE_DAILY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
+        native_forecast_list = await weather.async_forecast_twice_daily()
+    if native_forecast_list is None:
+        converted_forecast_list = []
+    else:
+        # pylint: disable-next=protected-access
+        converted_forecast_list = weather._convert_forecast(native_forecast_list)
+    return {
+        "forecast": converted_forecast_list,
+    }
