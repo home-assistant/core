@@ -1148,7 +1148,6 @@ async def test_get_forecast(
         return_response=True,
     )
     assert response == {
-        "type": forecast_type,
         "forecast": [
             {
                 "cloud_coverage": None,
@@ -1187,8 +1186,7 @@ async def test_get_forecast_no_forecast(
         return_response=True,
     )
     assert response == {
-        "type": "daily",
-        "forecast": None,
+        "forecast": [],
     }
 
 

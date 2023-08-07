@@ -1127,11 +1127,10 @@ async def async_get_forecast_service(
             raise_unsupported_forecast(weather.entity_id, forecast_type)
         native_forecast_list = await weather.async_forecast_twice_daily()
     if native_forecast_list is None:
-        converted_forecast_list = None
+        converted_forecast_list = []
     else:
         # pylint: disable-next=protected-access
         converted_forecast_list = weather._convert_forecast(native_forecast_list)
     return {
-        "type": forecast_type,
         "forecast": converted_forecast_list,
     }
