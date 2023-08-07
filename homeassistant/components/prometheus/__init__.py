@@ -118,10 +118,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         default_metric,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed)
+    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
     hass.bus.listen(
         EVENT_ENTITY_REGISTRY_UPDATED, metrics.handle_entity_registry_updated
     )
+
+    for state in hass.states.all():
+        if entity_filter(state.entity_id):
+            metrics.handle_state(state)
+
     return True
 
 
@@ -159,22 +164,27 @@ class PrometheusMetrics:
         self._metrics = {}
         self._climate_units = climate_units
 
-    def handle_state_changed(self, event):
-        """Listen for new messages on the bus, and add them to Prometheus."""
+    def handle_state_changed_event(self, event):
+        """Handle new messages from the bus."""
         if (state := event.data.get("new_state")) is None:
             return
 
-        entity_id = state.entity_id
-        _LOGGER.debug("Handling state update for %s", entity_id)
-        domain, _ = hacore.split_entity_id(entity_id)
-
         if not self._filter(state.entity_id):
+            _LOGGER.debug("Filtered out entity %s", state.entity_id)
             return
 
         if (old_state := event.data.get("old_state")) is not None and (
             old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
         ) != state.attributes.get(ATTR_FRIENDLY_NAME):
             self._remove_labelsets(old_state.entity_id, old_friendly_name)
+
+        self.handle_state(state)
+
+    def handle_state(self, state):
+        """Add/update a state in Prometheus."""
+        entity_id = state.entity_id
+        _LOGGER.debug("Handling state update for %s", entity_id)
+        domain, _ = hacore.split_entity_id(entity_id)
 
         ignored_states = (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
