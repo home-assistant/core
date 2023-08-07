@@ -38,7 +38,7 @@ from .util import create_unique_id, next_departuredate
 _LOGGER = logging.getLogger(__name__)
 
 OPTION_SCHEMA = {
-    vol.Optional(CONF_FILTER_PRODUCT): TextSelector(),
+    vol.Optional(CONF_FILTER_PRODUCT, default=""): TextSelector(),
 }
 
 DATA_SCHEMA = vol.Schema(
@@ -188,7 +188,10 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             train_to: str = user_input[CONF_TO]
             train_time: str | None = user_input.get(CONF_TIME)
             train_days: list = user_input[CONF_WEEKDAY]
-            filter_product: str | None = user_input.get(CONF_FILTER_PRODUCT)
+            filter_product: str | None = user_input[CONF_FILTER_PRODUCT]
+
+            if filter_product == "":
+                filter_product = None
 
             name = f"{train_from} to {train_to}"
             if train_time:
@@ -241,7 +244,7 @@ class TVTrainOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         errors: dict[str, Any] = {}
 
         if user_input:
-            if not user_input.get(CONF_FILTER_PRODUCT):
+            if not (_filter := user_input.get(CONF_FILTER_PRODUCT)) or _filter == "":
                 user_input[CONF_FILTER_PRODUCT] = None
             return self.async_create_entry(data=user_input)
 

@@ -23,7 +23,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import TrainData, TVDataUpdateCoordinator
 
-
 ATTR_PRODUCT_FILTER = "product_filter"
 
 
@@ -166,4 +165,6 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes for Trafikverket Train sensor."""
-        return {ATTR_PRODUCT_FILTER: self.coordinator.data.product_filter}
+        if self.coordinator.data.product_filter:
+            return {ATTR_PRODUCT_FILTER: self.coordinator.data.product_filter}
+        return None
