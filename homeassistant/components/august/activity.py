@@ -1,5 +1,6 @@
 """Consume the august activity stream."""
 import asyncio
+from datetime import datetime
 import logging
 
 from aiohttp import ClientError
@@ -25,7 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 ACTIVITY_STREAM_FETCH_LIMIT = 10
 ACTIVITY_CATCH_UP_FETCH_LIMIT = 2500
 
-ACTIVITY_DEBOUNCE_COOLDOWN = ACTIVITY_UPDATE_INTERVAL.total_seconds() / 2 + 1
+# If there is a storm of activity (ie lock, unlock, door open, door close, etc)
+# we want to debounce the updates so we don't hammer the activity api too much.
+ACTIVITY_DEBOUNCE_COOLDOWN = 3
 
 
 class ActivityStream(AugustSubscriberMixin):
@@ -42,21 +45,23 @@ class ActivityStream(AugustSubscriberMixin):
         """Init August activity stream object."""
         super().__init__(hass, ACTIVITY_UPDATE_INTERVAL)
         self._hass = hass
-        self._schedule_updates: dict[str, CALLBACK_TYPE | None] = {}
+        self._schedule_updates: dict[str, list[CALLBACK_TYPE]] = {}
         self._august_gateway = august_gateway
         self._api = api
         self._house_ids = house_ids
         self._latest_activities: dict[str, dict[ActivityType, Activity]] = {}
-        self._last_update_time = None
+        self._did_first_update = False
         self.pubnub = pubnub
         self._update_debounce: dict[str, Debouncer] = {}
 
     async def async_setup(self):
         """Token refresh check and catch up the activity stream."""
-        for house_id in self._house_ids:
-            self._update_debounce[house_id] = self._async_create_debouncer(house_id)
-
+        self._update_debounce = {
+            house_id: self._async_create_debouncer(house_id)
+            for house_id in self._house_ids
+        }
         await self._async_refresh(utcnow())
+        self._did_first_update = True
 
     @callback
     def _async_create_debouncer(self, house_id):
@@ -78,10 +83,10 @@ class ActivityStream(AugustSubscriberMixin):
         """Cleanup any debounces."""
         for debouncer in self._update_debounce.values():
             debouncer.async_cancel()
-        for house_id, updater in self._schedule_updates.items():
-            if updater is not None:
-                updater()
-                self._schedule_updates[house_id] = None
+        for cancels in self._schedule_updates.values():
+            for cancel in cancels:
+                cancel()
+            cancels.clear()
 
     def get_latest_device_activity(
         self, device_id: str, activity_types: set[ActivityType]
@@ -112,41 +117,44 @@ class ActivityStream(AugustSubscriberMixin):
         if self.pubnub.connected:
             _LOGGER.debug("Skipping update because pubnub is connected")
             return
-        await self._async_update_device_activities(time)
-
-    async def _async_update_device_activities(self, time):
         _LOGGER.debug("Start retrieving device activities")
         await asyncio.gather(
-            *(
-                self._update_debounce[house_id].async_call()
-                for house_id in self._house_ids
-            )
+            *(debouncer.async_call() for debouncer in self._update_debounce.values())
         )
-        self._last_update_time = time
 
     @callback
     def async_schedule_house_id_refresh(self, house_id: str) -> None:
         """Update for a house activities now and once in the future."""
-        if cancel := self._schedule_updates.get(house_id):
-            cancel()
-            self._schedule_updates[house_id] = None
+        if cancels := self._schedule_updates.get(house_id):
+            for cancel in cancels:
+                cancel()
+            cancels.clear()
 
-        async def _update_house_activities(_):
-            await self._update_debounce[house_id].async_call()
+        debouncer = self._update_debounce[house_id]
 
-        self._hass.async_create_task(self._update_debounce[house_id].async_call())
-        # Schedule an update past the debounce to ensure
-        # we catch the case where the lock operator is
-        # not updated or the lock failed
-        self._schedule_updates[house_id] = async_call_later(
-            self._hass,
-            ACTIVITY_DEBOUNCE_COOLDOWN + 0.1,
-            _update_house_activities,
-        )
+        self._hass.async_create_task(debouncer.async_call())
+        # Schedule two updates past the debounce time
+        # to ensure we catch the case where the activity
+        # api does not update right away and we need to poll
+        # it again. Sometimes the lock operator or a doorbell
+        # will not show up in the activity stream right away.
+        future_updates = self._schedule_updates.setdefault(house_id, [])
+
+        async def _update_house_activities(now: datetime) -> None:
+            await debouncer.async_call()
+
+        for step in (1, 2):
+            future_updates.append(
+                async_call_later(
+                    self._hass,
+                    (step * ACTIVITY_DEBOUNCE_COOLDOWN) + 0.1,
+                    _update_house_activities,
+                )
+            )
 
     async def _async_update_house_id(self, house_id: str) -> None:
         """Update device activities for a house."""
-        if self._last_update_time:
+        if self._did_first_update:
             limit = ACTIVITY_STREAM_FETCH_LIMIT
         else:
             limit = ACTIVITY_CATCH_UP_FETCH_LIMIT
@@ -186,20 +194,22 @@ class ActivityStream(AugustSubscriberMixin):
     ) -> set[str]:
         """Process activities if they are newer than the last one."""
         updated_device_ids = set()
+        latest_activities = self._latest_activities
         for activity in activities:
             device_id = activity.device_id
             activity_type = activity.activity_type
-            device_activities = self._latest_activities.setdefault(device_id, {})
+            device_activities = latest_activities.setdefault(device_id, {})
             # Ignore activities that are older than the latest one unless it is a non
             # locking or unlocking activity with the exact same start time.
-            if (
-                get_latest_activity(activity, device_activities.get(activity_type))
-                != activity
-            ):
+            last_activity = device_activities.get(activity_type)
+            # The activity stream can have duplicate activities. So we need
+            # to call get_latest_activity to figure out if if the activity
+            # is actually newer than the last one.
+            latest_activity = get_latest_activity(activity, last_activity)
+            if latest_activity != activity:
                 continue
 
             device_activities[activity_type] = activity
-
             updated_device_ids.add(device_id)
 
         return updated_device_ids
