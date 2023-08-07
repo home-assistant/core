@@ -261,7 +261,7 @@ class AlexaModeResource(AlexaCapabilityResource):
         self._supported_modes: list[dict[str, Any]] = []
         self._mode_ordered: bool = ordered
 
-    def add_mode(self, value, labels: list[str]) -> None:
+    def add_mode(self, value: str, labels: list[str]) -> None:
         """Add mode to the supportedModes object."""
         self._supported_modes.append({"value": value, "labels": labels})
 
