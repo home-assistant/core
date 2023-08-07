@@ -1,4 +1,5 @@
 """Describe logbook events."""
+from collections.abc import Callable
 from typing import Any
 
 from homeassistant.components.logbook import (
@@ -6,18 +7,20 @@ from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
 )
-from homeassistant.components.logbook.models import LazyEventPartialState
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import DOMAIN, EVENT_ALEXA_SMART_HOME
 
 
 @callback
-def async_describe_events(hass: HomeAssistant, async_describe_event):
+def async_describe_events(
+    hass: HomeAssistant,
+    async_describe_event: Callable[[str, str, Callable[[Event], dict[str, str]]], None],
+) -> None:
     """Describe logbook events."""
 
     @callback
-    def async_describe_logbook_event(event: LazyEventPartialState) -> dict[str, Any]:
+    def async_describe_logbook_event(event: Event) -> dict[str, Any]:
         """Describe a logbook event."""
         data = event.data
 
