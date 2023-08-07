@@ -131,6 +131,11 @@ async def test_sensors_io_series_4(
             async_address_present(hass, ORALB_IO_SERIES_4_SERVICE_INFO.address) is False
         )
 
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
     toothbrush_sensor = hass.states.get("sensor.io_series_4_48be_mode")
     # Sleepy devices should keep their state over time
     assert toothbrush_sensor.state == "gum care"
