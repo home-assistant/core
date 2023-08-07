@@ -337,7 +337,6 @@ class WeatherEntity(Entity, PostInit):
         super().__init_subclass__(**kwargs)
 
         _reported = False
-        _reported_forecast = False
         if any(
             method in cls.__dict__
             for method in (
