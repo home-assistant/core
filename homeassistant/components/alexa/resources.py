@@ -291,7 +291,7 @@ class AlexaPresetResource(AlexaCapabilityResource):
         labels: list[str],
         min_value: int | float,
         max_value: int | float,
-        precision,
+        precision: int | float,
         unit: str | None = None,
     ) -> None:
         """Initialize an Alexa presetResource."""
