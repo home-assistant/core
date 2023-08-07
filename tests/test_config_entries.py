@@ -1544,6 +1544,28 @@ async def test_init_custom_integration(hass: HomeAssistant) -> None:
         await hass.config_entries.flow.async_init("bla", context={"source": "user"})
 
 
+async def test_init_custom_integration_with_missing_handler(
+    hass: HomeAssistant,
+) -> None:
+    """Test initializing flow for custom integration with a missing handler."""
+    integration = loader.Integration(
+        hass,
+        "custom_components.hue",
+        None,
+        {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
+    )
+    mock_integration(
+        hass,
+        MockModule("hue"),
+    )
+    mock_entity_platform(hass, "config_flow.hue", None)
+    with pytest.raises(data_entry_flow.UnknownHandler), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        await hass.config_entries.flow.async_init("bla", context={"source": "user"})
+
+
 async def test_support_entry_unload(hass: HomeAssistant) -> None:
     """Test unloading entry."""
     assert await config_entries.support_entry_unload(hass, "light")

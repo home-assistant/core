@@ -1,10 +1,10 @@
 """Test for smart home alexa support."""
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.alexa import messages, smart_home
+from homeassistant.components.alexa import smart_home, state_report
 import homeassistant.components.camera as camera
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -29,6 +29,7 @@ from .test_common import (
 )
 
 from tests.common import async_capture_events, async_mock_service
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -58,7 +59,7 @@ def test_create_api_message_defaults(hass: HomeAssistant) -> None:
     """Create an API message response of a request with defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
     directive_header = request["directive"]["header"]
-    directive = messages.AlexaDirective(request)
+    directive = state_report.AlexaDirective(request)
 
     msg = directive.response(payload={"test": 3})._response
 
@@ -84,7 +85,7 @@ def test_create_api_message_special() -> None:
     request = get_new_request("Alexa.PowerController", "TurnOn")
     directive_header = request["directive"]["header"]
     directive_header.pop("correlationToken")
-    directive = messages.AlexaDirective(request)
+    directive = state_report.AlexaDirective(request)
 
     msg = directive.response("testName", "testNameSpace")._response
 
@@ -4372,3 +4373,28 @@ async def test_api_message_sets_authorized(hass: HomeAssistant) -> None:
     config._store.set_authorized.assert_not_called()
     await smart_home.async_handle_message(hass, config, msg)
     config._store.set_authorized.assert_called_once_with(True)
+
+
+async def test_alexa_config(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test all methods of the AlexaConfig class."""
+    config = {
+        "filter": entityfilter.FILTER_SCHEMA({"include_domains": ["sensor"]}),
+    }
+    test_config = smart_home.AlexaConfig(hass, config)
+    await test_config.async_initialize()
+    assert not test_config.supports_auth
+    assert not test_config.should_report_state
+    assert test_config.endpoint is None
+    assert test_config.entity_config == {}
+    assert test_config.user_identifier() == ""
+    assert test_config.locale is None
+    assert test_config.should_expose("sensor.test")
+    assert not test_config.should_expose("switch.test")
+    with patch.object(test_config, "_auth", AsyncMock()):
+        test_config._auth.async_invalidate_access_token = MagicMock()
+        test_config.async_invalidate_access_token()
+        assert len(test_config._auth.async_invalidate_access_token.mock_calls)
+        await test_config.async_accept_grant("grant_code")
+        test_config._auth.async_do_auth.assert_called_once_with("grant_code")
