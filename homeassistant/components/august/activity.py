@@ -7,14 +7,17 @@ from yalexs.activity import (
     Activity,
     ActivityType,
 )
+from yalexs.api_async import ApiAsync
+from yalexs.pubnub_async import AugustPubNub
 from yalexs.util import get_latest_activity
 
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 
 from .const import ACTIVITY_UPDATE_INTERVAL
+from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,18 +29,25 @@ ACTIVITY_CATCH_UP_FETCH_LIMIT = 2500
 class ActivityStream(AugustSubscriberMixin):
     """August activity stream handler."""
 
-    def __init__(self, hass, api, august_gateway, house_ids, pubnub):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api: ApiAsync,
+        august_gateway: AugustGateway,
+        house_ids: set[str],
+        pubnub: AugustPubNub,
+    ) -> None:
         """Init August activity stream object."""
         super().__init__(hass, ACTIVITY_UPDATE_INTERVAL)
         self._hass = hass
-        self._schedule_updates = {}
+        self._schedule_updates: dict[str, CALLBACK_TYPE | None] = {}
         self._august_gateway = august_gateway
         self._api = api
         self._house_ids = house_ids
         self._latest_activities: dict[str, dict[ActivityType, Activity]] = {}
         self._last_update_time = None
         self.pubnub = pubnub
-        self._update_debounce = {}
+        self._update_debounce: dict[str, Debouncer] = {}
 
     async def async_setup(self):
         """Token refresh check and catch up the activity stream."""
@@ -113,10 +123,10 @@ class ActivityStream(AugustSubscriberMixin):
         self._last_update_time = time
 
     @callback
-    def async_schedule_house_id_refresh(self, house_id):
+    def async_schedule_house_id_refresh(self, house_id: str) -> None:
         """Update for a house activities now and once in the future."""
-        if self._schedule_updates.get(house_id):
-            self._schedule_updates[house_id]()
+        if cancel := self._schedule_updates.get(house_id):
+            cancel()
             self._schedule_updates[house_id] = None
 
         async def _update_house_activities(_):
@@ -132,7 +142,7 @@ class ActivityStream(AugustSubscriberMixin):
             _update_house_activities,
         )
 
-    async def _async_update_house_id(self, house_id):
+    async def _async_update_house_id(self, house_id: str) -> None:
         """Update device activities for a house."""
         if self._last_update_time:
             limit = ACTIVITY_STREAM_FETCH_LIMIT
@@ -169,7 +179,9 @@ class ActivityStream(AugustSubscriberMixin):
             )
             self.async_signal_device_id_update(device_id)
 
-    def async_process_newer_device_activities(self, activities):
+    def async_process_newer_device_activities(
+        self, activities: list[Activity]
+    ) -> set[str]:
         """Process activities if they are newer than the last one."""
         updated_device_ids = set()
         for activity in activities:
