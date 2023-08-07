@@ -46,7 +46,9 @@ class NeatoDismissAlertButton(ButtonEntity):
         self.robot = robot
         self._attr_name = f"{self.robot.name} Dismiss Alert"
         self._attr_unique_id = f"{self.robot.serial}_dismiss_alert"
-        self._attr_device_info = DeviceInfo(identifiers={(NEATO_DOMAIN, self.robot.serial)})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(NEATO_DOMAIN, self.robot.serial)}
+        )
 
     async def async_press(self) -> None:
         """Press the button."""
