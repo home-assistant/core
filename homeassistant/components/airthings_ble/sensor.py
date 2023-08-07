@@ -162,7 +162,7 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        name = f"{airthings_device.name}"
+        name = airthings_device.name
         if airthings_device.identifier != "":
             name += f" ({airthings_device.identifier})"
 
