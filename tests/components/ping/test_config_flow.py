@@ -93,17 +93,3 @@ async def test_step_import(hass: HomeAssistant) -> None:
             "imported_by": "binary_sensor",
             **BINARY_SENSOR_IMPORT_DATA,
         }
-
-
-async def test_step_import_failed(hass: HomeAssistant) -> None:
-    """Test import step if failed with wrong data."""
-
-    with patch("homeassistant.components.ping.async_setup", return_value=True), patch(
-        "homeassistant.components.ping.async_setup_entry", return_value=True
-    ):
-        data = {"count": 10, "ip": "127.0.0.1"}
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.ABORT

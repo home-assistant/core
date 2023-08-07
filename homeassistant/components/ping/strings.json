@@ -18,7 +18,6 @@
       }
     },
     "abort": {
-      "missing_data": "Imported data missing data.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
