@@ -855,7 +855,7 @@ class AlexaInputController(AlexaCapability):
 
     def inputs(self) -> list[dict[str, str]] | None:
         """Return the list of valid supported inputs."""
-        source_list = self.entity.attributes.get(
+        source_list: list[str] = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
         return AlexaInputController.get_valid_inputs(source_list)
@@ -2237,7 +2237,7 @@ class AlexaTimeHoldController(AlexaCapability):
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity: State, allow_remote_resume=False) -> None:
+    def __init__(self, entity: State, allow_remote_resume: bool = False) -> None:
         """Initialize the entity."""
         super().__init__(entity)
         self._allow_remote_resume = allow_remote_resume
