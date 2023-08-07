@@ -155,6 +155,18 @@
     }),
   })
 # ---
+# name: test_audio_pipeline_no_wake_word_engine
+  dict({
+    'code': 'wake-engine-missing',
+    'message': 'No wake word engine',
+  })
+# ---
+# name: test_audio_pipeline_no_wake_word_entity
+  dict({
+    'code': 'wake-provider-missing',
+    'message': 'No wake-word-detection provider for: wake_word.bad-entity-id',
+  })
+# ---
 # name: test_audio_pipeline_with_wake_word
   dict({
     'language': 'en',

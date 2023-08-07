@@ -1,4 +1,6 @@
 """Tests for the Wyoming integration."""
+import asyncio
+
 from wyoming.info import (
     AsrModel,
     AsrProgram,
@@ -89,6 +91,7 @@ class MockAsyncTcpClient:
 
     async def read_event(self):
         """Receive."""
+        await asyncio.sleep(0)  # force context switch
         return self.responses.pop(0)
 
     async def __aenter__(self):

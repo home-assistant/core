@@ -321,6 +321,70 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     assert msg["result"] == {"events": events}
 
 
+async def test_audio_pipeline_no_wake_word_engine(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test timeout from a pipeline run with audio input/output + wake word."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.wake_word.async_default_engine", return_value=None
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "wake_word",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": 16000,
+                },
+            }
+        )
+
+        # error
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert "error" in msg
+        assert msg["error"] == snapshot
+
+
+async def test_audio_pipeline_no_wake_word_entity(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test timeout from a pipeline run with audio input/output + wake word."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.wake_word.async_default_engine",
+        return_value="wake_word.bad-entity-id",
+    ), patch(
+        "homeassistant.components.wake_word.async_get_wake_word_detection_entity",
+        return_value=None,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "wake_word",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": 16000,
+                },
+            }
+        )
+
+        # error
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert "error" in msg
+        assert msg["error"] == snapshot
+
+
 async def test_intent_timeout(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

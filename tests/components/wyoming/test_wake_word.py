@@ -1,9 +1,11 @@
 """Test stt."""
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
+from wyoming.asr import Transcript
 from wyoming.wake import Detection
 
 from homeassistant.components import wake_word
@@ -37,12 +39,20 @@ async def test_streaming_audio(
     assert entity is not None
 
     async def audio_stream():
-        yield "chunk1", 1000
-        yield "chunk2", 2000
+        yield b"chunk", 0
+
+        # Delay to force a pending audio chunk
+        await asyncio.sleep(0.05)
+        yield b"chunk", 1
+
+    client_events = [
+        Transcript("not a wake word event").event(),
+        Detection(name="Test Model", timestamp=0).event(),
+    ]
 
     with patch(
         "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
-        MockAsyncTcpClient([Detection(name="Test Model", timestamp=1000).event()]),
+        MockAsyncTcpClient(client_events),
     ):
         result = await entity.async_process_audio_stream(audio_stream())
 
@@ -60,7 +70,9 @@ async def test_streaming_audio_connection_lost(
     assert entity is not None
 
     async def audio_stream():
-        yield "chunk1", 1000
+        # Delay to force a pending audio chunk
+        await asyncio.sleep(0.05)
+        yield b"chunk", 1
 
     with patch(
         "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
@@ -81,7 +93,7 @@ async def test_streaming_audio_oserror(
     assert entity is not None
 
     async def audio_stream():
-        yield "chunk1", 1000
+        yield b"chunk1", 1000
 
     mock_client = MockAsyncTcpClient(
         [Detection(name="Test Model", timestamp=1000).event()]
