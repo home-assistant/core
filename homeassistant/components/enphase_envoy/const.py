@@ -10,6 +10,4 @@ DOMAIN = "enphase_envoy"
 
 PLATFORMS = [Platform.SENSOR]
 
-CONF_TOKEN = "token"
-
 INVALID_AUTH_ERRORS = (EnvoyAuthenticationError, EnvoyAuthenticationRequired)
