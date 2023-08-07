@@ -1095,7 +1095,7 @@ praw==7.5.0
 prayer-times-calculator==0.0.6
 
 # homeassistant.components.prometheus
-prometheus-client==0.7.1
+prometheus-client==0.17.1
 
 # homeassistant.components.hardware
 # homeassistant.components.recorder
