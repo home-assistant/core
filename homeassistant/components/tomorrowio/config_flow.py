@@ -102,7 +102,7 @@ class TomorrowioOptionsConfigFlow(config_entries.OptionsFlow):
             vol.Required(
                 CONF_TIMESTEP,
                 default=self._config_entry.options[CONF_TIMESTEP],
-            ): vol.In([1, 5, 15, 30]),
+            ): vol.In([1, 5, 15, 30, 60]),
         }
 
         return self.async_show_form(
