@@ -213,15 +213,19 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
     async def _async_get_recent_cost_reads(
         self, account: Account, last_stat_time: float
     ) -> list[CostRead]:
-        """Get cost reads within the past 30 days to allow corrections in data from utilities.
-
-        Hourly for electricity, daily for gas.
-        """
+        """Get cost reads within the past 30 days to allow corrections in data from utilities."""
+        if account.read_resolution in [
+            ReadResolution.HOUR,
+            ReadResolution.QUARTER_HOUR,
+        ]:
+            aggregate_type = AggregateType.HOUR
+        elif account.read_resolution == ReadResolution.DAY:
+            aggregate_type = AggregateType.DAY
+        else:
+            aggregate_type = AggregateType.BILL
         return await self.api.async_get_cost_reads(
             account,
-            AggregateType.HOUR
-            if account.meter_type == MeterType.ELEC
-            else AggregateType.DAY,
+            aggregate_type,
             datetime.fromtimestamp(last_stat_time) - timedelta(days=30),
             datetime.now(),
         )
