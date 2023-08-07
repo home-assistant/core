@@ -233,7 +233,7 @@ class EnvoyEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, envoy_serial_num)},
             manufacturer="Enphase",
-            model="Envoy",
+            model=coordinator.envoy.part_number or "Envoy",
             name=envoy_name,
             sw_version=str(coordinator.envoy.firmware),
         )

@@ -378,7 +378,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.5.3
+airthings-ble==0.5.6-2
 
 # homeassistant.components.airthings
 airthings-cloud==0.1.0
@@ -661,7 +661,7 @@ denonavr==0.11.3
 devolo-home-control-api==0.18.2
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.3.2
+devolo-plc-api==1.4.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1569,7 +1569,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.13.3
+pyatv==0.13.4
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1662,7 +1662,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==0.11.0
+pyenphase==0.14.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1907,7 +1907,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.9.0
+pyoverkiz==1.10.1
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2162,7 +2162,7 @@ python-smarttub==0.0.33
 python-songpal==0.15.2
 
 # homeassistant.components.tado
-python-tado==0.15.0
+python-tado==0.16.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -2728,7 +2728,7 @@ yalexs-ble==2.2.3
 yalexs==1.5.2
 
 # homeassistant.components.yeelight
-yeelight==0.7.12
+yeelight==0.7.13
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
