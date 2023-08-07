@@ -179,11 +179,16 @@ class ActivityStream(AugustSubscriberMixin):
         _LOGGER.debug(
             "Completed retrieving device activities for house id %s", house_id
         )
-        self._async_process_newer_device_activities(activities)
+        for device_id in self.async_process_newer_device_activities(activities):
+            _LOGGER.debug(
+                "async_signal_device_id_update (from activity stream): %s",
+                device_id,
+            )
+            self.async_signal_device_id_update(device_id)
 
-    def _async_process_newer_device_activities(
+    def async_process_newer_device_activities(
         self, activities: list[Activity]
-    ) -> None:
+    ) -> set[str]:
         """Process activities if they are newer than the last one."""
         updated_device_ids = set()
         latest_activities = self._latest_activities
@@ -204,9 +209,4 @@ class ActivityStream(AugustSubscriberMixin):
             device_activities[activity_type] = activity
             updated_device_ids.add(device_id)
 
-        for device_id in updated_device_ids:
-            _LOGGER.debug(
-                "async_signal_device_id_update (from activity stream): %s",
-                device_id,
-            )
-            self.async_signal_device_id_update(device_id)
+        return updated_device_ids
