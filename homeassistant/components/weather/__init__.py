@@ -1048,6 +1048,12 @@ class WeatherEntity(Entity):
         self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
     ) -> None:
         """Push updated forecast to all listeners."""
+        if not hasattr(self, "_forecast_listeners"):
+            # Required for entities initiated with `update_before_add`
+            # as `self._forecast_listeners` has not yet been set.
+            # `async_internal_added_to_hass()` will execute once entity has been added.
+            return
+
         if forecast_types is None:
             forecast_types = {"daily", "hourly", "twice_daily"}
         for forecast_type in forecast_types:

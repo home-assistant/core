@@ -26,7 +26,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import VelbusEntity
+from .entity import VelbusEntity, api_call
 
 
 async def async_setup_entry(
@@ -63,6 +63,7 @@ class VelbusLight(VelbusEntity, LightEntity):
         """Return the brightness of the light."""
         return int((self._channel.get_dimmer_state() * 255) / 100)
 
+    @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -83,6 +84,7 @@ class VelbusLight(VelbusEntity, LightEntity):
             )
         await getattr(self._channel, attr)(*args)
 
+    @api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
         attr, *args = (
@@ -113,6 +115,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
         """Return true if the light is on."""
         return self._channel.is_on()
 
+    @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
         if ATTR_FLASH in kwargs:
@@ -126,6 +129,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
             attr, *args = "set_led_state", "on"
         await getattr(self._channel, attr)(*args)
 
+    @api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
         attr, *args = "set_led_state", "off"
