@@ -34,9 +34,6 @@
       "reverseflow": {
         "name": "Reverse Waterflow"
       },
-      "emptypipe": {
-        "name": "Empty Pipe"
-      },
       "lowbattery": {
         "name": "Low Battery"
       },
