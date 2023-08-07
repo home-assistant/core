@@ -1874,6 +1874,24 @@ async def test_temperature_unit(
                 DEFAULT_CONFIG,
                 (
                     {
+                        "initial": 68.9,  # 20.5 dgC
+                        "temperature_unit": "F",
+                        "current_temperature_topic": "current_temperature",
+                    },
+                ),
+            ),
+            UnitOfTemperature.CELSIUS,
+            20.5,
+            DEFAULT_MIN_TEMP,
+            DEFAULT_MAX_TEMP,
+            25,
+        ),
+        (
+            help_custom_config(
+                climate.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
                         "temperature_unit": "F",
                         "current_temperature_topic": "current_temperature",
                     },
