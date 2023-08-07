@@ -22,37 +22,37 @@ from .eow import Meter
 FLAG_SENSORS = [
     BinarySensorEntityDescription(
         key="Leak",
-        name="Leak Sensor",
+        translation_key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     BinarySensorEntityDescription(
         key="EmptyPipe",
-        name="Empty Pipe",
+        translation_key="emptypipe",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="Tamper",
-        name="Tamper",
+        translation_key="tamper",
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
     BinarySensorEntityDescription(
         key="CoverRemoved",
-        name="Cover Removed",
+        translation_key="coverremoved",
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
     BinarySensorEntityDescription(
         key="ReverseFlow",
-        name="Reverse Waterflow",
+        translation_key="reverseflow",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="LowBattery",
-        name="Low Battery",
+        translation_key="lowbattery",
         device_class=BinarySensorDeviceClass.BATTERY,
     ),
     BinarySensorEntityDescription(
         key="BatteryCharging",
-        name="Battery Charging",
+        translation_key="batterycharging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     ),
 ]
