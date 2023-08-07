@@ -35,9 +35,15 @@ class AxisCamera(AxisEntity, MjpegCamera):
 
     _attr_supported_features = CameraEntityFeature.STREAM
 
+    _still_image_url: str
+    _mjpeg_url: str
+    _stream_source: str
+
     def __init__(self, device: AxisNetworkDevice) -> None:
         """Initialize Axis Communications camera component."""
         AxisEntity.__init__(self, device)
+
+        self._generate_sources()
 
         MjpegCamera.__init__(
             self,
@@ -46,41 +52,64 @@ class AxisCamera(AxisEntity, MjpegCamera):
             mjpeg_url=self.mjpeg_source,
             still_image_url=self.image_source,
             authentication=HTTP_DIGEST_AUTHENTICATION,
+            unique_id=f"{device.unique_id}-camera",
         )
-
-        self._attr_unique_id = f"{device.unique_id}-camera"
 
     async def async_added_to_hass(self) -> None:
         """Subscribe camera events."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.device.signal_new_address, self._new_address
+                self.hass, self.device.signal_new_address, self._generate_sources
             )
         )
 
         await super().async_added_to_hass()
 
-    def _new_address(self) -> None:
-        """Set new device address for video stream."""
-        self._mjpeg_url = self.mjpeg_source
-        self._still_image_url = self.image_source
+    def _generate_sources(self) -> None:
+        """Generate sources.
+
+        Additionally used when device change IP address.
+        """
+        image_options = self.generate_options(skip_stream_profile=True)
+        self._still_image_url = (
+            f"http://{self.device.host}:{self.device.port}/axis-cgi"
+            f"/jpg/image.cgi{image_options}"
+        )
+
+        mjpeg_options = self.generate_options()
+        self._mjpeg_url = (
+            f"http://{self.device.host}:{self.device.port}/axis-cgi"
+            f"/mjpg/video.cgi{mjpeg_options}"
+        )
+
+        stream_options = self.generate_options(add_video_codec_h264=True)
+        self._stream_source = (
+            f"rtsp://{self.device.username}:{self.device.password}"
+            f"@{self.device.host}/axis-media/media.amp{stream_options}"
+        )
+
+        self.device.additional_diagnostics["camera_sources"] = {
+            "Image": self._still_image_url,
+            "MJPEG": self._mjpeg_url,
+            "Stream": (
+                f"rtsp://user:pass@{self.device.host}/axis-media"
+                f"/media.amp{stream_options}"
+            ),
+        }
 
     @property
     def image_source(self) -> str:
         """Return still image URL for device."""
-        options = self.generate_options(skip_stream_profile=True)
-        return f"http://{self.device.host}:{self.device.port}/axis-cgi/jpg/image.cgi{options}"
+        return self._still_image_url
 
     @property
     def mjpeg_source(self) -> str:
         """Return mjpeg URL for device."""
-        options = self.generate_options()
-        return f"http://{self.device.host}:{self.device.port}/axis-cgi/mjpg/video.cgi{options}"
+        return self._mjpeg_url
 
     async def stream_source(self) -> str:
         """Return the stream source."""
-        options = self.generate_options(add_video_codec_h264=True)
-        return f"rtsp://{self.device.username}:{self.device.password}@{self.device.host}/axis-media/media.amp{options}"
+        return self._stream_source
 
     def generate_options(
         self, skip_stream_profile: bool = False, add_video_codec_h264: bool = False

@@ -1,12 +1,12 @@
 """Test Home Assistant package util methods."""
 import asyncio
+from importlib.metadata import PackageNotFoundError, metadata
 import logging
 import os
 from subprocess import PIPE
 import sys
 from unittest.mock import MagicMock, call, patch
 
-import pkg_resources
 import pytest
 
 import homeassistant.util.package as package
@@ -246,9 +246,9 @@ async def test_async_get_user_site(mock_env_copy) -> None:
 
 def test_check_package_global() -> None:
     """Test for an installed package."""
-    first_package = list(pkg_resources.working_set)[0]
-    installed_package = first_package.project_name
-    installed_version = first_package.version
+    pkg = metadata("homeassistant")
+    installed_package = pkg["name"]
+    installed_version = pkg["version"]
 
     assert package.is_installed(installed_package)
     assert package.is_installed(f"{installed_package}=={installed_version}")
@@ -264,13 +264,13 @@ def test_check_package_zip() -> None:
 
 def test_get_distribution_falls_back_to_version() -> None:
     """Test for get_distribution failing and fallback to version."""
-    first_package = list(pkg_resources.working_set)[0]
-    installed_package = first_package.project_name
-    installed_version = first_package.version
+    pkg = metadata("homeassistant")
+    installed_package = pkg["name"]
+    installed_version = pkg["version"]
 
     with patch(
-        "homeassistant.util.package.pkg_resources.get_distribution",
-        side_effect=pkg_resources.ExtractionError,
+        "homeassistant.util.package.distribution",
+        side_effect=PackageNotFoundError,
     ):
         assert package.is_installed(installed_package)
         assert package.is_installed(f"{installed_package}=={installed_version}")
@@ -281,13 +281,13 @@ def test_get_distribution_falls_back_to_version() -> None:
 
 def test_check_package_previous_failed_install() -> None:
     """Test for when a previously install package failed and left cruft behind."""
-    first_package = list(pkg_resources.working_set)[0]
-    installed_package = first_package.project_name
-    installed_version = first_package.version
+    pkg = metadata("homeassistant")
+    installed_package = pkg["name"]
+    installed_version = pkg["version"]
 
     with patch(
-        "homeassistant.util.package.pkg_resources.get_distribution",
-        side_effect=pkg_resources.ExtractionError,
+        "homeassistant.util.package.distribution",
+        side_effect=PackageNotFoundError,
     ), patch("homeassistant.util.package.version", return_value=None):
         assert not package.is_installed(installed_package)
         assert not package.is_installed(f"{installed_package}=={installed_version}")

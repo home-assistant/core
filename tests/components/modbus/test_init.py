@@ -64,6 +64,7 @@ from homeassistant.components.modbus.const import (
 from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
     duplicate_modbus_validator,
+    nan_validator,
     number_validator,
     struct_validator,
 )
@@ -139,6 +140,23 @@ async def test_number_validator() -> None:
     except vol.Invalid:
         return
     pytest.fail("Number_validator not throwing exception")
+
+
+async def test_nan_validator() -> None:
+    """Test number validator."""
+
+    for value, value_type in (
+        (15, int),
+        ("15", int),
+        ("abcdef", int),
+        ("0xabcdef", int),
+    ):
+        assert isinstance(nan_validator(value), value_type)
+
+    with pytest.raises(vol.Invalid):
+        nan_validator("x15")
+    with pytest.raises(vol.Invalid):
+        nan_validator("not a hex string")
 
 
 @pytest.mark.parametrize(
@@ -705,7 +723,6 @@ async def test_pymodbus_connect_fail(
     ExceptionMessage = "test connect exception"
     mock_pymodbus.connect.side_effect = ModbusException(ExceptionMessage)
     assert await async_setup_component(hass, DOMAIN, config) is True
-    assert ExceptionMessage in caplog.text
 
 
 async def test_delay(

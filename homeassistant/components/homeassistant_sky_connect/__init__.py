@@ -32,6 +32,7 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     usb_dev = entry.data["device"]
+    # The call to get_serial_by_id can be removed in HA Core 2024.1
     dev_path = await hass.async_add_executor_job(usb.get_serial_by_id, usb_dev)
 
     if not await multi_pan_addon_using_device(hass, dev_path):

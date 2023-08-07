@@ -23,9 +23,7 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_site_cannot_connect(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
@@ -54,9 +52,7 @@ async def test_site_cannot_connect(
         assert sensor is None
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_site_cannot_update(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
@@ -104,9 +100,7 @@ async def test_site_cannot_update(
     assert weather.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_one_weather_site_running(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
@@ -189,9 +183,7 @@ async def test_one_weather_site_running(
     assert weather.attributes.get("forecast")[3]["wind_bearing"] == "SE"
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_two_weather_sites_running(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:

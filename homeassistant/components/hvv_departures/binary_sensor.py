@@ -88,7 +88,7 @@ async def async_setup_entry(
         so entities can quickly look up their data.
         """
 
-        payload = {"station": station}
+        payload = {"station": {"id": station["id"], "type": station["type"]}}
 
         try:
             async with async_timeout.timeout(10):

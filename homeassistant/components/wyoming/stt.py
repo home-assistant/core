@@ -1,8 +1,8 @@
-"""Support for Wyoming speech to text services."""
+"""Support for Wyoming speech-to-text services."""
 from collections.abc import AsyncIterable
 import logging
 
-from wyoming.asr import Transcript
+from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
 
@@ -23,7 +23,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Wyoming speech to text."""
+    """Set up Wyoming speech-to-text."""
     service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
@@ -33,7 +33,7 @@ async def async_setup_entry(
 
 
 class WyomingSttProvider(stt.SpeechToTextEntity):
-    """Wyoming speech to text provider."""
+    """Wyoming speech-to-text provider."""
 
     def __init__(
         self,
@@ -89,6 +89,10 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
         """Process an audio stream to STT service."""
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
+                # Set transcription language
+                await client.write_event(Transcribe(language=metadata.language).event())
+
+                # Begin audio stream
                 await client.write_event(
                     AudioStart(
                         rate=SAMPLE_RATE,
@@ -106,6 +110,7 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                     )
                     await client.write_event(chunk.event())
 
+                # End audio stream
                 await client.write_event(AudioStop().event())
 
                 while True:

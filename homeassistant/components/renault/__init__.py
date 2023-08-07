@@ -26,7 +26,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryAuthFailed()
 
     hass.data.setdefault(DOMAIN, {})
-    await renault_hub.async_initialise(config_entry)
+    try:
+        await renault_hub.async_initialise(config_entry)
+    except aiohttp.ClientResponseError as exc:
+        raise ConfigEntryNotReady() from exc
 
     hass.data[DOMAIN][config_entry.entry_id] = renault_hub
 

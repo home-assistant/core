@@ -37,18 +37,20 @@ async def test_entry_diagnostics(
                     "hardware_id": REDACTED,
                     "hardware_revision": 4,
                     "firmware_version": {
-                        "silabs": "1.1.2",
                         "wifi": "0.121.0",
                         "wifi_app": "3.3.0",
+                        "silabs": "1.1.2",
+                        "ti": None,
                     },
                     "missing_at": None,
                     "created_at": "2019-06-27T00:18:44.337000+00:00",
                     "updated_at": "2023-03-19T03:20:16.061000+00:00",
                     "system_id": 11111,
                     "firmware": {
-                        "silabs": "1.1.2",
                         "wifi": "0.121.0",
                         "wifi_app": "3.3.0",
+                        "silabs": "1.1.2",
+                        "ti": None,
                     },
                     "links": {"system": 11111},
                 },
@@ -59,18 +61,20 @@ async def test_entry_diagnostics(
                     "hardware_id": REDACTED,
                     "hardware_revision": 4,
                     "firmware_version": {
-                        "silabs": "1.1.2",
                         "wifi": "0.121.0",
                         "wifi_app": "3.3.0",
+                        "silabs": "1.1.2",
+                        "ti": None,
                     },
                     "missing_at": None,
                     "created_at": "2019-04-30T01:43:50.497000+00:00",
                     "updated_at": "2023-01-02T19:09:58.251000+00:00",
                     "system_id": 11111,
                     "firmware": {
-                        "silabs": "1.1.2",
                         "wifi": "0.121.0",
                         "wifi_app": "3.3.0",
+                        "silabs": "1.1.2",
+                        "ti": None,
                     },
                     "links": {"system": 11111},
                 },
@@ -86,14 +90,6 @@ async def test_entry_diagnostics(
                     "device_type": "sensor",
                     "model_version": "3.1",
                     "sensor_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    "status": {
-                        "trigger_value": "no_alarm",
-                        "data_received_at": "2019-06-28T22:12:49.516000+00:00",
-                    },
-                    "status_localized": {
-                        "state": "No Sound",
-                        "description": "Jun 28 at 4:12pm",
-                    },
                     "insights": {
                         "primary": {
                             "origin": {"type": None, "id": None},
@@ -103,6 +99,14 @@ async def test_entry_diagnostics(
                     },
                     "configuration": {},
                     "pro_monitoring_status": "eligible",
+                    "status": {
+                        "trigger_value": "no_alarm",
+                        "data_received_at": "2019-06-28T22:12:49.516000+00:00",
+                    },
+                    "status_localized": {
+                        "state": "No Sound",
+                        "description": "Jun 28 at 4:12pm",
+                    },
                 }
             ],
             "sensors": [
@@ -131,5 +135,13 @@ async def test_entry_diagnostics(
                     "surface_type": None,
                 }
             ],
+            "user_preferences": {
+                "user_id": REDACTED,
+                "military_time_enabled": False,
+                "celsius_enabled": False,
+                "disconnect_alerts_enabled": True,
+                "home_away_alerts_enabled": False,
+                "battery_alerts_enabled": True,
+            },
         },
     }

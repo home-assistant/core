@@ -10,7 +10,6 @@ import zigpy.zcl
 
 from homeassistant.core import callback
 
-from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 from .. import registries
 from ..const import (
     ATTR_ATTRIBUTE_ID,
@@ -24,6 +23,7 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
+from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -198,7 +198,7 @@ class SmartThingsAcceleration(ClusterHandler):
         )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         try:
             attr_name = self._cluster.attributes[attrid].name
@@ -229,7 +229,7 @@ class InovelliNotificationClusterHandler(ClientClusterHandler):
     """Inovelli Notification cluster handler."""
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle an attribute updated on this cluster."""
 
     @callback
@@ -363,7 +363,7 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
         await self.get_attribute_value("fan_mode", from_cache=False)
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute update from fan cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(

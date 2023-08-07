@@ -40,6 +40,7 @@ async def async_setup_entry(
     )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an Smart Meter Texas sensor."""
 

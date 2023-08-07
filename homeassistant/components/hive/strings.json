@@ -25,7 +25,7 @@
         "title": "Hive Configuration."
       },
       "reauth": {
-        "title": "Hive Login",
+        "title": "[%key:component::hive::config::step::user::title%]",
         "description": "Re-enter your Hive login information.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -53,6 +53,50 @@
         "description": "Update the scan interval to poll for data more often.",
         "data": {
           "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    }
+  },
+  "services": {
+    "boost_heating_on": {
+      "name": "Boost heating on",
+      "description": "Sets the boost mode ON defining the period of time and the desired target temperature for the boost.",
+      "fields": {
+        "time_period": {
+          "name": "Time Period",
+          "description": "Set the time period for the boost."
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "Set the target temperature for the boost period."
+        }
+      }
+    },
+    "boost_heating_off": {
+      "name": "Boost heating off",
+      "description": "Sets the boost mode OFF.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Select entity_id to turn boost off."
+        }
+      }
+    },
+    "boost_hot_water": {
+      "name": "Boost hotwater",
+      "description": "Sets the boost mode ON or OFF defining the period of time for the boost.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Select entity_id to boost."
+        },
+        "time_period": {
+          "name": "Time period",
+          "description": "Set the time period for the boost."
+        },
+        "on_off": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "Set the boost function on or off."
         }
       }
     }

@@ -9,7 +9,6 @@ from typing import Any, cast
 
 from sqlalchemy import (
     CompoundSelect,
-    Integer,
     Select,
     Subquery,
     and_,
@@ -19,7 +18,6 @@ from sqlalchemy import (
     select,
     union_all,
 )
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 
@@ -52,16 +50,6 @@ _FIELD_MAP = {
 }
 
 
-CASTABLE_DOUBLE_TYPE = (
-    # MySQL/MariaDB < 10.4+ does not support casting to DOUBLE so we have to use Integer instead but it doesn't
-    # matter because we don't use the value as its always set to NULL
-    #
-    # sqlalchemy.exc.SAWarning: Datatype DOUBLE does not support CAST on MySQL/MariaDb; the CAST will be skipped.
-    #
-    Integer().with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
-)
-
-
 def _stmt_and_join_attributes(
     no_attributes: bool, include_last_changed: bool
 ) -> Select:
@@ -79,13 +67,9 @@ def _stmt_and_join_attributes_for_start_state(
 ) -> Select:
     """Return the statement and if StateAttributes should be joined."""
     _select = select(States.metadata_id, States.state)
-    _select = _select.add_columns(
-        literal(value=None).label("last_updated_ts").cast(CASTABLE_DOUBLE_TYPE)
-    )
+    _select = _select.add_columns(literal(value=0).label("last_updated_ts"))
     if include_last_changed:
-        _select = _select.add_columns(
-            literal(value=None).label("last_changed_ts").cast(CASTABLE_DOUBLE_TYPE)
-        )
+        _select = _select.add_columns(literal(value=0).label("last_changed_ts"))
     if not no_attributes:
         _select = _select.add_columns(SHARED_ATTR_OR_LEGACY_ATTRIBUTES)
     return _select
@@ -174,28 +158,29 @@ def _significant_states_stmt(
         stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if not include_start_time_state or not run_start_ts:
+        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
         return stmt
-    return _select_from_subquery(
-        union_all(
-            _select_from_subquery(
-                _get_start_time_state_stmt(
-                    run_start_ts,
-                    start_time_ts,
-                    single_metadata_id,
-                    metadata_ids,
-                    no_attributes,
-                    include_last_changed,
-                ).subquery(),
+    unioned_subquery = union_all(
+        _select_from_subquery(
+            _get_start_time_state_stmt(
+                run_start_ts,
+                start_time_ts,
+                single_metadata_id,
+                metadata_ids,
                 no_attributes,
                 include_last_changed,
-            ),
-            _select_from_subquery(stmt.subquery(), no_attributes, include_last_changed),
-        ).subquery(),
+            ).subquery(),
+            no_attributes,
+            include_last_changed,
+        ),
+        _select_from_subquery(stmt.subquery(), no_attributes, include_last_changed),
+    ).subquery()
+    return _select_from_subquery(
+        unioned_subquery,
         no_attributes,
         include_last_changed,
-    )
+    ).order_by(unioned_subquery.c.metadata_id, unioned_subquery.c.last_updated_ts)
 
 
 def get_significant_states_with_session(
@@ -279,6 +264,7 @@ def get_significant_states_with_session(
         entity_id_to_metadata_id,
         minimal_response,
         compressed_state_format,
+        no_attributes=no_attributes,
     )
 
 
@@ -433,6 +419,7 @@ def state_changes_during_period(
                 entity_ids,
                 entity_id_to_metadata_id,
                 descending=descending,
+                no_attributes=no_attributes,
             ),
         )
 
@@ -528,6 +515,7 @@ def get_last_state_changes(
                 None,
                 entity_ids,
                 entity_id_to_metadata_id,
+                no_attributes=False,
             ),
         )
 
@@ -651,6 +639,7 @@ def _sorted_states_to_dict(
     minimal_response: bool = False,
     compressed_state_format: bool = False,
     descending: bool = False,
+    no_attributes: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -665,7 +654,7 @@ def _sorted_states_to_dict(
     """
     field_map = _FIELD_MAP
     state_class: Callable[
-        [Row, dict[str, dict[str, Any]], float | None, str, str, float | None],
+        [Row, dict[str, dict[str, Any]], float | None, str, str, float | None, bool],
         State | dict[str, Any],
     ]
     if compressed_state_format:
@@ -716,6 +705,7 @@ def _sorted_states_to_dict(
                     entity_id,
                     db_state[state_idx],
                     db_state[last_updated_ts_idx],
+                    False,
                 )
                 for db_state in group
             )
@@ -738,6 +728,7 @@ def _sorted_states_to_dict(
                     entity_id,
                     prev_state,  # type: ignore[arg-type]
                     first_state[last_updated_ts_idx],
+                    no_attributes,
                 )
             )
 

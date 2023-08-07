@@ -8,7 +8,7 @@
   "documentation": "https://www.home-assistant.io/integrations/sonos",
   "iot_class": "local_push",
   "loggers": ["soco"],
-  "requirements": ["soco==0.29.1", "sonos-websocket==0.1.1"],
+  "requirements": ["soco==0.29.1", "sonos-websocket==0.1.2"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:ZonePlayer:1"

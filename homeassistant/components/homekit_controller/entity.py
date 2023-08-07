@@ -5,13 +5,13 @@ from typing import Any
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
+    EVENT_CHARACTERISTICS,
     Characteristic,
     CharacteristicPermissions,
     CharacteristicsTypes,
 )
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,6 +30,7 @@ class HomeKitEntity(Entity):
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._char_name: str | None = None
+        self.all_characteristics: set[tuple[int, int]] = set()
         self.setup()
 
         super().__init__()
@@ -54,13 +55,13 @@ class HomeKitEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._accessory.signal_state_updated,
-                self.async_write_ha_state,
+            self._accessory.async_subscribe(
+                self.all_characteristics, self._async_write_ha_state
             )
         )
-
+        self.async_on_remove(
+            self._accessory.async_subscribe_availability(self._async_write_ha_state)
+        )
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
         await self._accessory.add_watchable_characteristics(
             self.watchable_characteristics
@@ -105,10 +106,16 @@ class HomeKitEntity(Entity):
             for char in service.characteristics.filter(char_types=char_types):
                 self._setup_characteristic(char)
 
+        self.all_characteristics.update(self.pollable_characteristics)
+        self.all_characteristics.update(self.watchable_characteristics)
+
     def _setup_characteristic(self, char: Characteristic) -> None:
         """Configure an entity based on a HomeKit characteristics metadata."""
         # Build up a list of (aid, iid) tuples to poll on update()
-        if CharacteristicPermissions.paired_read in char.perms:
+        if (
+            CharacteristicPermissions.paired_read in char.perms
+            and char.type not in EVENT_CHARACTERISTICS
+        ):
             self.pollable_characteristics.append((self._aid, char.iid))
 
         # Build up a list of (aid, iid) tuples to subscribe to

@@ -32,13 +32,49 @@
   "selector": {
     "weekday": {
       "options": {
-        "mon": "Monday",
-        "tue": "Tuesday",
-        "wed": "Wednesday",
-        "thu": "Thursday",
-        "fri": "Friday",
-        "sat": "Saturday",
-        "sun": "Sunday"
+        "mon": "[%key:common::time::monday%]",
+        "tue": "[%key:common::time::tuesday%]",
+        "wed": "[%key:common::time::wednesday%]",
+        "thu": "[%key:common::time::thursday%]",
+        "fri": "[%key:common::time::friday%]",
+        "sat": "[%key:common::time::saturday%]",
+        "sun": "[%key:common::time::sunday%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure_time": {
+        "name": "Departure time"
+      },
+      "departure_state": {
+        "name": "Departure state",
+        "state": {
+          "on_time": "On time",
+          "delayed": "Delayed",
+          "canceled": "Cancelled"
+        }
+      },
+      "cancelled": {
+        "name": "Cancelled"
+      },
+      "delayed_time": {
+        "name": "Delayed time"
+      },
+      "planned_time": {
+        "name": "Planned time"
+      },
+      "estimated_time": {
+        "name": "Estimated time"
+      },
+      "actual_time": {
+        "name": "Actual time"
+      },
+      "other_info": {
+        "name": "Other information"
+      },
+      "deviation": {
+        "name": "Deviation"
       }
     }
   }

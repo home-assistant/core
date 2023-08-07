@@ -1,13 +1,14 @@
 """Test the Yale Access Bluetooth config flow."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 import pytest
-from yalexs_ble import AuthError
+from yalexs_ble import AuthError, DoorStatus, LockInfo, LockState, LockStatus
 
 from homeassistant import config_entries
 from homeassistant.components.yalexs_ble.const import (
+    CONF_ALWAYS_CONNECTED,
     CONF_KEY,
     CONF_LOCAL_NAME,
     CONF_SLOT,
@@ -25,6 +26,24 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+
+def _get_mock_push_lock():
+    """Return a mock PushLock."""
+    mock_push_lock = Mock()
+    mock_push_lock.start = AsyncMock()
+    mock_push_lock.start.return_value = MagicMock()
+    mock_push_lock.wait_for_first_update = AsyncMock()
+    mock_push_lock.stop = AsyncMock()
+    mock_push_lock.lock_state = LockState(
+        LockStatus.UNLOCKED, DoorStatus.CLOSED, None, None
+    )
+    mock_push_lock.lock_status = LockStatus.UNLOCKED
+    mock_push_lock.door_status = DoorStatus.CLOSED
+    mock_push_lock.lock_info = LockInfo("Front Door", "M1XXX012LU", "1.0.0", "1.0.0")
+    mock_push_lock.device_info = None
+    mock_push_lock.address = YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    return mock_push_lock
 
 
 @pytest.mark.parametrize("slot", [0, 1, 66])
@@ -946,4 +965,49 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options(hass: HomeAssistant) -> None:
+    """Test options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
+            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+            CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
+            CONF_SLOT: 66,
+        },
+        unique_id=YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.yalexs_ble.PushLock",
+        return_value=_get_mock_push_lock(),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "device_options"
+
+    with patch(
+        "homeassistant.components.yalexs_ble.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_ALWAYS_CONNECTED: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert entry.options == {CONF_ALWAYS_CONNECTED: True}
     assert len(mock_setup_entry.mock_calls) == 1

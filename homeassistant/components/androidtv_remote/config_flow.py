@@ -15,11 +15,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN
-from .helpers import create_api
+from .const import CONF_ENABLE_IME, DOMAIN
+from .helpers import create_api, get_enable_ime
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -55,8 +56,9 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.host = user_input["host"]
             assert self.host
-            api = create_api(self.hass, self.host)
+            api = create_api(self.hass, self.host, enable_ime=False)
             try:
+                await api.async_generate_cert_if_missing()
                 self.name, self.mac = await api.async_get_name_and_mac()
                 assert self.mac
                 await self.async_set_unique_id(format_mac(self.mac))
@@ -75,7 +77,7 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_start_pair(self) -> FlowResult:
         """Start pairing with the Android TV. Navigate to the pair flow to enter the PIN shown on screen."""
         assert self.host
-        self.api = create_api(self.hass, self.host)
+        self.api = create_api(self.hass, self.host, enable_ime=False)
         await self.api.async_generate_cert_if_missing()
         await self.api.async_start_pairing()
         return await self.async_step_pair()
@@ -135,7 +137,8 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = discovery_info.host
         self.name = discovery_info.name.removesuffix("._androidtvremote2._tcp.local.")
         self.mac = discovery_info.properties.get("bt")
-        assert self.mac
+        if not self.mac:
+            return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(format_mac(self.mac))
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
@@ -184,4 +187,39 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             description_placeholders={CONF_NAME: self.name},
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Android TV Remote options flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ENABLE_IME,
+                        default=get_enable_ime(self.config_entry),
+                    ): bool,
+                }
+            ),
         )
