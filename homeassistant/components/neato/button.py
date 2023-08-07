@@ -42,29 +42,11 @@ class NeatoDismissAlertButton(ButtonEntity):
     ) -> None:
         """Initialize a dismiss_alert Neato button entity."""
         self.robot = robot
-        self._button_name = f"{self.robot.name} Dismiss Alert"
-        self._robot_serial: str = self.robot.serial
+        self._attr_name = f"{self.robot.name} Dismiss Alert"
+        self._attr_unique_id = self.robot.serial
+        self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_device_info = DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
 
     async def async_press(self) -> None:
         """Press the button."""
         await self.hass.async_add_executor_job(self.robot.dismiss_current_alert)
-
-    @property
-    def name(self) -> str:
-        """Return the name of this camera."""
-        return self._button_name
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        return self._robot_serial
-
-    @property
-    def entity_category(self) -> EntityCategory:
-        """Device entity category."""
-        return EntityCategory.CONFIG
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for neato robot."""
-        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
