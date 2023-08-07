@@ -964,10 +964,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         Handler key is the domain of the component that we want to set up.
         """
-        await _load_integration(self.hass, handler_key, self._hass_config)
-        if (handler := HANDLERS.get(handler_key)) is None:
-            raise data_entry_flow.UnknownHandler
-
+        handler = await _async_get_flow_handler(
+            self.hass, handler_key, self._hass_config
+        )
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
@@ -1830,12 +1829,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry is None:
             raise UnknownEntry(handler_key)
 
-        await _load_integration(self.hass, entry.domain, {})
-
-        if entry.domain not in HANDLERS:
-            raise data_entry_flow.UnknownHandler
-
-        return HANDLERS[entry.domain].async_get_options_flow(entry)
+        handler = await _async_get_flow_handler(self.hass, entry.domain, {})
+        return handler.async_get_options_flow(entry)
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -2021,9 +2016,15 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     return hasattr(component, "async_remove_config_entry_device")
 
 
-async def _load_integration(
+async def _async_get_flow_handler(
     hass: HomeAssistant, domain: str, hass_config: ConfigType
-) -> None:
+) -> type[ConfigFlow]:
+    """Get a flow handler for specified domain."""
+
+    # First check if there is a handler registered for the domain
+    if domain in hass.config.components and (handler := HANDLERS.get(domain)):
+        return handler
+
     try:
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound as err:
@@ -2042,3 +2043,8 @@ async def _load_integration(
             err,
         )
         raise data_entry_flow.UnknownHandler
+
+    if handler := HANDLERS.get(domain):
+        return handler
+
+    raise data_entry_flow.UnknownHandler
