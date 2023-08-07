@@ -337,6 +337,7 @@ class WeatherEntity(Entity, PostInit):
         super().__init_subclass__(**kwargs)
 
         _reported = False
+        _reported_forecast = False
         if any(
             method in cls.__dict__
             for method in (
@@ -384,6 +385,31 @@ class WeatherEntity(Entity, PostInit):
                     cls.__name__,
                     report_issue,
                 )
+        if any(method in cls.__dict__ for method in ("_attr_forecast", "forecast")):
+            if _reported_forecast is False:
+                module = inspect.getmodule(cls)
+                _reported_forecast = True
+                if (
+                    module
+                    and module.__file__
+                    and "custom_components" in module.__file__
+                ):
+                    report_issue = "report it to the custom integration author."
+                else:
+                    report_issue = (
+                        "create a bug report at "
+                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                    )
+                _LOGGER.warning(
+                    (
+                        "%s::%s is using a forecast attribute on an instance of "
+                        "WeatherEntity, this is deprecated and will be unsupported "
+                        "from Home Assistant 2024.3. Please %s"
+                    ),
+                    cls.__module__,
+                    cls.__name__,
+                    report_issue,
+                )
 
     @callback
     def add_to_platform_start(
@@ -395,7 +421,7 @@ class WeatherEntity(Entity, PostInit):
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
         ir.async_create_issue(
-            hass,
+            self.hass,
             DOMAIN,
             f"deprecated_weather_forecast_{self.platform.platform_name}",
             breaks_in_ha_version="2024.3.0",
@@ -407,15 +433,6 @@ class WeatherEntity(Entity, PostInit):
             translation_placeholders={
                 "platform": self.platform.platform_name,
             },
-        )
-        _LOGGER.warning(
-            (
-                "%s::%s is using a forecast attribute on an instance of "
-                "WeatherEntity, this is deprecated and will be unsupported "
-                "from Home Assistant 2024.3. Please report it as an issue"
-            ),
-            self.platform.platform_name,
-            self.__class__.__name__,
         )
 
     async def async_internal_added_to_hass(self) -> None:
