@@ -37,15 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
-    entry.unique_id = entry.entry_id
-    unique_id = entry.unique_id
+    config_entry_id = entry.entry_id
     _LOGGER.debug(
         "Creating server instance for '%s' (%s)",
         entry.data[CONF_NAME],
         entry.data[CONF_HOST],
     )
-    server = MinecraftServer(hass, unique_id, entry.data)
-    domain_data[unique_id] = server
+    server = MinecraftServer(hass, config_entry_id, entry.data)
+    domain_data[config_entry_id] = server
     await server.async_update()
     server.start_periodic_update()
 
@@ -57,8 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Minecraft Server config entry."""
-    unique_id = config_entry.unique_id
-    server = hass.data[DOMAIN][unique_id]
+    config_entry_id = config_entry.entry_id
+    server = hass.data[DOMAIN][config_entry_id]
 
     # Unload platforms.
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -67,7 +66,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     # Clean up.
     server.stop_periodic_update()
-    hass.data[DOMAIN].pop(unique_id)
+    hass.data[DOMAIN].pop(config_entry_id)
 
     return unload_ok
 
@@ -81,15 +80,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         assert config_entry.unique_id
         assert config_entry.entry_id
         old_unique_id = config_entry.unique_id
-        new_unique_id = config_entry.entry_id
+        config_entry_id = config_entry.entry_id
 
         # Migrate config entry.
-        _LOGGER.debug(
-            "Migrating config entry unique ID from %s to %s",
-            old_unique_id,
-            new_unique_id,
-        )
-        config_entry.unique_id = new_unique_id
+        _LOGGER.debug("Migrating config entry. Resetting unique ID: %s", old_unique_id)
+        config_entry.unique_id = None
         config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)
 
@@ -97,9 +92,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         await _async_migrate_device_identifiers(hass, config_entry, old_unique_id)
 
         # Migrate entities.
-        await er.async_migrate_entries(
-            hass, config_entry.entry_id, _migrate_entity_unique_id
-        )
+        await er.async_migrate_entries(hass, config_entry_id, _migrate_entity_unique_id)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
@@ -111,6 +104,7 @@ async def _async_migrate_device_identifiers(
 ) -> None:
     """Migrate the device identifiers to the new format."""
     device_registry = dr.async_get(hass)
+    device_entry_found = False
     for device_entry in dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     ):
@@ -130,10 +124,15 @@ async def _async_migrate_device_identifiers(
                     new_identifiers,
                 )
                 device_registry.async_update_device(
-                    device_entry.id, new_identifiers=new_identifiers
+                    device_id=device_entry.id, new_identifiers=new_identifiers
                 )
-                # Leave for loop, as each server has only one device.
+                # Device entry found. Leave inner for loop.
+                device_entry_found = True
                 break
+
+        # Leave outer for loop if device entry is already found.
+        if device_entry_found:
+            break
 
 
 @callback
