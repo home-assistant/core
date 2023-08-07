@@ -217,7 +217,7 @@ class AlexaCapabilityResource(ABC):
         for label in labels:
             self._resource_labels.append(label)
 
-    def serialize_capability_resources(self) -> dict[str, list[str]]:
+    def serialize_capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return capabilityResources object serialized for an API response."""
         return self.serialize_labels(self._resource_labels)
 
@@ -228,19 +228,23 @@ class AlexaCapabilityResource(ABC):
         Return ModeResources, PresetResources friendlyNames serialized.
         """
 
-    def serialize_labels(self, resources) -> dict[str, list[str]]:
+    def serialize_labels(self, resources: list[str]) -> dict[str, list[dict[str, Any]]]:
         """Return serialized labels for an API response.
 
         Returns resource label objects for friendlyNames serialized.
         """
-        labels: list[str] = []
+        labels: list[dict[str, Any]] = []
+        label_dict: dict[str, Any]
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
-                label = {"@type": "asset", "value": {"assetId": label}}
+                label_dict = {"@type": "asset", "value": {"assetId": label}}
             else:
-                label = {"@type": "text", "value": {"text": label, "locale": "en-US"}}
+                label_dict = {
+                    "@type": "text",
+                    "value": {"text": label, "locale": "en-US"},
+                }
 
-            labels.append(label)
+            labels.append(label_dict)
 
         return {"friendlyNames": labels}
 
