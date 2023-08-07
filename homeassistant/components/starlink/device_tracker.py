@@ -30,7 +30,6 @@ async def async_setup_entry(
 class StarlinkDeviceTrackerEntityDescriptionMixin:
     """Describes a Starlink device tracker."""
 
-    source_type: SourceType
     latitude_fn: Callable[[StarlinkData], float]
     longitude_fn: Callable[[StarlinkData], float]
 
@@ -50,7 +49,7 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     @property
     def source_type(self) -> SourceType | str:
         """Return the source type, eg gps or router, of the device."""
-        return self.entity_description.source_type
+        return SourceType.GPS
 
     @property
     def latitude(self) -> float | None:
@@ -68,7 +67,6 @@ DEVICE_TRACKERS = [
         key="device_location",
         name="Device location",
         entity_registry_enabled_default=False,
-        source_type=SourceType.GPS,
         latitude_fn=lambda data: data.location["latitude"],
         longitude_fn=lambda data: data.location["longitude"],
     ),
