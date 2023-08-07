@@ -553,11 +553,17 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
             break
     if not host:
         return None
+
+    # Service properties are always bytes if they are set from the network.
+    # For legacy backwards compatibility zeroconf allows properties to be set
+    # as strings but we never do that so we can safely cast here.
+    service_properties = cast(dict[bytes, bytes | None], service.properties)
+
     properties: dict[str, Any] = {
         k.decode("ascii", "replace"): None
         if v is None
         else v.decode("utf-8", "replace")
-        for k, v in service.properties.items()
+        for k, v in service_properties.items()
     }
 
     assert service.server is not None, "server cannot be none if there are addresses"
