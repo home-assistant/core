@@ -395,7 +395,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     """
 
     coordinator: PassiveBluetoothProcessorCoordinator
-    data: PassiveBluetoothDataUpdate[_T] = PassiveBluetoothDataUpdate()
+    data: PassiveBluetoothDataUpdate[_T]
     entity_names: dict[PassiveBluetoothEntityKey, str | None]
     entity_data: dict[PassiveBluetoothEntityKey, _T]
     entity_descriptions: dict[PassiveBluetoothEntityKey, EntityDescription]
@@ -430,8 +430,8 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     ) -> None:
         """Register a coordinator."""
         self.coordinator = coordinator
-        data: PassiveBluetoothDataUpdate[_T] = PassiveBluetoothDataUpdate()
-        self.data = data
+        self.data = PassiveBluetoothDataUpdate()
+        data = self.data
         # These attributes to access the data in
         # self.data are for backwards compatibility.
         self.entity_names = data.entity_names
