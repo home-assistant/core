@@ -42,7 +42,7 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     async def _async_update_data(self) -> SchlageData:
         """Fetch the latest data from the Schlage API."""
         try:
-            locks: list[Lock] = await self.hass.async_add_executor_job(self.api.locks)
+            locks = await self.hass.async_add_executor_job(self.api.locks)
         except SchlageError as ex:
             raise UpdateFailed("Failed to refresh Schlage data") from ex
         lock_data = await asyncio.gather(
@@ -65,6 +65,6 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         try:
             logs = lock.logs()
         except SchlageError as ex:
-            LOGGER.warning('Failed to read logs for lock "%s": %s', lock.name, ex)
+            LOGGER.debug('Failed to read logs for lock "%s": %s', lock.name, ex)
 
         return LockData(lock=lock, logs=logs)
