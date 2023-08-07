@@ -1662,7 +1662,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==0.14.1
+pyenphase==0.15.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
