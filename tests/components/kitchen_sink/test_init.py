@@ -13,6 +13,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -123,6 +124,20 @@ async def test_issues_created(
     assert msg["success"]
     assert msg["result"] == {
         "issues": [
+            {
+                "breaks_in_ha_version": "2024.2.0",
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": WEATHER_DOMAIN,
+                "ignored": False,
+                "is_fixable": False,
+                "issue_id": "deprecated_weather_forecast_kitchen_sink",
+                "issue_domain": DOMAIN,
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "deprecated_weather_forecast",
+                "translation_placeholders": {"platform": "kitchen_sink"},
+            },
             {
                 "breaks_in_ha_version": "2023.1.1",
                 "created": ANY,
@@ -239,6 +254,20 @@ async def test_issues_created(
     assert msg["success"]
     assert msg["result"] == {
         "issues": [
+            {
+                "breaks_in_ha_version": "2024.2.0",
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": WEATHER_DOMAIN,
+                "ignored": False,
+                "is_fixable": False,
+                "issue_id": "deprecated_weather_forecast_kitchen_sink",
+                "issue_domain": DOMAIN,
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "deprecated_weather_forecast",
+                "translation_placeholders": {"platform": "kitchen_sink"},
+            },
             {
                 "breaks_in_ha_version": "2023.1.1",
                 "created": ANY,
