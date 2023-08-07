@@ -23,6 +23,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
+    SERVICE_GET_FORECAST,
 )
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -443,3 +444,31 @@ async def test_forecast_services_lack_of_data(
     forecast1 = msg["event"]["forecast"]
 
     assert forecast1 is None
+
+
+async def test_forecast_service(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    api_response: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test forecast service."""
+    uri = APIURL_TEMPLATE.format(
+        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
+    )
+    aioclient_mock.get(uri, text=api_response)
+
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {"entity_id": ENTITY_ID, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
