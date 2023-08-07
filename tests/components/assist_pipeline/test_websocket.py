@@ -167,13 +167,13 @@ async def test_audio_pipeline(
     assert msg["result"] == {"events": events}
 
 
-async def test_audio_pipeline_with_wake_word(
+async def test_audio_pipeline_with_wake_word_timeout(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test events from a pipeline run with audio input/output + wake word."""
+    """Test timeout from a pipeline run with audio input/output + wake word."""
     events = []
     client = await hass_ws_client(hass)
 
@@ -184,7 +184,7 @@ async def test_audio_pipeline_with_wake_word(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "timeout": 3,
+                "timeout": 1,
             },
         }
     )
@@ -206,9 +206,57 @@ async def test_audio_pipeline_with_wake_word(
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
-    # 3 seconds of audio (16-bit samples)
-    for _ in range(3):
-        await client.send_bytes(bytes([1]) + bytes(16000 * 2))
+    # 2 seconds of silence
+    await client.send_bytes(bytes([1]) + bytes(16000 * 2 * 2))
+
+    # Time out error
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "error"
+    assert msg["event"]["data"] == snapshot
+    events.append(msg["event"])
+
+
+async def test_audio_pipeline_with_wake_word_no_timeout(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test events from a pipeline run with audio input/output + wake word with no timeout."""
+    events = []
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "wake_word",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "timeout": 0,
+            },
+        }
+    )
+
+    # result
+    msg = await client.receive_json()
+    assert msg["success"], msg
+
+    # run start
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    assert msg["event"]["data"] == snapshot
+    events.append(msg["event"])
+
+    # wake_word
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "wake_word-start"
+    assert msg["event"]["data"] == snapshot
+    events.append(msg["event"])
+
+    # "audio"
+    await client.send_bytes(bytes([1]) + b"wake word")
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "wake_word-end"

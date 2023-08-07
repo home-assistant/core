@@ -18,6 +18,7 @@ from .pipeline import (
     PipelineInput,
     PipelineRun,
     PipelineStage,
+    WakeWordSettings,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
@@ -35,6 +36,7 @@ __all__ = (
     "PipelineEvent",
     "PipelineEventType",
     "PipelineNotFound",
+    "WakeWordSettings",
 )
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -57,6 +59,7 @@ async def async_pipeline_from_audio_stream(
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     tts_audio_output: str | None = None,
+    wake_word_settings: WakeWordSettings | None = None,
     device_id: str | None = None,
     start_stage: PipelineStage = PipelineStage.STT,
     end_stage: PipelineStage = PipelineStage.TTS,
@@ -78,6 +81,7 @@ async def async_pipeline_from_audio_stream(
             end_stage=end_stage,
             event_callback=event_callback,
             tts_audio_output=tts_audio_output,
+            wake_word_settings=wake_word_settings,
         ),
     )
     await pipeline_input.validate()

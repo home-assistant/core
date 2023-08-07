@@ -69,6 +69,9 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                         vol.Required("input"): {
                             vol.Required("sample_rate"): int,
                             vol.Optional("timeout"): vol.Any(float, int),
+                            vol.Optional("audio_seconds_to_buffer"): vol.Any(
+                                float, int
+                            ),
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -127,7 +130,8 @@ async def websocket_run(
 
         if start_stage == PipelineStage.WAKE_WORD:
             wake_word_settings = WakeWordSettings(
-                timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT)
+                timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
+                audio_seconds_to_buffer=msg["input"].get("audio_seconds_to_buffer", 0),
             )
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
@@ -135,9 +139,10 @@ async def websocket_run(
 
             # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
-                chunk, state = audioop.ratecv(
-                    chunk, 2, 1, incoming_sample_rate, 16000, state
-                )
+                if incoming_sample_rate != 16000:
+                    chunk, state = audioop.ratecv(
+                        chunk, 2, 1, incoming_sample_rate, 16000, state
+                    )
                 yield chunk
 
         def handle_binary(

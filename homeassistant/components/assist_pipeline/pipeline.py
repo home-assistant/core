@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
@@ -349,8 +348,8 @@ class WakeWordSettings:
     timeout: float | None = None
     """Seconds of silence before detection times out."""
 
-    audio_chunks_to_buffer: int = 0
-    """Number of audio chunks to buffer before detection and forward to STT."""
+    audio_seconds_to_buffer: float = 0
+    """Seconds of audio to buffer before detection and forward to STT."""
 
 
 @dataclass
@@ -484,21 +483,29 @@ class PipelineRun:
             wake_word_vad = VoiceActivityTimeout(wake_word_settings.timeout)
 
         # Audio chunk buffer.
-        # Keeping audio right before wake word detection allows the voice
-        # command to be spoken immediately after the wake word.
-        chunk_buffer: deque[bytes] | None = None
-        if wake_word_settings.audio_chunks_to_buffer > 0:
-            chunk_buffer = deque(maxlen=wake_word_settings.audio_chunks_to_buffer)
+        audio_bytes_to_buffer = int(
+            wake_word_settings.audio_seconds_to_buffer * 16000 * 2
+        )
+        audio_ring_buffer = b""
 
         async def timestamped_stream() -> AsyncIterable[tuple[bytes, int]]:
             """Yield audio with timestamps (milliseconds since start of stream)."""
+            nonlocal audio_ring_buffer
+
             timestamp_ms = 0
             async for chunk in stream:
                 yield chunk, timestamp_ms
                 timestamp_ms += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
 
-                if chunk_buffer is not None:
-                    chunk_buffer.append(chunk)
+                # Keeping audio right before wake word detection allows the
+                # voice command to be spoken immediately after the wake word.
+                if audio_bytes_to_buffer > 0:
+                    audio_ring_buffer += chunk
+                    if len(audio_ring_buffer) > audio_bytes_to_buffer:
+                        # A proper ring buffer would be far more efficient
+                        audio_ring_buffer = audio_ring_buffer[
+                            len(audio_ring_buffer) - audio_bytes_to_buffer :
+                        ]
 
                 if (wake_word_vad is not None) and (not wake_word_vad.process(chunk)):
                     raise WakeWordTimeoutError(
@@ -510,6 +517,11 @@ class PipelineRun:
             result = await self.wake_word_provider.async_process_audio_stream(
                 timestamped_stream()
             )
+
+            if audio_ring_buffer:
+                # All audio kept from right before the wake word was detected as
+                # a single chunk.
+                audio_buffer.append(audio_ring_buffer)
         except WakeWordTimeoutError:
             _LOGGER.debug("Timeout during wake word detection")
             raise
@@ -525,15 +537,15 @@ class PipelineRun:
         if result is None:
             wake_word_output: dict[str, Any] = {}
         else:
-            if chunk_buffer:
-                # Add audio collected before detection
-                audio_buffer.extend(chunk_buffer)
-
             if result.queued_audio:
                 # Add audio that was pending at detection
-                audio_buffer.extend(chunk_ts[0] for chunk_ts in result.queued_audio)
+                for chunk_ts in result.queued_audio:
+                    audio_buffer.append(chunk_ts[0])
 
             wake_word_output = asdict(result)
+
+            # Remove non-JSON fields
+            wake_word_output.pop("queued_audio", None)
 
         self.process_event(
             PipelineEvent(
