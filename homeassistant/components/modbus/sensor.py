@@ -160,6 +160,8 @@ class SlaveSensor(
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         if self._attr_unique_id:
             self._attr_unique_id = f"{self._attr_unique_id}_{idx}"
+        self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_available = False
         super().__init__(coordinator)
 
