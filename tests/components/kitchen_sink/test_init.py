@@ -125,7 +125,7 @@ async def test_issues_created(
     assert msg["result"] == {
         "issues": [
             {
-                "breaks_in_ha_version": "2024.2.0",
+                "breaks_in_ha_version": "2024.3.0",
                 "created": ANY,
                 "dismissed_version": None,
                 "domain": WEATHER_DOMAIN,
@@ -255,7 +255,7 @@ async def test_issues_created(
     assert msg["result"] == {
         "issues": [
             {
-                "breaks_in_ha_version": "2024.2.0",
+                "breaks_in_ha_version": "2024.3.0",
                 "created": ANY,
                 "dismissed_version": None,
                 "domain": WEATHER_DOMAIN,

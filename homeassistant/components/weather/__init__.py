@@ -402,7 +402,7 @@ class WeatherEntity(Entity, PostInit):
             hass,
             DOMAIN,
             f"deprecated_weather_forecast_{self.platform.platform_name}",
-            breaks_in_ha_version="2024.2.0",
+            breaks_in_ha_version="2024.3.0",
             is_fixable=False,
             is_persistent=False,
             issue_domain=self.platform.platform_name,
@@ -416,7 +416,7 @@ class WeatherEntity(Entity, PostInit):
             (
                 "%s::%s is using a forecast attribute on an instance of "
                 "WeatherEntity, this is deprecated and will be unsupported "
-                "from Home Assistant 2024.2. Please report it as an issue"
+                "from Home Assistant 2024.3. Please report it as an issue"
             ),
             self.platform.platform_name,
             self.__class__.__name__,
