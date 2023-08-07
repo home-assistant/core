@@ -59,20 +59,18 @@ class SystemBridgeNotificationService(BaseNotificationService):
         **kwargs: Any,
     ) -> None:
         """Send a message."""
-        data = kwargs.get(ATTR_DATA)
+        data = kwargs.get(ATTR_DATA, {})
 
         notification = Notification(
-            actions=data.get(ATTR_ACTIONS) if data is not None else None,
-            audio=data.get(ATTR_AUDIO) if data is not None else None,
-            icon=data.get(ATTR_ICON) if data is not None else None,
-            image=data.get(ATTR_IMAGE) if data is not None else None,
+            actions=data.get(ATTR_ACTIONS),
+            audio=data.get(ATTR_AUDIO),
+            icon=data.get(ATTR_ICON),
+            image=data.get(ATTR_IMAGE),
             message=message,
-            timeout=data.get(ATTR_TIMEOUT) if data is not None else None,
+            timeout=data.get(ATTR_TIMEOUT),
             title=kwargs.get(
                 ATTR_TITLE,
                 data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-                if data is not None
-                else ATTR_TITLE_DEFAULT,
             ),
         )
 
