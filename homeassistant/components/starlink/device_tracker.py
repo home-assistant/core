@@ -65,7 +65,7 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
 DEVICE_TRACKERS = [
     StarlinkDeviceTrackerEntityDescription(
         key="device_location",
-        name="Device location",
+        translation_key="device_location",
         entity_registry_enabled_default=False,
         latitude_fn=lambda data: data.location["latitude"],
         longitude_fn=lambda data: data.location["longitude"],
