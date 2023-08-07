@@ -98,5 +98,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_weather_forecast": {
+      "title": "The {platform} integration is using deprecated forecast",
+      "description": "The integration `{platform}` is using the deprecated forecast attribute.\n\nPlease report it to the author of the `{platform}` integration."
+    }
   }
 }
