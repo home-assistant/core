@@ -20,7 +20,7 @@
     "zigpy_znp"
   ],
   "requirements": [
-    "bellows==0.35.8",
+    "bellows==0.35.9",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
     "zha-quirks==0.0.102",
