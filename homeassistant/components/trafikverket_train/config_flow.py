@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime, time
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -65,7 +65,7 @@ async def validate_input(
     api_key: str,
     train_from: str,
     train_to: str,
-    train_time: time | None,
+    train_time: str | None,
     weekdays: list[str],
 ) -> dict[str, str]:
     """Validate input from user input."""
@@ -74,11 +74,12 @@ async def validate_input(
     when = dt_util.now()
     if train_time:
         departure_day = next_departuredate(weekdays)
-        when = datetime.combine(
-            departure_day,
-            train_time,
-            dt_util.get_time_zone(hass.config.time_zone),
-        )
+        if _time := dt_util.parse_time(train_time):
+            when = datetime.combine(
+                departure_day,
+                _time,
+                dt_util.get_time_zone(hass.config.time_zone),
+            )
 
     try:
         web_session = async_get_clientsession(hass)
@@ -137,7 +138,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api_key,
                 self.entry.data[CONF_FROM],
                 self.entry.data[CONF_TO],
-                dt_util.parse_time(self.entry.data[CONF_TIME]),
+                self.entry.data.get(CONF_TIME),
                 self.entry.data[CONF_WEEKDAY],
             )
             if not errors:
@@ -179,7 +180,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api_key,
                 train_from,
                 train_to,
-                dt_util.parse_time(train_time) if train_time else None,
+                train_time,
                 train_days,
             )
             if not errors:
