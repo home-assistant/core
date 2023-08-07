@@ -31,6 +31,14 @@ ACTIVITY_CATCH_UP_FETCH_LIMIT = 2500
 ACTIVITY_DEBOUNCE_COOLDOWN = 3
 
 
+@callback
+def _async_cancel_future_scheduled_updates(cancels: list[CALLBACK_TYPE]) -> None:
+    """Cancel future scheduled updates."""
+    for cancel in cancels:
+        cancel()
+    cancels.clear()
+
+
 class ActivityStream(AugustSubscriberMixin):
     """August activity stream handler."""
 
@@ -84,33 +92,30 @@ class ActivityStream(AugustSubscriberMixin):
         for debouncer in self._update_debounce.values():
             debouncer.async_cancel()
         for cancels in self._schedule_updates.values():
-            for cancel in cancels:
-                cancel()
-            cancels.clear()
+            _async_cancel_future_scheduled_updates(cancels)
 
     def get_latest_device_activity(
         self, device_id: str, activity_types: set[ActivityType]
     ) -> Activity | None:
         """Return latest activity that is one of the activity_types."""
-        if device_id not in self._latest_activities:
+        if not (latest_device_activities := self._latest_activities.get(device_id)):
             return None
 
-        latest_device_activities = self._latest_activities[device_id]
         latest_activity: Activity | None = None
 
         for activity_type in activity_types:
-            if activity_type in latest_device_activities:
+            if activity := latest_device_activities.get(activity_type):
                 if (
-                    latest_activity is not None
-                    and latest_device_activities[activity_type].activity_start_time
+                    latest_activity
+                    and activity.activity_start_time
                     <= latest_activity.activity_start_time
                 ):
                     continue
-                latest_activity = latest_device_activities[activity_type]
+                latest_activity = activity
 
         return latest_activity
 
-    async def _async_refresh(self, time):
+    async def _async_refresh(self, time: datetime) -> None:
         """Update the activity stream from August."""
         # This is the only place we refresh the api token
         await self._august_gateway.async_refresh_access_token_if_needed()
@@ -126,9 +131,7 @@ class ActivityStream(AugustSubscriberMixin):
     def async_schedule_house_id_refresh(self, house_id: str) -> None:
         """Update for a house activities now and once in the future."""
         if cancels := self._schedule_updates.get(house_id):
-            for cancel in cancels:
-                cancel()
-            cancels.clear()
+            _async_cancel_future_scheduled_updates(cancels)
 
         debouncer = self._update_debounce[house_id]
 
@@ -176,22 +179,11 @@ class ActivityStream(AugustSubscriberMixin):
         _LOGGER.debug(
             "Completed retrieving device activities for house id %s", house_id
         )
+        self._async_process_newer_device_activities(activities)
 
-        updated_device_ids = self.async_process_newer_device_activities(activities)
-
-        if not updated_device_ids:
-            return
-
-        for device_id in updated_device_ids:
-            _LOGGER.debug(
-                "async_signal_device_id_update (from activity stream): %s",
-                device_id,
-            )
-            self.async_signal_device_id_update(device_id)
-
-    def async_process_newer_device_activities(
+    def _async_process_newer_device_activities(
         self, activities: list[Activity]
-    ) -> set[str]:
+    ) -> None:
         """Process activities if they are newer than the last one."""
         updated_device_ids = set()
         latest_activities = self._latest_activities
@@ -212,4 +204,9 @@ class ActivityStream(AugustSubscriberMixin):
             device_activities[activity_type] = activity
             updated_device_ids.add(device_id)
 
-        return updated_device_ids
+        for device_id in updated_device_ids:
+            _LOGGER.debug(
+                "async_signal_device_id_update (from activity stream): %s",
+                device_id,
+            )
+            self.async_signal_device_id_update(device_id)
