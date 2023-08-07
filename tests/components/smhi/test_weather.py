@@ -402,3 +402,44 @@ async def test_forecast_services(
     assert len(forecast1) == 72
     assert forecast1[0] == snapshot
     assert forecast1[6] == snapshot
+
+
+async def test_forecast_services_lack_of_data(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    api_response_lack_data: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test forecast lacking data."""
+    uri = APIURL_TEMPLATE.format(
+        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
+    )
+    aioclient_mock.get(uri, text=api_response_lack_data)
+
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": "daily",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    forecast1 = msg["event"]["forecast"]
+
+    assert forecast1 is None

@@ -241,7 +241,7 @@ class SmhiWeather(WeatherEntity):
         self, forecast_data: list[SmhiForecast] | None
     ) -> list[Forecast] | None:
         """Get forecast data."""
-        if forecast_data is None or len(forecast_data) < 2:
+        if forecast_data is None or len(forecast_data) < 3:
             return None
 
         data: list[Forecast] = []

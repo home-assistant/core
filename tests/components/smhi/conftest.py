@@ -10,3 +10,9 @@ from tests.common import load_fixture
 def api_response():
     """Return an API response."""
     return load_fixture("smhi.json", DOMAIN)
+
+
+@pytest.fixture(scope="session")
+def api_response_lack_data():
+    """Return an API response."""
+    return load_fixture("smhi_short.json", DOMAIN)
