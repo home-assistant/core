@@ -1,6 +1,5 @@
 """Config flow for EyeOnWater integration."""
 import asyncio
-import contextlib
 import logging
 from typing import Any
 
@@ -28,7 +27,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def create_account_from_config(data: dict[str, Any]) -> Account:
+def create_account_from_config(hass: core.HomeAssistant, data: dict[str, Any]) -> Account:
     """Create account login from config."""
     CountryCode = hass.config.country
     if CountryCode == "US":
@@ -37,7 +36,7 @@ def create_account_from_config(data: dict[str, Any]) -> Account:
         eow_hostname = CONF_EOW_HOSTNAME_CA
     else:
         raise Exception(
-            f"Unsupported domain {domain}. Only 'com' and 'ca' are supported"
+            f"Unsupported country ({CountryCode}) setup in HomeAssistant."
         )
 
     metric_measurement_system = hass.config.units is METRIC_SYSTEM
