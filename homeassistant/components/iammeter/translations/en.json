@@ -1,0 +1,81 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "The prefix to be used for your Solar-Log sensors"
+                },
+                "title": "Define your Solar-Log connection"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "voltage_a": {
+                "name": "Voltage A"
+            },
+            "voltage_b": {
+                "name": "Voltage B"
+            },
+            "voltage_c": {
+                "name": "Voltage C"
+            },
+            "voltage_net": {
+                "name": "Voltage NET"
+            },
+            "current_a": {
+                "name": "Current A"
+            },
+            "current_b": {
+                "name": "Current B"
+            },
+            "current_c": {
+                "name": "Current C"
+            },
+            "import_energy_a": {
+                "name": "Import Energy A"
+            },
+            "import_energy_b": {
+                "name": "Import Energy B"
+            },
+            "import_energy_c": {
+                "name": "Import Energy C"
+            },
+            "import_energy_net": {
+                "name": "Import Energy Net"
+            },
+            "export_grid_a": {
+                "name": "Export Grid A"
+            },
+            "export_grid_b": {
+                "name": "Export Grid B"
+            },
+            "export_grid_c": {
+                "name": "Export Grid C"
+            },
+            "export_grid_net": {
+                "name": "Export Grid Net"
+            },
+            "pf_a": {
+                "name": "PF A"
+            },
+            "pf_b": {
+                "name": "PF B"
+            },
+            "pf_c": {
+                "name": "PF C"
+            },
+            "pf_net": {
+                "name": "PF Net"
+            }
+        }
+    }
+}
