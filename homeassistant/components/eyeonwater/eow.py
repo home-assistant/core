@@ -93,10 +93,9 @@ class Meter:
         data = await client.request(path=SEARCH_ENDPOINT, method="post", json=query)
         data = json.loads(data)
         meters = data["elastic_results"]["hits"]["hits"]
-        
+
         self.meter_info = meters[0]["_source"]
         self.reading_data = self.meter_info["register_0"]
-        return self.reading_data
 
     @property
     def attributes(self):
@@ -105,6 +104,7 @@ class Meter:
 
     def get_flags(self, flag) -> bool:
         """Define flags."""
+        flags = []
         flags = self.reading_data["flags"]
         if flag not in flags:
             raise EyeOnWaterAPIError(f"Cannot find {flag} field")
