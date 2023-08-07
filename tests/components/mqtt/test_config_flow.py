@@ -1,5 +1,6 @@
 """Test config flow."""
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits
 from ssl import SSLError
@@ -136,19 +137,22 @@ def mock_process_uploaded_file(tmp_path: Path) -> Generator[MagicMock, None, Non
     file_id_cert = str(uuid4())
     file_id_key = str(uuid4())
 
-    def _mock_process_uploaded_file(hass: HomeAssistant, file_id) -> None:
+    @contextmanager
+    def _mock_process_uploaded_file(
+        hass: HomeAssistant, file_id: str
+    ) -> Iterator[Path | None]:
         if file_id == file_id_ca:
             with open(tmp_path / "ca.crt", "wb") as cafile:
                 cafile.write(b"## mock CA certificate file ##")
-            return tmp_path / "ca.crt"
+            yield tmp_path / "ca.crt"
         elif file_id == file_id_cert:
             with open(tmp_path / "client.crt", "wb") as certfile:
                 certfile.write(b"## mock client certificate file ##")
-            return tmp_path / "client.crt"
+            yield tmp_path / "client.crt"
         elif file_id == file_id_key:
             with open(tmp_path / "client.key", "wb") as keyfile:
                 keyfile.write(b"## mock key file ##")
-            return tmp_path / "client.key"
+            yield tmp_path / "client.key"
         else:
             pytest.fail(f"Unexpected file_id: {file_id}")
 

@@ -6,6 +6,12 @@ from datetime import date, datetime, time, timedelta
 import logging
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleTrainAnnouncementFound,
+    NoTrainAnnouncementFound,
+    UnknownError,
+)
 from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 
 from homeassistant.config_entries import ConfigEntry
@@ -119,9 +125,13 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
                 state = await self._train_api.async_get_next_train_stop(
                     self.from_station, self.to_station, when
                 )
-        except ValueError as error:
-            if "Invalid authentication" in error.args[0]:
-                raise ConfigEntryAuthFailed from error
+        except InvalidAuthentication as error:
+            raise ConfigEntryAuthFailed from error
+        except (
+            NoTrainAnnouncementFound,
+            MultipleTrainAnnouncementFound,
+            UnknownError,
+        ) as error:
             raise UpdateFailed(
                 f"Train departure {when} encountered a problem: {error}"
             ) from error

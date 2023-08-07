@@ -75,8 +75,7 @@ from .errors import (
     AlexaUnsupportedThermostatModeError,
     AlexaVideoActionNotPermittedForContentError,
 )
-from .messages import AlexaDirective, AlexaResponse
-from .state_report import async_enable_proactive_mode
+from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"

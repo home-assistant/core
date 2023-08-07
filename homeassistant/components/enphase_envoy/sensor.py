@@ -5,7 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import cast
+
+from pyenphase import EnvoyInverter, EnvoySystemConsumption, EnvoySystemProduction
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,16 +17,15 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
-    DataUpdateCoordinator,
 )
 from homeassistant.util import dt as dt_util
 
-from .const import COORDINATOR, DOMAIN, NAME
+from .const import DOMAIN
+from .coordinator import EnphaseUpdateCoordinator
 
 ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)
@@ -35,100 +35,148 @@ LAST_REPORTED_KEY = "last_reported"
 
 
 @dataclass
-class EnvoyRequiredKeysMixin:
+class EnvoyInverterRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[tuple[float, str]], datetime.datetime | float | None]
+    value_fn: Callable[[EnvoyInverter], datetime.datetime | float]
 
 
 @dataclass
-class EnvoySensorEntityDescription(SensorEntityDescription, EnvoyRequiredKeysMixin):
+class EnvoyInverterSensorEntityDescription(
+    SensorEntityDescription, EnvoyInverterRequiredKeysMixin
+):
     """Describes an Envoy inverter sensor entity."""
 
 
-def _inverter_last_report_time(
-    watt_report_time: tuple[float, str]
-) -> datetime.datetime | None:
-    if (report_time := watt_report_time[1]) is None:
-        return None
-    if (last_reported_dt := dt_util.parse_datetime(report_time)) is None:
-        return None
-    if last_reported_dt.tzinfo is None:
-        return last_reported_dt.replace(tzinfo=dt_util.UTC)
-    return last_reported_dt
-
-
 INVERTER_SENSORS = (
-    EnvoySensorEntityDescription(
+    EnvoyInverterSensorEntityDescription(
         key=INVERTERS_KEY,
+        name=None,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
-        value_fn=lambda watt_report_time: watt_report_time[0],
+        value_fn=lambda inverter: inverter.last_report_watts,
     ),
-    EnvoySensorEntityDescription(
+    EnvoyInverterSensorEntityDescription(
         key=LAST_REPORTED_KEY,
-        name="Last Reported",
+        translation_key=LAST_REPORTED_KEY,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        value_fn=_inverter_last_report_time,
+        value_fn=lambda inverter: dt_util.utc_from_timestamp(inverter.last_report_date),
     ),
 )
 
-SENSORS = (
-    SensorEntityDescription(
+
+@dataclass
+class EnvoyProductionRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[EnvoySystemProduction], int]
+
+
+@dataclass
+class EnvoyProductionSensorEntityDescription(
+    SensorEntityDescription, EnvoyProductionRequiredKeysMixin
+):
+    """Describes an Envoy production sensor entity."""
+
+
+PRODUCTION_SENSORS = (
+    EnvoyProductionSensorEntityDescription(
         key="production",
-        name="Current Power Production",
+        translation_key="current_power_production",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda production: production.watts_now,
     ),
-    SensorEntityDescription(
+    EnvoyProductionSensorEntityDescription(
         key="daily_production",
-        name="Today's Energy Production",
+        translation_key="daily_production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda production: production.watt_hours_today,
     ),
-    SensorEntityDescription(
+    EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
-        name="Last Seven Days Energy Production",
+        translation_key="seven_days_production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda production: production.watt_hours_last_7_days,
     ),
-    SensorEntityDescription(
+    EnvoyProductionSensorEntityDescription(
         key="lifetime_production",
-        name="Lifetime Energy Production",
+        translation_key="lifetime_production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda production: production.watt_hours_lifetime,
     ),
-    SensorEntityDescription(
+)
+
+
+@dataclass
+class EnvoyConsumptionRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[EnvoySystemConsumption], int]
+
+
+@dataclass
+class EnvoyConsumptionSensorEntityDescription(
+    SensorEntityDescription, EnvoyConsumptionRequiredKeysMixin
+):
+    """Describes an Envoy consumption sensor entity."""
+
+
+CONSUMPTION_SENSORS = (
+    EnvoyConsumptionSensorEntityDescription(
         key="consumption",
-        name="Current Power Consumption",
+        translation_key="current_power_consumption",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda consumption: consumption.watts_now,
     ),
-    SensorEntityDescription(
+    EnvoyConsumptionSensorEntityDescription(
         key="daily_consumption",
-        name="Today's Energy Consumption",
+        translation_key="daily_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda consumption: consumption.watt_hours_today,
     ),
-    SensorEntityDescription(
+    EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
-        name="Last Seven Days Energy Consumption",
+        translation_key="seven_days_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda consumption: consumption.watt_hours_last_7_days,
     ),
-    SensorEntityDescription(
+    EnvoyConsumptionSensorEntityDescription(
         key="lifetime_consumption",
-        name="Lifetime Energy Consumption",
+        translation_key="lifetime_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda consumption: consumption.watt_hours_lifetime,
     ),
 )
 
@@ -139,103 +187,116 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up envoy sensor platform."""
-    data: dict = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator: DataUpdateCoordinator = data[COORDINATOR]
-    envoy_data: dict = coordinator.data
-    envoy_name: str = data[NAME]
+    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    envoy_data = coordinator.envoy.data
+    assert envoy_data is not None
     envoy_serial_num = config_entry.unique_id
     assert envoy_serial_num is not None
     _LOGGER.debug("Envoy data: %s", envoy_data)
 
-    entities: list[Envoy | EnvoyInverter] = []
-    for description in SENSORS:
-        sensor_data = envoy_data.get(description.key)
-        if isinstance(sensor_data, str) and "not available" in sensor_data:
-            continue
-        entities.append(
-            Envoy(
-                coordinator,
-                description,
-                envoy_name,
-                envoy_serial_num,
-            )
-        )
-
-    if production := envoy_data.get("inverters_production"):
+    entities: list[Entity] = [
+        EnvoyProductionEntity(coordinator, description)
+        for description in PRODUCTION_SENSORS
+    ]
+    if envoy_data.system_consumption:
         entities.extend(
-            EnvoyInverter(
-                coordinator,
-                description,
-                envoy_name,
-                envoy_serial_num,
-                str(inverter),
-            )
+            EnvoyConsumptionEntity(coordinator, description)
+            for description in CONSUMPTION_SENSORS
+        )
+    if envoy_data.inverters:
+        entities.extend(
+            EnvoyInverterEntity(coordinator, description, inverter)
             for description in INVERTER_SENSORS
-            for inverter in production
+            for inverter in envoy_data.inverters
         )
 
     async_add_entities(entities)
 
 
-class Envoy(CoordinatorEntity, SensorEntity):
+class EnvoyEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
     """Envoy inverter entity."""
 
     _attr_icon = ICON
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: EnphaseUpdateCoordinator,
         description: SensorEntityDescription,
-        envoy_name: str,
-        envoy_serial_num: str,
     ) -> None:
         """Initialize Envoy entity."""
         self.entity_description = description
-        self._attr_name = f"{envoy_name} {description.name}"
+        envoy_name = coordinator.name
+        envoy_serial_num = coordinator.envoy.serial_number
+        assert envoy_serial_num is not None
         self._attr_unique_id = f"{envoy_serial_num}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, envoy_serial_num)},
             manufacturer="Enphase",
-            model="Envoy",
+            model=coordinator.envoy.part_number or "Envoy",
             name=envoy_name,
+            sw_version=str(coordinator.envoy.firmware),
         )
         super().__init__(coordinator)
 
+
+class EnvoyProductionEntity(EnvoyEntity):
+    """Envoy production entity."""
+
+    entity_description: EnvoyProductionSensorEntityDescription
+
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
-        if (value := self.coordinator.data.get(self.entity_description.key)) is None:
-            return None
-        return cast(float, value)
+        envoy = self.coordinator.envoy
+        assert envoy.data is not None
+        assert envoy.data.system_production is not None
+        return self.entity_description.value_fn(envoy.data.system_production)
 
 
-class EnvoyInverter(CoordinatorEntity, SensorEntity):
+class EnvoyConsumptionEntity(EnvoyEntity):
+    """Envoy consumption entity."""
+
+    entity_description: EnvoyConsumptionSensorEntityDescription
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        envoy = self.coordinator.envoy
+        assert envoy.data is not None
+        assert envoy.data.system_consumption is not None
+        return self.entity_description.value_fn(envoy.data.system_consumption)
+
+
+class EnvoyInverterEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
     """Envoy inverter entity."""
 
     _attr_icon = ICON
-    entity_description: EnvoySensorEntityDescription
+    _attr_has_entity_name = True
+    entity_description: EnvoyInverterSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        description: EnvoySensorEntityDescription,
-        envoy_name: str,
-        envoy_serial_num: str,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyInverterSensorEntityDescription,
         serial_number: str,
     ) -> None:
         """Initialize Envoy inverter entity."""
         self.entity_description = description
         self._serial_number = serial_number
-        if description.name is not UNDEFINED:
-            self._attr_name = (
-                f"{envoy_name} Inverter {serial_number} {description.name}"
-            )
-        else:
-            self._attr_name = f"{envoy_name} Inverter {serial_number}"
-        if description.key == INVERTERS_KEY:
+        key = description.key
+
+        if key == INVERTERS_KEY:
+            # Originally there was only one inverter sensor, so we don't want to
+            # break existing installations by changing the unique_id.
             self._attr_unique_id = serial_number
         else:
-            self._attr_unique_id = f"{serial_number}_{description.key}"
+            # Additional sensors have a unique_id that includes the
+            # sensor key.
+            self._attr_unique_id = f"{serial_number}_{key}"
+
+        envoy_serial_num = coordinator.envoy.serial_number
+        assert envoy_serial_num is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
             name=f"Inverter {serial_number}",
@@ -246,9 +307,10 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
     @property
-    def native_value(self) -> datetime.datetime | float | None:
+    def native_value(self) -> datetime.datetime | float:
         """Return the state of the sensor."""
-        watt_report_time: tuple[float, str] = self.coordinator.data[
-            "inverters_production"
-        ][self._serial_number]
-        return self.entity_description.value_fn(watt_report_time)
+        envoy = self.coordinator.envoy
+        assert envoy.data is not None
+        assert envoy.data.inverters is not None
+        inverter = envoy.data.inverters[self._serial_number]
+        return self.entity_description.value_fn(inverter)

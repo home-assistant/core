@@ -470,6 +470,7 @@ async def test_wlan_client_sensors(
     wireless_client_1 = {
         "essid": "SSID 1",
         "is_wired": False,
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
         "mac": "00:00:00:00:00:01",
         "name": "Wireless client",
         "oui": "Producer",
@@ -479,6 +480,7 @@ async def test_wlan_client_sensors(
     wireless_client_2 = {
         "essid": "SSID 2",
         "is_wired": False,
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
         "mac": "00:00:00:00:00:02",
         "name": "Wireless client2",
         "oui": "Producer2",
@@ -526,9 +528,17 @@ async def test_wlan_client_sensors(
     # Verify state update - decreasing number
 
     wireless_client_1["essid"] = "SSID"
-    wireless_client_2["essid"] = "SSID"
-
     mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_1)
+
+    async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    ssid_1 = hass.states.get("sensor.ssid_1")
+    assert ssid_1.state == "1"
+
+    # Verify state update - decreasing number
+
+    wireless_client_2["last_seen"] = 0
     mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_2)
 
     async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
