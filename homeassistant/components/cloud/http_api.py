@@ -24,7 +24,7 @@ from homeassistant.components.alexa import (
 )
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant
@@ -189,12 +189,10 @@ class GoogleActionsSyncView(HomeAssistantView):
     url = "/api/cloud/google_actions/sync"
     name = "api:cloud:google_actions/sync"
 
+    @require_admin
     @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
         """Trigger a Google Actions sync."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-
         hass = request.app["hass"]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         gconf = await cloud.client.get_google_config()
@@ -208,14 +206,13 @@ class CloudLoginView(HomeAssistantView):
     url = "/api/cloud/login"
     name = "api:cloud:login"
 
+    @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(
         vol.Schema({vol.Required("email"): str, vol.Required("password"): str})
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
 
         def cloud_assist_pipeline(hass: HomeAssistant) -> str | None:
             """Return the ID of a cloud-enabled assist pipeline or None."""
@@ -250,12 +247,10 @@ class CloudLogoutView(HomeAssistantView):
     url = "/api/cloud/logout"
     name = "api:cloud:logout"
 
+    @require_admin
     @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
@@ -271,6 +266,7 @@ class CloudRegisterView(HomeAssistantView):
     url = "/api/cloud/register"
     name = "api:cloud:register"
 
+    @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(
         vol.Schema(
@@ -282,9 +278,6 @@ class CloudRegisterView(HomeAssistantView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle registration request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
@@ -317,13 +310,11 @@ class CloudResendConfirmView(HomeAssistantView):
     url = "/api/cloud/resend_confirm"
     name = "api:cloud:resend_confirm"
 
+    @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle resending confirm email code request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
@@ -339,13 +330,11 @@ class CloudForgotPasswordView(HomeAssistantView):
     url = "/api/cloud/forgot_password"
     name = "api:cloud:forgot_password"
 
+    @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
