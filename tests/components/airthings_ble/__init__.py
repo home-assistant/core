@@ -77,8 +77,11 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 WAVE_DEVICE_INFO = AirthingsDevice(
+    manufacturer="Airthings AS",
     hw_version="REV A",
     sw_version="G-BLE-1.5.3-master+0",
+    model="Wave Plus",
+    model_raw="2930",
     name="Airthings Wave+",
     identifier="123456",
     sensors={
