@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 import json
 import re
 from typing import Any, cast
@@ -27,8 +28,8 @@ import homeassistant.util.dt as dt_util
 from .const import (
     ATTR_PLAYBACK_RATE,
     DOMAIN,
-    LOGGER as _LOGGER,
     EXPECTED_HEARTBEAT_FREQUENCY,
+    LOGGER as _LOGGER,
 )
 
 PLATFORM = "media_player"
@@ -99,7 +100,7 @@ async def async_setup_entry(
 
 
 class HASSMPRISEntity(MediaPlayerEntity):
-    """This class represents an MPRIS media player entity."""
+    """Represents an MPRIS media player entity."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = SUPPORTED_MINIMAL
@@ -403,10 +404,14 @@ class EntityManager:
             return
         self._started = True
         _LOGGER.debug("%X: Streaming updates started", id(self))
+        seen_excs: dict[Any, bool] = {}
         while not self._shutdown.done():
             try:
+                cycle_update_count = 0
                 try:
-                    await self._monitor_updates()
+                    async for _ in self._monitor_updates():
+                        cycle_update_count = cycle_update_count + 1
+                        seen_excs = {}
                 except Exception as exc:
                     if self._shutdown.done():
                         _LOGGER.debug(
@@ -417,20 +422,30 @@ class EntityManager:
                     raise
             except hassmpris_client.Unauthenticated:
                 _LOGGER.error(
-                    "We have been deauthorized -- no further updates "
-                    "will occur until reauthentication"
+                    "We have been deauthorized after %s updates -- no further updates "
+                    "will occur until reauthentication",
+                    cycle_update_count,
                 )
                 self.config_entry.async_start_reauth(self.hass)
                 await self.stop()
             except hassmpris_client.ClientException as exc:
-                _LOGGER.exception(
-                    "%X: We lost connectivity (%s) -- reconnecting", id(self), exc
+                lg = _LOGGER.exception if type(exc) not in seen_excs else _LOGGER.debug
+                seen_excs[type(exc)] = True
+                lg(
+                    "%X: We lost connectivity after %s updates (%s) -- reconnecting",
+                    id(self),
+                    cycle_update_count,
+                    exc,
                 )
                 await asyncio.sleep(5)
-            except Exception:
-                _LOGGER.exception(
-                    "%X: Unexpected exception -- reconnecting",
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                lg = _LOGGER.exception if type(exc) not in seen_excs else _LOGGER.debug
+                seen_excs[type(exc)] = True
+                lg(
+                    "%X: Unexpected exception after %s updates (%s) -- reconnecting",
                     id(self),
+                    cycle_update_count,
+                    exc,
                 )
                 await asyncio.sleep(5)
         await self._shutdown
@@ -577,28 +592,28 @@ class EntityManager:
                 off_playa = self.players.get(player_id)
                 if off_playa is not None:
                     await off_playa.update_state(MediaPlayerState.OFF)
-        else:
+        elif is_off_or_absent():
             # This is a second instance of a player.
             # E.g. `VLC media player`` is not a second instance,
             # but `VLC media player 2`` is in fact a second instance.
             # Many media players can launch multiple instances, but we
             # don't necessarily want to keep all those instances around
             # if they are off or unknown.
-            if is_off_or_absent():
-                # The copycat player is in the directory, but its state is off
-                # or unknown.  This means the agent knew about it at some
-                # point, but it is now gone.  So we remove it from the list of
-                # players we know about.
-                #
-                # Alternatively:
-                #
-                # The agent does not know about this player, or the player
-                # is off / unknown.  That means we can remove its entity
-                # record from the registry (to keep the record clean of
-                # entities which may very well never reappear).
-                self._remove_player(player_id)
+            #
+            # The copycat player is in the directory, but its state is off
+            # or unknown.  This means the agent knew about it at some
+            # point, but it is now gone.  So we remove it from the list of
+            # players we know about.
+            #
+            # Alternatively:
+            #
+            # The agent does not know about this player, or the player
+            # is off / unknown.  That means we can remove its entity
+            # record from the registry (to keep the record clean of
+            # entities which may very well never reappear).
+            self._remove_player(player_id)
 
-    async def _monitor_updates(self):
+    async def _monitor_updates(self) -> AsyncGenerator[None, None]:
         """Obtain a real-time feed of player updates."""
         try:
             started_syncing = False
@@ -622,11 +637,15 @@ class EntityManager:
                     # have had their information sent to Home Assistant.
                     await self._finish_initial_players_sync()
                     finished_syncing = True
+                yield
         finally:
             # Whether due to error or request, we no longer get updates.
             # All entities are now unavailable from the standpoint of the
-            # HASS MPRIS client, so we mark them as such.
-            await self._mark_all_entities_unavailable()
+            # HASS MPRIS client.
+            if started_syncing:
+                # The loop synced entities successfully at least once
+                # Time to mark any available entities as unavailable.
+                await self._mark_all_entities_unavailable()
 
     async def _handle_update(
         self,
