@@ -744,10 +744,10 @@ def hass_client(
 ) -> ClientSessionGenerator:
     """Return an authenticated HTTP client."""
 
-    async def auth_client() -> TestClient:
+    async def auth_client(access_token: str | None = hass_access_token) -> TestClient:
         """Return an authenticated client."""
         return await aiohttp_client(
-            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
+            hass.http.app, headers={"Authorization": f"Bearer {access_token}"}
         )
 
     return auth_client

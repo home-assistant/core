@@ -157,7 +157,6 @@ class ScrapeSensor(
         """Initialize a web scrape sensor."""
         CoordinatorEntity.__init__(self, coordinator)
         ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
-        self._attr_name = trigger_entity_config[CONF_NAME].template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_state_class = state_class
         self._select = select

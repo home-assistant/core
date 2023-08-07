@@ -7,7 +7,7 @@ from unittest.mock import patch
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.components.xiaomi_ble.const import DOMAIN
+from homeassistant.components.xiaomi_ble.const import CONF_SLEEPY_DEVICE, DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
@@ -313,6 +313,8 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
+    assert CONF_SLEEPY_DEVICE not in entry.data
+
 
 async def test_sleepy_device(hass: HomeAssistant) -> None:
     """Test sleepy device does not go to unavailable after 60 minutes."""
@@ -363,3 +365,5 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True

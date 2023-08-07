@@ -41,7 +41,7 @@ class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
     image_fn: Callable[[UniFiController, ApiItemT], bytes]
-    value_fn: Callable[[ApiItemT], str]
+    value_fn: Callable[[ApiItemT], str | None]
 
 
 @dataclass
@@ -67,6 +67,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda _: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"qr_code-{obj_id}",
         image_fn=async_wlan_qr_code_image_fn,
@@ -82,6 +83,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up image platform for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    if controller.site_role != "admin":
+        return
+
     controller.register_platform_add_entities(
         UnifiImageEntity, ENTITY_DESCRIPTIONS, async_add_entities
     )
@@ -94,7 +99,7 @@ class UnifiImageEntity(UnifiEntity[HandlerT, ApiItemT], ImageEntity):
     _attr_content_type = "image/png"
 
     current_image: bytes | None = None
-    previous_value = ""
+    previous_value: str | None = None
 
     def __init__(
         self,

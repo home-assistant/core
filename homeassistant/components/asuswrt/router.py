@@ -377,7 +377,7 @@ class AsusWrtRouter:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id or "AsusWRT")},
+            identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
             name=self.host,
             model=self._api.model or "Asus Router",
             manufacturer="Asus",

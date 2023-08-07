@@ -31,6 +31,11 @@
       "hopfreepowerend": {
         "name": "Hour of free power end"
       }
+    },
+    "select": {
+      "hopselector": {
+        "name": "Hour of free power"
+      }
     }
   }
 }

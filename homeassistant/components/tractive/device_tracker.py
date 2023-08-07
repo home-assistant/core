@@ -43,7 +43,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         """Initialize tracker entity."""
         super().__init__(user_id, item.trackable, item.tracker_details)
 
-        self._battery_level: int = item.hw_info["battery_level"]
+        self._battery_level: int | None = item.hw_info.get("battery_level")
         self._latitude: float = item.pos_report["latlong"][0]
         self._longitude: float = item.pos_report["latlong"][1]
         self._accuracy: int = item.pos_report["pos_uncertainty"]
@@ -75,7 +75,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         return self._accuracy
 
     @property
-    def battery_level(self) -> int:
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._battery_level
 
