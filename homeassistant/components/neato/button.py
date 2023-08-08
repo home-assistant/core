@@ -7,10 +7,9 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import NEATO_DOMAIN, NEATO_ROBOTS
+from .const import NEATO_ROBOTS
 from .entity import NeatoEntity
 
 
@@ -36,10 +35,6 @@ class NeatoDismissAlertButton(NeatoEntity, ButtonEntity):
         """Initialize a dismiss_alert Neato button entity."""
         super().__init__(robot)
         self._attr_unique_id = f"{robot.serial}_dismiss_alert"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(NEATO_DOMAIN, robot.serial)},
-            name=robot.name,
-        )
 
     async def async_press(self) -> None:
         """Press the button."""
