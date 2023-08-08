@@ -3,8 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "host": "Device IP Address",
-          "access_token": "Access Token"
+          "host": "[%key:common::config_flow::data::host%]",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
         }
       }
     },
