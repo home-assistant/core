@@ -4,8 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.db_schema import StateAttributes, States
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.update.const import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -13,7 +12,7 @@ from homeassistant.components.update.const import (
     DOMAIN,
 )
 from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_PLATFORM
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -25,6 +24,7 @@ async def test_exclude_attributes(
     recorder_mock: Recorder, hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
     """Test update attributes to be excluded."""
+    now = dt_util.utcnow()
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
@@ -42,23 +42,13 @@ async def test_exclude_attributes(
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    def _fetch_states() -> list[State]:
-        with session_scope(hass=hass) as session:
-            native_states = []
-            for db_state, db_state_attributes in session.query(
-                States, StateAttributes
-            ).outerjoin(
-                StateAttributes, States.attributes_id == StateAttributes.attributes_id
-            ):
-                state = db_state.to_native()
-                state.attributes = db_state_attributes.to_native()
-                native_states.append(state)
-            return native_states
-
-    states: list[State] = await hass.async_add_executor_job(_fetch_states)
-    assert len(states) > 1
-    for state in states:
-        assert ATTR_ENTITY_PICTURE not in state.attributes
-        assert ATTR_IN_PROGRESS not in state.attributes
-        assert ATTR_RELEASE_SUMMARY not in state.attributes
-        assert ATTR_INSTALLED_VERSION in state.attributes
+    states = await hass.async_add_executor_job(
+        get_significant_states, hass, now, None, hass.states.async_entity_ids()
+    )
+    assert len(states) >= 1
+    for entity_states in states.values():
+        for state in entity_states:
+            assert ATTR_ENTITY_PICTURE not in state.attributes
+            assert ATTR_IN_PROGRESS not in state.attributes
+            assert ATTR_RELEASE_SUMMARY not in state.attributes
+            assert ATTR_INSTALLED_VERSION in state.attributes

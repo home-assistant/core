@@ -23,7 +23,13 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.util.decorator import Registry
 
-from tests.common import MockConfigEntry, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_entity_platform,
+    mock_integration,
+    mock_platform,
+)
 
 TEST_DOMAIN = "test"
 
@@ -226,6 +232,8 @@ async def test_options_flow_advanced_option(
         config_flow = {}
         options_flow = OPTIONS_FLOW
 
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",
@@ -513,6 +521,8 @@ async def test_suggested_values(
         config_flow = {}
         options_flow = OPTIONS_FLOW
 
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",
@@ -624,6 +634,8 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
         config_flow = {}
         options_flow = OPTIONS_FLOW
 
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from AIOAladdinConnect import AladdinConnectClient
@@ -19,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT_ID, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -133,12 +130,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(
-        self, import_data: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Import Aladin Connect config from configuration.yaml."""
-        return await self.async_step_user(import_data)
 
 
 class InvalidAuth(HomeAssistantError):

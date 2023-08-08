@@ -86,7 +86,10 @@ class DemoManager:
     def _init_regular_updates(self) -> None:
         """Schedule regular updates based on configured time interval."""
         track_time_interval(
-            self._hass, lambda now: self._update(), DEFAULT_UPDATE_INTERVAL
+            self._hass,
+            lambda now: self._update(),
+            DEFAULT_UPDATE_INTERVAL,
+            cancel_on_shutdown=True,
         )
 
     def _update(self, count: int = 1) -> None:
@@ -110,7 +113,7 @@ class DemoManager:
 
 
 class DemoGeolocationEvent(GeolocationEvent):
-    """This represents a demo geolocation event."""
+    """Represents a demo geolocation event."""
 
     _attr_should_poll = False
 

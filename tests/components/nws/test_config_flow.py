@@ -108,7 +108,8 @@ async def test_form_already_configured(
             result["flow_id"],
             {"api_key": "test"},
         )
+        await hass.async_block_till_done()
+
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 0

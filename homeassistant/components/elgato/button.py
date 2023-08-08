@@ -40,14 +40,12 @@ class ElgatoButtonEntityDescription(
 BUTTONS = [
     ElgatoButtonEntityDescription(
         key="identify",
-        name="Identify",
-        icon="mdi:help",
+        device_class=ButtonDeviceClass.IDENTIFY,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda client: client.identify(),
     ),
     ElgatoButtonEntityDescription(
         key="restart",
-        name="Restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda client: client.restart(),

@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import (
+    async_get_entity_registry_entry_or_raise,
+)
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -54,6 +57,7 @@ CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
 CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
 CONF_IS_NITROUS_OXIDE = "is_nitrous_oxide"
 CONF_IS_OZONE = "is_ozone"
+CONF_IS_PH = "is_ph"
 CONF_IS_PM1 = "is_pm1"
 CONF_IS_PM10 = "is_pm10"
 CONF_IS_PM25 = "is_pm25"
@@ -70,6 +74,7 @@ CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
 CONF_IS_VALUE = "is_value"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
+CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "is_volatile_organic_compounds_parts"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VOLUME = "is_volume"
 CONF_IS_WATER = "is_water"
@@ -89,6 +94,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_IS_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
+    SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
@@ -102,6 +108,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.OZONE: [{CONF_TYPE: CONF_IS_OZONE}],
     SensorDeviceClass.POWER: [{CONF_TYPE: CONF_IS_POWER}],
     SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_IS_POWER_FACTOR}],
+    SensorDeviceClass.PH: [{CONF_TYPE: CONF_IS_PH}],
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_IS_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
@@ -119,8 +126,12 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_IS_VOLATILE_ORGANIC_COMPOUNDS}
     ],
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: [
+        {CONF_TYPE: CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS}
+    ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
+    SensorDeviceClass.VOLUME_STORAGE: [{CONF_TYPE: CONF_IS_VOLUME}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_IS_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_IS_WIND_SPEED}],
@@ -130,7 +141,7 @@ ENTITY_CONDITIONS = {
 CONDITION_SCHEMA = vol.All(
     cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_IS_APPARENT_POWER,
@@ -158,6 +169,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_OZONE,
                     CONF_IS_POWER,
                     CONF_IS_POWER_FACTOR,
+                    CONF_IS_PH,
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,
@@ -171,6 +183,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_SULPHUR_DIOXIDE,
                     CONF_IS_TEMPERATURE,
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS,
+                    CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_IS_VOLTAGE,
                     CONF_IS_VOLUME,
                     CONF_IS_WATER,
@@ -216,7 +229,7 @@ async def async_get_conditions(
                 **template,
                 "condition": "device",
                 "device_id": device_id,
-                "entity_id": entry.entity_id,
+                "entity_id": entry.id,
                 "domain": DOMAIN,
             }
             for template in templates
@@ -250,8 +263,10 @@ async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List condition capabilities."""
+
     try:
-        unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])
+        entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
+        unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
     except HomeAssistantError:
         unit_of_measurement = None
 

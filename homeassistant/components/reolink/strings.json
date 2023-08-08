@@ -1,9 +1,9 @@
 {
   "config": {
-    "flow_title": "{short_mac} ({ip_address})",
+    "flow_title": "{hostname} ({ip_address})",
     "step": {
       "user": {
-        "description": "{error}",
+        "description": "See the [troubleshooting steps]({troubleshooting_link}) if you encounter problems. {error}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -19,10 +19,11 @@
     },
     "error": {
       "api_error": "API error occurred",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -41,7 +42,67 @@
   "issues": {
     "https_webhook": {
       "title": "Reolink webhook URL uses HTTPS (SSL)",
-      "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`"
+      "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device"
+    },
+    "ssl": {
+      "title": "Reolink incompatible with global SSL certificate",
+      "description": "Global SSL certificate configured in the [configuration.yaml under http]({ssl_link}) while a local HTTP address `{base_url}` is configured under \"Home Assistant URL\" in the [network settings]({network_link}). Therefore the Reolink device can not reach Home Assistant to push its motion/AI events. Please make sure the local HTTP adress is not covered by the SSL certificate, by for instance using [NGINX add-on]({nginx_link}) instead of a globally enforced SSL certificate."
+    },
+    "webhook_url": {
+      "title": "Reolink webhook URL unreachable",
+      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received."
+    },
+    "enable_port": {
+      "title": "Reolink port not enabled",
+      "description": "Failed to automatically enable {ports}port(s) on {name}. Use the [Reolink client]({info_link}) to manually set it to ON"
+    },
+    "firmware_update": {
+      "title": "Reolink firmware update required",
+      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
+    }
+  },
+  "entity": {
+    "select": {
+      "floodlight_mode": {
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "auto": "Auto",
+          "schedule": "Schedule",
+          "adaptive": "Adaptive",
+          "autoadaptive": "Auto adaptive"
+        }
+      },
+      "day_night_mode": {
+        "state": {
+          "auto": "Auto",
+          "color": "Color",
+          "blackwhite": "Black&White"
+        }
+      },
+      "auto_quick_reply_message": {
+        "state": {
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "auto_track_method": {
+        "state": {
+          "digital": "Digital",
+          "digitalfirst": "Digital first",
+          "pantiltfirst": "Pan/tilt first"
+        }
+      },
+      "status_led": {
+        "state": {
+          "stayoff": "Stay off",
+          "auto": "Auto",
+          "alwaysonatnight": "Auto & always on at night"
+        }
+      }
+    },
+    "sensor": {
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      }
     }
   }
 }

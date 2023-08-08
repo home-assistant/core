@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import logging
 
-import W800rf32 as w800
 import voluptuous as vol
+import W800rf32 as w800
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,

@@ -10,9 +10,8 @@ from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 from math import ceil, floor, log10
 import re
-from typing import Any, Final, cast, final
-
-from typing_extensions import Self
+import sys
+from typing import Any, Final, Self, cast, final
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -92,6 +91,8 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
 
+PY_311 = sys.version_info >= (3, 11, 0)
+
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 __all__ = [
@@ -167,7 +168,6 @@ class SensorEntity(Entity):
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
     )
-    _invalid_numeric_value_reported = False
     _invalid_state_class_reported = False
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
@@ -196,19 +196,30 @@ class SensorEntity(Entity):
         if self.unique_id is None or self.device_class is None:
             return
         registry = er.async_get(self.hass)
+
+        # Bail out if the entity is not yet registered
         if not (
             entity_id := registry.async_get_entity_id(
                 platform.domain, platform.platform_name, self.unique_id
             )
         ):
+            # Prime _sensor_option_unit_of_measurement to ensure the correct unit
+            # is stored in the entity registry.
+            self._sensor_option_unit_of_measurement = self._get_initial_suggested_unit()
             return
+
         registry_entry = registry.async_get(entity_id)
         assert registry_entry
 
+        # Prime _sensor_option_unit_of_measurement to ensure the correct unit
+        # is stored in the entity registry.
+        self.registry_entry = registry_entry
+        self._async_read_entity_options()
+
         # If the sensor has 'unit_of_measurement' in its sensor options, the user has
         # overridden the unit.
-        # If the sensor has 'sensor.private' in its entity options, it was added after
-        # automatic unit conversion was implemented.
+        # If the sensor has 'sensor.private' in its entity options, it already has a
+        # suggested_unit.
         registry_unit = registry_entry.unit_of_measurement
         if (
             (
@@ -230,11 +241,14 @@ class SensorEntity(Entity):
 
         # Set suggested_unit_of_measurement to the old unit to enable automatic
         # conversion
-        registry.async_update_entity_options(
+        self.registry_entry = registry.async_update_entity_options(
             entity_id,
             f"{DOMAIN}.private",
             {"suggested_unit_of_measurement": registry_unit},
         )
+        # Update _sensor_option_unit_of_measurement to ensure the correct unit
+        # is stored in the entity registry.
+        self._async_read_entity_options()
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
@@ -243,6 +257,13 @@ class SensorEntity(Entity):
             return
         self._async_read_entity_options()
         self._update_suggested_precision()
+
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For sensors this is True if the entity has a device class.
+        """
+        return self.device_class not in (None, SensorDeviceClass.ENUM)
 
     @property
     def device_class(self) -> SensorDeviceClass | None:
@@ -257,15 +278,20 @@ class SensorEntity(Entity):
     @property
     def _numeric_state_expected(self) -> bool:
         """Return true if the sensor must be numeric."""
+        # Note: the order of the checks needs to be kept aligned
+        # with the checks in `state` property.
+        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
+        if device_class in NON_NUMERIC_DEVICE_CLASSES:
+            return False
         if (
             self.state_class is not None
             or self.native_unit_of_measurement is not None
             or self.suggested_display_precision is not None
         ):
             return True
-        # Sensors with custom device classes are not considered numeric
-        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
-        return device_class not in {None, *NON_NUMERIC_DEVICE_CLASSES}
+        # Sensors with custom device classes will have the device class
+        # converted to None and are not considered numeric
+        return device_class is not None
 
     @property
     def options(self) -> list[str] | None:
@@ -305,12 +331,8 @@ class SensorEntity(Entity):
 
         return None
 
-    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
-        """Return initial entity options.
-
-        These will be stored in the entity registry the first time the entity is seen,
-        and then never updated.
-        """
+    def _get_initial_suggested_unit(self) -> str | UndefinedType:
+        """Return the initial unit."""
         # Unit suggested by the integration
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
 
@@ -321,6 +343,19 @@ class SensorEntity(Entity):
             )
 
         if suggested_unit_of_measurement is None:
+            return UNDEFINED
+
+        return suggested_unit_of_measurement
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the entity is seen,
+        and then never updated.
+        """
+        suggested_unit_of_measurement = self._get_initial_suggested_unit()
+
+        if suggested_unit_of_measurement is UNDEFINED:
             return None
 
         return {
@@ -416,8 +451,10 @@ class SensorEntity(Entity):
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration
-        if not self.registry_entry and self.suggested_unit_of_measurement:
-            return self.suggested_unit_of_measurement
+        if not self.registry_entry and (
+            suggested_unit_of_measurement := self.suggested_unit_of_measurement
+        ):
+            return suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
@@ -435,7 +472,7 @@ class SensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> Any:  # noqa: C901
+    def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
@@ -521,7 +558,9 @@ class SensorEntity(Entity):
                 ) from err
 
         # Enum checks
-        if device_class == SensorDeviceClass.ENUM or self.options is not None:
+        if (
+            options := self.options
+        ) is not None or device_class == SensorDeviceClass.ENUM:
             if device_class != SensorDeviceClass.ENUM:
                 reason = "is missing the enum device class"
                 if device_class is not None:
@@ -530,7 +569,7 @@ class SensorEntity(Entity):
                     f"Sensor {self.entity_id} is providing enum options, but {reason}"
                 )
 
-            if (options := self.options) and value not in options:
+            if options and value not in options:
                 raise ValueError(
                     f"Sensor {self.entity_id} provides state value '{value}', "
                     "which is not in the list of options provided"
@@ -553,44 +592,21 @@ class SensorEntity(Entity):
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
             except (TypeError, ValueError) as err:
-                # Raise if precision is not None, for other cases log a warning
-                if suggested_precision is not None:
-                    raise ValueError(
-                        f"Sensor {self.entity_id} has device class {device_class}, "
-                        f"state class {state_class} unit {unit_of_measurement} and "
-                        f"suggested precision {suggested_precision} thus indicating it "
-                        f"has a numeric value; however, it has the non-numeric value: "
-                        f"{value} ({type(value)})"
-                    ) from err
-                # This should raise in Home Assistant Core 2023.4
-                if not self._invalid_numeric_value_reported:
-                    self._invalid_numeric_value_reported = True
-                    report_issue = self._suggest_report_issue()
-                    _LOGGER.warning(
-                        "Sensor %s has device class %s, state class %s and unit %s "
-                        "thus indicating it has a numeric value; however, it has the "
-                        "non-numeric value: %s (%s); Please update your configuration "
-                        "if your entity is manually configured, otherwise %s",
-                        self.entity_id,
-                        device_class,
-                        state_class,
-                        unit_of_measurement,
-                        value,
-                        type(value),
-                        report_issue,
-                    )
-                return value
+                raise ValueError(
+                    f"Sensor {self.entity_id} has device class '{device_class}', "
+                    f"state class '{state_class}' unit '{unit_of_measurement}' and "
+                    f"suggested precision '{suggested_precision}' thus indicating it "
+                    f"has a numeric value; however, it has the non-numeric value: "
+                    f"'{value}' ({type(value)})"
+                ) from err
         else:
             numerical_value = value
 
-        if (
-            native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERTERS
+        if native_unit_of_measurement != unit_of_measurement and (
+            converter := UNIT_CONVERTERS.get(device_class)
         ):
             # Unit conversion needed
-            converter = UNIT_CONVERTERS[device_class]
-
-            converted_numerical_value = UNIT_CONVERTERS[device_class].convert(
+            converted_numerical_value = converter.convert(
                 float(numerical_value),
                 native_unit_of_measurement,
                 unit_of_measurement,
@@ -620,10 +636,12 @@ class SensorEntity(Entity):
                 )
                 precision = precision + floor(ratio_log)
 
-                value = f"{converted_numerical_value:.{precision}f}"
-                # This can be replaced with adding the z option when we drop support for
-                # Python 3.10
-                value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+                if PY_311:
+                    value = f"{converted_numerical_value:z.{precision}f}"
+                else:
+                    value = f"{converted_numerical_value:.{precision}f}"
+                    if value.startswith("-0") and NEGATIVE_ZERO_PATTERN.match(value):
+                        value = value[1:]
             else:
                 value = converted_numerical_value
 
@@ -709,7 +727,7 @@ class SensorEntity(Entity):
             or "suggested_display_precision" not in self.registry_entry.options
         ):
             return
-        sensor_options = self.registry_entry.options.get(DOMAIN, {})
+        sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         if (
             "suggested_display_precision" in sensor_options
             and sensor_options["suggested_display_precision"] == display_precision
@@ -865,29 +883,31 @@ def async_update_suggested_units(hass: HomeAssistant) -> None:
         )
 
 
+def _display_precision(hass: HomeAssistant, entity_id: str) -> int | None:
+    """Return the display precision."""
+    if not (entry := er.async_get(hass).async_get(entity_id)) or not (
+        sensor_options := entry.options.get(DOMAIN)
+    ):
+        return None
+    if (display_precision := sensor_options.get("display_precision")) is not None:
+        return cast(int, display_precision)
+    return sensor_options.get("suggested_display_precision")
+
+
 @callback
 def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> str:
     """Return the state rounded for presentation."""
-
-    def display_precision() -> int | None:
-        """Return the display precision."""
-        if not (entry := er.async_get(hass).async_get(entity_id)) or not (
-            sensor_options := entry.options.get(DOMAIN)
-        ):
-            return None
-        if (display_precision := sensor_options.get("display_precision")) is not None:
-            return cast(int, display_precision)
-        return sensor_options.get("suggested_display_precision")
-
     value = state.state
-    if (precision := display_precision()) is None:
+    if (precision := _display_precision(hass, entity_id)) is None:
         return value
 
     with suppress(TypeError, ValueError):
         numerical_value = float(value)
-        value = f"{numerical_value:.{precision}f}"
-        # This can be replaced with adding the z option when we drop support for
-        # Python 3.10
-        value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+        if PY_311:
+            value = f"{numerical_value:z.{precision}f}"
+        else:
+            value = f"{numerical_value:.{precision}f}"
+            if value.startswith("-0") and NEGATIVE_ZERO_PATTERN.match(value):
+                value = value[1:]
 
     return value

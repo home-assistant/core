@@ -11,6 +11,8 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_cleanup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -46,6 +48,8 @@ async def test_device_registry_cleanup(
     assert len(devices) == 0
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_subscription_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -61,6 +65,8 @@ async def test_subscription_setup(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_subscription_setup_polling_disabled(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

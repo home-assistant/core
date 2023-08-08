@@ -1,4 +1,5 @@
 """Test deCONZ component setup process."""
+import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
@@ -131,6 +132,31 @@ async def test_unload_entry_multiple_gateways(
 
     assert len(hass.data[DECONZ_DOMAIN]) == 1
     assert hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
+
+
+async def test_unload_entry_multiple_gateways_parallel(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test race condition when unloading multiple config entries in parallel."""
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    aioclient_mock.clear_requests()
+
+    data = {"config": {"bridgeid": "01234E56789B"}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry2 = await setup_deconz_integration(
+            hass,
+            aioclient_mock,
+            entry_id="2",
+            unique_id="01234E56789B",
+        )
+
+    assert len(hass.data[DECONZ_DOMAIN]) == 2
+
+    await asyncio.gather(
+        config_entry.async_unload(hass), config_entry2.async_unload(hass)
+    )
+
+    assert len(hass.data[DECONZ_DOMAIN]) == 0
 
 
 async def test_update_group_unique_id(hass: HomeAssistant) -> None:

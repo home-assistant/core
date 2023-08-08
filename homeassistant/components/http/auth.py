@@ -6,19 +6,22 @@ from datetime import timedelta
 from ipaddress import ip_address
 import logging
 import secrets
+import time
 from typing import Any, Final
 
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
+from jwt import api_jws
 from yarl import URL
 
+from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt as dt_util
 from homeassistant.util.network import is_local
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
@@ -59,23 +62,20 @@ def async_sign_path(
             refresh_token_id = hass.data[STORAGE_KEY]
 
     url = URL(path)
-    now = dt_util.utcnow()
-    params = dict(sorted(url.query.items()))
-    for param in SAFE_QUERY_PARAMS:
-        params.pop(param, None)
-    encoded = jwt.encode(
+    now_timestamp = int(time.time())
+    expiration_timestamp = now_timestamp + int(expiration.total_seconds())
+    params = [itm for itm in url.query.items() if itm[0] not in SAFE_QUERY_PARAMS]
+    json_payload = json_bytes(
         {
             "iss": refresh_token_id,
             "path": url.path,
             "params": params,
-            "iat": now,
-            "exp": now + expiration,
-        },
-        secret,
-        algorithm="HS256",
+            "iat": now_timestamp,
+            "exp": expiration_timestamp,
+        }
     )
-
-    params[SIGN_QUERY_PARAM] = encoded
+    encoded = api_jws.encode(json_payload, secret, "HS256")
+    params.append((SIGN_QUERY_PARAM, encoded))
     url = url.with_query(params)
     return f"{url.path}?{url.query_string}"
 
@@ -106,11 +106,11 @@ def async_user_not_allowed_do_auth(
             return "User is local only"
 
     try:
-        remote = ip_address(request.remote)  # type: ignore[arg-type]
+        remote_address = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:
         return "Invalid remote IP"
 
-    if is_local(remote):
+    if is_local(remote_address):
         return None
 
     return "User cannot authenticate remotely"
@@ -175,7 +175,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
             return False
 
         try:
-            claims = jwt.decode(
+            claims = jwt_wrapper.verify_and_decode(
                 signature, secret, algorithms=["HS256"], options={"verify_iss": False}
             )
         except jwt.InvalidTokenError:
@@ -184,10 +184,11 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if claims["path"] != request.path:
             return False
 
-        params = dict(sorted(request.query.items()))
-        del params[SIGN_QUERY_PARAM]
-        for param in SAFE_QUERY_PARAMS:
-            params.pop(param, None)
+        params = [
+            list(itm)  # claims stores tuples as lists
+            for itm in request.query.items()
+            if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
+        ]
         if claims["params"] != params:
             return False
 
@@ -223,7 +224,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
             authenticated = True
             auth_type = "signed request"
 
-        if authenticated:
+        if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
                 request.remote,

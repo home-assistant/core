@@ -44,7 +44,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery,
-    entity_registry,
+    entity_registry as er,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -326,7 +326,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
     url = entry.data[CONF_URL]
 
-    def get_connection() -> Connection:
+    def _connect() -> Connection:
         """Set up a connection."""
         if entry.options.get(CONF_UNAUTHENTICATED_MODE):
             _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")
@@ -341,7 +341,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return connection
 
     try:
-        connection = await hass.async_add_executor_job(get_connection)
+        connection = await hass.async_add_executor_job(_connect)
     except LoginErrorInvalidCredentialsException as ex:
         raise ConfigEntryAuthFailed from ex
     except Timeout as ex:
@@ -359,8 +359,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Transitional from < 2021.8: update None config entry and entity unique ids
         if router_info and (serial_number := router_info.get("SerialNumber")):
             hass.config_entries.async_update_entry(entry, unique_id=serial_number)
-            ent_reg = entity_registry.async_get(hass)
-            for entity_entry in entity_registry.async_entries_for_config_entry(
+            ent_reg = er.async_get(hass)
+            for entity_entry in er.async_entries_for_config_entry(
                 ent_reg, entry.entry_id
             ):
                 if not entity_entry.unique_id.startswith("None-"):
@@ -413,9 +413,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_info = DeviceInfo(
             configuration_url=router.url,
             connections=router.device_connections,
-            default_manufacturer=DEFAULT_MANUFACTURER,
             identifiers=router.device_identifiers,
-            manufacturer=entry.data.get(CONF_MANUFACTURER),
+            manufacturer=entry.data.get(CONF_MANUFACTURER, DEFAULT_MANUFACTURER),
             name=router.device_name,
         )
         hw_version = None

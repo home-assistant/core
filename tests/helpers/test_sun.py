@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.sun as sun
@@ -192,3 +194,15 @@ def test_norway_in_june(hass: HomeAssistant) -> None:
     )
     assert sun.get_astral_event_date(hass, SUN_EVENT_SUNRISE, june) is None
     assert sun.get_astral_event_date(hass, SUN_EVENT_SUNSET, june) is None
+
+
+def test_impossible_elevation(hass: HomeAssistant) -> None:
+    """Test altitude where the sun can't set."""
+    hass.config.latitude = 69.6
+    hass.config.longitude = 18.8
+    hass.config.elevation = 10000000
+
+    june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
+
+    with pytest.raises(ValueError):
+        sun.get_astral_event_next(hass, SUN_EVENT_SUNRISE, june)

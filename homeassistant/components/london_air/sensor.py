@@ -218,10 +218,12 @@ def parse_api_response(response):
     for authority in AUTHORITIES:
         for entry in response["HourlyAirQualityIndex"]["LocalAuthority"]:
             if entry["@LocalAuthorityName"] == authority:
-                if isinstance(entry["Site"], dict):
-                    entry_sites_data = [entry["Site"]]
-                else:
-                    entry_sites_data = entry["Site"]
+                entry_sites_data = []
+                if "Site" in entry:
+                    if isinstance(entry["Site"], dict):
+                        entry_sites_data = [entry["Site"]]
+                    else:
+                        entry_sites_data = entry["Site"]
 
                 data[authority] = parse_site(entry_sites_data)
 

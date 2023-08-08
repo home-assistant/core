@@ -249,11 +249,19 @@ class DenonDevice(MediaPlayerEntity):
 
         self._telnet_was_healthy: bool | None = None
 
-    async def _telnet_callback(self, zone, event, parameter):
+    async def _telnet_callback(self, zone, event, parameter) -> None:
         """Process a telnet command callback."""
+        # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
         if zone != self._receiver.zone:
             return
-
+        # Some updates trigger multiple events like one for artist and one for title for one change
+        # We skip every event except the last one
+        if event == "NSE" and not parameter.startswith("4"):
+            return
+        if event == "TA" and not parameter.startwith("ANNAME"):
+            return
+        if event == "HD" and not parameter.startswith("ALBUM"):
+            return
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -276,7 +284,6 @@ class DenonDevice(MediaPlayerEntity):
         if (
             telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
         ) and self._telnet_was_healthy:
-            await receiver.input.async_update_media_state()
             return
 
         # if async_update raises an exception, we don't want to skip the next update

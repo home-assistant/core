@@ -42,13 +42,14 @@ from async_upnp_client.utils import CaseInsensitiveDict
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
     __version__ as current_version,
 )
-from homeassistant.core import HomeAssistant, callback as core_callback
+from homeassistant.core import Event, HomeAssistant, callback as core_callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
@@ -106,42 +107,23 @@ PRIMARY_MATCH_KEYS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class _HaServiceDescription:
-    """Keys added by HA."""
-
-    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-@dataclass
-class _SsdpServiceDescription:
-    """SSDP info with optional keys."""
+@dataclass(slots=True)
+class SsdpServiceInfo(BaseServiceInfo):
+    """Prepared info from ssdp/upnp entries."""
 
     ssdp_usn: str
     ssdp_st: str
+    upnp: Mapping[str, Any]
     ssdp_location: str | None = None
     ssdp_nt: str | None = None
     ssdp_udn: str | None = None
     ssdp_ext: str | None = None
     ssdp_server: str | None = None
     ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class _UpnpServiceDescription:
-    """UPnP info."""
-
-    upnp: Mapping[str, Any]
-
-
-@dataclass
-class SsdpServiceInfo(
-    _HaServiceDescription,
-    _SsdpServiceDescription,
-    _UpnpServiceDescription,
-    BaseServiceInfo,
-):
-    """Prepared info from ssdp/upnp entries."""
+    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
@@ -401,7 +383,7 @@ class Scanner:
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._cancel_scan = async_track_time_interval(
-            self.hass, self.async_scan, SCAN_INTERVAL
+            self.hass, self.async_scan, SCAN_INTERVAL, name="SSDP scanner"
         )
 
         # Trigger the initial-scan.
@@ -747,15 +729,18 @@ class Server:
 
     async def async_start(self) -> None:
         """Start the server."""
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
-        await self._async_start_upnp_servers()
+        bus = self.hass.bus
+        bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+        bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, self._async_start_upnp_servers
+        )
 
     async def _async_get_instance_udn(self) -> str:
         """Get Unique Device Name for this instance."""
         instance_id = await async_get_instance_id(self.hass)
         return f"uuid:{instance_id[0:8]}-{instance_id[8:12]}-{instance_id[12:16]}-{instance_id[16:20]}-{instance_id[20:32]}".upper()
 
-    async def _async_start_upnp_servers(self) -> None:
+    async def _async_start_upnp_servers(self, event: Event) -> None:
         """Start the UPnP/SSDP servers."""
         # Update UDN with our instance UDN.
         udn = await self._async_get_instance_udn()

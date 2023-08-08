@@ -68,20 +68,20 @@ def _refresh_on_access_denied(func):
 
 
 class UbusDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running OpenWrt firmware.
+    """Class which queries a wireless router running OpenWrt firmware.
 
     Adapted from Tomato scanner.
     """
 
     def __init__(self, config):
         """Initialize the scanner."""
-        host = config[CONF_HOST]
+        self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = f"http://{host}/ubus"
+        self.url = f"http://{self.host}/ubus"
 
         self.ubus = Ubus(self.url, self.username, self.password)
         self.hostapd = []
@@ -107,6 +107,10 @@ class UbusDeviceScanner(DeviceScanner):
             return None
         name = self.mac2name.get(device.upper(), None)
         return name
+
+    async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
+        """Return the host to distinguish between multiple routers."""
+        return {"host": self.host}
 
     @_refresh_on_access_denied
     def _update_info(self):

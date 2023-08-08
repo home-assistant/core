@@ -101,8 +101,6 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 
-CONF_WHITE_VALUE = "white_value"
-
 
 def valid_color_configuration(config: ConfigType) -> ConfigType:
     """Test color_mode is not combined with deprecated config."""
@@ -134,7 +132,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
                 vol.Coerce(int), vol.In([0, 1, 2])
             ),
@@ -158,15 +156,11 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
-    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
-    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )
@@ -186,6 +180,7 @@ async def async_setup_entity_json(
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -260,7 +255,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 pass
             except ValueError:
                 _LOGGER.warning(
-                    "Invalid RGB color value received for entity %s", self.entity_id
+                    "Invalid RGB color value '%s' received for entity %s",
+                    values,
+                    self.entity_id,
                 )
                 return
 
@@ -272,7 +269,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 pass
             except ValueError:
                 _LOGGER.warning(
-                    "Invalid XY color value received for entity %s", self.entity_id
+                    "Invalid XY color value '%s' received for entity %s",
+                    values,
+                    self.entity_id,
                 )
                 return
 
@@ -284,14 +283,18 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 pass
             except ValueError:
                 _LOGGER.warning(
-                    "Invalid HS color value received for entity %s", self.entity_id
+                    "Invalid HS color value '%s' received for entity %s",
+                    values,
+                    self.entity_id,
                 )
                 return
         else:
             color_mode: str = values["color_mode"]
             if not self._supports_color_mode(color_mode):
                 _LOGGER.warning(
-                    "Invalid color mode received for entity %s", self.entity_id
+                    "Invalid color mode '%s' received for entity %s",
+                    color_mode,
+                    self.entity_id,
                 )
                 return
             try:
@@ -333,7 +336,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     self._attr_xy_color = (x, y)
             except (KeyError, ValueError):
                 _LOGGER.warning(
-                    "Invalid or incomplete color value received for entity %s",
+                    "Invalid or incomplete color value '%s' received for entity %s",
+                    values,
                     self.entity_id,
                 )
 
@@ -369,16 +373,24 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if brightness_supported(self.supported_color_modes):
                 try:
-                    self._attr_brightness = int(
-                        values["brightness"]  # type: ignore[operator]
-                        / float(self._config[CONF_BRIGHTNESS_SCALE])
-                        * 255
-                    )
+                    if brightness := values["brightness"]:
+                        self._attr_brightness = int(
+                            brightness  # type: ignore[operator]
+                            / float(self._config[CONF_BRIGHTNESS_SCALE])
+                            * 255
+                        )
+                    else:
+                        _LOGGER.debug(
+                            "Ignoring zero brightness value for entity %s",
+                            self.entity_id,
+                        )
+
                 except KeyError:
                     pass
                 except (TypeError, ValueError):
                     _LOGGER.warning(
-                        "Invalid brightness value received for entity %s",
+                        "Invalid brightness value '%s' received for entity %s",
+                        values["brightness"],
                         self.entity_id,
                     )
 
@@ -397,7 +409,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     pass
                 except ValueError:
                     _LOGGER.warning(
-                        "Invalid color temp value received for entity %s",
+                        "Invalid color temp value '%s' received for entity %s",
+                        values["color_temp"],
                         self.entity_id,
                     )
 

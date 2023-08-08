@@ -14,6 +14,7 @@ from homeassistant.components.hassio import (
     DOMAIN,
     STORAGE_KEY,
     async_get_addon_store_info,
+    hostname_from_addon_slug,
 )
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -125,6 +126,38 @@ def mock_all(aioclient_mock, request, os_info):
         },
     )
     aioclient_mock.get(
+        "http://127.0.0.1/core/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
         "http://127.0.0.1/addons/test/stats",
         json={
             "result": "ok",
@@ -210,7 +243,7 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 18
     assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
     assert hass.components.hassio.is_hassio()
 
@@ -232,6 +265,7 @@ async def test_setup_api_panel(
         "title": None,
         "url_path": "hassio",
         "require_admin": True,
+        "config_panel_domain": None,
         "config": {
             "_panel_custom": {
                 "embed_iframe": True,
@@ -254,7 +288,7 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 18
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
     assert aioclient_mock.mock_calls[1][2]["watchdog"]
@@ -273,7 +307,7 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 18
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
     assert not aioclient_mock.mock_calls[1][2]["watchdog"]
@@ -290,7 +324,7 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 18
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
     refresh_token = aioclient_mock.mock_calls[1][2]["refresh_token"]
@@ -370,7 +404,7 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 18
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
     assert aioclient_mock.mock_calls[1][2]["refresh_token"] == token.token
@@ -387,7 +421,7 @@ async def test_setup_core_push_timezone(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 18
     assert aioclient_mock.mock_calls[2][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
@@ -407,7 +441,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 18
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
@@ -450,6 +484,7 @@ async def test_service_register(hassio_env, hass: HomeAssistant) -> None:
     assert hass.services.has_service("hassio", "restore_partial")
 
 
+@pytest.mark.freeze_time("2021-11-13 11:48:00")
 async def test_service_calls(
     hassio_env,
     hass: HomeAssistant,
@@ -508,6 +543,7 @@ async def test_service_calls(
 
     assert aioclient_mock.call_count == 14
     assert aioclient_mock.mock_calls[-1][2] == {
+        "name": "2021-11-13 11:48:00",
         "homeassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
@@ -536,6 +572,37 @@ async def test_service_calls(
         "folders": ["ssl"],
         "homeassistant": False,
         "password": "123456",
+    }
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_full",
+        {
+            "name": "backup_name",
+            "location": "backup_share",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 17
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "name": "backup_name",
+        "location": "backup_share",
+    }
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_full",
+        {
+            "location": "/backup",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "name": "2021-11-13 11:48:00",
+        "location": None,
     }
 
 
@@ -646,7 +713,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 5
+        assert len(dev_reg.devices) == 6
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -677,11 +744,11 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -731,7 +798,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
 
 async def test_coordinator_updates(
@@ -822,7 +889,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 18
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -839,3 +906,12 @@ async def test_get_store_addon_info(
     data = await async_get_addon_store_info(hass, "test")
     assert data["name"] == "bla"
     assert aioclient_mock.call_count == 1
+
+
+def test_hostname_from_addon_slug() -> None:
+    """Test hostname_from_addon_slug."""
+    assert hostname_from_addon_slug("mqtt") == "mqtt"
+    assert (
+        hostname_from_addon_slug("core_silabs_multiprotocol")
+        == "core-silabs-multiprotocol"
+    )

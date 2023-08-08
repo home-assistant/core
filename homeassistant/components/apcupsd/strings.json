@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_status": "No status is reported from [%key:common::config_flow::data::host%]"
+      "no_status": "No status is reported from host"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -15,12 +15,6 @@
         },
         "description": "Enter the host and port on which the apcupsd NIS is being served."
       }
-    }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The APC UPS Daemon YAML configuration is being removed",
-      "description": "Configuring APC UPS Daemon using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the APC UPS Daemon YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }

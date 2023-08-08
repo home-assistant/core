@@ -7,10 +7,21 @@ DOMAIN = "lifx"
 TARGET_ANY = "00:00:00:00:00:00"
 
 DISCOVERY_INTERVAL = 10
-MESSAGE_TIMEOUT = 1.65
-MESSAGE_RETRIES = 5
-OVERALL_TIMEOUT = 9
+# The number of seconds before we will no longer accept a response
+# to a message and consider it invalid
+MESSAGE_TIMEOUT = 18
+# Disable the retries in the library since they are not spaced out
+# enough to account for WiFi and UDP dropouts
+MESSAGE_RETRIES = 1
+OVERALL_TIMEOUT = 15
 UNAVAILABLE_GRACE = 90
+
+# The number of times to retry a request message
+DEFAULT_ATTEMPTS = 5
+# The maximum time to wait for a bulb to respond to an update
+MAX_UPDATE_TIME = 90
+# The number of tries to send each request message to a bulb during an update
+MAX_ATTEMPTS_PER_UPDATE_REQUEST_MESSAGE = 5
 
 CONF_LABEL = "label"
 CONF_SERIAL = "serial"
@@ -49,5 +60,6 @@ INFRARED_BRIGHTNESS_VALUES_MAP = {
     65535: "100%",
 }
 DATA_LIFX_MANAGER = "lifx_manager"
+
 
 _LOGGER = logging.getLogger(__package__)

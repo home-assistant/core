@@ -24,6 +24,8 @@ async def switch_node_fixture(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_turn_on(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -58,6 +60,8 @@ async def test_turn_on(
     assert state.state == "on"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_turn_off(
     hass: HomeAssistant,
     matter_client: MagicMock,

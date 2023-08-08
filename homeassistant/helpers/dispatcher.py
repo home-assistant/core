@@ -75,7 +75,8 @@ def _generate_job(
                 signal,
                 args,
             ),
-        )
+        ),
+        f"dispatcher {signal}",
     )
 
 

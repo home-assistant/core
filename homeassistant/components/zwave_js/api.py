@@ -82,8 +82,8 @@ from .const import (
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
+    async_update_data_collection_preference,
     get_device_id,
-    update_data_collection_preference,
 )
 
 DATA_UNSUBSCRIBE = "unsubs"
@@ -98,6 +98,7 @@ COMMAND_CLASS_ID = "command_class_id"
 TYPE = "type"
 PROPERTY = "property"
 PROPERTY_KEY = "property_key"
+ENDPOINT = "endpoint"
 VALUE = "value"
 
 # constants for log config commands
@@ -119,9 +120,6 @@ OPTED_IN = "opted_in"
 # constants for granting security classes
 SECURITY_CLASSES = "security_classes"
 CLIENT_SIDE_AUTH = "client_side_auth"
-
-# constants for migration
-DRY_RUN = "dry_run"
 
 # constants for inclusion
 INCLUSION_STRATEGY = "inclusion_strategy"
@@ -1611,6 +1609,7 @@ async def websocket_refresh_node_cc_values(
         vol.Required(TYPE): "zwave_js/set_config_parameter",
         vol.Required(DEVICE_ID): str,
         vol.Required(PROPERTY): int,
+        vol.Optional(ENDPOINT, default=0): int,
         vol.Optional(PROPERTY_KEY): int,
         vol.Required(VALUE): vol.Any(int, BITMASK_SCHEMA),
     }
@@ -1626,12 +1625,13 @@ async def websocket_set_config_parameter(
 ) -> None:
     """Set a config parameter value for a Z-Wave node."""
     property_ = msg[PROPERTY]
+    endpoint = msg[ENDPOINT]
     property_key = msg.get(PROPERTY_KEY)
     value = msg[VALUE]
 
     try:
         zwave_value, cmd_status = await async_set_config_parameter(
-            node, value, property_, property_key=property_key
+            node, value, property_, property_key=property_key, endpoint=endpoint
         )
     except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
         code = ERR_UNKNOWN_ERROR
@@ -1676,6 +1676,7 @@ async def websocket_get_config_parameters(
         result[value_id] = {
             "property": zwave_value.property_,
             "property_key": zwave_value.property_key,
+            "endpoint": zwave_value.endpoint,
             "configuration_value_type": zwave_value.configuration_value_type.value,
             "metadata": {
                 "description": metadata.description,
@@ -1863,7 +1864,7 @@ async def websocket_update_data_collection_preference(
 ) -> None:
     """Update preference for data collection and enable/disable collection."""
     opted_in = msg[OPTED_IN]
-    update_data_collection_preference(hass, entry, opted_in)
+    async_update_data_collection_preference(hass, entry, opted_in)
 
     if opted_in:
         await async_enable_statistics(driver)
@@ -2346,7 +2347,7 @@ def _get_node_statistics_dict(
         """Convert a node to a device id."""
         driver = node.client.driver
         assert driver
-        device = dev_reg.async_get_device({get_device_id(driver, node)})
+        device = dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
         assert device
         return device.id
 

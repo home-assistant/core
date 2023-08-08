@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_miio",
   "iot_class": "local_polling",
   "loggers": ["micloud", "miio"],
-  "requirements": ["construct==2.10.56", "micloud==0.5", "python-miio==0.5.12"],
+  "requirements": ["construct==2.10.68", "micloud==0.5", "python-miio==0.5.12"],
   "zeroconf": ["_miio._udp.local."]
 }

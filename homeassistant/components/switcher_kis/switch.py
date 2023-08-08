@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     entity_platform,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -92,9 +92,7 @@ class SwitcherBaseSwitchEntity(
         self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = DeviceInfo(
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
-            }
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
     @callback

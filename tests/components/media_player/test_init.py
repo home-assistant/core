@@ -21,6 +21,12 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 async def test_get_image_http(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:

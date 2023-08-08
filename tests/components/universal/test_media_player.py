@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
@@ -1103,8 +1103,9 @@ async def test_state_template(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.tv").state == STATE_OFF
 
 
-async def test_browse_media(hass: HomeAssistant):
+async def test_browse_media(hass: HomeAssistant) -> None:
     """Test browse media."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
@@ -1133,8 +1134,9 @@ async def test_browse_media(hass: HomeAssistant):
         assert result == MOCK_BROWSE_MEDIA
 
 
-async def test_browse_media_override(hass: HomeAssistant):
+async def test_browse_media_override(hass: HomeAssistant) -> None:
     """Test browse media override."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
@@ -1183,7 +1185,9 @@ async def test_device_class(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.tv").attributes["device_class"] == "tv"
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id property."""
     hass.states.async_set("sensor.test_sensor", "on")
 
@@ -1199,8 +1203,10 @@ async def test_unique_id(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    er = entity_registry.async_get(hass)
-    assert er.async_get("media_player.tv").unique_id == "universal_master_bed_tv"
+    assert (
+        entity_registry.async_get("media_player.tv").unique_id
+        == "universal_master_bed_tv"
+    )
 
 
 async def test_invalid_state_template(hass: HomeAssistant) -> None:
@@ -1270,6 +1276,56 @@ async def test_master_state_with_template(hass: HomeAssistant) -> None:
 
     assert hass.states.get("media_player.tv").state == STATE_OFF
     assert events[0].context == context
+
+
+async def test_invalid_active_child_template(hass: HomeAssistant) -> None:
+    """Test invalid active child template."""
+    hass.states.async_set("media_player.mock1", STATE_PLAYING)
+    hass.states.async_set("media_player.mock2", STATE_PAUSED)
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "platform": "universal",
+                "name": "tv",
+                "children": ["media_player.mock1", "media_player.mock2"],
+                "active_child_template": "{{invalid.invalid}}!invalid",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.tv").state == STATE_PLAYING
+
+
+async def test_active_child_template(hass: HomeAssistant) -> None:
+    """Test override active child with template."""
+    hass.states.async_set("media_player.mock1", STATE_PLAYING)
+    hass.states.async_set("media_player.mock2", STATE_PAUSED)
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "platform": "universal",
+                "name": "tv",
+                "children": ["media_player.mock1", "media_player.mock2"],
+                "active_child_template": "{{ 'media_player.mock2' }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    hass.states.async_set("media_player.mock2", STATE_ON)
+
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.tv").state == STATE_ON
 
 
 async def test_reload(hass: HomeAssistant) -> None:

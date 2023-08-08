@@ -1,9 +1,9 @@
 """Shared Entity definition for UniFi Protect Integration."""
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyunifiprotect.data import (
     NVR,
@@ -23,6 +23,7 @@ from pyunifiprotect.data import (
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
     ATTR_EVENT_ID,
@@ -56,7 +57,8 @@ def _async_device_entities(
         else data.get_by_types({model_type}, ignore_unadopted=False)
     )
     for device in devices:
-        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
+        if TYPE_CHECKING:
+            assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         if not device.is_adopted_by_us:
             for description in unadopted_descs:
                 entities.append(
@@ -191,6 +193,9 @@ class ProtectDeviceEntity(Entity):
         super().__init__()
         self.data: ProtectData = data
         self.device = device
+        self._async_get_ufp_enabled: Callable[
+            [ProtectAdoptableDeviceModel], bool
+        ] | None = None
 
         if description is None:
             self._attr_unique_id = f"{self.device.mac}"
@@ -198,8 +203,14 @@ class ProtectDeviceEntity(Entity):
         else:
             self.entity_description = description
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
-            name = description.name or ""
+            name = (
+                description.name
+                if description.name and description.name is not UNDEFINED
+                else ""
+            )
             self._attr_name = f"{self.device.display_name} {name.title()}"
+            if isinstance(description, ProtectRequiredKeysMixin):
+                self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
@@ -227,24 +238,21 @@ class ProtectDeviceEntity(Entity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
-        if self.data.last_update_success:
+        if TYPE_CHECKING:
             assert isinstance(device, ProtectAdoptableDeviceModel)
+
+        if last_update_success := self.data.last_update_success:
             self.device = device
 
-        is_connected = self.data.last_update_success and (
-            self.device.state == StateType.CONNECTED
-            or (not self.device.is_adopted_by_us and self.device.can_adopt)
-        )
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description is not None
-            and hasattr(self.entity_description, "get_ufp_enabled")
-        ):
-            assert isinstance(self.entity_description, ProtectRequiredKeysMixin)
-            is_connected = is_connected and self.entity_description.get_ufp_enabled(
-                self.device
+        async_get_ufp_enabled = self._async_get_ufp_enabled
+        self._attr_available = (
+            last_update_success
+            and (
+                device.state == StateType.CONNECTED
+                or (not device.is_adopted_by_us and device.can_adopt)
             )
-        self._attr_available = is_connected
+            and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
+        )
 
     @callback
     def _async_updated_event(self, device: ProtectModelWithId) -> None:
@@ -266,7 +274,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
     """Base class for unifi protect entities."""
 
     # separate subclass on purpose
-    device: NVR  # type: ignore[assignment]
+    device: NVR
 
     def __init__(
         self,
@@ -275,7 +283,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(entry, device, description)  # type: ignore[arg-type]
+        super().__init__(entry, device, description)
 
     @callback
     def _async_set_device_info(self) -> None:
@@ -291,10 +299,12 @@ class ProtectNVREntity(ProtectDeviceEntity):
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        if self.data.last_update_success:
-            self.device = self.data.api.bootstrap.nvr
+        data = self.data
+        last_update_success = data.last_update_success
+        if last_update_success:
+            self.device = data.api.bootstrap.nvr
 
-        self._attr_available = self.data.last_update_success
+        self._attr_available = last_update_success
 
 
 class EventEntityMixin(ProtectDeviceEntity):
@@ -312,23 +322,14 @@ class EventEntityMixin(ProtectDeviceEntity):
         self._event: Event | None = None
 
     @callback
-    def _async_event_extra_attrs(self) -> dict[str, Any]:
-        attrs: dict[str, Any] = {}
-
-        if self._event is None:
-            return attrs
-
-        attrs[ATTR_EVENT_ID] = self._event.id
-        attrs[ATTR_EVENT_SCORE] = self._event.score
-        return attrs
-
-    @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        event = self.entity_description.get_event_obj(device)
+        if event is not None:
+            self._attr_extra_state_attributes = {
+                ATTR_EVENT_ID: event.id,
+                ATTR_EVENT_SCORE: event.score,
+            }
+        else:
+            self._attr_extra_state_attributes = {}
+        self._event = event
         super()._async_update_device_from_protect(device)
-        self._event = self.entity_description.get_event_obj(device)
-
-        attrs = self.extra_state_attributes or {}
-        self._attr_extra_state_attributes = {
-            **attrs,
-            **self._async_event_extra_attrs(),
-        }

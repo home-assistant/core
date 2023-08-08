@@ -2,31 +2,34 @@
 from __future__ import annotations
 
 import hashlib
-import logging
-import re
+from typing import Any
 
-import pylast as lastfm
-from pylast import WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+)
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_LAST_PLAYED = "last_played"
-ATTR_PLAY_COUNT = "play_count"
-ATTR_TOP_PLAYED = "top_played"
-
-STATE_NOT_SCROBBLING = "Not Scrobbling"
-
-CONF_USERS = "users"
-
-ICON = "mdi:radio-fm"
+from .const import (
+    ATTR_LAST_PLAYED,
+    ATTR_PLAY_COUNT,
+    ATTR_TOP_PLAYED,
+    CONF_USERS,
+    DEFAULT_NAME,
+    DOMAIN,
+    STATE_NOT_SCROBBLING,
+)
+from .coordinator import LastFMDataUpdateCoordinator, LastFMUserData
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -36,99 +39,113 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Last.fm sensor platform."""
-    api_key = config[CONF_API_KEY]
-    users = config[CONF_USERS]
+    """Set up the Last.fm sensor platform from yaml."""
 
-    lastfm_api = lastfm.LastFMNetwork(api_key=api_key)
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "LastFM",
+        },
+    )
 
-    entities = []
-    for username in users:
-        try:
-            lastfm_api.get_user(username).get_image()
-            entities.append(LastfmSensor(username, lastfm_api))
-        except WSError as error:
-            _LOGGER.error(error)
-            return
-
-    add_entities(entities, True)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
-class LastfmSensor(SensorEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize the entries."""
+
+    coordinator: LastFMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        (
+            LastFmSensor(coordinator, username, entry.entry_id)
+            for username in entry.options[CONF_USERS]
+        ),
+    )
+
+
+class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity):
     """A class for the Last.fm account."""
 
     _attr_attribution = "Data provided by Last.fm"
+    _attr_icon = "mdi:radio-fm"
 
-    def __init__(self, user, lastfm_api):
+    def __init__(
+        self,
+        coordinator: LastFMDataUpdateCoordinator,
+        username: str,
+        entry_id: str,
+    ) -> None:
         """Initialize the sensor."""
-        self._unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
-        self._user = lastfm_api.get_user(user)
-        self._name = user
-        self._lastfm = lastfm_api
-        self._state = "Not Scrobbling"
-        self._playcount = None
-        self._lastplayed = None
-        self._topplayed = None
-        self._cover = None
+        super().__init__(coordinator)
+        self._username = username
+        self._attr_unique_id = hashlib.sha256(username.encode("utf-8")).hexdigest()
+        self._attr_name = username
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.last.fm",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{entry_id}_{self._attr_unique_id}")},
+            manufacturer=DEFAULT_NAME,
+            name=f"{DEFAULT_NAME} {username}",
+        )
 
     @property
-    def unique_id(self):
-        """Return the unique ID of the sensor."""
-        return self._unique_id
+    def user_data(self) -> LastFMUserData | None:
+        """Returns the user from the coordinator."""
+        return self.coordinator.data.get(self._username)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    def available(self) -> bool:
+        """If user not found in coordinator, entity is unavailable."""
+        return super().available and self.user_data is not None
 
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    def update(self) -> None:
-        """Update device state."""
-        self._cover = self._user.get_image()
-        self._playcount = self._user.get_playcount()
-
-        if recent_tracks := self._user.get_recent_tracks(limit=2):
-            last = recent_tracks[0]
-            self._lastplayed = f"{last.track.artist} - {last.track.title}"
-
-        if top_tracks := self._user.get_top_tracks(limit=1):
-            top = str(top_tracks[0])
-            if (toptitle := re.search("', '(.+?)',", top)) and (
-                topartist := re.search("'(.+?)',", top)
-            ):
-                self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
-
-        if (now_playing := self._user.get_now_playing()) is None:
-            self._state = STATE_NOT_SCROBBLING
-            return
-
-        self._state = f"{now_playing.artist} - {now_playing.title}"
+    def entity_picture(self) -> str | None:
+        """Return user avatar."""
+        if self.user_data and self.user_data.image is not None:
+            return self.user_data.image
+        return None
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
+    def native_value(self) -> str:
+        """Return value of sensor."""
+        if self.user_data and self.user_data.now_playing is not None:
+            return self.user_data.now_playing
+        return STATE_NOT_SCROBBLING
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return state attributes."""
+        play_count = None
+        last_track = None
+        top_track = None
+        if self.user_data:
+            play_count = self.user_data.play_count
+            last_track = self.user_data.last_track
+            top_track = self.user_data.top_track
         return {
-            ATTR_LAST_PLAYED: self._lastplayed,
-            ATTR_PLAY_COUNT: self._playcount,
-            ATTR_TOP_PLAYED: self._topplayed,
+            ATTR_PLAY_COUNT: play_count,
+            ATTR_LAST_PLAYED: last_track,
+            ATTR_TOP_PLAYED: top_track,
         }
-
-    @property
-    def entity_picture(self):
-        """Avatar of the user."""
-        return self._cover
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON

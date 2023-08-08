@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import (
-    area_registry,
+    area_registry as ar,
     config_validation as cv,
     integration_platform,
     intent,
@@ -28,6 +28,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -68,18 +70,22 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            await hass.services.async_call(
-                COVER_DOMAIN,
-                SERVICE_OPEN_COVER
-                if self.service == SERVICE_TURN_ON
-                else SERVICE_CLOSE_COVER,
-                {ATTR_ENTITY_ID: state.entity_id},
-                context=intent_obj.context,
-                blocking=True,
-                limit=self.service_timeout,
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        COVER_DOMAIN,
+                        SERVICE_OPEN_COVER
+                        if self.service == SERVICE_TURN_ON
+                        else SERVICE_CLOSE_COVER,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
             )
+            return
 
-        elif not hass.services.has_service(state.domain, self.service):
+        if not hass.services.has_service(state.domain, self.service):
             raise intent.IntentHandleError(
                 f"Service {self.service} does not support entity {state.entity_id}"
             )
@@ -109,9 +115,9 @@ class GetStateIntentHandler(intent.IntentHandler):
 
         # Look up area first to fail early
         area_name = slots.get("area", {}).get("value")
-        area: area_registry.AreaEntry | None = None
+        area: ar.AreaEntry | None = None
         if area_name is not None:
-            areas = area_registry.async_get(hass)
+            areas = ar.async_get(hass)
             area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
                 area_name
             )
@@ -140,16 +146,18 @@ class GetStateIntentHandler(intent.IntentHandler):
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
+                assistant=intent_obj.assistant,
             )
         )
 
         _LOGGER.debug(
-            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s",
+            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
             len(states),
             name,
             area,
             domains,
             device_classes,
+            intent_obj.assistant,
         )
 
         # Create response

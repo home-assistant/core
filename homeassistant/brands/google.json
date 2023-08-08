@@ -6,6 +6,7 @@
     "google_assistant_sdk",
     "google_cloud",
     "google_domains",
+    "google_generative_ai_conversation",
     "google_mail",
     "google_maps",
     "google_pubsub",
@@ -16,6 +17,7 @@
     "google",
     "nest",
     "cast",
-    "dialogflow"
+    "dialogflow",
+    "youtube"
   ]
 }

@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterable
 import contextlib
 from enum import Enum
+from pathlib import Path
 import socket
 from typing import Any
 
@@ -27,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_ALL_UPDATES,
@@ -36,21 +38,20 @@ from .const import (
     ModelType,
 )
 
+_SENTINEL = object()
 
-def get_nested_attr(obj: Any, attr: str) -> Any:
+
+def get_nested_attr(obj: Any, attrs: tuple[str, ...]) -> Any:
     """Fetch a nested attribute."""
-    attrs = attr.split(".")
+    if len(attrs) == 1:
+        value = getattr(obj, attrs[0], None)
+    else:
+        value = obj
+        for key in attrs:
+            if (value := getattr(value, key, _SENTINEL)) is _SENTINEL:
+                return None
 
-    value = obj
-    for key in attrs:
-        if not hasattr(value, key):
-            return None
-        value = getattr(value, key)
-
-    if isinstance(value, Enum):
-        value = value.value
-
-    return value
+    return value.value if isinstance(value, Enum) else value
 
 
 @callback
@@ -142,4 +143,5 @@ def async_create_api_client(
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
+        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
     )

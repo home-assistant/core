@@ -8,7 +8,6 @@ from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -49,6 +48,7 @@ from . import (
     _get_manager,
     async_setup_with_default_adapter,
     generate_advertisement_data,
+    generate_ble_device,
     inject_advertisement,
     inject_advertisement_with_time_and_source_connectable,
     patch_discovered_devices,
@@ -354,7 +354,7 @@ async def test_discovery_match_by_service_uuid(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_device = generate_ble_device("44:44:33:11:23:45", "wrong_name")
         wrong_adv = generate_advertisement_data(
             local_name="wrong_name", service_uuids=[]
         )
@@ -364,7 +364,7 @@ async def test_discovery_match_by_service_uuid(
 
         assert len(mock_config_flow.mock_calls) == 0
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
@@ -401,7 +401,7 @@ async def test_discovery_match_by_service_uuid_connectable(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_device = generate_ble_device("44:44:33:11:23:45", "wrong_name")
         wrong_adv = generate_advertisement_data(
             local_name="wrong_name", service_uuids=[]
         )
@@ -413,7 +413,7 @@ async def test_discovery_match_by_service_uuid_connectable(
 
         assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
@@ -448,7 +448,7 @@ async def test_discovery_match_by_service_uuid_not_connectable(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_device = generate_ble_device("44:44:33:11:23:45", "wrong_name")
         wrong_adv = generate_advertisement_data(
             local_name="wrong_name", service_uuids=[]
         )
@@ -460,7 +460,7 @@ async def test_discovery_match_by_service_uuid_not_connectable(
 
         assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
@@ -493,7 +493,7 @@ async def test_discovery_match_by_name_connectable_false(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_device = generate_ble_device("44:44:33:11:23:45", "wrong_name")
         wrong_adv = generate_advertisement_data(
             local_name="wrong_name", service_uuids=[]
         )
@@ -505,7 +505,9 @@ async def test_discovery_match_by_name_connectable_false(
 
         assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
 
-        qingping_device = BLEDevice("44:44:33:11:23:45", "Qingping Motion & Light")
+        qingping_device = generate_ble_device(
+            "44:44:33:11:23:45", "Qingping Motion & Light"
+        )
         qingping_adv = generate_advertisement_data(
             local_name="Qingping Motion & Light",
             service_data={
@@ -561,7 +563,7 @@ async def test_discovery_match_by_local_name(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_device = generate_ble_device("44:44:33:11:23:45", "wrong_name")
         wrong_adv = generate_advertisement_data(
             local_name="wrong_name", service_uuids=[]
         )
@@ -571,7 +573,7 @@ async def test_discovery_match_by_local_name(
 
         assert len(mock_config_flow.mock_calls) == 0
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
         )
@@ -605,7 +607,7 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        hkc_device = BLEDevice("44:44:33:11:23:45", "lock")
+        hkc_device = generate_ble_device("44:44:33:11:23:45", "lock")
         hkc_adv_no_mfr_data = generate_advertisement_data(
             local_name="lock",
             service_uuids=[],
@@ -639,7 +641,7 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
         assert len(mock_config_flow.mock_calls) == 0
 
         mock_config_flow.reset_mock()
-        not_hkc_device = BLEDevice("44:44:33:11:23:21", "lock")
+        not_hkc_device = generate_ble_device("44:44:33:11:23:21", "lock")
         not_hkc_adv = generate_advertisement_data(
             local_name="lock", service_uuids=[], manufacturer_data={76: b"\x02"}
         )
@@ -648,7 +650,7 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 0
-        not_apple_device = BLEDevice("44:44:33:11:23:23", "lock")
+        not_apple_device = generate_ble_device("44:44:33:11:23:23", "lock")
         not_apple_adv = generate_advertisement_data(
             local_name="lock", service_uuids=[], manufacturer_data={21: b"\x02"}
         )
@@ -688,7 +690,7 @@ async def test_discovery_match_by_service_data_uuid_then_others(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        device = BLEDevice("44:44:33:11:23:45", "lock")
+        device = generate_ble_device("44:44:33:11:23:45", "lock")
         adv_without_service_data_uuid = generate_advertisement_data(
             local_name="lock",
             service_uuids=[],
@@ -838,7 +840,7 @@ async def test_discovery_match_by_service_data_uuid_when_format_changes(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        device = BLEDevice("44:44:33:11:23:45", "lock")
+        device = generate_ble_device("44:44:33:11:23:45", "lock")
         adv_without_service_data_uuid = generate_advertisement_data(
             local_name="Qingping Temp RH M",
             service_uuids=[],
@@ -896,6 +898,48 @@ async def test_discovery_match_by_service_data_uuid_when_format_changes(
         mock_config_flow.reset_mock()
 
 
+async def test_discovery_match_by_service_data_uuid_bthome(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
+) -> None:
+    """Test bluetooth discovery match by service_data_uuid for bthome."""
+    mock_bt = [
+        {
+            "domain": "bthome",
+            "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
+        },
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        device = generate_ble_device("44:44:33:11:23:45", "Shelly Button")
+        button_adv = generate_advertisement_data(
+            local_name="Shelly Button",
+            service_uuids=[],
+            manufacturer_data={},
+            service_data={"0000fcd2-0000-1000-8000-00805f9b34fb": b"@\x00k\x01d:\x01"},
+        )
+        # 1st discovery should generate a flow because the service data uuid matches
+        inject_advertisement(hass, device, button_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery should not generate a flow because the
+        # we already saw an advertisement with the service_data_uuid
+        inject_advertisement(hass, device, button_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+
 async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
 ) -> None:
@@ -921,7 +965,7 @@ async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        device = BLEDevice("44:44:33:11:23:45", "lock")
+        device = generate_ble_device("44:44:33:11:23:45", "lock")
         adv_service_uuids = generate_advertisement_data(
             local_name="lock",
             service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fc"],
@@ -976,7 +1020,7 @@ async def test_rediscovery(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
@@ -1026,12 +1070,12 @@ async def test_async_discovered_device_api(
 
             assert not bluetooth.async_discovered_service_info(hass)
 
-            wrong_device = BLEDevice("44:44:33:11:23:42", "wrong_name")
+            wrong_device = generate_ble_device("44:44:33:11:23:42", "wrong_name")
             wrong_adv = generate_advertisement_data(
                 local_name="wrong_name", service_uuids=[]
             )
             inject_advertisement(hass, wrong_device, wrong_adv)
-            switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+            switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
             switchbot_adv = generate_advertisement_data(
                 local_name="wohand", service_uuids=[]
             )
@@ -1119,7 +1163,7 @@ async def test_register_callbacks(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        seen_switchbot_device = BLEDevice("44:44:33:11:23:46", "wohand")
+        seen_switchbot_device = generate_ble_device("44:44:33:11:23:46", "wohand")
         seen_switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -1138,7 +1182,7 @@ async def test_register_callbacks(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -1148,13 +1192,13 @@ async def test_register_callbacks(
 
         inject_advertisement(hass, switchbot_device, switchbot_adv)
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
@@ -1209,7 +1253,7 @@ async def test_register_callbacks_raises_exception(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -1268,7 +1312,7 @@ async def test_register_callback_by_address(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -1278,13 +1322,13 @@ async def test_register_callback_by_address(
 
         inject_advertisement(hass, switchbot_device, switchbot_adv)
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         # 3rd callback raises ValueError but is still tracked
@@ -1370,7 +1414,7 @@ async def test_register_callback_by_address_connectable_only(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -1436,7 +1480,7 @@ async def test_register_callback_by_manufacturer_id(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        apple_device = generate_ble_device("44:44:33:11:23:45", "rtx")
         apple_adv = generate_advertisement_data(
             local_name="rtx",
             manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
@@ -1444,7 +1488,7 @@ async def test_register_callback_by_manufacturer_id(
 
         inject_advertisement(hass, apple_device, apple_adv)
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
@@ -1491,7 +1535,7 @@ async def test_register_callback_by_connectable(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        apple_device = generate_ble_device("44:44:33:11:23:45", "rtx")
         apple_adv = generate_advertisement_data(
             local_name="rtx",
             manufacturer_data={7676: b"\xd8.\xad\xcd\r\x85"},
@@ -1499,7 +1543,7 @@ async def test_register_callback_by_connectable(
 
         inject_advertisement(hass, apple_device, apple_adv)
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
@@ -1546,7 +1590,7 @@ async def test_not_filtering_wanted_apple_devices(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        ibeacon_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        ibeacon_device = generate_ble_device("44:44:33:11:23:45", "rtx")
         ibeacon_adv = generate_advertisement_data(
             local_name="ibeacon",
             manufacturer_data={76: b"\x02\x00\x00\x00"},
@@ -1554,7 +1598,7 @@ async def test_not_filtering_wanted_apple_devices(
 
         inject_advertisement(hass, ibeacon_device, ibeacon_adv)
 
-        homekit_device = BLEDevice("44:44:33:11:23:46", "rtx")
+        homekit_device = generate_ble_device("44:44:33:11:23:46", "rtx")
         homekit_adv = generate_advertisement_data(
             local_name="homekit",
             manufacturer_data={76: b"\x06\x00\x00\x00"},
@@ -1562,7 +1606,7 @@ async def test_not_filtering_wanted_apple_devices(
 
         inject_advertisement(hass, homekit_device, homekit_adv)
 
-        apple_device = BLEDevice("44:44:33:11:23:47", "rtx")
+        apple_device = generate_ble_device("44:44:33:11:23:47", "rtx")
         apple_adv = generate_advertisement_data(
             local_name="apple",
             manufacturer_data={76: b"\x10\x00\x00\x00"},
@@ -1606,7 +1650,7 @@ async def test_filtering_noisy_apple_devices(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        apple_device = generate_ble_device("44:44:33:11:23:45", "rtx")
         apple_adv = generate_advertisement_data(
             local_name="noisy",
             manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
@@ -1614,7 +1658,7 @@ async def test_filtering_noisy_apple_devices(
 
         inject_advertisement(hass, apple_device, apple_adv)
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
@@ -1656,7 +1700,7 @@ async def test_register_callback_by_address_connectable_manufacturer_id(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        apple_device = generate_ble_device("44:44:33:11:23:45", "rtx")
         apple_adv = generate_advertisement_data(
             local_name="rtx",
             manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
@@ -1664,7 +1708,7 @@ async def test_register_callback_by_address_connectable_manufacturer_id(
 
         inject_advertisement(hass, apple_device, apple_adv)
 
-        apple_device_wrong_address = BLEDevice("44:44:33:11:23:46", "rtx")
+        apple_device_wrong_address = generate_ble_device("44:44:33:11:23:46", "rtx")
 
         inject_advertisement(hass, apple_device_wrong_address, apple_adv)
         await hass.async_block_till_done()
@@ -1710,7 +1754,7 @@ async def test_register_callback_by_manufacturer_id_and_address(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        rtx_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        rtx_device = generate_ble_device("44:44:33:11:23:45", "rtx")
         rtx_adv = generate_advertisement_data(
             local_name="rtx",
             manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
@@ -1718,7 +1762,7 @@ async def test_register_callback_by_manufacturer_id_and_address(
 
         inject_advertisement(hass, rtx_device, rtx_adv)
 
-        yale_device = BLEDevice("44:44:33:11:23:45", "apple")
+        yale_device = generate_ble_device("44:44:33:11:23:45", "apple")
         yale_adv = generate_advertisement_data(
             local_name="yale",
             manufacturer_data={465: b"\xd8.\xad\xcd\r\x85"},
@@ -1727,7 +1771,7 @@ async def test_register_callback_by_manufacturer_id_and_address(
         inject_advertisement(hass, yale_device, yale_adv)
         await hass.async_block_till_done()
 
-        other_apple_device = BLEDevice("44:44:33:11:23:22", "apple")
+        other_apple_device = generate_ble_device("44:44:33:11:23:22", "apple")
         other_apple_adv = generate_advertisement_data(
             local_name="apple",
             manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
@@ -1778,7 +1822,7 @@ async def test_register_callback_by_service_uuid_and_address(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        switchbot_dev = BLEDevice("44:44:33:11:23:45", "switchbot")
+        switchbot_dev = generate_ble_device("44:44:33:11:23:45", "switchbot")
         switchbot_adv = generate_advertisement_data(
             local_name="switchbot",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -1786,7 +1830,9 @@ async def test_register_callback_by_service_uuid_and_address(
 
         inject_advertisement(hass, switchbot_dev, switchbot_adv)
 
-        switchbot_missing_service_uuid_dev = BLEDevice("44:44:33:11:23:45", "switchbot")
+        switchbot_missing_service_uuid_dev = generate_ble_device(
+            "44:44:33:11:23:45", "switchbot"
+        )
         switchbot_missing_service_uuid_adv = generate_advertisement_data(
             local_name="switchbot",
         )
@@ -1796,7 +1842,9 @@ async def test_register_callback_by_service_uuid_and_address(
         )
         await hass.async_block_till_done()
 
-        service_uuid_wrong_address_dev = BLEDevice("44:44:33:11:23:22", "switchbot2")
+        service_uuid_wrong_address_dev = generate_ble_device(
+            "44:44:33:11:23:22", "switchbot2"
+        )
         service_uuid_wrong_address_adv = generate_advertisement_data(
             local_name="switchbot2",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -1847,7 +1895,7 @@ async def test_register_callback_by_service_data_uuid_and_address(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        switchbot_dev = BLEDevice("44:44:33:11:23:45", "switchbot")
+        switchbot_dev = generate_ble_device("44:44:33:11:23:45", "switchbot")
         switchbot_adv = generate_advertisement_data(
             local_name="switchbot",
             service_data={"cba20d00-224d-11e6-9fb8-0002a5d5c51b": b"x"},
@@ -1855,7 +1903,9 @@ async def test_register_callback_by_service_data_uuid_and_address(
 
         inject_advertisement(hass, switchbot_dev, switchbot_adv)
 
-        switchbot_missing_service_uuid_dev = BLEDevice("44:44:33:11:23:45", "switchbot")
+        switchbot_missing_service_uuid_dev = generate_ble_device(
+            "44:44:33:11:23:45", "switchbot"
+        )
         switchbot_missing_service_uuid_adv = generate_advertisement_data(
             local_name="switchbot",
         )
@@ -1865,7 +1915,9 @@ async def test_register_callback_by_service_data_uuid_and_address(
         )
         await hass.async_block_till_done()
 
-        service_uuid_wrong_address_dev = BLEDevice("44:44:33:11:23:22", "switchbot2")
+        service_uuid_wrong_address_dev = generate_ble_device(
+            "44:44:33:11:23:22", "switchbot2"
+        )
         service_uuid_wrong_address_adv = generate_advertisement_data(
             local_name="switchbot2",
             service_data={"cba20d00-224d-11e6-9fb8-0002a5d5c51b": b"x"},
@@ -1913,7 +1965,7 @@ async def test_register_callback_by_local_name(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        rtx_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        rtx_device = generate_ble_device("44:44:33:11:23:45", "rtx")
         rtx_adv = generate_advertisement_data(
             local_name="rtx",
             manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
@@ -1921,12 +1973,12 @@ async def test_register_callback_by_local_name(
 
         inject_advertisement(hass, rtx_device, rtx_adv)
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
 
-        rtx_device_2 = BLEDevice("44:44:33:11:23:45", "rtx")
+        rtx_device_2 = generate_ble_device("44:44:33:11:23:45", "rtx")
         rtx_adv_2 = generate_advertisement_data(
             local_name="rtx2",
             manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
@@ -2012,7 +2064,7 @@ async def test_register_callback_by_service_data_uuid(
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "xiaomi")
+        apple_device = generate_ble_device("44:44:33:11:23:45", "xiaomi")
         apple_adv = generate_advertisement_data(
             local_name="xiaomi",
             service_data={
@@ -2022,7 +2074,7 @@ async def test_register_callback_by_service_data_uuid(
 
         inject_advertisement(hass, apple_device, apple_adv)
 
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
@@ -2066,7 +2118,7 @@ async def test_register_callback_survives_reload(
 
     assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=["zba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -2120,7 +2172,7 @@ async def test_process_advertisements_bail_on_good_advertisement(
     )
 
     while not done.done():
-        device = BLEDevice("aa:44:33:11:23:45", "wohand")
+        device = generate_ble_device("aa:44:33:11:23:45", "wohand")
         adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51a"],
@@ -2145,7 +2197,7 @@ async def test_process_advertisements_ignore_bad_advertisement(
     done = asyncio.Event()
     return_value = asyncio.Event()
 
-    device = BLEDevice("aa:44:33:11:23:45", "wohand")
+    device = generate_ble_device("aa:44:33:11:23:45", "wohand")
     adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51a"],
@@ -2227,7 +2279,7 @@ async def test_wrapped_instance_with_filter(
             """Handle a detected device."""
             detected.append((device, advertisement_data))
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -2240,7 +2292,7 @@ async def test_wrapped_instance_with_filter(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
@@ -2299,7 +2351,7 @@ async def test_wrapped_instance_with_service_uuids(
             """Handle a detected device."""
             detected.append((device, advertisement_data))
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -2312,7 +2364,66 @@ async def test_wrapped_instance_with_service_uuids(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
+        empty_adv = generate_advertisement_data(local_name="empty")
+
+        assert _get_manager() is not None
+        scanner = HaBleakScannerWrapper(
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+        scanner.register_detection_callback(_device_detected)
+
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+
+        await hass.async_block_till_done()
+
+        assert len(detected) == 2
+
+        # The UUIDs list we created in the wrapped scanner with should be respected
+        # and we should not get another callback
+        inject_advertisement(hass, empty_device, empty_adv)
+        assert len(detected) == 2
+
+
+async def test_wrapped_instance_with_service_uuids_with_coro_callback(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, enable_bluetooth: None
+) -> None:
+    """Test consumers can use the wrapped instance with a service_uuids list as if it was normal BleakScanner.
+
+    Verify that coro callbacks are supported.
+    """
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        detected = []
+
+        async def _device_detected(
+            device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Handle a detected device."""
+            detected.append((device, advertisement_data))
+
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
+        switchbot_adv = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
+        switchbot_adv_2 = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
@@ -2357,7 +2468,7 @@ async def test_wrapped_instance_with_broken_callbacks(
                 raise ValueError
             detected.append((device, advertisement_data))
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -2398,7 +2509,7 @@ async def test_wrapped_instance_changes_uuids(
             """Handle a detected device."""
             detected.append((device, advertisement_data))
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -2411,7 +2522,7 @@ async def test_wrapped_instance_changes_uuids(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
-        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
@@ -2453,7 +2564,7 @@ async def test_wrapped_instance_changes_filters(
             """Handle a detected device."""
             detected.append((device, advertisement_data))
 
-        switchbot_device = BLEDevice("44:44:33:11:23:42", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:42", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand",
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -2466,7 +2577,7 @@ async def test_wrapped_instance_changes_filters(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
-        empty_device = BLEDevice("11:22:33:44:55:62", "empty")
+        empty_device = generate_ble_device("11:22:33:44:55:62", "empty")
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
@@ -2541,7 +2652,7 @@ async def test_async_ble_device_from_address(
 
         assert not bluetooth.async_discovered_service_info(hass)
 
-        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
         switchbot_adv = generate_advertisement_data(
             local_name="wohand", service_uuids=[]
         )
@@ -2869,35 +2980,13 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
 
 
-async def test_issue_outdated_haos(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    one_adapter: None,
-    operating_system_85: None,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test we create an issue on outdated haos."""
-    entry = MockConfigEntry(
-        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
-    assert issue is not None
-    assert issue == snapshot
-
-
-async def test_issue_outdated_haos_no_adapters(
+async def test_issue_outdated_haos_removed(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
     no_adapters: None,
     operating_system_85: None,
 ) -> None:
-    """Test we do not create an issue on outdated haos if there are no adapters."""
+    """Test we do not create an issue on outdated haos anymore."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import EfergyEntity
@@ -25,14 +25,14 @@ from .const import CONF_CURRENT_VALUES, DOMAIN, LOGGER
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="instant_readings",
-        name="Power Usage",
+        translation_key="instant_readings",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="energy_day",
-        name="Daily Consumption",
+        translation_key="energy_day",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -40,7 +40,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="energy_week",
-        name="Weekly Consumption",
+        translation_key="energy_week",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -48,14 +48,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="energy_month",
-        name="Monthly Consumption",
+        translation_key="energy_month",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energy_year",
-        name="Yearly Consumption",
+        translation_key="energy_year",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -63,32 +63,32 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="budget",
-        name="Energy Budget",
+        translation_key="budget",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="cost_day",
-        name="Daily Energy Cost",
+        translation_key="cost_day",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="cost_week",
-        name="Weekly Energy Cost",
+        translation_key="cost_week",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="cost_month",
-        name="Monthly Energy Cost",
+        translation_key="cost_month",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="cost_year",
-        name="Yearly Energy Cost",
+        translation_key="cost_year",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -104,9 +104,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Efergy sensors."""
     api: Efergy = hass.data[DOMAIN][entry.entry_id]
@@ -138,6 +136,8 @@ async def async_setup_entry(
 
 class EfergySensor(EfergyEntity, SensorEntity):
     """Implementation of an Efergy sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

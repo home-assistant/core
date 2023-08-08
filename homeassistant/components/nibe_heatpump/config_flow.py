@@ -89,6 +89,7 @@ async def validate_nibegw_input(
     """Validate the user input allows us to connect."""
 
     heatpump = HeatPump(Model[data[CONF_MODEL]])
+    heatpump.word_swap = True
     await heatpump.initialize()
 
     connection = NibeGW(

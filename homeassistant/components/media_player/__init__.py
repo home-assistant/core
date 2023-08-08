@@ -7,23 +7,22 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import datetime as dt
+from enum import StrEnum
 import functools as ft
 import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
-from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
@@ -1001,13 +1000,14 @@ class MediaPlayerEntity(Entity):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
+        supported_features = self.supported_features
 
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
+        if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
             source_list := self.source_list
         ):
             data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
+        if supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
             sound_mode_list := self.sound_mode_list
         ):
             data[ATTR_SOUND_MODE_LIST] = sound_mode_list
@@ -1037,7 +1037,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Return a BrowseMedia instance.
@@ -1138,7 +1138,7 @@ class MediaPlayerImageView(HomeAssistantView):
         self,
         request: web.Request,
         entity_id: str,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
@@ -1258,12 +1258,13 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-        response = await websession.get(url)
-        if response.status == HTTPStatus.OK:
-            content = await response.read()
-            if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
+    with suppress(asyncio.TimeoutError):
+        async with async_timeout.timeout(10):
+            response = await websession.get(url)
+            if response.status == HTTPStatus.OK:
+                content = await response.read()
+                if content_type := response.headers.get(CONTENT_TYPE):
+                    content_type = content_type.split(";")[0]
 
     if content is None:
         url_parts = URL(url)

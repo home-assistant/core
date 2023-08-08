@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import datetime
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import httpx
 from iaqualink.client import AqualinkClient
@@ -139,7 +140,7 @@ async def async_setup_entry(  # noqa: C901
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    async def _async_systems_update(now):
+    async def _async_systems_update(_: datetime) -> None:
         """Refresh internal state for all systems."""
         for system in systems:
             prev = system.online
@@ -153,6 +154,7 @@ async def async_setup_entry(  # noqa: C901
                         system.serial,
                         svc_exception,
                     )
+                await system.aqualink.close()
             else:
                 cur = system.online
                 if cur and not prev:
@@ -160,7 +162,9 @@ async def async_setup_entry(  # noqa: C901
 
             async_dispatcher_send(hass, DOMAIN)
 
-    async_track_time_interval(hass, _async_systems_update, UPDATE_INTERVAL)
+    entry.async_on_unload(
+        async_track_time_interval(hass, _async_systems_update, UPDATE_INTERVAL)
+    )
 
     return True
 
@@ -239,6 +243,8 @@ class AqualinkEntity(Entity):
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer=self.dev.manufacturer,
             model=self.dev.model,
-            name=self.name,
+            # Instead of setting the device name to the entity name, iaqualink
+            # should be updated to set has_entity_name = True
+            name=cast(str | None, self.name),
             via_device=(DOMAIN, self.dev.system.serial),
         )

@@ -1,5 +1,6 @@
 """Tests for wemo_device.py."""
 import asyncio
+from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import call, patch
 
@@ -12,7 +13,7 @@ from homeassistant import runner
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, wemo_device
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -31,7 +32,7 @@ def pywemo_model():
 
 
 async def test_async_register_device_longpress_fails(
-    hass: HomeAssistant, pywemo_device
+    hass: HomeAssistant, pywemo_device, device_registry: dr.DeviceRegistry
 ) -> None:
     """Device is still registered if ensure_long_press_virtual_device fails."""
     with patch.object(pywemo_device, "ensure_long_press_virtual_device") as elp:
@@ -47,8 +48,7 @@ async def test_async_register_device_longpress_fails(
             },
         )
         await hass.async_block_till_done()
-    dr = device_registry.async_get(hass)
-    device_entries = list(dr.devices.values())
+    device_entries = list(device_registry.devices.values())
     assert len(device_entries) == 1
     device = wemo_device.async_get_coordinator(hass, device_entries[0].id)
     assert device.supports_long_press is False
@@ -85,7 +85,7 @@ async def test_long_press_event(
         "name": device.wemo.name,
         "params": "testing_params",
         "type": EVENT_TYPE_LONG_PRESS,
-        "unique_id": device.wemo.serialnumber,
+        "unique_id": device.wemo.serial_number,
     }
 
 
@@ -164,10 +164,11 @@ async def test_async_update_data_subscribed(
     pywemo_device.get_state.assert_not_called()
 
 
-async def test_device_info(hass: HomeAssistant, wemo_entity) -> None:
+async def test_device_info(
+    hass: HomeAssistant, wemo_entity, device_registry: dr.DeviceRegistry
+) -> None:
     """Verify the DeviceInfo data is set properly."""
-    dr = device_registry.async_get(hass)
-    device_entries = list(dr.devices.values())
+    device_entries = list(device_registry.devices.values())
 
     assert len(device_entries) == 1
     assert device_entries[0].connections == {
@@ -178,13 +179,39 @@ async def test_device_info(hass: HomeAssistant, wemo_entity) -> None:
     assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
 
 
-async def test_dli_device_info(hass: HomeAssistant, wemo_dli_entity) -> None:
+async def test_dli_device_info(
+    hass: HomeAssistant, wemo_dli_entity, device_registry: dr.DeviceRegistry
+) -> None:
     """Verify the DeviceInfo data for Digital Loggers emulated wemo device."""
-    dr = device_registry.async_get(hass)
-    device_entries = list(dr.devices.values())
+    device_entries = list(device_registry.devices.values())
 
     assert device_entries[0].configuration_url == "http://127.0.0.1"
     assert device_entries[0].identifiers == {(DOMAIN, "123456789")}
+
+
+async def test_options_enable_subscription_false(
+    hass, pywemo_registry, pywemo_device, wemo_entity
+):
+    """Test setting Options.enable_subscription = False."""
+    config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
+    assert hass.config_entries.async_update_entry(
+        config_entry,
+        options=asdict(
+            wemo_device.Options(enable_subscription=False, enable_long_press=False)
+        ),
+    )
+    await hass.async_block_till_done()
+    pywemo_registry.unregister.assert_called_once_with(pywemo_device)
+
+
+async def test_options_enable_long_press_false(hass, pywemo_device, wemo_entity):
+    """Test setting Options.enable_long_press = False."""
+    config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
+    assert hass.config_entries.async_update_entry(
+        config_entry, options=asdict(wemo_device.Options(enable_long_press=False))
+    )
+    await hass.async_block_till_done()
+    pywemo_device.remove_long_press_virtual_device.assert_called_once_with()
 
 
 class TestInsight:

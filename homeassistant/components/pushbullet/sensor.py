@@ -1,23 +1,14 @@
 """Pushbullet platform for sensor component."""
 from __future__ import annotations
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorEntity,
-    SensorEntityDescription,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .api import PushBulletNotificationProvider
 from .const import DATA_UPDATED, DOMAIN
@@ -25,89 +16,55 @@ from .const import DATA_UPDATED, DOMAIN
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="application_name",
-        name="Application name",
+        translation_key="application_name",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="body",
-        name="Body",
+        translation_key="body",
     ),
     SensorEntityDescription(
         key="notification_id",
-        name="Notification ID",
+        translation_key="notification_id",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="notification_tag",
-        name="Notification tag",
+        translation_key="notification_tag",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="package_name",
-        name="Package name",
+        translation_key="package_name",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="receiver_email",
-        name="Receiver email",
+        translation_key="receiver_email",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="sender_email",
-        name="Sender email",
+        translation_key="sender_email",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="source_device_iden",
-        name="Sender device ID",
+        translation_key="source_device_identifier",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="title",
-        name="Title",
+        translation_key="title",
     ),
     SensorEntityDescription(
         key="type",
-        name="Type",
+        translation_key="type",
         entity_registry_enabled_default=False,
     ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["title", "body"]): vol.All(
-            cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_KEYS)]
-        ),
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Pushbullet Sensor platform."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.2.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(

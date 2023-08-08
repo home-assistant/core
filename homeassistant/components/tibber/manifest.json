@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["tibber"],
   "quality_scale": "silver",
-  "requirements": ["pyTibber==0.26.13"]
+  "requirements": ["pyTibber==0.28.0"]
 }

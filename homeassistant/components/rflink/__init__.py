@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
+from homeassistant.core import CoreState, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -28,6 +28,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
@@ -246,7 +247,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     @callback
-    def reconnect(exc=None):
+    def reconnect(_: Exception | None = None) -> None:
         """Schedule reconnect after connection has been unexpectedly lost."""
         # Reset protocol binding before starting reconnect
         RflinkCommand.set_rflink_protocol(None)
@@ -257,6 +258,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if hass.state != CoreState.stopping:
             _LOGGER.warning("Disconnected from Rflink, reconnecting")
             hass.async_create_task(connect())
+
+    _reconnect_job = HassJob(reconnect, "Rflink reconnect", cancel_on_shutdown=True)
 
     async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
@@ -284,7 +287,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SerialException,
             OSError,
             asyncio.TimeoutError,
-        ) as exc:
+        ):
             reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
             _LOGGER.exception(
                 "Error connecting to Rflink, reconnecting in %s", reconnect_interval
@@ -292,7 +295,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # Connection to Rflink device is lost, make entities unavailable
             async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
-            hass.loop.call_later(reconnect_interval, reconnect, exc)
+            async_call_later(hass, reconnect_interval, _reconnect_job)
             return
 
         # There is a valid connection to a Rflink device now so
@@ -320,7 +323,6 @@ class RflinkDevice(Entity):
     Contains the common logic for Rflink entities.
     """
 
-    platform = None
     _state: bool | None = None
     _available = True
     _attr_should_poll = False

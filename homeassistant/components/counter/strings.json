@@ -1,0 +1,66 @@
+{
+  "title": "Counter",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::counter::title%]",
+      "state_attributes": {
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "initial": {
+          "name": "Initial value"
+        },
+        "maximum": {
+          "name": "Maximum"
+        },
+        "minimum": {
+          "name": "Minimum"
+        },
+        "step": {
+          "name": "Step"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_configure_service": {
+      "title": "The counter configure service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::counter::issues::deprecated_configure_service::title%]",
+            "description": "The counter service `counter.configure` is being removed and use of it has been detected. If you want to change the current value of a counter, use the new `counter.set_value` service instead.\n\nPlease remove this service from your automations and scripts and select **submit** to close this issue."
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "decrement": {
+      "name": "Decrement",
+      "description": "Decrements a counter."
+    },
+    "increment": {
+      "name": "Increment",
+      "description": "Increments a counter."
+    },
+    "reset": {
+      "name": "Reset",
+      "description": "Resets a counter."
+    },
+    "set_value": {
+      "name": "Set",
+      "description": "Sets the counter value.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new counter value the entity should be set to."
+        }
+      }
+    }
+  }
+}

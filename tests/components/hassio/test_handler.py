@@ -1,13 +1,23 @@
 """The tests for the hassio component."""
+from __future__ import annotations
+
+from typing import Any, Literal
+
 import aiohttp
+from aiohttp import hdrs, web
 import pytest
 
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import handler
+from homeassistant.components.hassio.handler import HassIO, HassioAPIError
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_api_ping(hassio_handler, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_api_ping(
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API ping."""
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
 
@@ -16,7 +26,7 @@ async def test_api_ping(hassio_handler, aioclient_mock: AiohttpClientMocker) -> 
 
 
 async def test_api_ping_error(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API ping error."""
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "error"})
@@ -26,7 +36,7 @@ async def test_api_ping_error(
 
 
 async def test_api_ping_exeption(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API ping exception."""
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", exc=aiohttp.ClientError())
@@ -35,7 +45,9 @@ async def test_api_ping_exeption(
     assert aioclient_mock.call_count == 1
 
 
-async def test_api_info(hassio_handler, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_api_info(
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API generic info."""
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -53,7 +65,7 @@ async def test_api_info(hassio_handler, aioclient_mock: AiohttpClientMocker) -> 
 
 
 async def test_api_info_error(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Home Assistant info error."""
     aioclient_mock.get(
@@ -67,7 +79,7 @@ async def test_api_info_error(
 
 
 async def test_api_host_info(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Host info."""
     aioclient_mock.get(
@@ -90,7 +102,7 @@ async def test_api_host_info(
 
 
 async def test_api_supervisor_info(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Supervisor info."""
     aioclient_mock.get(
@@ -108,7 +120,9 @@ async def test_api_supervisor_info(
     assert data["channel"] == "stable"
 
 
-async def test_api_os_info(hassio_handler, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_api_os_info(
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API OS info."""
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
@@ -125,7 +139,7 @@ async def test_api_os_info(hassio_handler, aioclient_mock: AiohttpClientMocker) 
 
 
 async def test_api_host_info_error(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Home Assistant info error."""
     aioclient_mock.get(
@@ -139,7 +153,7 @@ async def test_api_host_info_error(
 
 
 async def test_api_core_info(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Home Assistant Core info."""
     aioclient_mock.get(
@@ -153,7 +167,7 @@ async def test_api_core_info(
 
 
 async def test_api_core_info_error(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Home Assistant Core info error."""
     aioclient_mock.get(
@@ -167,7 +181,7 @@ async def test_api_core_info_error(
 
 
 async def test_api_homeassistant_stop(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Home Assistant stop."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/stop", json={"result": "ok"})
@@ -177,7 +191,7 @@ async def test_api_homeassistant_stop(
 
 
 async def test_api_homeassistant_restart(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Home Assistant restart."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/restart", json={"result": "ok"})
@@ -187,7 +201,7 @@ async def test_api_homeassistant_restart(
 
 
 async def test_api_addon_info(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Add-on info."""
     aioclient_mock.get(
@@ -201,7 +215,7 @@ async def test_api_addon_info(
 
 
 async def test_api_addon_stats(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Add-on stats."""
     aioclient_mock.get(
@@ -214,8 +228,36 @@ async def test_api_addon_stats(
     assert aioclient_mock.call_count == 1
 
 
+async def test_api_core_stats(
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API Add-on stats."""
+    aioclient_mock.get(
+        "http://127.0.0.1/core/stats",
+        json={"result": "ok", "data": {"memory_percent": 0.01}},
+    )
+
+    data = await hassio_handler.get_core_stats()
+    assert data["memory_percent"] == 0.01
+    assert aioclient_mock.call_count == 1
+
+
+async def test_api_supervisor_stats(
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API Add-on stats."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/stats",
+        json={"result": "ok", "data": {"memory_percent": 0.01}},
+    )
+
+    data = await hassio_handler.get_supervisor_stats()
+    assert data["memory_percent"] == 0.01
+    assert aioclient_mock.call_count == 1
+
+
 async def test_api_discovery_message(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API discovery message."""
     aioclient_mock.get(
@@ -229,7 +271,7 @@ async def test_api_discovery_message(
 
 
 async def test_api_retrieve_discovery(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API discovery message."""
     aioclient_mock.get(
@@ -243,7 +285,7 @@ async def test_api_retrieve_discovery(
 
 
 async def test_api_ingress_panels(
-    hassio_handler, aioclient_mock: AiohttpClientMocker
+    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with API Ingress panels."""
     aioclient_mock.get(
@@ -267,3 +309,107 @@ async def test_api_ingress_panels(
     assert aioclient_mock.call_count == 1
     assert data["panels"]
     assert "slug" in data["panels"]
+
+
+@pytest.mark.parametrize(
+    ("api_call", "method", "payload"),
+    [
+        ["retrieve_discovery_messages", "GET", None],
+        ["refresh_updates", "POST", None],
+        ["update_diagnostics", "POST", True],
+    ],
+)
+async def test_api_headers(
+    hass,
+    aiohttp_raw_server,
+    socket_enabled,
+    api_call: str,
+    method: Literal["GET", "POST"],
+    payload: Any,
+) -> None:
+    """Test headers are forwarded correctly."""
+    received_request = None
+
+    async def mock_handler(request):
+        """Return OK."""
+        nonlocal received_request
+        received_request = request
+        return web.json_response({"result": "ok", "data": None})
+
+    server = await aiohttp_raw_server(mock_handler)
+    hassio_handler = HassIO(
+        hass.loop,
+        async_get_clientsession(hass),
+        f"{server.host}:{server.port}",
+    )
+
+    api_func = getattr(hassio_handler, api_call)
+    if payload:
+        await api_func(payload)
+    else:
+        await api_func()
+    assert received_request is not None
+
+    assert received_request.method == method
+    assert received_request.headers.get("X-Hass-Source") == "core.handler"
+
+    if method == "GET":
+        assert hdrs.CONTENT_TYPE not in received_request.headers
+        return
+
+    assert hdrs.CONTENT_TYPE in received_request.headers
+    if payload:
+        assert received_request.headers[hdrs.CONTENT_TYPE] == "application/json"
+    else:
+        assert received_request.headers[hdrs.CONTENT_TYPE] == "application/octet-stream"
+
+
+async def test_api_get_yellow_settings(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API ping."""
+    aioclient_mock.get(
+        "http://127.0.0.1/os/boards/yellow",
+        json={
+            "result": "ok",
+            "data": {"disk_led": True, "heartbeat_led": True, "power_led": True},
+        },
+    )
+
+    assert await handler.async_get_yellow_settings(hass) == {
+        "disk_led": True,
+        "heartbeat_led": True,
+        "power_led": True,
+    }
+    assert aioclient_mock.call_count == 1
+
+
+async def test_api_set_yellow_settings(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API ping."""
+    aioclient_mock.post(
+        "http://127.0.0.1/os/boards/yellow",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert (
+        await handler.async_set_yellow_settings(
+            hass, {"disk_led": True, "heartbeat_led": True, "power_led": True}
+        )
+        == {}
+    )
+    assert aioclient_mock.call_count == 1
+
+
+async def test_api_reboot_host(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API ping."""
+    aioclient_mock.post(
+        "http://127.0.0.1/host/reboot",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert await handler.async_reboot_host(hass) == {}
+    assert aioclient_mock.call_count == 1

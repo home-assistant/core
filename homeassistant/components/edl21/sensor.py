@@ -1,22 +1,21 @@
 """Support for EDL21 Smart Meters."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
-import logging
+from typing import Any
 
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     DEGREE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -25,64 +24,82 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "edl21"
-CONF_SERIAL_PORT = "serial_port"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_SERIAL_PORT): cv.string,
-        vol.Optional(CONF_NAME, default=""): cv.string,
-    },
+from .const import (
+    CONF_SERIAL_PORT,
+    DEFAULT_DEVICE_NAME,
+    DOMAIN,
+    LOGGER,
+    SIGNAL_EDL21_TELEGRAM,
 )
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 # OBIS format: A-B:C.D.E*F
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # A=1: Electricity
     # C=0: General purpose objects
     # D=0: Free ID-numbers for utilities
+    # E=0 Ownership ID
     SensorEntityDescription(
-        key="1-0:0.0.9*255", name="Electricity ID", icon="mdi:flash"
+        key="1-0:0.0.0*255",
+        translation_key="ownership_id",
+        icon="mdi:flash",
+        entity_registry_enabled_default=False,
+    ),
+    # E=9: Electrity ID
+    SensorEntityDescription(
+        key="1-0:0.0.9*255",
+        translation_key="electricity_id",
+        icon="mdi:flash",
     ),
     # D=2: Program entries
     SensorEntityDescription(
-        key="1-0:0.2.0*0", name="Configuration program version number", icon="mdi:flash"
+        key="1-0:0.2.0*0",
+        translation_key="configuration_program_version_number",
+        icon="mdi:flash",
     ),
     SensorEntityDescription(
-        key="1-0:0.2.0*1", name="Firmware version number", icon="mdi:flash"
+        key="1-0:0.2.0*1",
+        translation_key="firmware_version_number",
+        icon="mdi:flash",
     ),
     # C=1: Active power +
+    # D=7: Current value
+    # E=0: Total
+    SensorEntityDescription(
+        key="1-0:1.7.0*255",
+        translation_key="positive_active_instantaneous_power",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    # C=1: Active energy +
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
         key="1-0:1.8.0*255",
-        name="Positive active energy total",
+        translation_key="positive_active_energy_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=1: Rate 1
     SensorEntityDescription(
         key="1-0:1.8.1*255",
-        name="Positive active energy in tariff T1",
+        translation_key="positive_active_energy_tariff_t1",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=2: Rate 2
     SensorEntityDescription(
         key="1-0:1.8.2*255",
-        name="Positive active energy in tariff T2",
+        translation_key="positive_active_energy_tariff_t2",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -90,28 +107,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:1.17.0*255",
-        name="Last signed positive active energy total",
+        translation_key="last_signed_positive_active_energy_total",
     ),
-    # C=2: Active power -
+    # C=2: Active energy -
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
         key="1-0:2.8.0*255",
-        name="Negative active energy total",
+        translation_key="negative_active_energy_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=1: Rate 1
     SensorEntityDescription(
         key="1-0:2.8.1*255",
-        name="Negative active energy in tariff T1",
+        translation_key="negative_active_energy_tariff_t1",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=2: Rate 2
     SensorEntityDescription(
         key="1-0:2.8.2*255",
-        name="Negative active energy in tariff T2",
+        translation_key="negative_active_energy_tariff_t2",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -119,14 +136,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # D=7: Instantaneous value
     # E=0: Total
     SensorEntityDescription(
-        key="1-0:14.7.0*255", name="Supply frequency", icon="mdi:sine-wave"
+        key="1-0:14.7.0*255",
+        translation_key="supply_frequency",
+        icon="mdi:sine-wave",
     ),
     # C=15: Active power absolute
     # D=7: Instantaneous value
     # E=0: Total
     SensorEntityDescription(
         key="1-0:15.7.0*255",
-        name="Absolute active instantaneous power",
+        translation_key="absolute_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -135,7 +154,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:16.7.0*255",
-        name="Sum active instantaneous power",
+        translation_key="sum_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -144,7 +163,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:31.7.0*255",
-        name="L1 active instantaneous amperage",
+        translation_key="l1_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -153,7 +172,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:32.7.0*255",
-        name="L1 active instantaneous voltage",
+        translation_key="l1_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -162,7 +181,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:36.7.0*255",
-        name="L1 active instantaneous power",
+        translation_key="l1_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -171,7 +190,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:51.7.0*255",
-        name="L2 active instantaneous amperage",
+        translation_key="l2_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -180,7 +199,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:52.7.0*255",
-        name="L2 active instantaneous voltage",
+        translation_key="l2_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -189,7 +208,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:56.7.0*255",
-        name="L2 active instantaneous power",
+        translation_key="l2_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -198,7 +217,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:71.7.0*255",
-        name="L3 active instantaneous amperage",
+        translation_key="l3_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -207,7 +226,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:72.7.0*255",
-        name="L3 active instantaneous voltage",
+        translation_key="l3_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -216,7 +235,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:76.7.0*255",
-        name="L3 active instantaneous power",
+        translation_key="l3_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -228,26 +247,40 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=15: U(L2) x I(L2)
     # E=26: U(L3) x I(L3)
     SensorEntityDescription(
-        key="1-0:81.7.1*255", name="U(L2)/U(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.1*255",
+        translation_key="u_l2_u_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.2*255", name="U(L3)/U(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.2*255",
+        translation_key="u_l3_u_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.4*255",
+        translation_key="u_l1_i_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.15*255", name="U(L2)/I(L2) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.15*255",
+        translation_key="u_l2_i_l2_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.26*255", name="U(L3)/I(L3) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.26*255",
+        translation_key="u_l3_i_l3_phase_angle",
+        icon="mdi:sine-wave",
     ),
     # C=96: Electricity-related service entries
     SensorEntityDescription(
-        key="1-0:96.1.0*255", name="Metering point ID 1", icon="mdi:flash"
+        key="1-0:96.1.0*255",
+        translation_key="metering_point_id_1",
+        icon="mdi:flash",
     ),
     SensorEntityDescription(
-        key="1-0:96.5.0*255", name="Internal operating status", icon="mdi:flash"
+        key="1-0:96.5.0*255",
+        translation_key="internal_operating_status",
+        icon="mdi:flash",
     ),
 )
 
@@ -264,14 +297,13 @@ SENSOR_UNIT_MAPPING = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EDL21 sensor."""
-    hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
+    hass.data[DOMAIN] = EDL21(hass, config_entry.data, async_add_entities)
     await hass.data[DOMAIN].connect()
 
 
@@ -295,16 +327,20 @@ class EDL21:
     def __init__(
         self,
         hass: HomeAssistant,
-        config: ConfigType,
+        config: Mapping[str, Any],
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
-        self._name = config[CONF_NAME]
+        self._serial_port = config[CONF_SERIAL_PORT]
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
+        LOGGER.debug(
+            "Initialized EDL21 on %s",
+            config[CONF_SERIAL_PORT],
+        )
 
     async def connect(self) -> None:
         """Connect to an EDL21 reader."""
@@ -313,14 +349,14 @@ class EDL21:
     def event(self, message_body) -> None:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
+        LOGGER.debug("Received sml message on %s: %s", self._serial_port, message_body)
 
-        electricity_id = None
-        for telegram in message_body.get("valList", []):
-            if telegram.get("objName") in ("1-0:0.0.9*255", "1-0:96.1.0*255"):
-                electricity_id = telegram.get("value")
-                break
+        electricity_id = message_body["serverId"]
 
         if electricity_id is None:
+            LOGGER.debug(
+                "No electricity id found in sml message on %s", self._serial_port
+            )
             return
         electricity_id = electricity_id.replace(" ", "")
 
@@ -335,19 +371,18 @@ class EDL21:
                 )
             else:
                 entity_description = SENSORS.get(obis)
-                if entity_description and entity_description.name:
-                    name = entity_description.name
-                    if self._name:
-                        name = f"{self._name}: {name}"
-
+                if entity_description:
                     new_entities.append(
                         EDL21Entity(
-                            electricity_id, obis, name, entity_description, telegram
+                            electricity_id,
+                            obis,
+                            entity_description,
+                            telegram,
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at %s",
                         obis,
                         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+edl21%22",
@@ -355,54 +390,29 @@ class EDL21:
                     self._OBIS_BLACKLIST.add(obis)
 
         if new_entities:
-            self._hass.loop.create_task(self.add_entities(new_entities))
-
-    async def add_entities(self, new_entities: list[EDL21Entity]) -> None:
-        """Migrate old unique IDs, then add entities to hass."""
-        registry = er.async_get(self._hass)
-
-        for entity in new_entities:
-            old_entity_id = registry.async_get_entity_id(
-                "sensor", DOMAIN, entity.old_unique_id
-            )
-            if old_entity_id is not None:
-                _LOGGER.debug(
-                    "Migrating unique_id from [%s] to [%s]",
-                    entity.old_unique_id,
-                    entity.unique_id,
-                )
-                if registry.async_get_entity_id("sensor", DOMAIN, entity.unique_id):
-                    registry.async_remove(old_entity_id)
-                else:
-                    registry.async_update_entity(
-                        old_entity_id, new_unique_id=entity.unique_id
-                    )
-
-        self._async_add_entities(new_entities, update_before_add=True)
+            self._async_add_entities(new_entities, update_before_add=True)
 
 
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, electricity_id, obis, name, entity_description, telegram):
+    def __init__(self, electricity_id, obis, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
-        self._name = name
-        self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
-        self._state_attrs = {
-            "status": "status",
-            "valTime": "val_time",
-            "scaler": "scaler",
-            "valueSignature": "value_signature",
-        }
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
+        self._attr_unique_id = f"{electricity_id}_{obis}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._electricity_id)},
+            name=DEFAULT_DEVICE_NAME,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -435,36 +445,12 @@ class EDL21Entity(SensorEntity):
             self._async_remove_dispatcher()
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def old_unique_id(self) -> str:
-        """Return a less unique ID as used in the first version of edl21."""
-        return self._obis
-
-    @property
-    def name(self) -> str | None:
-        """Return a name."""
-        return self._name
-
-    @property
     def native_value(self) -> str:
         """Return the value of the last received telegram."""
         return self._telegram.get("value")
 
     @property
-    def extra_state_attributes(self):
-        """Enumerate supported attributes."""
-        return {
-            self._state_attrs[k]: v
-            for k, v in self._telegram.items()
-            if k in self._state_attrs
-        }
-
-    @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (unit := self._telegram.get("unit")) is None or unit == 0:
             return None

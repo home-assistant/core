@@ -33,12 +33,12 @@ async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
             result1["flow_id"],
             USER_INPUT,
         )
+        await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 1
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "testname"
     assert result2["data"] == USER_INPUT
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
     # Test Duplicate Config Flow

@@ -48,7 +48,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == STATE_OFF
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Button Lock on Device"
+        == f"{CONF_FAKE_NAME} Button lock on device"
     )
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.LOCK
     assert ATTR_STATE_CLASS not in state.attributes
@@ -57,7 +57,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.state == STATE_OFF
     assert (
-        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Button Lock via UI"
+        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Button lock via UI"
     )
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.LOCK
     assert ATTR_STATE_CLASS not in state.attributes

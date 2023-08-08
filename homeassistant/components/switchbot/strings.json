@@ -44,7 +44,7 @@
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "no_devices_found": "No supported SwitchBot devices found in range; If the device is in range, ensure the scanner has active scanning enabled, as SwitchBot devices cannot be discovered with passive scans. Active scans can be disabled once the device is configured. If you need clarification on whether the device is in-range, download the diagnostics for the integration that provides your Bluetooth adapter or proxy and check if the MAC address of the SwitchBot device is present.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "switchbot_unsupported_type": "Unsupported Switchbot Type."
@@ -55,6 +55,90 @@
       "init": {
         "data": {
           "retry_count": "Retry count"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "calibration": {
+        "name": "Calibration"
+      },
+      "door_timeout": {
+        "name": "Timeout"
+      },
+      "door_unclosed_alarm": {
+        "name": "Unclosed alarm"
+      },
+      "door_unlocked_alarm": {
+        "name": "Unlocked alarm"
+      },
+      "door_auto_lock_paused": {
+        "name": "Auto-lock paused"
+      }
+    },
+    "sensor": {
+      "bluetooth_signal": {
+        "name": "Bluetooth signal"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "light_level": {
+        "name": "Light level"
+      }
+    },
+    "cover": {
+      "cover": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "humidifier": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "lock": {
+      "lock": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "switch": {
+      "bot": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          },
+          "switch_mode": {
+            "state": {
+              "true": "Pull/Retract",
+              "false": "Momentary"
+            }
+          }
         }
       }
     }

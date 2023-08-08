@@ -28,8 +28,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import device_registry, entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
@@ -630,7 +633,7 @@ async def _async_get_supported_devices(hass: HomeAssistant) -> dict[str, str]:
     results = await device_automation.async_get_device_automations(
         hass, device_automation.DeviceAutomationType.TRIGGER
     )
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     unsorted: dict[str, str] = {}
     for device_id in results:
         entry = dev_reg.async_get(device_id)
@@ -639,7 +642,7 @@ async def _async_get_supported_devices(hass: HomeAssistant) -> dict[str, str]:
 
 
 def _exclude_by_entity_registry(
-    ent_reg: entity_registry.EntityRegistry,
+    ent_reg: er.EntityRegistry,
     entity_id: str,
     include_entity_category: bool,
     include_hidden: bool,
@@ -661,7 +664,7 @@ def _async_get_matching_entities(
     include_hidden: bool = False,
 ) -> dict[str, str]:
     """Fetch all entities or entities in the given domains."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     return {
         state.entity_id: (
             f"{state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)} ({state.entity_id})"

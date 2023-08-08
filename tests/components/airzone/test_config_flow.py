@@ -10,13 +10,14 @@ from aioairzone.exceptions import (
     SystemOutOfRange,
 )
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.airzone.config_flow import short_mac
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .util import CONFIG, CONFIG_ID1, HVAC_MOCK, HVAC_VERSION_MOCK, HVAC_WEBSERVER_MOCK
 
@@ -46,6 +47,9 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,
     ):
@@ -53,8 +57,8 @@ async def test_form(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
@@ -67,7 +71,7 @@ async def test_form(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == f"Airzone {CONFIG[CONF_HOST]}:{CONFIG[CONF_PORT]}"
         assert result["data"][CONF_HOST] == CONFIG[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG[CONF_PORT]
@@ -89,6 +93,9 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,
     ):
@@ -96,8 +103,8 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
         assert result["errors"] == {CONF_ID: "invalid_system_id"}
 
         mock_hvac.return_value = HVAC_MOCK[API_SYSTEMS][0]
@@ -107,7 +114,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
             result["flow_id"], CONFIG_ID1
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -115,7 +122,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert (
             result["title"]
             == f"Airzone {CONFIG_ID1[CONF_HOST]}:{CONFIG_ID1[CONF_PORT]}"
@@ -172,7 +179,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(
@@ -185,6 +192,9 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,
     ):
@@ -195,7 +205,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: TEST_IP,
         CONF_PORT: TEST_PORT,
@@ -217,7 +227,7 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -234,7 +244,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(
@@ -260,6 +270,9 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,
     ):
@@ -276,7 +289,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == f"Airzone {short_mac(HVAC_WEBSERVER_MOCK[API_MAC])}"
         assert result["data"][CONF_HOST] == TEST_IP
         assert result["data"][CONF_PORT] == TEST_PORT
@@ -297,7 +310,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(
@@ -310,6 +323,9 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,
     ):
@@ -320,7 +336,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "discovered_connection"
         assert result["errors"] == {CONF_ID: "invalid_system_id"}
 
@@ -341,7 +357,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == f"Airzone {short_mac(DHCP_SERVICE_INFO.macaddress)}"
         assert result["data"][CONF_HOST] == TEST_IP
         assert result["data"][CONF_PORT] == TEST_PORT

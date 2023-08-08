@@ -1,6 +1,8 @@
 """Test the jellyfin config flow."""
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.jellyfin.const import CONF_CLIENT_DEVICE_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -10,6 +12,8 @@ from . import async_load_json_fixture
 from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:

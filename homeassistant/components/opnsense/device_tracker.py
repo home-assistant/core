@@ -20,7 +20,7 @@ async def async_get_scanner(
 
 
 class OPNSenseDeviceScanner(DeviceScanner):
-    """This class queries a router running OPNsense."""
+    """Class which queries a router running OPNsense."""
 
     def __init__(self, client, interfaces):
         """Initialize the scanner."""

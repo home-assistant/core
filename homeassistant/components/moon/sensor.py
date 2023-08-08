@@ -2,25 +2,16 @@
 from __future__ import annotations
 
 from astral import moon
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SensorDeviceClass,
-    SensorEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 
 STATE_FIRST_QUARTER = "first_quarter"
 STATE_FULL_MOON = "full_moon"
@@ -42,35 +33,6 @@ MOON_ICONS = {
     STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous",
 }
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Moon sensor."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "removed_yaml",
-        breaks_in_ha_version="2022.12.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="removed_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -85,17 +47,16 @@ class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = "Phase"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [
-        STATE_FIRST_QUARTER,
-        STATE_FULL_MOON,
-        STATE_LAST_QUARTER,
         STATE_NEW_MOON,
-        STATE_WANING_CRESCENT,
-        STATE_WANING_GIBBOUS,
         STATE_WAXING_CRESCENT,
+        STATE_FIRST_QUARTER,
         STATE_WAXING_GIBBOUS,
+        STATE_FULL_MOON,
+        STATE_WANING_GIBBOUS,
+        STATE_LAST_QUARTER,
+        STATE_WANING_CRESCENT,
     ]
     _attr_translation_key = "phase"
 

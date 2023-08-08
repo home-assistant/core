@@ -20,5 +20,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/bthome",
   "iot_class": "local_push",
-  "requirements": ["bthome-ble==2.5.2"]
+  "requirements": ["bthome-ble==3.0.0"]
 }

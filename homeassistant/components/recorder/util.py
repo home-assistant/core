@@ -18,8 +18,9 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 import ciso8601
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
+from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
@@ -110,8 +111,14 @@ def session_scope(
     hass: HomeAssistant | None = None,
     session: Session | None = None,
     exception_filter: Callable[[Exception], bool] | None = None,
+    read_only: bool = False,
 ) -> Generator[Session, None, None]:
-    """Provide a transactional scope around a series of operations."""
+    """Provide a transactional scope around a series of operations.
+
+    read_only is used to indicate that the session is only used for reading
+    data and that no commit is required. It does not prevent the session
+    from writing and is not a security measure.
+    """
     if session is None and hass is not None:
         session = get_instance(hass).get_session()
 
@@ -121,7 +128,7 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.get_transaction():
+        if session.get_transaction() and not read_only:
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
@@ -192,6 +199,7 @@ def execute_stmt_lambda_element(
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int = DEFAULT_YIELD_STATES_ROWS,
+    orm_rows: bool = True,
 ) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
@@ -204,10 +212,13 @@ def execute_stmt_lambda_element(
     specific entities) since they are usually faster
     with .all().
     """
-    executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
         try:
+            if orm_rows:
+                executed = session.execute(stmt)
+            else:
+                executed = session.connection().execute(stmt)
             if use_all:
                 return executed.all()
             return executed.yield_per(yield_per)
@@ -267,9 +278,11 @@ def basic_sanity_check(cursor: SQLiteCursor) -> bool:
 
     for table in TABLES_TO_CHECK:
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
-            cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
+            cursor.execute(f"SELECT * FROM {table};")  # noqa: S608 # not injection
         else:
-            cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
+            cursor.execute(
+                f"SELECT * FROM {table} LIMIT 1;"  # noqa: S608 # not injection
+            )
 
     return True
 
@@ -338,14 +351,14 @@ def move_away_broken_database(dbfile: str) -> None:
         os.rename(path, f"{path}{corrupt_postfix}")
 
 
-def execute_on_connection(dbapi_connection: Any, statement: str) -> None:
+def execute_on_connection(dbapi_connection: DBAPIConnection, statement: str) -> None:
     """Execute a single statement with a dbapi connection."""
     cursor = dbapi_connection.cursor()
     cursor.execute(statement)
     cursor.close()
 
 
-def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
+def query_on_connection(dbapi_connection: DBAPIConnection, statement: str) -> Any:
     """Execute a single statement with a dbapi connection and return the result."""
     cursor = dbapi_connection.cursor()
     cursor.execute(statement)
@@ -451,7 +464,7 @@ def _async_create_mariadb_range_index_regression_issue(
 def setup_connection_for_dialect(
     instance: Recorder,
     dialect_name: str,
-    dbapi_connection: Any,
+    dbapi_connection: DBAPIConnection,
     first_connection: bool,
 ) -> DatabaseEngine | None:
     """Execute statements needed for dialect connection."""
@@ -459,10 +472,10 @@ def setup_connection_for_dialect(
     slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
-            old_isolation = dbapi_connection.isolation_level
-            dbapi_connection.isolation_level = None
+            old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
+            dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
             execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
-            dbapi_connection.isolation_level = old_isolation
+            dbapi_connection.isolation_level = old_isolation  # type: ignore[attr-defined]
             # WAL mode only needs to be setup once
             # instead of every time we open the sqlite connection
             # as its persistent and isn't free to call every time.
@@ -517,11 +530,10 @@ def setup_connection_for_dialect(
                         version,
                     )
 
-            else:
-                if not version or version < MIN_VERSION_MYSQL:
-                    _fail_unsupported_version(
-                        version or version_string, "MySQL", MIN_VERSION_MYSQL
-                    )
+            elif not version or version < MIN_VERSION_MYSQL:
+                _fail_unsupported_version(
+                    version or version_string, "MySQL", MIN_VERSION_MYSQL
+                )
 
             slow_range_in_select = bool(
                 not version
@@ -568,6 +580,17 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
+def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
+    """Return True if the error is retryable."""
+    assert instance.engine is not None
+    return bool(
+        instance.engine.dialect.name == SupportedDialect.MYSQL
+        and isinstance(err.orig, BaseException)
+        and err.orig.args
+        and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
+    )
+
+
 _FuncType = Callable[Concatenate[_RecorderT, _P], bool]
 
 
@@ -585,12 +608,8 @@ def retryable_database_job(
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
-                assert instance.engine is not None
-                if (
-                    instance.engine.dialect.name == SupportedDialect.MYSQL
-                    and err.orig
-                    and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
-                ):
+                if _is_retryable_error(instance, err):
+                    assert isinstance(err.orig, BaseException)
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -608,6 +627,46 @@ def retryable_database_job(
     return decorator
 
 
+_WrappedFuncType = Callable[Concatenate[_RecorderT, _P], None]
+
+
+def database_job_retry_wrapper(
+    description: str, attempts: int = 5
+) -> Callable[[_WrappedFuncType[_RecorderT, _P]], _WrappedFuncType[_RecorderT, _P]]:
+    """Try to execute a database job multiple times.
+
+    This wrapper handles InnoDB deadlocks and lock timeouts.
+
+    This is different from retryable_database_job in that it will retry the job
+    attempts number of times instead of returning False if the job fails.
+    """
+
+    def decorator(
+        job: _WrappedFuncType[_RecorderT, _P]
+    ) -> _WrappedFuncType[_RecorderT, _P]:
+        @functools.wraps(job)
+        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+            for attempt in range(attempts):
+                try:
+                    job(instance, *args, **kwargs)
+                    return
+                except OperationalError as err:
+                    if attempt == attempts - 1 or not _is_retryable_error(
+                        instance, err
+                    ):
+                        raise
+                    assert isinstance(err.orig, BaseException)
+                    _LOGGER.info(
+                        "%s; %s failed, retrying", err.orig.args[1], description
+                    )
+                    time.sleep(instance.db_retry_wait)
+                    # Failed with retryable error
+
+        return wrapper
+
+    return decorator
+
+
 def periodic_db_cleanups(instance: Recorder) -> None:
     """Run any database cleanups that need to happen periodically.
 
@@ -619,6 +678,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:
             connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))
+            connection.execute(text("PRAGMA OPTIMIZE;"))
 
 
 @contextmanager
@@ -779,3 +839,22 @@ def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
     From more-itertools
     """
     return iter(partial(take, chunked_num, iter(iterable)), [])
+
+
+def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:
+    """Get an index by name."""
+    connection = session.connection()
+    inspector = inspect(connection)
+    indexes = inspector.get_indexes(table_name)
+    return next(
+        (
+            possible_index["name"]
+            for possible_index in indexes
+            if possible_index["name"]
+            and (
+                possible_index["name"] == index_name
+                or possible_index["name"].endswith(f"_{index_name}")
+            )
+        ),
+        None,
+    )

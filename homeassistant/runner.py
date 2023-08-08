@@ -11,6 +11,8 @@ import threading
 import traceback
 from typing import Any
 
+import packaging.tags
+
 from . import bootstrap
 from .core import callback
 from .helpers.frame import warn_use
@@ -29,12 +31,11 @@ from .util.thread import deadlock_safe_shutdown
 #
 MAX_EXECUTOR_WORKERS = 64
 TASK_CANCELATION_TIMEOUT = 5
-ALPINE_RELEASE_FILE = "/etc/alpine-release"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class RuntimeConfig:
     """Class to hold the information for running Home Assistant."""
 
@@ -62,7 +63,7 @@ def can_use_pidfd() -> bool:
         return False
     try:
         pid = os.getpid()
-        os.close(os.pidfd_open(pid, 0))  # pylint: disable=no-member
+        os.close(os.pidfd_open(pid, 0))
     except OSError:
         # blocked by security policy like SECCOMP
         return False
@@ -110,7 +111,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
-        loop.set_default_executor = warn_use(  # type: ignore[assignment]
+        loop.set_default_executor = warn_use(  # type: ignore[method-assign]
             loop.set_default_executor, "sets default executor on the event loop"
         )
         return loop
@@ -164,8 +165,9 @@ def _enable_posix_spawn() -> None:
     # The subprocess module does not know about Alpine Linux/musl
     # and will use fork() instead of posix_spawn() which significantly
     # less efficient. This is a workaround to force posix_spawn()
-    # on Alpine Linux which is supported by musl.
-    subprocess._USE_POSIX_SPAWN = os.path.exists(ALPINE_RELEASE_FILE)
+    # when using musl since cpython is not aware its supported.
+    tag = next(packaging.tags.sys_tags())
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform
 
 
 def run(runtime_config: RuntimeConfig) -> int:
@@ -196,7 +198,7 @@ def _cancel_all_tasks_with_timeout(
         return
 
     for task in to_cancel:
-        task.cancel()
+        task.cancel("Final process shutdown")
 
     loop.run_until_complete(asyncio.wait(to_cancel, timeout=timeout))
 

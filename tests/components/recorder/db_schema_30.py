@@ -8,10 +8,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypedDict, cast, overload
+import time
+from typing import Any, Self, TypedDict, cast, overload
 
 import ciso8601
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     JSON,
     BigInteger,
@@ -23,6 +24,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    LargeBinary,
     SmallInteger,
     String,
     Text,
@@ -32,7 +34,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
-from typing_extensions import Self
 
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.const import (
@@ -63,8 +64,10 @@ _LOGGER = logging.getLogger(__name__)
 
 TABLE_EVENTS = "events"
 TABLE_EVENT_DATA = "event_data"
+TABLE_EVENT_TYPES = "event_types"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
+TABLE_STATES_META = "states_meta"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
@@ -75,8 +78,10 @@ TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 ALL_TABLES = [
     TABLE_STATES,
     TABLE_STATE_ATTRIBUTES,
+    TABLE_STATES_META,
     TABLE_EVENTS,
     TABLE_EVENT_DATA,
+    TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
@@ -96,6 +101,9 @@ LAST_UPDATED_INDEX = "ix_states_last_updated"
 ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
+CONTEXT_ID_BIN_MAX_LENGTH = 16
+EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
+STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 
 
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
@@ -193,6 +201,12 @@ class Events(Base):  # type: ignore[misc,valid-type]
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        Index(
+            EVENTS_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
@@ -202,11 +216,27 @@ class Events(Base):  # type: ignore[misc,valid-type]
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used for new rows
     origin_idx = Column(SmallInteger)
     time_fired = Column(DATETIME_TYPE, index=True)
+    time_fired_ts = Column(
+        TIMESTAMP_TYPE, index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    event_type_id = Column(
+        Integer, ForeignKey("event_types.event_type_id"), index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
     event_data_rel = relationship("EventData")
+    event_type_rel = relationship("EventTypes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -303,6 +333,19 @@ class EventData(Base):  # type: ignore[misc,valid-type]
             return {}
 
 
+# *** Not originally in v30, only added for recorder to startup ok
+# This is not being tested by the v30 statistics migration tests
+class EventTypes(Base):  # type: ignore[misc,valid-type]
+    """Event type history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_EVENT_TYPES
+    event_type_id = Column(Integer, Identity(), primary_key=True)
+    event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+
+
 class States(Base):  # type: ignore[misc,valid-type]
     """State change history."""
 
@@ -310,6 +353,12 @@ class States(Base):  # type: ignore[misc,valid-type]
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index(ENTITY_ID_LAST_UPDATED_INDEX, "entity_id", "last_updated"),
+        Index(
+            STATES_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
@@ -323,7 +372,13 @@ class States(Base):  # type: ignore[misc,valid-type]
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
     last_changed = Column(DATETIME_TYPE)
+    last_changed_ts = Column(
+        TIMESTAMP_TYPE
+    )  # *** Not originally in v30, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    last_updated_ts = Column(
+        TIMESTAMP_TYPE, default=time.time, index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
@@ -332,6 +387,19 @@ class States(Base):  # type: ignore[misc,valid-type]
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    metadata_id = Column(
+        Integer, ForeignKey("states_meta.metadata_id"), index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    states_meta_rel = relationship("StatesMeta")
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
@@ -467,6 +535,27 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
             # When json_loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
             return {}
+
+
+# *** Not originally in v30, only added for recorder to startup ok
+# This is not being tested by the v30 statistics migration tests
+class StatesMeta(Base):  # type: ignore[misc,valid-type]
+    """Metadata for states."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_STATES_META
+    metadata_id = Column(Integer, Identity(), primary_key=True)
+    entity_id = Column(String(MAX_LENGTH_STATE_ENTITY_ID))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            "<recorder.StatesMeta("
+            f"id={self.metadata_id}, entity_id='{self.entity_id}'"
+            ")>"
+        )
 
 
 class StatisticsBase:

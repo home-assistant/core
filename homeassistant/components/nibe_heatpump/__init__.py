@@ -5,7 +5,6 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from functools import cached_property
 from typing import Any, Generic, TypeVar
 
 from nibe.coil import Coil, CoilData
@@ -15,6 +14,7 @@ from nibe.connection.nibegw import NibeGW, ProductInfo
 from nibe.exceptions import CoilNotFoundException, ReadException
 from nibe.heatpump import HeatPump, Model, Series
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -54,6 +54,7 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.WATER_HEATER,
 ]
 COIL_READ_RETRIES = 5
 
@@ -62,13 +63,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nibe Heat Pump from a config entry."""
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
+    heatpump.word_swap = entry.data.get(CONF_WORD_SWAP, True)
     await heatpump.initialize()
 
     connection: Connection
     connection_type = entry.data[CONF_CONNECTION_TYPE]
 
     if connection_type == CONF_CONNECTION_TYPE_NIBEGW:
-        heatpump.word_swap = entry.data[CONF_WORD_SWAP]
         connection = NibeGW(
             heatpump,
             entry.data[CONF_IP_ADDRESS],

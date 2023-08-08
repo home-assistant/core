@@ -1,10 +1,12 @@
 """The tests for the Home Assistant HTTP component."""
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
 import logging
-import pathlib
-from unittest.mock import Mock, patch
+from pathlib import Path
+import time
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -19,25 +21,28 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 from tests.typing import ClientSessionGenerator
 
 
-def _setup_broken_ssl_pem_files(tmpdir):
-    test_dir = tmpdir.mkdir("test_broken_ssl")
-    cert_path = pathlib.Path(test_dir) / "cert.pem"
+def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
+    test_dir = tmp_path / "test_broken_ssl"
+    test_dir.mkdir()
+    cert_path = test_dir / "cert.pem"
     cert_path.write_text("garbage")
-    key_path = pathlib.Path(test_dir) / "key.pem"
+    key_path = test_dir / "key.pem"
     key_path.write_text("garbage")
     return cert_path, key_path
 
 
-def _setup_empty_ssl_pem_files(tmpdir):
-    test_dir = tmpdir.mkdir("test_empty_ssl")
-    cert_path = pathlib.Path(test_dir) / "cert.pem"
+def _setup_empty_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path, Path]:
+    test_dir = tmp_path / "test_empty_ssl"
+    test_dir.mkdir()
+    cert_path = test_dir / "cert.pem"
     cert_path.write_text("-")
-    peer_cert_path = pathlib.Path(test_dir) / "peer_cert.pem"
+    peer_cert_path = test_dir / "peer_cert.pem"
     peer_cert_path.write_text("-")
-    key_path = pathlib.Path(test_dir) / "key.pem"
+    key_path = test_dir / "key.pem"
     key_path.write_text("-")
     return cert_path, key_path, peer_cert_path
 
@@ -80,11 +85,13 @@ class TestView(http.HomeAssistantView):
 
 
 async def test_registering_view_while_running(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, aiohttp_unused_port
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
 ) -> None:
     """Test that we can register a view while the server is running."""
     await async_setup_component(
-        hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port()}}
+        hass,
+        http.DOMAIN,
+        {http.DOMAIN: {http.CONF_SERVER_PORT: unused_tcp_port_factory()}},
     )
 
     await hass.async_start()
@@ -150,11 +157,11 @@ async def test_proxy_config_only_trust_proxies(hass: HomeAssistant) -> None:
     )
 
 
-async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmpdir) -> None:
+async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test default ssl profile."""
 
     cert_path, key_path, _ = await hass.async_add_executor_job(
-        _setup_empty_ssl_pem_files, tmpdir
+        _setup_empty_ssl_pem_files, tmp_path
     )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
@@ -175,11 +182,13 @@ async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmpdir) -> None:
     assert len(mock_context.mock_calls) == 1
 
 
-async def test_ssl_profile_change_intermediate(hass: HomeAssistant, tmpdir) -> None:
+async def test_ssl_profile_change_intermediate(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
     """Test setting ssl profile to intermediate."""
 
     cert_path, key_path, _ = await hass.async_add_executor_job(
-        _setup_empty_ssl_pem_files, tmpdir
+        _setup_empty_ssl_pem_files, tmp_path
     )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
@@ -206,11 +215,11 @@ async def test_ssl_profile_change_intermediate(hass: HomeAssistant, tmpdir) -> N
     assert len(mock_context.mock_calls) == 1
 
 
-async def test_ssl_profile_change_modern(hass: HomeAssistant, tmpdir) -> None:
+async def test_ssl_profile_change_modern(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test setting ssl profile to modern."""
 
     cert_path, key_path, _ = await hass.async_add_executor_job(
-        _setup_empty_ssl_pem_files, tmpdir
+        _setup_empty_ssl_pem_files, tmp_path
     )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
@@ -237,10 +246,10 @@ async def test_ssl_profile_change_modern(hass: HomeAssistant, tmpdir) -> None:
     assert len(mock_context.mock_calls) == 1
 
 
-async def test_peer_cert(hass: HomeAssistant, tmpdir) -> None:
+async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test required peer cert."""
     cert_path, key_path, peer_cert_path = await hass.async_add_executor_job(
-        _setup_empty_ssl_pem_files, tmpdir
+        _setup_empty_ssl_pem_files, tmp_path
     )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
@@ -272,12 +281,12 @@ async def test_peer_cert(hass: HomeAssistant, tmpdir) -> None:
 
 
 async def test_emergency_ssl_certificate_when_invalid(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test http can startup with an emergency self signed cert when the current one is broken."""
 
     cert_path, key_path = await hass.async_add_executor_job(
-        _setup_broken_ssl_pem_files, tmpdir
+        _setup_broken_ssl_pem_files, tmp_path
     )
 
     hass.config.safe_mode = True
@@ -303,12 +312,12 @@ async def test_emergency_ssl_certificate_when_invalid(
 
 
 async def test_emergency_ssl_certificate_not_used_when_not_safe_mode(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test an emergency cert is only used in safe mode."""
 
     cert_path, key_path = await hass.async_add_executor_job(
-        _setup_broken_ssl_pem_files, tmpdir
+        _setup_broken_ssl_pem_files, tmp_path
     )
 
     assert (
@@ -320,14 +329,14 @@ async def test_emergency_ssl_certificate_not_used_when_not_safe_mode(
 
 
 async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken.
 
     Ensure we can still start of we cannot determine the external url as well.
     """
     cert_path, key_path = await hass.async_add_executor_job(
-        _setup_broken_ssl_pem_files, tmpdir
+        _setup_broken_ssl_pem_files, tmp_path
     )
     hass.config.safe_mode = True
 
@@ -357,12 +366,12 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 
 
 async def test_invalid_ssl_and_cannot_create_emergency_cert(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken."""
 
     cert_path, key_path = await hass.async_add_executor_job(
-        _setup_broken_ssl_pem_files, tmpdir
+        _setup_broken_ssl_pem_files, tmp_path
     )
     hass.config.safe_mode = True
 
@@ -388,7 +397,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
 
 
 async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken.
 
@@ -399,7 +408,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     """
 
     cert_path, key_path = await hass.async_add_executor_job(
-        _setup_broken_ssl_pem_files, tmpdir
+        _setup_broken_ssl_pem_files, tmp_path
     )
     hass.config.safe_mode = True
 
@@ -436,11 +445,11 @@ async def test_cors_defaults(hass: HomeAssistant) -> None:
 
 
 async def test_storing_config(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, aiohttp_unused_port
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
 ) -> None:
     """Test that we store last working config."""
     config = {
-        http.CONF_SERVER_PORT: aiohttp_unused_port(),
+        http.CONF_SERVER_PORT: unused_tcp_port_factory(),
         "use_x_forwarded_for": True,
         "trusted_proxies": ["192.168.1.100"],
     }
@@ -456,3 +465,58 @@ async def test_storing_config(
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
     assert restored == http.HTTP_SCHEMA(config)
+
+
+async def test_logging(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Testing the access log works."""
+    await asyncio.gather(
+        *(
+            async_setup_component(hass, component, {})
+            for component in ("http", "logger", "api")
+        )
+    )
+    hass.states.async_set("logging.entity", "hello")
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"aiohttp.access": "info"},
+        blocking=True,
+    )
+    client = await hass_client()
+    response = await client.get("/api/states/logging.entity")
+    assert response.status == HTTPStatus.OK
+
+    assert "GET /api/states/logging.entity" in caplog.text
+    caplog.clear()
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"aiohttp.access": "warning"},
+        blocking=True,
+    )
+    response = await client.get("/api/states/logging.entity")
+    assert response.status == HTTPStatus.OK
+    assert "GET /api/states/logging.entity" not in caplog.text
+
+
+async def test_hass_access_logger_at_info_level(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that logging happens at info level."""
+    test_logger = logging.getLogger("test.aiohttp.logger")
+    logger = http.HomeAssistantAccessLogger(test_logger)
+    mock_request = MagicMock()
+    response = AiohttpClientMockResponse(
+        "POST", "http://127.0.0.1", status=HTTPStatus.OK
+    )
+    setattr(response, "body_length", 42)
+    logger.log(mock_request, response, time.time())
+    assert "42" in caplog.text
+    caplog.clear()
+    test_logger.setLevel(logging.WARNING)
+    logger.log(mock_request, response, time.time())
+    assert "42" not in caplog.text

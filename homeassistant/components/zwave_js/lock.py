@@ -13,12 +13,14 @@ from zwave_js_server.const.command_class.lock import (
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
     DoorLockMode,
 )
+from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.util.lock import clear_usercode, set_usercode
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -97,14 +99,17 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     @property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
-        if self.info.primary_value.value is None:
+        value = self.info.primary_value
+        if value.value is None or (
+            value.command_class == CommandClass.DOOR_LOCK
+            and value.value == DoorLockMode.UNKNOWN
+        ):
             # guard missing value
             return None
-        return int(
-            LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP[
-                CommandClass(self.info.primary_value.command_class)
-            ]
-        ) == int(self.info.primary_value.value)
+        return (
+            LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP[CommandClass(value.command_class)]
+            == self.info.primary_value.value
+        )
 
     async def _set_lock_state(self, target_state: str, **kwargs: Any) -> None:
         """Set the lock state."""
@@ -114,7 +119,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             ]
         )
         if target_value is not None:
-            await self.info.node.async_set_value(
+            await self._async_set_value(
                 target_value,
                 STATE_TO_ZWAVE_MAP[self.info.primary_value.command_class][target_state],
             )
@@ -129,10 +134,20 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
 
     async def async_set_lock_usercode(self, code_slot: int, usercode: str) -> None:
         """Set the usercode to index X on the lock."""
-        await set_usercode(self.info.node, code_slot, usercode)
+        try:
+            await set_usercode(self.info.node, code_slot, usercode)
+        except BaseZwaveJSServerError as err:
+            raise HomeAssistantError(
+                f"Unable to set lock usercode on code_slot {code_slot}: {err}"
+            ) from err
         LOGGER.debug("User code at slot %s set", code_slot)
 
     async def async_clear_lock_usercode(self, code_slot: int) -> None:
         """Clear the usercode at index X on the lock."""
-        await clear_usercode(self.info.node, code_slot)
+        try:
+            await clear_usercode(self.info.node, code_slot)
+        except BaseZwaveJSServerError as err:
+            raise HomeAssistantError(
+                f"Unable to clear lock usercode on code_slot {code_slot}: {err}"
+            ) from err
         LOGGER.debug("User code at slot %s cleared", code_slot)
