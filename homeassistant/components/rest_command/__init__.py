@@ -132,8 +132,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     headers=headers,
                     timeout=timeout,
                 ) as response:
-                    return_data: ServiceResponse = (
-                        {
+                    if service.return_response:
+                        return_data: ServiceResponse = {
                             "status": response.status,
                             "headers": [
                                 {"key": item[0], "value": item[1]}
@@ -144,9 +144,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             ),
                             "url": str(response.url),
                         }
-                        if service.return_response
-                        else None
-                    )
+                    else:
+                        return_data = None
 
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
