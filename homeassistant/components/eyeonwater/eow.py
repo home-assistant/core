@@ -102,7 +102,7 @@ class Meter:
         """Define attributes."""
         return self.meter_info
 
-    def get_flags(self, flag) -> bool:
+    def get_flags(self, flag: str) -> bool:
         """Define flags."""
         flags = self.reading_data["flags"]
         if flag not in flags:
