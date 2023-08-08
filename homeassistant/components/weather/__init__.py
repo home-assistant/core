@@ -5,9 +5,10 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import wraps
 import inspect
 import logging
-from typing import Any, Final, Literal, Required, TypedDict, final
+from typing import Any, Final, Literal, Required, Self, TypedDict, final
 
 import voluptuous as vol
 
@@ -271,9 +272,25 @@ class WeatherEntity(Entity):
     _weather_option_precipitation_unit: str | None = None
     _weather_option_wind_speed_unit: str | None = None
 
+    def __init__(self) -> None:
+        """Initialize."""
+        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
+
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
+
+        # Make sure __init__ is called
+        orig_init = cls.__init__
+
+        @wraps(orig_init)
+        def __init__(self: Self, *args: Any, **kwargs: Any) -> None:
+            super(self.__class__, self).__init__()
+            orig_init(self, *args, **kwargs)
+
+        setattr(cls, "__init__", __init__)
+
+        # Check for deprecated features
         _reported = False
         if any(
             method in cls.__dict__
@@ -326,7 +343,6 @@ class WeatherEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
         await super().async_internal_added_to_hass()
-        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
         if not self.registry_entry:
             return
         self.async_registry_entry_updated()
@@ -1072,12 +1088,6 @@ class WeatherEntity(Entity):
         self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
     ) -> None:
         """Push updated forecast to all listeners."""
-        if not hasattr(self, "_forecast_listeners"):
-            # Required for entities initiated with `update_before_add`
-            # as `self._forecast_listeners` has not yet been set.
-            # `async_internal_added_to_hass()` will execute once entity has been added.
-            return
-
         if forecast_types is None:
             forecast_types = {"daily", "hourly", "twice_daily"}
         for forecast_type in forecast_types:
