@@ -98,7 +98,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         await self.async_base_added_to_hass()
         state = await self.async_get_last_sensor_data()
         if state:
-            self._attr_native_value = state.native_value  # pragma: no cover
+            self._attr_native_value = state.native_value
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
