@@ -72,7 +72,6 @@ class DevoloImageEntity(DevoloCoordinatorEntity[WifiGuestAccessGet], ImageEntity
     """Representation of a devolo image."""
 
     _attr_content_type = "image/svg+xml"
-    _data: WifiGuestAccessGet | None = None
 
     def __init__(
         self,
@@ -85,11 +84,16 @@ class DevoloImageEntity(DevoloCoordinatorEntity[WifiGuestAccessGet], ImageEntity
         self.entity_description: DevoloImageEntityDescription = description
         super().__init__(entry, coordinator, device)
         ImageEntity.__init__(self, coordinator.hass)
+        self._attr_image_last_updated = dt_util.utcnow()
+        self._data = self.coordinator.data
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self._data != self.coordinator.data:
+        if (
+            self._data.ssid != self.coordinator.data.ssid
+            or self._data.key != self.coordinator.data.key
+        ):
             self._data = self.coordinator.data
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
