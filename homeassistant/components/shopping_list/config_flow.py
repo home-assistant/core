@@ -10,7 +10,7 @@ from .const import DOMAIN
 
 
 class ShoppingListFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Config flow for the shooping list integrations."""
+    """Config flow for the shopping list integration."""
 
     VERSION = 1
 
