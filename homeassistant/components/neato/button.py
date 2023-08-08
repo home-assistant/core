@@ -1,8 +1,6 @@
 """Support for Neato buttons."""
 from __future__ import annotations
 
-import logging
-
 from pybotvac import Robot
 
 from homeassistant.components.button import ButtonEntity
@@ -14,8 +12,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import NEATO_DOMAIN, NEATO_ROBOTS
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -26,7 +22,6 @@ async def async_setup_entry(
         for robot in hass.data[NEATO_ROBOTS]
     ]
 
-    _LOGGER.debug("Adding vacuum buttons %s", entities)
     async_add_entities(entities, True)
 
 
