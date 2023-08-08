@@ -150,7 +150,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         int, vol.Range(min=1, max=20)
                     ),
                     vol.Optional(CONF_HEADLINE_FILTER, default=""): cv.string,
-                    vol.Optional(CONF_AREA_FILTER, default=""): cv.string,
                 }
             ),
             errors=errors,
