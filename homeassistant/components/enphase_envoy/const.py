@@ -8,8 +8,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "enphase_envoy"
 
-PLATFORMS = [Platform.SENSOR]
-
-CONF_TOKEN = "token"
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 INVALID_AUTH_ERRORS = (EnvoyAuthenticationError, EnvoyAuthenticationRequired)

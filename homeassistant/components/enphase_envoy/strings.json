@@ -22,6 +22,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "communicating": {
+        "name": "Communicating"
+      },
+      "dc_switch": {
+        "name": "DC Switch"
+      },
+      "operating": {
+        "name": "Operating"
+      }
+    },
     "sensor": {
       "last_reported": {
         "name": "Last reported"

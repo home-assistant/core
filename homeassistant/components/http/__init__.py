@@ -52,6 +52,7 @@ from .const import (  # noqa: F401
     KEY_HASS_USER,
 )
 from .cors import setup_cors
+from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
 from .headers import setup_headers
 from .request_context import current_request, setup_request_context

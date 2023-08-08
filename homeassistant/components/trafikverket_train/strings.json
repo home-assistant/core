@@ -9,7 +9,8 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_station": "Could not find a station with the specified name",
       "more_stations": "Found multiple stations with the specified name",
-      "invalid_time": "Invalid time provided",
+      "no_trains": "No train found",
+      "multiple_trains": "Multiple trains found",
       "incorrect_api_key": "Invalid API key for selected account"
     },
     "step": {
@@ -20,6 +21,9 @@
           "from": "From station",
           "time": "Time (optional)",
           "weekday": "Days"
+        },
+        "data_description": {
+          "time": "Set time to search specifically at this time of day, must be exact time as scheduled train departure"
         }
       },
       "reauth_confirm": {
