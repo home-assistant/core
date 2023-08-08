@@ -249,7 +249,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.14
+aiohomekit==2.6.15
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -378,7 +378,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.5.3
+airthings-ble==0.5.6-2
 
 # homeassistant.components.airthings
 airthings-cloud==0.1.0
@@ -500,7 +500,7 @@ beautifulsoup4==4.11.1
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.8
+bellows==0.35.9
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.13.9
@@ -1429,7 +1429,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.31.1
+plugwise==0.31.9
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1450,7 +1450,7 @@ prayer-times-calculator==0.0.6
 proliphix==0.4.1
 
 # homeassistant.components.prometheus
-prometheus-client==0.7.1
+prometheus-client==0.17.1
 
 # homeassistant.components.proxmoxve
 proxmoxer==2.0.1
@@ -1560,7 +1560,7 @@ pyairnow==1.2.1
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
-pyairvisual==2022.12.1
+pyairvisual==2023.08.1
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
@@ -1584,7 +1584,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.6
 
 # homeassistant.components.neato
-pybotvac==0.0.23
+pybotvac==0.0.24
 
 # homeassistant.components.braviatv
 pybravia==0.3.3
@@ -1662,7 +1662,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==0.14.1
+pyenphase==0.15.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2725,7 +2725,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.2.3
 
 # homeassistant.components.august
-yalexs==1.5.1
+yalexs==1.5.2
 
 # homeassistant.components.yeelight
 yeelight==0.7.13
