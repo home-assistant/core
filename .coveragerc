@@ -772,6 +772,7 @@ omit =
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py
+    homeassistant/components/neato/button.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/__init__.py
