@@ -410,25 +410,6 @@ class GoogleCalendarEntity(
         (event, _) = self._event_with_offset()
         return event
 
-    def _event_with_offset(
-        self,
-    ) -> tuple[CalendarEvent | None, timedelta | None]:
-        """Get the calendar event and offset if any."""
-        if api_event := next(
-            filter(
-                self._event_filter,
-                self.coordinator.upcoming or [],
-            ),
-            None,
-        ):
-            event = _get_calendar_event(api_event)
-            if self._offset:
-                (event.summary, offset_value) = extract_offset(
-                    event.summary, self._offset
-                )
-            return event, offset_value
-        return None, None
-
     def _event_filter(self, event: Event) -> bool:
         """Return True if the event is visible."""
         if self._ignore_availability:
@@ -438,6 +419,7 @@ class GoogleCalendarEntity(
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+
         # We do not ask for an update with async_add_entities()
         # because it will update disabled entities. This is started as a
         # task to let if sync in the background without blocking startup
@@ -456,6 +438,25 @@ class GoogleCalendarEntity(
             _get_calendar_event(event)
             for event in filter(self._event_filter, result_items)
         ]
+
+    def _event_with_offset(
+        self,
+    ) -> tuple[CalendarEvent | None, timedelta | None]:
+        """Get the calendar event and offset if any."""
+        if api_event := next(
+            filter(
+                self._event_filter,
+                self.coordinator.upcoming or [],
+            ),
+            None,
+        ):
+            event = _get_calendar_event(api_event)
+            if self._offset:
+                (event.summary, offset_value) = extract_offset(
+                    event.summary, self._offset
+                )
+            return event, offset_value
+        return None, None
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""

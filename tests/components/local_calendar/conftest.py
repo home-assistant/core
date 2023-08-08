@@ -10,13 +10,12 @@ import urllib
 from aiohttp import ClientWebSocketResponse
 import pytest
 
-from homeassistant.auth.models import Credentials
 from homeassistant.components.local_calendar import LocalCalendarStore
 from homeassistant.components.local_calendar.const import CONF_CALENDAR_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import CLIENT_ID, MockConfigEntry, MockUser
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CALENDAR_NAME = "Light Schedule"
@@ -86,31 +85,12 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(domain=DOMAIN, data={CONF_CALENDAR_NAME: CALENDAR_NAME})
 
 
-async def _setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
+@pytest.fixture(name="setup_integration")
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the integration."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-
-
-@pytest.fixture(name="setup_integration")
-async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Set up the integration."""
-    await _setup_integration(hass, config_entry)
-
-
-@pytest.fixture(name="setup_integration_func")
-async def setup_integration_func(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Callable[[], Awaitable[None]]:
-    """Fixture that will set up the integration."""
-
-    async def _func():
-        await _setup_integration(hass, config_entry)
-
-    return _func
 
 
 GetEventsFn = Callable[[str, str], Awaitable[list[dict[str, Any]]]]
@@ -174,37 +154,18 @@ class Client:
         return resp.get("result")
 
 
-async def generate_new_hass_access_token(
-    hass: HomeAssistant,
-    hass_admin_user: MockUser,
-    hass_admin_credential: Credentials,
-) -> str:
-    """Return an access token to access Home Assistant."""
-    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
-
-    refresh_token = await hass.auth.async_create_refresh_token(
-        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
-    )
-    return hass.auth.async_create_access_token(refresh_token)
-
-
 ClientFixture = Callable[[], Awaitable[Client]]
 
 
 @pytest.fixture
 async def ws_client(
     hass: HomeAssistant,
-    hass_admin_user: MockUser,
-    hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
 ) -> ClientFixture:
     """Fixture for creating the test websocket client."""
 
     async def create_client() -> Client:
-        access_token = await generate_new_hass_access_token(
-            hass, hass_admin_user, hass_admin_credential
-        )
-        ws_client = await hass_ws_client(hass, access_token=access_token)
+        ws_client = await hass_ws_client(hass)
         return Client(ws_client)
 
     return create_client

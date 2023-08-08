@@ -1,7 +1,6 @@
 """Tests for calendar platform of local calendar."""
 
 import datetime
-import logging
 import textwrap
 
 import pytest
@@ -20,8 +19,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_empty_calendar(

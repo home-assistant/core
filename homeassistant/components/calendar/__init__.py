@@ -25,6 +25,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -518,13 +519,14 @@ class CalendarEntity(Entity):
 
         return STATE_OFF
 
-    async def async_update_ha_state(self, force_refresh: bool = False) -> None:
-        """Update Home Assistant with current state of entity.
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine.
 
         This sets up listeners to handle state transitions for start or end of
         the current or upcoming event.
         """
-        await super().async_update_ha_state(force_refresh)
+        super().async_write_ha_state()
 
         for unsub in self._alarm_unsubs:
             unsub()
@@ -692,7 +694,6 @@ async def handle_calendar_event_create(
             )
         )
         return
-    _LOGGER.debug("async_create_event: %s", msg[CONF_EVENT])
     try:
         await entity.async_create_event(**msg[CONF_EVENT])
     except HomeAssistantError as ex:

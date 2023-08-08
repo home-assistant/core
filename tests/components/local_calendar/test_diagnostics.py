@@ -8,11 +8,23 @@ from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_ENTITY, Client, generate_new_hass_access_token
+from .conftest import TEST_ENTITY, Client
 
-from tests.common import MockConfigEntry, MockUser
+from tests.common import CLIENT_ID, MockConfigEntry, MockUser
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+
+async def generate_new_hass_access_token(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_admin_credential: Credentials
+) -> str:
+    """Return an access token to access Home Assistant."""
+    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
+    return hass.auth.async_create_access_token(refresh_token)
 
 
 def _get_test_client_generator(
