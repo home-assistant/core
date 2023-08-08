@@ -33,10 +33,13 @@ class PingDomainData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ping integration."""
-    hass.data.setdefault(DOMAIN, {})
-
-    hass.data[DOMAIN] = PingDomainData(
-        privileged=await hass.async_add_executor_job(_can_use_icmp_lib_with_privilege),
+    hass.data.setdefault(
+        DOMAIN,
+        PingDomainData(
+            privileged=await hass.async_add_executor_job(
+                _can_use_icmp_lib_with_privilege
+            ),
+        ),
     )
 
     return True

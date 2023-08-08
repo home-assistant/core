@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -22,11 +20,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import PingDomainData
-from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DOMAIN
+from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 from .ping import PingDataICMPLib, PingDataSubProcess
-
-_LOGGER = logging.getLogger(__name__)
-
 
 ATTR_ROUND_TRIP_TIME_AVG = "round_trip_time_avg"
 ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
@@ -34,21 +29,9 @@ ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
 DEFAULT_NAME = "Ping"
-DEFAULT_PING_COUNT = 5
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
 PARALLEL_UPDATES = 50
-
-PING_MATCHER = re.compile(
-    r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)"
-)
-
-PING_MATCHER_BUSYBOX = re.compile(
-    r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)"
-)
-
-WIN32_PING_MATCHER = re.compile(r"(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms")
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -126,7 +109,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the ICMP checo request."""
+        """Return the state attributes of the ICMP echo request."""
         if self._ping.data is None:
             return None
         return {
