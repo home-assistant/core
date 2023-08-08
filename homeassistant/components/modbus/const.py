@@ -18,6 +18,7 @@ CONF_CLIMATES = "climates"
 CONF_CLOSE_COMM_ON_ERROR = "close_comm_on_error"
 CONF_DATA_TYPE = "data_type"
 CONF_FANS = "fans"
+CONF_HUB = "hub"
 CONF_INPUT_TYPE = "input_type"
 CONF_LAZY_ERROR = "lazy_error_count"
 CONF_MAX_TEMP = "max_temp"
@@ -72,7 +73,7 @@ UDP = "udp"
 
 # service call attributes
 ATTR_ADDRESS = CONF_ADDRESS
-ATTR_HUB = "hub"
+ATTR_HUB = CONF_HUB
 ATTR_UNIT = "unit"
 ATTR_SLAVE = "slave"
 ATTR_VALUE = "value"
