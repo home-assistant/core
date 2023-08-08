@@ -347,30 +347,35 @@ class WeatherFlowSensorEntity(SensorEntity):
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-        attr = getattr(
+
+        # Extract raw sensor data
+        raw_sensor_data = getattr(
             self.device,
             self.entity_description.key
             if self.entity_description.attr is None
             else self.entity_description.attr,
         )
 
-        if attr is None:
-            return attr
+        if raw_sensor_data is None:
+            return raw_sensor_data
 
+        # Utilize the internal conversion of pyweatherudp to extract correct sensor values
         if (
             self.hass.config.units is not METRIC_SYSTEM
             and (function := self.entity_description.conversion_fn) is not None
         ) or (function := self.entity_description.value_fn) is not None:
-            attr = function(attr)
+            raw_sensor_data = function(raw_sensor_data)
 
-        if isinstance(attr, Quantity):
-            attr = attr.m
-        elif isinstance(attr, Enum):
-            attr = attr.name
+        if isinstance(raw_sensor_data, Quantity):
+            sensor_value = raw_sensor_data.magnitude
+            if (decimals := self.entity_description.decimals) is not None:
+                sensor_value = round(sensor_value, decimals)
+            return sensor_value
 
-        if (decimals := self.entity_description.decimals) is not None:
-            attr = round(attr, decimals)
-        return attr
+        if isinstance(raw_sensor_data, Enum):
+            sensor_value = raw_sensor_data.name
+
+        return sensor_value
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""

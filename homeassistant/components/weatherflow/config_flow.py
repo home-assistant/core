@@ -35,7 +35,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         event.set()
 
     async with WeatherFlowListener(host) as client:
-        LOGGER.info("Registering EVENT_DISCOVERED_FUNCTION")
+        LOGGER.debug("Registering EVENT_DISCOVERED_FUNCTION")
         client.on(EVENT_DEVICE_DISCOVERED, lambda _: found())
         try:
             async with timeout(10):
