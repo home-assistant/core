@@ -14,7 +14,7 @@ import async_timeout
 
 from homeassistant.components import event
 from homeassistant.const import MATCH_ALL, STATE_ON
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
@@ -159,12 +159,14 @@ class AlexaResponse:
     @property
     def name(self) -> str:
         """Return the name of this response."""
-        return self._response[API_EVENT][API_HEADER]["name"]
+        name: str = self._response[API_EVENT][API_HEADER]["name"]
+        return name
 
     @property
     def namespace(self) -> str:
         """Return the namespace of this response."""
-        return self._response[API_EVENT][API_HEADER]["namespace"]
+        namespace: str = self._response[API_EVENT][API_HEADER]["namespace"]
+        return namespace
 
     def set_correlation_token(self, token: str) -> None:
         """Set the correlationToken.
@@ -196,9 +198,10 @@ class AlexaResponse:
         """
         self._response[API_EVENT][API_ENDPOINT] = endpoint
 
-    def _properties(self):
-        context = self._response.setdefault(API_CONTEXT, {})
-        return context.setdefault("properties", [])
+    def _properties(self) -> list[dict[str, Any]]:
+        context: dict[str, Any] = self._response.setdefault(API_CONTEXT, {})
+        properties: list[dict[str, Any]] = context.setdefault("properties", [])
+        return properties
 
     def add_context_property(self, prop: dict[str, Any]) -> None:
         """Add a property to the response context.
@@ -236,7 +239,7 @@ class AlexaResponse:
 
 async def async_enable_proactive_mode(
     hass: HomeAssistant, smart_home_config: AbstractConfig
-):
+) -> CALLBACK_TYPE | None:
     """Enable the proactive mode.
 
     Proactive mode makes this component report state changes to Alexa.
