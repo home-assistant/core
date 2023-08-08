@@ -32,13 +32,12 @@ async def test_image_setup(hass: HomeAssistant) -> None:
 
     assert (
         hass.states.get(f"{DOMAIN}.{device_name}_guest_wifi_credentials_as_qr_code")
-        is None
+        is not None
     )
 
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
 async def test_guest_wifi_qr(
     hass: HomeAssistant,

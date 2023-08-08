@@ -41,7 +41,6 @@ IMAGE_TYPES: dict[str, DevoloImageEntityDescription] = {
     IMAGE_GUEST_WIFI: DevoloImageEntityDescription(
         key=IMAGE_GUEST_WIFI,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         image_func=partial(wifi_qr_code, scale=QR_CODE_SCALE),
     )
 }
