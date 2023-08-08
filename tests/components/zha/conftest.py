@@ -122,12 +122,19 @@ def zigpy_app_controller():
 
     # Create a fake coordinator device
     dev = app.add_device(nwk=app.state.node_info.nwk, ieee=app.state.node_info.ieee)
+    dev.node_desc = zdo_t.NodeDescriptor()
+    dev.node_desc.logical_type = zdo_t.LogicalType.Coordinator
+    dev.manufacturer = "Coordinator Manufacturer"
+    dev.model = "Coordinator Model"
+
     ep = dev.add_endpoint(1)
     ep.add_input_cluster(Basic.cluster_id)
 
     with patch("zigpy.device.Device.request"), patch.object(
         app, "permit", autospec=True
-    ), patch.object(app, "permit_with_key", autospec=True):
+    ), patch.object(app, "startup", wraps=app.startup), patch.object(
+        app, "permit_with_key", autospec=True
+    ):
         yield app
 
 

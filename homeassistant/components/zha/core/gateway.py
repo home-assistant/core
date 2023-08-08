@@ -212,7 +212,8 @@ class ZHAGateway:
         coordinator = self._find_coordinator_device()
         loaded_groups = False
 
-        # We can only load groups if the coordinator's model has been stored in the DB
+        # We can only load groups early if the coordinator's model info has been stored
+        # in the zigpy database
         if coordinator.model is not None:
             self.coordinator_zha_device = self._async_get_or_create_device(
                 coordinator, restored=True
