@@ -52,6 +52,7 @@ API_ENDPOINT = "/api/prometheus"
 
 DOMAIN = "prometheus"
 CONF_FILTER = "filter"
+CONF_REQUIRES_AUTH = "requires_auth"
 CONF_PROM_NAMESPACE = "namespace"
 CONF_COMPONENT_CONFIG = "component_config"
 CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
@@ -70,6 +71,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
                 vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
+                vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
                 vol.Optional(CONF_DEFAULT_METRIC): cv.string,
                 vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
                 vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
@@ -90,7 +92,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
-    hass.http.register_view(PrometheusView(prometheus_client))
+    hass.http.register_view(
+        PrometheusView(prometheus_client, config[DOMAIN][CONF_REQUIRES_AUTH])
+    )
 
     conf = config[DOMAIN]
     entity_filter = conf[CONF_FILTER]
@@ -650,8 +654,9 @@ class PrometheusView(HomeAssistantView):
     url = API_ENDPOINT
     name = "api:prometheus"
 
-    def __init__(self, prometheus_cli):
+    def __init__(self, prometheus_cli, requires_auth: bool) -> None:
         """Initialize Prometheus view."""
+        self.requires_auth = requires_auth
         self.prometheus_cli = prometheus_cli
 
     async def get(self, request):
