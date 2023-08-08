@@ -758,7 +758,9 @@ async def async_api_previous(
     return directive.response()
 
 
-def temperature_from_object(hass: ha.HomeAssistant, temp_obj, interval=False):
+def temperature_from_object(
+    hass: ha.HomeAssistant, temp_obj: dict[str, Any], interval: bool = False
+) -> float:
     """Get temperature from Temperature object in requested unit."""
     to_unit = hass.config.units.temperature_unit
     from_unit = UnitOfTemperature.CELSIUS

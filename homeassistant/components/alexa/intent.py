@@ -129,7 +129,8 @@ async def async_handle_message(
     if not (handler := HANDLERS.get(req_type)):
         raise UnknownRequest(f"Received unknown request {req_type}")
 
-    return await handler(hass, message)
+    response: dict[str, Any] = await handler(hass, message)
+    return response
 
 
 @HANDLERS.register("SessionEndedRequest")
@@ -282,7 +283,7 @@ class AlexaIntentResponse:
 
         self.speech = {"type": speech_type.value, key: text}
 
-    def add_reprompt(self, speech_type: SpeechType, text) -> None:
+    def add_reprompt(self, speech_type: SpeechType, text: str) -> None:
         """Add reprompt if user does not answer."""
         assert self.reprompt is None
 
