@@ -8,7 +8,7 @@ from pyezviz.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -61,21 +61,13 @@ class EzvizLight(EzvizEntity, LightEntity):
         )
         self._attr_unique_id = f"{serial}_Light"
         self._attr_name = "Light"
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return round(
+        self._attr_is_on = self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
+        self._attr_brightness = round(
             percentage_to_ranged_value(
                 BRIGHTNESS_RANGE,
                 self.coordinator.data[self._serial]["alarm_light_luminance"],
             )
         )
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the light."""
-        return self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
@@ -85,41 +77,55 @@ class EzvizLight(EzvizEntity, LightEntity):
                     BRIGHTNESS_RANGE, kwargs[ATTR_BRIGHTNESS]
                 )
 
-                update_ok = await self.hass.async_add_executor_job(
+                if await self.hass.async_add_executor_job(
                     self.coordinator.ezviz_client.set_floodlight_brightness,
                     self._serial,
                     data,
-                )
-            else:
-                update_ok = await self.hass.async_add_executor_job(
-                    self.coordinator.ezviz_client.switch_status,
-                    self._serial,
-                    DeviceSwitchType.ALARM_LIGHT.value,
-                    1,
-                )
+                ):
+                    self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+
+            if await self.hass.async_add_executor_job(
+                self.coordinator.ezviz_client.switch_status,
+                self._serial,
+                DeviceSwitchType.ALARM_LIGHT.value,
+                1,
+            ):
+                self._attr_is_on = True
+                self.async_write_ha_state()
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
                 f"Failed to turn on light {self._attr_name}"
             ) from err
 
-        if update_ok:
-            await self.coordinator.async_request_refresh()
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         try:
-            update_ok = await self.hass.async_add_executor_job(
+            if await self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.switch_status,
                 self._serial,
                 DeviceSwitchType.ALARM_LIGHT.value,
                 0,
-            )
+            ):
+                self._attr_is_on = False
+                self.async_write_ha_state()
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
                 f"Failed to turn off light {self._attr_name}"
             ) from err
 
-        if update_ok:
-            await self.coordinator.async_request_refresh()
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self.data["switches"].get(DeviceSwitchType.ALARM_LIGHT.value)
+
+        if isinstance(self.data["alarm_light_luminance"], int):
+            self._attr_brightness = round(
+                percentage_to_ranged_value(
+                    BRIGHTNESS_RANGE,
+                    self.data["alarm_light_luminance"],
+                )
+            )
+
+        super()._handle_coordinator_update()

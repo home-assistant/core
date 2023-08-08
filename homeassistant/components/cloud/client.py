@@ -230,7 +230,7 @@ class CloudClient(Interface):
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
         aconfig = await self.get_alexa_config()
-        return await alexa_smart_home.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
+        return await alexa_smart_home.async_handle_message(
             self._hass,
             aconfig,
             payload,

@@ -1857,11 +1857,6 @@ async def test_device_name_defaulting_config_entry(
             "name": "bla",
             "default_name": "yo",
         },
-        # Invalid configuration URL
-        {
-            "identifiers": {("hue", "1234")},
-            "configuration_url": "foo://192.168.0.100/config",
-        },
     ],
 )
 async def test_device_type_error_checking(

@@ -59,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data = RuntimeEntryData(
         client=cli,
         entry_id=entry.entry_id,
+        title=entry.title,
         store=domain_data.get_or_create_store(hass, entry),
         original_options=dict(entry.options),
     )

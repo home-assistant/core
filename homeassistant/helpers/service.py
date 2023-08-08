@@ -666,6 +666,10 @@ async def async_get_all_descriptions(
                     f"component.{domain}.services.{service_name}.fields.{field_name}.description"
                 ):
                     field_schema["description"] = desc
+                if example := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.example"
+                ):
+                    field_schema["example"] = example
 
             if "target" in yaml_description:
                 description["target"] = yaml_description["target"]

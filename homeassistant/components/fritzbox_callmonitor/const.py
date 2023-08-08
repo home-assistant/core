@@ -1,7 +1,7 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
+from enum import StrEnum
 from typing import Final
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
 
 

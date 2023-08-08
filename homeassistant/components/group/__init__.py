@@ -28,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Event,
     HomeAssistant,
     ServiceCall,
     State,
@@ -38,13 +37,16 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
 
 from .const import CONF_HIDE_MEMBERS
@@ -737,7 +739,9 @@ class Group(Entity):
         """Handle removal from Home Assistant."""
         self._async_stop()
 
-    async def _async_state_changed_listener(self, event: Event) -> None:
+    async def _async_state_changed_listener(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Respond to a member state changing.
 
         This method must be run in the event loop.
@@ -748,7 +752,7 @@ class Group(Entity):
 
         self.async_set_context(event.context)
 
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             # The state was removed from the state machine
             self._reset_tracked_state()
 

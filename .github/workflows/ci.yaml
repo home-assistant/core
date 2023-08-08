@@ -32,9 +32,9 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.8
-  DEFAULT_PYTHON: "3.10"
-  ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
+  HA_SHORT_VERSION: 2023.9
+  DEFAULT_PYTHON: "3.11"
+  ALL_PYTHON_VERSIONS: "['3.11']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support

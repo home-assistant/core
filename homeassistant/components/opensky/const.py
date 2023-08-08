@@ -1,6 +1,10 @@
 """OpenSky constants."""
+from homeassistant.const import Platform
+
+PLATFORMS = [Platform.SENSOR]
 DEFAULT_NAME = "OpenSky"
 DOMAIN = "opensky"
+CLIENT = "client"
 
 CONF_ALTITUDE = "altitude"
 ATTR_ICAO24 = "icao24"

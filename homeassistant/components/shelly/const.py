@@ -1,13 +1,12 @@
 """Constants for the Shelly integration."""
 from __future__ import annotations
 
+from enum import StrEnum
 from logging import Logger, getLogger
 import re
 from typing import Final
 
 from awesomeversion import AwesomeVersion
-
-from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "shelly"
 

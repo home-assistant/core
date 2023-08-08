@@ -5,9 +5,8 @@ from collections import OrderedDict
 import logging
 import os
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import loader
