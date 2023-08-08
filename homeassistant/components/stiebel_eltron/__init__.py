@@ -6,7 +6,6 @@ from pystiebeleltron import pystiebeleltron
 import voluptuous as vol
 
 from homeassistant.components.modbus import (
-    CONF_HUB,
     DEFAULT_HUB,
     DOMAIN as MODBUS_DOMAIN,
 )
@@ -18,6 +17,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 DOMAIN = "stiebel_eltron"
+CONF_HUB = "hub"
 
 CONFIG_SCHEMA = vol.Schema(
     {
