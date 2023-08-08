@@ -508,7 +508,6 @@ class CalendarEntity(Entity):
     @property
     def state(self) -> str:
         """Return the state of the calendar event."""
-        _LOGGER.debug("state property called: %s", self.event)
         if (event := self.event) is None:
             return STATE_OFF
 
@@ -694,6 +693,7 @@ async def handle_calendar_event_create(
             )
         )
         return
+
     try:
         await entity.async_create_event(**msg[CONF_EVENT])
     except HomeAssistantError as ex:
