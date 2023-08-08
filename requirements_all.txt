@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.2
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.56
+AIOAladdinConnect==0.1.57
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.15
