@@ -38,7 +38,7 @@
         "name": "Barometer"
       },
       "barometerfcnamenl": {
-        "name": "Barometer"
+        "name": "[%key:component::buienradar::entity::sensor::barometerfcname::name%]"
       },
       "condition": {
         "name": "Condition",

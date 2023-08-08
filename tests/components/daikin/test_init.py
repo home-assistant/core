@@ -67,7 +67,7 @@ async def test_unique_id_migrate(hass: HomeAssistant, mock_daikin) -> None:
 
     assert config_entry.unique_id == HOST
 
-    assert device_registry.async_get_device({}, {(KEY_MAC, HOST)}).name is None
+    assert device_registry.async_get_device(connections={(KEY_MAC, HOST)}).name is None
 
     entity = entity_registry.async_get("climate.daikin_127_0_0_1")
     assert entity.unique_id == HOST
@@ -86,7 +86,8 @@ async def test_unique_id_migrate(hass: HomeAssistant, mock_daikin) -> None:
     assert config_entry.unique_id == MAC
 
     assert (
-        device_registry.async_get_device({}, {(KEY_MAC, MAC)}).name == "DaikinAP00000"
+        device_registry.async_get_device(connections={(KEY_MAC, MAC)}).name
+        == "DaikinAP00000"
     )
 
     entity = entity_registry.async_get("climate.daikin_127_0_0_1")

@@ -332,11 +332,6 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         )
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
-    @property
-    def available(self) -> bool:
-        """Available."""
-        return self.coordinator.last_update_success
-
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
@@ -374,11 +369,6 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         }
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
-
-    @property
-    def available(self) -> bool:
-        """Available."""
-        return self.coordinator.last_update_success
 
     @property
     def status(self) -> dict:

@@ -397,6 +397,68 @@ async def test_ingress_request_get_compressed(
 
 
 @pytest.mark.parametrize(
+    "content_type",
+    [
+        "image/png",
+        "image/jpeg",
+        "font/woff2",
+        "video/mp4",
+    ],
+)
+async def test_ingress_request_not_compressed(
+    hassio_noauth_client, content_type: str, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test ingress does not compress images."""
+    body = b"this_is_long_enough_to_be_compressed" * 100
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/core/x.any",
+        data=body,
+        headers={"Content-Length": len(body), "Content-Type": content_type},
+    )
+
+    resp = await hassio_noauth_client.get(
+        "/api/hassio_ingress/core/x.any",
+        headers={"X-Test-Header": "beer", "Accept-Encoding": "gzip, deflate"},
+    )
+
+    # Check we got right response
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == content_type
+    assert "Content-Encoding" not in resp.headers
+
+
+@pytest.mark.parametrize(
+    "content_type",
+    [
+        "image/svg+xml",
+        "text/html",
+        "application/javascript",
+        "text/plain",
+    ],
+)
+async def test_ingress_request_compressed(
+    hassio_noauth_client, content_type: str, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test ingress compresses text."""
+    body = b"this_is_long_enough_to_be_compressed" * 100
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/core/x.any",
+        data=body,
+        headers={"Content-Length": len(body), "Content-Type": content_type},
+    )
+
+    resp = await hassio_noauth_client.get(
+        "/api/hassio_ingress/core/x.any",
+        headers={"X-Test-Header": "beer", "Accept-Encoding": "gzip, deflate"},
+    )
+
+    # Check we got right response
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == content_type
+    assert resp.headers["Content-Encoding"] == "deflate"
+
+
+@pytest.mark.parametrize(
     "build_type",
     [
         ("a3_vl", "test/beer/ping?index=1"),

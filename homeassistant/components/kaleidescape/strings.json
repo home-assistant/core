@@ -19,7 +19,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unsupported": "Unsupported device"
+      "unsupported": "[%key:component::kaleidescape::config::abort::unsupported%]"
     }
   },
   "entity": {

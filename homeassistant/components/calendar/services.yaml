@@ -1,6 +1,4 @@
 create_event:
-  name: Create event
-  description: Add a new calendar event.
   target:
     entity:
       domain: calendar
@@ -8,73 +6,49 @@ create_event:
         - calendar.CalendarEntityFeature.CREATE_EVENT
   fields:
     summary:
-      name: Summary
-      description: Defines the short summary or subject for the event
       required: true
       example: "Department Party"
       selector:
         text:
     description:
-      name: Description
-      description: A more complete description of the event than that provided by the summary.
       example: "Meeting to provide technical review for 'Phoenix' design."
       selector:
         text:
     start_date_time:
-      name: Start time
-      description: The date and time the event should start.
       example: "2022-03-22 20:00:00"
       selector:
         datetime:
     end_date_time:
-      name: End time
-      description: The date and time the event should end.
       example: "2022-03-22 22:00:00"
       selector:
         datetime:
     start_date:
-      name: Start date
-      description: The date the all-day event should start.
       example: "2022-03-22"
       selector:
         date:
     end_date:
-      name: End date
-      description: The date the all-day event should end (exclusive).
       example: "2022-03-23"
       selector:
         date:
     in:
-      name: In
-      description: Days or weeks that you want to create the event in.
       example: '{"days": 2} or {"weeks": 2}'
     location:
-      name: Location
-      description: The location of the event.
       example: "Conference Room - F123, Bldg. 002"
       selector:
         text:
 list_events:
-  name: List event
-  description: List events on a calendar within a time range.
   target:
     entity:
       domain: calendar
   fields:
     start_date_time:
-      name: Start time
-      description: Return active events after this time (exclusive). When not set, defaults to now.
       example: "2022-03-22 20:00:00"
       selector:
         datetime:
     end_date_time:
-      name: End time
-      description: Return active events before this time (exclusive). Cannot be used with 'duration'.
       example: "2022-03-22 22:00:00"
       selector:
         datetime:
     duration:
-      name: Duration
-      description: Return active events from start_date_time until the specified duration.
       selector:
         duration:

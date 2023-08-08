@@ -35,13 +35,16 @@ async def async_setup_entry(
     """Add Dune HD entities from a config_entry."""
     unique_id = entry.entry_id
 
-    player: str = hass.data[DOMAIN][entry.entry_id]
+    player: DuneHDPlayer = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([DuneHDPlayerEntity(player, DEFAULT_NAME, unique_id)], True)
 
 
 class DuneHDPlayerEntity(MediaPlayerEntity):
     """Implementation of the Dune HD player."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, player: DuneHDPlayer, name: str, unique_id: str) -> None:
         """Initialize entity to control Dune HD."""
@@ -71,11 +74,6 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         return state
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return len(self._state) > 0
@@ -91,7 +89,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer=ATTR_MANUFACTURER,
-            name=DEFAULT_NAME,
+            name=self._name,
         )
 
     @property

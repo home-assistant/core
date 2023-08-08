@@ -87,6 +87,40 @@ async def test_update_script_config(
 
 
 @pytest.mark.parametrize("script_config", ({},))
+async def test_invalid_object_id(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+) -> None:
+    """Test creating a script with an invalid object_id."""
+    with patch.object(config, "SECTIONS", ["script"]):
+        await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    client = await hass_client()
+
+    hass_config_store["scripts.yaml"] = {}
+
+    resp = await client.post(
+        "/api/config/script/config/turn_on",
+        data=json.dumps({"alias": "Turn on", "sequence": []}),
+    )
+    await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert result == {
+        "message": (
+            "Message malformed: A script's object_id must not be one of "
+            "reload, toggle, turn_off, turn_on"
+        )
+    }
+
+    new_data = hass_config_store["scripts.yaml"]
+    assert new_data == {}
+
+
+@pytest.mark.parametrize("script_config", ({},))
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [

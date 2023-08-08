@@ -6,16 +6,34 @@ import pytest
 from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 
-from . import CONFIG_ENTRY_DATA, DATASET_CH16
+from . import CONFIG_ENTRY_DATA_MULTIPAN, CONFIG_ENTRY_DATA_THREAD, DATASET_CH16
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="otbr_config_entry")
-async def otbr_config_entry_fixture(hass):
+@pytest.fixture(name="otbr_config_entry_multipan")
+async def otbr_config_entry_multipan_fixture(hass):
     """Mock Open Thread Border Router config entry."""
     config_entry = MockConfigEntry(
-        data=CONFIG_ENTRY_DATA,
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="Open Thread Border Router",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ), patch(
+        "homeassistant.components.otbr.util.compute_pskc"
+    ):  # Patch to speed up tests
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+
+@pytest.fixture(name="otbr_config_entry_thread")
+async def otbr_config_entry_thread_fixture(hass):
+    """Mock Open Thread Border Router config entry."""
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_THREAD,
         domain=otbr.DOMAIN,
         options={},
         title="Open Thread Border Router",

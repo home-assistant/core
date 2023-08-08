@@ -1,5 +1,7 @@
 """Offer template automation rules."""
+from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -8,13 +10,15 @@ from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackTemplate,
+    TrackTemplateResult,
     async_call_later,
     async_track_template_result,
 )
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +63,10 @@ async def async_attach_trigger(
         )
 
     @callback
-    def template_listener(event, updates):
+    def template_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         """Listen for state changes and calls action."""
         nonlocal delay_cancel, armed
         result = updates.pop().result
@@ -88,9 +95,9 @@ async def async_attach_trigger(
         # Fire!
         armed = False
 
-        entity_id = event and event.data.get("entity_id")
-        from_s = event and event.data.get("old_state")
-        to_s = event and event.data.get("new_state")
+        entity_id = event and event.data["entity_id"]
+        from_s = event and event.data["old_state"]
+        to_s = event and event.data["new_state"]
 
         if entity_id is not None:
             description = f"{entity_id} via template"
@@ -110,7 +117,7 @@ async def async_attach_trigger(
         }
 
         @callback
-        def call_action(*_):
+        def call_action(*_: Any) -> None:
             """Call action with right context."""
             nonlocal trigger_variables
             hass.async_run_hass_job(
@@ -124,7 +131,7 @@ async def async_attach_trigger(
             return
 
         try:
-            period = cv.positive_time_period(
+            period: timedelta = cv.positive_time_period(
                 template.render_complex(time_delta, {"trigger": template_variables})
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:

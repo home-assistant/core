@@ -47,7 +47,6 @@ class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = "Phase"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [
         STATE_NEW_MOON,

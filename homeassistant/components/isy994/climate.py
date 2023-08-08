@@ -37,6 +37,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     _LOGGER,
@@ -131,7 +132,10 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
                 if self._node.protocol == PROTO_INSTEON
                 else UOM_HVAC_MODE_GENERIC
             )
-        return UOM_TO_STATES[uom].get(hvac_mode.value, HVACMode.OFF)
+        return (
+            try_parse_enum(HVACMode, UOM_TO_STATES[uom].get(hvac_mode.value))
+            or HVACMode.OFF
+        )
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -139,7 +143,9 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         hvac_action = self._node.aux_properties.get(PROP_HEAT_COOL_STATE)
         if not hvac_action:
             return None
-        return UOM_TO_STATES[UOM_HVAC_ACTIONS].get(hvac_action.value)
+        return try_parse_enum(
+            HVACAction, UOM_TO_STATES[UOM_HVAC_ACTIONS].get(hvac_action.value)
+        )
 
     @property
     def current_temperature(self) -> float | None:

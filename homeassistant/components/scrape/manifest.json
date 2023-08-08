@@ -2,7 +2,7 @@
   "domain": "scrape",
   "name": "Scrape",
   "after_dependencies": ["rest"],
-  "codeowners": ["@fabaff", "@gjohansson-ST", "@epenet"],
+  "codeowners": ["@fabaff", "@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/scrape",
   "iot_class": "cloud_polling",

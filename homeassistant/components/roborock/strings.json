@@ -4,7 +4,7 @@
       "user": {
         "description": "Enter your Roborock email address.",
         "data": {
-          "username": "Email"
+          "username": "[%key:common::config_flow::data::email%]"
         }
       },
       "code": {
@@ -27,6 +27,11 @@
     }
   },
   "entity": {
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "sensor": {
       "cleaning_area": {
         "name": "Cleaning area"
@@ -51,14 +56,14 @@
         "state": {
           "starting": "Starting",
           "charger_disconnected": "Charger disconnected",
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "remote_control_active": "Remote control active",
           "cleaning": "Cleaning",
           "returning_home": "Returning home",
           "manual_mode": "Manual mode",
           "charging": "Charging",
           "charging_problem": "Charging problem",
-          "paused": "Paused",
+          "paused": "[%key:common::state::paused%]",
           "spot_cleaning": "Spot cleaning",
           "error": "Error",
           "shutting_down": "Shutting down",
@@ -79,6 +84,38 @@
       },
       "total_cleaning_area": {
         "name": "Total cleaning area"
+      },
+      "vacuum_error": {
+        "name": "Vacuum error",
+        "state": {
+          "none": "None",
+          "lidar_blocked": "Lidar blocked",
+          "bumper_stuck": "Bumper stuck",
+          "wheels_suspended": "Wheels suspended",
+          "cliff_sensor_error": "Cliff sensor error",
+          "main_brush_jammed": "Main brush jammed",
+          "side_brush_jammed": "Side brush jammed",
+          "wheels_jammed": "Wheels jammed",
+          "robot_trapped": "Robot trapped",
+          "no_dustbin": "No dustbin",
+          "low_battery": "Low battery",
+          "charging_error": "Charging error",
+          "battery_error": "Battery error",
+          "wall_sensor_dirty": "Wall sensor dirty",
+          "robot_tilted": "Robot tilted",
+          "side_brush_error": "Side brush error",
+          "fan_error": "Fan error",
+          "vertical_bumper_pressed": "Vertical bumper pressed",
+          "dock_locator_error": "Dock locator error",
+          "return_to_dock_fail": "Return to dock fail",
+          "nogo_zone_detected": "No-go zone detected",
+          "vibrarise_jammed": "VibraRise jammed",
+          "robot_on_carpet": "Robot on carpet",
+          "filter_blocked": "Filter blocked",
+          "invisible_wall_detected": "Invisible wall detected",
+          "cannot_cross_carpet": "Cannot cross carpet",
+          "internal_error": "Internal error"
+        }
       }
     },
     "select": {
@@ -102,7 +139,7 @@
           "moderate": "Moderate",
           "high": "High",
           "intense": "Intense",
-          "custom": "Custom"
+          "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]"
         }
       }
     },
@@ -117,6 +154,14 @@
         "name": "Status indicator light"
       }
     },
+    "time": {
+      "dnd_start_time": {
+        "name": "Do not disturb begin"
+      },
+      "dnd_end_time": {
+        "name": "Do not disturb end"
+      }
+    },
     "vacuum": {
       "roborock": {
         "state_attributes": {
@@ -124,7 +169,7 @@
             "state": {
               "auto": "Auto",
               "balanced": "Balanced",
-              "custom": "Custom",
+              "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
               "gentle": "Gentle",
               "off": "[%key:common::state::off%]",
               "max": "Max",
@@ -132,7 +177,7 @@
               "medium": "Medium",
               "quiet": "Quiet",
               "silent": "Silent",
-              "standard": "Standard",
+              "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
               "turbo": "Turbo"
             }
           }
@@ -143,7 +188,14 @@
   "issues": {
     "service_deprecation_start_pause": {
       "title": "Roborock vacuum support for vacuum.start_pause is being removed",
-      "description": "Roborock vacuum support for the vacuum.start_pause service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.pause or vacuum.start and select submit below to mark this issue as resolved."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::roborock::issues::service_deprecation_start_pause::title%]",
+            "description": "Roborock vacuum support for the vacuum.start_pause service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.pause or vacuum.start and select submit below to mark this issue as resolved."
+          }
+        }
+      }
     }
   }
 }

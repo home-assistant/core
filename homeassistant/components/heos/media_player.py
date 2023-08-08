@@ -114,6 +114,8 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, player):
         """Initialize."""
@@ -391,11 +393,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
     def media_title(self) -> str:
         """Title of current playing media."""
         return self._player.now_playing_media.song
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._player.name
 
     @property
     def shuffle(self) -> bool:

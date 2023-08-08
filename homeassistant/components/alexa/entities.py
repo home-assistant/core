@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator, Iterable
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -14,6 +14,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -273,22 +274,22 @@ class AlexaEntity:
         self.entity_conf = config.entity_config.get(entity.entity_id, {})
 
     @property
-    def entity_id(self):
+    def entity_id(self) -> str:
         """Return the Entity ID."""
         return self.entity.entity_id
 
-    def friendly_name(self):
+    def friendly_name(self) -> str:
         """Return the Alexa API friendly name."""
         return self.entity_conf.get(CONF_NAME, self.entity.name).translate(
             TRANSLATION_TABLE
         )
 
-    def description(self):
+    def description(self) -> str:
         """Return the Alexa API description."""
         description = self.entity_conf.get(CONF_DESCRIPTION) or self.entity_id
         return f"{description} via Home Assistant".translate(TRANSLATION_TABLE)
 
-    def alexa_id(self):
+    def alexa_id(self) -> str:
         """Return the Alexa API entity id."""
         return generate_alexa_id(self.entity.entity_id)
 
@@ -316,7 +317,7 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
-    def serialize_properties(self):
+    def serialize_properties(self) -> Generator[dict[str, Any], None, None]:
         """Yield each supported property in API format."""
         for interface in self.interfaces():
             if not interface.properties_proactively_reported():
@@ -324,9 +325,9 @@ class AlexaEntity:
 
             yield from interface.serialize_properties()
 
-    def serialize_discovery(self):
+    def serialize_discovery(self) -> dict[str, Any]:
         """Serialize the entity for discovery."""
-        result = {
+        result: dict[str, Any] = {
             "displayCategories": self.display_categories(),
             "cookie": {},
             "endpointId": self.alexa_id(),
@@ -365,7 +366,7 @@ def async_get_entities(
     hass: HomeAssistant, config: AbstractConfig
 ) -> list[AlexaEntity]:
     """Return all entities that are supported by Alexa."""
-    entities = []
+    entities: list[AlexaEntity] = []
     for state in hass.states.async_all():
         if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             continue
@@ -523,6 +524,26 @@ class CoverCapabilities(AlexaEntity):
             )
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(event.DOMAIN)
+class EventCapabilities(AlexaEntity):
+    """Class to represent doorbel event capabilities."""
+
+    def default_display_categories(self) -> list[str] | None:
+        """Return the display categories for this entity."""
+        attrs = self.entity.attributes
+        device_class: event.EventDeviceClass | None = attrs.get(ATTR_DEVICE_CLASS)
+        if device_class == event.EventDeviceClass.DOORBELL:
+            return [DisplayCategory.DOORBELL]
+        return None
+
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
+        """Yield the supported interfaces."""
+        if self.default_display_categories() is not None:
+            yield AlexaDoorbellEventSource(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

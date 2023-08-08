@@ -35,7 +35,7 @@ from .const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
-from .dashboard import async_get_dashboard, async_set_dashboard_info
+from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
@@ -55,6 +55,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._port: int | None = None
         self._password: str | None = None
+        self._noise_required: bool | None = None
         self._noise_psk: str | None = None
         self._device_info: DeviceInfo | None = None
         self._reauth_entry: ConfigEntry | None = None
@@ -151,33 +152,45 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._name}
 
     async def _async_try_fetch_device_info(self) -> FlowResult:
-        error = await self.fetch_device_info()
+        """Try to fetch device info and return any errors."""
+        response: str | None
+        if self._noise_required:
+            # If we already know we need encryption, don't try to fetch device info
+            # without encryption.
+            response = ERROR_REQUIRES_ENCRYPTION_KEY
+        else:
+            # After 2024.08, stop trying to fetch device info without encryption
+            # so we can avoid probe requests to check for password. At this point
+            # most devices should announce encryption support and password is
+            # deprecated and can be discovered by trying to connect only after they
+            # interact with the flow since it is expected to be a rare case.
+            response = await self.fetch_device_info()
 
-        if error == ERROR_REQUIRES_ENCRYPTION_KEY:
+        if response == ERROR_REQUIRES_ENCRYPTION_KEY:
             if not self._device_name and not self._noise_psk:
                 # If device name is not set we can send a zero noise psk
                 # to get the device name which will allow us to populate
                 # the device name and hopefully get the encryption key
                 # from the dashboard.
                 self._noise_psk = ZERO_NOISE_PSK
-                error = await self.fetch_device_info()
+                response = await self.fetch_device_info()
                 self._noise_psk = None
 
             if (
                 self._device_name
                 and await self._retrieve_encryption_key_from_dashboard()
             ):
-                error = await self.fetch_device_info()
+                response = await self.fetch_device_info()
 
             # If the fetched key is invalid, unset it again.
-            if error == ERROR_INVALID_ENCRYPTION_KEY:
+            if response == ERROR_INVALID_ENCRYPTION_KEY:
                 self._noise_psk = None
-                error = ERROR_REQUIRES_ENCRYPTION_KEY
+                response = ERROR_REQUIRES_ENCRYPTION_KEY
 
-        if error == ERROR_REQUIRES_ENCRYPTION_KEY:
+        if response == ERROR_REQUIRES_ENCRYPTION_KEY:
             return await self.async_step_encryption_key()
-        if error is not None:
-            return await self._async_step_user_base(error=error)
+        if response is not None:
+            return await self._async_step_user_base(error=response)
         return await self._async_authenticate_or_add()
 
     async def _async_authenticate_or_add(self) -> FlowResult:
@@ -220,6 +233,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_name = device_name
         self._host = discovery_info.host
         self._port = discovery_info.port
+        self._noise_required = bool(discovery_info.properties.get("api_encryption"))
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
@@ -392,7 +406,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         if (
             self._device_name is None
-            or (dashboard := async_get_dashboard(self.hass)) is None
+            or (manager := await async_get_or_create_dashboard_manager(self.hass))
+            is None
+            or (dashboard := manager.async_get()) is None
         ):
             return False
 

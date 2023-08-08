@@ -139,7 +139,7 @@ async def async_migrate_unique_id(
     dev_reg = dr.async_get(hass)
     old_unique_id = config_entry.unique_id
     new_unique_id = api.device.mac
-    new_name = api.device.values["name"]
+    new_name = api.device.values.get("name")
 
     @callback
     def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
