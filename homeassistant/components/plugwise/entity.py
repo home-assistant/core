@@ -67,7 +67,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         """Return if entity is available."""
         return (
             self._dev_id in self.coordinator.data.devices
-            and ("available" in self.device and self.device["available"] is True)
+            and ("available" not in self.device or self.device["available"] is True)
             and super().available
         )
 
