@@ -69,7 +69,7 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            "device_id": self._device.device_id,
+            "device_id": self._device.id,
             "battery_backup": self._device.battery,
             "cellular_backup": self._device.is_cellular,
         }
