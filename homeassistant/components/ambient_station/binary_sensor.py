@@ -268,8 +268,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_LIGHTNING,
-        translation_key="battery_1",
-        name="Lightning detector battery",
+        translation_key="lightning_detector_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,

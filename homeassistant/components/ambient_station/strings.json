@@ -97,6 +97,9 @@
       "co2_battery": {
         "name": "Carbon dioxide battery"
       },
+      "lightning_detector_battery": {
+        "name": "Lightning detector battery"
+      },
       "leak_detector_1": {
         "name": "Leak detector 1"
       },
