@@ -70,6 +70,7 @@ ICON_D = "mdi:tumble-dryer"
 ICON_W = "mdi:washing-machine"
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 def washer_state(washer: WasherDryer) -> str | None:
@@ -228,7 +229,7 @@ class WasherDryerClass(SensorEntity):
 class WasherDryerTimeClass(RestoreSensor):
     """A timestamp class for the whirlpool/maytag washer account."""
 
-    _attr_should_poll = False
+    _attr_should_poll = True
     _attr_has_entity_name = True
 
     def __init__(
@@ -271,6 +272,10 @@ class WasherDryerTimeClass(RestoreSensor):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._wd.get_online()
+
+    async def async_update(self) -> None:
+        """Update status of Whirlpool."""
+        await self._wd.fetch_data()
 
     @callback
     def update_from_latest_data(self) -> None:

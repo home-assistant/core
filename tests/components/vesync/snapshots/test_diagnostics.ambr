@@ -200,7 +200,7 @@
                 'auto',
                 'sleep',
               ]),
-              'supported_features': 1,
+              'supported_features': 9,
             }),
             'entity_id': 'fan.fan',
             'last_changed': str,
