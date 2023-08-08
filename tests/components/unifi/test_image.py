@@ -105,7 +105,7 @@ async def test_wlan_qr_code(
     image_state_2 = hass.states.get("image.ssid_1_qr_code")
     assert image_state_1.state == image_state_2.state
 
-    # Update state object - changeed password - new state
+    # Update state object - changed password - new state
     data = deepcopy(WLAN)
     data["x_passphrase"] = "new password"
     mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=data)
