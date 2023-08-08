@@ -1,90 +1,108 @@
 """Test the World Air Quality Index (WAQI) config flow."""
+import json
 from unittest.mock import AsyncMock, patch
 
+from aiowaqi import WAQIAirQuality, WAQIAuthenticationError, WAQIConnectionError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.waqi.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.waqi.const import DOMAIN
+from homeassistant.components.waqi.const import CONF_STATION_NUMBER, DOMAIN
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.waqi.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "aiowaqi.WAQIClient.authenticate",
+    ), patch(
+        "aiowaqi.WAQIClient.get_by_coordinates",
+        return_value=WAQIAirQuality.parse_obj(
+            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+        ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_LOCATION: {CONF_LATITUDE: 50.0, CONF_LONGITUDE: 10.0},
+                CONF_API_KEY: "asd",
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "de Jongweg, Utrecht"
+    assert result["data"] == {
+        CONF_API_KEY: "asd",
+        CONF_STATION_NUMBER: 4584,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (WAQIAuthenticationError(), "invalid_auth"),
+        (WAQIConnectionError(), "cannot_connect"),
+        (Exception(), "unknown"),
+    ],
+)
+async def test_flow_errors(
+    hass: HomeAssistant, exception: Exception, error: str
+) -> None:
+    """Test we handle errors during configuration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.waqi.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        "aiowaqi.WAQIClient.authenticate",
+    ), patch(
+        "aiowaqi.WAQIClient.get_by_coordinates",
+        side_effect=exception,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_LOCATION: {CONF_LATITUDE: 50.0, CONF_LONGITUDE: 10.0},
+                CONF_API_KEY: "asd",
             },
         )
+        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
     with patch(
-        "homeassistant.components.waqi.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "aiowaqi.WAQIClient.authenticate",
+    ), patch(
+        "aiowaqi.WAQIClient.get_by_coordinates",
+        return_value=WAQIAirQuality.parse_obj(
+            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+        ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_LOCATION: {CONF_LATITUDE: 50.0, CONF_LONGITUDE: 10.0},
+                CONF_API_KEY: "asd",
             },
         )
+        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == FlowResultType.CREATE_ENTRY

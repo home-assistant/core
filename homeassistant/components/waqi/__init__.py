@@ -4,7 +4,7 @@ from __future__ import annotations
 from aiowaqi import WAQIClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, Platform
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up World Air Quality Index (WAQI) from a config entry."""
 
     client = WAQIClient(session=async_get_clientsession(hass))
-    client.authenticate(entry.data[CONF_TOKEN])
+    client.authenticate(entry.data[CONF_API_KEY])
 
     waqi_coordinator = WAQIDataUpdateCoordinator(hass, client)
     await waqi_coordinator.async_config_entry_first_refresh()
