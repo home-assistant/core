@@ -339,6 +339,7 @@ class EnvoyEntity(EnvoyBaseEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize Envoy entity."""
+        super().__init__(coordinator, description)
         self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.envoy_serial_num)},
@@ -347,7 +348,6 @@ class EnvoyEntity(EnvoyBaseEntity, SensorEntity):
             name=coordinator.name,
             sw_version=str(coordinator.envoy.firmware),
         )
-        super().__init__(coordinator, description)
 
 
 class EnvoyProductionEntity(EnvoyEntity):
@@ -390,6 +390,7 @@ class EnvoyInverterEntity(EnvoyBaseEntity, SensorEntity):
         serial_number: str,
     ) -> None:
         """Initialize Envoy inverter entity."""
+        super().__init__(coordinator, description)
         self._serial_number = serial_number
         key = description.key
         if key == INVERTERS_KEY:
@@ -407,7 +408,6 @@ class EnvoyInverterEntity(EnvoyBaseEntity, SensorEntity):
             model="Inverter",
             via_device=(DOMAIN, self.envoy_serial_num),
         )
-        super().__init__(coordinator, description)
 
     @property
     def native_value(self) -> datetime.datetime | float:
@@ -430,6 +430,7 @@ class EnvoyEnchargeEntity(EnvoyBaseEntity, SensorEntity):
         serial_number: str,
     ) -> None:
         """Initialize Encharge entity."""
+        super().__init__(coordinator, description)
         self._serial_number = serial_number
         self._attr_unique_id = f"{serial_number}_{description.key}"
         encharge_inventory = self.data.encharge_inventory
@@ -442,7 +443,6 @@ class EnvoyEnchargeEntity(EnvoyBaseEntity, SensorEntity):
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
         )
-        super().__init__(coordinator, description)
 
 
 class EnvoyEnchargeInventoryEntity(EnvoyEnchargeEntity):
