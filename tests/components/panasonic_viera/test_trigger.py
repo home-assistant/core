@@ -1,13 +1,13 @@
 """The tests for WebOS TV automation triggers."""
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
+from panasonic_viera import Keys
 import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.panasonic_viera import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
@@ -18,7 +18,7 @@ FAKE_UUID = "mock-unique-id"
 
 
 async def test_panasonic_viera_turn_on_trigger_device_id(
-    hass: HomeAssistant, init_integration: MockConfigEntry, calls
+    hass: HomeAssistant, init_integration: MockConfigEntry, calls, mock_remote: Mock
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
 
@@ -63,16 +63,23 @@ async def test_panasonic_viera_turn_on_trigger_device_id(
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
     calls.clear()
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "media_player",
-            "turn_on",
-            {"entity_id": ENTITY_ID},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "media_player",
+        "turn_off",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
 
     await hass.async_block_till_done()
+    power = getattr(Keys.power, "value", Keys.power)
+    assert mock_remote.send_key.call_args_list == [call(power)]
     assert len(calls) == 0
 
 

@@ -57,7 +57,7 @@ async def async_setup_entry(
 class PanasonicVieraTVEntity(PanasonicVieraEntity, MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
-    _supported_features = (
+    _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -65,6 +65,7 @@ class PanasonicVieraTVEntity(PanasonicVieraEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.STOP
@@ -76,14 +77,6 @@ class PanasonicVieraTVEntity(PanasonicVieraEntity, MediaPlayerEntity):
         super().__init__(remote)
         self._name = name
         self._device_info = device_info
-
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
-        """Flag media player features that are supported."""
-        if self._turn_on:
-            return self._supported_features | MediaPlayerEntityFeature.TURN_ON
-
-        return self._supported_features
 
     @property
     def unique_id(self):
@@ -142,7 +135,10 @@ class PanasonicVieraTVEntity(PanasonicVieraEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn on the media player."""
-        await self._turn_on.async_run(self.hass, self._context)
+        if self._turn_on:
+            await self._turn_on.async_run(self.hass, self._context)
+        else:
+            await self._remote.async_turn_on()
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""

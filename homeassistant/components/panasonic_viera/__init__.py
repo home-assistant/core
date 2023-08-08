@@ -168,10 +168,12 @@ class Remote:
             _LOGGER.debug("Could not establish remote connection: %s", err)
             self._control = None
             self.state = STATE_OFF
+            self.available = False
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self._control = None
             self.state = STATE_OFF
+            self.available = False
 
     async def async_update(self):
         """Update device data."""
@@ -194,6 +196,13 @@ class Remote:
             key = getattr(key, "value", key)
 
         await self._handle_errors(self._control.send_key, key)
+
+    async def async_turn_on(self):
+        """Turn on the TV."""
+        _LOGGER.info("Turning on the tv via telnet")
+        if self.state != STATE_ON:
+            await self.async_send_key(Keys.power)
+            await self.async_update()
 
     async def async_turn_off(self):
         """Turn off the TV."""
@@ -239,11 +248,14 @@ class Remote:
         except (SOAPError, HTTPError) as err:
             _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
+            self.available = True
             await self.async_create_remote_control()
         except (URLError, OSError) as err:
             _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
+            self.available = False
             await self.async_create_remote_control()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self.state = STATE_OFF
+            self.available = False

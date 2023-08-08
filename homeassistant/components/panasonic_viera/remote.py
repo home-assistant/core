@@ -88,7 +88,10 @@ class PanasonicVieraRemoteEntity(PanasonicVieraEntity, RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the media player."""
-        await self._turn_on.async_run(self.hass, self._context)
+        if self._turn_on:
+            await self._turn_on.async_run(self.hass, self._context)
+        else:
+            await self._remote.async_turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
