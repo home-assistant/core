@@ -1,11 +1,14 @@
 """Support for IPMA weather service."""
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
+from typing import Literal
 
 import async_timeout
 from pyipma.api import IPMA_API
-from pyipma.forecast import Forecast
+from pyipma.forecast import Forecast as IPMAForecast
 from pyipma.location import Location
 
 from homeassistant.components.weather import (
@@ -16,7 +19,9 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -81,11 +86,13 @@ async def async_setup_entry(
 class IPMAWeather(WeatherEntity, IPMADevice):
     """Representation of a weather condition."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
-
-    _attr_attribution = ATTRIBUTION
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
 
     def __init__(self, location: Location, api: IPMA_API, config) -> None:
         """Initialise the platform with a data instance and station name."""
@@ -95,7 +102,8 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         self._mode = config.get(CONF_MODE)
         self._period = 1 if config.get(CONF_MODE) == "hourly" else 24
         self._observation = None
-        self._forecast: list[Forecast] = []
+        self._daily_forecast: list[IPMAForecast] | None = None
+        self._hourly_forecast: list[IPMAForecast] | None = None
         self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -103,17 +111,21 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         """Update Condition and Forecast."""
         async with async_timeout.timeout(10):
             new_observation = await self._location.observation(self._api)
-            new_forecast = await self._location.forecast(self._api, self._period)
 
             if new_observation:
                 self._observation = new_observation
             else:
                 _LOGGER.warning("Could not update weather observation")
 
-            if new_forecast:
-                self._forecast = new_forecast
+            if self._period == 24 or self._forecast_listeners["daily"]:
+                await self._update_forecast("daily", 24, True)
             else:
-                _LOGGER.warning("Could not update weather forecast")
+                self._daily_forecast = None
+
+            if self._period == 1 or self._forecast_listeners["hourly"]:
+                await self._update_forecast("hourly", 1, True)
+            else:
+                self._hourly_forecast = None
 
             _LOGGER.debug(
                 "Updated location %s based on %s, current observation %s",
@@ -121,6 +133,21 @@ class IPMAWeather(WeatherEntity, IPMADevice):
                 self._location.station,
                 self._observation,
             )
+
+    async def _update_forecast(
+        self,
+        forecast_type: Literal["daily", "hourly"],
+        period: int,
+        update_listeners: bool,
+    ) -> None:
+        """Update weather forecast."""
+        new_forecast = await self._location.forecast(self._api, period)
+        if new_forecast:
+            setattr(self, f"_{forecast_type}_forecast", new_forecast)
+            if update_listeners:
+                await self.async_update_listeners((forecast_type,))
+        else:
+            _LOGGER.warning("Could not update %s weather forecast", forecast_type)
 
     def _condition_conversion(self, identifier, forecast_dt):
         """Convert from IPMA weather_type id to HA."""
@@ -135,10 +162,12 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     @property
     def condition(self):
         """Return the current condition."""
-        if not self._forecast:
+        forecast = self._hourly_forecast or self._daily_forecast
+
+        if not forecast:
             return
 
-        return self._condition_conversion(self._forecast[0].weather_type.id, None)
+        return self._condition_conversion(forecast[0].weather_type.id, None)
 
     @property
     def native_temperature(self):
@@ -180,10 +209,9 @@ class IPMAWeather(WeatherEntity, IPMADevice):
 
         return self._observation.wind_direction
 
-    @property
-    def forecast(self):
+    def _forecast(self, forecast: list[IPMAForecast] | None) -> list[Forecast]:
         """Return the forecast array."""
-        if not self._forecast:
+        if not forecast:
             return []
 
         return [
@@ -198,5 +226,32 @@ class IPMAWeather(WeatherEntity, IPMADevice):
                 ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.wind_strength,
                 ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
             }
-            for data_in in self._forecast
+            for data_in in forecast
         ]
+
+    @property
+    def forecast(self) -> list[Forecast]:
+        """Return the forecast array."""
+        return self._forecast(
+            self._hourly_forecast if self._period == 1 else self._daily_forecast
+        )
+
+    async def _try_update_forecast(
+        self,
+        forecast_type: Literal["daily", "hourly"],
+        period: int,
+    ) -> None:
+        """Try to update weather forecast."""
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with async_timeout.timeout(10):
+                await self._update_forecast(forecast_type, period, False)
+
+    async def async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        await self._try_update_forecast("daily", 24)
+        return self._forecast(self._daily_forecast)
+
+    async def async_forecast_hourly(self) -> list[Forecast]:
+        """Return the hourly forecast in native units."""
+        await self._try_update_forecast("hourly", 1)
+        return self._forecast(self._hourly_forecast)
