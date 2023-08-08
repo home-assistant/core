@@ -1874,7 +1874,7 @@ async def test_temperature_unit(
                 DEFAULT_CONFIG,
                 (
                     {
-                        "initial": 68.9,  # 20.5 dgC
+                        "initial": 68.9,  # 20.5 °C
                         "temperature_unit": "F",
                         "current_temperature_topic": "current_temperature",
                     },
