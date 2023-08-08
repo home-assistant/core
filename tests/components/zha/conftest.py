@@ -15,7 +15,8 @@ import zigpy.group
 import zigpy.profiles
 import zigpy.quirks
 import zigpy.types
-from zigpy.zcl.clusters.general import Basic
+from zigpy.zcl.clusters.general import Basic, Groups
+from zigpy.zcl.foundation import Status
 import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.const as zha_const
@@ -129,10 +130,13 @@ def zigpy_app_controller():
 
     ep = dev.add_endpoint(1)
     ep.add_input_cluster(Basic.cluster_id)
+    ep.add_input_cluster(Groups.cluster_id)
 
-    with patch("zigpy.device.Device.request"), patch.object(
-        app, "permit", autospec=True
-    ), patch.object(app, "startup", wraps=app.startup), patch.object(
+    with patch(
+        "zigpy.device.Device.request", return_value=[Status.SUCCESS]
+    ), patch.object(app, "permit", autospec=True), patch.object(
+        app, "startup", wraps=app.startup
+    ), patch.object(
         app, "permit_with_key", autospec=True
     ):
         yield app
