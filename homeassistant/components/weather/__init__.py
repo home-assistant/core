@@ -1,6 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
+import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -204,18 +205,25 @@ class WeatherEntityDescription(EntityDescription):
     """A class that describes weather entities."""
 
 
-class PostInit(type(Entity)):  # type: ignore[misc]
+class PostInitMeta(abc.ABCMeta):
     """Meta class which calls __post_init__ after __new__ and __init__."""
 
     def __call__(cls, *args: Any, **kwargs: Any) -> Any:
         """Create an instance."""
-        instance = super().__call__(*args, **kwargs)
-        if post := getattr(cls, "__post_init__", None):
-            post(instance, *args, **kwargs)
+        instance: PostInit = super().__call__(*args, **kwargs)
+        instance.__post_init__(*args, **kwargs)
         return instance
 
 
-class WeatherEntity(Entity, metaclass=PostInit):
+class PostInit(metaclass=PostInitMeta):
+    """Class which calls __post_init__ after __new__ and __init__."""
+
+    @abc.abstractmethod
+    def __post_init__(self, *args: Any, **kwargs: Any) -> None:
+        """Finish initializing."""
+
+
+class WeatherEntity(Entity, PostInit):
     """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
