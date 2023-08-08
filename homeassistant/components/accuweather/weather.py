@@ -68,9 +68,6 @@ class AccuWeatherEntity(
     def __init__(self, coordinator: AccuWeatherDataUpdateCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        # Coordinator data is used also for sensors which don't have units automatically
-        # converted, hence the weather entity's native units follow the configured unit
-        # system
         self._attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
         self._attr_native_pressure_unit = UnitOfPressure.HPA
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
