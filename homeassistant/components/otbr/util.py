@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
+import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
@@ -26,6 +27,8 @@ from .const import DOMAIN
 
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+_LOGGER = logging.getLogger(__name__)
 
 INFO_URL_SKY_CONNECT = (
     "https://skyconnect.home-assistant.io/multiprotocol-channel-missmatch"
@@ -74,6 +77,9 @@ class OTBRData:
         try:
             await self.api.factory_reset()
         except python_otbr_api.FactoryResetNotSupportedError:
+            _LOGGER.info(
+                "OTBR does not support factory reset, attempting to delete dataset"
+            )
             await self.delete_active_dataset()
 
     @_handle_otbr_error
