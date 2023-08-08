@@ -57,6 +57,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
+
+        # Only allow a single instance of integration
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         current_hosts = [
             entry.data.get(CONF_HOST, DEFAULT_HOST)
             for entry in self._async_current_entries()
@@ -73,7 +78,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if host in current_hosts:
             self._async_abort_entries_match()
-            # return self.async_abort(reason="single_instance_allowed")
 
         # Get current discovered entries.
         in_progress = self._async_in_progress()

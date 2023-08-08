@@ -376,8 +376,9 @@ class WeatherFlowSensorEntity(SensorEntity):
 
         if isinstance(noramlized_sensor_data, Enum):
             sensor_value = noramlized_sensor_data.name
+            return sensor_value
 
-        return sensor_value
+        return None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
