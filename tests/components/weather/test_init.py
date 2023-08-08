@@ -1231,6 +1231,7 @@ async def test_get_forecast_unsupported(
 async def test_issue_forecast_deprecated(
     hass: HomeAssistant,
     enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the _attr attributes."""
 
@@ -1263,3 +1264,8 @@ async def test_issue_forecast_deprecated(
     assert issue.issue_domain == "test"
     assert issue.issue_id == "deprecated_weather_forecast_test"
     assert issue.translation_placeholders == {"platform": "test"}
+
+    assert (
+        "custom_components.test.weather::weather.testing is using a forecast attribute on an instance of WeatherEntity"
+        in caplog.text
+    )

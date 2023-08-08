@@ -321,6 +321,9 @@ class WeatherEntity(Entity, PostInit):
         Literal["daily", "hourly", "twice_daily"],
         list[Callable[[list[JsonValueType] | None], None]],
     ]
+    __weather_legacy_forecast: bool = False
+    __weather_legacy_forecast_reported: bool = False
+    __report_issue: str
 
     _weather_option_temperature_unit: str | None = None
     _weather_option_pressure_unit: str | None = None
@@ -386,30 +389,7 @@ class WeatherEntity(Entity, PostInit):
                     report_issue,
                 )
         if any(method in cls.__dict__ for method in ("_attr_forecast", "forecast")):
-            if _reported_forecast is False:
-                module = inspect.getmodule(cls)
-                _reported_forecast = True
-                if (
-                    module
-                    and module.__file__
-                    and "custom_components" in module.__file__
-                ):
-                    report_issue = "report it to the custom integration author."
-                else:
-                    report_issue = (
-                        "create a bug report at "
-                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                    )
-                _LOGGER.warning(
-                    (
-                        "%s::%s is using a forecast attribute on an instance of "
-                        "WeatherEntity, this is deprecated and will be unsupported "
-                        "from Home Assistant 2024.3. Please %s"
-                    ),
-                    cls.__module__,
-                    cls.__name__,
-                    report_issue,
-                )
+            cls.__weather_legacy_forecast = True
 
     @callback
     def add_to_platform_start(
@@ -420,20 +400,41 @@ class WeatherEntity(Entity, PostInit):
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_weather_forecast_{self.platform.platform_name}",
-            breaks_in_ha_version="2024.3.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=self.platform.platform_name,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_weather_forecast",
-            translation_placeholders={
-                "platform": self.platform.platform_name,
-            },
-        )
+        _reported_forecast = False
+        if self.__weather_legacy_forecast and not _reported_forecast:
+            module = inspect.getmodule(self)
+            if module and module.__file__ and "custom_components" in module.__file__:
+                report_issue = "report it to the custom integration author."
+            else:
+                report_issue = (
+                    "create a bug report at "
+                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                )
+            _LOGGER.warning(
+                (
+                    "%s::%s is using a forecast attribute on an instance of "
+                    "WeatherEntity, this is deprecated and will be unsupported "
+                    "from Home Assistant 2024.3. Please %s"
+                ),
+                self.__module__,
+                self.entity_id,
+                report_issue,
+            )
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_weather_forecast_{self.platform.platform_name}",
+                breaks_in_ha_version="2024.3.0",
+                is_fixable=False,
+                is_persistent=False,
+                issue_domain=self.platform.platform_name,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_weather_forecast",
+                translation_placeholders={
+                    "platform": self.platform.platform_name,
+                },
+            )
+            _reported_forecast = True
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
