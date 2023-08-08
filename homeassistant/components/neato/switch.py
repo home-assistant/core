@@ -40,7 +40,6 @@ async def async_setup_entry(
 class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
     """Neato Connected Switches."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "schedule"
     _attr_entity_category = EntityCategory.CONFIG
 
