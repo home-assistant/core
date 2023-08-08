@@ -861,7 +861,7 @@ class AlexaInputController(AlexaCapability):
         return AlexaInputController.get_valid_inputs(source_list)
 
     @staticmethod
-    def get_valid_inputs(source_list) -> list[dict[str, str]]:
+    def get_valid_inputs(source_list: list[str]) -> list[dict[str, str]]:
         """Return list of supported inputs."""
         input_list: list[dict[str, str]] = []
         for source in source_list:
@@ -2217,9 +2217,9 @@ class AlexaEqualizerController(AlexaCapability):
         return configurations
 
     @classmethod
-    def get_valid_inputs(cls, sound_mode_list):
+    def get_valid_inputs(cls, sound_mode_list: list[str]) -> list[dict[str, str]]:
         """Return list of supported inputs."""
-        input_list = []
+        input_list: list[dict[str, str]] = []
         for sound_mode in sound_mode_list:
             sound_mode = sound_mode.upper()
 
