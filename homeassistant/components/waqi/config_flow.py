@@ -44,6 +44,7 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
             async with WAQIClient(
                 session=async_get_clientsession(self.hass)
             ) as waqi_client:
+                waqi_client.authenticate(user_input[CONF_API_KEY])
                 try:
                     location = user_input[CONF_LOCATION]
                     measuring_station: WAQIAirQuality = (
