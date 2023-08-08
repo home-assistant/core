@@ -482,9 +482,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        if (
-            self._hvac_mode_dp_name in self.device.function
-        ):
+        if self._hvac_mode_dp_name in self.device.function:
             self._send_command([{"code": self._hvac_mode_dp_name, "value": True}])
             return
 
@@ -497,9 +495,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def turn_off(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        if (
-            self._hvac_mode_dp_name in self.device.function
-        ):
+        if self._hvac_mode_dp_name in self.device.function:
             self._send_command([{"code": self._hvac_mode_dp_name, "value": False}])
             return
 
