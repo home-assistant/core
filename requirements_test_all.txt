@@ -1187,7 +1187,7 @@ pybalboa==1.0.1
 pyblackbird==0.6
 
 # homeassistant.components.neato
-pybotvac==0.0.23
+pybotvac==0.0.24
 
 # homeassistant.components.braviatv
 pybravia==0.3.3
