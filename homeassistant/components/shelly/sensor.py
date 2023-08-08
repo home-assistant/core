@@ -97,8 +97,8 @@ SENSORS: Final = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    ("emeter", "neutralCurrent"): BlockSensorDescription(
-        key="emeter|neutralCurrent",
+    ("device", "neutralCurrent"): BlockSensorDescription(
+        key="device|neutralCurrent",
         name="Neutral current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
