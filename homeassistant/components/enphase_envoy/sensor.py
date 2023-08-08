@@ -314,6 +314,9 @@ class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity)
     ) -> None:
         """Init the envoy base entity."""
         self.entity_description = description
+        serial_number = coordinator.envoy.serial_number
+        assert serial_number is not None
+        self.envoy_serial_num = serial_number
         super().__init__(coordinator)
 
     @property
@@ -322,13 +325,6 @@ class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity)
         data = self.coordinator.envoy.data
         assert data is not None
         return data
-
-    @property
-    def envoy_serial_num(self) -> str:
-        """Return envoy serial number."""
-        serial_number = self.coordinator.envoy.serial_number
-        assert serial_number is not None
-        return serial_number
 
 
 class EnvoyEntity(EnvoyBaseEntity, SensorEntity):
@@ -343,14 +339,12 @@ class EnvoyEntity(EnvoyBaseEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize Envoy entity."""
-        envoy_name = coordinator.name
-        envoy_serial_num = self.envoy_serial_num
-        self._attr_unique_id = f"{envoy_serial_num}_{description.key}"
+        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, envoy_serial_num)},
+            identifiers={(DOMAIN, self.envoy_serial_num)},
             manufacturer="Enphase",
             model=coordinator.envoy.part_number or "Envoy",
-            name=envoy_name,
+            name=coordinator.name,
             sw_version=str(coordinator.envoy.firmware),
         )
         super().__init__(coordinator, description)
@@ -406,13 +400,12 @@ class EnvoyInverterEntity(EnvoyBaseEntity, SensorEntity):
             # Additional sensors have a unique_id that includes the
             # sensor key.
             self._attr_unique_id = f"{serial_number}_{key}"
-        envoy_serial_num = self.envoy_serial_num
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
             name=f"Inverter {serial_number}",
             manufacturer="Enphase",
             model="Inverter",
-            via_device=(DOMAIN, envoy_serial_num),
+            via_device=(DOMAIN, self.envoy_serial_num),
         )
         super().__init__(coordinator, description)
 
@@ -438,7 +431,6 @@ class EnvoyEnchargeEntity(EnvoyBaseEntity, SensorEntity):
     ) -> None:
         """Initialize Encharge entity."""
         self._serial_number = serial_number
-        envoy_serial_num = self.envoy_serial_num
         self._attr_unique_id = f"{serial_number}_{description.key}"
         encharge_inventory = self.data.encharge_inventory
         assert encharge_inventory is not None
@@ -448,7 +440,7 @@ class EnvoyEnchargeEntity(EnvoyBaseEntity, SensorEntity):
             model="Encharge",
             name=f"Encharge {serial_number}",
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
-            via_device=(DOMAIN, envoy_serial_num),
+            via_device=(DOMAIN, self.envoy_serial_num),
         )
         super().__init__(coordinator, description)
 
