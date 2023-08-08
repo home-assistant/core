@@ -26,6 +26,7 @@ from .entity import (
     HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
+    async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
 
@@ -61,7 +62,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
-        available_fn=lambda controller, _: controller.available,
+        available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,

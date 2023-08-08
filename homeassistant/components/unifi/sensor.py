@@ -39,6 +39,7 @@ from .entity import (
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
 
@@ -181,7 +182,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         has_entity_name=True,
         allowed_fn=lambda controller, _: True,
         api_handler_fn=lambda api: api.wlans,
-        available_fn=lambda controller, obj_id: controller.available,
+        available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
