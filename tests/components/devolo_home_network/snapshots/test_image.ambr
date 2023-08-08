@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_guest_wifi_qr
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'image.mock_title_guest_wifi_credentials_as_qr_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Guest Wifi credentials as QR code',
+    'platform': 'devolo_home_network',
+    'supported_features': 0,
+    'translation_key': 'image_guest_wifi',
+    'unique_id': '1234567890_image_guest_wifi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_guest_wifi_qr.1
+  b'<?xml version="1.0" encoding="utf-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="148" height="148" class="segno"><path transform="scale(4)" class="qrline" stroke="#000" d="M4 4.5h7m2 0h1m4 0h3m1 0h3m1 0h7m-29 1h1m5 0h1m2 0h2m1 0h1m2 0h1m4 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h2m3 0h1m3 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h2m2 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h3m1 0h1m2 0h2m2 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h2m3 0h6m1 0h1m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h1m1 0h3m1 0h2m3 0h2m-21 1h1m1 0h5m2 0h2m1 0h1m1 0h2m1 0h1m4 0h5m-26 1h1m1 0h1m3 0h3m1 0h1m3 0h2m2 0h2m1 0h1m1 0h1m1 0h2m-27 1h4m1 0h1m2 0h2m1 0h2m1 0h2m3 0h4m1 0h1m-26 1h3m1 0h2m2 0h1m2 0h1m3 0h2m1 0h1m1 0h3m1 0h1m2 0h2m-28 1h1m2 0h1m1 0h2m2 0h1m1 0h1m1 0h1m2 0h3m3 0h4m-27 1h1m1 0h2m3 0h1m2 0h1m4 0h5m1 0h4m1 0h2m-28 1h3m3 0h7m2 0h1m4 0h1m2 0h1m2 0h1m-26 1h3m4 0h1m1 0h3m1 0h2m3 0h3m3 0h1m-25 1h4m1 0h1m3 0h4m3 0h3m3 0h1m1 0h1m1 0h2m-29 1h2m7 0h1m3 0h5m1 0h4m1 0h2m1 0h1m-28 1h1m1 0h2m1 0h4m1 0h1m2 0h1m1 0h1m2 0h1m4 0h2m-25 1h1m1 0h2m3 0h1m1 0h4m1 0h1m5 0h1m3 0h1m3 0h1m-29 1h1m4 0h6m2 0h1m2 0h11m-19 1h2m2 0h3m5 0h1m3 0h1m1 0h1m-27 1h7m6 0h1m1 0h1m1 0h4m1 0h1m1 0h1m1 0h1m-27 1h1m5 0h1m1 0h3m3 0h2m3 0h2m3 0h2m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h3m1 0h1m2 0h4m1 0h6m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h2m2 0h2m3 0h2m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h4m1 0h3m1 0h6m-28 1h1m5 0h1m4 0h4m3 0h1m1 0h1m3 0h2m1 0h1m-28 1h7m1 0h2m3 0h1m2 0h4m1 0h2m1 0h2"/></svg>\n'
+# ---
+# name: test_guest_wifi_qr.2
+  b'<?xml version="1.0" encoding="utf-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="148" height="148" class="segno"><path transform="scale(4)" class="qrline" stroke="#000" d="M4 4.5h7m2 0h1m4 0h3m1 0h3m1 0h7m-29 1h1m5 0h1m2 0h2m1 0h1m2 0h1m4 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h2m3 0h1m3 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h2m2 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h3m1 0h1m2 0h2m2 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h2m3 0h6m1 0h1m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h1m1 0h3m1 0h2m3 0h2m-21 1h1m1 0h5m2 0h2m1 0h1m1 0h2m1 0h1m4 0h5m-26 1h1m1 0h1m3 0h3m1 0h1m3 0h2m2 0h2m1 0h1m1 0h1m1 0h2m-27 1h4m1 0h1m2 0h2m1 0h2m1 0h2m3 0h4m1 0h1m-26 1h3m1 0h2m2 0h1m2 0h1m3 0h2m1 0h1m1 0h3m1 0h1m2 0h2m-28 1h1m2 0h1m1 0h2m2 0h1m1 0h1m1 0h1m2 0h3m3 0h4m-27 1h1m1 0h2m3 0h1m2 0h1m4 0h5m1 0h4m1 0h2m-28 1h3m3 0h7m2 0h1m4 0h1m2 0h1m2 0h1m-26 1h3m4 0h1m1 0h3m1 0h2m3 0h3m3 0h1m-25 1h4m1 0h1m3 0h4m3 0h3m3 0h1m1 0h1m1 0h2m-29 1h2m7 0h1m3 0h5m1 0h4m1 0h2m1 0h1m-28 1h1m1 0h2m1 0h4m1 0h1m2 0h1m1 0h1m2 0h1m4 0h2m-25 1h1m1 0h2m3 0h1m1 0h4m1 0h1m5 0h1m3 0h1m3 0h1m-29 1h1m4 0h6m2 0h1m2 0h11m-19 1h2m2 0h3m5 0h1m3 0h1m1 0h1m-27 1h7m6 0h1m1 0h1m1 0h4m1 0h1m1 0h1m1 0h1m-27 1h1m5 0h1m1 0h3m3 0h2m3 0h2m3 0h2m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h3m1 0h1m2 0h4m1 0h6m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h2m2 0h2m3 0h2m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h4m1 0h3m1 0h6m-28 1h1m5 0h1m4 0h4m3 0h1m1 0h1m3 0h2m1 0h1m-28 1h7m1 0h2m3 0h1m2 0h4m1 0h2m1 0h2"/></svg>\n'
+# ---
