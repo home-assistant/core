@@ -68,10 +68,7 @@ class SystemBridgeNotificationService(BaseNotificationService):
             image=data.get(ATTR_IMAGE),
             message=message,
             timeout=data.get(ATTR_TIMEOUT),
-            title=kwargs.get(
-                ATTR_TITLE,
-                data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-            ),
+            title=kwargs.get(ATTR_TITLE, data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)),
         )
 
         _LOGGER.debug("Sending notification: %s", notification.json())
