@@ -145,7 +145,7 @@ class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStat
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
-COORDINATORS = [
+COORDINATORS: list[tuple[str, type[NextDnsUpdateCoordinator], timedelta]] = [
     (ATTR_CONNECTION, NextDnsConnectionUpdateCoordinator, UPDATE_INTERVAL_CONNECTION),
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
@@ -168,23 +168,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
-
     tasks = []
+    coordinators = {}
 
     # Independent DataUpdateCoordinator is used for each API endpoint to avoid
     # unnecessary requests when entities using this endpoint are disabled.
     for coordinator_name, coordinator_class, update_interval in COORDINATORS:
-        hass.data[DOMAIN][entry.entry_id][coordinator_name] = coordinator_class(
-            hass, nextdns, profile_id, update_interval
-        )
-        tasks.append(
-            hass.data[DOMAIN][entry.entry_id][
-                coordinator_name
-            ].async_config_entry_first_refresh()
-        )
+        coordinator = coordinator_class(hass, nextdns, profile_id, update_interval)
+        tasks.append(coordinator.async_config_entry_first_refresh())
+        coordinators[coordinator_name] = coordinator
 
     await asyncio.gather(*tasks)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

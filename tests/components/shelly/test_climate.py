@@ -21,9 +21,11 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import init_integration, register_device, register_entity
+from . import MOCK_MAC, init_integration, register_device, register_entity
+from .conftest import MOCK_STATUS_COAP
 
 from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
 
@@ -486,3 +488,43 @@ async def test_block_restored_climate_auth_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
+
+
+async def test_device_not_calibrated(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
+    """Test to create an issue when the device is not calibrated."""
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+
+    await init_integration(hass, 1, sleep_period=1000, model="SHTRV-01")
+
+    # Make device online
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    mock_status = MOCK_STATUS_COAP.copy()
+    mock_status["calibrated"] = False
+    monkeypatch.setattr(
+        mock_block_device,
+        "status",
+        mock_status,
+    )
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+    )
+
+    # The device has been calibrated
+    monkeypatch.setattr(
+        mock_block_device,
+        "status",
+        MOCK_STATUS_COAP,
+    )
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+    )

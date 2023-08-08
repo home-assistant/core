@@ -105,6 +105,22 @@ HHCCJCY10_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=False,
 )
 
+MISCALE_V1_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="MISCA",
+    address="50:FB:19:1B:B5:DC",
+    device=generate_ble_device("00:00:00:00:00:00", None),
+    rssi=-60,
+    manufacturer_data={},
+    service_data={
+        "0000181d-0000-1000-8000-00805f9b34fb": b"\x22\x9e\x43\xe5\x07\x04\x0b\x10\x13\x01"
+    },
+    service_uuids=["0000181d-0000-1000-8000-00805f9b34fb"],
+    source="local",
+    advertisement=generate_advertisement_data(local_name="Not it"),
+    time=0,
+    connectable=False,
+)
+
 MISCALE_V2_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="MIBFS",
     address="50:FB:19:1B:B5:DC",
@@ -112,7 +128,7 @@ MISCALE_V2_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-60,
     manufacturer_data={},
     service_data={
-        "0000181b-0000-1000-8000-00805f9b34fb": b"\x02\xa6\xe7\x07\x07\x07\x0b\x1f\x1d\x1f\x02\xfa-"
+        "0000181b-0000-1000-8000-00805f9b34fb": b"\x02&\xb2\x07\x05\x04\x0f\x02\x01\xac\x01\x86B"
     },
     service_uuids=["0000181b-0000-1000-8000-00805f9b34fb"],
     source="local",

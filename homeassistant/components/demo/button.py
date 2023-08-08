@@ -51,3 +51,4 @@ class DemoButton(ButtonEntity):
         persistent_notification.async_create(
             self.hass, "Button pressed", title="Button"
         )
+        self.hass.bus.async_fire("demo_button_pressed")

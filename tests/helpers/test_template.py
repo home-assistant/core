@@ -19,15 +19,15 @@ from homeassistant.components import group
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_METERS,
-    LENGTH_MILLIMETERS,
-    MASS_GRAMS,
     STATE_ON,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
     VOLUME_LITERS,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -53,12 +53,12 @@ def _set_up_units(hass: HomeAssistant) -> None:
     """Set up the tests."""
     hass.config.units = UnitSystem(
         "custom",
-        accumulated_precipitation=LENGTH_MILLIMETERS,
+        accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
         conversions={},
-        length=LENGTH_METERS,
-        mass=MASS_GRAMS,
+        length=UnitOfLength.METERS,
+        mass=UnitOfMass.GRAMS,
         pressure=UnitOfPressure.PA,
-        temperature=TEMP_CELSIUS,
+        temperature=UnitOfTemperature.CELSIUS,
         volume=VOLUME_LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
     )
@@ -3553,7 +3553,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(
     template_complex_str = r"""
 
 {% for state in states.cover %}
-  {% if state.entity_id | regex_match('.*\.office_') %}
+  {% if state.entity_id | regex_match('.*\\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}

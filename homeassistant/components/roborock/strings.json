@@ -27,6 +27,11 @@
     }
   },
   "entity": {
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "sensor": {
       "cleaning_area": {
         "name": "Cleaning area"
@@ -147,6 +152,14 @@
       },
       "status_indicator": {
         "name": "Status indicator light"
+      }
+    },
+    "time": {
+      "dnd_start_time": {
+        "name": "Do not disturb begin"
+      },
+      "dnd_end_time": {
+        "name": "Do not disturb end"
       }
     },
     "vacuum": {

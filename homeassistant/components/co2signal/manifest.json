@@ -3,7 +3,7 @@
   "name": "Electricity Maps",
   "codeowners": [],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/electricity_maps",
+  "documentation": "https://www.home-assistant.io/integrations/co2signal",
   "iot_class": "cloud_polling",
   "loggers": ["CO2Signal"],
   "requirements": ["CO2Signal==0.4.2"]

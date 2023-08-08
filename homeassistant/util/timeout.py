@@ -8,9 +8,7 @@ from __future__ import annotations
 import asyncio
 import enum
 from types import TracebackType
-from typing import Any
-
-from typing_extensions import Self
+from typing import Any, Self
 
 from .async_ import run_callback_threadsafe
 
