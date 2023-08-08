@@ -305,7 +305,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             identifiers={(NEATO_DOMAIN, self._robot_serial)},
             manufacturer=stats["battery"]["vendor"] if stats else None,
             model=stats["model"] if stats else None,
-            name=self._attr_name,
+            name=self.robot.name,
             sw_version=stats["firmware"] if stats else None,
         )
 
