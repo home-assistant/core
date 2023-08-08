@@ -8,11 +8,9 @@ from homeassistant import data_entry_flow
 from homeassistant.components.meteo_france.const import (
     CONF_CITY,
     DOMAIN,
-    FORECAST_MODE_DAILY,
-    FORECAST_MODE_HOURLY,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -212,36 +210,3 @@ async def test_abort_if_already_setup(hass: HomeAssistant, client_single) -> Non
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_LATITUDE: CITY_1_LAT, CONF_LONGITUDE: CITY_1_LON},
-        unique_id=f"{CITY_1_LAT}, {CITY_1_LON}",
-    )
-    config_entry.add_to_hass(hass)
-
-    assert config_entry.options == {}
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    # Default
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_MODE] == FORECAST_MODE_DAILY
-
-    # Manual
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_MODE: FORECAST_MODE_HOURLY},
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_MODE] == FORECAST_MODE_HOURLY
