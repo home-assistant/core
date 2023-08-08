@@ -29,9 +29,8 @@ async def async_setup_entry(
     """Electric Kiwi select setup."""
     hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    _LOGGER.debug("Setting up HOP entity")
-    entities = [ElectricKiwiSelectHOPEntity(hop_coordinator, HOP_SELECT)]
-    async_add_entities(entities)
+    _LOGGER.debug("Setting up select entity")
+    async_add_entities([ElectricKiwiSelectHOPEntity(hop_coordinator, HOP_SELECT)])
 
 
 class ElectricKiwiSelectHOPEntity(
@@ -46,16 +45,15 @@ class ElectricKiwiSelectHOPEntity(
 
     def __init__(
         self,
-        hop_coordinator: ElectricKiwiHOPDataCoordinator,
+        coordinator: ElectricKiwiHOPDataCoordinator,
         description: SelectEntityDescription,
     ) -> None:
         """Initialise the HOP selection entity."""
-        super().__init__(hop_coordinator)
-        self._attr_unique_id = f"{self.coordinator._ek_api.customer_number}_{self.coordinator._ek_api.connection_id}_{description.key}"
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator._ek_api.customer_number}_{coordinator._ek_api.connection_id}_{description.key}"
         self.entity_description = description
-        self._state = None
-        self.values_dict = self.coordinator.get_hop_options()
-        self._attr_options = list(self.values_dict.keys())
+        self.values_dict = coordinator.get_hop_options()
+        self._attr_options = list(self.values_dict)
 
     @property
     def current_option(self) -> str | None:
