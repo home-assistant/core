@@ -77,7 +77,7 @@ class OTBRData:
         try:
             await self.api.factory_reset()
         except python_otbr_api.FactoryResetNotSupportedError:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "OTBR does not support factory reset, attempting to delete dataset"
             )
             await self.delete_active_dataset()
