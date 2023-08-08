@@ -5,10 +5,9 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
-from functools import wraps
 import inspect
 import logging
-from typing import Any, Final, Literal, Required, Self, TypedDict, final
+from typing import Any, Final, Literal, Required, TypedDict, final
 
 import voluptuous as vol
 
@@ -205,7 +204,18 @@ class WeatherEntityDescription(EntityDescription):
     """A class that describes weather entities."""
 
 
-class WeatherEntity(Entity):
+class PostInit(type(Entity)):  # type: ignore[misc]
+    """Meta class which calls __post_init__ after __new__ and __init__."""
+
+    def __call__(cls, *args: Any, **kwargs: Any) -> Any:
+        """Create an instance."""
+        instance = super().__call__(*args, **kwargs)
+        if post := getattr(cls, "__post_init__", None):
+            post(instance, *args, **kwargs)
+        return instance
+
+
+class WeatherEntity(Entity, metaclass=PostInit):
     """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
@@ -272,25 +282,14 @@ class WeatherEntity(Entity):
     _weather_option_precipitation_unit: str | None = None
     _weather_option_wind_speed_unit: str | None = None
 
-    def __init__(self) -> None:
-        """Initialize."""
+    def __post_init__(self, *args: Any, **kwargs: Any) -> None:
+        """Finish initializing."""
         self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
 
-        # Make sure __init__ is called
-        orig_init = cls.__init__
-
-        @wraps(orig_init)
-        def __init__(self: Self, *args: Any, **kwargs: Any) -> None:
-            super(self.__class__, self).__init__()
-            orig_init(self, *args, **kwargs)
-
-        setattr(cls, "__init__", __init__)
-
-        # Check for deprecated features
         _reported = False
         if any(
             method in cls.__dict__
