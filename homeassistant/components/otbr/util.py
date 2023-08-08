@@ -69,6 +69,14 @@ class OTBRData:
     entry_id: str
 
     @_handle_otbr_error
+    async def factory_reset(self) -> None:
+        """Reset the router."""
+        try:
+            await self.api.factory_reset()
+        except python_otbr_api.FactoryResetNotSupportedError:
+            await self.delete_active_dataset()
+
+    @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
         """Enable or disable the router."""
         return await self.api.set_enabled(enabled)
