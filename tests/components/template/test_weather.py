@@ -85,7 +85,6 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
     [
         {
             "weather": [
-                {"weather": {"platform": "demo"}},
                 {
                     "platform": "template",
                     "name": "forecast",
@@ -93,15 +92,6 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
                     "forecast_template": "{{ states.weather.forecast.attributes.forecast }}",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
                     "humidity_template": "{{ states('sensor.humidity') | int }}",
-                    "pressure_template": "{{ states('sensor.pressure') }}",
-                    "wind_speed_template": "{{ states('sensor.windspeed') }}",
-                    "wind_bearing_template": "{{ states('sensor.windbearing') }}",
-                    "ozone_template": "{{ states('sensor.ozone') }}",
-                    "visibility_template": "{{ states('sensor.visibility') }}",
-                    "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
-                    "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
-                    "dew_point_template": "{{ states('sensor.dew_point') }}",
-                    "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
                 },
             ]
         },
@@ -109,25 +99,30 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
 )
 async def test_forecast_service(hass: HomeAssistant, start_ha) -> None:
     """Test forecast service."""
-    for attr, value in [
-        (
-            "weather.forecast",
-            {
-                ATTR_FORECAST: [
-                    Forecast(
-                        condition="cloudy",
-                        datetime="2023-02-17T14:00:00+00:00",
-                        temperature=14.2,
-                    )
-                ]
-            },
-        )
+    for attr, _v_attr, value in [
+        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
+        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
     ]:
-        hass.states.async_set(attr, "sunny", value)
+        hass.states.async_set(attr, value)
         await hass.async_block_till_done()
-        state = hass.states.get("weather.forecast")
-        assert state is not None
-        assert state.state == "sunny"
+
+    hass.states.async_set(
+        "weather.forecast",
+        "sunny",
+        {
+            ATTR_FORECAST: [
+                Forecast(
+                    condition="cloudy",
+                    datetime="2023-02-17T14:00:00+00:00",
+                    temperature=14.2,
+                )
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("weather.forecast")
+    assert state is not None
+    assert state.state == "sunny"
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -142,6 +137,41 @@ async def test_forecast_service(hass: HomeAssistant, start_ha) -> None:
                 "condition": "cloudy",
                 "datetime": "2023-02-17T14:00:00+00:00",
                 "temperature": 14.2,
+            }
+        ]
+    }
+
+    hass.states.async_set(
+        "weather.forecast",
+        "sunny",
+        {
+            ATTR_FORECAST: [
+                Forecast(
+                    condition="cloudy",
+                    datetime="2023-02-17T14:00:00+00:00",
+                    temperature=16.9,
+                )
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("weather.forecast")
+    assert state is not None
+    assert state.state == "sunny"
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {"entity_id": "weather.forecast", "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": [
+            {
+                "condition": "cloudy",
+                "datetime": "2023-02-17T14:00:00+00:00",
+                "temperature": 16.9,
             }
         ]
     }
