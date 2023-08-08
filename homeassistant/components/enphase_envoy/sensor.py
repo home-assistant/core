@@ -6,7 +6,13 @@ from dataclasses import dataclass
 import datetime
 import logging
 
-from pyenphase import EnvoyInverter, EnvoySystemConsumption, EnvoySystemProduction
+from pyenphase import (
+    EnvoyEncharge,
+    EnvoyEnchargePower,
+    EnvoyInverter,
+    EnvoySystemConsumption,
+    EnvoySystemProduction,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,7 +21,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfApparentPower,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -181,6 +193,71 @@ CONSUMPTION_SENSORS = (
 )
 
 
+@dataclass
+class EnvoyEnchargeRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[EnvoyEncharge], datetime.datetime | int | float]
+
+
+@dataclass
+class EnvoyEnchargeSensorEntityDescription(
+    SensorEntityDescription, EnvoyEnchargeRequiredKeysMixin
+):
+    """Describes an Envoy Encharge sensor entity."""
+
+
+@dataclass
+class EnvoyEnchargePowerRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[EnvoyEnchargePower], int | float]
+
+
+@dataclass
+class EnvoyEnchargePowerSensorEntityDescription(
+    SensorEntityDescription, EnvoyEnchargePowerRequiredKeysMixin
+):
+    """Describes an Envoy Encharge sensor entity."""
+
+
+ENCHARGE_INVENTORY_SENSORS = (
+    EnvoyEnchargeSensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        value_fn=lambda encharge: encharge.temperature,
+    ),
+    EnvoyEnchargeSensorEntityDescription(
+        key=LAST_REPORTED_KEY,
+        translation_key=LAST_REPORTED_KEY,
+        native_unit_of_measurement=None,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda encharge: dt_util.utc_from_timestamp(encharge.last_report_date),
+    ),
+)
+ENCHARGE_POWER_SENSORS = (
+    EnvoyEnchargePowerSensorEntityDescription(
+        key="soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=lambda encharge: encharge.soc,
+    ),
+    EnvoyEnchargePowerSensorEntityDescription(
+        key="apparent_power_mva",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        value_fn=lambda encharge: encharge.apparent_power_mva * 0.001,
+    ),
+    EnvoyEnchargePowerSensorEntityDescription(
+        key="real_power_mw",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=lambda encharge: encharge.real_power_mw * 0.001,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -208,6 +285,19 @@ async def async_setup_entry(
             EnvoyInverterEntity(coordinator, description, inverter)
             for description in INVERTER_SENSORS
             for inverter in envoy_data.inverters
+        )
+
+    if envoy_data.encharge_inventory:
+        entities.extend(
+            EnvoyEnchargeInventoryEntity(coordinator, description, encharge)
+            for description in ENCHARGE_INVENTORY_SENSORS
+            for encharge in envoy_data.encharge_inventory
+        )
+    if envoy_data.encharge_power:
+        entities.extend(
+            EnvoyEnchargePowerEntity(coordinator, description, encharge)
+            for description in ENCHARGE_POWER_SENSORS
+            for encharge in envoy_data.encharge_power
         )
 
     async_add_entities(entities)
@@ -314,3 +404,66 @@ class EnvoyInverterEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEnt
         assert envoy.data.inverters is not None
         inverter = envoy.data.inverters[self._serial_number]
         return self.entity_description.value_fn(inverter)
+
+
+class EnvoyEnchargeEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
+    """Envoy Encharge sensor entity."""
+
+    entity_description: EnvoyEnchargeSensorEntityDescription | EnvoyEnchargePowerSensorEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyEnchargeSensorEntityDescription
+        | EnvoyEnchargePowerSensorEntityDescription,
+        serial_number: str,
+    ) -> None:
+        """Initialize Encharge entity."""
+        self.entity_description = description
+        self._serial_number = serial_number
+        envoy_serial_num = coordinator.envoy.serial_number
+        assert envoy_serial_num is not None
+        self._attr_unique_id = f"{serial_number}_{description.key}"
+        assert coordinator.envoy.data is not None
+        assert coordinator.envoy.data.encharge_inventory is not None
+        encharge = coordinator.envoy.data.encharge_inventory[self._serial_number]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial_number)},
+            manufacturer="Enphase",
+            model="Encharge",
+            name=f"Encharge {serial_number}",
+            sw_version=str(encharge.firmware_version),
+            via_device=(DOMAIN, envoy_serial_num),
+        )
+        super().__init__(coordinator)
+
+
+class EnvoyEnchargeInventoryEntity(EnvoyEnchargeEntity):
+    """Envoy Encharge inventory entity."""
+
+    entity_description: EnvoyEnchargeSensorEntityDescription
+
+    @property
+    def native_value(self) -> int | float | datetime.datetime | None:
+        """Return the state of the inventory sensors."""
+        envoy = self.coordinator.envoy
+        assert envoy.data is not None
+        assert envoy.data.encharge_inventory is not None
+        encharge = envoy.data.encharge_inventory[self._serial_number]
+        return self.entity_description.value_fn(encharge)
+
+
+class EnvoyEnchargePowerEntity(EnvoyEnchargeEntity):
+    """Envoy Encharge power entity."""
+
+    entity_description: EnvoyEnchargePowerSensorEntityDescription
+
+    @property
+    def native_value(self) -> int | float | None:
+        """Return the state of the power sensors."""
+        envoy = self.coordinator.envoy
+        assert envoy.data is not None
+        assert envoy.data.encharge_power is not None
+        encharge = envoy.data.encharge_power[self._serial_number]
+        return self.entity_description.value_fn(encharge)
