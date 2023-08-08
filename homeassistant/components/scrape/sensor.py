@@ -166,12 +166,12 @@ class ScrapeSensor(
         self._index = index
         self._value_template = value_template
         self._attr_native_value = None
-        if not yaml and trigger_entity_config.get(CONF_UNIQUE_ID):
+        if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
             self._attr_name = None
             self._attr_has_entity_name = True
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
-                identifiers={(DOMAIN, trigger_entity_config[CONF_UNIQUE_ID])},
+                identifiers={(DOMAIN, unique_id)},
                 manufacturer="Scrape",
                 name=self.name,
             )
