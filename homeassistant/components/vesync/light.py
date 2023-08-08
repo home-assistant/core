@@ -188,7 +188,7 @@ class VeSyncMulticolorLightHA(VeSyncTunableWhiteLightHA, LightEntity):
     _attr_supported_color_modes = {ColorMode.HS, ColorMode.COLOR_TEMP}
 
     @property
-    def color_mode(self) -> ColorMode | str | None:
+    def color_mode(self) -> ColorMode:
         """Return the current color mode."""
         # get value from pyvesync library api,
         color_mode_value = self.device.color_mode
@@ -235,7 +235,7 @@ class VeSyncMulticolorLightHA(VeSyncTunableWhiteLightHA, LightEntity):
                     "from pyvesync api: %s",
                     str(color_value_hsv),
                 )
-                return 0
+                return None
             # convert percent brightness to ha expected range
             return round((max(1, hsv_value) / 100) * 255)
 
@@ -251,11 +251,11 @@ class VeSyncMulticolorLightHA(VeSyncTunableWhiteLightHA, LightEntity):
                 "from pyvesync api: %s",
                 str(result),
             )
-            return 0
+            return None
         # convert percent brightness to ha expected range
         return round((max(1, brightness_value) / 100) * 255)
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Optional[Any]) -> None:
         """Turn the device on, and adjust attributes."""
         # The Valceno Multicolor bulb use the V2 API endpoint,
         #   so it has the capability of setting every light parameter in a single call
