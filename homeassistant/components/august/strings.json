@@ -39,6 +39,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "image_capture": {
+        "name": "Image capture"
+      }
+    },
     "button": {
       "wake": {
         "name": "Wake"

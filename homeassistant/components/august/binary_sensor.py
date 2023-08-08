@@ -109,10 +109,6 @@ def _native_datetime() -> datetime:
 class AugustBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes August binary_sensor entity."""
 
-    # AugustBinarySensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
 
 @dataclass
 class AugustDoorbellRequiredKeysMixin:
@@ -128,13 +124,10 @@ class AugustDoorbellBinarySensorEntityDescription(
 ):
     """Describes August binary_sensor entity."""
 
-    # AugustDoorbellBinarySensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
 
 SENSOR_TYPE_DOOR = AugustBinarySensorEntityDescription(
-    key="open", device_class=BinarySensorDeviceClass.DOOR
+    key="open",
+    device_class=BinarySensorDeviceClass.DOOR,
 )
 
 SENSOR_TYPES_VIDEO_DOORBELL = (
@@ -145,8 +138,8 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
-        key="image_capture",
-        name="Image Capture",
+        key="image capture",
+        translation_key="image_capture",
         icon="mdi:file-image",
         value_fn=_retrieve_image_capture_state,
         is_time_based=True,
