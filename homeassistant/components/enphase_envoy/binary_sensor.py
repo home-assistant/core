@@ -18,7 +18,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -41,7 +41,7 @@ class EnvoyEnchargeRequiredKeysMixin:
 class EnvoyEnchargeBinarySensorEntityDescription(
     BinarySensorEntityDescription, EnvoyEnchargeRequiredKeysMixin
 ):
-    """Describes an Envoy Encharge sensor entity."""
+    """Describes an Envoy Encharge binary sensor entity."""
 
 
 ENCHARGE_SENSORS = (
@@ -72,14 +72,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up envoy sensor platform."""
+    """Set up envoy binary sensor platform."""
     coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
     envoy_serial_num = config_entry.unique_id
     assert envoy_serial_num is not None
-    _LOGGER.debug("Envoy data: %s", envoy_data)
-    entities: list[Entity] = []
+    entities: list[BinarySensorEntity] = []
     if envoy_data.encharge_inventory:
         entities.extend(
             EnvoyEnchargeBinarySensorEntity(coordinator, description, encharge)
@@ -104,7 +103,7 @@ class EnvoyEnchargeBinarySensorEntity(
         description: EnvoyEnchargeBinarySensorEntityDescription,
         serial_number: str,
     ) -> None:
-        """Init the envoy base entity."""
+        """Init the Encharge base entity."""
         self.entity_description = description
         self.coordinator = coordinator
         assert serial_number is not None
