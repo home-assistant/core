@@ -25,6 +25,8 @@ async def async_setup_entry(
 class NeatoDismissAlertButton(ButtonEntity):
     """Representation of a dismiss_alert button entity."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "dismiss_alert"
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
@@ -33,9 +35,11 @@ class NeatoDismissAlertButton(ButtonEntity):
     ) -> None:
         """Initialize a dismiss_alert Neato button entity."""
         self.robot = robot
-        self._attr_name = f"{robot.name} Dismiss Alert"
         self._attr_unique_id = f"{robot.serial}_dismiss_alert"
-        self._attr_device_info = DeviceInfo(identifiers={(NEATO_DOMAIN, robot.serial)})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(NEATO_DOMAIN, robot.serial)},
+            name=robot.name,
+        )
 
     async def async_press(self) -> None:
         """Press the button."""

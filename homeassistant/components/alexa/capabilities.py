@@ -1990,7 +1990,7 @@ class AlexaDoorbellEventSource(AlexaCapability):
         """Return the Alexa API name of this interface."""
         return "Alexa.DoorbellEventSource"
 
-    def capability_proactively_reported(self):
+    def capability_proactively_reported(self) -> bool:
         """Return True for proactively reported capability."""
         return True
 
