@@ -17,10 +17,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Neato button from config entry."""
-    entities = [
-        NeatoDismissAlertButton(robot)
-        for robot in hass.data[NEATO_ROBOTS]
-    ]
+    entities = [NeatoDismissAlertButton(robot) for robot in hass.data[NEATO_ROBOTS]]
 
     async_add_entities(entities, True)
 
@@ -38,9 +35,7 @@ class NeatoDismissAlertButton(ButtonEntity):
         self.robot = robot
         self._attr_name = f"{robot.name} Dismiss Alert"
         self._attr_unique_id = f"{robot.serial}_dismiss_alert"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(NEATO_DOMAIN, robot.serial)}
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(NEATO_DOMAIN, robot.serial)})
 
     async def async_press(self) -> None:
         """Press the button."""
