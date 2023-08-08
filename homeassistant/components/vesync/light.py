@@ -255,7 +255,7 @@ class VeSyncMulticolorLightHA(VeSyncTunableWhiteLightHA, LightEntity):
         # convert percent brightness to ha expected range
         return round((max(1, brightness_value) / 100) * 255)
 
-    def turn_on(self, **kwargs: Optional[Any]) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on, and adjust attributes."""
         # The Valceno Multicolor bulb use the V2 API endpoint,
         #   so it has the capability of setting every light parameter in a single call
