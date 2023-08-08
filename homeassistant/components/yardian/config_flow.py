@@ -29,6 +29,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def fetch_device_info(self, host, access_token):
+        yarcli = AsyncYardianClient(
+            async_get_clientsession(self.hass),
+            host,
+            access_token,
+        )
+        device_info = await yarcli.fetch_device_info()
+        return device_info
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -36,12 +45,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                yarcli = AsyncYardianClient(
-                    async_get_clientsession(self.hass),
-                    user_input["host"],
-                    user_input["access_token"],
+                device_info = await self.fetch_device_info(
+                    user_input["host"], user_input["access_token"]
                 )
-                device_info = await yarcli.fetch_device_info()
             except NotAuthorizedException:
                 errors["base"] = "invalid_auth"
             except NetworkException:

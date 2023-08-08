@@ -2,9 +2,9 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pyyardian import NetworkException, NotAuthorizedException
 
 from homeassistant import config_entries
-from homeassistant.components.yardian.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.yardian.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -18,28 +18,28 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.yardian.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.yardian.config_flow.ConfigFlow.fetch_device_info",
+        return_value={"name": "fake_name", "yid": "fake_yid"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "host": "fake_host",
+                "access_token": "fake_token",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "fake_name - fake_yid"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        "host": "fake_host",
+        "access_token": "fake_token",
+        "name": "fake_name",
+        "yid": "fake_yid",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -51,15 +51,14 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.yardian.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        "homeassistant.components.yardian.config_flow.ConfigFlow.fetch_device_info",
+        side_effect=NotAuthorizedException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "host": "fake_host",
+                "access_token": "fake_token",
             },
         )
 
@@ -74,15 +73,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.yardian.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.yardian.config_flow.ConfigFlow.fetch_device_info",
+        side_effect=NetworkException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "host": "fake_host",
+                "access_token": "fake_token",
             },
         )
 
