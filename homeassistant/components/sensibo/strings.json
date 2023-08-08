@@ -183,7 +183,7 @@
               "rangetop": "Range top",
               "rangemiddle": "Range middle",
               "rangebottom": "Range bottom",
-              "rangefull": "Range full",
+              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]",
               "horizontal": "Horizontal",
               "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
             }
