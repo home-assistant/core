@@ -18,7 +18,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables, TractiveClient
@@ -32,7 +31,6 @@ from .const import (
     ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
-    SERVER_UNAVAILABLE,
     TRACKABLES,
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
@@ -85,26 +83,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         self._attr_native_value = event[self.entity_description.key]
 
         super().handle_status_update(event)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._dispatcher_signal,
-                self.handle_status_update,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self.handle_server_unavailable,
-            )
-        )
 
 
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (

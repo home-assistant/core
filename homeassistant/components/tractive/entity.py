@@ -1,14 +1,15 @@
 """A entity class for Tractive integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from . import TractiveClient
-from .const import DOMAIN
+from .const import DOMAIN, SERVER_UNAVAILABLE
 
 
 class TractiveEntity(Entity):
@@ -35,11 +36,31 @@ class TractiveEntity(Entity):
         self._tracker_id = tracker_details["_id"]
         self._trackable = trackable
         self._client = client
+        self._dispatcher_signal: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if not self._client.subscribed:
             self._client.subscribe()
+
+        if TYPE_CHECKING:
+            assert self._dispatcher_signal is not None
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._dispatcher_signal,
+                self.handle_status_update,
+            )
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_UNAVAILABLE}-{self._user_id}",
+                self.handle_server_unavailable,
+            )
+        )
 
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:

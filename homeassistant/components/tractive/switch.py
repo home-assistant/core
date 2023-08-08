@@ -11,7 +11,6 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables, TractiveClient
@@ -21,7 +20,6 @@ from .const import (
     ATTR_LIVE_TRACKING,
     CLIENT,
     DOMAIN,
-    SERVER_UNAVAILABLE,
     TRACKABLES,
     TRACKER_HARDWARE_STATUS_UPDATED,
 )
@@ -104,6 +102,9 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         self._tracker = item.tracker
         self._method = getattr(self, description.method)
         self.entity_description = description
+        self._dispatcher_signal = (
+            f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}"
+        )
 
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
@@ -111,26 +112,6 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         self._attr_is_on = event[self.entity_description.key]
 
         super().handle_status_update(event)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
-                self.handle_status_update,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self.handle_server_unavailable,
-            )
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on a switch."""
