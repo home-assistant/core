@@ -1,7 +1,6 @@
 """Support for the World Air Quality Index service."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from aiowaqi import WAQIClient, WAQIConnectionError
@@ -17,20 +16,20 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TEMPERATURE,
     ATTR_TIME,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
+    CONF_API_KEY,
     CONF_NAME,
     CONF_TOKEN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_STATION_NUMBER, DOMAIN
 from .coordinator import WAQIDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +49,6 @@ ATTR_ICON = "mdi:cloud"
 
 CONF_LOCATIONS = "locations"
 CONF_STATIONS = "stations"
-
-SCAN_INTERVAL = timedelta(minutes=5)
 
 TIMEOUT = 10
 
@@ -76,6 +73,21 @@ async def async_setup_platform(
     station_filter = config.get(CONF_STATIONS)
     locations = config[CONF_LOCATIONS]
 
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "World Air Quality Index",
+        },
+    )
+
     client = WAQIClient(session=async_get_clientsession(hass), request_timeout=TIMEOUT)
     client.authenticate(token)
     try:
@@ -93,9 +105,9 @@ async def async_setup_platform(
                             DOMAIN,
                             context={"source": SOURCE_IMPORT},
                             data={
-                                CONF_LATITUDE: station.station.coordinates.latitude,
-                                CONF_LONGITUDE: station.station.coordinates.longitude,
+                                CONF_STATION_NUMBER: station.station_id,
                                 CONF_NAME: station.station.name,
+                                CONF_API_KEY: config[CONF_TOKEN],
                             },
                         )
                     )

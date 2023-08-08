@@ -2,10 +2,10 @@
   "config": {
     "step": {
       "user": {
+        "description": "Select a location to get the closest measuring station.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "location": "[%key:common::config_flow::data::location%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },
