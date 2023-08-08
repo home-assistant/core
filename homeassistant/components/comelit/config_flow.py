@@ -42,8 +42,10 @@ async def validate_input(
         raise CannotConnect from err
     except aiocomelit_exceptions.CannotAuthenticate as err:
         raise InvalidAuth from err
+    finally:
+        await api.logout()
+        await api.close()
 
-    await api.logout()
     return {"title": data[CONF_HOST]}
 
 
