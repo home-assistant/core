@@ -40,3 +40,32 @@ async def test_anna_max_boiler_temp_change(
     mock_smile_anna.set_number_setpoint.assert_called_with(
         "maximum_boiler_temperature", 65.0
     )
+
+
+async def test_adam_number_entities(
+    hass: HomeAssistant, mock_smile_adam_2: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test creation of a number."""
+    state = hass.states.get("number.opentherm_domestic_hot_water_setpoint")
+    assert state
+    assert float(state.state) == 60.0
+
+
+async def test_adam_dhw_setpoint_change(
+    hass: HomeAssistant, mock_smile_adam_2: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test changing of number entities."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.opentherm_domestic_hot_water_setpoint",
+            ATTR_VALUE: 55,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_adam_2.set_number_setpoint.call_count == 1
+    mock_smile_adam_2.set_number_setpoint.assert_called_with(
+        "max_dhw_temperature", "056ee145a816487eaa69243c3280f8bf", 55.0
+    )
