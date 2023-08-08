@@ -22,9 +22,10 @@ from homeassistant.components.weather import (
     ENTITY_ID_FORMAT,
     Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -130,6 +131,7 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_should_poll = False
+    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     def __init__(
         self,
@@ -246,12 +248,24 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         """Return the forecast."""
         return self._forecast
 
+    async def async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self._forecast
+
     @property
     def attribution(self) -> str | None:
         """Return the attribution."""
         if self._attribution is None:
             return "Powered by Home Assistant"
         return self._attribution
+
+    @callback
+    def _update_state(self, result):
+        super()._update_state(result)
+        assert self.platform.config_entry
+        self.platform.config_entry.async_create_task(
+            self.hass, self.async_update_listeners("daily")
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
