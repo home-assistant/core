@@ -148,16 +148,16 @@ def _migrate_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
     entity_type = unique_id_pieces[2]
 
     # Handle bug in version 1: Entity type names were used instead of
-    # keys (e.g. "Protocol Version" instead of "protocol_version").
+    # keys (e.g. "Protocol Version" instead of "protocol-version").
     new_entity_type = entity_type.lower()
-    new_entity_type = new_entity_type.replace(" ", "_")
+    new_entity_type = new_entity_type.replace(" ", "-")
 
     # Special case 'MOTD': Name and key differs.
-    if new_entity_type == "world_message":
+    if new_entity_type == "world-message":
         new_entity_type = KEY_MOTD
 
     # Special case 'latency_time': Renamed to 'latency'.
-    if new_entity_type == "latency_time":
+    if new_entity_type == "latency-time":
         new_entity_type = KEY_LATENCY
 
     new_unique_id = f"{entity_entry.config_entry_id}-{new_entity_type}"
