@@ -364,16 +364,18 @@ class WeatherFlowSensorEntity(SensorEntity):
             self.hass.config.units is not METRIC_SYSTEM
             and (function := self.entity_description.conversion_fn) is not None
         ) or (function := self.entity_description.value_fn) is not None:
-            raw_sensor_data = function(raw_sensor_data)
+            noramlized_sensor_data = function(raw_sensor_data)
+        else:
+            noramlized_sensor_data = raw_sensor_data
 
-        if isinstance(raw_sensor_data, Quantity):
-            sensor_value = raw_sensor_data.magnitude
+        if isinstance(noramlized_sensor_data, Quantity):
+            sensor_value = noramlized_sensor_data.magnitude
             if (decimals := self.entity_description.decimals) is not None:
                 sensor_value = round(sensor_value, decimals)
             return sensor_value
 
-        if isinstance(raw_sensor_data, Enum):
-            sensor_value = raw_sensor_data.name
+        if isinstance(noramlized_sensor_data, Enum):
+            sensor_value = noramlized_sensor_data.name
 
         return sensor_value
 
