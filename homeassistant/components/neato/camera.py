@@ -12,16 +12,15 @@ from urllib3.response import HTTPResponse
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    NEATO_DOMAIN,
     NEATO_LOGIN,
     NEATO_MAP_DATA,
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
 )
+from .entity import NeatoEntity
 from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,26 +43,25 @@ async def async_setup_entry(
     if not dev:
         return
 
-    _LOGGER.debug("Adding robots for cleaning maps %s", dev)
     async_add_entities(dev, True)
 
 
-class NeatoCleaningMap(Camera):
+class NeatoCleaningMap(NeatoEntity, Camera):
     """Neato cleaning map for last clean."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "cleaning_map"
 
     def __init__(
         self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any] | None
     ) -> None:
         """Initialize Neato cleaning map."""
-        super().__init__()
-        self.robot = robot
+        Camera.__init__(self)
+        NeatoEntity.__init__(self, robot)
+        self._attr_available = neato is not None
+        self._attr_unique_id = self.robot.serial
+
         self.neato = neato
         self._mapdata = mapdata
-        self._available = neato is not None
-        self._robot_serial: str = self.robot.serial
         self._generated_at: str | None = None
         self._image_url: str | None = None
         self._image: bytes | None = None
@@ -82,17 +80,17 @@ class NeatoCleaningMap(Camera):
         try:
             self.neato.update_robots()
         except NeatoRobotException as ex:
-            if self._available:  # Print only once when available
+            if self._attr_available:  # Print only once when available
                 _LOGGER.error(
                     "Neato camera connection error for '%s': %s", self.entity_id, ex
                 )
             self._image = None
             self._image_url = None
-            self._available = False
+            self._attr_available = False
             return
 
         if self._mapdata:
-            map_data: dict[str, Any] = self._mapdata[self._robot_serial]["maps"][0]
+            map_data: dict[str, Any] = self._mapdata[self.robot.serial]["maps"][0]
         if (image_url := map_data["url"]) == self._image_url:
             _LOGGER.debug(
                 "The map image_url for '%s' is the same as old", self.entity_id
@@ -102,37 +100,19 @@ class NeatoCleaningMap(Camera):
         try:
             image: HTTPResponse = self.neato.download_map(image_url)
         except NeatoRobotException as ex:
-            if self._available:  # Print only once when available
+            if self._attr_available:  # Print only once when available
                 _LOGGER.error(
                     "Neato camera connection error for '%s': %s", self.entity_id, ex
                 )
             self._image = None
             self._image_url = None
-            self._available = False
+            self._attr_available = False
             return
 
         self._image = image.read()
         self._image_url = image_url
         self._generated_at = map_data.get("generated_at")
-        self._available = True
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        return self._robot_serial
-
-    @property
-    def available(self) -> bool:
-        """Return if the robot is available."""
-        return self._available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for neato robot."""
-        return DeviceInfo(
-            identifiers={(NEATO_DOMAIN, self._robot_serial)},
-            name=self.robot.name,
-        )
+        self._attr_available = True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
