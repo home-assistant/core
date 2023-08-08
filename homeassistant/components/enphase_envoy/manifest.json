@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/enphase_envoy",
   "iot_class": "local_polling",
   "loggers": ["pyenphase"],
-  "requirements": ["pyenphase==0.14.1"],
+  "requirements": ["pyenphase==0.15.1"],
   "zeroconf": [
     {
       "type": "_enphase-envoy._tcp.local."
