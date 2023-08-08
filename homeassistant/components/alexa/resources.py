@@ -399,7 +399,7 @@ class AlexaSemantics:
         """Add state mapping between states and interface directives."""
         self._state_mappings.append(semantics)
 
-    def add_states_to_value(self, states: list[str], value: int | float) -> None:
+    def add_states_to_value(self, states: list[str], value: Any) -> None:
         """Add StatesToValue stateMappings."""
         self._add_state_mapping(
             {"@type": self.STATES_TO_VALUE, "states": states, "value": value}
