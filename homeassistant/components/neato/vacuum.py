@@ -105,7 +105,6 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         | VacuumEntityFeature.MAP
         | VacuumEntityFeature.LOCATE
     )
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
