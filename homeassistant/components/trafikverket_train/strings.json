@@ -9,7 +9,8 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_station": "Could not find a station with the specified name",
       "more_stations": "Found multiple stations with the specified name",
-      "invalid_time": "Invalid time provided",
+      "no_trains": "No train found",
+      "multiple_trains": "Multiple trains found",
       "incorrect_api_key": "Invalid API key for selected account"
     },
     "step": {
@@ -20,6 +21,9 @@
           "from": "From station",
           "time": "Time (optional)",
           "weekday": "Days"
+        },
+        "data_description": {
+          "time": "Set time to search specifically at this time of day, must be exact time as scheduled train departure"
         }
       },
       "reauth_confirm": {
@@ -45,38 +49,36 @@
   "entity": {
     "sensor": {
       "departure_time": {
-        "name": "Departure time",
-        "state_attributes": {
-          "departure_state": {
-            "name": "Departure state",
-            "state": {
-              "on_time": "On time",
-              "delayed": "Delayed",
-              "canceled": "Cancelled"
-            }
-          },
-          "canceled": {
-            "name": "Cancelled"
-          },
-          "number_of_minutes_delayed": {
-            "name": "Minutes delayed"
-          },
-          "planned_time": {
-            "name": "Planned time"
-          },
-          "estimated_time": {
-            "name": "Estimated time"
-          },
-          "actual_time": {
-            "name": "Actual time"
-          },
-          "other_information": {
-            "name": "Other information"
-          },
-          "deviations": {
-            "name": "Deviations"
-          }
+        "name": "Departure time"
+      },
+      "departure_state": {
+        "name": "Departure state",
+        "state": {
+          "on_time": "On time",
+          "delayed": "Delayed",
+          "canceled": "Cancelled"
         }
+      },
+      "cancelled": {
+        "name": "Cancelled"
+      },
+      "delayed_time": {
+        "name": "Delayed time"
+      },
+      "planned_time": {
+        "name": "Planned time"
+      },
+      "estimated_time": {
+        "name": "Estimated time"
+      },
+      "actual_time": {
+        "name": "Actual time"
+      },
+      "other_info": {
+        "name": "Other information"
+      },
+      "deviation": {
+        "name": "Deviation"
       }
     }
   }

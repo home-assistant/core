@@ -30,7 +30,7 @@ janus==1.0.0
 Jinja2==3.1.2
 lru-dict==1.2.0
 mutagen==1.46.0
-orjson==3.9.2
+orjson==3.9.3
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.0.0

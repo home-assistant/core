@@ -13,7 +13,7 @@ from yalexs.activity import (
     ActivityType,
 )
 from yalexs.doorbell import Doorbell, DoorbellDetail
-from yalexs.lock import Lock, LockDoorStatus
+from yalexs.lock import Lock, LockDetail, LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
 from homeassistant.components.binary_sensor import (
@@ -39,13 +39,16 @@ TIME_TO_RECHECK_DETECTION = timedelta(
 )
 
 
-def _retrieve_online_state(data: AugustData, detail: DoorbellDetail) -> bool:
+def _retrieve_online_state(
+    data: AugustData, detail: DoorbellDetail | LockDetail
+) -> bool:
     """Get the latest state of the sensor."""
     # The doorbell will go into standby mode when there is no motion
     # for a short while. It will wake by itself when needed so we need
     # to consider is available or we will not report motion or dings
-
-    return detail.is_online or detail.is_standby
+    if isinstance(detail, DoorbellDetail):
+        return detail.is_online or detail.is_standby
+    return detail.bridge_is_online
 
 
 def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
@@ -72,7 +75,7 @@ def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> b
     return _activity_time_based_state(latest)
 
 
-def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail) -> bool:
+def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail | LockDetail) -> bool:
     assert data.activity_stream is not None
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_DING}
@@ -135,15 +138,7 @@ SENSOR_TYPE_DOOR = AugustBinarySensorEntityDescription(
     name="Open",
 )
 
-
-SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] = (
-    AugustDoorbellBinarySensorEntityDescription(
-        key="doorbell_ding",
-        name="Ding",
-        device_class=BinarySensorDeviceClass.OCCUPANCY,
-        value_fn=_retrieve_ding_state,
-        is_time_based=True,
-    ),
+SENSOR_TYPES_VIDEO_DOORBELL = (
     AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_motion",
         name="Motion",
@@ -165,6 +160,17 @@ SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] =
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_online_state,
         is_time_based=False,
+    ),
+)
+
+
+SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] = (
+    AugustDoorbellBinarySensorEntityDescription(
+        key="doorbell_ding",
+        name="Ding",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        value_fn=_retrieve_ding_state,
+        is_time_based=True,
     ),
 )
 
@@ -193,8 +199,17 @@ async def async_setup_entry(
         _LOGGER.debug("Adding sensor class door for %s", door.device_name)
         entities.append(AugustDoorBinarySensor(data, door, SENSOR_TYPE_DOOR))
 
+        if detail.doorbell:
+            for description in SENSOR_TYPES_DOORBELL:
+                _LOGGER.debug(
+                    "Adding doorbell sensor class %s for %s",
+                    description.device_class,
+                    door.device_name,
+                )
+                entities.append(AugustDoorbellBinarySensor(data, door, description))
+
     for doorbell in data.doorbells:
-        for description in SENSOR_TYPES_DOORBELL:
+        for description in SENSOR_TYPES_DOORBELL + SENSOR_TYPES_VIDEO_DOORBELL:
             _LOGGER.debug(
                 "Adding doorbell sensor class %s for %s",
                 description.device_class,
@@ -261,7 +276,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
     def __init__(
         self,
         data: AugustData,
-        device: Doorbell,
+        device: Doorbell | Lock,
         description: AugustDoorbellBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
