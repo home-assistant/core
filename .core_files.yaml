@@ -86,6 +86,7 @@ components: &components
   - homeassistant/components/lovelace/**
   - homeassistant/components/media_source/**
   - homeassistant/components/mjpeg/**
+  - homeassistant/components/modbus/**
   - homeassistant/components/mqtt/**
   - homeassistant/components/network/**
   - homeassistant/components/onboarding/**
