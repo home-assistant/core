@@ -13,7 +13,7 @@ from typing import Any, TypeVar
 
 import slugify as unicode_slug
 
-from .dt import as_local, utcnow
+from . import dt as dt_util
 
 _T = TypeVar("_T")
 _U = TypeVar("_U")
@@ -55,7 +55,7 @@ def repr_helper(inp: Any) -> str:
             f"{repr_helper(key)}={repr_helper(item)}" for key, item in inp.items()
         )
     if isinstance(inp, datetime):
-        return as_local(inp).isoformat()
+        return dt_util.as_local(inp).isoformat()
 
     return str(inp)
 
@@ -186,9 +186,9 @@ class Throttle:
             force = kwargs.pop("no_throttle", False) or not throttle[1]
 
             try:
-                if force or utcnow() - throttle[1] > self.min_time:
+                if force or dt_util.utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
-                    throttle[1] = utcnow()
+                    throttle[1] = dt_util.utcnow()
                     return result  # type: ignore[no-any-return]
 
                 return throttled_value()
