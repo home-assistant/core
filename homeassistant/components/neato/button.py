@@ -21,16 +21,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Neato button from config entry."""
-    dev = []
+    entities = [
+        NeatoDismissAlertButton(robot)
+        for robot in hass.data[NEATO_ROBOTS]
+    ]
 
-    for robot in hass.data[NEATO_ROBOTS]:
-        dev.append(NeatoDismissAlertButton(robot))
-
-    if not dev:
-        return
-
-    _LOGGER.debug("Adding vacuum buttons %s", dev)
-    async_add_entities(dev, True)
+    _LOGGER.debug("Adding vacuum buttons %s", entities)
+    async_add_entities(entities, True)
 
 
 class NeatoDismissAlertButton(ButtonEntity):
