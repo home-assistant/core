@@ -3,22 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import YardianUpdateCoordinator
-
-SERVICE_START_IRRIGATION = "start_irrigation"
-SERVICE_SCHEMA_START_IRRIGATION = {
-    vol.Required("duration"): cv.positive_int,
-}
 
 
 async def async_setup_entry(
@@ -37,19 +29,12 @@ async def async_setup_entry(
         for i in range(len(coordinator.data.zones))
     )
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_START_IRRIGATION,
-        SERVICE_SCHEMA_START_IRRIGATION,
-        "async_turn_on",
-    )
-
 
 class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
     """Representation of a Yardian switch."""
 
     def __init__(self, coordinator: YardianUpdateCoordinator, config, zone_id) -> None:
-        """Initialize a Rain Bird Switch Device."""
+        """Initialize a Yardian Switch Device."""
         super().__init__(coordinator)
         self.coordinator = coordinator
         self._zone_id = zone_id
