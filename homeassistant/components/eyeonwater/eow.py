@@ -247,6 +247,9 @@ class Client:
                 },
             )
 
+            if "dashboard" not in str(resp.url):
+                raise EyeOnWaterAuthError("No meter found")
+
             if resp.status == 400:
                 raise EyeOnWaterAuthError("Username or password was not accepted")
 
