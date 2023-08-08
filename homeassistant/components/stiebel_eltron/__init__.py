@@ -16,7 +16,6 @@ CONF_HUB = "hub"
 DEFAULT_HUB = "modbus_hub"
 MODBUS_DOMAIN = "modbus"
 DOMAIN = "stiebel_eltron"
-CONF_HUB = "hub"
 
 CONFIG_SCHEMA = vol.Schema(
     {
