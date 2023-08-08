@@ -106,6 +106,8 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         | VacuumEntityFeature.MAP
         | VacuumEntityFeature.LOCATE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -118,7 +120,6 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         self.robot = robot
         self._attr_available: bool = neato is not None
         self._mapdata = mapdata
-        self._attr_name: str = self.robot.name
         self._robot_has_map: bool = self.robot.has_persistent_maps
         self._robot_maps = persistent_maps
         self._robot_serial: str = self.robot.serial
