@@ -289,13 +289,13 @@ async def async_setup_entry(
 
     if envoy_data.encharge_inventory:
         entities.extend(
-            EnvoyEnchargeEntity(coordinator, description, encharge)
+            EnvoyEnchargeInventoryEntity(coordinator, description, encharge)
             for description in ENCHARGE_INVENTORY_SENSORS
             for encharge in envoy_data.encharge_inventory
         )
     if envoy_data.encharge_power:
         entities.extend(
-            EnvoyEnchargeEntity(coordinator, description, encharge)
+            EnvoyEnchargePowerEntity(coordinator, description, encharge)
             for description in ENCHARGE_POWER_SENSORS
             for encharge in envoy_data.encharge_power
         )
@@ -438,15 +438,32 @@ class EnvoyEnchargeEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEnt
         )
         super().__init__(coordinator)
 
+
+class EnvoyEnchargeInventoryEntity(EnvoyEnchargeEntity):
+    """Envoy Encharge inventory entity."""
+
+    entity_description: EnvoyEnchargeSensorEntityDescription
+
     @property
     def native_value(self) -> int | float | datetime.datetime | None:
-        """Return the state of the sensor."""
+        """Return the state of the inventory sensors."""
         envoy = self.coordinator.envoy
         assert envoy.data is not None
         assert envoy.data.encharge_inventory is not None
+        encharge = envoy.data.encharge_inventory[self._serial_number]
+        return self.entity_description.value_fn(encharge)
+
+
+class EnvoyEnchargePowerEntity(EnvoyEnchargeEntity):
+    """Envoy Encharge power entity."""
+
+    entity_description: EnvoyEnchargePowerSensorEntityDescription
+
+    @property
+    def native_value(self) -> int | float | None:
+        """Return the state of the power sensors."""
+        envoy = self.coordinator.envoy
+        assert envoy.data is not None
         assert envoy.data.encharge_power is not None
-        if self.entity_description in ENCHARGE_POWER_SENSORS:
-            encharge = envoy.data.encharge_power[self._serial_number]
-        else:
-            encharge = envoy.data.encharge_inventory[self._serial_number]
+        encharge = envoy.data.encharge_power[self._serial_number]
         return self.entity_description.value_fn(encharge)
