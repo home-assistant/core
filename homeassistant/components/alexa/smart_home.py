@@ -1,7 +1,13 @@
 """Support for alexa Smart Home Skill API."""
 import logging
+from typing import Any
+
+from aiohttp import web
+from yarl import URL
 
 from homeassistant import core
+from homeassistant.auth.models import User
+from homeassistant.components.http import HomeAssistantRequest
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import Context, HomeAssistant
@@ -23,15 +29,16 @@ from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .state_report import AlexaDirective
 
-SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"
-
 _LOGGER = logging.getLogger(__name__)
+SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"
 
 
 class AlexaConfig(AbstractConfig):
     """Alexa config."""
 
-    def __init__(self, hass, config):
+    _auth: Auth | None
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize Alexa config."""
         super().__init__(hass)
         self._config = config
@@ -42,37 +49,37 @@ class AlexaConfig(AbstractConfig):
             self._auth = None
 
     @property
-    def supports_auth(self):
+    def supports_auth(self) -> bool:
         """Return if config supports auth."""
         return self._auth is not None
 
     @property
-    def should_report_state(self):
+    def should_report_state(self) -> bool:
         """Return if we should proactively report states."""
         return self._auth is not None and self.authorized
 
     @property
-    def endpoint(self):
+    def endpoint(self) -> str | URL | None:
         """Endpoint for report state."""
         return self._config.get(CONF_ENDPOINT)
 
     @property
-    def entity_config(self):
+    def entity_config(self) -> dict[str, Any]:
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     @property
-    def locale(self):
+    def locale(self) -> str | None:
         """Return config locale."""
         return self._config.get(CONF_LOCALE)
 
     @core.callback
-    def user_identifier(self):
+    def user_identifier(self) -> str:
         """Return an identifier for the user that represents this config."""
         return ""
 
     @core.callback
-    def should_expose(self, entity_id):
+    def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
         if not self._config[CONF_FILTER].empty_filter:
             return self._config[CONF_FILTER](entity_id)
@@ -88,16 +95,19 @@ class AlexaConfig(AbstractConfig):
         return not auxiliary_entity
 
     @core.callback
-    def async_invalidate_access_token(self):
+    def async_invalidate_access_token(self) -> None:
         """Invalidate access token."""
+        assert self._auth is not None
         self._auth.async_invalidate_access_token()
 
-    async def async_get_access_token(self):
+    async def async_get_access_token(self) -> str | None:
         """Get an access token."""
+        assert self._auth is not None
         return await self._auth.async_get_access_token()
 
-    async def async_accept_grant(self, code):
+    async def async_accept_grant(self, code: str) -> str | None:
         """Accept a grant."""
+        assert self._auth is not None
         return await self._auth.async_do_auth(code)
 
 
@@ -124,20 +134,20 @@ class SmartHomeView(HomeAssistantView):
     url = SMART_HOME_HTTP_ENDPOINT
     name = "api:alexa:smart_home"
 
-    def __init__(self, smart_home_config):
+    def __init__(self, smart_home_config: AlexaConfig) -> None:
         """Initialize."""
         self.smart_home_config = smart_home_config
 
-    async def post(self, request):
+    async def post(self, request: HomeAssistantRequest) -> web.Response | bytes:
         """Handle Alexa Smart Home requests.
 
         The Smart Home API requires the endpoint to be implemented in AWS
         Lambda, which will need to forward the requests to here and pass back
         the response.
         """
-        hass = request.app["hass"]
-        user = request["hass_user"]
-        message = await request.json()
+        hass: HomeAssistant = request.app["hass"]
+        user: User = request["hass_user"]
+        message: dict[str, Any] = await request.json()
 
         _LOGGER.debug("Received Alexa Smart Home request: %s", message)
 
@@ -148,7 +158,13 @@ class SmartHomeView(HomeAssistantView):
         return b"" if response is None else self.json(response)
 
 
-async def async_handle_message(hass, config, request, context=None, enabled=True):
+async def async_handle_message(
+    hass: HomeAssistant,
+    config: AbstractConfig,
+    request: dict[str, Any],
+    context: Context | None = None,
+    enabled: bool = True,
+) -> dict[str, Any]:
     """Handle incoming API messages.
 
     If enabled is False, the response to all messages will be a
@@ -185,7 +201,7 @@ async def async_handle_message(hass, config, request, context=None, enabled=True
             response = directive.error()
     except AlexaError as err:
         response = directive.error(
-            error_type=err.error_type,
+            error_type=str(err.error_type),
             error_message=err.error_message,
             payload=err.payload,
         )
@@ -198,9 +214,13 @@ async def async_handle_message(hass, config, request, context=None, enabled=True
         )
         response = directive.error(error_message="Unknown error")
 
-    request_info = {"namespace": directive.namespace, "name": directive.name}
+    request_info: dict[str, Any] = {
+        "namespace": directive.namespace,
+        "name": directive.name,
+    }
 
     if directive.has_endpoint:
+        assert directive.entity_id is not None
         request_info["entity_id"] = directive.entity_id
 
     hass.bus.async_fire(
