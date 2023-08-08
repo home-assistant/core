@@ -25,14 +25,14 @@ class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: AuroraDataUpdateCoordinator,
-        name: str,
+        translation_key: str,
         icon: str,
     ) -> None:
         """Initialize the Aurora Entity."""
 
         super().__init__(coordinator=coordinator)
 
-        self._attr_name = name
+        self._attr_translation_key = translation_key
         self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
         self._attr_icon = icon
 
