@@ -194,7 +194,7 @@ CONFIG_FLOW = {
     "sensor": SchemaFlowFormStep(
         SENSOR_CONFIG_SCHEMA,
         validate_user_input=set_group_type("sensor"),
-        preview="sensor_group_preview",
+        preview="group_sensor",
     ),
     "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"),
@@ -215,7 +215,7 @@ OPTIONS_FLOW = {
     ),
     "sensor": SchemaFlowFormStep(
         partial(sensor_options_schema, "sensor"),
-        preview="sensor_group_preview",
+        preview="group_sensor",
     ),
     "switch": SchemaFlowFormStep(partial(light_switch_options_schema, "switch")),
 }
