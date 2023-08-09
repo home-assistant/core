@@ -1108,7 +1108,7 @@ def async_discover_single_value(
 def async_discover_single_configuration_value(
     value: ConfigurationValue,
 ) -> Generator[ZwaveDiscoveryInfo, None, None]:
-    """Run discovery on a single ZWave configuration value and return matching schema info."""
+    """Run discovery on single Z-Wave configuration value and return schema matches."""
     if value.metadata.writeable and value.metadata.readable:
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             yield ZwaveDiscoveryInfo(
