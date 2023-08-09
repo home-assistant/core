@@ -22,7 +22,11 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
@@ -36,7 +40,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="fan",
         info_type=FanInfo,
         entity_type=EsphomeFan,
         state_type=FanState,
@@ -116,9 +119,6 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
     @esphome_state_property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        if not self._static_info.supports_speed:
-            return None
-
         if not self._supports_speed_levels:
             return ordered_list_item_to_percentage(
                 ORDERED_NAMED_FAN_SPEEDS, self._state.speed  # type: ignore[misc]

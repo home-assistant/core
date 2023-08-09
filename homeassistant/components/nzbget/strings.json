@@ -31,5 +31,25 @@
         }
       }
     }
+  },
+  "services": {
+    "pause": {
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses download queue."
+    },
+    "resume": {
+      "name": "Resume",
+      "description": "Resumes download queue."
+    },
+    "set_speed": {
+      "name": "Set speed",
+      "description": "Sets download speed limit.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "Speed limit. 0 is unlimited."
+        }
+      }
+    }
   }
 }

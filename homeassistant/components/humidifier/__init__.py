@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
@@ -29,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
+    ATTR_ACTION,
     ATTR_AVAILABLE_MODES,
     ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
@@ -45,6 +46,7 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SUPPORT_MODES,
+    HumidifierAction,
     HumidifierEntityFeature,
 )
 
@@ -133,6 +135,7 @@ class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
 
     entity_description: HumidifierEntityDescription
+    _attr_action: HumidifierAction | None = None
     _attr_available_modes: list[str] | None
     _attr_current_humidity: int | None = None
     _attr_device_class: HumidifierDeviceClass | None
@@ -170,6 +173,9 @@ class HumidifierEntity(ToggleEntity):
         """Return the optional state attributes."""
         data: dict[str, int | str | None] = {}
 
+        if self.action is not None:
+            data[ATTR_ACTION] = self.action if self.is_on else HumidifierAction.OFF
+
         if self.current_humidity is not None:
             data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
 
@@ -180,6 +186,11 @@ class HumidifierEntity(ToggleEntity):
             data[ATTR_MODE] = self.mode
 
         return data
+
+    @property
+    def action(self) -> HumidifierAction | None:
+        """Return the current action."""
+        return self._attr_action
 
     @property
     def current_humidity(self) -> int | None:

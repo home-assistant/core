@@ -143,7 +143,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.IDENTIFY
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -168,7 +168,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "2021-11-04T16:37:00+00:00"
-    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.IDENTIFY
 
 
 async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:

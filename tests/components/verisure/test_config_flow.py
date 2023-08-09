@@ -583,6 +583,15 @@ async def test_reauth_flow_errors(
                 CONF_LOCK_CODE_DIGITS: DEFAULT_LOCK_CODE_DIGITS,
             },
         ),
+        (
+            {
+                CONF_LOCK_CODE_DIGITS: 5,
+            },
+            {
+                CONF_LOCK_CODE_DIGITS: 5,
+                CONF_LOCK_DEFAULT_CODE: "",
+            },
+        ),
     ],
 )
 async def test_options_flow(

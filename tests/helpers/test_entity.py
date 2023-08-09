@@ -19,7 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import (
     MockConfigEntry,
@@ -971,6 +972,7 @@ async def _test_friendly_name(
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
     entity_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )
@@ -983,14 +985,25 @@ async def _test_friendly_name(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
     assert (expected_warning in caplog.text) is warn_implicit_name
 
+    await async_update_entity(hass, ent.entity_id)
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+
 
 @pytest.mark.parametrize(
-    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
     (
-        (False, "Entity Blu", "Entity Blu", False),
-        (False, None, None, False),
-        (True, "Entity Blu", "Device Bla Entity Blu", False),
-        (True, None, "Device Bla", False),
+        "has_entity_name",
+        "entity_name",
+        "device_name",
+        "expected_friendly_name",
+        "warn_implicit_name",
+    ),
+    (
+        (False, "Entity Blu", "Device Bla", "Entity Blu", False),
+        (False, None, "Device Bla", None, False),
+        (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", "Device Bla", False),
+        (True, "Entity Blu", UNDEFINED, "Entity Blu", False),
+        (True, "Entity Blu", None, "Mock Title Entity Blu", False),
     ),
 )
 async def test_friendly_name_attr(
@@ -998,6 +1011,7 @@ async def test_friendly_name_attr(
     caplog: pytest.LogCaptureFixture,
     has_entity_name: bool,
     entity_name: str | None,
+    device_name: str | None | UndefinedType,
     expected_friendly_name: str | None,
     warn_implicit_name: bool,
 ) -> None:
@@ -1008,7 +1022,7 @@ async def test_friendly_name_attr(
         device_info={
             "identifiers": {("hue", "1234")},
             "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
-            "name": "Device Bla",
+            "name": device_name,
         },
     )
     ent._attr_has_entity_name = has_entity_name

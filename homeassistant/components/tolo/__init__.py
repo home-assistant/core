@@ -95,6 +95,8 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
 class ToloSaunaCoordinatorEntity(CoordinatorEntity[ToloSaunaUpdateCoordinator]):
     """CoordinatorEntity for TOLO Sauna."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
     ) -> None:

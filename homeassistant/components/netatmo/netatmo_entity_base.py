@@ -70,7 +70,7 @@ class NetatmoBase(Entity):
                 await self.data_handler.unsubscribe(signal_name, None)
 
         registry = dr.async_get(self.hass)
-        if device := registry.async_get_device({(DOMAIN, self._id)}):
+        if device := registry.async_get_device(identifiers={(DOMAIN, self._id)}):
             self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
         self.async_update_callback()

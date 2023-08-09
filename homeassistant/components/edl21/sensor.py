@@ -50,41 +50,56 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0 Ownership ID
     SensorEntityDescription(
         key="1-0:0.0.0*255",
-        name="Ownership ID",
+        translation_key="ownership_id",
         icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
     # E=9: Electrity ID
     SensorEntityDescription(
-        key="1-0:0.0.9*255", name="Electricity ID", icon="mdi:flash"
+        key="1-0:0.0.9*255",
+        translation_key="electricity_id",
+        icon="mdi:flash",
     ),
     # D=2: Program entries
     SensorEntityDescription(
-        key="1-0:0.2.0*0", name="Configuration program version number", icon="mdi:flash"
+        key="1-0:0.2.0*0",
+        translation_key="configuration_program_version_number",
+        icon="mdi:flash",
     ),
     SensorEntityDescription(
-        key="1-0:0.2.0*1", name="Firmware version number", icon="mdi:flash"
+        key="1-0:0.2.0*1",
+        translation_key="firmware_version_number",
+        icon="mdi:flash",
     ),
     # C=1: Active power +
+    # D=7: Current value
+    # E=0: Total
+    SensorEntityDescription(
+        key="1-0:1.7.0*255",
+        translation_key="positive_active_instantaneous_power",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    # C=1: Active energy +
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
         key="1-0:1.8.0*255",
-        name="Positive active energy total",
+        translation_key="positive_active_energy_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=1: Rate 1
     SensorEntityDescription(
         key="1-0:1.8.1*255",
-        name="Positive active energy in tariff T1",
+        translation_key="positive_active_energy_tariff_t1",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=2: Rate 2
     SensorEntityDescription(
         key="1-0:1.8.2*255",
-        name="Positive active energy in tariff T2",
+        translation_key="positive_active_energy_tariff_t2",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -92,28 +107,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:1.17.0*255",
-        name="Last signed positive active energy total",
+        translation_key="last_signed_positive_active_energy_total",
     ),
-    # C=2: Active power -
+    # C=2: Active energy -
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
         key="1-0:2.8.0*255",
-        name="Negative active energy total",
+        translation_key="negative_active_energy_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=1: Rate 1
     SensorEntityDescription(
         key="1-0:2.8.1*255",
-        name="Negative active energy in tariff T1",
+        translation_key="negative_active_energy_tariff_t1",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     # E=2: Rate 2
     SensorEntityDescription(
         key="1-0:2.8.2*255",
-        name="Negative active energy in tariff T2",
+        translation_key="negative_active_energy_tariff_t2",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -121,14 +136,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # D=7: Instantaneous value
     # E=0: Total
     SensorEntityDescription(
-        key="1-0:14.7.0*255", name="Supply frequency", icon="mdi:sine-wave"
+        key="1-0:14.7.0*255",
+        translation_key="supply_frequency",
+        icon="mdi:sine-wave",
     ),
     # C=15: Active power absolute
     # D=7: Instantaneous value
     # E=0: Total
     SensorEntityDescription(
         key="1-0:15.7.0*255",
-        name="Absolute active instantaneous power",
+        translation_key="absolute_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -137,7 +154,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:16.7.0*255",
-        name="Sum active instantaneous power",
+        translation_key="sum_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -146,7 +163,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:31.7.0*255",
-        name="L1 active instantaneous amperage",
+        translation_key="l1_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -155,7 +172,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:32.7.0*255",
-        name="L1 active instantaneous voltage",
+        translation_key="l1_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -164,7 +181,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:36.7.0*255",
-        name="L1 active instantaneous power",
+        translation_key="l1_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -173,7 +190,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:51.7.0*255",
-        name="L2 active instantaneous amperage",
+        translation_key="l2_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -182,7 +199,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:52.7.0*255",
-        name="L2 active instantaneous voltage",
+        translation_key="l2_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -191,7 +208,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:56.7.0*255",
-        name="L2 active instantaneous power",
+        translation_key="l2_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -200,7 +217,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:71.7.0*255",
-        name="L3 active instantaneous amperage",
+        translation_key="l3_active_instantaneous_amperage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -209,7 +226,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:72.7.0*255",
-        name="L3 active instantaneous voltage",
+        translation_key="l3_active_instantaneous_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
@@ -218,7 +235,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0: Total
     SensorEntityDescription(
         key="1-0:76.7.0*255",
-        name="L3 active instantaneous power",
+        translation_key="l3_active_instantaneous_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -230,26 +247,40 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=15: U(L2) x I(L2)
     # E=26: U(L3) x I(L3)
     SensorEntityDescription(
-        key="1-0:81.7.1*255", name="U(L2)/U(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.1*255",
+        translation_key="u_l2_u_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.2*255", name="U(L3)/U(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.2*255",
+        translation_key="u_l3_u_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.4*255",
+        translation_key="u_l1_i_l1_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.15*255", name="U(L2)/I(L2) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.15*255",
+        translation_key="u_l2_i_l2_phase_angle",
+        icon="mdi:sine-wave",
     ),
     SensorEntityDescription(
-        key="1-0:81.7.26*255", name="U(L3)/I(L3) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.26*255",
+        translation_key="u_l3_i_l3_phase_angle",
+        icon="mdi:sine-wave",
     ),
     # C=96: Electricity-related service entries
     SensorEntityDescription(
-        key="1-0:96.1.0*255", name="Metering point ID 1", icon="mdi:flash"
+        key="1-0:96.1.0*255",
+        translation_key="metering_point_id_1",
+        icon="mdi:flash",
     ),
     SensorEntityDescription(
-        key="1-0:96.5.0*255", name="Internal operating status", icon="mdi:flash"
+        key="1-0:96.5.0*255",
+        translation_key="internal_operating_status",
+        icon="mdi:flash",
     ),
 )
 

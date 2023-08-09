@@ -47,3 +47,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
+
+    async def async_step_onboarding(
+        self, data: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initialized by onboarding."""
+        return self.async_create_entry(
+            title="Google Translate text-to-speech",
+            data={CONF_LANG: DEFAULT_LANG, CONF_TLD: DEFAULT_TLD},
+        )

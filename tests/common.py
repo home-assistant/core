@@ -48,7 +48,9 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     State,
+    SupportsResponse,
     callback,
 )
 from homeassistant.helpers import (
@@ -65,7 +67,7 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -285,7 +287,12 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
 
 def async_mock_service(
-    hass: HomeAssistant, domain: str, service: str, schema: vol.Schema | None = None
+    hass: HomeAssistant,
+    domain: str,
+    service: str,
+    schema: vol.Schema | None = None,
+    response: ServiceResponse = None,
+    supports_response: SupportsResponse | None = None,
 ) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -294,8 +301,18 @@ def async_mock_service(
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
+        return response
 
-    hass.services.async_register(domain, service, mock_service_log, schema=schema)
+    if supports_response is None and response is not None:
+        supports_response = SupportsResponse.OPTIONAL
+
+    hass.services.async_register(
+        domain,
+        service,
+        mock_service_log,
+        schema=schema,
+        supports_response=supports_response,
+    )
 
     return calls
 
@@ -511,6 +528,7 @@ def mock_registry(
     registry = er.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
+    registry.deleted_entities = {}
     registry.entities = er.EntityRegistryItems()
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
@@ -1218,6 +1236,8 @@ def mock_storage(
         if store._data is None:
             # No data to load
             if store.key not in data:
+                # Make sure the next attempt will still load
+                store._load_task = None
                 return None
 
             mock_data = data.get(store.key)
@@ -1240,7 +1260,14 @@ def mock_storage(
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
-        data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
+        encoder = store._encoder
+        if encoder and encoder is not JSONEncoder:
+            # If they pass a custom encoder that is not the
+            # default JSONEncoder, we use the slow path of json.dumps
+            dump = ft.partial(json.dumps, cls=store._encoder)
+        else:
+            dump = _orjson_default_encoder
+        data[store.key] = json.loads(dump(data_to_write))
 
     async def mock_remove(store: storage.Store) -> None:
         """Remove data."""
@@ -1309,8 +1336,17 @@ def mock_integration(
     integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
-    hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
-    hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
+    if integration_cache is None:
+        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
+        loader._async_mount_config_dir(hass)
+    integration_cache[module.DOMAIN] = integration
+
+    module_cache = hass.data.get(loader.DATA_COMPONENTS)
+    if module_cache is None:
+        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
+        loader._async_mount_config_dir(hass)
+    module_cache[module.DOMAIN] = module
 
     return integration
 
@@ -1334,9 +1370,16 @@ def mock_platform(
 
     platform_path is in form hue.config_flow.
     """
-    domain, platform_name = platform_path.split(".")
-    integration_cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
-    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    domain = platform_path.split(".")[0]
+    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
+    if integration_cache is None:
+        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
+        loader._async_mount_config_dir(hass)
+
+    module_cache = hass.data.get(loader.DATA_COMPONENTS)
+    if module_cache is None:
+        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
+        loader._async_mount_config_dir(hass)
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))

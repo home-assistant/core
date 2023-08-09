@@ -548,6 +548,8 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
+    _attr_name = None
+
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,

@@ -38,8 +38,8 @@ async def test_sensors(
     assert await async_setup_component(hass, DOMAIN, {})
     state = hass.states.get("sensor.dremel_3d45_job_phase")
     assert state.state == "building"
-    state = hass.states.get("sensor.dremel_3d45_remaining_time")
-    assert state.state == "2023-05-31T12:27:44+00:00"
+    state = hass.states.get("sensor.dremel_3d45_completion_time")
+    assert state.state == "2023-05-31T14:32:16+00:00"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     state = hass.states.get("sensor.dremel_3d45_progress")
     assert state.state == "13.9"
@@ -85,11 +85,13 @@ async def test_sensors(
     state = hass.states.get("sensor.dremel_3d45_filament")
     assert state.state == "ECO-ABS"
     state = hass.states.get("sensor.dremel_3d45_elapsed_time")
-    assert state.state == "2023-05-31T13:30:00+00:00"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+    assert state.state == "0"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
     state = hass.states.get("sensor.dremel_3d45_estimated_total_time")
-    assert state.state == "2023-05-31T12:17:40+00:00"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+    assert state.state == "4340"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
     state = hass.states.get("sensor.dremel_3d45_job_status")
     assert state.state == "building"
     state = hass.states.get("sensor.dremel_3d45_job_name")
@@ -107,4 +109,3 @@ async def test_sensors(
     state = hass.states.get("sensor.dremel_3d45_hours_used")
     assert state.state == "7"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UnitOfTime.HOURS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION

@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
 from typing import final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -35,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 class ButtonDeviceClass(StrEnum):
     """Device class for buttons."""
 
+    IDENTIFY = "identify"
     RESTART = "restart"
     UPDATE = "update"
 
@@ -91,7 +92,7 @@ class ButtonEntity(RestoreEntity):
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
-        For sensors this is True if the entity has a device class.
+        For buttons this is True if the entity has a device class.
         """
         return self.device_class is not None
 

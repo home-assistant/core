@@ -58,16 +58,16 @@ class HVVDepartureSensor(SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = ICON
+    _attr_translation_key = "departures"
+    _attr_has_entity_name = True
+    _attr_available = False
 
     def __init__(self, hass, config_entry, session, hub):
         """Initialize."""
         self.config_entry = config_entry
         self.station_name = self.config_entry.data[CONF_STATION]["name"]
-        self._attr_extra_state_attributes = {}
-        self._attr_available = False
-        self._attr_has_entity_name = True
-        self._attr_name = "Departures"
         self._last_error = None
+        self._attr_extra_state_attributes = {}
 
         self.gti = hub.gti
 

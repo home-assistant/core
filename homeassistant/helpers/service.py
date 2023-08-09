@@ -31,6 +31,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import (
@@ -49,6 +50,7 @@ from . import (
     device_registry,
     entity_registry,
     template,
+    translation,
 )
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
@@ -171,7 +173,7 @@ _SERVICE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: _SERVICE_SCHEMA})
+_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
 
 
 class ServiceParams(TypedDict):
@@ -239,7 +241,7 @@ class SelectedEntities:
             return
 
         _LOGGER.warning(
-            "Unable to find referenced %s or it is/they are currently not available",
+            "Referenced %s are missing or not currently available",
             ", ".join(parts),
         )
 
@@ -565,7 +567,9 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache: dict[
+        tuple[str, str], dict[str, Any] | None
+    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
     services = hass.services.async_services()
 
     # See if there are new services not seen before.
@@ -573,71 +577,113 @@ async def async_get_all_descriptions(
     missing = set()
     all_services = []
     for domain in services:
-        for service in services[domain]:
-            cache_key = (domain, service)
+        for service_name in services[domain]:
+            cache_key = (domain, service_name)
             all_services.append(cache_key)
             if cache_key not in descriptions_cache:
                 missing.add(domain)
 
     # If we have a complete cache, check if it is still valid
-    if ALL_SERVICE_DESCRIPTIONS_CACHE in hass.data:
-        previous_all_services, previous_descriptions_cache = hass.data[
-            ALL_SERVICE_DESCRIPTIONS_CACHE
-        ]
+    if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
+        previous_all_services, previous_descriptions_cache = all_cache
         # If the services are the same, we can return the cache
         if previous_all_services == all_services:
             return cast(dict[str, dict[str, Any]], previous_descriptions_cache)
 
     # Files we loaded for missing descriptions
-    loaded = {}
+    loaded: dict[str, JSON_TYPE] = {}
 
     if missing:
         ints_or_excs = await async_get_integrations(hass, missing)
-        integrations = [
-            int_or_exc
-            for int_or_exc in ints_or_excs.values()
-            if isinstance(int_or_exc, Integration)
-        ]
-
+        integrations: list[Integration] = []
+        for domain, int_or_exc in ints_or_excs.items():
+            if type(int_or_exc) is Integration:  # pylint: disable=unidiomatic-typecheck
+                integrations.append(int_or_exc)
+                continue
+            if TYPE_CHECKING:
+                assert isinstance(int_or_exc, Exception)
+            _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
         contents = await hass.async_add_executor_job(
             _load_services_files, hass, integrations
         )
+        loaded = dict(zip(missing, contents))
 
-        for domain, content in zip(missing, contents):
-            loaded[domain] = content
+    # Load translations for all service domains
+    translations = await translation.async_get_translations(
+        hass, "en", "services", list(services)
+    )
 
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
-    for domain in services:
+    for domain, services_map in services.items():
         descriptions[domain] = {}
+        domain_descriptions = descriptions[domain]
 
-        for service in services[domain]:
-            cache_key = (domain, service)
+        for service_name in services_map:
+            cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
+            if description is not None:
+                domain_descriptions[service_name] = description
+                continue
 
             # Cache missing descriptions
-            if description is None:
-                domain_yaml = loaded[domain]
+            domain_yaml = loaded.get(domain) or {}
+            # The YAML may be empty for dynamically defined
+            # services (ie shell_command) that never call
+            # service.async_set_service_schema for the dynamic
+            # service
 
-                yaml_description = domain_yaml.get(  # type: ignore[union-attr]
-                    service, {}
-                )
+            yaml_description = (
+                domain_yaml.get(service_name) or {}  # type: ignore[union-attr]
+            )
 
-                # Don't warn for missing services, because it triggers false
-                # positives for things like scripts, that register as a service
+            # Don't warn for missing services, because it triggers false
+            # positives for things like scripts, that register as a service
+            #
+            # When name & description are in the translations use those;
+            # otherwise fallback to backwards compatible behavior from
+            # the time when we didn't have translations for descriptions yet.
+            # This mimics the behavior of the frontend.
+            description = {
+                "name": translations.get(
+                    f"component.{domain}.services.{service_name}.name",
+                    yaml_description.get("name", ""),
+                ),
+                "description": translations.get(
+                    f"component.{domain}.services.{service_name}.description",
+                    yaml_description.get("description", ""),
+                ),
+                "fields": dict(yaml_description.get("fields", {})),
+            }
 
-                description = {
-                    "name": yaml_description.get("name", ""),
-                    "description": yaml_description.get("description", ""),
-                    "fields": yaml_description.get("fields", {}),
+            # Translate fields names & descriptions as well
+            for field_name, field_schema in description["fields"].items():
+                if name := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.name"
+                ):
+                    field_schema["name"] = name
+                if desc := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.description"
+                ):
+                    field_schema["description"] = desc
+                if example := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.example"
+                ):
+                    field_schema["example"] = example
+
+            if "target" in yaml_description:
+                description["target"] = yaml_description["target"]
+
+            if (
+                response := hass.services.supports_response(domain, service_name)
+            ) != SupportsResponse.NONE:
+                description["response"] = {
+                    "optional": response == SupportsResponse.OPTIONAL,
                 }
 
-                if "target" in yaml_description:
-                    description["target"] = yaml_description["target"]
+            descriptions_cache[cache_key] = description
 
-                descriptions_cache[cache_key] = description
-
-            descriptions[domain][service] = description
+            domain_descriptions[service_name] = description
 
     hass.data[ALL_SERVICE_DESCRIPTIONS_CACHE] = (all_services, descriptions)
     return descriptions
@@ -659,7 +705,12 @@ def async_set_service_schema(
     hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
     """Register a description for a service."""
-    hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    domain = domain.lower()
+    service = service.lower()
+
+    descriptions_cache: dict[
+        tuple[str, str], dict[str, Any] | None
+    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
         "name": schema.get("name", ""),
@@ -670,8 +721,15 @@ def async_set_service_schema(
     if "target" in schema:
         description["target"] = schema["target"]
 
+    if (
+        response := hass.services.supports_response(domain, service)
+    ) != SupportsResponse.NONE:
+        description["response"] = {
+            "optional": response == SupportsResponse.OPTIONAL,
+        }
+
     hass.data.pop(ALL_SERVICE_DESCRIPTIONS_CACHE, None)
-    hass.data[SERVICE_DESCRIPTION_CACHE][(domain, service)] = description
+    descriptions_cache[(domain, service)] = description
 
 
 @bind_hass
@@ -687,6 +745,8 @@ async def entity_service_call(  # noqa: C901
     Calls all platforms simultaneously.
     """
     entity_perms: None | (Callable[[str, str], bool]) = None
+    return_response = call.return_response
+
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
@@ -797,13 +857,27 @@ async def entity_service_call(  # noqa: C901
         entities.append(entity)
 
     if not entities:
-        if call.return_response:
+        if return_response:
             raise HomeAssistantError(
                 "Service call requested response data but did not match any entities"
             )
         return None
 
-    if call.return_response and len(entities) != 1:
+    if len(entities) == 1:
+        # Single entity case avoids creating tasks and allows returning
+        # ServiceResponse
+        entity = entities[0]
+        response_data = await _handle_entity_call(
+            hass, entity, func, data, call.context
+        )
+        if entity.should_poll:
+            # Context expires if the turn on commands took a long time.
+            # Set context again so it's there when we update
+            entity.async_set_context(call.context)
+            await entity.async_update_ha_state(True)
+        return response_data if return_response else None
+
+    if return_response:
         raise HomeAssistantError(
             "Service call requested response data but matched more than one entity"
         )
@@ -820,9 +894,8 @@ async def entity_service_call(  # noqa: C901
     )
     assert not pending
 
-    response_data: ServiceResponse | None
     for task in done:
-        response_data = task.result()  # pop exception if have
+        task.result()  # pop exception if have
 
     tasks: list[asyncio.Task[None]] = []
 
@@ -841,7 +914,7 @@ async def entity_service_call(  # noqa: C901
         for future in done:
             future.result()  # pop exception if have
 
-    return response_data if call.return_response else None
+    return None
 
 
 async def _handle_entity_call(

@@ -58,11 +58,9 @@ async def test_get_triggers(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    entity_trigger_types = {
-        "changed_states",
-    }
     trigger_types = {
         "buffering",
+        "changed_states",
         "idle",
         "paused",
         "playing",
@@ -79,17 +77,6 @@ async def test_get_triggers(
             "metadata": {"secondary": False},
         }
         for trigger in trigger_types
-    ]
-    expected_triggers += [
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": trigger,
-            "device_id": device_entry.id,
-            "entity_id": entity_entry.entity_id,
-            "metadata": {"secondary": False},
-        }
-        for trigger in entity_trigger_types
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -128,11 +115,9 @@ async def test_get_triggers_hidden_auxiliary(
         entity_category=entity_category,
         hidden_by=hidden_by,
     )
-    entity_trigger_types = {
-        "changed_states",
-    }
     trigger_types = {
         "buffering",
+        "changed_states",
         "idle",
         "paused",
         "playing",
@@ -149,17 +134,6 @@ async def test_get_triggers_hidden_auxiliary(
             "metadata": {"secondary": True},
         }
         for trigger in trigger_types
-    ]
-    expected_triggers += [
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": trigger,
-            "device_id": device_entry.id,
-            "entity_id": entity_entry.entity_id,
-            "metadata": {"secondary": True},
-        }
-        for trigger in entity_trigger_types
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -263,9 +237,7 @@ async def test_if_fires_on_state_change(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": entry.entity_id
-                        if trigger == "changed_states"
-                        else entry.id,
+                        "entity_id": entry.id,
                         "type": trigger,
                     },
                     "action": {

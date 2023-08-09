@@ -12,13 +12,31 @@
       "name": "[%key:component::update::title%]"
     },
     "firmware": {
-      "name": "firmware"
+      "name": "Firmware"
     }
   },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+  "services": {
+    "install": {
+      "name": "Install update",
+      "description": "Installs an update for this device or service.",
+      "fields": {
+        "version": {
+          "name": "Version",
+          "description": "The version to install. If omitted, the latest version will be installed."
+        },
+        "backup": {
+          "name": "Backup",
+          "description": "If supported by the integration, this creates a backup before starting the update ."
+        }
+      }
+    },
+    "skip": {
+      "name": "Skip update",
+      "description": "Marks currently available update as skipped."
+    },
+    "clear_skipped": {
+      "name": "Clear skipped update",
+      "description": "Removes the skipped version marker from an update."
     }
   }
 }

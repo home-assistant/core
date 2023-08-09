@@ -1,6 +1,7 @@
 """Tests for the Open Thread Border Router integration."""
 BASE_URL = "http://core-silabs-multiprotocol:8081"
-CONFIG_ENTRY_DATA = {"url": "http://core-silabs-multiprotocol:8081"}
+CONFIG_ENTRY_DATA_MULTIPAN = {"url": "http://core-silabs-multiprotocol:8081"}
+CONFIG_ENTRY_DATA_THREAD = {"url": "/dev/ttyAMA1"}
 
 DATASET_CH15 = bytes.fromhex(
     "0E080000000000010000000300000F35060004001FFFE00208F642646DA209B1D00708FDF57B5A"

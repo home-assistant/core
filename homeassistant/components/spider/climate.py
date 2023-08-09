@@ -40,6 +40,8 @@ async def async_setup_entry(
 class SpiderThermostat(ClimateEntity):
     """Representation of a thermostat."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, api, thermostat):
@@ -76,11 +78,6 @@ class SpiderThermostat(ClimateEntity):
     def unique_id(self):
         """Return the id of the thermostat, if any."""
         return self.thermostat.id
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self.thermostat.name
 
     @property
     def current_temperature(self):

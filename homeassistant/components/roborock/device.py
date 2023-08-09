@@ -2,9 +2,10 @@
 
 from typing import Any
 
+from roborock.api import AttributeCache, RoborockClient
+from roborock.command_cache import CacheableAttribute
 from roborock.containers import Status
 from roborock.exceptions import RoborockException
-from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.exceptions import HomeAssistantError
@@ -20,15 +21,26 @@ class RoborockEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, unique_id: str, device_info: DeviceInfo, api: RoborockLocalClient
+        self, unique_id: str, device_info: DeviceInfo, api: RoborockClient
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._api = api
 
+    @property
+    def api(self) -> RoborockClient:
+        """Returns the api."""
+        return self._api
+
+    def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
+        """Get an item from the api cache."""
+        return self._api.cache.get(attribute)
+
     async def send(
-        self, command: RoborockCommand, params: dict[str, Any] | list[Any] | None = None
+        self,
+        command: RoborockCommand,
+        params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Send a command to a vacuum cleaner."""
         try:
@@ -76,7 +88,7 @@ class RoborockCoordinatedEntity(
     async def send(
         self,
         command: RoborockCommand,
-        params: dict[str, Any] | list[Any] | None = None,
+        params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""
         res = await super().send(command, params)

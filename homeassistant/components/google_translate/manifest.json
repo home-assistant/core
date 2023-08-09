@@ -3,7 +3,6 @@
   "name": "Google Translate text-to-speech",
   "codeowners": [],
   "config_flow": true,
-  "dependencies": ["repairs"],
   "documentation": "https://www.home-assistant.io/integrations/google_translate",
   "iot_class": "cloud_push",
   "loggers": ["gtts"],

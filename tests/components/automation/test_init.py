@@ -25,6 +25,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
     Context,
@@ -1428,8 +1429,13 @@ async def test_automation_bad_config_validation(
         f" {details}"
     ) in caplog.text
 
-    # Make sure one bad automation does not prevent other automations from setting up
-    assert hass.states.async_entity_ids("automation") == ["automation.good_automation"]
+    # Make sure both automations are setup
+    assert set(hass.states.async_entity_ids("automation")) == {
+        "automation.bad_automation",
+        "automation.good_automation",
+    }
+    # The automation failing validation should be unavailable
+    assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
 
 
 async def test_automation_with_error_in_script(
@@ -1556,6 +1562,31 @@ async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> N
     assert automation.blueprint_in_automation(hass, "automation.unknown") is None
     assert automation.devices_in_automation(hass, "automation.unknown") == []
     assert automation.entities_in_automation(hass, "automation.unknown") == []
+
+
+async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) -> None:
+    """Test extraction functions for an unknown automation."""
+    entity_id = "automation.test1"
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                }
+            ]
+        },
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert automation.automations_with_area(hass, "area-in-both") == []
+    assert automation.areas_in_automation(hass, entity_id) == []
+    assert automation.automations_with_blueprint(hass, "blabla.yaml") == []
+    assert automation.blueprint_in_automation(hass, entity_id) is None
+    assert automation.automations_with_device(hass, "device-in-both") == []
+    assert automation.devices_in_automation(hass, entity_id) == []
+    assert automation.automations_with_entity(hass, "light.in_both") == []
+    assert automation.entities_in_automation(hass, entity_id) == []
 
 
 async def test_extraction_functions(hass: HomeAssistant) -> None:

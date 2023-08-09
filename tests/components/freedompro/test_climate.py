@@ -33,7 +33,7 @@ async def test_climate_get_state(hass: HomeAssistant, init_integration) -> None:
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({("freedompro", uid)})
+    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -66,7 +66,7 @@ async def test_climate_get_state(hass: HomeAssistant, init_integration) -> None:
     states_response[0]["state"]["currentTemperature"] = 20
     states_response[0]["state"]["targetTemperature"] = 21
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -174,7 +174,7 @@ async def test_climate_set_temperature(hass: HomeAssistant, init_integration) ->
     states_response[0]["state"]["currentTemperature"] = 20
     states_response[0]["state"]["targetTemperature"] = 21
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

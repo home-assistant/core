@@ -688,6 +688,7 @@ async def test_device_id(hass: HomeAssistant) -> None:
     source_device_entry = device_registry.async_get_or_create(
         config_entry_id=source_config_entry.entry_id,
         identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
     )
     source_entity = entity_registry.async_get_or_create(
         "sensor",

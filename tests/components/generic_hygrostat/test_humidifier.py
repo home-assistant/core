@@ -121,6 +121,7 @@ async def test_humidifier_input_boolean(hass: HomeAssistant, setup_comp_1) -> No
     await hass.async_block_till_done()
 
     assert hass.states.get(humidifier_switch).state == STATE_ON
+    assert hass.states.get(ENTITY).attributes.get("action") == "humidifying"
 
 
 async def test_humidifier_switch(
@@ -165,6 +166,7 @@ async def test_humidifier_switch(
     await hass.async_block_till_done()
 
     assert hass.states.get(humidifier_switch).state == STATE_ON
+    assert hass.states.get(ENTITY).attributes.get("action") == "humidifying"
 
 
 def _setup_sensor(hass, humidity):
@@ -277,6 +279,7 @@ async def test_default_setup_params(hass: HomeAssistant, setup_comp_2) -> None:
     assert state.attributes.get("min_humidity") == 0
     assert state.attributes.get("max_humidity") == 100
     assert state.attributes.get("humidity") == 0
+    assert state.attributes.get("action") == "idle"
 
 
 async def test_default_setup_params_dehumidifier(
@@ -287,6 +290,7 @@ async def test_default_setup_params_dehumidifier(
     assert state.attributes.get("min_humidity") == 0
     assert state.attributes.get("max_humidity") == 100
     assert state.attributes.get("humidity") == 100
+    assert state.attributes.get("action") == "idle"
 
 
 async def test_get_modes(hass: HomeAssistant, setup_comp_2) -> None:
@@ -648,6 +652,7 @@ async def test_set_target_humidity_dry_off(hass: HomeAssistant, setup_comp_3) ->
     assert call.domain == HASS_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
+    assert hass.states.get(ENTITY).attributes.get("action") == "drying"
 
 
 async def test_turn_away_mode_on_drying(hass: HomeAssistant, setup_comp_3) -> None:
@@ -799,6 +804,7 @@ async def test_running_when_operating_mode_is_off_2(
     assert call.domain == HASS_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
+    assert hass.states.get(ENTITY).attributes.get("action") == "off"
 
 
 async def test_no_state_change_when_operation_mode_off_2(
@@ -818,6 +824,7 @@ async def test_no_state_change_when_operation_mode_off_2(
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert len(calls) == 0
+    assert hass.states.get(ENTITY).attributes.get("action") == "off"
 
 
 @pytest.fixture
@@ -862,9 +869,7 @@ async def test_humidity_change_dry_trigger_on_long_enough(
     hass: HomeAssistant, setup_comp_4
 ) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
@@ -898,9 +903,7 @@ async def test_humidity_change_dry_trigger_off_long_enough(
     hass: HomeAssistant, setup_comp_4
 ) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
@@ -1024,9 +1027,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(
     hass: HomeAssistant, setup_comp_6
 ) -> None:
     """Test if humidity change turn humidifier on after min cycle."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
@@ -1046,9 +1047,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(
     hass: HomeAssistant, setup_comp_6
 ) -> None:
     """Test if humidity change turn humidifier off after min cycle."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)

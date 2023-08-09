@@ -9,7 +9,7 @@ from .const import ATTR_TITLE, DOMAIN, MANUFACTURER
 from .coordinator import YouTubeDataUpdateCoordinator
 
 
-class YouTubeChannelEntity(CoordinatorEntity):
+class YouTubeChannelEntity(CoordinatorEntity[YouTubeDataUpdateCoordinator]):
     """An HA implementation for YouTube entity."""
 
     _attr_has_entity_name = True

@@ -27,17 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=TYPE_BATTERY,
-        name="Battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key=TYPE_CAMERA_ARMED,
-        name="Camera Armed",
+        translation_key="camera_armed",
     ),
     BinarySensorEntityDescription(
         key=TYPE_MOTION_DETECTED,
-        name="Motion Detected",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
 )
@@ -60,13 +58,14 @@ async def async_setup_entry(
 class BlinkBinarySensor(BinarySensorEntity):
     """Representation of a Blink binary sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, data, camera, description: BinarySensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         self.data = data
         self.entity_description = description
-        self._attr_name = f"{DOMAIN} {camera} {description.name}"
         self._camera = data.cameras[camera]
         self._attr_unique_id = f"{self._camera.serial}-{description.key}"
         self._attr_device_info = DeviceInfo(

@@ -35,11 +35,6 @@ class SomaSensor(SomaEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self.device["name"] + " battery level"
-
-    @property
     def native_value(self):
         """Return the state of the entity."""
         return self.battery_state

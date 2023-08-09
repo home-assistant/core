@@ -25,13 +25,13 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
 
+from .bridge import AsusWrtBridge
 from .const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
@@ -47,7 +47,6 @@ from .const import (
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
 )
-from .router import get_api, get_nvram_info
 
 LABEL_MAC = "LABEL_MAC"
 
@@ -143,16 +142,15 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    @staticmethod
     async def _async_check_connection(
-        user_input: dict[str, Any]
+        self, user_input: dict[str, Any]
     ) -> tuple[str, str | None]:
         """Attempt to connect the AsusWrt router."""
 
         host: str = user_input[CONF_HOST]
-        api = get_api(user_input)
+        api = AsusWrtBridge.get_bridge(self.hass, user_input)
         try:
-            await api.connection.async_connect()
+            await api.async_connect()
 
         except OSError:
             _LOGGER.error("Error connecting to the AsusWrt router at %s", host)
@@ -168,14 +166,9 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error connecting to the AsusWrt router at %s", host)
             return RESULT_CONN_ERROR, None
 
-        label_mac = await get_nvram_info(api, LABEL_MAC)
-        conf_protocol = user_input[CONF_PROTOCOL]
-        if conf_protocol == PROTOCOL_TELNET:
-            api.connection.disconnect()
+        unique_id = api.label_mac
+        await api.async_disconnect()
 
-        unique_id = None
-        if label_mac and "label_mac" in label_mac:
-            unique_id = format_mac(label_mac["label_mac"])
         return RESULT_SUCCESS, unique_id
 
     async def async_step_user(

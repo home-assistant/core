@@ -33,7 +33,7 @@ from . import ATTR_CURRENT_HUMIDITY, DOMAIN
 CURRENT_TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): "current_humidity_changed",
             vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
             vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
@@ -113,7 +113,10 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    if config[CONF_TYPE] == "target_humidity_changed":
+    if (trigger_type := config[CONF_TYPE]) in {
+        "current_humidity_changed",
+        "target_humidity_changed",
+    }:
         numeric_state_config = {
             numeric_state_trigger.CONF_PLATFORM: "numeric_state",
             numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
@@ -121,6 +124,14 @@ async def async_attach_trigger(
                 "{{ state.attributes.humidity }}"
             ),
         }
+        if trigger_type == "target_humidity_changed":
+            numeric_state_config[
+                numeric_state_trigger.CONF_VALUE_TEMPLATE
+            ] = "{{ state.attributes.humidity }}"
+        else:  # trigger_type == "current_humidity_changed"
+            numeric_state_config[
+                numeric_state_trigger.CONF_VALUE_TEMPLATE
+            ] = "{{ state.attributes.current_humidity }}"
 
         if CONF_ABOVE in config:
             numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]
@@ -145,7 +156,7 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
-    if config[CONF_TYPE] == "target_humidity_changed":
+    if config[CONF_TYPE] in {"current_humidity_changed", "target_humidity_changed"}:
         return {
             "extra_fields": vol.Schema(
                 {

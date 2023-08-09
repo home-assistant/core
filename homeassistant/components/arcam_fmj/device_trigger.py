@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -22,7 +24,7 @@ from .const import DOMAIN, EVENT_TURN_ON
 TRIGGER_TYPES = {"turn_on"}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
     }
 )
@@ -43,7 +45,7 @@ async def async_get_triggers(
                     CONF_PLATFORM: "device",
                     CONF_DEVICE_ID: device_id,
                     CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_ENTITY_ID: entry.id,
                     CONF_TYPE: "turn_on",
                 }
             )
@@ -62,7 +64,8 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     if config[CONF_TYPE] == "turn_on":
-        entity_id = config[CONF_ENTITY_ID]
+        registry = er.async_get(hass)
+        entity_id = er.async_resolve_entity_id(registry, config[ATTR_ENTITY_ID])
 
         @callback
         def _handle_event(event: Event) -> None:
@@ -74,6 +77,7 @@ async def async_attach_trigger(
                             **trigger_data,
                             **config,
                             "description": f"{DOMAIN} - {entity_id}",
+                            "entity_id": entity_id,
                         }
                     },
                     event.context,

@@ -33,11 +33,25 @@ BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
+    __slots__ = (
+        "logger",
+        "hass",
+        "send_message",
+        "user",
+        "refresh_token_id",
+        "subscriptions",
+        "last_id",
+        "can_coalesce",
+        "supported_features",
+        "handlers",
+        "binary_handlers",
+    )
+
     def __init__(
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+        send_message: Callable[[str | dict[str, Any]], None],
         user: User,
         refresh_token: RefreshToken,
     ) -> None:
@@ -178,7 +192,7 @@ class ActiveConnection:
             return
 
         if not (handler_schema := self.handlers.get(type_)):
-            self.logger.info(f"Received unknown command: {type_}")
+            self.logger.info("Received unknown command: %s", type_)
             self.send_message(
                 messages.error_message(
                     cur_id, const.ERR_UNKNOWN_COMMAND, "Unknown command."

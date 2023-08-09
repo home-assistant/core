@@ -22,6 +22,7 @@ from homeassistant.components.number.const import (
 )
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
+    NON_NUMERIC_DEVICE_CLASSES,
     SensorDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -40,7 +41,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
     MockConfigEntry,
-    MockEntityPlatform,
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
@@ -253,64 +253,6 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_4.value is None
 
 
-async def test_deprecation_warnings(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test overriding the deprecated attributes is possible and warnings are logged."""
-    number = MockDefaultNumberEntityDeprecated()
-    number.hass = hass
-    number.platform = MockEntityPlatform(hass)
-    assert number.max_value == 100.0
-    assert number.min_value == 0.0
-    assert number.step == 1.0
-    assert number.unit_of_measurement is None
-    assert number.value == 0.5
-
-    number_2 = MockNumberEntityDeprecated()
-    number_2.hass = hass
-    number_2.platform = MockEntityPlatform(hass)
-    assert number_2.max_value == 0.5
-    assert number_2.min_value == -0.5
-    assert number_2.step == 0.1
-    assert number_2.unit_of_measurement == "cats"
-    assert number_2.value == 0.5
-
-    number_3 = MockNumberEntityAttrDeprecated()
-    number_3.hass = hass
-    number_3.platform = MockEntityPlatform(hass)
-    assert number_3.max_value == 1000.0
-    assert number_3.min_value == -1000.0
-    assert number_3.step == 100.0
-    assert number_3.unit_of_measurement == "dogs"
-    assert number_3.value == 500.0
-
-    number_4 = MockNumberEntityDescrDeprecated()
-    number_4.hass = hass
-    number_4.platform = MockEntityPlatform(hass)
-    assert number_4.max_value == 10.0
-    assert number_4.min_value == -10.0
-    assert number_4.step == 2.0
-    assert number_4.unit_of_measurement == "rabbits"
-    assert number_4.value == 0.5
-
-    assert (
-        "tests.components.number.test_init::MockNumberEntityDeprecated is overriding "
-        " deprecated methods on an instance of NumberEntity"
-    )
-    assert (
-        "Entity None (<class 'tests.components.number.test_init.MockNumberEntityAttrDeprecated'>) "
-        "is using deprecated NumberEntity features" in caplog.text
-    )
-    assert (
-        "Entity None (<class 'tests.components.number.test_init.MockNumberEntityDescrDeprecated'>) "
-        "is using deprecated NumberEntity features" in caplog.text
-    )
-    assert (
-        "tests.components.number.test_init is setting deprecated attributes on an "
-        "instance of NumberEntityDescription" in caplog.text
-    )
-
-
 async def test_sync_set_value(hass: HomeAssistant) -> None:
     """Test if async set_value calls sync set_value."""
     number = MockDefaultNumberEntity()
@@ -358,104 +300,6 @@ async def test_set_value(hass: HomeAssistant, enable_custom_integrations: None) 
     await hass.async_block_till_done()
     state = hass.states.get("number.test")
     assert state.state == "60.0"
-
-
-async def test_deprecated_attributes(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
-    """Test entity using deprecated attributes."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init(empty=True)
-    platform.ENTITIES.append(platform.LegacyMockNumberEntity())
-    entity = platform.ENTITIES[0]
-    entity._attr_name = "Test"
-    entity._attr_max_value = 25
-    entity._attr_min_value = -25
-    entity._attr_step = 2.5
-    entity._attr_value = 51.0
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("number.test")
-    assert state.state == "51.0"
-    assert state.attributes.get(ATTR_MAX) == 25.0
-    assert state.attributes.get(ATTR_MIN) == -25.0
-    assert state.attributes.get(ATTR_STEP) == 2.5
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: 0.0, ATTR_ENTITY_ID: "number.test"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("number.test")
-    assert state.state == "0.0"
-
-    # test ValueError trigger
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: "number.test"},
-            blocking=True,
-        )
-
-    await hass.async_block_till_done()
-    state = hass.states.get("number.test")
-    assert state.state == "0.0"
-
-
-async def test_deprecated_methods(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
-    """Test entity using deprecated methods."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.LegacyMockNumberEntity(
-            name="Test",
-            max_value=25.0,
-            min_value=-25.0,
-            step=2.5,
-            value=51.0,
-        )
-    )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("number.test")
-    assert state.state == "51.0"
-    assert state.attributes.get(ATTR_MAX) == 25.0
-    assert state.attributes.get(ATTR_MIN) == -25.0
-    assert state.attributes.get(ATTR_STEP) == 2.5
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: 0.0, ATTR_ENTITY_ID: "number.test"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("number.test")
-    assert state.state == "0.0"
-
-    # test ValueError trigger
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: "number.test"},
-            blocking=True,
-        )
-
-    await hass.async_block_till_done()
-    state = hass.states.get("number.test")
-    assert state.state == "0.0"
 
 
 @pytest.mark.parametrize(
@@ -926,22 +770,15 @@ async def test_custom_unit_change(
 def test_device_classes_aligned() -> None:
     """Make sure all sensor device classes are also available in NumberDeviceClass."""
 
-    non_numeric_device_classes = {
-        SensorDeviceClass.DATE,
-        SensorDeviceClass.DURATION,
-        SensorDeviceClass.ENUM,
-        SensorDeviceClass.TIMESTAMP,
-    }
-
     for device_class in SensorDeviceClass:
-        if device_class in non_numeric_device_classes:
+        if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
 
         assert hasattr(NumberDeviceClass, device_class.name)
         assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
 
     for device_class in SENSOR_DEVICE_CLASS_UNITS:
-        if device_class in non_numeric_device_classes:
+        if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
         assert (
             SENSOR_DEVICE_CLASS_UNITS[device_class]
