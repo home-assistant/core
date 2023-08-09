@@ -7,6 +7,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
+    HVACAction,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -80,14 +81,17 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
         self._attr_current_temperature = self.controller.room_temperature
         self._attr_target_temperature = self.controller.room_setpoint
 
-        if self.controller.enabled:
+        if not self.controller.chw_away:
             self._attr_hvac_mode = HVACMode.AUTO
             if self.controller.chw_active:
                 self._attr_icon = "mdi:radiator"
+                self._attr_hvac_action = HVACAction.HEATING
             else:
                 self._attr_icon = "mdi:radiator-off"
+                self._attr_hvac_action = HVACAction.IDLE
         else:
             self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_action = HVACAction.OFF
             self._attr_icon = "mdi:radiator-disabled"
 
     def set_temperature(self, **kwargs: Any) -> None:
