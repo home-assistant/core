@@ -414,9 +414,7 @@ def copy_available_params(
     )
 
 
-def get_value_state_schema(
-    value: ZwaveValue,
-) -> vol.Schema | None:
+def get_value_state_schema(value: ZwaveValue) -> vol.Schema | None:
     """Return device automation schema for a config entry."""
     if isinstance(value, ConfigurationValue):
         min_ = value.metadata.min
