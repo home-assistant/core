@@ -1,7 +1,6 @@
 """Tests for TP-Link Omada switch entities."""
 from unittest.mock import MagicMock
 
-from tplink_omada_client.devices import OmadaSwitchPortDetails
 from tplink_omada_client.omadasiteclient import SwitchPortOverrides
 
 from homeassistant.components import switch
@@ -50,17 +49,15 @@ async def _test_poe_switch(
         assert overrides
         assert overrides.enable_poe == poe_enable
 
-        return OmadaSwitchPortDetails({"poe": 1 if overrides.enable_poe else 0})
-
-    entity = hass.states.get(entity_name)
+    entity = hass.states.get(entity_id)
     assert entity
     assert entity.state == "on"
-    entry = entity_registry.async_get(entity_name)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"{network_switch_mac}_00000000000000000000000{port}_poe"
 
     mock_omada_site_client.update_switch_port.reset_mock()
-    await call_service(hass, "turn_on", entity_name)
+    await call_service(hass, "turn_on", entity_id)
     mock_omada_site_client.update_switch_port.assert_called_once()
     device, switch_port = mock_omada_site_client.update_switch_port.call_args.args
     assert_update_switch_port(
