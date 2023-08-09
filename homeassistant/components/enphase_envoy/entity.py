@@ -10,7 +10,7 @@ from .coordinator import EnphaseUpdateCoordinator
 
 
 class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator]):
-    """Defines a base envoy entities."""
+    """Defines a base envoy entity."""
 
     _attr_has_entity_name = True
 
