@@ -216,7 +216,6 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         assert enpower is not None
         self._serial_number = enpower.serial_number
         self._attr_unique_id = f"{self._serial_number}_{description.key}"
-        assert enpower is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._serial_number)},
             manufacturer="Enphase",
@@ -265,6 +264,9 @@ class EnvoyRelayBinarySensorEntity(
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, envoy_serial_num),
         )
+        self._attr_name = (
+            f"{self.data.dry_contact_settings[self.relay.id].load_name} Relay"
+        )
 
     @property
     def data(self) -> EnvoyData:
@@ -272,11 +274,6 @@ class EnvoyRelayBinarySensorEntity(
         data = self.coordinator.envoy.data
         assert data is not None
         return data
-
-    @property
-    def name(self) -> str:
-        """Return the name of the binary_sensor."""
-        return f"{self.data.dry_contact_settings[self.relay.id].load_name} Relay"
 
     @property
     def is_on(self) -> bool:
