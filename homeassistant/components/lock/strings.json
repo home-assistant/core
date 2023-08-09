@@ -35,10 +35,36 @@
       }
     }
   },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+  "services": {
+    "lock": {
+      "name": "Lock",
+      "description": "Locks a lock.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code used to lock the lock."
+        }
+      }
+    },
+    "open": {
+      "name": "[%key:common::action::open%]",
+      "description": "Opens a lock.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::lock::services::lock::fields::code::name%]",
+          "description": "Code used to open the lock."
+        }
+      }
+    },
+    "unlock": {
+      "name": "Unlock",
+      "description": "Unlocks a lock.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::lock::services::lock::fields::code::name%]",
+          "description": "Code used to unlock the lock."
+        }
+      }
     }
   }
 }

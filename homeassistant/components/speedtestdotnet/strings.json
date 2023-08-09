@@ -17,5 +17,18 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "ping": {
+        "name": "Ping"
+      },
+      "download": {
+        "name": "Download"
+      },
+      "upload": {
+        "name": "Upload"
+      }
+    }
   }
 }

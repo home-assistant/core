@@ -191,7 +191,11 @@ async def test_supported_features(hass: HomeAssistant) -> None:
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.STOP
     )
-    play_media = MediaPlayerEntityFeature.PLAY_MEDIA
+    play_media = (
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+    )
     volume = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET

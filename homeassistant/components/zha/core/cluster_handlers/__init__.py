@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
 from enum import Enum
-from functools import partialmethod
+import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, ParamSpec, TypedDict
 
 import zigpy.exceptions
 import zigpy.util
@@ -19,6 +20,7 @@ from zigpy.zcl.foundation import (
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import (
@@ -45,8 +47,34 @@ if TYPE_CHECKING:
     from ..endpoint import Endpoint
 
 _LOGGER = logging.getLogger(__name__)
+RETRYABLE_REQUEST_DECORATOR = zigpy.util.retryable_request(tries=3)
 
-retry_request = zigpy.util.retryable_request(tries=3)
+
+_P = ParamSpec("_P")
+_FuncType = Callable[_P, Awaitable[Any]]
+_ReturnFuncType = Callable[_P, Coroutine[Any, Any, Any]]
+
+
+def retry_request(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
+    """Send a request with retries and wrap expected zigpy exceptions."""
+
+    @functools.wraps(func)
+    async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> Any:
+        try:
+            return await RETRYABLE_REQUEST_DECORATOR(func)(*args, **kwargs)
+        except asyncio.TimeoutError as exc:
+            raise HomeAssistantError(
+                "Failed to send request: device did not respond"
+            ) from exc
+        except zigpy.exceptions.ZigbeeException as exc:
+            message = "Failed to send request"
+
+            if str(exc):
+                message = f"{message}: {exc}"
+
+            raise HomeAssistantError(message) from exc
+
+    return wrapper
 
 
 class AttrReportConfig(TypedDict, total=True):
@@ -471,7 +499,7 @@ class ClusterHandler(LogMixin):
             rest = rest[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
         return result
 
-    get_attributes = partialmethod(_get_attributes, False)
+    get_attributes = functools.partialmethod(_get_attributes, False)
 
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""

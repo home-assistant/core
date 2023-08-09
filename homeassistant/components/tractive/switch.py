@@ -88,7 +88,6 @@ async def async_setup_entry(
 class TractiveSwitch(TractiveEntity, SwitchEntity):
     """Tractive switch."""
 
-    _attr_has_entity_name = True
     entity_description: TractiveSwitchEntityDescription
 
     def __init__(

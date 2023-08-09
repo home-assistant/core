@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
+    EntityCategory,
     Platform,
     UnitOfPressure,
     UnitOfTemperature,
@@ -127,6 +128,7 @@ DISCOVERY_SCHEMAS = [
             key="PowerSource",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
             # value has double precision
             measurement_to_ha=lambda x: int(x / 2),
         ),

@@ -14,6 +14,8 @@ from .data import RadioThermUpdate
 class RadioThermostatEntity(CoordinatorEntity[RadioThermUpdateCoordinator]):
     """Base class for radiotherm entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

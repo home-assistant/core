@@ -224,6 +224,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
 
             temp = values.get(TMRW_ATTR_TEMPERATURE_HIGH)
             temp_low = None
+
             wind_direction = values.get(TMRW_ATTR_WIND_DIRECTION)
             wind_speed = values.get(TMRW_ATTR_WIND_SPEED)
 

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (

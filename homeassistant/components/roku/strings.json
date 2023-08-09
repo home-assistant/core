@@ -20,5 +20,17 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "services": {
+    "search": {
+      "name": "Search",
+      "description": "Emulates opening the search screen and entering the search keyword.",
+      "fields": {
+        "keyword": {
+          "name": "Keyword",
+          "description": "The keyword to search for."
+        }
+      }
+    }
   }
 }

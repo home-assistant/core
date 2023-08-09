@@ -514,8 +514,8 @@ class Camera(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.stream and not self.stream.available:
-            return self.stream.available
+        if (stream := self.stream) and not stream.available:
+            return False
         return super().available
 
     async def async_create_stream(self) -> Stream | None:

@@ -744,7 +744,7 @@ async def test_homekit_start(
     assert device_registry.async_get(bridge_with_wrong_mac.id) is None
 
     device = device_registry.async_get_device(
-        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -760,7 +760,7 @@ async def test_homekit_start(
         await homekit.async_start()
 
     device = device_registry.async_get_device(
-        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -953,7 +953,7 @@ async def test_homekit_unpair(
 
         formatted_mac = dr.format_mac(state.mac)
         hk_bridge_dev = device_registry.async_get_device(
-            {}, {(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
         )
 
         await hass.services.async_call(

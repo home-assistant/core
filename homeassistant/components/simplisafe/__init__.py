@@ -268,7 +268,7 @@ def _async_register_base_station(
 
     # Check for an old system ID format and remove it:
     if old_base_station := device_registry.async_get_device(
-        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+        identifiers={(DOMAIN, system.system_id)}  # type: ignore[arg-type]
     ):
         # Update the new base station with any properties the user might have configured
         # on the old base station:

@@ -218,6 +218,11 @@ async def test_rpc_sleeping_binary_sensor(
 
     assert hass.states.get(entity_id).state == STATE_ON
 
+    # test external power sensor
+    state = hass.states.get("binary_sensor.test_name_external_power")
+    assert state
+    assert state.state == STATE_ON
+
 
 async def test_rpc_restored_sleeping_binary_sensor(
     hass: HomeAssistant, mock_rpc_device, device_reg, monkeypatch

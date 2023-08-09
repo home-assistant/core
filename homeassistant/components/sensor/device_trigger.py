@@ -56,6 +56,7 @@ CONF_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 CONF_NITROGEN_MONOXIDE = "nitrogen_monoxide"
 CONF_NITROUS_OXIDE = "nitrous_oxide"
 CONF_OZONE = "ozone"
+CONF_PH = "ph"
 CONF_PM1 = "pm1"
 CONF_PM10 = "pm10"
 CONF_PM25 = "pm25"
@@ -104,6 +105,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
     SensorDeviceClass.NITROUS_OXIDE: [{CONF_TYPE: CONF_NITROUS_OXIDE}],
     SensorDeviceClass.OZONE: [{CONF_TYPE: CONF_OZONE}],
+    SensorDeviceClass.PH: [{CONF_TYPE: CONF_PH}],
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_PM25}],
@@ -165,6 +167,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_NITROGEN_MONOXIDE,
                     CONF_NITROUS_OXIDE,
                     CONF_OZONE,
+                    CONF_PH,
                     CONF_PM1,
                     CONF_PM10,
                     CONF_PM25,
