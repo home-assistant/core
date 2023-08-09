@@ -453,7 +453,7 @@ class DataManager:
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
             return self._api.sleep_get_summary(
-                lastupdate=yesterday_noon,
+                lastupdate=yesterday_noon_utc,
                 data_fields=[
                     GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
                     GetSleepSummaryField.DEEP_SLEEP_DURATION,
