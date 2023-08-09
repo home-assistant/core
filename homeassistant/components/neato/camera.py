@@ -51,6 +51,9 @@ async def async_setup_entry(
 class NeatoCleaningMap(Camera):
     """Neato cleaning map for last clean."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "cleaning_map"
+
     def __init__(
         self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any] | None
     ) -> None:
@@ -60,7 +63,6 @@ class NeatoCleaningMap(Camera):
         self.neato = neato
         self._mapdata = mapdata
         self._available = neato is not None
-        self._robot_name = f"{self.robot.name} Cleaning Map"
         self._robot_serial: str = self.robot.serial
         self._generated_at: str | None = None
         self._image_url: str | None = None
@@ -115,11 +117,6 @@ class NeatoCleaningMap(Camera):
         self._available = True
 
     @property
-    def name(self) -> str:
-        """Return the name of this camera."""
-        return self._robot_name
-
-    @property
     def unique_id(self) -> str:
         """Return unique ID."""
         return self._robot_serial
@@ -132,7 +129,10 @@ class NeatoCleaningMap(Camera):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
+        return DeviceInfo(
+            identifiers={(NEATO_DOMAIN, self._robot_serial)},
+            name=self.robot.name,
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

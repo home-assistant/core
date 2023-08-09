@@ -15,10 +15,9 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar, cast
 
 import attr
-from typing_extensions import NotRequired
 import voluptuous as vol
 
 from homeassistant.const import (

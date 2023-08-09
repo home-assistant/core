@@ -42,7 +42,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
     DeviceEntryType,
 )
 from homeassistant.helpers.entity import DeviceInfo
@@ -55,6 +54,7 @@ from .entity import (
     SubscriptionT,
     UnifiEntity,
     UnifiEntityDescription,
+    async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
     async_wlan_device_info_fn,
@@ -74,17 +74,6 @@ def async_dpi_group_is_on_fn(
         api.dpi_apps[app_id].enabled
         for app_id in dpi_group.dpiapp_ids or []
         if app_id in api.dpi_apps
-    )
-
-
-@callback
-def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for client."""
-    client = api.clients[obj_id]
-    return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, obj_id)},
-        default_manufacturer=client.oui,
-        default_name=client.name or client.hostname,
     )
 
 

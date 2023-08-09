@@ -100,6 +100,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
+    from homeassistant.components.weather import WeatherEntityFeature
 
     return {
         "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
@@ -117,6 +118,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
+        "WeatherEntityFeature": WeatherEntityFeature,
     }
 
 
@@ -988,6 +990,7 @@ class SelectSelectorConfig(TypedDict, total=False):
     custom_value: bool
     mode: SelectSelectorMode
     translation_key: str
+    sort: bool
 
 
 @SELECTORS.register("select")
@@ -1005,6 +1008,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
             vol.Optional("translation_key"): cv.string,
+            vol.Optional("sort", default=False): cv.boolean,
         }
     )
 

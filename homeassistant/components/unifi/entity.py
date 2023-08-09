@@ -45,6 +45,13 @@ def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
 
 
 @callback
+def async_wlan_available_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if WLAN is available."""
+    wlan = controller.api.wlans[obj_id]
+    return controller.available and wlan.enabled
+
+
+@callback
 def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
     """Create device registry entry for device."""
     if "_" in obj_id:  # Sub device (outlet or port)
@@ -71,6 +78,17 @@ def async_wlan_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceIn
         manufacturer=ATTR_MANUFACTURER,
         model="UniFi WLAN",
         name=wlan.name,
+    )
+
+
+@callback
+def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for client."""
+    client = api.clients[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, obj_id)},
+        default_manufacturer=client.oui,
+        default_name=client.name or client.hostname,
     )
 
 

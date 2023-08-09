@@ -76,7 +76,8 @@
               "initial_press": "Initial press",
               "repeat": "Repeat",
               "short_release": "Short press",
-              "long_release": "Long press",
+              "long_press": "Long press",
+              "long_release": "Long release",
               "double_short_release": "Double press"
             }
           }

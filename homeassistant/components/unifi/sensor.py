@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Generic
 
-import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.ports import Ports
@@ -28,8 +27,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -39,8 +36,10 @@ from .entity import (
     HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
+    async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
 
@@ -79,18 +78,9 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
             client.mac
             for client in controller.api.clients.values()
             if client.essid == wlan.name
+            and dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
+            < controller.option_detection_time
         ]
-    )
-
-
-@callback
-def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for client."""
-    client = api.clients[obj_id]
-    return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, obj_id)},
-        default_manufacturer=client.oui,
-        default_name=client.name or client.hostname,
     )
 
 
@@ -190,16 +180,16 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="WLAN clients",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=True,
-        allowed_fn=lambda controller, _: True,
+        allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
-        available_fn=lambda controller, obj_id: controller.available,
+        available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        name_fn=lambda client: None,
+        name_fn=lambda wlan: None,
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         should_poll=True,
-        supported_fn=lambda controller, _: True,
+        supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"wlan_clients-{obj_id}",
         value_fn=async_wlan_client_value_fn,
     ),
