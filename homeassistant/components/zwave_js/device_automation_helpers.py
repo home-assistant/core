@@ -35,6 +35,9 @@ def get_config_parameter_value_schema(node: Node, value_id: str) -> vol.Schema |
     ):
         return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
 
+    if config_value.configuration_value_type == ConfigurationValueType.BOOLEAN:
+        return vol.Coerce(bool)
+
     if config_value.configuration_value_type == ConfigurationValueType.ENUMERATED:
         return vol.In({int(k): v for k, v in config_value.metadata.states.items()})
 

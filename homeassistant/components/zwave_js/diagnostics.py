@@ -9,6 +9,7 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.value import ValueDataType
+from zwave_js_server.util.node import dump_node_state
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.diagnostics.util import async_redact_data
@@ -149,19 +150,7 @@ async def async_get_device_diagnostics(
     entities = get_device_entities(hass, node, config_entry, device)
     assert client.version
     node_state = redact_node_state(
-        async_redact_data(
-            cast(
-                NodeDataType,
-                {
-                    **node.data,
-                    "values": [value.data for value in node.values.values()],
-                    "endpoints": [
-                        endpoint.data for endpoint in node.endpoints.values()
-                    ],
-                },
-            ),
-            KEYS_TO_REDACT,
-        )
+        async_redact_data(cast(NodeDataType, dump_node_state(node)), KEYS_TO_REDACT)
     )
     return {
         "versionInfo": {
