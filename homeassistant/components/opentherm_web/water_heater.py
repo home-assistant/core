@@ -85,14 +85,14 @@ class OpenThermWaterHeater(
     def refresh(self) -> None:
         """Handle updated data from the coordinator."""
         self.controller = self.coordinator.data.web_api.get_controller()
-        if self.controller.away or self.controller.dhw_setpoint == 0:
+        if self.controller.dhw_away or self.controller.dhw_setpoint == 0:
             self._attr_icon = "mdi:water-boiler-off"
         else:
             self._attr_icon = "mdi:water-boiler-auto"
 
         self._attr_current_temperature = self.controller.dhw_temperature
         self._attr_target_temperature = self.controller.dhw_setpoint
-        self._attr_is_away_mode_on = self.controller.away
+        self._attr_is_away_mode_on = self.controller.dhw_away
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -102,11 +102,11 @@ class OpenThermWaterHeater(
 
     def turn_away_mode_on(self) -> None:
         """Turn on away mode."""
-        self.web_api.set_away_mode(True)
+        self.web_api.set_dhw_away_mode(True)
 
     def turn_away_mode_off(self) -> None:
         """Turn off away mode."""
-        self.web_api.set_away_mode(False)
+        self.web_api.set_dhw_away_mode(False)
 
     async def async_turn_on(self) -> None:
         """Turn on."""

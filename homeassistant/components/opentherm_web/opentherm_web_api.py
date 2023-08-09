@@ -87,12 +87,12 @@ class OpenThermWebApi:
         self.controller.dhw_setpoint = temperature
         self.push_change()
 
-    def set_away_mode(self, away_mode: bool) -> None:
+    def set_dhw_away_mode(self, away_mode: bool) -> None:
         """Set away mode."""
-        self.controller.away = away_mode
+        self.controller.dhw_away = away_mode
         self.push_change()
 
     def set_hvac_mode(self, enabled: bool) -> None:
         """Set HVAC mode."""
-        self.controller.enabled = enabled
+        self.controller.chw_away = not enabled
         self.push_change()
