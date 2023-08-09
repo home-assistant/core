@@ -1,4 +1,5 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
+import asyncio
 import logging
 
 from pylutron import Button, Lutron
@@ -11,14 +12,16 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
+from .config_flow import LutronConfigFlow
 
-DOMAIN = "lutron"
+from .const import DOMAIN
 
 PLATFORMS = [
     Platform.LIGHT,
@@ -52,9 +55,19 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, base_config: ConfigType) -> bool:
+    # Initialize and set up your integration using the configuration entry data
+    # For example, you might establish a connection to the Lutron device using the entry data
+    # You can also add entities, platforms, and other integration-specific logic here
+    
+    # Example: Create a LutronDevice object and add it to Home Assistant
+    #device = Lutron(entry.data['ip_address'],entry.data['username'], entry.data['password'])
+    #hass.data[DOMAIN][entry.entry_id] = device
     """Set up the Lutron integration."""
+    #if entry.source == entry.SOURCE_USER:
+    #    hass.async_create_task(
+    #        hass.config_entries.async_forward_entry_setup(entry, "switch")
+    #    )
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {
@@ -111,6 +124,19 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
 
     for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
+
+
+
+    return True
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    # Clean up resources and entities associated with the integration
+    # For example, you might disconnect from the Lutron device and remove entities
+    
+    if entry.entry_id in hass.data[DOMAIN]:
+        device = hass.data[DOMAIN].pop(entry.entry_id)
+        await device.cleanup()  # Perform cleanup operations
+        
     return True
 
 
