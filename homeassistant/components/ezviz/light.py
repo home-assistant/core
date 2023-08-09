@@ -44,6 +44,7 @@ async def async_setup_entry(
 class EzvizLight(EzvizEntity, LightEntity):
     """Representation of a EZVIZ light."""
 
+    _attr_translation_key = "light"
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
