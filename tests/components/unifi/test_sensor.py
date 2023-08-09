@@ -558,3 +558,16 @@ async def test_wlan_client_sensors(
     mock_unifi_websocket(state=WebsocketState.RUNNING)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.ssid_1").state == "0"
+
+    # WLAN gets disabled
+    wlan_1 = deepcopy(WLAN)
+    wlan_1["enabled"] = False
+    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
+
+    # WLAN gets re-enabled
+    wlan_1["enabled"] = True
+    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.ssid_1").state == "0"
