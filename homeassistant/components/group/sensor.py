@@ -13,10 +13,12 @@ from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    UNIT_CONVERTERS,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -46,6 +48,7 @@ from homeassistant.helpers.typing import (
     EventType,
     StateType,
 )
+from homeassistant.util.unit_conversion import BaseUnitConverter
 
 from . import GroupEntity
 from .const import CONF_IGNORE_NON_NUMERIC
@@ -302,6 +305,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
+        self.entities_can_convert = False
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -328,11 +332,21 @@ class SensorGroup(GroupEntity, SensorEntity):
         states: list[StateType] = []
         valid_states: list[bool] = []
         sensor_values: list[tuple[str, float, State]] = []
+        (
+            self.entities_can_convert,
+            converter,
+            base_uom,
+        ) = self._check_entities_device_class_and_uom()
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is not None:
                 states.append(state.state)
                 try:
-                    sensor_values.append((entity_id, float(state.state), state))
+                    value = float(state.state)
+                    if self.entities_can_convert and converter:
+                        value = converter.convert(
+                            value, state.attributes.get("unit_of_measurement"), base_uom
+                        )
+                    sensor_values.append((entity_id, value, state))
                     if entity_id in self._state_incorrect:
                         self._state_incorrect.remove(entity_id)
                 except ValueError:
@@ -444,3 +458,45 @@ class SensorGroup(GroupEntity, SensorEntity):
             and all(x == unit_of_measurements[0] for x in unit_of_measurements)
         ):
             self.calc_unit_of_measurement = unit_of_measurements[0]
+
+        if self.entities_can_convert:
+            (
+                _,
+                _,
+                self.calc_unit_of_measurement,
+            ) = self._check_entities_device_class_and_uom()
+
+    def _check_entities_device_class_and_uom(
+        self,
+    ) -> tuple[bool, type[BaseUnitConverter] | None, str | None]:
+        """See if we can convert values if device_classes and UoM matches."""
+
+        _device_classes: list[str] = []
+        entity_reg = er.async_get(self.hass)
+        for entity_id in self._entity_ids:
+            entity = entity_reg.async_get(entity_id)
+            if not entity or not entity.device_class:
+                return False, None, None
+            _device_classes.append(entity.device_class)
+        if not all(x == _device_classes[0] for x in _device_classes):
+            return False, None, None
+
+        first_device_class = SensorDeviceClass(_device_classes[0])
+        device_class_to_uom = DEVICE_CLASS_UNITS[first_device_class]
+        if not all(x == _device_classes[0] for x in _device_classes):
+            return False, None, None
+
+        base_uom: str | None = None
+        for entity_id in self._entity_ids:
+            _state = self.hass.states.get(entity_id)
+            if _state and base_uom is None:
+                base_uom = _state.attributes.get("unit_of_measurement")
+            if (
+                _state
+                and _state.attributes.get("unit_of_measurement")
+                not in device_class_to_uom
+            ):
+                return False, None, None
+
+        converter = UNIT_CONVERTERS.get(_device_classes[0])
+        return True, converter, base_uom
