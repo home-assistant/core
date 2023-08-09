@@ -11,6 +11,7 @@ from linear_garage_door.errors import InvalidLoginError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -21,8 +22,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = {
-    vol.Required("email"): str,
-    vol.Required("password"): str,
+    vol.Required(CONF_EMAIL): str,
+    vol.Required(CONF_PASSWORD): str,
 }
 
 
@@ -38,7 +39,6 @@ async def validate_input(
     hub = Linear()
 
     device_id = str(uuid.uuid4())
-
     try:
         await hub.login(
             data["email"],
@@ -46,10 +46,12 @@ async def validate_input(
             device_id=device_id,
             client_session=async_get_clientsession(hass),
         )
+
+        sites = await hub.get_sites()
     except InvalidLoginError as err:
         raise InvalidAuth from err
-
-    sites = await hub.get_sites()
+    finally:
+        await hub.close()
 
     info = {
         "email": data["email"],
@@ -57,8 +59,6 @@ async def validate_input(
         "sites": sites,
         "device_id": device_id,
     }
-
-    await hub.close()
 
     return info
 
@@ -119,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the site step."""
 
         if isinstance(self.data["sites"], list):
-            sites: list[dict[str, str]] = list(self.data["sites"])
+            sites: list[dict[str, str]] = self.data["sites"]
 
         if not user_input:
             return self.async_show_form(

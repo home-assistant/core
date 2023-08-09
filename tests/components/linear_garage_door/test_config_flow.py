@@ -122,6 +122,9 @@ async def test_form_invalid_login(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.linear_garage_door.config_flow.Linear.login",
         side_effect=InvalidLoginError,
+    ), patch(
+        "homeassistant.components.linear_garage_door.config_flow.Linear.close",
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

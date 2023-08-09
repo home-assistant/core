@@ -68,6 +68,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         super().__init__(coordinator)
 
         self._attr_has_entity_name = True
+        self._attr_name = None
         self._device_id = device_id
         self._device_name = device_name
         self._subdevice = subdevice
@@ -75,55 +76,43 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         self._attr_unique_id = f"{device_id}-{subdevice}"
         self._config_entry = config_entry
 
+    def _get_data(self, data_property: str) -> str:
+        """Get a property of the subdevice."""
+        return str(
+            self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
+                data_property
+            )
+        )
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info of a garage door."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             name=self._device_name,
-            default_manufacturer="Linear",
-            default_model="Garage Door Opener",
+            manufacturer="Linear",
+            model="Garage Door Opener",
         )
 
     @property
     def is_closed(self) -> bool:
         """Return if cover is closed."""
-        return bool(
-            self.coordinator.data[self._device_id]["subdevices"][self._subdevice][
-                "Open_B"
-            ]
-            == "false"
-        )
+        return bool(self._get_data("Open_B") == "false")
 
     @property
     def is_opened(self) -> bool:
         """Return if cover is open."""
-        return bool(
-            self.coordinator.data[self._device_id]["subdevices"][self._subdevice][
-                "Open_B"
-            ]
-            == "true"
-        )
+        return bool(self._get_data("Open_B") == "true")
 
     @property
     def is_opening(self) -> bool:
         """Return if cover is opening."""
-        return bool(
-            self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
-                "Opening_P"
-            )
-            == "0"
-        )
+        return bool(self._get_data("Opening_P") == "0")
 
     @property
     def is_closing(self) -> bool:
         """Return if cover is closing."""
-        return bool(
-            self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
-                "Closing_P"
-            )
-            == "100"
-        )
+        return bool(self._get_data("Opening_P") == "100")
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""

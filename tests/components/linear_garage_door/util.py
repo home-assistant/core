@@ -29,6 +29,8 @@ async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
         return_value=[
             {"id": "test1", "name": "Test Garage 1", "subdevices": ["GDO", "Light"]},
             {"id": "test2", "name": "Test Garage 2", "subdevices": ["GDO", "Light"]},
+            {"id": "test3", "name": "Test Garage 3", "subdevices": ["GDO", "Light"]},
+            {"id": "test4", "name": "Test Garage 4", "subdevices": ["GDO", "Light"]},
         ],
     ), patch(
         "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
@@ -40,6 +42,14 @@ async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
             "test2": {
                 "GDO": {"Open_B": "false", "Open_P": "0"},
                 "Light": {"On_B": "false", "On_P": "0"},
+            },
+            "test3": {
+                "GDO": {"Open_B": "false", "Opening_P": "0"},
+                "Light": {"On_B": "false", "On_P": "0"},
+            },
+            "test4": {
+                "GDO": {"Open_B": "true", "Opening_P": "100"},
+                "Light": {"On_B": "true", "On_P": "100"},
             },
         }[id],
     ), patch(

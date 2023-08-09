@@ -36,4 +36,18 @@ async def test_entry_diagnostics(
                 "Light": {"On_B": "false", "On_P": "0"},
             },
         },
+        "test3": {
+            "name": "Test Garage 3",
+            "subdevices": {
+                "GDO": {"Open_B": "false", "Opening_P": "0"},
+                "Light": {"On_B": "false", "On_P": "0"},
+            },
+        },
+        "test4": {
+            "name": "Test Garage 4",
+            "subdevices": {
+                "GDO": {"Open_B": "true", "Opening_P": "100"},
+                "Light": {"On_B": "true", "On_P": "100"},
+            },
+        },
     }

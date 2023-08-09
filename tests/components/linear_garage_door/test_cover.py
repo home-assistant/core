@@ -34,6 +34,8 @@ async def test_data(hass: HomeAssistant) -> None:
     assert entries[0].state == ConfigEntryState.LOADED
     assert hass.states.get("cover.test_garage_1").state == STATE_OPEN
     assert hass.states.get("cover.test_garage_2").state == STATE_CLOSED
+    assert hass.states.get("cover.test_garage_3").state == STATE_OPENING
+    assert hass.states.get("cover.test_garage_4").state == STATE_CLOSING
 
 
 async def test_open_cover(hass: HomeAssistant) -> None:
@@ -90,6 +92,14 @@ async def test_open_cover(hass: HomeAssistant) -> None:
             "test2": {
                 "GDO": {"Open_B": "false", "Opening_P": "0"},
                 "Light": {"On_B": "false", "On_P": "0"},
+            },
+            "test3": {
+                "GDO": {"Open_B": "false", "Opening_P": "0"},
+                "Light": {"On_B": "false", "On_P": "0"},
+            },
+            "test4": {
+                "GDO": {"Open_B": "true", "Opening_P": "100"},
+                "Light": {"On_B": "true", "On_P": "100"},
             },
         }[id],
     ), patch(
@@ -150,12 +160,20 @@ async def test_close_cover(hass: HomeAssistant) -> None:
         "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
         side_effect=lambda id: {
             "test1": {
-                "GDO": {"Open_B": "true", "Closing_P": "100"},
+                "GDO": {"Open_B": "true", "Opening_P": "100"},
                 "Light": {"On_B": "true", "On_P": "100"},
             },
             "test2": {
                 "GDO": {"Open_B": "false", "Open_P": "0"},
                 "Light": {"On_B": "false", "On_P": "0"},
+            },
+            "test3": {
+                "GDO": {"Open_B": "false", "Opening_P": "0"},
+                "Light": {"On_B": "false", "On_P": "0"},
+            },
+            "test4": {
+                "GDO": {"Open_B": "true", "Opening_P": "100"},
+                "Light": {"On_B": "true", "On_P": "100"},
             },
         }[id],
     ), patch(
