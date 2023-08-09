@@ -252,7 +252,7 @@ def async_get_node_from_entity_id(
     entity_entry = ent_reg.async_get(entity_id)
 
     if entity_entry is None or entity_entry.platform != DOMAIN:
-        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity.")
+        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity")
 
     # Assert for mypy, safe because we know that zwave_js entities are always
     # tied to a device
