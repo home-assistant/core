@@ -77,7 +77,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     def native_value(self) -> float | None:
         """Return the state of the entity."""
         state = self._state
-        if state.missing_state or math.isnan(state.state):
+        if state.missing_state or not math.isfinite(state.state):
             return None
         return state.state
 
