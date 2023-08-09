@@ -14,6 +14,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
+    DOMAIN as WEATHER_DOMAIN,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -29,6 +30,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -47,19 +49,38 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator: MetDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
-            MetWeather(
-                coordinator,
-                config_entry.data,
-                hass.config.units is METRIC_SYSTEM,
-                False,
-            ),
+    entity_registry = er.async_get(hass)
+
+    entities = [
+        MetWeather(
+            coordinator, config_entry.data, hass.config.units is METRIC_SYSTEM, False
+        )
+    ]
+
+    # Add hourly entity to legacy config entries
+    if entity_registry.async_get_entity_id(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        _calculate_unique_id(config_entry.data, True),
+    ):
+        entities.append(
             MetWeather(
                 coordinator, config_entry.data, hass.config.units is METRIC_SYSTEM, True
-            ),
-        ]
-    )
+            )
+        )
+
+    async_add_entities(entities)
+
+
+def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+    """Calculate unique ID."""
+    name_appendix = ""
+    if hourly:
+        name_appendix = "-hourly"
+    if config.get(CONF_TRACK_HOME):
+        return f"home{name_appendix}"
+
+    return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
 
 
 def format_condition(condition: str) -> str:
@@ -95,6 +116,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
+        self._attr_unique_id = _calculate_unique_id(config, hourly)
         self._config = config
         self._is_metric = is_metric
         self._hourly = hourly
@@ -103,17 +125,6 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     def track_home(self) -> Any | bool:
         """Return if we are tracking home."""
         return self._config.get(CONF_TRACK_HOME, False)
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = "-hourly"
-        if self.track_home:
-            return f"home{name_appendix}"
-
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{name_appendix}"
 
     @property
     def name(self) -> str:
