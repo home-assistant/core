@@ -233,20 +233,22 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
         await super().async_added_to_hass()
-
-        last_state = await self.async_get_last_state()
-        if not last_state or last_state.state == STATE_UNAVAILABLE:
+        last_sensor_data = await self.async_get_last_sensor_data()
+        if not last_sensor_data or last_sensor_data.native_value == STATE_UNAVAILABLE:
             return
+        self._attr_native_value = last_sensor_data.native_value
 
-        self._attr_native_value = last_state.state
-        if ATTR_ENTITY_PICTURE in last_state.attributes:
-            self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
-        if ATTR_OPERATION_REMOTE in last_state.attributes:
-            self._operated_remote = last_state.attributes[ATTR_OPERATION_REMOTE]
-        if ATTR_OPERATION_KEYPAD in last_state.attributes:
-            self._operated_keypad = last_state.attributes[ATTR_OPERATION_KEYPAD]
-        if ATTR_OPERATION_AUTORELOCK in last_state.attributes:
-            self._operated_autorelock = last_state.attributes[ATTR_OPERATION_AUTORELOCK]
+        if (last_state := await self.async_get_last_state()) is not None:
+            if ATTR_ENTITY_PICTURE in last_state.attributes:
+                self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
+            if ATTR_OPERATION_REMOTE in last_state.attributes:
+                self._operated_remote = last_state.attributes[ATTR_OPERATION_REMOTE]
+            if ATTR_OPERATION_KEYPAD in last_state.attributes:
+                self._operated_keypad = last_state.attributes[ATTR_OPERATION_KEYPAD]
+            if ATTR_OPERATION_AUTORELOCK in last_state.attributes:
+                self._operated_autorelock = last_state.attributes[
+                    ATTR_OPERATION_AUTORELOCK
+                ]
 
     @property
     def entity_picture(self):
