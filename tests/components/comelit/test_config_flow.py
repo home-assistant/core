@@ -106,6 +106,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
                 CONF_PIN: "other_fake_pin",
             },
         )
+        await hass.async_block_till_done()
 
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
@@ -129,8 +130,6 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         "aiocomelit.api.ComeliteSerialBridgeAPi.login", side_effect=side_effect
     ), patch(
         "aiocomelit.api.ComeliteSerialBridgeAPi.logout",
-    ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeAPi.close",
     ), patch(
         "homeassistant.components.comelit.async_setup_entry"
     ):
