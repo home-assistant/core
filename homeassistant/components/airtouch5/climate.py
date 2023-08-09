@@ -386,3 +386,11 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         )
         packet = self._client.data_packet_factory.zone_control([zcz])
         await self._client.send_packet(packet)
+
+    async def async_turn_on(self) -> None:
+        """Turn the zone on."""
+        await self.async_set_hvac_mode(HVACMode.FAN_ONLY)
+
+    async def async_turn_off(self) -> None:
+        """Turn the zone off."""
+        await self.async_set_hvac_mode(HVACMode.OFF)
