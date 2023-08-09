@@ -152,7 +152,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "other")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state other which does not match expected pattern (y|n)"
+        "Entity text.test provides state other which does not match expected pattern (y|n)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -163,7 +163,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "yesyesyesyes")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
+        "Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -174,7 +174,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "y")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state y which is too short (minimum length 2)"
+        "Entity text.test provides state y which is too short (minimum length 2)"
         in caplog.text
     )
     state = hass.states.get("text.test")
