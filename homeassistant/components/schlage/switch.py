@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from functools import partial
 from typing import Any
+
+from pyschlage.lock import Lock
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -20,6 +24,49 @@ from .coordinator import SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 
+@dataclass
+class SchlageSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    # NOTE: This has to be a mixin because these are required keys.
+    # SwitchEntityDescription has attributes with default values,
+    # which means we can't inherit from it because you haven't have
+    # non-default arguments follow default arguments in an initializer.
+
+    on_fn: Callable[[Lock], None]
+    off_fn: Callable[[Lock], None]
+    value_attr: str
+
+
+@dataclass
+class SchlageSwitchEntityDescription(
+    SwitchEntityDescription, SchlageSwitchEntityDescriptionMixin
+):
+    """Entity description for a Schlage switch."""
+
+
+SWITCHES: tuple[SchlageSwitchEntityDescription, ...] = (
+    SchlageSwitchEntityDescription(
+        key="beeper",
+        translation_key="beeper",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_fn=lambda lock: lock.set_beeper(True),
+        off_fn=lambda lock: lock.set_beeper(False),
+        value_attr="beeper_enabled",
+    ),
+    SchlageSwitchEntityDescription(
+        key="lock_and_leve",
+        translation_key="lock_and_leave",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_fn=lambda lock: lock.set_lock_and_leave(True),
+        off_fn=lambda lock: lock.set_lock_and_leave(False),
+        value_attr="lock_and_leave_enabled",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -29,86 +76,49 @@ async def async_setup_entry(
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
     for device_id in coordinator.data.locks:
-        entities.extend(
-            [
-                BeeperSwitch(coordinator=coordinator, device_id=device_id),
-                LockAndLeaveSwitch(coordinator=coordinator, device_id=device_id),
-            ]
-        )
+        for description in SWITCHES:
+            entities.append(
+                SchlageSwitch(
+                    coordinator=coordinator,
+                    description=description,
+                    device_id=device_id,
+                )
+            )
     async_add_entities(entities)
 
 
-class BeeperSwitch(SchlageEntity, SwitchEntity):
-    """Schlage keypad beeper switch."""
+class SchlageSwitch(SchlageEntity, SwitchEntity):
+    """Schlage switch entity."""
 
-    entity_description = SwitchEntityDescription(
-        key="beeper",
-        translation_key="beeper",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
-    )
+    entity_description: SchlageSwitchEntityDescription
 
     def __init__(
         self,
         coordinator: SchlageDataUpdateCoordinator,
+        description: SchlageSwitchEntityDescription,
         device_id: str,
     ) -> None:
-        """Initialize a BeeperSwitch."""
+        """Initialize a SchlageSwitch."""
         super().__init__(coordinator=coordinator, device_id=device_id)
+        self.entity_description = description
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
-        self._attr_is_on = self._lock.beeper_enabled
+        self._attr_is_on = getattr(self._lock, self.entity_description.value_attr)
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_is_on = self._lock.beeper_enabled
+        self._attr_is_on = getattr(self._lock, self.entity_description.value_attr)
         return super()._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the keypad beeper on."""
-        await self.hass.async_add_executor_job(partial(self._lock.set_beeper, True))
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the keypad beeper off."""
-        await self.hass.async_add_executor_job(partial(self._lock.set_beeper, False))
-        await self.coordinator.async_request_refresh()
-
-
-class LockAndLeaveSwitch(SchlageEntity, SwitchEntity):
-    """Schlage lock-and-leave switch."""
-
-    entity_description = SwitchEntityDescription(
-        key="lock_and_leve",
-        translation_key="lock_and_leave",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
-    )
-
-    def __init__(
-        self,
-        coordinator: SchlageDataUpdateCoordinator,
-        device_id: str,
-    ) -> None:
-        """Initialize a LockAndLeaveSwitch."""
-        super().__init__(coordinator=coordinator, device_id=device_id)
-        self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
-        self._attr_is_on = self._lock.lock_and_leave_enabled
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        self._attr_is_on = self._lock.lock_and_leave_enabled
-        return super()._handle_coordinator_update()
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn lock-and-leave on."""
+        """Turn the switch on."""
         await self.hass.async_add_executor_job(
-            partial(self._lock.set_lock_and_leave, True)
+            partial(self.entity_description.on_fn, self._lock)
         )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn lock-and-leave off."""
+        """Turn the switch off."""
         await self.hass.async_add_executor_job(
-            partial(self._lock.set_lock_and_leave, False)
+            partial(self.entity_description.off_fn, self._lock)
         )
         await self.coordinator.async_request_refresh()
