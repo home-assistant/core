@@ -250,7 +250,6 @@ class EnvoyRelayBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         super().__init__(coordinator, description)
         enpower = self.data.enpower
         assert enpower is not None
-        self.enpower = enpower
         self.relay = self.data.dry_contact_status[relay]
         self._serial_number = enpower.serial_number
         self._attr_unique_id = f"{self._serial_number}_relay_{self.relay.id}"
