@@ -7,7 +7,6 @@ import datetime
 import logging
 
 from pyenphase import (
-    EnvoyData,
     EnvoyEncharge,
     EnvoyEnchargePower,
     EnvoyEnpower,
@@ -33,13 +32,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
+from .entity import EnvoyBaseEntity
 
 ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)
@@ -340,30 +337,11 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
+class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
     """Defines a base envoy entity."""
 
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Init the envoy base entity."""
-        self.entity_description = description
-        serial_number = coordinator.envoy.serial_number
-        assert serial_number is not None
-        self.envoy_serial_num = serial_number
-        super().__init__(coordinator)
 
-    @property
-    def data(self) -> EnvoyData:
-        """Return envoy data."""
-        data = self.coordinator.envoy.data
-        assert data is not None
-        return data
-
-
-class EnvoyEntity(EnvoyBaseEntity, SensorEntity):
+class EnvoySensorEntity(EnvoySensorBaseEntity, SensorEntity):
     """Envoy inverter entity."""
 
     _attr_icon = ICON
@@ -386,7 +364,7 @@ class EnvoyEntity(EnvoyBaseEntity, SensorEntity):
         )
 
 
-class EnvoyProductionEntity(EnvoyEntity):
+class EnvoyProductionEntity(EnvoySensorEntity):
     """Envoy production entity."""
 
     entity_description: EnvoyProductionSensorEntityDescription
@@ -399,7 +377,7 @@ class EnvoyProductionEntity(EnvoyEntity):
         return self.entity_description.value_fn(system_production)
 
 
-class EnvoyConsumptionEntity(EnvoyEntity):
+class EnvoyConsumptionEntity(EnvoySensorEntity):
     """Envoy consumption entity."""
 
     entity_description: EnvoyConsumptionSensorEntityDescription
@@ -412,7 +390,7 @@ class EnvoyConsumptionEntity(EnvoyEntity):
         return self.entity_description.value_fn(system_consumption)
 
 
-class EnvoyInverterEntity(EnvoyBaseEntity, SensorEntity):
+class EnvoyInverterEntity(EnvoySensorBaseEntity, SensorEntity):
     """Envoy inverter entity."""
 
     _attr_icon = ICON
@@ -453,7 +431,7 @@ class EnvoyInverterEntity(EnvoyBaseEntity, SensorEntity):
         return self.entity_description.value_fn(inverters[self._serial_number])
 
 
-class EnvoyEnchargeEntity(EnvoyBaseEntity, SensorEntity):
+class EnvoyEnchargeEntity(EnvoySensorBaseEntity, SensorEntity):
     """Envoy Encharge sensor entity."""
 
     _attr_has_entity_name = True
@@ -507,7 +485,7 @@ class EnvoyEnchargePowerEntity(EnvoyEnchargeEntity):
         return self.entity_description.value_fn(encharge_power[self._serial_number])
 
 
-class EnvoyEnpowerEntity(EnvoyBaseEntity, SensorEntity):
+class EnvoyEnpowerEntity(EnvoySensorBaseEntity, SensorEntity):
     """Envoy Enpower sensor entity."""
 
     _attr_has_entity_name = True
