@@ -3,13 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
-from pyenphase import (
-    EnvoyData,
-    EnvoyEncharge,
-    EnvoyEnpower,
-)
+from pyenphase import EnvoyEncharge, EnvoyEnpower
 from pyenphase.models.dry_contacts import DryContactStatus
 
 from homeassistant.components.binary_sensor import (
@@ -22,14 +17,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
 
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .entity import EnvoyBaseEntity
 
 
 @dataclass
@@ -143,31 +134,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class EnvoyBaseBinarySensorEntity(
-    CoordinatorEntity[EnphaseUpdateCoordinator], BinarySensorEntity
-):
+class EnvoyBaseBinarySensorEntity(EnvoyBaseEntity, BinarySensorEntity):
     """Defines a base envoy binary_sensor entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: BinarySensorEntityDescription,
-    ) -> None:
-        """Init the Enphase base binary_sensor entity."""
-        self.entity_description = description
-        serial_number = coordinator.envoy.serial_number
-        assert serial_number is not None
-        self.envoy_serial_num = serial_number
-        super().__init__(coordinator)
-
-    @property
-    def data(self) -> EnvoyData:
-        """Return envoy data."""
-        data = self.coordinator.envoy.data
-        assert data is not None
-        return data
 
 
 class EnvoyEnchargeBinarySensorEntity(EnvoyBaseBinarySensorEntity):
