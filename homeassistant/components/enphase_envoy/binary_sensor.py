@@ -68,6 +68,10 @@ ENCHARGE_SENSORS = (
     ),
 )
 
+RELAY_STATUS_SENSOR = BinarySensorEntityDescription(
+    key="relay_status", icon="mdi:power-plug", has_entity_name=True
+)
+
 
 @dataclass
 class EnvoyEnpowerRequiredKeysMixin:
@@ -133,7 +137,7 @@ async def async_setup_entry(
 
     if envoy_data.dry_contact_status:
         entities.extend(
-            EnvoyRelayBinarySensorEntity(coordinator, relay)
+            EnvoyRelayBinarySensorEntity(coordinator, RELAY_STATUS_SENSOR, relay)
             for relay in envoy_data.dry_contact_status
         )
     async_add_entities(entities)
@@ -233,27 +237,21 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         return self.entity_description.value_fn(enpower)
 
 
-class EnvoyRelayBinarySensorEntity(
-    CoordinatorEntity[EnphaseUpdateCoordinator], BinarySensorEntity
-):
+class EnvoyRelayBinarySensorEntity(EnvoyBaseBinarySensorEntity):
     """Defines an Enpower dry contact binary_sensor entity."""
-
-    _attr_has_entity_name = True
-    _attr_icon = "mdi:power-plug"
 
     def __init__(
         self,
         coordinator: EnphaseUpdateCoordinator,
+        description: BinarySensorEntityDescription,
         relay: str,
     ) -> None:
         """Init the Enpower base entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description)
         enpower = self.data.enpower
         assert enpower is not None
         self.enpower = enpower
         self.relay = self.data.dry_contact_status[relay]
-        envoy_serial_num = coordinator.envoy.serial_number
-        assert envoy_serial_num is not None
         self._serial_number = enpower.serial_number
         self._attr_unique_id = f"{self._serial_number}_relay_{self.relay.id}"
         self._attr_device_info = DeviceInfo(
@@ -262,18 +260,11 @@ class EnvoyRelayBinarySensorEntity(
             model="Enpower",
             name=f"Enpower {self._serial_number}",
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, envoy_serial_num),
+            via_device=(DOMAIN, self.envoy_serial_num),
         )
         self._attr_name = (
             f"{self.data.dry_contact_settings[self.relay.id].load_name} Relay"
         )
-
-    @property
-    def data(self) -> EnvoyData:
-        """Return envoy data."""
-        data = self.coordinator.envoy.data
-        assert data is not None
-        return data
 
     @property
     def is_on(self) -> bool:
