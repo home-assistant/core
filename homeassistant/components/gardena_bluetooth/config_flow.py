@@ -5,9 +5,9 @@ import logging
 from typing import Any
 
 from gardena_bluetooth.client import Client
-from gardena_bluetooth.const import DeviceInformation, ScanService
+from gardena_bluetooth.const import PRODUCT_NAMES, DeviceInformation, ScanService
 from gardena_bluetooth.exceptions import CharacteristicNotFound, CommunicationFailure
-from gardena_bluetooth.parse import ManufacturerData, ProductGroup
+from gardena_bluetooth.parse import ManufacturerData, ProductType
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -34,7 +34,13 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
         return False
 
     manufacturer_data = ManufacturerData.decode(data)
-    if manufacturer_data.group != ProductGroup.WATER_CONTROL:
+    product_type = ProductType.from_manufacturer_data(manufacturer_data)
+
+    if product_type not in (
+        ProductType.PUMP,
+        ProductType.VALVE,
+        ProductType.WATER_COMPUTER,
+    ):
         _LOGGER.debug("Unsupported device: %s", manufacturer_data)
         return False
 
@@ -42,9 +48,14 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
 
 
 def _get_name(discovery_info: BluetoothServiceInfo):
-    if discovery_info.name and discovery_info.name != discovery_info.address:
-        return discovery_info.name
-    return "Gardena Device"
+    if not (data := discovery_info.manufacturer_data.get(ManufacturerData.company)):
+        _LOGGER.debug("Missing manufacturer data: %s", discovery_info)
+        return False
+
+    manufacturer_data = ManufacturerData.decode(data)
+    product_type = ProductType.from_manufacturer_data(manufacturer_data)
+
+    return PRODUCT_NAMES.get(product_type, "Gardena Device")
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
