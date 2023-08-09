@@ -84,6 +84,20 @@ async def async_setup_entry(
                     percent_conv,
                 )
             )
+        # Fan speed
+        if thermostat.has_variable_fan_speed():
+            entities.append(
+                NexiaThermostatSensor(
+                    coordinator,
+                    thermostat,
+                    "get_fan_speed_setpoint",
+                    "Current Fan Speed",
+                    None,
+                    PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
+                    percent_conv,
+                )
+            )
         # Outdoor Temperature
         if thermostat.has_outdoor_temperature():
             if thermostat.get_unit() == UNIT_CELSIUS:
