@@ -161,14 +161,29 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
-        if object_id := entity_info.object_id:
-            # Use the object_id to suggest the entity_id
-            self.entity_id = f"{domain}.{device_info.name}_{object_id}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
         self._entry_id = entry_data.entry_id
-        self._attr_has_entity_name = bool(device_info.friendly_name)
+        #
+        # If `friendly_name` is set, we use the Friendly naming rules, if
+        # `friendly_name` is not set we make an exception to the naming rules for
+        # backwards compatibility and use the Legacy naming rules.
+        #
+        # Friendly naming
+        # - Friendly name is prepended to entity names
+        # - Device Name is prepended to entity ids
+        # - Entity id is constructed from device name and object id
+        #
+        # Legacy naming
+        # - Device name is not prepended to entity names
+        # - Device name is not prepended to entity ids
+        # - Entity id is constructed from entity name
+        #
+        if not device_info.friendly_name:
+            return
+        self._attr_has_entity_name = True
+        self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

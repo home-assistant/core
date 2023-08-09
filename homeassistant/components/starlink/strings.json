@@ -16,7 +16,7 @@
   },
   "entity": {
     "binary_sensor": {
-      "roaming_mode": {
+      "roaming": {
         "name": "Roaming mode"
       },
       "currently_obstructed": {

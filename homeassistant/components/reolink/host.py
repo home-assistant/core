@@ -24,7 +24,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
-DEFAULT_TIMEOUT = 60
+DEFAULT_TIMEOUT = 30
 FIRST_ONVIF_TIMEOUT = 10
 FIRST_ONVIF_LONG_POLL_TIMEOUT = 90
 SUBSCRIPTION_RENEW_THRESHOLD = 300
@@ -231,6 +231,7 @@ class ReolinkHost:
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
+
             if self._base_url.startswith("https"):
                 ir.async_create_issue(
                     self._hass,
@@ -246,9 +247,28 @@ class ReolinkHost:
                 )
             else:
                 ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
+
+            if self._hass.config.api is not None and self._hass.config.api.use_ssl:
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "ssl",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="ssl",
+                    translation_placeholders={
+                        "ssl_link": "https://www.home-assistant.io/integrations/http/#ssl_certificate",
+                        "base_url": self._base_url,
+                        "network_link": "https://my.home-assistant.io/redirect/network/",
+                        "nginx_link": "https://github.com/home-assistant/addons/tree/master/nginx_proxy",
+                    },
+                )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, "ssl")
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
             ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
+            ir.async_delete_issue(self._hass, DOMAIN, "ssl")
 
         # If no ONVIF push or long polling state is received, start fast polling
         await self._async_poll_all_motion()
@@ -470,7 +490,9 @@ class ReolinkHost:
                 await asyncio.sleep(LONG_POLL_ERROR_COOLDOWN)
                 continue
             except Exception as ex:
-                _LOGGER.exception("Error while requesting ONVIF pull point: %s", ex)
+                _LOGGER.exception(
+                    "Unexpected exception while requesting ONVIF pull point: %s", ex
+                )
                 await self._api.unsubscribe(sub_type=SubType.long_poll)
                 raise ex
 

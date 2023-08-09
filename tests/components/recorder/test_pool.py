@@ -26,14 +26,14 @@ def test_recorder_pool(caplog: pytest.LogCaptureFixture) -> None:
 
     def _get_connection_twice():
         session = get_session()
-        connections.append(session.connection().connection.connection)
+        connections.append(session.connection().connection.driver_connection)
         session.close()
 
         if shutdown:
             engine.pool.shutdown()
 
         session = get_session()
-        connections.append(session.connection().connection.connection)
+        connections.append(session.connection().connection.driver_connection)
         session.close()
 
     caplog.clear()

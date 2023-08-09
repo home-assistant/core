@@ -1730,3 +1730,44 @@ async def test_device_info_configuration_url_validation(
         device_registry.async_update_device(
             update_device.id, configuration_url=configuration_url
         )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_invalid_configuration_url_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test loading stored devices with an invalid URL."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["1234"],
+                    "configuration_url": "invalid",
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": dr.DeviceEntryType.SERVICE,
+                    "hw_version": None,
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name_by_user": None,
+                    "name": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+    assert len(registry.devices) == 1
+    entry = registry.async_get_or_create(
+        config_entry_id="1234", identifiers={("serial", "12:34:56:AB:CD:EF")}
+    )
+    assert entry.configuration_url == "invalid"
