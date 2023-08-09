@@ -34,7 +34,7 @@ class AnovaSwitchEntityDescriptionMixin:
 class AnovaSwitchDescription(
     SwitchEntityDescription, AnovaSwitchEntityDescriptionMixin
 ):
-    """Describes a Anova switch."""
+    """Describes an Anova switch."""
 
 
 SWITCH_DESCRIPTIONS = [

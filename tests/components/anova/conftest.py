@@ -93,7 +93,7 @@ async def anova_api_wrong_login(
 
 @pytest.fixture
 async def anova_precision_cooker(hass: HomeAssistant) -> AsyncMock:
-    """Mock a APC object."""
+    """Mock an APC object."""
     apc_patch = AsyncMock()
 
     async def apc_update_side_effect():
@@ -113,7 +113,7 @@ async def anova_precision_cooker(hass: HomeAssistant) -> AsyncMock:
 
 @pytest.fixture
 async def anova_precision_cooker_setter_failure(hass: HomeAssistant) -> AsyncMock:
-    """Mock a APC object."""
+    """Mock an APC object."""
     apc_patch = AsyncMock()
 
     async def apc_update_side_effect():
