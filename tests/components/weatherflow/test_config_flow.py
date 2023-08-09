@@ -49,18 +49,18 @@ async def test_abort_create(
     assert result["type"] == FlowResultType.ABORT
 
 
-async def test_default_in_current_host(
+async def test_single_instance(
     hass: HomeAssistant,
     mock_config_entry2: MockConfigEntry,
     mock_has_devices: AsyncMock,
-):
-    """Test the case where default host exists in the current host list."""
+) -> None:
+    """Test more than one instance."""
     mock_config_entry2.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == FlowResultType.ABORT
 
 
 async def test_has_no_devices(
