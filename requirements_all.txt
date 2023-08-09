@@ -2914,6 +2914,9 @@ weatherflow4py==0.2.21
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
 
+# homeassistant.components.nasweb
+webio-api==0.1.2
+
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
 
