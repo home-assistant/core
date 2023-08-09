@@ -24,8 +24,6 @@ from .const import (
 )
 from .entity import TractiveEntity
 
-TRACKERS_WITH_BUILTIN_BATTERY = ("TRNJA4", "TRAXL1")
-
 
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     """Tractive sensor."""
@@ -90,7 +88,7 @@ async def async_setup_entry(
     entities = [
         TractiveBinarySensor(client.user_id, item, SENSOR_TYPE)
         for item in trackables
-        if item.tracker_details["model_number"] in TRACKERS_WITH_BUILTIN_BATTERY
+        if item.tracker_details.get("charging_state") is not None
     ]
 
     async_add_entities(entities)

@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import asynccontextmanager
-import datetime
 import functools
 import gc
 import itertools
@@ -32,6 +31,9 @@ import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
+# Setup patching if dt_util time functions before any other Home Assistant imports
+from . import patch_time  # noqa: F401, isort:skip
+
 from homeassistant import core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
@@ -53,7 +55,6 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
-    event,
     issue_registry as ir,
     recorder as recorder_helper,
 )
@@ -107,15 +108,6 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
-
-
-def _utcnow() -> datetime.datetime:
-    """Make utcnow patchable by freezegun."""
-    return datetime.datetime.now(datetime.timezone.utc)
-
-
-dt_util.utcnow = _utcnow  # type: ignore[assignment]
-event.time_tracker_utcnow = _utcnow  # type: ignore[assignment]
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -744,10 +736,10 @@ def hass_client(
 ) -> ClientSessionGenerator:
     """Return an authenticated HTTP client."""
 
-    async def auth_client() -> TestClient:
+    async def auth_client(access_token: str | None = hass_access_token) -> TestClient:
         """Return an authenticated client."""
         return await aiohttp_client(
-            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
+            hass.http.app, headers={"Authorization": f"Bearer {access_token}"}
         )
 
     return auth_client
@@ -1104,21 +1096,34 @@ def mock_get_source_ip() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_zeroconf() -> Generator[None, None, None]:
     """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
+    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
+
+    with patch(
+        "homeassistant.components.zeroconf.HaZeroconf", autospec=True
+    ) as mock_zc, patch(
         "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
     ):
-        yield
+        zc = mock_zc.return_value
+        # DNSCache has strong Cython type checks, and MagicMock does not work
+        # so we must mock the class directly
+        zc.cache = DNSCache()
+        yield mock_zc
 
 
 @pytest.fixture
 def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
+    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
+
     with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
         zc = mock_aiozc.return_value
         zc.async_unregister_service = AsyncMock()
         zc.async_register_service = AsyncMock()
         zc.async_update_service = AsyncMock()
         zc.zeroconf.async_wait_for_start = AsyncMock()
+        # DNSCache has strong Cython type checks, and MagicMock does not work
+        # so we must mock the class directly
+        zc.zeroconf.cache = DNSCache()
         zc.zeroconf.done = False
         zc.async_close = AsyncMock()
         zc.ha_async_close = AsyncMock()

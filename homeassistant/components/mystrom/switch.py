@@ -70,10 +70,12 @@ async def async_setup_platform(
 class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, plug, name):
         """Initialize the myStrom switch/plug."""
         self.plug = plug
-        self._attr_name = name
         self._attr_unique_id = self.plug.mac
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.plug.mac)},

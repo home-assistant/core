@@ -293,7 +293,7 @@ SENSOR_TYPES = {
     ),
     ATTR_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_LIFE_REMAINING,
-        name="Filter life remaining",
+        name="Filter lifetime remaining",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:air-filter",
         state_class=SensorStateClass.MEASUREMENT,
@@ -311,7 +311,7 @@ SENSOR_TYPES = {
     ),
     ATTR_FILTER_LEFT_TIME: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_LEFT_TIME,
-        name="Filter time left",
+        name="Filter lifetime left",
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.DURATION,
@@ -320,7 +320,7 @@ SENSOR_TYPES = {
     ),
     ATTR_DUST_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_DUST_FILTER_LIFE_REMAINING,
-        name="Dust filter life remaining",
+        name="Dust filter lifetime remaining",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:air-filter",
         state_class=SensorStateClass.MEASUREMENT,
@@ -329,7 +329,7 @@ SENSOR_TYPES = {
     ),
     ATTR_DUST_FILTER_LIFE_REMAINING_DAYS: XiaomiMiioSensorDescription(
         key=ATTR_DUST_FILTER_LIFE_REMAINING_DAYS,
-        name="Dust filter life remaining days",
+        name="Dust filter lifetime remaining days",
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.DURATION,
@@ -338,7 +338,7 @@ SENSOR_TYPES = {
     ),
     ATTR_UPPER_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_UPPER_FILTER_LIFE_REMAINING,
-        name="Upper filter life remaining",
+        name="Upper filter lifetime remaining",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:air-filter",
         state_class=SensorStateClass.MEASUREMENT,
@@ -347,7 +347,7 @@ SENSOR_TYPES = {
     ),
     ATTR_UPPER_FILTER_LIFE_REMAINING_DAYS: XiaomiMiioSensorDescription(
         key=ATTR_UPPER_FILTER_LIFE_REMAINING_DAYS,
-        name="Upper filter life remaining days",
+        name="Upper filter lifetime remaining days",
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.DURATION,

@@ -569,7 +569,8 @@ class EntityPlatform:
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
 
-        # Update properties before we generate the entity_id
+        # Update properties before we generate the entity_id. This will happen
+        # also for disabled entities.
         if update_before_add:
             try:
                 await entity.async_device_update(warning=False)

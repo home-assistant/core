@@ -163,10 +163,11 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        name = f"{airthings_device.name} {airthings_device.identifier}"
+        name = airthings_device.name
+        if identifier := airthings_device.identifier:
+            name += f" ({identifier})"
 
         self._attr_unique_id = f"{name}_{entity_description.key}"
-
         self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
             connections={
@@ -176,9 +177,10 @@ class AirthingsSensor(
                 )
             },
             name=name,
-            manufacturer="Airthings",
+            manufacturer=airthings_device.manufacturer,
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
+            model=airthings_device.model,
         )
 
     @property

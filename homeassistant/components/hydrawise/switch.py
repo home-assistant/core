@@ -99,26 +99,26 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        relay_data = self.data["relay"] - 1
+        zone_number = self.data["relay"]
         if self.entity_description.key == "manual_watering":
-            self.coordinator.api.run_zone(self._default_watering_timer, relay_data)
+            self.coordinator.api.run_zone(self._default_watering_timer, zone_number)
         elif self.entity_description.key == "auto_watering":
-            self.coordinator.api.suspend_zone(0, relay_data)
+            self.coordinator.api.suspend_zone(0, zone_number)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        relay_data = self.data["relay"] - 1
+        zone_number = self.data["relay"]
         if self.entity_description.key == "manual_watering":
-            self.coordinator.api.run_zone(0, relay_data)
+            self.coordinator.api.run_zone(0, zone_number)
         elif self.entity_description.key == "auto_watering":
-            self.coordinator.api.suspend_zone(365, relay_data)
+            self.coordinator.api.suspend_zone(365, zone_number)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update device state."""
-        relay_data = self.data["relay"] - 1
+        zone_number = self.data["relay"]
         LOGGER.debug("Updating Hydrawise switch: %s", self.name)
-        timestr = self.coordinator.api.relays[relay_data]["timestr"]
+        timestr = self.coordinator.api.relays_by_zone_number[zone_number]["timestr"]
         if self.entity_description.key == "manual_watering":
             self._attr_is_on = timestr == "Now"
         elif self.entity_description.key == "auto_watering":

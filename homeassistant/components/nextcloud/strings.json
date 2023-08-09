@@ -28,5 +28,152 @@
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "nextcloud_system_enable_avatars": {
+        "name": "Avatars enabled"
+      },
+      "nextcloud_system_enable_previews": {
+        "name": "Previews enabled"
+      },
+      "nextcloud_system_filelocking_enabled": {
+        "name": "Filelocking enabled"
+      },
+      "nextcloud_system_debug": {
+        "name": "Debug enabled"
+      }
+    },
+    "sensor": {
+      "nextcloud_system_version": {
+        "name": "System version"
+      },
+      "nextcloud_system_theme": {
+        "name": "System theme"
+      },
+      "nextcloud_system_memcache_local": {
+        "name": "System memcache local"
+      },
+      "nextcloud_system_memcache_distributed": {
+        "name": "System memcache distributed"
+      },
+      "nextcloud_system_memcache_locking": {
+        "name": "System memcache locking"
+      },
+      "nextcloud_system_freespace": {
+        "name": "Free space"
+      },
+      "nextcloud_system_cpuload": {
+        "name": "CPU Load"
+      },
+      "nextcloud_system_mem_total": {
+        "name": "Total memory"
+      },
+      "nextcloud_system_mem_free": {
+        "name": "Free memory"
+      },
+      "nextcloud_system_swap_total": {
+        "name": "Total swap memory"
+      },
+      "nextcloud_system_swap_free": {
+        "name": "Free swap memory"
+      },
+      "nextcloud_system_apps_num_installed": {
+        "name": "Apps installed"
+      },
+      "nextcloud_system_apps_num_updates_available": {
+        "name": "Updates available"
+      },
+      "nextcloud_system_apps_app_updates_calendar": {
+        "name": "Calendar updates"
+      },
+      "nextcloud_system_apps_app_updates_contacts": {
+        "name": "Contact updates"
+      },
+      "nextcloud_system_apps_app_updates_tasks": {
+        "name": "Task updates"
+      },
+      "nextcloud_system_apps_app_updates_twofactor_totp": {
+        "name": "Two factor authentication updates"
+      },
+      "nextcloud_storage_num_users": {
+        "name": "Amount of user"
+      },
+      "nextcloud_storage_num_files": {
+        "name": "Amount of files"
+      },
+      "nextcloud_storage_num_storages": {
+        "name": "Amount of storages"
+      },
+      "nextcloud_storage_num_storages_local": {
+        "name": "Amount of local storages"
+      },
+      "nextcloud_storage_num_storages_home": {
+        "name": "Amount of storages at home"
+      },
+      "nextcloud_storage_num_storages_other": {
+        "name": "Amount of other storages"
+      },
+      "nextcloud_shares_num_shares": {
+        "name": "Amount of shares"
+      },
+      "nextcloud_shares_num_shares_user": {
+        "name": "Amount of user shares"
+      },
+      "nextcloud_shares_num_shares_groups": {
+        "name": "Amount of group shares"
+      },
+      "nextcloud_shares_num_shares_link": {
+        "name": "Amount of link shares"
+      },
+      "nextcloud_shares_num_shares_mail": {
+        "name": "Amount of mail shares"
+      },
+      "nextcloud_shares_num_shares_room": {
+        "name": "Amount of room shares"
+      },
+      "nextcloud_shares_num_shares_link_no_password": {
+        "name": "Amount of passwordless link shares"
+      },
+      "nextcloud_shares_num_fed_shares_sent": {
+        "name": "Amount of shares sent"
+      },
+      "nextcloud_shares_num_fed_shares_received": {
+        "name": "Amount of shares received"
+      },
+      "nextcloud_shares_permissions_3_1": {
+        "name": "Permissions 3.1"
+      },
+      "nextcloud_server_webserver": {
+        "name": "Webserver"
+      },
+      "nextcloud_server_php_version": {
+        "name": "PHP version"
+      },
+      "nextcloud_server_php_memory_limit": {
+        "name": "PHP memory limit"
+      },
+      "nextcloud_server_php_max_execution_time": {
+        "name": "PHP max execution time"
+      },
+      "nextcloud_server_php_upload_max_filesize": {
+        "name": "PHP upload maximum filesize"
+      },
+      "nextcloud_database_type": {
+        "name": "Database type"
+      },
+      "nextcloud_database_version": {
+        "name": "Database version"
+      },
+      "nextcloud_activeusers_last5minutes": {
+        "name": "Amount of active users last 5 minutes"
+      },
+      "nextcloud_activeusers_last1hour": {
+        "name": "Amount of active users last hour"
+      },
+      "nextcloud_activeusers_last24hours": {
+        "name": "Amount of active users last day"
+      }
+    }
   }
 }

@@ -76,6 +76,17 @@
           "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
         }
       }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          }
+        }
+      }
     }
   },
   "issues": {
