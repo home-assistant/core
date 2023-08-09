@@ -19,7 +19,7 @@ class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator]):
         coordinator: EnphaseUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
-        """Init the Enphase base binary_sensor entity."""
+        """Init the Enphase base entity."""
         self.entity_description = description
         serial_number = coordinator.envoy.serial_number
         assert serial_number is not None
