@@ -43,8 +43,8 @@ async def async_setup_entry(
     async_add_entities(
         EzvizSirenEntity(coordinator, camera)
         for camera in coordinator.data
-        for capibility, value in coordinator.data[camera]["supportExt"].items()
-        if capibility == str(SupportExt.SupportActiveDefense.value)
+        for capability, value in coordinator.data[camera]["supportExt"].items()
+        if capability == str(SupportExt.SupportActiveDefense.value)
         if value != "0"
     )
 
