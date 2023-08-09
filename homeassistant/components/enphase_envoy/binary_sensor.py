@@ -3,12 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
-from pyenphase import (
-    EnvoyEncharge,
-    EnvoyEnpower,
-)
+from pyenphase import EnvoyEncharge, EnvoyEnpower
 from pyenphase.models.dry_contacts import DryContactStatus
 
 from homeassistant.components.binary_sensor import (
@@ -25,8 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass

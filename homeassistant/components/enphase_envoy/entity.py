@@ -1,20 +1,12 @@
 """Support for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
-import logging
-
-from pyenphase import (
-    EnvoyData,
-)
+from pyenphase import EnvoyData
 
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import EnphaseUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator]):
