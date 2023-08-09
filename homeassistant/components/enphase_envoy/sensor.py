@@ -342,7 +342,7 @@ class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
 
 
 class EnvoySensorEntity(EnvoySensorBaseEntity, SensorEntity):
-    """Envoy inverter entity."""
+    """Envoy system base entity."""
 
     _attr_icon = ICON
     _attr_has_entity_name = True
