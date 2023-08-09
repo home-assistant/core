@@ -375,9 +375,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USERNAME, default=entry.unique_id): vol.In(
-                    [entry.unique_id]
-                ),
+                vol.Required(CONF_USERNAME, default=entry.unique_id): str,
                 vol.Required(CONF_PASSWORD): str,
             }
         )
