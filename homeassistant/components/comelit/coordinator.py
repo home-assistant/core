@@ -3,9 +3,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from aiocomelit import (
-    ComeliteSerialBridgeAPi,
-)
+from aiocomelit import ComeliteSerialBridgeAPi
 import aiohttp
 
 from homeassistant.core import HomeAssistant
