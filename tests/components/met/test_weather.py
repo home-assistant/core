@@ -23,7 +23,7 @@ async def test_new_config_entry(hass: HomeAssistant, mock_weather) -> None:
 
 
 async def test_legacy_config_entry(hass: HomeAssistant, mock_weather) -> None:
-    """Test we track home."""
+    """Test the expected entities are created."""
     registry = er.async_get(hass)
     registry.async_get_or_create(
         WEATHER_DOMAIN,
