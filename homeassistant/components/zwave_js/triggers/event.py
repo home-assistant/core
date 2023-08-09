@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 
+from pydantic import ValidationError
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
@@ -16,11 +17,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-
-try:
-    from pydantic.v1 import ValidationError
-except ImportError:
-    from pydantic import ValidationError
 
 from ..const import (
     ATTR_CONFIG_ENTRY_ID,
