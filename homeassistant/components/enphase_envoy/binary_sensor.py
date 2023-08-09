@@ -137,8 +137,6 @@ async def async_setup_entry(
 class EnvoyBaseBinarySensorEntity(EnvoyBaseEntity, BinarySensorEntity):
     """Defines a base envoy binary_sensor entity."""
 
-    _attr_has_entity_name = True
-
 
 class EnvoyEnchargeBinarySensorEntity(EnvoyBaseBinarySensorEntity):
     """Defines an Encharge binary_sensor entity."""

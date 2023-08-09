@@ -341,11 +341,10 @@ class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
     """Defines a base envoy entity."""
 
 
-class EnvoySystemSensorEntity(EnvoySensorBaseEntity, SensorEntity):
+class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
     """Envoy system base entity."""
 
     _attr_icon = ICON
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -390,11 +389,10 @@ class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
         return self.entity_description.value_fn(system_consumption)
 
 
-class EnvoyInverterEntity(EnvoySensorBaseEntity, SensorEntity):
+class EnvoyInverterEntity(EnvoySensorBaseEntity):
     """Envoy inverter entity."""
 
     _attr_icon = ICON
-    _attr_has_entity_name = True
     entity_description: EnvoyInverterSensorEntityDescription
 
     def __init__(
@@ -431,10 +429,8 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity, SensorEntity):
         return self.entity_description.value_fn(inverters[self._serial_number])
 
 
-class EnvoyEnchargeEntity(EnvoySensorBaseEntity, SensorEntity):
+class EnvoyEnchargeEntity(EnvoySensorBaseEntity):
     """Envoy Encharge sensor entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -485,10 +481,9 @@ class EnvoyEnchargePowerEntity(EnvoyEnchargeEntity):
         return self.entity_description.value_fn(encharge_power[self._serial_number])
 
 
-class EnvoyEnpowerEntity(EnvoySensorBaseEntity, SensorEntity):
+class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
     """Envoy Enpower sensor entity."""
 
-    _attr_has_entity_name = True
     entity_description: EnvoyEnpowerSensorEntityDescription
 
     def __init__(

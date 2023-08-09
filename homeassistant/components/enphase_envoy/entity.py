@@ -12,6 +12,8 @@ from .coordinator import EnphaseUpdateCoordinator
 class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator]):
     """Defines a base envoy entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: EnphaseUpdateCoordinator,
