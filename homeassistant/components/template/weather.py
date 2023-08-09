@@ -1,6 +1,8 @@
 """Template platform that aggregates meteorological data."""
 from __future__ import annotations
 
+from typing import Literal
+
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -73,6 +75,9 @@ CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
 CONF_OZONE_TEMPLATE = "ozone_template"
 CONF_VISIBILITY_TEMPLATE = "visibility_template"
 CONF_FORECAST_TEMPLATE = "forecast_template"
+CONF_FORECAST_DAILY_TEMPLATE = "forecast_daily_template"
+CONF_FORECAST_HOURLY_TEMPLATE = "forecast_hourly_template"
+CONF_FORECAST_TWICE_DAILY_TEMPLATE = "forecast_twice_daily_template"
 CONF_PRESSURE_UNIT = "pressure_unit"
 CONF_WIND_SPEED_UNIT = "wind_speed_unit"
 CONF_VISIBILITY_UNIT = "visibility_unit"
@@ -82,30 +87,40 @@ CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
 CONF_DEW_POINT_TEMPLATE = "dew_point_template"
 CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
-        vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
-        vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
-        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
-        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
-        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
-        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
-        vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
-        vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_FORECAST_TEMPLATE),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
+            vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
+            vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
+            vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
+            vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
+            vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
+            vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
+            vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
+            vol.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
+            vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
+            vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(
+                TemperatureConverter.VALID_UNITS
+            ),
+            vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
+            vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+            vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+            vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(
+                DistanceConverter.VALID_UNITS
+            ),
+            vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
+            vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
+            vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
+            vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
+        }
+    ),
 )
 
 
@@ -135,7 +150,11 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_should_poll = False
-    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY
+    )
 
     def __init__(
         self,
@@ -157,6 +176,11 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
         self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
         self._forecast_template = config.get(CONF_FORECAST_TEMPLATE)
+        self._forecast_daily_template = config.get(CONF_FORECAST_DAILY_TEMPLATE)
+        self._forecast_hourly_template = config.get(CONF_FORECAST_HOURLY_TEMPLATE)
+        self._forecast_twice_daily_template = config.get(
+            CONF_FORECAST_TWICE_DAILY_TEMPLATE
+        )
         self._wind_gust_speed_template = config.get(CONF_WIND_GUST_SPEED_TEMPLATE)
         self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE_TEMPLATE)
         self._dew_point_template = config.get(CONF_DEW_POINT_TEMPLATE)
@@ -186,6 +210,9 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._dew_point = None
         self._apparent_temperature = None
         self._forecast: list[Forecast] = []
+        self._forecast_daily: list[Forecast] = []
+        self._forecast_hourly: list[Forecast] = []
+        self._forecast_twice_daily: list[Forecast] = []
 
     @property
     def condition(self) -> str | None:
@@ -254,7 +281,15 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return self._forecast
+        return self._forecast_daily
+
+    async def async_forecast_hourly(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self._forecast_hourly
+
+    async def async_forecast_twice_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self._forecast_twice_daily
 
     @property
     def attribution(self) -> str | None:
@@ -332,17 +367,34 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
                 "_apparent_temperature",
                 self._apparent_temperature_template,
             )
-
         if self._forecast_template:
             self.add_template_attribute(
                 "_forecast",
                 self._forecast_template,
             )
+
+        if fc_daily := self._forecast_daily_template:
+            self.add_template_attribute(
+                "_forecast_daily",
+                self._forecast_daily_template,
+            )
+        if fc_hourly := self._forecast_hourly_template:
+            self.add_template_attribute(
+                "_forecast_hourly",
+                self._forecast_hourly_template,
+            )
+        if fc_twice_daily := self._forecast_twice_daily_template:
+            self.add_template_attribute(
+                "_forecast_twice_daily",
+                self._forecast_twice_daily_template,
+            )
+        if fc_daily or fc_hourly or fc_twice_daily:
             self.async_on_remove(
                 async_track_state_change_event(
                     self.hass, self.entity_id, self.async_state_changed_listener
                 )
             )
+
         await super().async_added_to_hass()
 
     @callback
@@ -351,4 +403,11 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         event: EventType[EventStateChangedData],
     ) -> None:
         """Call to update forecast listener."""
-        await self.async_update_listeners(["daily"])
+        types: list[Literal["daily", "hourly", "twice_daily"]] = []
+        if self._forecast_daily_template:
+            types.append("daily")
+        if self._forecast_hourly_template:
+            types.append("hourly")
+        if self._forecast_twice_daily_template:
+            types.append("twice_daily")
+        await self.async_update_listeners(types)

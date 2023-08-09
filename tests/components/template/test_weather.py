@@ -90,6 +90,9 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
                     "name": "forecast",
                     "condition_template": "sunny",
                     "forecast_template": "{{ states.weather.forecast.attributes.forecast }}",
+                    "forecast_daily_template": "{{ states.weather.forecast.attributes.forecast }}",
+                    "forecast_hourly_template": "{{ states.weather.forecast.attributes.forecast }}",
+                    "forecast_twice_daily_template": "{{ states.weather.forecast_twice_daily.attributes.forecast }}",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
                     "humidity_template": "{{ states('sensor.humidity') | int }}",
                 },
@@ -97,7 +100,7 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_forecast_service(hass: HomeAssistant, start_ha) -> None:
+async def test_forecasts(hass: HomeAssistant, start_ha) -> None:
     """Test forecast service."""
     for attr, _v_attr, value in [
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
@@ -119,10 +122,27 @@ async def test_forecast_service(hass: HomeAssistant, start_ha) -> None:
             ]
         },
     )
+    hass.states.async_set(
+        "weather.forecast_twice_daily",
+        "fog",
+        {
+            ATTR_FORECAST: [
+                Forecast(
+                    condition="fog",
+                    datetime="2023-02-17T14:00:00+00:00",
+                    temperature=14.2,
+                    is_daytime=True,
+                )
+            ]
+        },
+    )
     await hass.async_block_till_done()
     state = hass.states.get("weather.forecast")
     assert state is not None
     assert state.state == "sunny"
+    state2 = hass.states.get("weather.forecast_twice_daily")
+    assert state2 is not None
+    assert state2.state == "fog"
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -137,6 +157,39 @@ async def test_forecast_service(hass: HomeAssistant, start_ha) -> None:
                 "condition": "cloudy",
                 "datetime": "2023-02-17T14:00:00+00:00",
                 "temperature": 14.2,
+            }
+        ]
+    }
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {"entity_id": "weather.forecast", "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": [
+            {
+                "condition": "cloudy",
+                "datetime": "2023-02-17T14:00:00+00:00",
+                "temperature": 14.2,
+            }
+        ]
+    }
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {"entity_id": "weather.forecast", "type": "twice_daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": [
+            {
+                "condition": "fog",
+                "datetime": "2023-02-17T14:00:00+00:00",
+                "temperature": 14.2,
+                "is_daytime": True,
             }
         ]
     }
