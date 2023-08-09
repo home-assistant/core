@@ -341,7 +341,7 @@ class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
     """Defines a base envoy entity."""
 
 
-class EnvoySensorEntity(EnvoySensorBaseEntity, SensorEntity):
+class EnvoySystemSensorEntity(EnvoySensorBaseEntity, SensorEntity):
     """Envoy system base entity."""
 
     _attr_icon = ICON
@@ -364,7 +364,7 @@ class EnvoySensorEntity(EnvoySensorBaseEntity, SensorEntity):
         )
 
 
-class EnvoyProductionEntity(EnvoySensorEntity):
+class EnvoyProductionEntity(EnvoySystemSensorEntity):
     """Envoy production entity."""
 
     entity_description: EnvoyProductionSensorEntityDescription
@@ -377,7 +377,7 @@ class EnvoyProductionEntity(EnvoySensorEntity):
         return self.entity_description.value_fn(system_production)
 
 
-class EnvoyConsumptionEntity(EnvoySensorEntity):
+class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
     """Envoy consumption entity."""
 
     entity_description: EnvoyConsumptionSensorEntityDescription
