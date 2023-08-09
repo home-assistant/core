@@ -92,8 +92,8 @@ def async_migrate_unique_ids(
     device_name = slugify(coordinator.device.name)
 
     for key in ("reboot", "self_test", "mute", "unmute"):
-        if entity_entry.unique_id.startswith(device_name):
-            old_unique_id = entity_entry.unique_id
+        old_unique_id = f"{device_name}_{key}"
+        if entity_entry.unique_id == old_unique_id:
             new_unique_id = f"{coordinator.mac}_{key}"
             LOGGER.debug(
                 "Migrating unique_id for %s entity from [%s] to [%s]",

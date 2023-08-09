@@ -33,6 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import (
     EsphomeEntity,
+    esphome_state_property,
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
@@ -111,6 +112,7 @@ class EsphomeAlarmControlPanel(
         self._attr_code_arm_required = bool(static_info.requires_code_to_arm)
 
     @property
+    @esphome_state_property
     def state(self) -> str | None:
         """Return the state of the device."""
         return _ESPHOME_ACP_STATE_TO_HASS_STATE.from_esphome(self._state.state)

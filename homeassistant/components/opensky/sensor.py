@@ -7,6 +7,7 @@ from python_opensky import BoundingBox, OpenSky, StateVector
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -15,46 +16,27 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RADIUS,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-CONF_ALTITUDE = "altitude"
+from .const import (
+    ATTR_ALTITUDE,
+    ATTR_CALLSIGN,
+    ATTR_ICAO24,
+    ATTR_SENSOR,
+    CLIENT,
+    CONF_ALTITUDE,
+    DEFAULT_ALTITUDE,
+    DOMAIN,
+    EVENT_OPENSKY_ENTRY,
+    EVENT_OPENSKY_EXIT,
+)
 
-ATTR_ICAO24 = "icao24"
-ATTR_CALLSIGN = "callsign"
-ATTR_ALTITUDE = "altitude"
-ATTR_ON_GROUND = "on_ground"
-ATTR_SENSOR = "sensor"
-ATTR_STATES = "states"
-
-DOMAIN = "opensky"
-
-DEFAULT_ALTITUDE = 0
-
-EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
-EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 # OpenSky free user has 400 credits, with 4 credits per API call. 100/24 = ~4 requests per hour
 SCAN_INTERVAL = timedelta(minutes=15)
-
-OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
-OPENSKY_API_FIELDS = [
-    ATTR_ICAO24,
-    ATTR_CALLSIGN,
-    "origin_country",
-    "time_position",
-    "time_velocity",
-    ATTR_LONGITUDE,
-    ATTR_LATITUDE,
-    ATTR_ALTITUDE,
-    ATTR_ON_GROUND,
-    "velocity",
-    "heading",
-    "vertical_rate",
-    "sensors",
-]
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -68,27 +50,57 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Open Sky platform."""
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    radius = config.get(CONF_RADIUS, 0)
-    bounding_box = OpenSky.get_bounding_box(latitude, longitude, radius * 1000)
-    session = async_get_clientsession(hass)
-    opensky = OpenSky(session=session)
-    add_entities(
+    """Set up the OpenSky sensor platform from yaml."""
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.1.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "OpenSky",
+        },
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize the entries."""
+
+    opensky = hass.data[DOMAIN][entry.entry_id][CLIENT]
+    bounding_box = OpenSky.get_bounding_box(
+        entry.data[CONF_LATITUDE],
+        entry.data[CONF_LONGITUDE],
+        entry.options[CONF_RADIUS],
+    )
+    async_add_entities(
         [
             OpenSkySensor(
-                hass,
-                config.get(CONF_NAME, DOMAIN),
+                entry.title,
                 opensky,
                 bounding_box,
-                config[CONF_ALTITUDE],
+                entry.options.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
+                entry.entry_id,
             )
         ],
         True,
@@ -104,20 +116,20 @@ class OpenSkySensor(SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         name: str,
         opensky: OpenSky,
         bounding_box: BoundingBox,
         altitude: float,
+        entry_id: str,
     ) -> None:
         """Initialize the sensor."""
         self._altitude = altitude
         self._state = 0
-        self._hass = hass
         self._name = name
         self._previously_tracked: set[str] = set()
         self._opensky = opensky
         self._bounding_box = bounding_box
+        self._attr_unique_id = f"{entry_id}_opensky"
 
     @property
     def name(self) -> str:
@@ -154,7 +166,7 @@ class OpenSkySensor(SensorEntity):
                 ATTR_LATITUDE: latitude,
                 ATTR_ICAO24: icao24,
             }
-            self._hass.bus.fire(event, data)
+            self.hass.bus.fire(event, data)
 
     async def async_update(self) -> None:
         """Update device state."""

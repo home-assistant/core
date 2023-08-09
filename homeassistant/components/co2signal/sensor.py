@@ -75,11 +75,11 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
             "country_code": coordinator.data["countryCode"],
         }
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.electricitymap.org/",
+            configuration_url="https://www.electricitymaps.com/",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
-            manufacturer="Tmrow.com",
-            name="CO2 signal",
+            manufacturer="Electricity Maps",
+            name="Electricity Maps",
         )
         self._attr_unique_id = (
             f"{coordinator.entry_id}_{description.unique_id or description.key}"

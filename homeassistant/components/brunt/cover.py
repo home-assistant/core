@@ -60,6 +60,10 @@ class BruntDevice(
     Contains the common logic for all Brunt devices.
     """
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_device_class = CoverDeviceClass.BLIND
+    _attr_attribution = ATTRIBUTION
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
@@ -83,12 +87,9 @@ class BruntDevice(
 
         self._remove_update_listener = None
 
-        self._attr_name = self._thing.name
-        self._attr_device_class = CoverDeviceClass.BLIND
-        self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},  # type: ignore[arg-type]
-            name=self._attr_name,
+            name=self._thing.name,
             via_device=(DOMAIN, self._entry_id),
             manufacturer="Brunt",
             sw_version=self._thing.fw_version,

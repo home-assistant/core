@@ -11,16 +11,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -104,6 +101,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage1"],
     ),
     DiscovergySensorEntityDescription(
         key="phase2Voltage",
@@ -113,6 +111,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage2"],
     ),
     DiscovergySensorEntityDescription(
         key="phase3Voltage",
@@ -122,6 +121,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage3"],
     ),
     # energy sensors
     DiscovergySensorEntityDescription(
@@ -154,8 +154,6 @@ async def async_setup_entry(
 
     entities: list[DiscovergySensor] = []
     for meter in meters:
-        meter_id = meter.get_meter_id()
-
         sensors = None
         if meter.measurement_type == "ELECTRICITY":
             sensors = ELECTRICITY_SENSORS
@@ -167,7 +165,7 @@ async def async_setup_entry(
                 # check if this meter has this data, then add this sensor
                 for key in {description.key, *description.alternative_keys}:
                     coordinator: DiscovergyUpdateCoordinator = data.coordinators[
-                        meter_id
+                        meter.meter_id
                     ]
                     if key in coordinator.data.values:
                         entities.append(
@@ -198,12 +196,12 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
 
         self.entity_description = description
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, meter.get_meter_id())},
-            ATTR_NAME: f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
-            ATTR_MODEL: f"{meter.type} {meter.full_serial_number}",
-            ATTR_MANUFACTURER: MANUFACTURER,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, meter.meter_id)},
+            name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
+            model=f"{meter.type} {meter.full_serial_number}",
+            manufacturer=MANUFACTURER,
+        )
 
     @property
     def native_value(self) -> StateType:

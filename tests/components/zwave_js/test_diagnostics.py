@@ -58,7 +58,9 @@ async def test_device_diagnostics(
 ) -> None:
     """Test the device level diagnostics data dump."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, multisensor_6)}
+    )
     assert device
 
     # Create mock config entry for fake entity
@@ -151,7 +153,9 @@ async def test_device_diagnostics_missing_primary_value(
 ) -> None:
     """Test that device diagnostics handles an entity with a missing primary value."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, multisensor_6)}
+    )
     assert device
 
     entity_id = "sensor.multisensor_6_air_temperature"
@@ -240,7 +244,7 @@ async def test_device_diagnostics_secret_value(
     client.driver.controller.emit("node added", {"node": node})
     await hass.async_block_till_done()
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client.driver, node)})
+    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
     assert device
 
     diagnostics_data = await get_diagnostics_for_device(

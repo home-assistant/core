@@ -29,7 +29,6 @@ class ToloLampModeSelect(ToloSaunaCoordinatorEntity, SelectEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:lightbulb-multiple-outline"
-    _attr_name = "Lamp Mode"
     _attr_options = [lamp_mode.name.lower() for lamp_mode in LampMode]
     _attr_translation_key = "lamp_mode"
 

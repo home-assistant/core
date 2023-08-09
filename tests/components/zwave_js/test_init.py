@@ -976,7 +976,9 @@ async def test_removed_device(
     assert len(device_entries) == 2
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 60
-    assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
+    assert (
+        dev_reg.async_get_device(identifiers={get_device_id(driver, old_node)}) is None
+    )
 
 
 async def test_suggested_area(hass: HomeAssistant, client, eaton_rf9640_dimmer) -> None:

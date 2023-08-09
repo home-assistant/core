@@ -4,9 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Any, Final
+from typing import Any, Final, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -27,7 +26,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -35,8 +34,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from .const import (
     CONF_ROUND_DIGITS,
@@ -291,10 +293,10 @@ class IntegrationSensor(RestoreSensor):
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         @callback
-        def calc_integration(event: Event) -> None:
+        def calc_integration(event: EventType[EventStateChangedData]) -> None:
             """Handle the sensor state changes."""
-            old_state: State | None = event.data.get("old_state")
-            new_state: State | None = event.data.get("new_state")
+            old_state = event.data["old_state"]
+            new_state = event.data["new_state"]
 
             # We may want to update our state before an early return,
             # based on the source sensor's unit_of_measurement

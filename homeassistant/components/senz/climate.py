@@ -43,6 +43,8 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_max_temp = 35
     _attr_min_temp = 5
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -52,7 +54,6 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
         """Init SENZ climate."""
         super().__init__(coordinator)
         self._thermostat = thermostat
-        self._attr_name = thermostat.name
         self._attr_unique_id = thermostat.serial_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, thermostat.serial_number)},
