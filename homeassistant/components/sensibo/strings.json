@@ -79,7 +79,9 @@
           "fixedright": "Fixed right",
           "fixedleftright": "Fixed left right",
           "rangecenter": "Range center",
-          "rangefull": "Range full"
+          "rangefull": "Range full",
+          "rangeleft": "Range left",
+          "rangeright": "Range right"
         }
       },
       "light": {
@@ -337,6 +339,38 @@
     "update": {
       "fw_ver_available": {
         "name": "Update available"
+      }
+    },
+    "climate": {
+      "climate_device": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet",
+              "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
+              "medium_high": "Medium high",
+              "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
+              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "stopped": "[%key:common::state::off%]",
+              "fixedtop": "Fixed top",
+              "fixedmiddletop": "Fixed middle top",
+              "fixedmiddle": "Fixed middle",
+              "fixedmiddlebottom": "Fixed middle bottom",
+              "fixedbottom": "Fixed bottom",
+              "rangetop": "Range top",
+              "rangemiddle": "Range middle",
+              "rangebottom": "Range bottom",
+              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]",
+              "horizontal": "Horizontal",
+              "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
+            }
+          }
+        }
       }
     }
   },

@@ -57,7 +57,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             except GrpcError as exc:
                 raise UpdateFailed from exc
 
-    async def async_stow_starlink(self, stow: bool):
+    async def async_stow_starlink(self, stow: bool) -> None:
         """Set whether Starlink system tied to this coordinator should be stowed."""
         async with async_timeout.timeout(4):
             try:
@@ -67,7 +67,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             except GrpcError as exc:
                 raise HomeAssistantError from exc
 
-    async def async_reboot_starlink(self):
+    async def async_reboot_starlink(self) -> None:
         """Reboot the Starlink system tied to this coordinator."""
         async with async_timeout.timeout(4):
             try:

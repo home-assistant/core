@@ -344,16 +344,15 @@ class SQLSensor(ManualTriggerEntity, SensorEntity):
         self._attr_extra_state_attributes = {}
         self._use_database_executor = use_database_executor
         self._lambda_stmt = _generate_lambda_stmt(query)
-        self._attr_name = (
-            None if not yaml else trigger_entity_config[CONF_NAME].template
-        )
-        self._attr_has_entity_name = not yaml
+        if not yaml:
+            self._attr_name = None
+            self._attr_has_entity_name = True
         if not yaml and trigger_entity_config.get(CONF_UNIQUE_ID):
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, trigger_entity_config[CONF_UNIQUE_ID])},
                 manufacturer="SQL",
-                name=trigger_entity_config[CONF_NAME].template,
+                name=self.name,
             )
 
     async def async_added_to_hass(self) -> None:

@@ -88,9 +88,9 @@ async def websocket_create_network(
         return
 
     try:
-        await data.delete_active_dataset()
+        await data.factory_reset()
     except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "delete_active_dataset_failed", str(exc))
+        connection.send_error(msg["id"], "factory_reset_failed", str(exc))
         return
 
     try:

@@ -15,9 +15,7 @@ from . import api
 from .const import DOMAIN
 from .coordinator import ElectricKiwiHOPDataCoordinator
 
-PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
-]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SELECT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

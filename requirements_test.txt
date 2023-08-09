@@ -13,7 +13,7 @@ freezegun==1.2.2
 mock-open==1.4.0
 mypy==1.4.1
 pre-commit==3.3.3
-pydantic==1.10.11
+pydantic==1.10.12
 pylint==2.17.4
 pylint-per-file-ignores==1.2.1
 pipdeptree==2.11.0
