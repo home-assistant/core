@@ -9,11 +9,6 @@ from homeassistant.helpers import entity_registry as er
 async def test_new_config_entry(hass: HomeAssistant, mock_weather) -> None:
     """Test the expected entities are created."""
     registry = er.async_get(hass)
-    registry.async_get_or_create(
-        WEATHER_DOMAIN,
-        DOMAIN,
-        "10-20-hourly",
-    )
     await hass.config_entries.flow.async_init("met", context={"source": "onboarding"})
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids("weather")) == 1
