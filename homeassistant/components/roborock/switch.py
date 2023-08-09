@@ -101,6 +101,7 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         translation_key="off_peak_switch",
         icon="mdi:power-plug",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
 ]
 

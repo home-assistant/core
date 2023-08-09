@@ -96,6 +96,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
             hour=cache.value.get("start_hour"), minute=cache.value.get("start_minute")
         ),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     RoborockTimeDescription(
         key="off_peak_end",
@@ -114,6 +115,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
             hour=cache.value.get("end_hour"), minute=cache.value.get("end_minute")
         ),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
 ]
 
