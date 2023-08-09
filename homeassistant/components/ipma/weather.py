@@ -104,7 +104,12 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         self._observation = None
         self._daily_forecast: list[IPMAForecast] | None = None
         self._hourly_forecast: list[IPMAForecast] | None = None
-        self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
+        if self._mode is not None:
+            self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
+        else:
+            self._attr_unique_id = (
+                f"{self._location.station_latitude}, {self._location.station_longitude}"
+            )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
