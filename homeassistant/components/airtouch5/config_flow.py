@@ -45,15 +45,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        errors: dict[str, str] | None = None
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors = {"base": "cannot_connect"}
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors = {"base": "unknown"}
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 

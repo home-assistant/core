@@ -21,8 +21,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.airtouch5.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.airtouch5.config_flow.validate_input",
+        return_value={"title": "1.1.1.1"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -47,7 +47,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.airtouch5.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.airtouch5.config_flow.validate_input",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
