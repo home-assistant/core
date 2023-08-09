@@ -132,6 +132,16 @@
         "name": "Encryption"
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "number": {
+      "detection_sensibility": {
+        "name": "Detection sensitivity"
+      }
+    },
     "sensor": {
       "alarm_sound_mod": {
         "name": "Alarm sound level"
