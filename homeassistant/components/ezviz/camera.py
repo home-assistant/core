@@ -170,6 +170,8 @@ async def async_setup_entry(
 class EzvizCamera(EzvizEntity, Camera):
     """An implementation of a EZVIZ security camera."""
 
+    _attr_name = None
+
     def __init__(
         self,
         hass: HomeAssistant,
