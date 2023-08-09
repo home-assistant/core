@@ -75,7 +75,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
 class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server version sensor."""
 
-    _attr_translation_key = "version"
+    _attr_translation_key = KEY_VERSION
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize version sensor."""
@@ -89,7 +89,7 @@ class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
 class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server protocol version sensor."""
 
-    _attr_translation_key = "protocol_version"
+    _attr_translation_key = KEY_PROTOCOL_VERSION
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize protocol version sensor."""
@@ -107,7 +107,7 @@ class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
 class MinecraftServerLatencySensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server latency sensor."""
 
-    _attr_translation_key = "latency"
+    _attr_translation_key = KEY_LATENCY
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize latency sensor."""
@@ -126,7 +126,7 @@ class MinecraftServerLatencySensor(MinecraftServerSensorEntity):
 class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server online players sensor."""
 
-    _attr_translation_key = "players_online"
+    _attr_translation_key = KEY_PLAYERS_ONLINE
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize online players sensor."""
@@ -153,7 +153,7 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
 class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server maximum number of players sensor."""
 
-    _attr_translation_key = "players_max"
+    _attr_translation_key = KEY_PLAYERS_MAX
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize maximum number of players sensor."""
@@ -172,7 +172,7 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
 class MinecraftServerMOTDSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server MOTD sensor."""
 
-    _attr_translation_key = "motd"
+    _attr_translation_key = KEY_MOTD
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize MOTD sensor."""
