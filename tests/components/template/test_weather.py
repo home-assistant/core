@@ -228,3 +228,77 @@ async def test_forecasts(hass: HomeAssistant, start_ha) -> None:
             }
         ]
     }
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "weather": [
+                {
+                    "platform": "template",
+                    "name": "forecast",
+                    "condition_template": "sunny",
+                    "forecast_template": "{{ states.weather.forecast.attributes.forecast }}",
+                    "forecast_daily_template": "{{ states.weather.forecast.attributes.forecast }}",
+                    "forecast_hourly_template": "{{ states.weather.forecast_hourly.attributes.forecast }}",
+                    "temperature_template": "{{ states('sensor.temperature') | float }}",
+                    "humidity_template": "{{ states('sensor.humidity') | int }}",
+                },
+            ]
+        },
+    ],
+)
+async def test_forecast_invalid(
+    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test forecast service."""
+    for attr, _v_attr, value in [
+        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
+        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
+    ]:
+        hass.states.async_set(attr, value)
+        await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "weather.forecast",
+        "sunny",
+        {
+            ATTR_FORECAST: [
+                Forecast(
+                    condition="cloudy",
+                    datetime="2023-02-17T14:00:00+00:00",
+                    temperature=14.2,
+                    not_correct=1,
+                )
+            ]
+        },
+    )
+    hass.states.async_set(
+        "weather.forecast_hourly",
+        "sunny",
+        {ATTR_FORECAST: None},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("weather.forecast_hourly")
+    assert state is not None
+    assert state.state == "sunny"
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {"entity_id": "weather.forecast", "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"forecast": []}
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {"entity_id": "weather.forecast", "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"forecast": []}
+    assert "Only valid keys in Forecast are allowed" in caplog.text

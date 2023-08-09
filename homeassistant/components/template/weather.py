@@ -1,8 +1,6 @@
 """Template platform that aggregates meteorological data."""
 from __future__ import annotations
 
-from typing import Literal
-
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -28,15 +26,12 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -373,41 +368,65 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
                 self._forecast_template,
             )
 
-        if fc_daily := self._forecast_daily_template:
+        if self._forecast_daily_template:
             self.add_template_attribute(
                 "_forecast_daily",
                 self._forecast_daily_template,
+                on_update=self._update_daily,
+                validator=self._validate_forecast,
             )
-        if fc_hourly := self._forecast_hourly_template:
+        if self._forecast_hourly_template:
             self.add_template_attribute(
                 "_forecast_hourly",
                 self._forecast_hourly_template,
+                on_update=self._update_hourly,
+                validator=self._validate_forecast,
             )
-        if fc_twice_daily := self._forecast_twice_daily_template:
+        if self._forecast_twice_daily_template:
             self.add_template_attribute(
                 "_forecast_twice_daily",
                 self._forecast_twice_daily_template,
-            )
-        if fc_daily or fc_hourly or fc_twice_daily:
-            self.async_on_remove(
-                async_track_state_change_event(
-                    self.hass, self.entity_id, self.async_state_changed_listener
-                )
+                on_update=self._update_twice_daily,
+                validator=self._validate_forecast,
             )
 
         await super().async_added_to_hass()
 
     @callback
-    async def async_state_changed_listener(
-        self,
-        event: EventType[EventStateChangedData],
-    ) -> None:
-        """Call to update forecast listener."""
-        types: list[Literal["daily", "hourly", "twice_daily"]] = []
-        if self._forecast_daily_template:
-            types.append("daily")
-        if self._forecast_hourly_template:
-            types.append("hourly")
-        if self._forecast_twice_daily_template:
-            types.append("twice_daily")
-        await self.async_update_listeners(types)
+    def _update_daily(self, result: list[Forecast] | TemplateError) -> None:
+        """Save template result and trigger forecast listener."""
+        attr_result = None if isinstance(result, TemplateError) else result
+        setattr(self, "_forecast_daily", attr_result)
+        self.hass.create_task(self.async_update_listeners(["daily"]))
+
+    @callback
+    def _update_hourly(self, result: list[Forecast] | TemplateError) -> None:
+        """Save template result and trigger forecast listener."""
+        attr_result = None if isinstance(result, TemplateError) else result
+        setattr(self, "_forecast_hourly", attr_result)
+        self.hass.create_task(self.async_update_listeners(["hourly"]))
+
+    @callback
+    def _update_twice_daily(self, result: list[Forecast] | TemplateError) -> None:
+        """Save template result and trigger forecast listener."""
+        attr_result = None if isinstance(result, TemplateError) else result
+        setattr(self, "_forecast_twice_daily", attr_result)
+        self.hass.create_task(self.async_update_listeners(["twice_daily"]))
+
+    @callback
+    def _validate_forecast(
+        self, result: list[Forecast] | TemplateError
+    ) -> list[Forecast] | None:
+        """Validate the forecasts."""
+        if result is None or isinstance(result, TemplateError):
+            return None
+        check_keys = Forecast.__annotations__.keys()
+        if isinstance(result, list):
+            for forecast in result:
+                for key, _ in forecast.items():
+                    if key not in check_keys:
+                        raise vol.Invalid(
+                            "Only valid keys in Forecast are allowed, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+                        )
+                    continue
+        return result
