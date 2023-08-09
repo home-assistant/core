@@ -51,6 +51,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCEPT,
     CONF_FOR,
     CONF_FOR_EACH,
     CONF_ID,
@@ -72,6 +73,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TRY,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -1755,6 +1757,14 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_TRY_EXCEPT_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_TRY): SCRIPT_SCHEMA,
+        vol.Optional(CONF_EXCEPT): SCRIPT_SCHEMA,
+    }
+)
+
 
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
@@ -1770,6 +1780,7 @@ SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
+SCRIPT_ACTION_TRY_EXCEPT = "try_except"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1816,6 +1827,9 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
 
+    if CONF_TRY in action:
+        return SCRIPT_ACTION_TRY_EXCEPT
+
     raise ValueError("Unable to determine action")
 
 
@@ -1834,6 +1848,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
+    SCRIPT_ACTION_TRY_EXCEPT: _SCRIPT_TRY_EXCEPT_SCHEMA,
 }
 
 

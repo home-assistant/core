@@ -41,6 +41,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCEPT,
     CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
@@ -56,6 +57,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TRY,
     CONF_UNTIL,
     CONF_VARIABLES,
     CONF_WAIT_FOR_TRIGGER,
@@ -330,6 +332,13 @@ async def async_validate_action_config(
         for parallel_conf in config[CONF_PARALLEL]:
             parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
                 hass, parallel_conf[CONF_SEQUENCE]
+            )
+
+    elif action_type == cv.SCRIPT_ACTION_TRY_EXCEPT:
+        config[CONF_TRY] = await async_validate_actions_config(hass, config[CONF_TRY])
+        if CONF_EXCEPT in config:
+            config[CONF_EXCEPT] = await async_validate_actions_config(
+                hass, config[CONF_EXCEPT]
             )
 
     else:
@@ -1070,6 +1079,35 @@ class _ScriptRun:
             )
         )
 
+    async def _async_try_except_step(self) -> None:
+        """Try/except block."""
+        # pylint: disable=protected-access
+        try_except_data = await self._script._async_get_try_except_data(self._step)
+
+        try:
+            trace_set_result(choice="try")
+            with trace_path("try"):
+                await self._async_run_script(try_except_data["try_then"])
+                return
+        except Exception as ex:  # pylint: disable=broad-except
+            ex_data = {
+                "exception": type(ex).__name__,
+                "message": str(ex),
+                "step": trace_path_get(),
+            }
+
+            _LOGGER.warning(
+                "Caught '%s' in 'try' execution in step '%s':\n%s",
+                ex_data["exception"],
+                ex_data["step"],
+                ex_data["message"],
+            )
+            if try_except_data["except_then"]:
+                trace_set_result(choice="except")
+                with trace_path("except"):
+                    self._variables["exception"] = ex_data
+                    await self._async_run_script(try_except_data["except_then"])
+
 
 class _QueuedScriptRun(_ScriptRun):
     """Manage queued Script sequence run."""
@@ -1188,6 +1226,11 @@ class _IfData(TypedDict):
     if_else: Script | None
 
 
+class _TryExceptData(TypedDict):
+    try_then: Script
+    except_then: Script | None
+
+
 class Script:
     """Representation of a script."""
 
@@ -1252,6 +1295,7 @@ class Script:
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
         self._parallel_scripts: dict[int, list[Script]] = {}
+        self._try_except_data: dict[int, _TryExceptData] = {}
         self._referenced_entities: set[str] | None = None
         self._referenced_devices: set[str] | None = None
         self._referenced_areas: set[str] | None = None
@@ -1761,6 +1805,53 @@ class Script:
             parallel_scripts = await self._async_prep_parallel_scripts(step)
             self._parallel_scripts[step] = parallel_scripts
         return parallel_scripts
+
+    async def _async_prep_try_except_data(self, step: int) -> _TryExceptData:
+        """Prepare data for an if statement."""
+        action = self.sequence[step]
+        step_name = action.get(CONF_ALIAS, f"Try/except at step {step+1}")
+
+        try_script = Script(
+            self._hass,
+            action[CONF_TRY],
+            f"{self.name}: {step_name}",
+            self.domain,
+            running_description=self.running_description,
+            script_mode=SCRIPT_MODE_PARALLEL,
+            max_runs=self.max_runs,
+            logger=self._logger,
+            top_level=False,
+        )
+        try_script.change_listener = partial(self._chain_change_listener, try_script)
+
+        if CONF_EXCEPT in action:
+            except_script = Script(
+                self._hass,
+                action[CONF_EXCEPT],
+                f"{self.name}: {step_name}",
+                self.domain,
+                running_description=self.running_description,
+                script_mode=SCRIPT_MODE_PARALLEL,
+                max_runs=self.max_runs,
+                logger=self._logger,
+                top_level=False,
+            )
+            except_script.change_listener = partial(
+                self._chain_change_listener, except_script
+            )
+        else:
+            except_script = None
+
+        return _TryExceptData(
+            try_then=try_script,
+            except_then=except_script,
+        )
+
+    async def _async_get_try_except_data(self, step: int) -> _TryExceptData:
+        if not (try_except_data := self._try_except_data.get(step)):
+            try_except_data = await self._async_prep_try_except_data(step)
+            self._try_except_data[step] = try_except_data
+        return try_except_data
 
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
