@@ -105,9 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             assert self.entry is not None
-
-            new_input = self.entry.data.copy()
-            new_input.update(user_input)
+            new_input = self.entry.data | user_input
 
             if self.client_device_id is None:
                 self.client_device_id = _generate_client_device_id()
