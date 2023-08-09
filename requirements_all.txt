@@ -1365,7 +1365,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.20
+opower==0.0.24
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1662,7 +1662,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.2.1
+pyenphase==1.3.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1824,7 +1824,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.10
+pymazda==0.3.11
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
