@@ -10,6 +10,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    DOMAIN as WEATHER_DOMAIN,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -83,10 +85,28 @@ async def async_setup_entry(
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
 
     entities = []
-    for mode in FORECAST_MODES:
-        name = f"{domain_data[ENTRY_NAME]} {mode}"
-        unique_id = f"{config_entry.unique_id} {mode}"
-        entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
+    entity_registry = er.async_get(hass)
+
+    # Add daily + hourly entity for legacy config entries, only add daily for new
+    # config entries. This can be removed in HA Core 2024.3
+    if entity_registry.async_get_entity_id(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        f"{config_entry.unique_id} {FORECAST_MODE_HOURLY}",
+    ):
+        for mode in FORECAST_MODES:
+            name = f"{domain_data[ENTRY_NAME]} {mode}"
+            unique_id = f"{config_entry.unique_id} {mode}"
+            entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
+    else:
+        entities.append(
+            AemetWeather(
+                domain_data[ENTRY_NAME],
+                config_entry.unique_id,
+                weather_coordinator,
+                FORECAST_MODE_DAILY,
+            )
+        )
 
     async_add_entities(entities, False)
 

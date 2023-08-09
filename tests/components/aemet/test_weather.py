@@ -7,7 +7,7 @@ import pytest
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aemet.const import ATTRIBUTION
+from homeassistant.components.aemet.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.aemet.weather_update_coordinator import (
     WEATHER_UPDATE_INTERVAL,
 )
@@ -33,6 +33,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .util import aemet_requests_mock, async_init_integration
@@ -42,6 +43,49 @@ from tests.typing import WebSocketGenerator
 
 async def test_aemet_weather(hass: HomeAssistant) -> None:
     """Test states of the weather."""
+
+    hass.config.set_time_zone("UTC")
+    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
+    with patch("homeassistant.util.dt.now", return_value=now), patch(
+        "homeassistant.util.dt.utcnow", return_value=now
+    ):
+        await async_init_integration(hass)
+
+    state = hass.states.get("weather.aemet")
+    assert state
+    assert state.state == ATTR_CONDITION_SNOWY
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 99.0
+    assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4  # 100440.0 Pa -> hPa
+    assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
+    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 90.0
+    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 15.0  # 4.17 m/s -> km/h
+    forecast = state.attributes.get(ATTR_FORECAST)[0]
+    assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
+    assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
+    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 30
+    assert forecast.get(ATTR_FORECAST_TEMP) == 4
+    assert forecast.get(ATTR_FORECAST_TEMP_LOW) == -4
+    assert (
+        forecast.get(ATTR_FORECAST_TIME)
+        == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
+    )
+    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 45.0
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20.0  # 5.56 m/s -> km/h
+
+    state = hass.states.get("weather.aemet_hourly")
+    assert state is None
+
+
+async def test_aemet_weather_legacy(hass: HomeAssistant) -> None:
+    """Test states of the weather."""
+
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        "None hourly",
+    )
 
     hass.config.set_time_zone("UTC")
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
@@ -92,7 +136,7 @@ async def test_forecast_service(
         WEATHER_DOMAIN,
         SERVICE_GET_FORECAST,
         {
-            "entity_id": "weather.aemet_daily",
+            "entity_id": "weather.aemet",
             "type": "daily",
         },
         blocking=True,
@@ -104,7 +148,7 @@ async def test_forecast_service(
         WEATHER_DOMAIN,
         SERVICE_GET_FORECAST,
         {
-            "entity_id": "weather.aemet_daily",
+            "entity_id": "weather.aemet",
             "type": "hourly",
         },
         blocking=True,
@@ -132,7 +176,7 @@ async def test_forecast_subscription(
         {
             "type": "weather/subscribe_forecast",
             "forecast_type": forecast_type,
-            "entity_id": "weather.aemet_daily",
+            "entity_id": "weather.aemet",
         }
     )
     msg = await client.receive_json()
