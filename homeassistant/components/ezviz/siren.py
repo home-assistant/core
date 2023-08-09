@@ -41,7 +41,7 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        EzvizSirenEntity(coordinator, camera)
+        EzvizSirenEntity(coordinator, camera, SIREN_ENTITY_TYPE)
         for camera in coordinator.data
         for capability, value in coordinator.data[camera]["supportExt"].items()
         if capability == str(SupportExt.SupportActiveDefense.value)
@@ -59,11 +59,12 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
         self,
         coordinator: EzvizDataUpdateCoordinator,
         serial: str,
+        description: SirenEntityDescription,
     ) -> None:
         """Initialize the Siren."""
         super().__init__(coordinator, serial)
-        self._attr_unique_id = f"{serial}_{SIREN_ENTITY_TYPE.key}"
-        self.entity_description = SIREN_ENTITY_TYPE
+        self._attr_unique_id = f"{serial}_{description.key}"
+        self.entity_description = description
         self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
