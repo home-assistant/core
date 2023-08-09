@@ -258,7 +258,7 @@ aiolivisi==0.0.19
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==1.0.9
+aiolyric==1.1.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
