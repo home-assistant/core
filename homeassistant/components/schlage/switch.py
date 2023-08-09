@@ -16,7 +16,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -35,7 +35,7 @@ class SchlageSwitchEntityDescriptionMixin:
 
     on_fn: Callable[[Lock], None]
     off_fn: Callable[[Lock], None]
-    value_attr: str
+    value_fn: Callable[[Lock], bool | None]
 
 
 @dataclass
@@ -53,7 +53,7 @@ SWITCHES: tuple[SchlageSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         on_fn=lambda lock: lock.set_beeper(True),
         off_fn=lambda lock: lock.set_beeper(False),
-        value_attr="beeper_enabled",
+        value_fn=lambda lock: lock.beeper_enabled,
     ),
     SchlageSwitchEntityDescription(
         key="lock_and_leve",
@@ -62,7 +62,7 @@ SWITCHES: tuple[SchlageSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         on_fn=lambda lock: lock.set_lock_and_leave(True),
         off_fn=lambda lock: lock.set_lock_and_leave(False),
-        value_attr="lock_and_leave_enabled",
+        value_fn=lambda lock: lock.lock_and_leave_enabled,
     ),
 )
 
@@ -102,12 +102,11 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
         super().__init__(coordinator=coordinator, device_id=device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
-        self._attr_is_on = getattr(self._lock, self.entity_description.value_attr)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        self._attr_is_on = getattr(self._lock, self.entity_description.value_attr)
-        return super()._handle_coordinator_update()
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if the switch is on."""
+        return self.entity_description.value_fn(self._lock)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
