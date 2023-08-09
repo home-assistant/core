@@ -35,7 +35,7 @@ class SchlageSwitchEntityDescriptionMixin:
 
     on_fn: Callable[[Lock], None]
     off_fn: Callable[[Lock], None]
-    value_fn: Callable[[Lock], bool | None]
+    value_fn: Callable[[Lock], bool]
 
 
 @dataclass
@@ -104,7 +104,7 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return True if the switch is on."""
         return self.entity_description.value_fn(self._lock)
 
