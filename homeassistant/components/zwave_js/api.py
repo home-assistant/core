@@ -1138,6 +1138,7 @@ async def websocket_remove_node(
         node = event["node"]
         node_details = {
             "node_id": node.node_id,
+            "reason": event["reason"],
         }
 
         connection.send_message(
