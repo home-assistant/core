@@ -1878,6 +1878,7 @@ async def test_device_type_error_checking(
     config_entry = MockConfigEntry(
         title="Mock Config Entry Title", entry_id="super-mock-id"
     )
+    config_entry.add_to_hass(hass)
     entity_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )
