@@ -135,11 +135,6 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
         if (value_template := self._value_template) is not None:
             value_template.hass = hass
 
-    async def async_added_to_hass(self) -> None:
-        """Ensure the data from the initial update is reflected in the state."""
-        await RestEntity.async_added_to_hass(self)
-        await ManualTriggerEntity.async_added_to_hass(self)
-
     @property
     def available(self) -> bool:
         """Return if entity is available."""

@@ -564,6 +564,7 @@ class TriggerBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
         template_attach(self.hass, self._config)
 
     def _set_unique_id(self, unique_id: str | None) -> None:
