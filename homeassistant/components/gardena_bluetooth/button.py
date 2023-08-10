@@ -6,10 +6,7 @@ from dataclasses import dataclass, field
 from gardena_bluetooth.const import Reset
 from gardena_bluetooth.parse import CharacteristicBool
 
-from homeassistant.components.button import (
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant

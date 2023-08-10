@@ -12,10 +12,7 @@ import httpx
 import voluptuous as vol
 
 from homeassistant.components import image
-from homeassistant.components.image import (
-    DEFAULT_CONTENT_TYPE,
-    ImageEntity,
-)
+from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback

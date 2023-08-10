@@ -19,11 +19,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-    mock_coro,
-)
+from tests.common import async_get_device_automations, async_mock_service, mock_coro
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")

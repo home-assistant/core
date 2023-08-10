@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             AFSAPIDevice(
-                config_entry.unique_id or config_entry.entry_id,
+                config_entry.entry_id,
                 config_entry.title,
                 afsapi,
             )
@@ -84,7 +84,7 @@ class AFSAPIDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, unique_id)},
             name=name,
         )
-        self._attr_unique_id = f"{unique_id}_media_player"
+        self._attr_unique_id = unique_id
         self._max_volume: int | None = None
 
         self.__modes_by_label: dict[str, str] | None = None
