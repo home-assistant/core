@@ -621,8 +621,13 @@ class EntityPlatform:
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
-                    self.logger.error("Ignoring invalid device info: %s", str(exc))
-                    device = None
+                    self.logger.exception(
+                        "%s: Not adding entity with invalid device info: %s",
+                        self.platform_name,
+                        str(exc),
+                    )
+                    entity.add_to_platform_abort()
+                    return
             else:
                 device = None
 
