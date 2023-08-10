@@ -937,6 +937,81 @@ async def test_option_flow_addon_installed_same_device_flasher_already_installed
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
+async def test_option_flow_flasher_install_failure(
+    hass: HomeAssistant,
+    addon_info,
+    addon_store_info,
+    addon_installed,
+    install_addon,
+    start_addon,
+    stop_addon,
+    uninstall_addon,
+    set_addon_options,
+    options_flow_poll_addon_state,
+) -> None:
+    """Test uninstalling the multi pan addon, case where flasher addon fails."""
+    mock_integration(hass, MockModule("hassio"))
+    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=TEST_DOMAIN,
+        options={},
+        title="Test HW",
+    )
+    config_entry.add_to_hass(hass)
+
+    zha_config_entry = MockConfigEntry(
+        data={
+            "device": {"path": "socket://core-silabs-multiprotocol:9999"},
+            "radio_type": "ezsp",
+        },
+        domain=ZHA_DOMAIN,
+        options={},
+        title="Test Multi-PAN",
+    )
+    zha_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        side_effect=Mock(return_value=True),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == FlowResultType.MENU
+        assert result["step_id"] == "addon_menu"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "uninstall_addon"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "uninstall_addon"
+
+    addon_store_info.return_value = {
+        "installed": None,
+        "available": True,
+        "state": "not_installed",
+    }
+    install_addon.side_effect = [AddonError()]
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {silabs_multiprotocol_addon.CONF_DISABLE_MULTI_PAN: True}
+    )
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_flasher_addon"
+    assert result["progress_action"] == "install_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "install_failed"
+    install_addon.assert_called_once_with(hass, "core_silabs_flasher")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "addon_install_failed"
+
+
 async def test_option_flow_do_not_install_multi_pan_addon(
     hass: HomeAssistant,
     addon_info,
