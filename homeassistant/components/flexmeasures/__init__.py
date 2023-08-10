@@ -1,6 +1,14 @@
 """The FlexMeasures integration."""
 from __future__ import annotations
 
+from datetime import timedelta
+import json
+
+from flexmeasures_client.client import FlexMeasuresClient
+from flexmeasures_client.s2.cem import CEM
+from flexmeasures_client.s2.control_types.FRBC.frbc_simple import FRBCSimple
+from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -56,7 +64,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     """Initialize the websocket API."""
-    hass.http.register_view(WebsocketAPIView())
+    # TODO: create CEM in __init__ just once, when CEM supports multiple RMs
+    fm_client = FlexMeasuresClient(
+        "toy-password", "toy-user@flexmeasures.io"
+    )  # replace by helpers/get_fm_client
+
+    cem = CEM(fm_client=fm_client)
+    frbc = FRBCSimple(
+        power_sensor_id=1,
+        price_sensor_id=2,
+        soc_sensor_id=4,
+        rm_discharge_sensor_id=5,
+        schedule_duration=timedelta(hours=24),
+    )
+    cem.register_control_type(frbc)
+
+    async def change_control_type(call):
+        # print(call)
+
+        value = hass.states.get("flexmeasures_api.prueba")
+        if value is not None:
+            value = json.loads(value.state).get("a") + 1
+        else:
+            value = 0
+
+        hass.states.async_set("flexmeasures_api.prueba", json.dumps({"a": value}))
+
+        await cem.activate_control_type(
+            control_type=ControlType.FILL_RATE_BASED_CONTROL
+        )
+
+        # check/wait that the control type is set properly
+        # while cem._control_type != ControlType.FILL_RATE_BASED_CONTROL:
+        #     print("waiting for the activation of the control type...")
+        #     await asyncio.sleep(1)
+
+        # print("CONTROL TYPE: ", cem._control_type)
+
+    hass.http.register_view(WebsocketAPIView(cem))
+    hass.services.async_register(DOMAIN, "change_control_type", change_control_type)
 
     return True
 
