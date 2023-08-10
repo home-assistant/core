@@ -23,11 +23,7 @@ import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_MODE,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_MODE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
