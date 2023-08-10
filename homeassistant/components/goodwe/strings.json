@@ -27,9 +27,6 @@
       "grid_export_limit": {
         "name": "Grid export limit"
       },
-      "grid_power_export_limit": {
-        "name": "Grid power export limit"
-      },
       "battery_discharge_depth": {
         "name": "Depth of discharge (on-grid)"
       }

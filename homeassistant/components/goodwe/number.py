@@ -45,6 +45,8 @@ def _get_setting_unit(inverter: Inverter, setting: str) -> str:
 
 
 NUMBERS = (
+    # Only one of the export limits are added.
+    # Availability is checked in the filter method.
     # Export limit in W
     GoodweNumberEntityDescription(
         key="grid_export_limit",
