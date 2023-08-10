@@ -185,6 +185,7 @@ DEFAULT_FORECAST = [
         "windSpeedAvg": 10,
         "windBearing": 180,
         "detailedForecast": "A detailed forecast.",
+        "shortForecast": "A short headline forecast",
         "timestamp": "2019-08-12T23:53:00+00:00",
         "iconTime": "night",
         "iconWeather": (("lightning-rainy", 40), ("lightning-rainy", 90)),
@@ -196,6 +197,7 @@ DEFAULT_FORECAST = [
 
 EXPECTED_FORECAST_IMPERIAL = {
     ATTR_FORECAST_CONDITION: ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_FORECAST_SUMMARY: "A short headline forecast",
     ATTR_FORECAST_TIME: "2019-08-12T20:00:00-04:00",
     ATTR_FORECAST_TEMP: 10,
     ATTR_FORECAST_WIND_SPEED: 10,
@@ -207,6 +209,7 @@ EXPECTED_FORECAST_IMPERIAL = {
 
 EXPECTED_FORECAST_METRIC = {
     ATTR_FORECAST_CONDITION: ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_FORECAST_SUMMARY: "A short headline forecast",
     ATTR_FORECAST_TIME: "2019-08-12T20:00:00-04:00",
     ATTR_FORECAST_TEMP: round(
         TemperatureConverter.convert(
