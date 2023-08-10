@@ -20,8 +20,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 from .coordinator import HydrawiseDataUpdateCoordinator
 
-# Deprecated since Home Assistant 2023.8.0
-# Can be removed completely in 2024.2.0
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
