@@ -40,6 +40,8 @@ CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
+CONF_POWER_COMMAND_TOPIC = "power_command_topic"
+CONF_POWER_COMMAND_TEMPLATE = "power_command_template"
 CONF_PRECISION = "precision"
 CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
 CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
@@ -112,6 +114,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
@@ -138,6 +141,7 @@ RELOADABLE_PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,

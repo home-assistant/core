@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
+from enum import StrEnum
 import functools as ft
 from typing import Any, cast
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_ import run_callback_threadsafe

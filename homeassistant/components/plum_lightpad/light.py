@@ -66,6 +66,8 @@ class PlumLight(LightEntity):
     """Representation of a Plum Lightpad dimmer."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, load):
         """Initialize the light."""
@@ -87,18 +89,13 @@ class PlumLight(LightEntity):
         return f"{self._load.llid}.light"
 
     @property
-    def name(self):
-        """Return the name of the switch if any."""
-        return self._load.name
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Plum",
             model="Dimmer",
-            name=self.name,
+            name=self._load.name,
         )
 
     @property

@@ -6,7 +6,12 @@ from fritzconnection.core.processor import Service
 from fritzconnection.lib.fritzhosts import FritzHosts
 import pytest
 
-from .const import MOCK_FB_SERVICES, MOCK_MESH_DATA, MOCK_MODELNAME
+from .const import (
+    MOCK_FB_SERVICES,
+    MOCK_HOST_ATTRIBUTES_DATA,
+    MOCK_MESH_DATA,
+    MOCK_MODELNAME,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +79,10 @@ class FritzHostMock(FritzHosts):
     def get_mesh_topology(self, raw=False):
         """Retrurn mocked mesh data."""
         return MOCK_MESH_DATA
+
+    def get_hosts_attributes(self):
+        """Retrurn mocked host attributes data."""
+        return MOCK_HOST_ATTRIBUTES_DATA
 
 
 @pytest.fixture(name="fc_data")

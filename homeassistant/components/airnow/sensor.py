@@ -30,6 +30,9 @@ from .const import (
     ATTR_API_AQI_LEVEL,
     ATTR_API_O3,
     ATTR_API_PM25,
+    ATTR_API_STATION,
+    ATTR_API_STATION_LATITUDE,
+    ATTR_API_STATION_LONGITUDE,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -40,6 +43,7 @@ PARALLEL_UPDATES = 1
 
 ATTR_DESCR = "description"
 ATTR_LEVEL = "level"
+ATTR_STATION = "reporting_station"
 
 
 @dataclass
@@ -84,6 +88,16 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.get(ATTR_API_O3),
         extra_state_attributes_fn=None,
+    ),
+    AirNowEntityDescription(
+        key=ATTR_API_STATION,
+        translation_key="station",
+        icon="mdi:blur",
+        value_fn=lambda data: data.get(ATTR_API_STATION),
+        extra_state_attributes_fn=lambda data: {
+            "lat": data[ATTR_API_STATION_LATITUDE],
+            "long": data[ATTR_API_STATION_LONGITUDE],
+        },
     ),
 )
 

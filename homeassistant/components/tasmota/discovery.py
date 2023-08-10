@@ -302,7 +302,7 @@ async def async_start(  # noqa: C901
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
         device = device_registry.async_get_device(
-            set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)}
         )
 
         if device is None:

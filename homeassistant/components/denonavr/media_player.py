@@ -256,7 +256,7 @@ class DenonDevice(MediaPlayerEntity):
             return
         # Some updates trigger multiple events like one for artist and one for title for one change
         # We skip every event except the last one
-        if event == "NS" and not parameter.startswith("E4"):
+        if event == "NSE" and not parameter.startswith("4"):
             return
         if event == "TA" and not parameter.startwith("ANNAME"):
             return

@@ -93,6 +93,7 @@ class AirConEntity(ClimateEntity):
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP

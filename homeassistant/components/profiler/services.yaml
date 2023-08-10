@@ -1,10 +1,6 @@
 start:
-  name: Start
-  description: Start the Profiler
   fields:
     seconds:
-      name: Seconds
-      description: The number of seconds to run the profiler.
       default: 60.0
       selector:
         number:
@@ -12,12 +8,8 @@ start:
           max: 3600
           unit_of_measurement: seconds
 memory:
-  name: Memory
-  description: Start the Memory Profiler
   fields:
     seconds:
-      name: Seconds
-      description: The number of seconds to run the memory profiler.
       default: 60.0
       selector:
         number:
@@ -25,12 +17,8 @@ memory:
           max: 3600
           unit_of_measurement: seconds
 start_log_objects:
-  name: Start logging objects
-  description: Start logging growth of objects in memory
   fields:
     scan_interval:
-      name: Scan interval
-      description: The number of seconds between logging objects.
       default: 30.0
       selector:
         number:
@@ -38,26 +26,16 @@ start_log_objects:
           max: 3600
           unit_of_measurement: seconds
 stop_log_objects:
-  name: Stop logging objects
-  description: Stop logging growth of objects in memory.
 dump_log_objects:
-  name: Dump log objects
-  description: Dump the repr of all matching objects to the log.
   fields:
     type:
-      name: Type
-      description: The type of objects to dump to the log.
       required: true
       example: State
       selector:
         text:
 start_log_object_sources:
-  name: Start logging object sources
-  description: Start logging sources of new objects in memory
   fields:
     scan_interval:
-      name: Scan interval
-      description: The number of seconds between logging objects.
       default: 30.0
       selector:
         number:
@@ -65,8 +43,6 @@ start_log_object_sources:
           max: 3600
           unit_of_measurement: seconds
     max_objects:
-      name: Maximum objects
-      description: The maximum number of objects to log.
       default: 5
       selector:
         number:
@@ -74,14 +50,6 @@ start_log_object_sources:
           max: 30
           unit_of_measurement: objects
 stop_log_object_sources:
-  name: Stop logging object sources
-  description: Stop logging sources of new objects in memory.
 lru_stats:
-  name: Log LRU stats
-  description: Log the stats of all lru caches.
 log_thread_frames:
-  name: Log thread frames
-  description: Log the current frames for all threads.
 log_event_loop_scheduled:
-  name: Log event loop scheduled
-  description: Log what is scheduled in the event loop.

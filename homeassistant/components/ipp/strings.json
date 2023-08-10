@@ -37,7 +37,7 @@
       "printer": {
         "state": {
           "printing": "Printing",
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "stopped": "Stopped"
         }
       }

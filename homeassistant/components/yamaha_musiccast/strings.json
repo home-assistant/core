@@ -45,7 +45,7 @@
       },
       "zone_surr_decoder_type": {
         "state": {
-          "toggle": "Toggle",
+          "toggle": "[%key:common::action::toggle%]",
           "auto": "Auto",
           "dolby_pl": "Dolby ProLogic",
           "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
@@ -61,7 +61,7 @@
         "state": {
           "manual": "Manual",
           "auto": "Auto",
-          "bypass": "Bypass"
+          "bypass": "[%key:component::yamaha_musiccast::entity::select::zone_tone_control_mode::state::bypass%]"
         }
       },
       "zone_link_audio_quality": {

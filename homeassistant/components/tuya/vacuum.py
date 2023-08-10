@@ -15,6 +15,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -153,10 +154,30 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._send_command([{"code": DPCode.POWER, "value": True}])
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation_turn_on",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation_turn_on",
+        )
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._send_command([{"code": DPCode.POWER, "value": False}])
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation_turn_off",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation_turn_off",
+        )
 
     def start(self, **kwargs: Any) -> None:
         """Start the device."""

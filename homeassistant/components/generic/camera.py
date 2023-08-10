@@ -80,12 +80,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up a generic IP Camera."""
 
-    _LOGGER.warning(
-        "Loading generic IP camera via configuration.yaml is deprecated, "
-        "it will be automatically imported.  Once you have confirmed correct "
-        "operation, please remove 'generic' (IP camera) section(s) from "
-        "configuration.yaml"
-    )
     image = config.get(CONF_STILL_IMAGE_URL)
     stream = config.get(CONF_STREAM_SOURCE)
     config_new = {

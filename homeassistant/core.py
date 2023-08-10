@@ -16,7 +16,6 @@ from collections.abc import (
 )
 import concurrent.futures
 from contextlib import suppress
-from contextvars import ContextVar
 import datetime
 import enum
 import functools
@@ -27,24 +26,14 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    ParamSpec,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
 from urllib.parse import urlparse
 
 import async_timeout
-from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
 from . import block_async_io, loader, util
-from .backports.enum import StrEnum
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -134,7 +123,7 @@ BLOCK_LOG_TIMEOUT = 60
 ServiceResponse = JsonObjectType | None
 
 
-class ConfigSource(StrEnum):
+class ConfigSource(enum.StrEnum):
     """Source of core configuration."""
 
     DEFAULT = "default"
@@ -154,8 +143,6 @@ TIMEOUT_EVENT_START = 15
 MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
-
-_cv_hass: ContextVar[HomeAssistant] = ContextVar("hass")
 
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
@@ -199,16 +186,27 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+class _Hass(threading.local):
+    """Container which makes a HomeAssistant instance available to the event loop."""
+
+    hass: HomeAssistant | None = None
+
+
+_hass = _Hass()
+
+
 @callback
 def async_get_hass() -> HomeAssistant:
     """Return the HomeAssistant instance.
 
-    Raises LookupError if no HomeAssistant instance is available.
+    Raises HomeAssistantError when called from the wrong thread.
 
     This should be used where it's very cumbersome or downright impossible to pass
     hass to the code which needs it.
     """
-    return _cv_hass.get()
+    if not _hass.hass:
+        raise HomeAssistantError("async_get_hass called from the wrong thread")
+    return _hass.hass
 
 
 @enum.unique
@@ -292,9 +290,9 @@ class HomeAssistant:
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
     def __new__(cls) -> HomeAssistant:
-        """Set the _cv_hass context variable."""
+        """Set the _hass thread local data."""
         hass = super().__new__(cls)
-        _cv_hass.set(hass)
+        _hass.hass = hass
         return hass
 
     def __init__(self) -> None:
@@ -756,7 +754,7 @@ class HomeAssistant:
         for task in self._background_tasks:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
-            task.cancel()
+            task.cancel("Home Assistant is stopping")
         self._cancel_cancellable_timers()
 
         self.exit_code = exit_code
@@ -806,7 +804,7 @@ class HomeAssistant:
                 "the stop event to prevent delaying shutdown",
                 task,
             )
-            task.cancel()
+            task.cancel("Home Assistant stage 2 shutdown")
             try:
                 async with async_timeout.timeout(0.1):
                     await task
@@ -972,6 +970,8 @@ _FilterableJobType = tuple[
 
 class EventBus:
     """Allow the firing of and listening for events."""
+
+    __slots__ = ("_listeners", "_match_all_listeners", "_hass")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
@@ -1410,6 +1410,8 @@ class State:
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
+    __slots__ = ("_states", "_reservations", "_bus", "_loop")
+
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: dict[str, State] = {}
@@ -1657,7 +1659,7 @@ class StateMachine:
         )
 
 
-class SupportsResponse(StrEnum):
+class SupportsResponse(enum.StrEnum):
     """Service call response configuration."""
 
     NONE = "none"
@@ -1693,7 +1695,7 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ["domain", "service", "data", "context", "return_response"]
+    __slots__ = ("domain", "service", "data", "context", "return_response")
 
     def __init__(
         self,
@@ -1704,8 +1706,8 @@ class ServiceCall:
         return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
-        self.domain = domain.lower()
-        self.service = service.lower()
+        self.domain = domain
+        self.service = service
         self.data = ReadOnlyDict(data or {})
         self.context = context or Context()
         self.return_response = return_response
@@ -1723,6 +1725,8 @@ class ServiceCall:
 
 class ServiceRegistry:
     """Offer the services over the eventbus."""
+
+    __slots__ = ("_services", "_hass")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a service registry."""
@@ -1756,7 +1760,7 @@ class ServiceRegistry:
         the context. Will return NONE if the service does not exist as there is
         other error handling when calling the service if it does not exist.
         """
-        if not (handler := self._services[domain][service]):
+        if not (handler := self._services[domain.lower()][service.lower()]):
             return SupportsResponse.NONE
         return handler.supports_response
 
@@ -1890,15 +1894,20 @@ class ServiceRegistry:
 
         This method is a coroutine.
         """
-        domain = domain.lower()
-        service = service.lower()
         context = context or Context()
         service_data = service_data or {}
 
         try:
             handler = self._services[domain][service]
         except KeyError:
-            raise ServiceNotFound(domain, service) from None
+            # Almost all calls are already lower case, so we avoid
+            # calling lower() on the arguments in the common case.
+            domain = domain.lower()
+            service = service.lower()
+            try:
+                handler = self._services[domain][service]
+            except KeyError:
+                raise ServiceNotFound(domain, service) from None
 
         if return_response:
             if not blocking:
@@ -1938,8 +1947,8 @@ class ServiceRegistry:
         self._hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
-                ATTR_DOMAIN: domain.lower(),
-                ATTR_SERVICE: service.lower(),
+                ATTR_DOMAIN: domain,
+                ATTR_SERVICE: service,
                 ATTR_SERVICE_DATA: service_data,
             },
             context=context,
@@ -1947,7 +1956,10 @@ class ServiceRegistry:
 
         coro = self._execute_service(handler, service_call)
         if not blocking:
-            self._run_service_in_background(coro, service_call)
+            self._hass.async_create_task(
+                self._run_service_call_catch_exceptions(coro, service_call),
+                f"service call background {service_call.domain}.{service_call.service}",
+            )
             return None
 
         response_data = await coro
@@ -1959,49 +1971,42 @@ class ServiceRegistry:
             )
         return response_data
 
-    def _run_service_in_background(
+    async def _run_service_call_catch_exceptions(
         self,
         coro_or_task: Coroutine[Any, Any, Any] | asyncio.Task[Any],
         service_call: ServiceCall,
     ) -> None:
         """Run service call in background, catching and logging any exceptions."""
-
-        async def catch_exceptions() -> None:
-            try:
-                await coro_or_task
-            except Unauthorized:
-                _LOGGER.warning(
-                    "Unauthorized service called %s/%s",
-                    service_call.domain,
-                    service_call.service,
-                )
-            except asyncio.CancelledError:
-                _LOGGER.debug("Service was cancelled: %s", service_call)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error executing service: %s", service_call)
-
-        self._hass.async_create_task(
-            catch_exceptions(),
-            f"service call background {service_call.domain}.{service_call.service}",
-        )
+        try:
+            await coro_or_task
+        except Unauthorized:
+            _LOGGER.warning(
+                "Unauthorized service called %s/%s",
+                service_call.domain,
+                service_call.service,
+            )
+        except asyncio.CancelledError:
+            _LOGGER.debug("Service was cancelled: %s", service_call)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error executing service: %s", service_call)
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
     ) -> ServiceResponse:
         """Execute a service."""
-        if handler.job.job_type == HassJobType.Coroutinefunction:
-            return await cast(
-                Callable[[ServiceCall], Awaitable[ServiceResponse]],
-                handler.job.target,
-            )(service_call)
-        if handler.job.job_type == HassJobType.Callback:
-            return cast(Callable[[ServiceCall], ServiceResponse], handler.job.target)(
-                service_call
-            )
-        return await self._hass.async_add_executor_job(
-            cast(Callable[[ServiceCall], ServiceResponse], handler.job.target),
-            service_call,
-        )
+        job = handler.job
+        target = job.target
+        if job.job_type == HassJobType.Coroutinefunction:
+            if TYPE_CHECKING:
+                target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
+            return await target(service_call)
+        if job.job_type == HassJobType.Callback:
+            if TYPE_CHECKING:
+                target = cast(Callable[..., _R], target)
+            return target(service_call)
+        if TYPE_CHECKING:
+            target = cast(Callable[..., _R], target)
+        return await self._hass.async_add_executor_job(target, service_call)
 
 
 class Config:

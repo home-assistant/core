@@ -26,7 +26,7 @@ async def async_setup_entry(
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
-        if device["type"] == "switch" or device["type"] == "outlet"
+        if device["type"] in ("switch", "outlet")
     )
 
 

@@ -22,6 +22,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_UV_INDEX,
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_GUST_SPEED,
@@ -61,6 +62,7 @@ async def test_weather_without_forecast(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_WEATHER_DEW_POINT) == 16.2
     assert state.attributes.get(ATTR_WEATHER_CLOUD_COVERAGE) == 10
     assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 20.3
+    assert state.attributes.get(ATTR_WEATHER_UV_INDEX) == 6
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
 
     entry = registry.async_get("weather.home")
@@ -86,6 +88,7 @@ async def test_weather_with_forecast(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_WEATHER_DEW_POINT) == 16.2
     assert state.attributes.get(ATTR_WEATHER_CLOUD_COVERAGE) == 10
     assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 20.3
+    assert state.attributes.get(ATTR_WEATHER_UV_INDEX) == 6
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     forecast = state.attributes.get(ATTR_FORECAST)[0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == "lightning-rainy"
@@ -99,6 +102,7 @@ async def test_weather_with_forecast(hass: HomeAssistant) -> None:
     assert forecast.get(ATTR_FORECAST_CLOUD_COVERAGE) == 58
     assert forecast.get(ATTR_FORECAST_APPARENT_TEMP) == 29.8
     assert forecast.get(ATTR_FORECAST_WIND_GUST_SPEED) == 29.6
+    assert forecast.get(ATTR_WEATHER_UV_INDEX) == 5
 
     entry = registry.async_get("weather.home")
     assert entry

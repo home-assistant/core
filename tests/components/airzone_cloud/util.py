@@ -16,6 +16,7 @@ from aioairzone_cloud.const import (
     API_DISCONNECTION_DATE,
     API_ERRORS,
     API_FAH,
+    API_GROUP_ID,
     API_GROUPS,
     API_HUMIDITY,
     API_INSTALLATION_ID,
@@ -61,6 +62,7 @@ CONFIG = {
 GET_INSTALLATION_MOCK = {
     API_GROUPS: [
         {
+            API_GROUP_ID: "grp1",
             API_NAME: "Group",
             API_DEVICES: [
                 {
@@ -94,6 +96,7 @@ GET_INSTALLATION_MOCK = {
             ],
         },
         {
+            API_GROUP_ID: "grp2",
             API_NAME: "Aidoo Group",
             API_DEVICES: [
                 {
@@ -160,6 +163,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
 
     if device.get_id() == "aidoo1":
         return {
+            API_ACTIVE: False,
             API_ERRORS: [],
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
@@ -176,6 +180,18 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_WS_CONNECTED: True,
             API_WARNINGS: [],
         }
+    if device.get_id() == "zone1":
+        return {
+            API_ACTIVE: True,
+            API_HUMIDITY: 30,
+            API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
+            API_LOCAL_TEMP: {
+                API_FAH: 68,
+                API_CELSIUS: 20,
+            },
+            API_WARNINGS: [],
+        }
     if device.get_id() == "zone2":
         return {
             API_ACTIVE: False,
@@ -188,17 +204,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             },
             API_WARNINGS: [],
         }
-    return {
-        API_ACTIVE: True,
-        API_HUMIDITY: 30,
-        API_IS_CONNECTED: True,
-        API_WS_CONNECTED: True,
-        API_LOCAL_TEMP: {
-            API_FAH: 68,
-            API_CELSIUS: 20,
-        },
-        API_WARNINGS: [],
-    }
+    return None
 
 
 def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:

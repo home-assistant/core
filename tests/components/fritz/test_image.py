@@ -60,11 +60,31 @@ GUEST_WIFI_CHANGED: dict[str, dict] = {
 
 GUEST_WIFI_DISABLED: dict[str, dict] = {
     "WLANConfiguration0": {},
-    "WLANConfiguration1": {"GetInfo": {"NewEnable": False}},
+    "WLANConfiguration1": {
+        "GetInfo": {
+            "NewEnable": False,
+            "NewStatus": "Up",
+            "NewSSID": "GuestWifi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+        },
+        "GetSSID": {
+            "NewSSID": "GuestWifi",
+        },
+        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+    },
 }
 
 
-@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED})])
+@pytest.mark.parametrize(
+    ("fc_data"),
+    [
+        ({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED}),
+        ({**MOCK_FB_SERVICES, **GUEST_WIFI_DISABLED}),
+    ],
+)
 async def test_image_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -150,23 +170,3 @@ async def test_image_update(
 
     assert resp_body != resp_body_new
     assert resp_body_new == snapshot
-
-
-@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_DISABLED})])
-async def test_image_guest_wifi_disabled(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    fc_class_mock,
-    fh_class_mock,
-) -> None:
-    """Test image entities."""
-
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-    entry.add_to_hass(hass)
-
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
-
-    images = hass.states.async_all(IMAGE_DOMAIN)
-    assert len(images) == 0

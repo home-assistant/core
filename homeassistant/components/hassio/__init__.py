@@ -647,8 +647,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = dr.async_get(hass)
     coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
-    hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_config_entry_first_refresh()
+    hass.data[ADDONS_COORDINATOR] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -758,7 +758,7 @@ def async_remove_addons_from_dev_reg(
 ) -> None:
     """Remove addons from the device registry."""
     for addon_slug in addons:
-        if dev := dev_reg.async_get_device({(DOMAIN, addon_slug)}):
+        if dev := dev_reg.async_get_device(identifiers={(DOMAIN, addon_slug)}):
             dev_reg.async_remove_device(dev.id)
 
 
@@ -855,7 +855,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
 
         if not self.is_hass_os and (
-            dev := self.dev_reg.async_get_device({(DOMAIN, "OS")})
+            dev := self.dev_reg.async_get_device(identifiers={(DOMAIN, "OS")})
         ):
             # Remove the OS device if it exists and the installation is not hassos
             self.dev_reg.async_remove_device(dev.id)

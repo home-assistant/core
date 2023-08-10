@@ -44,7 +44,7 @@ async def _async_clear_notifications(system: System) -> None:
 BUTTON_DESCRIPTIONS = (
     SimpliSafeButtonDescription(
         key=BUTTON_KIND_CLEAR_NOTIFICATIONS,
-        name="Clear notifications",
+        translation_key=BUTTON_KIND_CLEAR_NOTIFICATIONS,
         push_action=_async_clear_notifications,
     ),
 )

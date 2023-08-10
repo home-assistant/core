@@ -7,7 +7,11 @@ from typing import Any
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
+from zwave_js_server.model.value import (
+    SetValueResult,
+    Value as ZwaveValue,
+    get_value_id_str,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
@@ -70,9 +74,9 @@ class ZWaveBaseEntity(Entity):
 
     async def _async_poll_value(self, value_or_id: str | ZwaveValue) -> None:
         """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task and we don't want to raise the exception in that separate task
-        # because it is confusing to the user.
+        # We log an error instead of raising an exception because this service call
+        # occurs in a separate task and we don't want to raise the exception in that
+        # separate task because it is confusing to the user.
         try:
             await self.info.node.async_poll_value(value_or_id)
         except BaseZwaveJSServerError as err:
@@ -157,6 +161,7 @@ class ZWaveBaseEntity(Entity):
         name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
+        primary_value = self.info.primary_value
         name = ""
         if (
             hasattr(self, "entity_description")
@@ -174,9 +179,9 @@ class ZWaveBaseEntity(Entity):
             value_name = alternate_value_name
         elif include_value_name:
             value_name = (
-                self.info.primary_value.metadata.label
-                or self.info.primary_value.property_key_name
-                or self.info.primary_value.property_name
+                primary_value.metadata.label
+                or primary_value.property_key_name
+                or primary_value.property_name
                 or ""
             )
 
@@ -184,12 +189,21 @@ class ZWaveBaseEntity(Entity):
         # Only include non empty additional info
         if additional_info := [item for item in (additional_info or []) if item]:
             name = f"{name} {' '.join(additional_info)}"
-        # append endpoint if > 1
-        if (
-            self.info.primary_value.endpoint is not None
-            and self.info.primary_value.endpoint > 1
+
+        # Only append endpoint to name if there are equivalent values on a lower
+        # endpoint
+        if primary_value.endpoint is not None and any(
+            get_value_id_str(
+                self.info.node,
+                primary_value.command_class,
+                primary_value.property_,
+                endpoint=endpoint_idx,
+                property_key=primary_value.property_key,
+            )
+            in self.info.node.values
+            for endpoint_idx in range(0, primary_value.endpoint)
         ):
-            name += f" ({self.info.primary_value.endpoint})"
+            name += f" ({primary_value.endpoint})"
 
         return name
 
@@ -312,7 +326,7 @@ class ZWaveBaseEntity(Entity):
         new_value: Any,
         options: dict | None = None,
         wait_for_result: bool | None = None,
-    ) -> bool | None:
+    ) -> SetValueResult | None:
         """Set value on node."""
         try:
             return await self.info.node.async_set_value(
