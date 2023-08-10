@@ -1632,7 +1632,7 @@ pyvizio==0.1.61
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==0.1.3
+pywaze==0.2.0
 
 # homeassistant.components.html5
 pywebpush==1.9.2

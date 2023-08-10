@@ -148,8 +148,8 @@ class WazeTravelTimeData:
 
     def __init__(self, region: str, config_entry: ConfigEntry) -> None:
         """Set up WazeRouteCalculator."""
-        self.region = region
         self.config_entry = config_entry
+        self.client: WazeRouteCalculator = WazeRouteCalculator(region)
         self.origin: str | None = None
         self.destination: str | None = None
         self.duration = None
@@ -179,16 +179,15 @@ class WazeTravelTimeData:
 
             routes = {}
             try:
-                async with WazeRouteCalculator(
-                    region=self.region,
+                routes = await self.client.calc_all_routes_info(
+                    self.origin,
+                    self.destination,
                     vehicle_type=vehicle_type,
                     avoid_toll_roads=avoid_toll_roads,
                     avoid_subscription_roads=avoid_subscription_roads,
                     avoid_ferries=avoid_ferries,
-                ) as client:
-                    routes = await client.calc_all_routes_info(
-                        self.origin, self.destination, real_time=realtime
-                    )
+                    real_time=realtime,
+                )
 
                 if incl_filter not in {None, ""}:
                     routes = {
