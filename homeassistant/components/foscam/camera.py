@@ -118,6 +118,7 @@ class HassFoscamCamera(Camera):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             name=config_entry.title,
+            manufacturer="Foscam",
         )
 
     async def async_added_to_hass(self) -> None:
