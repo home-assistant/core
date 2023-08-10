@@ -9,7 +9,7 @@
   "iot_class": "local_push",
   "loggers": ["zwave_js_server"],
   "quality_scale": "platinum",
-  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.50.0"],
+  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.50.1"],
   "usb": [
     {
       "vid": "0658",
