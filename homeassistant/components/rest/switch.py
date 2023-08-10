@@ -160,6 +160,11 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         template.attach(hass, self._headers)
         template.attach(hass, self._params)
 
+    async def async_added_to_hass(self) -> None:
+        """Handle adding to Home Assistant."""
+        await super().async_added_to_hass()
+        await self.async_update()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         body_on_t = self._body_on.async_render(parse_result=False)
