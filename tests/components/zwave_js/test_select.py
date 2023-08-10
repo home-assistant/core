@@ -11,7 +11,7 @@ from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
-from .common import replace_value_of_zwave_value, set_value_response
+from .common import replace_value_of_zwave_value
 
 DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
 PROTECTION_SELECT_ENTITY = "select.family_room_combo_local_protection_state"
@@ -69,8 +69,6 @@ async def test_default_tone_select(
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
 
-    set_value_response(client, True)
-
     # Test select option with string value
     await hass.services.async_call(
         "select",
@@ -91,7 +89,6 @@ async def test_default_tone_select(
     assert args["value"] == 30
 
     client.async_send_command.reset_mock()
-    set_value_response(client, True)
 
     # Test value update from value updated event
     event = Event(
@@ -143,8 +140,6 @@ async def test_protection_select(
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
 
-    set_value_response(client, True)
-
     # Test select option with string value
     await hass.services.async_call(
         "select",
@@ -165,7 +160,6 @@ async def test_protection_select(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
-    set_value_response(client, True)
 
     # Test value update from value updated event
     event = Event(
@@ -233,8 +227,6 @@ async def test_multilevel_switch_select(
         "Siren & Strobe FULL Alarm",
     ]
 
-    set_value_response(client, True)
-
     # Test select option with string value
     await hass.services.async_call(
         "select",
@@ -255,7 +247,6 @@ async def test_multilevel_switch_select(
     assert args["value"] == 33
 
     client.async_send_command.reset_mock()
-    set_value_response(client, True)
 
     # Test value update from value updated event
     event = Event(

@@ -26,8 +26,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, Entity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import set_value_response
-
 
 async def test_iblinds_v2(hass: HomeAssistant, client, iblinds_v2, integration) -> None:
     """Test that an iBlinds v2.0 multilevel switch value is discovered as a cover."""
@@ -174,8 +172,6 @@ async def test_zooz_zen72(
     assert state
     assert state.state == STATE_UNKNOWN
 
-    set_value_response(client, True)
-
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -197,7 +193,6 @@ async def test_zooz_zen72(
     assert args["value"] == 5
 
     client.async_send_command.reset_mock()
-    set_value_response(client, True)
 
     entity_id = "button.z_wave_plus_700_series_dimmer_switch_identify"
     entry = ent_reg.async_get(entity_id)
@@ -263,8 +258,6 @@ async def test_indicator_test(
     assert state
     assert state.state == STATE_OFF
 
-    set_value_response(client, True)
-
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -284,7 +277,6 @@ async def test_indicator_test(
     assert args["value"] is True
 
     client.async_send_command.reset_mock()
-    set_value_response(client, True)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
