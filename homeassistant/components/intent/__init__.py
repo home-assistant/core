@@ -89,7 +89,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 )
             )
             return
-          
+
         if state.domain == LOCK_DOMAIN:
             # on = lock
             # off = unlock
