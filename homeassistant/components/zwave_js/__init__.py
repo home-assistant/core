@@ -249,20 +249,6 @@ class DriverEvents:
         elif opted_in is False:
             await driver.async_disable_statistics()
 
-        # Check for nodes that no longer exist and remove them
-        stored_devices = dr.async_entries_for_config_entry(
-            self.dev_reg, self.config_entry.entry_id
-        )
-        known_devices = [
-            self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
-            for node in controller.nodes.values()
-        ]
-
-        # Devices that are in the device registry that are not known by the controller can be removed
-        for device in stored_devices:
-            if device not in known_devices:
-                self.dev_reg.async_remove_device(device.id)
-
         # run discovery on controller node
         if controller.own_node:
             await self.controller_events.async_on_node_added(controller.own_node)
@@ -415,8 +401,6 @@ class ControllerEvents:
                     "remove_entity"
                 ),
             )
-        else:
-            self.remove_device(device)
 
     @callback
     def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
@@ -430,17 +414,6 @@ class ControllerEvents:
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
             via_device_id = get_device_id(driver, controller.own_node)
-
-        # Replace the device if it can be determined that this node is not the
-        # same product as it was previously.
-        if (
-            device_id_ext
-            and device
-            and len(device.identifiers) == 2
-            and device_id_ext not in device.identifiers
-        ):
-            self.remove_device(device)
-            device = None
 
         if device_id_ext:
             ids = {device_id, device_id_ext}
@@ -876,6 +849,33 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await addon_manager.async_uninstall_addon()
     except AddonError as err:
         LOGGER.error(err)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    entry_hass_data = hass.data[DOMAIN][config_entry.entry_id]
+    client: ZwaveClient = entry_hass_data[DATA_CLIENT]
+    assert client.driver
+    driver: Driver = client.driver
+    dev_reg = dr.async_get(hass)
+
+    known_devices = [
+        dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+        for node in driver.controller.nodes.values()
+    ]
+
+    # If device is known to the controller, do not let it be removed
+    if device_entry in known_devices:
+        return False
+
+    controller_events: ControllerEvents = entry_hass_data[
+        DATA_DRIVER_EVENTS
+    ].controller_events
+    controller_events.registered_unique_ids.pop(device_entry.id, None)
+    controller_events.discovered_value_ids.pop(device_entry.id, None)
+    return True
 
 
 async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
