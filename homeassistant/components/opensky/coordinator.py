@@ -64,7 +64,7 @@ class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
             if not flight.callsign:
                 continue
             callsign = flight.callsign.strip()
-            if callsign != "":
+            if callsign:
                 flight_metadata[callsign] = flight
             else:
                 continue
