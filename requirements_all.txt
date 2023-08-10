@@ -126,12 +126,12 @@ RestrictedPython==6.1
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
-# homeassistant.components.tami4
-Tami4EdgeAPI==2.0
-
 # homeassistant.components.recorder
 # homeassistant.components.sql
 SQLAlchemy==2.0.15
+
+# homeassistant.components.tami4
+Tami4EdgeAPI==2.0
 
 # homeassistant.components.travisci
 TravisPy==0.3.5
