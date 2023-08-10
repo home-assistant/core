@@ -1,7 +1,7 @@
 """Const file for Rova."""
 import logging
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 
 CONF_ZIP_CODE = "zip_code"
 CONF_HOUSE_NUMBER = "house_number"
