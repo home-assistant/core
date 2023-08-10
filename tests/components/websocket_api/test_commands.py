@@ -33,10 +33,7 @@ from tests.common import (
     async_mock_service,
     mock_platform,
 )
-from tests.typing import (
-    ClientSessionGenerator,
-    WebSocketGenerator,
-)
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",

@@ -21,12 +21,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone
 
-from .const import (
-    CONF_HOUSE_NUMBER,
-    CONF_HOUSE_NUMBER_SUFFIX,
-    CONF_ZIP_CODE,
-    LOGGER,
-)
+from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, LOGGER
 
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
