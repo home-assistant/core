@@ -13,11 +13,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.rabbitair.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 TEST_HOST = "1.1.1.1"
 TEST_NAME = "abcdef1234_123456789012345678"
@@ -85,7 +81,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -101,7 +97,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_TITLE
     assert result2["data"] == {
         CONF_HOST: TEST_HOST,
@@ -113,7 +109,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error_type,base_value",
+    ("error_type", "base_value"),
     [
         (ValueError, "invalid_access_token"),
         (OSError, "invalid_host"),
@@ -128,7 +124,7 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -143,7 +139,7 @@ async def test_form_cannot_connect(
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": base_value}
 
 
@@ -152,7 +148,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -167,18 +163,18 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.usefixtures("rabbitair_connect")
-async def test_zeroconf_discovery(hass):
+async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
     """Test zeroconf discovery setup flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_DATA
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -194,7 +190,7 @@ async def test_zeroconf_discovery(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_TITLE
     assert result2["data"] == {
         CONF_HOST: TEST_NAME + ".local",
@@ -208,5 +204,5 @@ async def test_zeroconf_discovery(hass):
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_DATA
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
