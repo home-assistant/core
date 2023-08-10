@@ -3,6 +3,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from python_opensky.exceptions import OpenSkyUnauthenticatedError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.opensky.const import (
@@ -23,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MockOpenSky, NonAuthenticatedMockOpenSky, patch_setup_entry
+from . import get_states_response_fixture, patch_setup_entry
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
@@ -193,11 +194,11 @@ async def test_options_flow_failures(
     error: str,
 ) -> None:
     """Test load and unload entry."""
-    await setup_integration(config_entry, MockOpenSky())
+    await setup_integration(config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     with patch(
-        "homeassistant.components.opensky.config_flow.OpenSky",
-        return_value=NonAuthenticatedMockOpenSky(),
+        "python_opensky.OpenSky.authenticate",
+        side_effect=OpenSkyUnauthenticatedError(),
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
         await hass.async_block_till_done()
@@ -214,9 +215,9 @@ async def test_options_flow_failures(
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"]["base"] == error
-    with patch(
-        "homeassistant.components.opensky.config_flow.OpenSky",
-        return_value=MockOpenSky(),
+    with patch("python_opensky.OpenSky.authenticate"), patch(
+        "python_opensky.OpenSky.get_states",
+        return_value=get_states_response_fixture("opensky/states_1.json"),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

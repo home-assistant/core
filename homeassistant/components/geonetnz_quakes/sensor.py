@@ -36,7 +36,6 @@ async def async_setup_entry(
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
     sensor = GeonetnzQuakesSensor(entry.entry_id, entry.unique_id, entry.title, manager)
     async_add_entities([sensor])
-    _LOGGER.debug("Sensor setup done")
 
 
 class GeonetnzQuakesSensor(SensorEntity):

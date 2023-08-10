@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MockOpenSky
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
@@ -22,7 +21,7 @@ async def test_load_unload_entry(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload entry."""
-    await setup_integration(config_entry, MockOpenSky())
+    await setup_integration(config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     state = hass.states.get("sensor.opensky")
