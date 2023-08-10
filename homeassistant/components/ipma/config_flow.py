@@ -22,18 +22,11 @@ class IpmaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
-            if user_input[CONF_NAME] not in self.hass.config_entries.async_entries(
-                DOMAIN
-            ):
-                unique_id = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+            unique_id = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
-
-            self._errors[CONF_NAME] = "name_exists"
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         # default location is set hass configuration
         return await self._show_config_form(
