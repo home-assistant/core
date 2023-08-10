@@ -48,6 +48,14 @@ CONF_BODY_ON = "body_on"
 CONF_IS_ON_TEMPLATE = "is_on_template"
 CONF_STATE_RESOURCE = "state_resource"
 
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
+)
+
 DEFAULT_METHOD = "post"
 DEFAULT_BODY_OFF = "OFF"
 DEFAULT_BODY_ON = "ON"
@@ -88,21 +96,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the RESTful switch."""
     resource: str = config[CONF_RESOURCE]
-    name = config.get(CONF_NAME)
-    if not name:
-        name = template.Template(DEFAULT_NAME, hass)
+    name = config.get(CONF_NAME) or template.Template(DEFAULT_NAME, hass)
 
-    trigger_entity_config = {
-        CONF_NAME: name,
-        CONF_DEVICE_CLASS: config.get(CONF_DEVICE_CLASS),
-        CONF_UNIQUE_ID: config.get(CONF_UNIQUE_ID),
-    }
-    if available := config.get(CONF_AVAILABILITY):
-        trigger_entity_config[CONF_AVAILABILITY] = available
-    if icon := config.get(CONF_ICON):
-        trigger_entity_config[CONF_ICON] = icon
-    if picture := config.get(CONF_PICTURE):
-        trigger_entity_config[CONF_PICTURE] = picture
+    trigger_entity_config = {CONF_NAME: name}
+
+    for key in TRIGGER_ENTITY_OPTIONS:
+        if key not in config:
+            continue
+        trigger_entity_config[key] = config[key]
 
     try:
         switch = RestSwitch(hass, config, trigger_entity_config)
