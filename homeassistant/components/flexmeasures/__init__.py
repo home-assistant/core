@@ -1,41 +1,41 @@
 """The FlexMeasures integration."""
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform, EVENT_STATE_CHANGED
-from homeassistant.core import HomeAssistant
-import logging
 from datetime import datetime
+import logging
+
 import pytz
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_STATE_CHANGED, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import state as state_helper
-from .api import async_register_s2_api, S2FlexMeasuresClient
+from homeassistant.helpers.typing import ConfigType
+
+from .api import S2FlexMeasuresClient, async_register_s2_api
 from .const import DOMAIN
 
 ATTR_NAME = "name"
 DEFAULT_NAME = "World"
 
 
-def setup(hass: HomeAssistant, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up is called when Home Assistant is loading our component."""
 
     # Return boolean to indicate that initialization was successful.
     return True
 
 
-# TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
 # PLATFORMS: list[Platform] = [Platform.LIGHT]
-PLATFORMS: list[Platform] = []
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FlexMeasures from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    # TODO 1. Create API instance
-    # TODO 2. Validate the API connection (and authentication)
-    # TODO 3. Store an API object for your platforms to access
+
     config_data = dict(entry.data)
     # Registers update listener to update config entry when options are updated.
     unsub_options_update_listener = entry.add_update_listener(options_update_listener)
@@ -51,9 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def handle_api(call):
         """Handle the service call to the FlexMeasures REST API."""
-        name = call.data.get(ATTR_NAME, DEFAULT_NAME)
+        call.data.get(ATTR_NAME, DEFAULT_NAME)
         method = call.data.get("method")
-        call_dict = dict(**call.data)
+        call_dict = {**call.data}
         call_dict.pop("method")
         if method == "post_measurements":
             logging.info("post measurement")
@@ -61,30 +61,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         elif method == "trigger_storage_schedule":
             logging.info("trigger_schedule")
             schedule_id = await getattr(client, method)(**call_dict)
-            print(schedule_id)
             hass.states.async_set(f"{DOMAIN}.schedule_id", schedule_id)
-            # hass.states.set("schedule_id", schedule_id)
         elif method == "trigger_and_get_schedule":
             logging.info("trigger_schedule")
             schedule = await getattr(client, method)(**call_dict)
-            print(schedule)
-            # hass.states.async_set(f"{DOMAIN}.schedule_id", schedule)
             new_state = (
                 "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
             )
-            print(new_state)
             hass.states.async_set(
                 f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
             )
         elif method == "get_schedule":
             logging.info("get schedule")
             schedule = await getattr(client, method)(**call_dict)
-            print(schedule)
-            # hass.states.async_set(f"{DOMAIN}.schedule", new_state=schedule['start'])
             new_state = (
                 "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
             )
-            print(new_state)
             hass.states.async_set(
                 f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
             )
@@ -93,9 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await getattr(client, method)(**call_dict)
 
     async def schedule_trigger_event_listener(event):
-
         state = event.data.get("new_state")
- 
 
         try:
             _state = state_helper.state_as_number(state)
@@ -105,11 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if state.domain != "flexmeasures":
             return
 
-
         if state.object_id == "trigger_and_get_schedule":
-
             schedule = await client.trigger_and_get_schedule(**state.attributes)
-            new_state = "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
+            new_state = (
+                "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
+            )
 
             hass.states.async_set(
                 f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
@@ -125,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if state.object_id == "post_measurements":
             logging.info("post measurement")
             await client.post_measurements(**state.attributes)
-            
+
         if state.object_id == "trigger_storage_schedule":
             logging.info("trigger_schedule")
             schedule_id = await client.trigger_storage_schedule(**state.attributes)
@@ -142,13 +132,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.states.async_set(
                 f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
             )
-
-        
-
-
-
-
-
 
     def handle_s2(call):
         """Handle the service call to the FlexMeasures S2 websockets implementation."""
@@ -167,9 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def options_update_listener(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 

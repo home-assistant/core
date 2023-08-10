@@ -370,7 +370,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/fjaraskupan/ @elupus
 /tests/components/fjaraskupan/ @elupus
 /homeassistant/components/flexmeasures/ @flix6x
-/tests/components/flexmeasures/ @flix6x
 /homeassistant/components/flick_electric/ @ZephireNZ
 /tests/components/flick_electric/ @ZephireNZ
 /homeassistant/components/flipr/ @cnico

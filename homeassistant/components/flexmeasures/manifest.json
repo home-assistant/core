@@ -7,13 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/flexmeasures",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["flexmeasures-client>=0.1.1"],
+  "requirements": ["flexmeasures-client==0.1.4"],
   "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": ["websocket_api", "calendar"],
-  "codeowners": [
-    "@flix6x"
-  ],
-  "iot_class": "cloud_polling"
+  "zeroconf": []
 }

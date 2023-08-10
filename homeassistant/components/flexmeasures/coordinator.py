@@ -1,1 +1,0 @@
-from flexmeasures_client import FlexMeasuresClient as S2FlexMeasuresClient

@@ -11,9 +11,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection, decorators
 from homeassistant.core import HomeAssistant, callback
 
-from .coordinator import S2FlexMeasuresClient
-from .helpers import get_fm_client
-
+from .helpers import S2FlexMeasuresClient, get_fm_client
 
 # HA specific
 ID = "id"
@@ -45,11 +43,13 @@ def async_register_s2_api(hass: HomeAssistant) -> None:
 
 
 @callback
-@decorators.websocket_command({
-    vol.Required(TYPE): "S2",
-    vol.Required("message_id"): str,
-    vol.Required("message_type"): str,
-})
+@decorators.websocket_command(
+    {
+        vol.Required(TYPE): "S2",
+        vol.Required("message_id"): str,
+        vol.Required("message_type"): str,
+    }
+)
 @websocket_api.async_response
 @async_get_flexmeasures_client
 async def handle_s2_message(
@@ -64,7 +64,7 @@ async def handle_s2_message(
     connection.send_message(s2_result_message(msg["id"], msg["message_id"], {}))
 
 
-def s2_result_message(iden: int , message_id: str, result: Any = None) -> dict[str, Any]:
+def s2_result_message(iden: int, message_id: str, result: Any = None) -> dict[str, Any]:
     """Return an S2 success result message.
 
     Based on websocket_api.messages.result_message
@@ -80,7 +80,9 @@ def s2_result_message(iden: int , message_id: str, result: Any = None) -> dict[s
     }
 
 
-def s2_error_message(iden: int | None, message_id: str | None, code: str, message: str) -> dict[str, Any]:
+def s2_error_message(
+    iden: int | None, message_id: str | None, code: str, message: str
+) -> dict[str, Any]:
     """Return an S2 error result message.
 
     Based on websocket_api.messages.error_message

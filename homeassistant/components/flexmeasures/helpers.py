@@ -1,8 +1,11 @@
+"""Helper to create S2 FlexMeasures Client instance."""
+
+from flexmeasures_client import FlexMeasuresClient as S2FlexMeasuresClient
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .coordinator import S2FlexMeasuresClient
 
 
 @callback
