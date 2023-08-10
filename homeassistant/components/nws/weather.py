@@ -38,6 +38,7 @@ from homeassistant.util.unit_system import UnitSystem
 from . import base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
+    ATTR_FORECAST_SUMMARY,
     ATTRIBUTION,
     CONDITION_CLASSES,
     COORDINATOR_FORECAST,
@@ -243,6 +244,7 @@ class NWSWeather(WeatherEntity):
                 ATTR_FORECAST_DETAILED_DESCRIPTION: forecast_entry.get(
                     "detailedForecast"
                 ),
+                ATTR_FORECAST_SUMMARY: forecast_entry.get("shortForecast"),
                 ATTR_FORECAST_TIME: forecast_entry.get("startTime"),
             }
 
