@@ -36,6 +36,7 @@ from homeassistant.helpers.template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerEntity,
+    ManualTriggerSensorEntity,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -53,6 +54,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **SENSOR_SCHEMA})
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
+)
+
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
+    CONF_STATE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
 )
 
 
@@ -87,24 +98,14 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    unit_of_measurement = conf.get(CONF_UNIT_OF_MEASUREMENT)
-    state_class = conf.get(CONF_STATE_CLASS)
+    name = config.get(CONF_NAME) or Template(DEFAULT_SENSOR_NAME, hass)
 
-    name = conf.get(CONF_NAME)
-    if not name:
-        name = Template(DEFAULT_SENSOR_NAME, hass)
+    trigger_entity_config = {CONF_NAME: name}
 
-    trigger_entity_config = {
-        CONF_NAME: name,
-        CONF_DEVICE_CLASS: conf.get(CONF_DEVICE_CLASS),
-        CONF_UNIQUE_ID: conf.get(CONF_UNIQUE_ID),
-    }
-    if available := conf.get(CONF_AVAILABILITY):
-        trigger_entity_config[CONF_AVAILABILITY] = available
-    if icon := conf.get(CONF_ICON):
-        trigger_entity_config[CONF_ICON] = icon
-    if picture := conf.get(CONF_PICTURE):
-        trigger_entity_config[CONF_PICTURE] = picture
+    for key in TRIGGER_ENTITY_OPTIONS:
+        if key not in config:
+            continue
+        trigger_entity_config[key] = config[key]
 
     async_add_entities(
         [
@@ -114,14 +115,12 @@ async def async_setup_platform(
                 rest,
                 conf,
                 trigger_entity_config,
-                unit_of_measurement,
-                state_class,
             )
         ],
     )
 
 
-class RestSensor(ManualTriggerEntity, RestEntity, SensorEntity):
+class RestSensor(ManualTriggerSensorEntity, RestEntity, SensorEntity):
     """Implementation of a REST sensor."""
 
     def __init__(
@@ -131,11 +130,9 @@ class RestSensor(ManualTriggerEntity, RestEntity, SensorEntity):
         rest: RestData,
         config: ConfigType,
         trigger_entity_config: ConfigType,
-        unit_of_measurement: str | None,
-        state_class: str | None,
     ) -> None:
         """Initialize the REST sensor."""
-        ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
+        ManualTriggerSensorEntity.__init__(self, hass, trigger_entity_config)
         RestEntity.__init__(
             self,
             coordinator,
@@ -143,8 +140,6 @@ class RestSensor(ManualTriggerEntity, RestEntity, SensorEntity):
             config.get(CONF_RESOURCE_TEMPLATE),
             config[CONF_FORCE_UPDATE],
         )
-        self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_state_class = state_class
         self._value_template = config.get(CONF_VALUE_TEMPLATE)
         if (value_template := self._value_template) is not None:
             value_template.hass = hass
@@ -161,7 +156,7 @@ class RestSensor(ManualTriggerEntity, RestEntity, SensorEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         available1 = RestEntity.available.fget(self)  # type: ignore[attr-defined]
-        available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
+        available2 = ManualTriggerSensorEntity.available.fget(self)  # type: ignore[attr-defined]
         return bool(available1 and available2)
 
     @property
