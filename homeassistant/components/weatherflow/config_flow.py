@@ -62,16 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        current_hosts = [
-            entry.data.get(CONF_HOST, DEFAULT_HOST)
-            for entry in self._async_current_entries()
-        ]
-
         if user_input is None:
-            if DEFAULT_HOST in current_hosts:
-                return self.async_show_form(
-                    step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-                )
             host = DEFAULT_HOST
         else:
             host = user_input.get(CONF_HOST)
