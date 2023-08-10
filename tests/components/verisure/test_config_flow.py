@@ -562,11 +562,7 @@ async def test_reauth_flow_errors(
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="12345",
-        data={},
-    )
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="12345", data={}, version=2)
     entry.add_to_hass(hass)
 
     with patch(

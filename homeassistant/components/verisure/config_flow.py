@@ -30,7 +30,7 @@ from .const import (
 class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Verisure."""
 
-    VERSION = 1
+    VERSION = 2
 
     email: str
     entry: ConfigEntry
