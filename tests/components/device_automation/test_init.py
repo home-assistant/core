@@ -1496,8 +1496,10 @@ async def test_automation_with_device_wrong_domain(
     module = module_cache["fake_integration.device_trigger"]
     module.async_validate_trigger_config = AsyncMock()
 
+    source_config_entry = MockConfigEntry(domain="not_fake_integration")
+    source_config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
-        config_entry_id="not_fake_integration_config_entry",
+        config_entry_id=source_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert await async_setup_component(
