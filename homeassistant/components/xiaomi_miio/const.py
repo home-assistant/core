@@ -12,6 +12,7 @@ from miio.integrations.vacuum.roborock.vacuum import (
     ROCKROBO_S7_MAXV,
     ROCKROBO_V1,
 )
+from miio.integrations.vacuum.dreame.dreamevacuum_miot import DREAME_MOP_2_ULTRA
 
 DOMAIN = "xiaomi_miio"
 
@@ -236,6 +237,7 @@ MODELS_VACUUM = [
     ROCKROBO_S7_MAXV,
     ROBOROCK_GENERIC,
     ROCKROBO_GENERIC,
+    DREAME_MOP_2_ULTRA,
 ]
 MODELS_VACUUM_WITH_MOP = [
     ROCKROBO_E2,
@@ -246,6 +248,7 @@ MODELS_VACUUM_WITH_MOP = [
     ROCKROBO_S6_PURE,
     ROCKROBO_S7,
     ROCKROBO_S7_MAXV,
+    DREAME_MOP_2_ULTRA,
 ]
 MODELS_VACUUM_WITH_SEPARATE_MOP = [
     ROCKROBO_S7,
