@@ -6,12 +6,12 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import aiounifi
-from aiounifi.models.event import EventKey
-from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 import pytest
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
@@ -182,8 +182,8 @@ async def setup_unifi_integration(
     config_entry.add_to_hass(hass)
 
     if known_wireless_clients:
-        hass.data[UNIFI_WIRELESS_CLIENTS].update_data(
-            known_wireless_clients, config_entry
+        hass.data[UNIFI_WIRELESS_CLIENTS].wireless_clients.update(
+            known_wireless_clients
         )
 
     if aioclient_mock:
@@ -223,9 +223,11 @@ async def test_controller_setup(
 
     entry = controller.config_entry
     assert len(forward_entry_setup.mock_calls) == len(PLATFORMS)
-    assert forward_entry_setup.mock_calls[0][1] == (entry, TRACKER_DOMAIN)
-    assert forward_entry_setup.mock_calls[1][1] == (entry, SENSOR_DOMAIN)
-    assert forward_entry_setup.mock_calls[2][1] == (entry, SWITCH_DOMAIN)
+    assert forward_entry_setup.mock_calls[0][1] == (entry, BUTTON_DOMAIN)
+    assert forward_entry_setup.mock_calls[1][1] == (entry, TRACKER_DOMAIN)
+    assert forward_entry_setup.mock_calls[2][1] == (entry, IMAGE_DOMAIN)
+    assert forward_entry_setup.mock_calls[3][1] == (entry, SENSOR_DOMAIN)
+    assert forward_entry_setup.mock_calls[4][1] == (entry, SWITCH_DOMAIN)
 
     assert controller.host == ENTRY_CONFIG[CONF_HOST]
     assert controller.site == ENTRY_CONFIG[CONF_SITE_ID]
@@ -263,8 +265,7 @@ async def test_controller_mac(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
     )
-
-    assert device_entry.configuration_url == controller.api.url
+    assert device_entry
 
 
 async def test_controller_not_accessible(hass: HomeAssistant) -> None:
@@ -381,41 +382,6 @@ async def test_connection_state_signalling(
 
     # Controller is once again connected
     assert hass.states.get("device_tracker.client").state == "home"
-
-
-async def test_wireless_client_event_calls_update_wireless_devices(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
-) -> None:
-    """Call update_wireless_devices method when receiving wireless client event."""
-    client_1_dict = {
-        "essid": "ssid",
-        "disabled": False,
-        "hostname": "client_1",
-        "ip": "10.0.0.4",
-        "is_wired": False,
-        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-        "mac": "00:00:00:00:00:01",
-    }
-    await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        clients_response=[client_1_dict],
-        known_wireless_clients=(client_1_dict["mac"],),
-    )
-
-    with patch(
-        "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
-        return_value=None,
-    ) as wireless_clients_mock:
-        event = {
-            "datetime": "2020-01-20T19:37:04Z",
-            "user": "00:00:00:00:00:01",
-            "key": EventKey.WIRELESS_CLIENT_CONNECTED.value,
-            "msg": "User[11:22:33:44:55:66] has connected to WLAN",
-            "time": 1579549024893,
-        }
-        mock_unifi_websocket(message=MessageKey.EVENT, data=event)
-        assert wireless_clients_mock.assert_called_once
 
 
 async def test_reconnect_mechanism(

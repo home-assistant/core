@@ -113,6 +113,7 @@ class FreeboxSensor(SensorEntity):
         self.entity_description = description
         self._router = router
         self._attr_unique_id = f"{router.mac} {description.name}"
+        self._attr_device_info = router.device_info
 
     @callback
     def async_update_state(self) -> None:
@@ -122,11 +123,6 @@ class FreeboxSensor(SensorEntity):
             self._attr_native_value = round(state / 1000, 2)
         else:
             self._attr_native_value = state
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return self._router.device_info
 
     @callback
     def async_on_demand_update(self):
@@ -193,19 +189,18 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._disk = disk
         self._partition = partition
         self._attr_name = f"{partition['label']} {description.name}"
-        self._attr_unique_id = f"{self._router.mac} {description.key} {self._disk['id']} {self._partition['id']}"
+        self._attr_unique_id = (
+            f"{router.mac} {description.key} {disk['id']} {partition['id']}"
+        )
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._disk["id"])},
-            model=self._disk["model"],
-            name=f"Disk {self._disk['id']}",
-            sw_version=self._disk["firmware"],
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, disk["id"])},
+            model=disk["model"],
+            name=f"Disk {disk['id']}",
+            sw_version=disk["firmware"],
             via_device=(
                 DOMAIN,
-                self._router.mac,
+                router.mac,
             ),
         )
 

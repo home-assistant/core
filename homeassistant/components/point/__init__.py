@@ -97,9 +97,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         token_saver=token_saver,
     )
     try:
-        # pylint: disable-next=fixme
-        # TODO Remove authlib constraint when refactoring this code
-        await session.ensure_active_token()
+        # the call to user() implicitly calls ensure_active_token() in authlib
+        await session.user()
     except ConnectTimeout as err:
         _LOGGER.debug("Connection Timeout")
         raise ConfigEntryNotReady from err

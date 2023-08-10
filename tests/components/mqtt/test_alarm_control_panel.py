@@ -35,9 +35,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -55,6 +55,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_entity_name,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
@@ -64,7 +65,6 @@ from .test_common import (
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
-    help_test_validate_platform_config,
 )
 
 from tests.common import async_fire_mqtt_message
@@ -131,7 +131,7 @@ def alarm_control_panel_platform_only():
 
 
 @pytest.mark.parametrize(
-    ("config", "valid"),
+    ("hass_config", "valid"),
     [
         (
             {
@@ -170,18 +170,22 @@ def alarm_control_panel_platform_only():
     ],
 )
 async def test_fail_setup_without_state_or_command_topic(
-    hass: HomeAssistant, config, valid
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, valid
 ) -> None:
     """Test for failing setup with no state or command topic."""
-    assert help_test_validate_platform_config(hass, config) == valid
+    if valid:
+        await mqtt_mock_entry()
+        return
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_update_state_via_state_topic(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test updating with via state topic."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     await hass.async_block_till_done()
 
     entity_id = "alarm_control_panel.test"
@@ -204,17 +208,12 @@ async def test_update_state_via_state_topic(
         assert hass.states.get(entity_id).state == state
 
 
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_ignore_update_state_if_unknown_via_state_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test ignoring updates via state topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        DEFAULT_CONFIG,
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     entity_id = "alarm_control_panel.test"
 
@@ -225,31 +224,25 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
 
 
 @pytest.mark.parametrize(
-    ("service", "payload"),
+    ("hass_config", "service", "payload"),
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
-        (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
-        (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
-        (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
-        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
-        (SERVICE_ALARM_DISARM, "DISARM"),
-        (SERVICE_ALARM_TRIGGER, "TRIGGER"),
+        (DEFAULT_CONFIG, SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (DEFAULT_CONFIG, SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
+        (DEFAULT_CONFIG, SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
+        (DEFAULT_CONFIG, SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
+        (DEFAULT_CONFIG, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
+        (DEFAULT_CONFIG, SERVICE_ALARM_DISARM, "DISARM"),
+        (DEFAULT_CONFIG, SERVICE_ALARM_TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_no_code(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     service,
     payload,
 ) -> None:
     """Test publishing of MQTT messages when no code is configured."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        DEFAULT_CONFIG,
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
@@ -262,31 +255,25 @@ async def test_publish_mqtt_no_code(
 
 
 @pytest.mark.parametrize(
-    ("service", "payload"),
+    ("hass_config", "service", "payload"),
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
-        (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
-        (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
-        (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
-        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
-        (SERVICE_ALARM_DISARM, "DISARM"),
-        (SERVICE_ALARM_TRIGGER, "TRIGGER"),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_DISARM, "DISARM"),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_with_code(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     service,
     payload,
 ) -> None:
     """Test publishing of MQTT messages when code is configured."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        DEFAULT_CONFIG_CODE,
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     call_count = mqtt_mock.async_publish.call_count
 
     # No code provided, should not publish
@@ -318,31 +305,29 @@ async def test_publish_mqtt_with_code(
 
 
 @pytest.mark.parametrize(
-    ("service", "payload"),
+    ("hass_config", "service", "payload"),
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
-        (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
-        (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
-        (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
-        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
-        (SERVICE_ALARM_DISARM, "DISARM"),
-        (SERVICE_ALARM_TRIGGER, "TRIGGER"),
+        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
+        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
+        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "ARM_CUSTOM_BYPASS",
+        ),
+        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_DISARM, "DISARM"),
+        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_with_remote_code(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     service,
     payload,
 ) -> None:
     """Test publishing of MQTT messages when remode code is configured."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        DEFAULT_CONFIG_REMOTE_CODE,
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     call_count = mqtt_mock.async_publish.call_count
 
     # No code provided, should not publish
@@ -365,31 +350,29 @@ async def test_publish_mqtt_with_remote_code(
 
 
 @pytest.mark.parametrize(
-    ("service", "payload"),
+    ("hass_config", "service", "payload"),
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
-        (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
-        (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
-        (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
-        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
-        (SERVICE_ALARM_DISARM, "DISARM"),
-        (SERVICE_ALARM_TRIGGER, "TRIGGER"),
+        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
+        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
+        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE_TEXT,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "ARM_CUSTOM_BYPASS",
+        ),
+        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_DISARM, "DISARM"),
+        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_with_remote_code_text(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    service,
-    payload,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    service: str,
+    payload: str,
 ) -> None:
     """Test publishing of MQTT messages when remote text code is configured."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        DEFAULT_CONFIG_REMOTE_CODE_TEXT,
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     call_count = mqtt_mock.async_publish.call_count
 
     # No code provided, should not publish
@@ -412,38 +395,85 @@ async def test_publish_mqtt_with_remote_code_text(
 
 
 @pytest.mark.parametrize(
-    ("service", "payload", "disable_code"),
+    ("hass_config", "service", "payload"),
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME", "code_arm_required"),
-        (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY", "code_arm_required"),
-        (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT", "code_arm_required"),
-        (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION", "code_arm_required"),
-        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS", "code_arm_required"),
-        (SERVICE_ALARM_DISARM, "DISARM", "code_disarm_required"),
-        (SERVICE_ALARM_TRIGGER, "TRIGGER", "code_trigger_required"),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG_CODE,
+                ({"code_arm_required": False},),
+            ),
+            SERVICE_ALARM_ARM_HOME,
+            "ARM_HOME",
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG_CODE,
+                ({"code_arm_required": False},),
+            ),
+            SERVICE_ALARM_ARM_AWAY,
+            "ARM_AWAY",
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG_CODE,
+                ({"code_arm_required": False},),
+            ),
+            SERVICE_ALARM_ARM_NIGHT,
+            "ARM_NIGHT",
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG_CODE,
+                ({"code_arm_required": False},),
+            ),
+            SERVICE_ALARM_ARM_VACATION,
+            "ARM_VACATION",
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG_CODE,
+                ({"code_arm_required": False},),
+            ),
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "ARM_CUSTOM_BYPASS",
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG_CODE,
+                ({"code_disarm_required": False},),
+            ),
+            SERVICE_ALARM_DISARM,
+            "DISARM",
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG_CODE,
+                ({"code_trigger_required": False},),
+            ),
+            SERVICE_ALARM_TRIGGER,
+            "TRIGGER",
+        ),
     ],
 )
 async def test_publish_mqtt_with_code_required_false(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    service,
-    payload,
-    disable_code,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    service: str,
+    payload: str,
 ) -> None:
     """Test publishing of MQTT messages when code is configured.
 
     code_arm_required = False / code_disarm_required = False /
     code_trigger_required = False
     """
-    config = copy.deepcopy(DEFAULT_CONFIG_CODE)
-    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN][disable_code] = False
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        config,
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     # No code provided, should publish
     await hass.services.async_call(
@@ -476,25 +506,29 @@ async def test_publish_mqtt_with_code_required_false(
     mqtt_mock.reset_mock()
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            alarm_control_panel.DOMAIN,
+            DEFAULT_CONFIG_CODE,
+            (
+                {
+                    "code": "0123",
+                    "command_template": '{"action":"{{ action }}","code":"{{ code }}"}',
+                },
+            ),
+        )
+    ],
+)
 async def test_disarm_publishes_mqtt_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test publishing of MQTT messages while disarmed.
 
     When command_template set to output json
     """
-    config = copy.deepcopy(DEFAULT_CONFIG_CODE)
-    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN]["code"] = "0123"
-    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN][
-        "command_template"
-    ] = '{"action":"{{ action }}","code":"{{ code }}"}'
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        config,
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     await common.async_alarm_disarm(hass, "0123")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -502,13 +536,9 @@ async def test_disarm_publishes_mqtt_with_template(
     )
 
 
-async def test_update_state_via_state_topic_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test updating with template_value via state topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 alarm_control_panel.DOMAIN: {
@@ -523,10 +553,14 @@ async def test_update_state_via_state_topic_template(
                 {% endif %}",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_update_state_via_state_topic_template(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test updating with template_value via state topic."""
+    await mqtt_mock_entry()
 
     state = hass.states.get("alarm_control_panel.test")
     assert state.state == STATE_UNKNOWN
@@ -537,16 +571,19 @@ async def test_update_state_via_state_topic_template(
     assert state.state == STATE_ALARM_ARMED_AWAY
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            alarm_control_panel.DOMAIN, DEFAULT_CONFIG, ({"code": CODE_NUMBER},)
+        )
+    ],
+)
 async def test_attributes_code_number(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test attributes which are not supported by the vacuum."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN]["code"] = CODE_NUMBER
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, config)
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("alarm_control_panel.test")
     assert (
@@ -555,16 +592,21 @@ async def test_attributes_code_number(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            alarm_control_panel.DOMAIN,
+            DEFAULT_CONFIG_REMOTE_CODE,
+            ({"code": "REMOTE_CODE"},),
+        )
+    ],
+)
 async def test_attributes_remote_code_number(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test attributes which are not supported by the vacuum."""
-    config = copy.deepcopy(DEFAULT_CONFIG_REMOTE_CODE)
-    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN]["code"] = "REMOTE_CODE"
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, config)
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("alarm_control_panel.test")
     assert (
@@ -573,16 +615,19 @@ async def test_attributes_remote_code_number(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            alarm_control_panel.DOMAIN, DEFAULT_CONFIG, ({"code": CODE_TEXT},)
+        )
+    ],
+)
 async def test_attributes_code_text(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test attributes which are not supported by the vacuum."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN]["code"] = CODE_TEXT
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, config)
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("alarm_control_panel.test")
     assert (
@@ -593,70 +638,70 @@ async def test_attributes_code_text(
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG_CODE])
 async def test_availability_when_connection_lost(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_no_yaml_config, alarm_control_panel.DOMAIN
+        hass, mqtt_mock_entry, alarm_control_panel.DOMAIN
     )
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG_CODE])
 async def test_availability_without_topic(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG_CODE,
     )
 
 
 async def test_default_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG_CODE,
     )
 
 
 async def test_custom_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
     )
 
 
 async def test_setting_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
     )
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
         MQTT_ALARM_ATTRIBUTES_BLOCKED,
@@ -664,12 +709,12 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 
 
 async def test_setting_attribute_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
     )
@@ -677,13 +722,13 @@ async def test_setting_attribute_with_template(
 
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
@@ -692,13 +737,13 @@ async def test_update_with_json_attrs_not_dict(
 
 async def test_update_with_json_attrs_bad_json(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
@@ -707,13 +752,13 @@ async def test_update_with_json_attrs_bad_json(
 
 async def test_discovery_update_attr(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
@@ -744,29 +789,27 @@ async def test_discovery_update_attr(
     ],
 )
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unique id option only creates one alarm per unique_id."""
-    await help_test_unique_id(
-        hass, mqtt_mock_entry_no_yaml_config, alarm_control_panel.DOMAIN
-    )
+    await help_test_unique_id(hass, mqtt_mock_entry, alarm_control_panel.DOMAIN)
 
 
 async def test_discovery_removal_alarm(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered alarm_control_panel."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN])
     await help_test_discovery_removal(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, alarm_control_panel.DOMAIN, data
+        hass, mqtt_mock_entry, caplog, alarm_control_panel.DOMAIN, data
     )
 
 
 async def test_discovery_update_alarm_topic_and_template(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered alarm_control_panel."""
@@ -791,7 +834,7 @@ async def test_discovery_update_alarm_topic_and_template(
 
     await help_test_discovery_update(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         alarm_control_panel.DOMAIN,
         config1,
@@ -803,7 +846,7 @@ async def test_discovery_update_alarm_topic_and_template(
 
 async def test_discovery_update_alarm_template(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered alarm_control_panel."""
@@ -826,7 +869,7 @@ async def test_discovery_update_alarm_template(
 
     await help_test_discovery_update(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         alarm_control_panel.DOMAIN,
         config1,
@@ -838,7 +881,7 @@ async def test_discovery_update_alarm_template(
 
 async def test_discovery_update_unchanged_alarm(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered alarm_control_panel."""
@@ -851,7 +894,7 @@ async def test_discovery_update_unchanged_alarm(
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,
-            mqtt_mock_entry_no_yaml_config,
+            mqtt_mock_entry,
             caplog,
             alarm_control_panel.DOMAIN,
             data1,
@@ -862,7 +905,7 @@ async def test_discovery_update_unchanged_alarm(
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
@@ -874,7 +917,7 @@ async def test_discovery_broken(
     )
     await help_test_discovery_broken(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         alarm_control_panel.DOMAIN,
         data1,
@@ -891,14 +934,14 @@ async def test_discovery_broken(
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     topic: str,
     value: str,
 ) -> None:
     """Test handling of incoming encoded payload."""
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN],
         topic,
@@ -907,81 +950,81 @@ async def test_encoding_subscribable_topics(
 
 
 async def test_entity_device_info_with_connection(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT alarm control panel device registry integration."""
     await help_test_entity_device_info_with_connection(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
     )
 
 
 async def test_entity_device_info_with_identifier(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT alarm control panel device registry integration."""
     await help_test_entity_device_info_with_identifier(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
     )
 
 
 async def test_entity_device_info_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry update."""
     await help_test_entity_device_info_update(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
     )
 
 
 async def test_entity_device_info_remove(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
     )
 
 
 async def test_entity_id_update_subscriptions(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry_no_yaml_config, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_discovery_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
     )
 
 
 async def test_entity_debug_info_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
         alarm_control_panel.SERVICE_ALARM_DISARM,
@@ -1014,7 +1057,7 @@ async def test_entity_debug_info_message(
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     service: str,
     topic: str,
@@ -1030,7 +1073,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         domain,
         config,
@@ -1054,23 +1097,45 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup manual configured MQTT entity."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     platform = alarm_control_panel.DOMAIN
     assert hass.states.get(f"{platform}.test")
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = alarm_control_panel.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_no_yaml_config, domain, config
+        hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    ("expected_friendly_name", "device_class"),
+    [("test", None)],
+)
+async def test_entity_name(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_friendly_name: str | None,
+    device_class: str | None,
+) -> None:
+    """Test the entity name setup."""
+    domain = alarm_control_panel.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_name(
+        hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
     )

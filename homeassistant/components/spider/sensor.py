@@ -32,6 +32,8 @@ async def async_setup_entry(
 class SpiderPowerPlugEnergy(SensorEntity):
     """Representation of a Spider Power Plug (energy)."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "total_energy_today"
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -57,11 +59,6 @@ class SpiderPowerPlugEnergy(SensorEntity):
         return f"{self.power_plug.id}_total_energy_today"
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor if any."""
-        return f"{self.power_plug.name} Total Energy Today"
-
-    @property
     def native_value(self) -> float:
         """Return todays energy usage in Kwh."""
         return round(self.power_plug.today_energy_consumption / 1000, 2)
@@ -74,6 +71,8 @@ class SpiderPowerPlugEnergy(SensorEntity):
 class SpiderPowerPlugPower(SensorEntity):
     """Representation of a Spider Power Plug (power)."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "power_consumption"
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfPower.WATT
@@ -97,11 +96,6 @@ class SpiderPowerPlugPower(SensorEntity):
     def unique_id(self) -> str:
         """Return the ID of this sensor."""
         return f"{self.power_plug.id}_power_consumption"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor if any."""
-        return f"{self.power_plug.name} Power Consumption"
 
     @property
     def native_value(self) -> float:

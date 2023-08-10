@@ -8,13 +8,15 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import humidifier, mqtt
 from homeassistant.components.humidifier import (
+    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MODE,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
+    HumidifierAction,
 )
-from homeassistant.components.mqtt import CONFIG_SCHEMA
+from homeassistant.components.mqtt.const import CONF_CURRENT_HUMIDITY_TOPIC
 from homeassistant.components.mqtt.humidifier import (
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
@@ -34,7 +36,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -130,36 +131,31 @@ async def async_set_humidity(
     await hass.services.async_call(DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True)
 
 
+@pytest.mark.parametrize(
+    "hass_config", [{mqtt.DOMAIN: {humidifier.DOMAIN: {"name": "test"}}}]
+)
 async def test_fail_setup_if_no_command_topic(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test if command fails with command topic."""
-    assert not await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {mqtt.DOMAIN: {humidifier.DOMAIN: {"name": "test"}}},
-    )
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['humidifier'][0]['command_topic']. Got None"
-        in caplog.text
-    )
-
-
-async def test_controlling_state_via_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the controlling state via topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+    """Test if command fails with command topic."""
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 humidifier.DOMAIN: {
                     "name": "test",
+                    "action_topic": "action-topic",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
+                    "current_humidity_topic": "current-humidity-topic",
                     "payload_off": "StAtE_OfF",
                     "payload_on": "StAtE_On",
                     "target_humidity_state_topic": "humidity-state-topic",
@@ -178,22 +174,31 @@ async def test_controlling_state_via_topic(
                     "payload_reset_mode": "rEset_mode",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic."""
+    await mqtt_mock_entry()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    assert not state.attributes.get(humidifier.ATTR_ACTION)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
+    assert not state.attributes.get(humidifier.ATTR_ACTION)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_OfF")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_OFF
+    assert not state.attributes.get(humidifier.ATTR_ACTION)
 
     async_fire_mqtt_message(hass, "humidity-state-topic", "0")
     state = hass.states.get("humidifier.test")
@@ -223,6 +228,26 @@ async def test_controlling_state_via_topic(
     assert "not a valid mode" in caplog.text
     caplog.clear()
 
+    async_fire_mqtt_message(hass, "current-humidity-topic", "48")
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 48
+
+    async_fire_mqtt_message(hass, "current-humidity-topic", "101")
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 48
+
+    async_fire_mqtt_message(hass, "current-humidity-topic", "-1.6")
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 48
+
+    async_fire_mqtt_message(hass, "current-humidity-topic", "43.6")
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 44
+
+    async_fire_mqtt_message(hass, "current-humidity-topic", "invalid")
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 44
+
     async_fire_mqtt_message(hass, "mode-state-topic", "auto")
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
@@ -250,23 +275,47 @@ async def test_controlling_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "None")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(humidifier.ATTR_ACTION)
+
+    # Turn un the humidifier
+    async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
+    state = hass.states.get("humidifier.test")
+    assert state.state == STATE_ON
+    assert not state.attributes.get(humidifier.ATTR_ACTION)
+
+    async_fire_mqtt_message(hass, "action-topic", HumidifierAction.DRYING.value)
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.DRYING
+
+    async_fire_mqtt_message(hass, "action-topic", HumidifierAction.HUMIDIFYING.value)
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+
+    async_fire_mqtt_message(hass, "action-topic", HumidifierAction.HUMIDIFYING.value)
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+
+    async_fire_mqtt_message(hass, "action-topic", "invalid_action")
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+
+    async_fire_mqtt_message(hass, "state-topic", "StAtE_OfF")
+    state = hass.states.get("humidifier.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.OFF
 
 
-async def test_controlling_state_via_topic_and_json_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic and JSON message."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 humidifier.DOMAIN: {
                     "name": "test",
+                    "action_topic": "action-topic",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
+                    "current_humidity_topic": "current-humidity-topic",
                     "target_humidity_state_topic": "humidity-state-topic",
                     "target_humidity_command_topic": "humidity-command-topic",
                     "mode_state_topic": "mode-state-topic",
@@ -276,15 +325,24 @@ async def test_controlling_state_via_topic_and_json_message(
                         "eco",
                         "baby",
                     ],
+                    "current_humidity_template": "{{ value_json.val }}",
+                    "action_template": "{{ value_json.val }}",
                     "state_value_template": "{{ value_json.val }}",
                     "target_humidity_state_template": "{{ value_json.val }}",
                     "mode_state_template": "{{ value_json.val }}",
                 }
             }
-        },
-    )
+        }
+    ],
+)
+async def test_controlling_state_via_topic_and_json_message(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic and JSON message."""
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -312,6 +370,22 @@ async def test_controlling_state_via_topic_and_json_message(
 
     async_fire_mqtt_message(hass, "humidity-state-topic", '{"otherval": 100}')
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
+    caplog.clear()
+
+    async_fire_mqtt_message(hass, "current-humidity-topic", '{"val": 1}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 1
+
+    async_fire_mqtt_message(hass, "current-humidity-topic", '{"val": 100}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 100
+
+    async_fire_mqtt_message(hass, "current-humidity-topic", '{"val": "None"}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) is None
+
+    async_fire_mqtt_message(hass, "current-humidity-topic", '{"otherval": 100}')
+    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) is None
     caplog.clear()
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"val": "low"}')
@@ -342,16 +416,39 @@ async def test_controlling_state_via_topic_and_json_message(
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
 
+    # Make sure the humidifier is ON
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"ON"}')
+    state = hass.states.get("humidifier.test")
+    assert state.state == STATE_ON
 
-async def test_controlling_state_via_topic_and_json_message_shared_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic and JSON message using a shared topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+    async_fire_mqtt_message(hass, "action-topic", '{"val": "drying"}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.DRYING
+
+    async_fire_mqtt_message(hass, "action-topic", '{"val": "humidifying"}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+
+    async_fire_mqtt_message(hass, "action-topic", '{"val": null}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+
+    async_fire_mqtt_message(hass, "action-topic", '{"otherval": "idle"}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+
+    async_fire_mqtt_message(hass, "action-topic", '{"val": "idle"}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.IDLE
+
+    async_fire_mqtt_message(hass, "action-topic", '{"val": "off"}')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.OFF
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 humidifier.DOMAIN: {
@@ -372,10 +469,16 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
                     "mode_state_template": "{{ value_json.mode }}",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic_and_json_message_shared_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic and JSON message using a shared topic."""
+    await mqtt_mock_entry()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -422,15 +525,9 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     caplog.clear()
 
 
-async def test_sending_mqtt_commands_and_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test optimistic mode without state topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 humidifier.DOMAIN: {
@@ -447,10 +544,16 @@ async def test_sending_mqtt_commands_and_optimistic(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_optimistic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test optimistic mode without state topic."""
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -521,15 +624,9 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_command_templates_(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Testing command templates with optimistic mode without state topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 humidifier.DOMAIN: {
@@ -547,10 +644,16 @@ async def test_sending_mqtt_command_templates_(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_command_templates_(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Testing command templates with optimistic mode without state topic."""
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -621,15 +724,9 @@ async def test_sending_mqtt_command_templates_(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_and_explicit_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test optimistic mode with state topic and turn on attributes."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 humidifier.DOMAIN: {
@@ -648,10 +745,16 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
                     "optimistic": True,
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_explicit_optimistic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test optimistic mode with state topic and turn on attributes."""
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -748,11 +851,12 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
         ("state_topic", "ON", None, "on"),
         (CONF_MODE_STATE_TOPIC, "auto", ATTR_MODE, "auto"),
         (CONF_TARGET_HUMIDITY_STATE_TOPIC, "45", ATTR_HUMIDITY, 45),
+        (CONF_CURRENT_HUMIDITY_TOPIC, "39", ATTR_CURRENT_HUMIDITY, 39),
     ],
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     topic: str,
     value: str,
     attribute: str | None,
@@ -764,7 +868,7 @@ async def test_encoding_subscribable_topics(
     config[CONF_MODE_COMMAND_TOPIC] = "humidifier/some_mode_command_topic"
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         humidifier.DOMAIN,
         config,
         topic,
@@ -774,15 +878,9 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_attributes(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test attributes."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 humidifier.DOMAIN: {
@@ -796,10 +894,16 @@ async def test_attributes(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_attributes(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes."""
+    await mqtt_mock_entry()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -826,105 +930,155 @@ async def test_attributes(
 
 
 @pytest.mark.parametrize(
-    ("config", "valid"),
+    ("hass_config", "valid"),
     [
         (
             {
-                "name": "test_valid_1",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_valid_1",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                    }
+                }
             },
             True,
         ),
         (
             {
-                "name": "test_valid_2",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "device_class": "humidifier",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_valid_2",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "device_class": "humidifier",
+                    }
+                }
             },
             True,
         ),
         (
             {
-                "name": "test_valid_3",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "device_class": "dehumidifier",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_valid_3",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "device_class": "dehumidifier",
+                    }
+                }
             },
             True,
         ),
         (
             {
-                "name": "test_invalid_device_class",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "device_class": "notsupporedSpeci@l",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_valid_4",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "device_class": None,
+                    }
+                }
+            },
+            True,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_invalid_device_class",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "device_class": "notsupporedSpeci@l",
+                    }
+                }
             },
             False,
         ),
         (
             {
-                "name": "test_mode_command_without_modes",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "mode_command_topic": "mode-command-topic",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_mode_command_without_modes",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "mode_command_topic": "mode-command-topic",
+                    }
+                }
             },
             False,
         ),
         (
             {
-                "name": "test_invalid_humidity_min_max_1",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "min_humidity": 0,
-                "max_humidity": 101,
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_invalid_humidity_min_max_1",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "min_humidity": 0,
+                        "max_humidity": 101,
+                    }
+                }
             },
             False,
         ),
         (
             {
-                "name": "test_invalid_humidity_min_max_2",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "max_humidity": 20,
-                "min_humidity": 40,
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_invalid_humidity_min_max_2",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "max_humidity": 20,
+                        "min_humidity": 40,
+                    }
+                }
             },
             False,
         ),
         (
             {
-                "name": "test_invalid_mode_is_reset",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "mode_command_topic": "mode-command-topic",
-                "modes": ["eco", "None"],
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test_invalid_mode_is_reset",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "mode_command_topic": "mode-command-topic",
+                        "modes": ["eco", "None"],
+                    }
+                }
             },
             False,
         ),
     ],
 )
-async def test_validity_configurations(hass: HomeAssistant, config, valid) -> None:
+async def test_validity_configurations(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    valid: bool,
+) -> None:
     """Test validity of configurations."""
-    assert (
-        await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            {mqtt.DOMAIN: {humidifier.DOMAIN: config}},
-        )
-        is valid
-    )
+    if valid:
+        await mqtt_mock_entry()
+        return
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize(
-    ("name", "config", "success", "features"),
+    ("name", "hass_config", "success", "features"),
     [
         (
             "test1",
             {
-                "name": "test1",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test1",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                    }
+                }
             },
             True,
             0,
@@ -932,21 +1086,29 @@ async def test_validity_configurations(hass: HomeAssistant, config, valid) -> No
         (
             "test2",
             {
-                "name": "test2",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "mode_command_topic": "mode-command-topic",
-                "modes": ["eco", "auto"],
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test2",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "mode_command_topic": "mode-command-topic",
+                        "modes": ["eco", "auto"],
+                    }
+                }
             },
             True,
-            humidifier.SUPPORT_MODES,
+            humidifier.HumidifierEntityFeature.MODES,
         ),
         (
             "test3",
             {
-                "name": "test3",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test3",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                    }
+                }
             },
             True,
             0,
@@ -954,20 +1116,28 @@ async def test_validity_configurations(hass: HomeAssistant, config, valid) -> No
         (
             "test4",
             {
-                "name": "test4",
-                "command_topic": "command-topic",
-                "target_humidity_command_topic": "humidity-command-topic",
-                "mode_command_topic": "mode-command-topic",
-                "modes": ["eco", "auto"],
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test4",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "mode_command_topic": "mode-command-topic",
+                        "modes": ["eco", "auto"],
+                    }
+                }
             },
             True,
-            humidifier.SUPPORT_MODES,
+            humidifier.HumidifierEntityFeature.MODES,
         ),
         (
             "test5",
             {
-                "name": "test5",
-                "command_topic": "command-topic",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test5",
+                        "command_topic": "command-topic",
+                    }
+                }
             },
             False,
             None,
@@ -975,8 +1145,12 @@ async def test_validity_configurations(hass: HomeAssistant, config, valid) -> No
         (
             "test6",
             {
-                "name": "test6",
-                "target_humidity_command_topic": "humidity-command-topic",
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
+                        "name": "test6",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                    }
+                }
             },
             False,
             None,
@@ -985,56 +1159,49 @@ async def test_validity_configurations(hass: HomeAssistant, config, valid) -> No
 )
 async def test_supported_features(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    name,
-    config,
-    success,
-    features,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    name: str,
+    success: bool,
+    features: humidifier.HumidifierEntityFeature | None,
 ) -> None:
     """Test supported features."""
-    assert (
-        await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            {mqtt.DOMAIN: {humidifier.DOMAIN: config}},
-        )
-        is success
-    )
     if success:
-        await hass.async_block_till_done()
-        await mqtt_mock_entry_with_yaml_config()
+        await mqtt_mock_entry()
 
         state = hass.states.get(f"humidifier.{name}")
         assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == features
+        return
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_when_connection_lost(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN
+        hass, mqtt_mock_entry, humidifier.DOMAIN
     )
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_without_topic(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_default_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
         True,
@@ -1044,12 +1211,12 @@ async def test_default_availability_payload(
 
 
 async def test_custom_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
         True,
@@ -1059,21 +1226,21 @@ async def test_custom_availability_payload(
 
 
 async def test_setting_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
         MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED,
@@ -1081,23 +1248,23 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 
 
 async def test_setting_attribute_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
@@ -1106,13 +1273,13 @@ async def test_update_with_json_attrs_not_dict(
 
 async def test_update_with_json_attrs_bad_json(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
@@ -1121,13 +1288,13 @@ async def test_update_with_json_attrs_bad_json(
 
 async def test_discovery_update_attr(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
@@ -1160,27 +1327,27 @@ async def test_discovery_update_attr(
     ],
 )
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unique_id option only creates one fan per id."""
-    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN)
+    await help_test_unique_id(hass, mqtt_mock_entry, humidifier.DOMAIN)
 
 
 async def test_discovery_removal_humidifier(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered humidifier."""
     data = '{ "name": "test", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     await help_test_discovery_removal(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, humidifier.DOMAIN, data
+        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, data
     )
 
 
 async def test_discovery_update_humidifier(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered humidifier."""
@@ -1196,7 +1363,7 @@ async def test_discovery_update_humidifier(
     }
     await help_test_discovery_update(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         humidifier.DOMAIN,
         config1,
@@ -1206,7 +1373,7 @@ async def test_discovery_update_humidifier(
 
 async def test_discovery_update_unchanged_humidifier(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered humidifier."""
@@ -1216,7 +1383,7 @@ async def test_discovery_update_unchanged_humidifier(
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,
-            mqtt_mock_entry_no_yaml_config,
+            mqtt_mock_entry,
             caplog,
             humidifier.DOMAIN,
             data1,
@@ -1227,78 +1394,78 @@ async def test_discovery_update_unchanged_humidifier(
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     await help_test_discovery_broken(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, humidifier.DOMAIN, data1, data2
+        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, data1, data2
     )
 
 
 async def test_entity_device_info_with_connection(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT fan device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_with_identifier(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT fan device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_remove(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_subscriptions(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_discovery_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_debug_info_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
         humidifier.SERVICE_TURN_ON,
@@ -1340,7 +1507,7 @@ async def test_entity_debug_info_message(
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     service: str,
     topic: str,
@@ -1356,7 +1523,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         domain,
         config,
@@ -1378,34 +1545,27 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup manual configured MQTT entity."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     platform = humidifier.DOMAIN
     assert hass.states.get(f"{platform}.test")
 
 
-async def test_config_schema_validation(hass: HomeAssistant) -> None:
-    """Test invalid platform options in the config schema do not pass the config validation."""
-    platform = humidifier.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][platform])
-    config["name"] = "test"
-    CONFIG_SCHEMA({mqtt.DOMAIN: {platform: config}})
-    CONFIG_SCHEMA({mqtt.DOMAIN: {platform: [config]}})
-    with pytest.raises(MultipleInvalid):
-        CONFIG_SCHEMA({mqtt.DOMAIN: {platform: [{"bla": "bla"}]}})
-
-
 async def test_unload_config_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = humidifier.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_no_yaml_config, domain, config
+        hass, mqtt_mock_entry, domain, config
     )

@@ -1,9 +1,11 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from __future__ import annotations
 
+import asyncio
 import datetime
 from typing import Any
 
+from aiohttp import ClientConnectionError
 import aiosomecomfort
 
 from homeassistant.components.climate import (
@@ -99,6 +101,7 @@ class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -212,9 +215,9 @@ class HoneywellUSThermostat(ClimateEntity):
         return self._device.current_humidity
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
+        return HW_MODE_TO_HVAC_MODE.get(self._device.system_mode)
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -341,12 +344,8 @@ class HoneywellUSThermostat(ClimateEntity):
         it doesn't get overwritten when away mode is switched on.
         """
         self._away = True
-        try:
-            # Get current mode
-            mode = self._device.system_mode
-        except aiosomecomfort.SomeComfortError:
-            _LOGGER.error("Can not get system mode")
-            return
+        # Get current mode
+        mode = self._device.system_mode
         try:
             # Set permanent hold
             # and Set temperature
@@ -365,12 +364,8 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def _turn_hold_mode_on(self) -> None:
         """Turn permanent hold on."""
-        try:
-            # Get current mode
-            mode = self._device.system_mode
-        except aiosomecomfort.SomeComfortError:
-            _LOGGER.error("Can not get system mode")
-            return
+        # Get current mode
+        mode = self._device.system_mode
         # Check that we got a valid mode back
         if mode in HW_MODE_TO_HVAC_MODE:
             try:
@@ -421,17 +416,16 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.refresh()
             self._attr_available = True
-        except (
-            aiosomecomfort.SomeComfortError,
-            OSError,
-        ):
+        except aiosomecomfort.SomeComfortError:
             try:
                 await self._data.client.login()
 
-            except aiosomecomfort.AuthError:
+            except (
+                aiosomecomfort.SomeComfortError,
+                ClientConnectionError,
+                asyncio.TimeoutError,
+            ):
                 self._attr_available = False
-                await self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._data.entry_id)
-                )
-            except aiosomecomfort.SomeComfortError:
-                self._attr_available = False
+
+        except (ClientConnectionError, asyncio.TimeoutError):
+            self._attr_available = False

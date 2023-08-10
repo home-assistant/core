@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import json
 import logging
 import math
 import random
@@ -10,6 +11,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import orjson
 import pytest
 import voluptuous as vol
 
@@ -17,14 +19,15 @@ from homeassistant.components import group
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_METERS,
-    LENGTH_MILLIMETERS,
-    MASS_GRAMS,
     STATE_ON,
-    TEMP_CELSIUS,
+    STATE_UNAVAILABLE,
     VOLUME_LITERS,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -42,19 +45,19 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _set_up_units(hass: HomeAssistant) -> None:
     """Set up the tests."""
     hass.config.units = UnitSystem(
         "custom",
-        accumulated_precipitation=LENGTH_MILLIMETERS,
+        accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
         conversions={},
-        length=LENGTH_METERS,
-        mass=MASS_GRAMS,
+        length=UnitOfLength.METERS,
+        mass=UnitOfMass.GRAMS,
         pressure=UnitOfPressure.PA,
-        temperature=TEMP_CELSIUS,
+        temperature=UnitOfTemperature.CELSIUS,
         volume=VOLUME_LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
     )
@@ -97,14 +100,14 @@ def assert_result_info(
     assert info.filter("invalid_entity_name.somewhere") == all_states
     if entities is not None:
         assert info.entities == frozenset(entities)
-        assert all([info.filter(entity) for entity in entities])
+        assert all(info.filter(entity) for entity in entities)
         if not all_states:
             assert not info.filter("invalid_entity_name.somewhere")
     else:
         assert not info.entities
     if domains is not None:
         assert info.domains == frozenset(domains)
-        assert all([info.filter(domain + ".entity") for domain in domains])
+        assert all(info.filter(domain + ".entity") for domain in domains)
     else:
         assert not hasattr(info, "_domains")
 
@@ -120,7 +123,7 @@ def test_template_equality() -> None:
     assert hash(template_one) == hash(template_one_1)
     assert hash(template_one) != hash(template_two)
 
-    assert str(template_one_1) == 'Template("{{ template_one }}")'
+    assert str(template_one_1) == "Template<template=({{ template_one }}) renders=0>"
 
     with pytest.raises(TypeError):
         template.Template(["{{ template_one }}"])
@@ -184,7 +187,7 @@ def test_raise_exception_on_error(hass: HomeAssistant) -> None:
 
 def test_iterating_all_states(hass: HomeAssistant) -> None:
     """Test iterating all states."""
-    tmpl_str = "{% for state in states %}{{ state.state }}{% endfor %}"
+    tmpl_str = "{% for state in states | sort(attribute='entity_id') %}{{ state.state }}{% endfor %}"
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", all_states=True)
@@ -244,8 +247,8 @@ def test_iterating_domain_states(hass: HomeAssistant) -> None:
 
 
 async def test_import(hass: HomeAssistant) -> None:
-    """Test that imports work from the config/custom_jinja folder."""
-    await template.async_load_custom_jinja(hass)
+    """Test that imports work from the config/custom_templates folder."""
+    await template.async_load_custom_templates(hass)
     assert "test.jinja" in template._get_hass_loader(hass).sources
     assert "inner/inner_test.jinja" in template._get_hass_loader(hass).sources
     assert (
@@ -282,7 +285,7 @@ async def test_import(hass: HomeAssistant) -> None:
 
 async def test_import_change(hass: HomeAssistant) -> None:
     """Test that a change in HassLoader results in updated imports."""
-    await template.async_load_custom_jinja(hass)
+    await template.async_load_custom_templates(hass)
     to_test = template.Template(
         """
         {% import 'test.jinja' as t %}
@@ -1046,20 +1049,50 @@ def test_to_json(hass: HomeAssistant) -> None:
     ).async_render()
     assert actual_result == expected_result
 
+    expected_result = orjson.dumps({"Foo": "Bar"}, option=orjson.OPT_INDENT_2).decode()
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
 
-def test_to_json_string(hass: HomeAssistant) -> None:
+    expected_result = orjson.dumps(
+        {"Z": 26, "A": 1, "M": 13}, option=orjson.OPT_SORT_KEYS
+    ).decode()
+    actual_result = template.Template(
+        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ {'Foo': now()} | to_json }}", hass).async_render()
+
+
+def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
     """Test the object to JSON string filter."""
 
     # Note that we're not testing the actual json.loads and json.dumps methods,
     # only the filters, so we don't need to be exhaustive with our sample JSON.
     actual_value_ascii = template.Template(
-        "{{ 'Bar ҝ éèà' | to_json }}", hass
+        "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=True) }}", hass
     ).async_render()
     assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
     actual_value = template.Template(
         "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}", hass
     ).async_render()
     assert actual_value == '"Bar ҝ éèà"'
+
+    expected_result = json.dumps({"Foo": "Bar"}, indent=2)
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True, ensure_ascii=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
+
+    expected_result = json.dumps({"Z": 26, "A": 1, "M": 13}, sort_keys=True)
+    actual_result = template.Template(
+        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True, ensure_ascii=True) }}",
+        hass,
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
 
 
 def test_from_json(hass: HomeAssistant) -> None:
@@ -1169,32 +1202,28 @@ def test_min_max_attribute(hass: HomeAssistant, attribute) -> None:
     )
     assert (
         template.Template(
-            "{{ (state_attr('test.object', 'objects') | min(attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (state_attr('test.object', 'objects') | min(attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 1
     )
     assert (
         template.Template(
-            "{{ (min(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (min(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 1
     )
     assert (
         template.Template(
-            "{{ (state_attr('test.object', 'objects') | max(attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (state_attr('test.object', 'objects') | max(attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 3
     )
     assert (
         template.Template(
-            "{{ (max(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (max(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 3
@@ -1462,6 +1491,11 @@ def test_is_hidden_entity(
         hass,
     ).async_render()
 
+    assert not template.Template(
+        f"{{{{ ['{visible_entity.entity_id}'] | select('is_hidden_entity') | first }}}}",
+        hass,
+    ).async_render()
+
 
 def test_is_state(hass: HomeAssistant) -> None:
     """Test is_state method."""
@@ -1607,6 +1641,44 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
+def test_has_value(hass: HomeAssistant) -> None:
+    """Test has_value method."""
+    hass.states.async_set("test.value1", 1)
+    hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
+
+    tpl = template.Template(
+        """
+{{ has_value("test.value1") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unavailable") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unknown") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{% if "test.value1" is has_value %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
@@ -1696,6 +1768,11 @@ def test_today_at(
     with pytest.raises(TemplateError):
         template.Template("{{ today_at('bad') }}", hass).async_render()
 
+    info = template.Template(
+        "{{ today_at('10:00').isoformat() }}", hass
+    ).async_render_to_info()
+    assert info.has_time is True
+
     freezer.stop()
 
 
@@ -1707,9 +1784,12 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
     hass.config.set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    relative_time_template = (
+        '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
+    )
     with patch("homeassistant.util.dt.now", return_value=now):
         result = template.Template(
-            '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+            relative_time_template,
             hass,
         ).async_render()
         assert result == "1 hour"
@@ -1767,6 +1847,9 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
             hass,
         ).async_render()
         assert result == "string"
+
+        info = template.Template(relative_time_template, hass).async_render_to_info()
+        assert info.has_time is True
 
 
 @patch(
@@ -2236,8 +2319,7 @@ def test_distance_function_with_2_coords(hass: HomeAssistant) -> None:
     _set_up_units(hass)
     assert (
         template.Template(
-            '{{ distance("32.87336", "-117.22943", %s, %s) | round }}'
-            % (hass.config.latitude, hass.config.longitude),
+            f'{{{{ distance("32.87336", "-117.22943", {hass.config.latitude}, {hass.config.longitude}) | round }}}}',
             hass,
         ).async_render()
         == 187
@@ -2456,20 +2538,22 @@ async def test_expand(hass: HomeAssistant) -> None:
     hass.states.async_set("test.object", "happy")
 
     info = render_to_info(
-        hass, "{{ expand('test.object') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('test.object') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", ["test.object"])
     assert info.rate_limit is None
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
+        "{{ expand('group.new_group') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "", ["group.new_group"])
     assert info.rate_limit is None
 
     info = render_to_info(
-        hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand(states.group) | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "", [], ["group"])
     assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
@@ -2480,13 +2564,14 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
+        "{{ expand('group.new_group') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", {"group.new_group", "test.object"})
     assert info.rate_limit is None
 
     info = render_to_info(
-        hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand(states.group) | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", {"test.object"}, ["group"])
     assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
@@ -2495,7 +2580,7 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ expand('group.new_group', 'test.object')"
-            " | map(attribute='entity_id') | join(', ') }}"
+            " | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
@@ -2504,7 +2589,7 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ ['group.new_group', 'test.object'] | expand"
-            " | map(attribute='entity_id') | join(', ') }}"
+            " | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
@@ -2524,7 +2609,7 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ states.group.power_sensors.attributes.entity_id | expand "
-            "| map(attribute='state')|map('float')|sum  }}"
+            "| sort(attribute='entity_id') | map(attribute='state')|map('float')|sum  }}"
         ),
     )
     assert_result_info(
@@ -2552,7 +2637,8 @@ async def test_expand(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     info = render_to_info(
-        hass, "{{ expand('light.grouped') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('light.grouped') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(
         info,
@@ -2574,7 +2660,8 @@ async def test_expand(hass: HomeAssistant) -> None:
         },
     )
     info = render_to_info(
-        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(
         info,
@@ -2589,7 +2676,8 @@ async def test_expand(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     info = render_to_info(
-        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(
         info,
@@ -2604,7 +2692,8 @@ async def test_expand(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     info = render_to_info(
-        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(
         info,
@@ -2620,6 +2709,7 @@ async def test_device_entities(
 ) -> None:
     """Test device_entities function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device ids
     info = render_to_info(hass, "{{ device_entities('abc123') }}")
@@ -2654,7 +2744,7 @@ async def test_device_entities(
         hass,
         (
             f"{{{{ device_entities('{device_entry.id}') | expand "
-            "| map(attribute='entity_id') | join(', ') }}"
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "", ["light.hue_5678"])
@@ -2666,7 +2756,7 @@ async def test_device_entities(
         hass,
         (
             f"{{{{ device_entities('{device_entry.id}') | expand "
-            "| map(attribute='entity_id') | join(', ') }}"
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "light.hue_5678", ["light.hue_5678"])
@@ -2688,7 +2778,7 @@ async def test_device_entities(
         hass,
         (
             f"{{{{ device_entities('{device_entry.id}') | expand "
-            "| map(attribute='entity_id') | join(', ') }}"
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(
@@ -2769,6 +2859,7 @@ async def test_device_id(
 ) -> None:
     """Test device_id function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -2814,6 +2905,7 @@ async def test_device_attr(
 ) -> None:
     """Test device_attr and is_device_attr functions."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device ids (device_attr)
     info = render_to_info(hass, "{{ device_attr('abc123', 'id') }}")
@@ -2960,6 +3052,7 @@ async def test_area_id(
 ) -> None:
     """Test area_id function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing entity id
     info = render_to_info(hass, "{{ area_id('sensor.fake') }}")
@@ -3066,6 +3159,7 @@ async def test_area_name(
 ) -> None:
     """Test area_name function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing entity id
     info = render_to_info(hass, "{{ area_name('sensor.fake') }}")
@@ -3147,6 +3241,7 @@ async def test_area_entities(
 ) -> None:
     """Test area_entities function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device id
     info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
@@ -3201,6 +3296,7 @@ async def test_area_devices(
 ) -> None:
     """Test area_devices function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device id
     info = render_to_info(hass, "{{ area_devices('deadbeef') }}")
@@ -3258,16 +3354,14 @@ def test_closest_function_to_coord(hass: HomeAssistant) -> None:
     )
 
     tpl = template.Template(
-        '{{ closest("%s", %s, states.test_domain).entity_id }}'
-        % (hass.config.latitude + 0.3, hass.config.longitude + 0.3),
+        f'{{{{ closest("{hass.config.latitude + 0.3}", {hass.config.longitude + 0.3}, states.test_domain).entity_id }}}}',
         hass,
     )
 
     assert tpl.async_render() == "test_domain.closest_zone"
 
     tpl = template.Template(
-        '{{ (states.test_domain | closest("%s", %s)).entity_id }}'
-        % (hass.config.latitude + 0.3, hass.config.longitude + 0.3),
+        f'{{{{ (states.test_domain | closest("{hass.config.latitude + 0.3}", {hass.config.longitude + 0.3})).entity_id }}}}',
         hass,
     )
 
@@ -3329,7 +3423,7 @@ def test_async_render_to_info_with_complex_branching(hass: HomeAssistant) -> Non
 {%     elif     states.light.a == "on" %}
   {{ states[domain] | list }}
 {%         elif     states('light.b') == "on" %}
-  {{ states[otherdomain] | map(attribute='entity_id') | list }}
+  {{ states[otherdomain] | sort(attribute='entity_id') | map(attribute='entity_id') | list }}
 {% elif states.light.a == "on" %}
   {{ states["nonexist"] | list }}
 {% else %}
@@ -3350,7 +3444,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(
     template_complex_str = r"""
 
 {% for state in states.cover %}
-  {% if state.entity_id | regex_match('.*\.office_') %}
+  {% if state.entity_id | regex_match('.*\\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -3802,6 +3896,8 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
     hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set("sensor.test3", "-0.0", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set("sensor.test4", "-0", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
 
     # state_with_unit property
     tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)
@@ -3818,6 +3914,8 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
     # AllStates.__call__ and rounded=True
     tpl7 = template.Template("{{ states('sensor.test', rounded=True) }}", hass)
     tpl8 = template.Template("{{ states('sensor.test2', rounded=True) }}", hass)
+    tpl9 = template.Template("{{ states('sensor.test3', rounded=True) }}", hass)
+    tpl10 = template.Template("{{ states('sensor.test4', rounded=True) }}", hass)
 
     assert tpl.async_render() == "23.00 beers"
     assert tpl2.async_render() == "23 beers"
@@ -3827,6 +3925,8 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
     assert tpl6.async_render() == "23 beers"
     assert tpl7.async_render() == 23.0
     assert tpl8.async_render() == 23
+    assert tpl9.async_render() == 0.0
+    assert tpl10.async_render() == 0
 
     hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
     hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
@@ -4150,7 +4250,7 @@ async def test_lights(hass: HomeAssistant) -> None:
     """Test we can sort lights."""
 
     tmpl = """
-          {% set lights_on = states.light|selectattr('state','eq','on')|map(attribute='name')|list %}
+          {% set lights_on = states.light|selectattr('state','eq','on')|sort(attribute='entity_id')|map(attribute='name')|list %}
           {% if lights_on|length == 0 %}
             No lights on. Sleep well..
           {% elif lights_on|length == 1 %}
@@ -4253,7 +4353,7 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
     tpl = template.Template(
         (
             "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| map(attribute='entity_id') | list | join(', ') }}"
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | list | join(', ') }}"
         ),
         hass,
     )
@@ -4263,7 +4363,7 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
         (
             "{{ states.light "
             "| selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| map(attribute='entity_id') | list "
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | list "
             "| join(', ') }}"
         ),
         hass,
@@ -4435,3 +4535,46 @@ async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
 
     assert info.all_states is False
     assert info.entities == {"test_domain.object"}
+
+
+async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
+    """Test that the template internal LRU cache increases with many entities."""
+    # We do not actually want to record 4096 entities so we mock the entity count
+    mock_entity_count = 16
+
+    assert template.CACHED_TEMPLATE_LRU.get_size() == template.CACHED_TEMPLATE_STATES
+    assert (
+        template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size()
+        == template.CACHED_TEMPLATE_STATES
+    )
+    template.CACHED_TEMPLATE_LRU.set_size(8)
+    template.CACHED_TEMPLATE_NO_COLLECT_LRU.set_size(8)
+
+    template.async_setup(hass)
+    for i in range(mock_entity_count):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    assert template.CACHED_TEMPLATE_LRU.get_size() == int(
+        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
+    )
+    assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
+        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
+    )
+
+    await hass.async_stop()
+
+    for i in range(mock_entity_count):
+        hass.states.async_set(f"sensor.sensor_add_{i}", "on")
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
+    await hass.async_block_till_done()
+
+    assert template.CACHED_TEMPLATE_LRU.get_size() == int(
+        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
+    )
+    assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
+        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
+    )

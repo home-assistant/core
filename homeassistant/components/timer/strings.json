@@ -6,6 +6,61 @@
         "active": "[%key:common::state::active%]",
         "idle": "[%key:common::state::idle%]",
         "paused": "[%key:common::state::paused%]"
+      },
+      "state_attributes": {
+        "duration": {
+          "name": "Duration"
+        },
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "finishes_at": {
+          "name": "Finishes at"
+        },
+        "remaining": {
+          "name": "Remaining"
+        },
+        "restore": {
+          "name": "Restore"
+        }
+      }
+    }
+  },
+  "services": {
+    "start": {
+      "name": "[%key:common::action::start%]",
+      "description": "Starts a timer.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration the timer requires to finish. [optional]."
+        }
+      }
+    },
+    "pause": {
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses a timer."
+    },
+    "cancel": {
+      "name": "Cancel",
+      "description": "Cancels a timer."
+    },
+    "finish": {
+      "name": "Finish",
+      "description": "Finishes a timer."
+    },
+    "change": {
+      "name": "Change",
+      "description": "Changes a timer.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration to add or subtract to the running timer."
+        }
       }
     }
   }

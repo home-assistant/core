@@ -210,6 +210,7 @@ class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
     _attr_device_class = SensorDeviceClass.VOLTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False

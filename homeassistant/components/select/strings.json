@@ -14,5 +14,55 @@
     "condition_type": {
       "selected_option": "Current {entity_name} selected option"
     }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::select::title%]",
+      "state_attributes": {
+        "options": {
+          "name": "Options"
+        }
+      }
+    }
+  },
+  "services": {
+    "select_first": {
+      "name": "First",
+      "description": "Selects the first option."
+    },
+    "select_last": {
+      "name": "Last",
+      "description": "Selects the last option."
+    },
+    "select_next": {
+      "name": "Next",
+      "description": "Selects the next option.",
+      "fields": {
+        "cycle": {
+          "name": "Cycle",
+          "description": "If the option should cycle from the last to the first."
+        }
+      }
+    },
+    "select_option": {
+      "name": "Select",
+      "description": "Selects an option.",
+      "fields": {
+        "option": {
+          "name": "Option",
+          "description": "Option to be selected."
+        }
+      }
+    },
+    "select_previous": {
+      "name": "Previous",
+      "description": "Selects the previous option.",
+      "fields": {
+        "cycle": {
+          "name": "Cycle",
+          "description": "If the option should cycle from the first to the last."
+        }
+      }
+    }
   }
 }

@@ -14,10 +14,10 @@ from homeassistant.core import Event
 from homeassistant.helpers.typing import UndefinedType
 
 from . import entity_registry, purge, statistics
-from .const import DOMAIN, EXCLUDE_ATTRIBUTES
+from .const import DOMAIN
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
-from .util import periodic_db_cleanups
+from .util import periodic_db_cleanups, session_scope
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,8 @@ if TYPE_CHECKING:
     from .core import Recorder
 
 
-class RecorderTask(abc.ABC):
+@dataclass(slots=True)
+class RecorderTask:
     """ABC for recorder tasks."""
 
     commit_before = True
@@ -36,7 +37,7 @@ class RecorderTask(abc.ABC):
         """Handle the task."""
 
 
-@dataclass
+@dataclass(slots=True)
 class ChangeStatisticsUnitTask(RecorderTask):
     """Object to store statistics_id and unit to convert unit of statistics."""
 
@@ -54,7 +55,7 @@ class ChangeStatisticsUnitTask(RecorderTask):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
@@ -65,7 +66,7 @@ class ClearStatisticsTask(RecorderTask):
         statistics.clear_statistics(instance, self.statistic_ids)
 
 
-@dataclass
+@dataclass(slots=True)
 class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 
@@ -83,7 +84,7 @@ class UpdateStatisticsMetadataTask(RecorderTask):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class UpdateStatesMetadataTask(RecorderTask):
     """Task to update states metadata."""
 
@@ -99,7 +100,7 @@ class UpdateStatesMetadataTask(RecorderTask):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class PurgeTask(RecorderTask):
     """Object to store information about purge task."""
 
@@ -113,7 +114,7 @@ class PurgeTask(RecorderTask):
             instance, self.purge_before, self.repack, self.apply_filter
         ):
             with instance.get_session() as session:
-                instance.run_history.load_from_db(session)
+                instance.recorder_runs_manager.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -125,7 +126,7 @@ class PurgeTask(RecorderTask):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class PurgeEntitiesTask(RecorderTask):
     """Object to store entity information about purge task."""
 
@@ -140,7 +141,7 @@ class PurgeEntitiesTask(RecorderTask):
         instance.queue_task(PurgeEntitiesTask(self.entity_filter, self.purge_before))
 
 
-@dataclass
+@dataclass(slots=True)
 class PerodicCleanupTask(RecorderTask):
     """An object to insert into the recorder to trigger cleanup tasks.
 
@@ -152,7 +153,7 @@ class PerodicCleanupTask(RecorderTask):
         periodic_db_cleanups(instance)
 
 
-@dataclass
+@dataclass(slots=True)
 class StatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run a statistics task."""
 
@@ -167,7 +168,7 @@ class StatisticsTask(RecorderTask):
         instance.queue_task(StatisticsTask(self.start, self.fire_events))
 
 
-@dataclass
+@dataclass(slots=True)
 class CompileMissingStatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run a compile missing statistics."""
 
@@ -179,7 +180,7 @@ class CompileMissingStatisticsTask(RecorderTask):
         instance.queue_task(CompileMissingStatisticsTask())
 
 
-@dataclass
+@dataclass(slots=True)
 class ImportStatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run an import statistics task."""
 
@@ -199,7 +200,7 @@ class ImportStatisticsTask(RecorderTask):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class AdjustStatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run an adjust statistics task."""
 
@@ -229,7 +230,7 @@ class AdjustStatisticsTask(RecorderTask):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class WaitTask(RecorderTask):
     """An object to insert into the recorder queue.
 
@@ -243,7 +244,7 @@ class WaitTask(RecorderTask):
         instance._queue_watch.set()  # pylint: disable=[protected-access]
 
 
-@dataclass
+@dataclass(slots=True)
 class DatabaseLockTask(RecorderTask):
     """An object to insert into the recorder queue to prevent writes to the database."""
 
@@ -256,7 +257,7 @@ class DatabaseLockTask(RecorderTask):
         instance._lock_database(self)  # pylint: disable=[protected-access]
 
 
-@dataclass
+@dataclass(slots=True)
 class StopTask(RecorderTask):
     """An object to insert into the recorder queue to stop the event handler."""
 
@@ -267,7 +268,7 @@ class StopTask(RecorderTask):
         instance.stop_requested = True
 
 
-@dataclass
+@dataclass(slots=True)
 class EventTask(RecorderTask):
     """An event to be processed."""
 
@@ -280,7 +281,7 @@ class EventTask(RecorderTask):
         instance._process_one_event(self.event)
 
 
-@dataclass
+@dataclass(slots=True)
 class KeepAliveTask(RecorderTask):
     """A keep alive to be sent."""
 
@@ -292,7 +293,7 @@ class KeepAliveTask(RecorderTask):
         instance._send_keep_alive()
 
 
-@dataclass
+@dataclass(slots=True)
 class CommitTask(RecorderTask):
     """Commit the event session."""
 
@@ -304,7 +305,7 @@ class CommitTask(RecorderTask):
         instance._commit_event_session_or_retry()
 
 
-@dataclass
+@dataclass(slots=True)
 class AddRecorderPlatformTask(RecorderTask):
     """Add a recorder platform."""
 
@@ -317,14 +318,11 @@ class AddRecorderPlatformTask(RecorderTask):
         hass = instance.hass
         domain = self.domain
         platform = self.platform
-
         platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
         platforms[domain] = platform
-        if hasattr(self.platform, "exclude_attributes"):
-            hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
 
 
-@dataclass
+@dataclass(slots=True)
 class SynchronizeTask(RecorderTask):
     """Ensure all pending data has been committed."""
 
@@ -338,7 +336,7 @@ class SynchronizeTask(RecorderTask):
         instance.hass.loop.call_soon_threadsafe(self.event.set)
 
 
-@dataclass
+@dataclass(slots=True)
 class PostSchemaMigrationTask(RecorderTask):
     """Post migration task to update schema."""
 
@@ -352,7 +350,7 @@ class PostSchemaMigrationTask(RecorderTask):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class StatisticsTimestampMigrationCleanupTask(RecorderTask):
     """An object to insert into the recorder queue to run a statistics migration cleanup task."""
 
@@ -363,7 +361,7 @@ class StatisticsTimestampMigrationCleanupTask(RecorderTask):
             instance.queue_task(StatisticsTimestampMigrationCleanupTask())
 
 
-@dataclass
+@dataclass(slots=True)
 class AdjustLRUSizeTask(RecorderTask):
     """An object to insert into the recorder queue to adjust the LRU size."""
 
@@ -374,7 +372,7 @@ class AdjustLRUSizeTask(RecorderTask):
         instance._adjust_lru_size()  # pylint: disable=[protected-access]
 
 
-@dataclass
+@dataclass(slots=True)
 class StatesContextIDMigrationTask(RecorderTask):
     """An object to insert into the recorder queue to migrate states context ids."""
 
@@ -389,7 +387,7 @@ class StatesContextIDMigrationTask(RecorderTask):
             instance.queue_task(StatesContextIDMigrationTask())
 
 
-@dataclass
+@dataclass(slots=True)
 class EventsContextIDMigrationTask(RecorderTask):
     """An object to insert into the recorder queue to migrate events context ids."""
 
@@ -404,7 +402,7 @@ class EventsContextIDMigrationTask(RecorderTask):
             instance.queue_task(EventsContextIDMigrationTask())
 
 
-@dataclass
+@dataclass(slots=True)
 class EventTypeIDMigrationTask(RecorderTask):
     """An object to insert into the recorder queue to migrate event type ids."""
 
@@ -420,7 +418,7 @@ class EventTypeIDMigrationTask(RecorderTask):
             instance.queue_task(EventTypeIDMigrationTask())
 
 
-@dataclass
+@dataclass(slots=True)
 class EntityIDMigrationTask(RecorderTask):
     """An object to insert into the recorder queue to migrate entity_ids to StatesMeta."""
 
@@ -443,7 +441,7 @@ class EntityIDMigrationTask(RecorderTask):
             instance.queue_task(EntityIDPostMigrationTask())
 
 
-@dataclass
+@dataclass(slots=True)
 class EntityIDPostMigrationTask(RecorderTask):
     """An object to insert into the recorder queue to cleanup after entity_ids migration."""
 
@@ -456,7 +454,7 @@ class EntityIDPostMigrationTask(RecorderTask):
             instance.queue_task(EntityIDPostMigrationTask())
 
 
-@dataclass
+@dataclass(slots=True)
 class EventIdMigrationTask(RecorderTask):
     """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
 
@@ -468,3 +466,17 @@ class EventIdMigrationTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Clean up the legacy event_id index on states."""
         instance._cleanup_legacy_states_event_ids()  # pylint: disable=[protected-access]
+
+
+@dataclass(slots=True)
+class RefreshEventTypesTask(RecorderTask):
+    """An object to insert into the recorder queue to refresh event types."""
+
+    event_types: list[str]
+
+    def run(self, instance: Recorder) -> None:
+        """Refresh event types."""
+        with session_scope(session=instance.get_session(), read_only=True) as session:
+            instance.event_type_manager.get_many(
+                self.event_types, session, from_recorder=True
+            )

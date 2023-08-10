@@ -43,7 +43,6 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
-    warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data
@@ -62,19 +61,12 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_OFF_DELAY): cv.positive_int,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-
-# Configuring MQTT Binary sensors under the binary_sensor platform key was deprecated in
-# HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(binary_sensor.DOMAIN),
-)
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
@@ -105,6 +97,7 @@ async def _async_setup_entity(
 class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
     _expired: bool | None
     _expire_after: int | None

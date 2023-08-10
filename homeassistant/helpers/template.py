@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable
+from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -13,7 +13,7 @@ from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
-from operator import attrgetter, contains
+from operator import contains
 import pathlib
 import random
 import re
@@ -41,6 +41,8 @@ from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+from lru import LRU  # pylint: disable=no-name-in-module
+import orjson
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -49,6 +51,9 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfLength,
 )
@@ -58,6 +63,7 @@ from homeassistant.core import (
     State,
     callback,
     split_entity_id,
+    valid_domain,
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
@@ -83,7 +89,6 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
@@ -116,14 +121,87 @@ _P = ParamSpec("_P")
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
+_render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
+
+
 template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
 
+#
+# CACHED_TEMPLATE_STATES is a rough estimate of the number of entities
+# on a typical system. It is used as the initial size of the LRU cache
+# for TemplateState objects.
+#
+# If the cache is too small we will end up creating and destroying
+# TemplateState objects too often which will cause a lot of GC activity
+# and slow down the system. For systems with a lot of entities and
+# templates, this can reach 100000s of object creations and destructions
+# per minute.
+#
+# Since entity counts may grow over time, we will increase
+# the size if the number of entities grows via _async_adjust_lru_sizes
+# at the start of the system and every 10 minutes if needed.
+#
 CACHED_TEMPLATE_STATES = 512
 EVAL_CACHE_SIZE = 512
 
-MAX_CUSTOM_JINJA_SIZE = 5 * 1024 * 1024
+MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
+
+CACHED_TEMPLATE_LRU: MutableMapping[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
+CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
+    CACHED_TEMPLATE_STATES
+)
+ENTITY_COUNT_GROWTH_FACTOR = 1.2
+
+ORJSON_PASSTHROUGH_OPTIONS = (
+    orjson.OPT_PASSTHROUGH_DATACLASS | orjson.OPT_PASSTHROUGH_DATETIME
+)
+
+
+def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
+    """Return a TemplateState for a state without collecting."""
+    if template_state := CACHED_TEMPLATE_NO_COLLECT_LRU.get(state):
+        return template_state
+    template_state = _create_template_state_no_collect(hass, state)
+    CACHED_TEMPLATE_NO_COLLECT_LRU[state] = template_state
+    return template_state
+
+
+def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
+    """Return a TemplateState for a state that collects."""
+    if template_state := CACHED_TEMPLATE_LRU.get(state):
+        return template_state
+    template_state = TemplateState(hass, state)
+    CACHED_TEMPLATE_LRU[state] = template_state
+    return template_state
+
+
+def async_setup(hass: HomeAssistant) -> bool:
+    """Set up tracking the template LRUs."""
+
+    @callback
+    def _async_adjust_lru_sizes(_: Any) -> None:
+        """Adjust the lru cache sizes."""
+        new_size = int(
+            round(hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR)
+        )
+        for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
+            # There is no typing for LRU
+            current_size = lru.get_size()  # type: ignore[attr-defined]
+            if new_size > current_size:
+                lru.set_size(new_size)  # type: ignore[attr-defined]
+
+    from .event import (  # pylint: disable=import-outside-toplevel
+        async_track_time_interval,
+    )
+
+    cancel = async_track_time_interval(
+        hass, _async_adjust_lru_sizes, timedelta(minutes=10)
+    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
+    return True
 
 
 @bind_hass
@@ -251,6 +329,22 @@ _cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
 class RenderInfo:
     """Holds information about a template render."""
 
+    __slots__ = (
+        "template",
+        "filter_lifecycle",
+        "filter",
+        "_result",
+        "is_static",
+        "exception",
+        "all_states",
+        "all_states_lifecycle",
+        "domains",
+        "domains_lifecycle",
+        "entities",
+        "rate_limit",
+        "has_time",
+    )
+
     def __init__(self, template: Template) -> None:
         """Initialise."""
         self.template = template
@@ -366,6 +460,7 @@ class Template:
         "_limited",
         "_strict",
         "_hash_cache",
+        "_renders",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
@@ -382,6 +477,7 @@ class Template:
         self._limited: bool | None = None
         self._strict: bool | None = None
         self._hash_cache: int = hash(self.template)
+        self._renders: int = 0
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -451,6 +547,8 @@ class Template:
         If limited is True, the template is not allowed to access any function
         or filter depending on hass or the state machine.
         """
+        self._renders += 1
+
         if self.is_static:
             if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
@@ -526,6 +624,8 @@ class Template:
 
         This method must be run in the event loop.
         """
+        self._renders += 1
+
         if self.is_static:
             return False
 
@@ -568,7 +668,8 @@ class Template:
         self, variables: TemplateVarsType = None, strict: bool = False, **kwargs: Any
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
-        assert self.hass and _RENDER_INFO not in self.hass.data
+        self._renders += 1
+        assert self.hass and _render_info.get() is None
 
         render_info = RenderInfo(self)
 
@@ -578,13 +679,13 @@ class Template:
             render_info._freeze_static()
             return render_info
 
-        self.hass.data[_RENDER_INFO] = render_info
+        token = _render_info.set(render_info)
         try:
             render_info._result = self.async_render(variables, strict=strict, **kwargs)
         except TemplateError as ex:
             render_info.exception = ex
         finally:
-            del self.hass.data[_RENDER_INFO]
+            _render_info.reset(token)
 
         render_info._freeze()
         return render_info
@@ -617,6 +718,8 @@ class Template:
 
         This method must be run in the event loop.
         """
+        self._renders += 1
+
         if self.is_static:
             return self.template
 
@@ -680,7 +783,7 @@ class Template:
 
     def __repr__(self) -> str:
         """Representation of Template."""
-        return 'Template("' + self.template + '")'
+        return f"Template<template=({self.template}) renders={self._renders}>"
 
 
 @cache
@@ -712,7 +815,7 @@ class AllStates:
         if name in _RESERVED_NAMES:
             return None
 
-        if not valid_entity_id(f"{name}.entity"):
+        if not valid_domain(name):
             raise TemplateError(f"Invalid domain name '{name}'")
 
         return _domain_states(self._hass, name)
@@ -722,13 +825,11 @@ class AllStates:
     __getitem__ = __getattr__
 
     def _collect_all(self) -> None:
-        render_info = self._hass.data.get(_RENDER_INFO)
-        if render_info is not None:
+        if (render_info := _render_info.get()) is not None:
             render_info.all_states = True
 
     def _collect_all_lifecycle(self) -> None:
-        render_info = self._hass.data.get(_RENDER_INFO)
-        if render_info is not None:
+        if (render_info := _render_info.get()) is not None:
             render_info.all_states_lifecycle = True
 
     def __iter__(self) -> Generator[TemplateState, None, None]:
@@ -784,14 +885,12 @@ class DomainStates:
     __getitem__ = __getattr__
 
     def _collect_domain(self) -> None:
-        entity_collect = self._hass.data.get(_RENDER_INFO)
-        if entity_collect is not None:
-            entity_collect.domains.add(self._domain)
+        if (entity_collect := _render_info.get()) is not None:
+            entity_collect.domains.add(self._domain)  # type: ignore[attr-defined]
 
     def _collect_domain_lifecycle(self) -> None:
-        entity_collect = self._hass.data.get(_RENDER_INFO)
-        if entity_collect is not None:
-            entity_collect.domains_lifecycle.add(self._domain)
+        if (entity_collect := _render_info.get()) is not None:
+            entity_collect.domains_lifecycle.add(self._domain)  # type: ignore[attr-defined]
 
     def __iter__(self) -> Generator[TemplateState, None, None]:
         """Return the iteration over all the states."""
@@ -828,8 +927,8 @@ class TemplateStateBase(State):
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
-        if self._collect and (_render_info := self._hass.data.get(_RENDER_INFO)):
-            _render_info.entities.add(self._entity_id)
+        if self._collect and (render_info := _render_info.get()):
+            render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -837,8 +936,8 @@ class TemplateStateBase(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if self._collect and (_render_info := self._hass.data.get(_RENDER_INFO)):
-                _render_info.entities.add(self._entity_id)
+            if self._collect and (render_info := _render_info.get()):
+                render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
             return getattr(self._state, item)
         if item == "entity_id":
             return self._entity_id
@@ -968,21 +1067,33 @@ class TemplateStateFromEntityId(TemplateStateBase):
         return f"<template TemplateStateFromEntityId({self._entity_id})>"
 
 
+_create_template_state_no_collect = partial(TemplateState, collect=False)
+
+
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
-    if (entity_collect := hass.data.get(_RENDER_INFO)) is not None:
-        entity_collect.entities.add(entity_id)
-
-
-_template_state_no_collect = lru_cache(maxsize=CACHED_TEMPLATE_STATES)(
-    partial(TemplateState, collect=False)
-)
+    if (entity_collect := _render_info.get()) is not None:
+        entity_collect.entities.add(entity_id)  # type: ignore[attr-defined]
 
 
 def _state_generator(
     hass: HomeAssistant, domain: str | None
 ) -> Generator[TemplateState, None, None]:
     """State generator for a domain or all states."""
-    for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
+    states = hass.states
+    # If domain is None, we want to iterate over all states, but making
+    # a copy of the dict is expensive. So we iterate over the protected
+    # _states dict instead. This is safe because we're not modifying it
+    # and everything is happening in the same thread (MainThread).
+    #
+    # We do not want to expose this method in the public API though to
+    # ensure it does not get misused.
+    #
+    container: Iterable[State]
+    if domain is None:
+        container = states._states.values()  # pylint: disable=protected-access
+    else:
+        container = states.async_all(domain)
+    for state in container:
         yield _template_state_no_collect(hass, state)
 
 
@@ -995,9 +1106,6 @@ def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
-
-
-_template_state = lru_cache(maxsize=CACHED_TEMPLATE_STATES)(TemplateState)
 
 
 def _get_template_state_from_state(
@@ -1096,7 +1204,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             _collect_state(hass, entity_id)
             found[entity_id] = entity
 
-    return sorted(found.values(), key=lambda a: a.entity_id)
+    return list(found.values())
 
 
 def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
@@ -1470,9 +1578,18 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
+def has_value(hass: HomeAssistant, entity_id: str) -> bool:
+    """Test if an entity has a valid value."""
+    state_obj = _get_state(hass, entity_id)
+
+    return state_obj is not None and (
+        state_obj.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
+    )
+
+
 def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
-    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
+    if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
     return dt_util.now()
@@ -1480,7 +1597,7 @@ def now(hass: HomeAssistant) -> datetime:
 
 def utcnow(hass: HomeAssistant) -> datetime:
     """Record fetching utcnow."""
-    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
+    if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
     return dt_util.utcnow()
@@ -1817,7 +1934,7 @@ def is_number(value):
         fvalue = float(value)
     except (ValueError, TypeError):
         return False
-    if math.isnan(fvalue) or math.isinf(fvalue):
+    if not math.isfinite(fvalue):
         return False
     return True
 
@@ -1932,9 +2049,38 @@ def from_json(value):
     return json_loads(value)
 
 
-def to_json(value, ensure_ascii=True):
+def _to_json_default(obj: Any) -> None:
+    """Disable custom types in json serialization."""
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
+def to_json(
+    value: Any,
+    ensure_ascii: bool = False,
+    pretty_print: bool = False,
+    sort_keys: bool = False,
+) -> str:
     """Convert an object to a JSON string."""
-    return json.dumps(value, ensure_ascii=ensure_ascii)
+    if ensure_ascii:
+        # For those who need ascii, we can't use orjson, so we fall back to the json library.
+        return json.dumps(
+            value,
+            ensure_ascii=ensure_ascii,
+            indent=2 if pretty_print else None,
+            sort_keys=sort_keys,
+        )
+
+    option = (
+        ORJSON_PASSTHROUGH_OPTIONS
+        | (orjson.OPT_INDENT_2 if pretty_print else 0)
+        | (orjson.OPT_SORT_KEYS if sort_keys else 0)
+    )
+
+    return orjson.dumps(
+        value,
+        option=option,
+        default=_to_json_default,
+    ).decode("utf-8")
 
 
 @pass_context
@@ -1947,8 +2093,11 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
-def today_at(time_str: str = "") -> datetime:
+def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
     today = dt_util.start_of_local_day()
     if not time_str:
         return today
@@ -1961,7 +2110,7 @@ def today_at(time_str: str = "") -> datetime:
     return datetime.combine(today, time_today, today.tzinfo)
 
 
-def relative_time(value):
+def relative_time(hass: HomeAssistant, value: Any) -> Any:
     """Take a datetime and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month or year. Only the
@@ -1971,6 +2120,9 @@ def relative_time(value):
 
     If the input are not a datetime object the input will be returned unmodified.
     """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
     if not isinstance(value, datetime):
         return value
     if not value.tzinfo:
@@ -2068,25 +2220,25 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
-async def async_load_custom_jinja(hass: HomeAssistant) -> None:
+async def async_load_custom_templates(hass: HomeAssistant) -> None:
     """Load all custom jinja files under 5MiB into memory."""
-    return await hass.async_add_executor_job(_load_custom_jinja, hass)
+    custom_templates = await hass.async_add_executor_job(_load_custom_templates, hass)
+    _get_hass_loader(hass).sources = custom_templates
 
 
-def _load_custom_jinja(hass: HomeAssistant) -> None:
+def _load_custom_templates(hass: HomeAssistant) -> dict[str, str]:
     result = {}
-    jinja_path = hass.config.path("custom_jinja")
+    jinja_path = hass.config.path("custom_templates")
     all_files = [
         item
         for item in pathlib.Path(jinja_path).rglob("*.jinja")
-        if item.is_file() and item.stat().st_size <= MAX_CUSTOM_JINJA_SIZE
+        if item.is_file() and item.stat().st_size <= MAX_CUSTOM_TEMPLATE_SIZE
     ]
     for file in all_files:
         content = file.read_text()
         path = str(file.relative_to(jinja_path))
         result[path] = content
-
-    _get_hass_loader(hass).sources = result
+    return result
 
 
 @singleton(_HASS_LOADER)
@@ -2152,7 +2304,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["as_datetime"] = as_datetime
         self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
-        self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
@@ -2178,7 +2329,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
-        self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
         self.filters["bool"] = forgiving_boolean
@@ -2201,8 +2351,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["today_at"] = today_at
-        self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
@@ -2273,9 +2421,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = pass_context(self.globals["area_devices"])
 
-        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
-        self.tests["is_hidden_entity"] = pass_context(self.globals["is_hidden_entity"])
-
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = pass_context(
             self.globals["integration_entities"]
@@ -2296,10 +2441,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "closest",
                 "distance",
                 "expand",
+                "is_hidden_entity",
                 "is_state",
                 "is_state_attr",
                 "state_attr",
                 "states",
+                "has_value",
                 "utcnow",
                 "now",
                 "device_attr",
@@ -2307,12 +2454,29 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "relative_time",
+                "today_at",
             ]
-            hass_filters = ["closest", "expand", "device_id", "area_id", "area_name"]
+            hass_filters = [
+                "closest",
+                "expand",
+                "device_id",
+                "area_id",
+                "area_name",
+                "has_value",
+            ]
+            hass_tests = [
+                "has_value",
+                "is_hidden_entity",
+                "is_state",
+                "is_state_attr",
+            ]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
+            for test in hass_tests:
+                self.filters[test] = unsupported(test)
             return
 
         self.globals["expand"] = hassfunction(expand)
@@ -2320,6 +2484,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["closest"] = hassfunction(closest)
         self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
+        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
+        self.tests["is_hidden_entity"] = pass_eval_context(
+            self.globals["is_hidden_entity"]
+        )
         self.globals["is_state"] = hassfunction(is_state)
         self.tests["is_state"] = pass_eval_context(self.globals["is_state"])
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
@@ -2328,8 +2496,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
+        self.globals["has_value"] = hassfunction(has_value)
+        self.filters["has_value"] = pass_context(self.globals["has_value"])
+        self.tests["has_value"] = pass_eval_context(self.globals["has_value"])
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
+        self.globals["relative_time"] = hassfunction(relative_time)
+        self.filters["relative_time"] = self.globals["relative_time"]
+        self.globals["today_at"] = hassfunction(today_at)
+        self.filters["today_at"] = self.globals["today_at"]
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

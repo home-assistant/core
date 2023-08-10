@@ -357,9 +357,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
         "      example: 'This is a test of python_script.hello'"
     )
     services_yaml1 = {
-        "{}/{}/services.yaml".format(
-            hass.config.config_dir, FOLDER
-        ): service_descriptions1
+        f"{hass.config.config_dir}/{FOLDER}/services.yaml": service_descriptions1
     }
 
     with patch(
@@ -408,9 +406,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
         "      example: 'This is a test of python_script.hello2'"
     )
     services_yaml2 = {
-        "{}/{}/services.yaml".format(
-            hass.config.config_dir, FOLDER
-        ): service_descriptions2
+        f"{hass.config.config_dir}/{FOLDER}/services.yaml": service_descriptions2
     }
 
     with patch(

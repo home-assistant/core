@@ -12,13 +12,14 @@ import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
+from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -26,7 +27,6 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 from .entity import (
-    DataT,
     HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
@@ -54,7 +54,6 @@ CLIENT_CONNECTED_ATTRIBUTES = [
 ]
 
 CLIENT_STATIC_ATTRIBUTES = [
-    "hostname",
     "mac",
     "name",
     "oui",
@@ -105,7 +104,7 @@ def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bo
     """Check if device object is disabled."""
     client = controller.api.clients[obj_id]
 
-    if client.is_wired != (obj_id not in controller.wireless_clients):
+    if controller.wireless_clients.is_wireless(client) and client.is_wired:
         if not controller.option_ignore_wired_bug:
             return False  # Wired bug in action
 
@@ -136,7 +135,7 @@ def async_device_heartbeat_timedelta_fn(
 
 
 @dataclass
-class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, DataT]):
+class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Device tracker local functions."""
 
     heartbeat_timedelta_fn: Callable[[UniFiController, str], timedelta]
@@ -147,8 +146,8 @@ class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, DataT]):
 
 @dataclass
 class UnifiTrackerEntityDescription(
-    UnifiEntityDescription[HandlerT, DataT],
-    UnifiEntityTrackerDescriptionMixin[HandlerT, DataT],
+    UnifiEntityDescription[HandlerT, ApiItemT],
+    UnifiEntityTrackerDescriptionMixin[HandlerT, ApiItemT],
 ):
     """Class describing UniFi device tracker entity."""
 
@@ -172,10 +171,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"{obj_id}-{controller.site}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
-        hostname_fn=lambda api, obj_id: None,
+        hostname_fn=lambda api, obj_id: api.clients[obj_id].hostname,
     ),
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
@@ -191,6 +191,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         is_connected_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].state == 1,
         name_fn=lambda device: device.name or device.model,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: obj_id,
         ip_address_fn=lambda api, obj_id: api.devices[obj_id].ip,
@@ -211,7 +212,7 @@ async def async_setup_entry(
     )
 
 
-class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
+class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     """Representation of a UniFi scanner."""
 
     entity_description: UnifiTrackerEntityDescription
@@ -268,7 +269,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
         return self._attr_unique_id
 
     @callback
-    def _make_disconnected(self, *_) -> None:
+    def _make_disconnected(self, *_: core_Event) -> None:
         """No heart beat by device."""
         self._is_connected = False
         self.async_write_ha_state()

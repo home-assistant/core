@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
-from .exceptions import ReolinkException, UserNotAdmin
+from .exceptions import ReolinkException, ReolinkWebhookException, UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,6 +79,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
         self._reauth = True
+        self.context["title_placeholders"]["ip_address"] = entry_data[CONF_HOST]
+        self.context["title_placeholders"]["hostname"] = self.context[
+            "title_placeholders"
+        ]["name"]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -108,7 +112,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        placeholders = {"error": ""}
+        placeholders = {
+            "error": "",
+            "troubleshooting_link": "https://www.home-assistant.io/integrations/reolink/#troubleshooting",
+        }
 
         if user_input is not None:
             if CONF_HOST not in user_input:
@@ -126,6 +133,12 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
+            except ReolinkWebhookException as err:
+                placeholders["error"] = str(err)
+                placeholders[
+                    "more_info"
+                ] = "https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url"
+                errors["base"] = "webhook_exception"
             except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "cannot_connect"
@@ -175,7 +188,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema = data_schema.extend(
                 {
                     vol.Optional(CONF_PORT): cv.positive_int,
-                    vol.Optional(CONF_USE_HTTPS): bool,
+                    vol.Required(CONF_USE_HTTPS, default=False): bool,
                 }
             )
 

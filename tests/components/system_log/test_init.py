@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 import logging
+import traceback
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -412,3 +413,31 @@ async def test_config_path(
         )
         log = (await get_error_log(hass_ws_client))[0]
     assert log["source"] == ["custom_component/test.py", 5]
+
+
+async def test_raise_during_log_capture(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that exceptions are logged and retrieved correctly."""
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
+
+    class RaisesDuringRepr:
+        """Class that raises during repr."""
+
+        def __repr__(self):
+            in_system_log = False
+            for stack in traceback.extract_stack():
+                if "homeassistant/components/system_log" in stack.filename:
+                    in_system_log = True
+                    break
+            if in_system_log:
+                raise ValueError("repr error")
+            return "repr message"
+
+    raise_during_repr = RaisesDuringRepr()
+
+    _LOGGER.error("raise during repr: %s", raise_during_repr)
+    log = find_log(await get_error_log(hass_ws_client), "ERROR")
+    assert log is not None
+    assert_log(log, "", "Bad logger message: repr error", "ERROR")

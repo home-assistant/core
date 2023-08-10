@@ -51,6 +51,8 @@ class MockDevice(Device):
         self.async_disconnect = AsyncMock()
         self.device = DeviceApi(IP, None, DISCOVERY_INFO)
         self.device.async_get_led_setting = AsyncMock(return_value=False)
+        self.device.async_restart = AsyncMock(return_value=True)
+        self.device.async_start_wps = AsyncMock(return_value=True)
         self.device.async_get_wifi_connected_station = AsyncMock(
             return_value=CONNECTED_STATIONS
         )
@@ -60,3 +62,5 @@ class MockDevice(Device):
         )
         self.plcnet = PlcNetApi(IP, None, DISCOVERY_INFO)
         self.plcnet.async_get_network_overview = AsyncMock(return_value=PLCNET)
+        self.plcnet.async_identify_device_start = AsyncMock(return_value=True)
+        self.plcnet.async_pair_device = AsyncMock(return_value=True)

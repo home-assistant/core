@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 import tempfile
 from typing import Any
 
+import async_timeout
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
@@ -22,12 +25,15 @@ from .const import (
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
     DATA_MQTT,
+    DATA_MQTT_AVAILABLE,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
 )
 from .models import MqttData
+
+AVAILABILITY_TIMEOUT = 30.0
 
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
@@ -39,6 +45,37 @@ def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     if not bool(hass.config_entries.async_entries(DOMAIN)):
         return None
     return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
+
+
+async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
+    """Wait for the MQTT client to become available.
+
+    Waits when mqtt set up is in progress,
+    It is not needed that the client is connected.
+    Returns True if the mqtt client is available.
+    Returns False when the client is not available.
+    """
+    if not mqtt_config_entry_enabled(hass):
+        return False
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    if entry.state == ConfigEntryState.LOADED:
+        return True
+
+    state_reached_future: asyncio.Future[bool]
+    if DATA_MQTT_AVAILABLE not in hass.data:
+        hass.data[DATA_MQTT_AVAILABLE] = state_reached_future = asyncio.Future()
+    else:
+        state_reached_future = hass.data[DATA_MQTT_AVAILABLE]
+        if state_reached_future.done():
+            return state_reached_future.result()
+
+    try:
+        async with async_timeout.timeout(AVAILABILITY_TIMEOUT):
+            # Await the client setup or an error state was received
+            return await state_reached_future
+    except asyncio.TimeoutError:
+        return False
 
 
 def valid_topic(topic: Any) -> str:
@@ -136,12 +173,9 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
     return config
 
 
-def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
+def get_mqtt_data(hass: HomeAssistant) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
     mqtt_data: MqttData
-    if ensure_exists:
-        mqtt_data = hass.data.setdefault(DATA_MQTT, MqttData())
-        return mqtt_data
     mqtt_data = hass.data[DATA_MQTT]
     return mqtt_data
 

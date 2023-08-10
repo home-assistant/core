@@ -19,5 +19,81 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "cart_items_count": {
+        "name": "Cart items count"
+      },
+      "cart_total_price": {
+        "name": "Cart total price"
+      },
+      "selected_slot_start": {
+        "name": "Start of selected slot"
+      },
+      "selected_slot_end": {
+        "name": "End of selected slot"
+      },
+      "selected_slot_max_order_time": {
+        "name": "Max order time of selected slot"
+      },
+      "selected_slot_min_order_value": {
+        "name": "Minimum order value for selected slot"
+      },
+      "last_order_slot_start": {
+        "name": "Start of last order's slot"
+      },
+      "last_order_slot_end": {
+        "name": "End of last order's slot"
+      },
+      "last_order_status": {
+        "name": "Status of last order"
+      },
+      "last_order_max_order_time": {
+        "name": "Max order time of last order"
+      },
+      "last_order_delivery_time": {
+        "name": "Last order delivery time"
+      },
+      "last_order_total_price": {
+        "name": "Total price of last order"
+      },
+      "next_delivery_eta_start": {
+        "name": "Expected start of next delivery"
+      },
+      "next_delivery_eta_end": {
+        "name": "Expected end of next delivery"
+      },
+      "next_delivery_slot_start": {
+        "name": "Start of next delivery's slot"
+      },
+      "next_delivery_slot_end": {
+        "name": "End of next delivery's slot"
+      }
+    }
+  },
+  "services": {
+    "add_product": {
+      "name": "Add a product to the cart",
+      "description": "Adds a product to the cart based on a search string or product ID. The search string and product ID are exclusive.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Picnic service",
+          "description": "The product will be added to the selected service."
+        },
+        "product_id": {
+          "name": "Product ID",
+          "description": "The product ID of a Picnic product."
+        },
+        "product_name": {
+          "name": "Product name",
+          "description": "Search for a product and add the first result."
+        },
+        "amount": {
+          "name": "Amount",
+          "description": "Amount to add of the selected product."
+        }
+      }
+    }
   }
 }

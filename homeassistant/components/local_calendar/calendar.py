@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 import logging
 from typing import Any
 
@@ -33,6 +33,8 @@ from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
+PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,6 +45,7 @@ async def async_setup_entry(
     store = hass.data[DOMAIN][config_entry.entry_id]
     ics = await store.async_load()
     calendar = IcsCalendarStream.calendar_from_ics(ics)
+    calendar.prodid = PRODID
 
     name = config_entry.data[CONF_CALENDAR_NAME]
     entity = LocalCalendarEntity(store, calendar, name, unique_id=config_entry.entry_id)
@@ -82,17 +85,16 @@ class LocalCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events = self._calendar.timeline_tz(dt_util.DEFAULT_TIME_ZONE).overlapping(
-            dt_util.as_local(start_date),
-            dt_util.as_local(end_date),
+        events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
+            start_date,
+            end_date,
         )
         return [_get_calendar_event(event) for event in events]
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        events = self._calendar.timeline_tz(dt_util.DEFAULT_TIME_ZONE).active_after(
-            dt_util.now()
-        )
+        now = dt_util.now()
+        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
         if event := next(events, None):
             self._event = _get_calendar_event(event)
         else:
@@ -127,7 +129,7 @@ class LocalCalendarEntity(CalendarEntity):
                 recurrence_range=range_value,
             )
         except EventStoreError as err:
-            raise HomeAssistantError("Error while deleting event: {err}") from err
+            raise HomeAssistantError(f"Error while deleting event: {err}") from err
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -151,7 +153,7 @@ class LocalCalendarEntity(CalendarEntity):
                 recurrence_range=range_value,
             )
         except EventStoreError as err:
-            raise HomeAssistantError("Error while updating event: {err}") from err
+            raise HomeAssistantError(f"Error while updating event: {err}") from err
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -184,16 +186,26 @@ def _parse_event(event: dict[str, Any]) -> Event:
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
+    start: datetime | date
+    end: datetime | date
+    if isinstance(event.start, datetime) and isinstance(event.end, datetime):
+        start = dt_util.as_local(event.start)
+        end = dt_util.as_local(event.end)
+        if (end - start) <= timedelta(seconds=0):
+            end = start + timedelta(minutes=30)
+    else:
+        start = event.start
+        end = event.end
+        if (end - start) < timedelta(days=0):
+            end = start + timedelta(days=1)
+
     return CalendarEvent(
         summary=event.summary,
-        start=dt_util.as_local(event.start)
-        if isinstance(event.start, datetime)
-        else event.start,
-        end=dt_util.as_local(event.end)
-        if isinstance(event.end, datetime)
-        else event.end,
+        start=start,
+        end=end,
         description=event.description,
         uid=event.uid,
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
+        location=event.location,
     )

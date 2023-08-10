@@ -7,13 +7,16 @@ from typing import Any
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
+    ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,7 +28,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,9 +38,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from . import MetDataUpdateCoordinator
 from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
-ATTRIBUTION = (
-    "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute."
-)
 DEFAULT_NAME = "Met.no"
 
 
@@ -74,11 +74,18 @@ def format_condition(condition: str) -> str:
 class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
+    _attr_attribution = (
+        "Weather forecast from met.no, delivered by the Norwegian "
+        "Meteorological Institute."
+    )
     _attr_has_entity_name = True
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
 
     def __init__(
         self,
@@ -130,6 +137,15 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         """Return if the entity should be enabled when first added to the entity registry."""
         return not self._hourly
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+        assert self.platform.config_entry
+        self.platform.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(("daily", "hourly"))
+        )
+
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
@@ -174,14 +190,22 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         )
 
     @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_WIND_GUST_SPEED]
+        )
 
     @property
-    def forecast(self) -> list[Forecast] | None:
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_CLOUD_COVERAGE]
+        )
+
+    def _forecast(self, hourly: bool) -> list[Forecast] | None:
         """Return the forecast array."""
-        if self._hourly:
+        if hourly:
             met_forecast = self.coordinator.data.hourly_forecast
         else:
             met_forecast = self.coordinator.data.daily_forecast
@@ -203,10 +227,23 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         return ha_forecast
 
     @property
+    def forecast(self) -> list[Forecast] | None:
+        """Return the forecast array."""
+        return self._forecast(self._hourly)
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._forecast(False)
+
+    async def async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        return self._forecast(True)
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Device info."""
         return DeviceInfo(
-            default_name="Forecast",
+            name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN,)},  # type: ignore[arg-type]
             manufacturer="Met.no",

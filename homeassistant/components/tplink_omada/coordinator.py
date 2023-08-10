@@ -1,5 +1,4 @@
 """Generic Omada API coordinator."""
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from typing import Generic, TypeVar
@@ -24,7 +23,6 @@ class OmadaCoordinator(DataUpdateCoordinator[dict[str, T]], Generic[T]):
         hass: HomeAssistant,
         omada_client: OmadaSiteClient,
         name: str,
-        update_func: Callable[[OmadaSiteClient], Awaitable[dict[str, T]]],
         poll_delay: int = 300,
     ) -> None:
         """Initialize my coordinator."""
@@ -35,12 +33,15 @@ class OmadaCoordinator(DataUpdateCoordinator[dict[str, T]], Generic[T]):
             update_interval=timedelta(seconds=poll_delay),
         )
         self.omada_client = omada_client
-        self._update_func = update_func
 
     async def _async_update_data(self) -> dict[str, T]:
         """Fetch data from API endpoint."""
         try:
             async with async_timeout.timeout(10):
-                return await self._update_func(self.omada_client)
+                return await self.poll_update()
         except OmadaClientException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    async def poll_update(self) -> dict[str, T]:
+        """Poll the current data from the controller."""
+        raise NotImplementedError("Update method not implemented")

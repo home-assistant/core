@@ -369,7 +369,7 @@ def test_filter_schema_include_exclude() -> None:
     assert not filt.empty_filter
 
 
-def test_exlictly_included() -> None:
+def test_explicitly_included() -> None:
     """Test if an entity is explicitly included."""
     conf = {
         "include": {
@@ -393,6 +393,28 @@ def test_exlictly_included() -> None:
     assert not filt.explicitly_excluded("switch.other")
     assert filt.explicitly_excluded("sensor.weather_5")
     assert filt.explicitly_excluded("light.kitchen")
+
+
+def test_get_filter() -> None:
+    """Test we can get the underlying filter."""
+    conf = {
+        "include": {
+            "domains": ["light"],
+            "entity_globs": ["sensor.kitchen_*"],
+            "entities": ["switch.kitchen"],
+        },
+        "exclude": {
+            "domains": ["cover"],
+            "entity_globs": ["sensor.weather_*"],
+            "entities": ["light.kitchen"],
+        },
+    }
+    filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
+    underlying_filter = filt.get_filter()
+    assert underlying_filter("light.any")
+    assert not underlying_filter("switch.other")
+    assert underlying_filter("sensor.kitchen_4")
+    assert underlying_filter("switch.kitchen")
 
 
 def test_complex_include_exclude_filter() -> None:

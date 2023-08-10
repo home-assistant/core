@@ -162,6 +162,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_name = None
 
     device: SmartBulb
 
@@ -267,9 +268,9 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         return hue, saturation
 
     @property
-    def supported_color_modes(self) -> set[ColorMode | str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Return list of available color modes."""
-        modes: set[ColorMode | str] = set()
+        modes: set[ColorMode] = set()
         if self.device.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
         if self.device.is_color:

@@ -10,10 +10,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_setting_blocked_attribute_via_mqtt_json_message
+from .test_common import (
+    help_test_reloadable,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
+)
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
+from tests.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -34,11 +41,11 @@ def device_tracker_platform_only():
 
 async def test_discover_device_tracker(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test discovering an MQTT device tracker component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -56,11 +63,11 @@ async def test_discover_device_tracker(
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -85,11 +92,11 @@ async def test_discovery_broken(
 
 async def test_non_duplicate_device_tracker_discovery(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for a non duplicate component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -113,11 +120,11 @@ async def test_non_duplicate_device_tracker_discovery(
 
 async def test_device_tracker_removal(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of component through empty discovery message."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -135,11 +142,11 @@ async def test_device_tracker_removal(
 
 async def test_device_tracker_rediscover(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test rediscover of removed component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -166,11 +173,11 @@ async def test_device_tracker_rediscover(
 
 async def test_duplicate_device_tracker_removal(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for a non duplicate component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -191,11 +198,11 @@ async def test_duplicate_device_tracker_removal(
 
 async def test_device_tracker_discovery_update(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for a discovery update event."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -224,12 +231,12 @@ async def test_cleanup_device_tracker(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovered device is cleaned up when removed from registry."""
     assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     ws_client = await hass_ws_client(hass)
 
     async_fire_mqtt_message(
@@ -242,7 +249,7 @@ async def test_cleanup_device_tracker(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
     entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
     assert entity_entry is not None
@@ -266,7 +273,7 @@ async def test_cleanup_device_tracker(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
     assert entity_entry is None
@@ -284,11 +291,11 @@ async def test_cleanup_device_tracker(
 
 async def test_setting_device_tracker_value_via_mqtt_message(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setting of the value via MQTT."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -312,11 +319,11 @@ async def test_setting_device_tracker_value_via_mqtt_message(
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setting of the value via MQTT."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -339,11 +346,11 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template(
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setting of the value via MQTT."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -369,11 +376,11 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
 
 async def test_setting_device_tracker_location_via_mqtt_message(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setting of the location via MQTT."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -393,19 +400,15 @@ async def test_setting_device_tracker_location_via_mqtt_message(
 
 async def test_setting_device_tracker_location_via_lat_lon_message(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the setting of the latitude and longitude via MQTT."""
-    await mqtt_mock_entry_no_yaml_config()
+    """Test the setting of the latitude and longitude via MQTT without state topic."""
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
-        "{ "
-        '"name": "test", '
-        '"state_topic": "test-topic", '
-        '"json_attributes_topic": "attributes-topic" '
-        "}",
+        '{ "name": "test", "json_attributes_topic": "attributes-topic"}',
     )
     await hass.async_block_till_done()
 
@@ -454,11 +457,11 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
 
 async def test_setting_device_tracker_location_via_reset_message(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the automatic inference of zones via MQTT via reset."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -530,11 +533,11 @@ async def test_setting_device_tracker_location_via_reset_message(
 
 async def test_setting_device_tracker_location_via_abbr_reset_message(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setting of reset via abbreviated names and custom payloads via MQTT."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -573,12 +576,12 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         device_tracker.DOMAIN,
         DEFAULT_CONFIG,
         None,
@@ -596,10 +599,20 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
     ],
 )
 async def test_setup_with_modern_schema(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup using the modern schema."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     dev_id = "jan"
     entity_id = f"{device_tracker.DOMAIN}.{dev_id}"
     assert hass.states.get(entity_id) is not None
+
+
+async def test_reloadable(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test reloading the MQTT platform."""
+    domain = device_tracker.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)

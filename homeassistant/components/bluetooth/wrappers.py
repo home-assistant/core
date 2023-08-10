@@ -6,13 +6,18 @@ from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 from functools import partial
+import inspect
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
+from bleak.backends.scanner import (
+    AdvertisementData,
+    AdvertisementDataCallback,
+    BaseBleakScanner,
+)
 from bleak_retry_connector import (
     NO_RSSI_VALUE,
     ble_device_description,
@@ -34,7 +39,7 @@ if TYPE_CHECKING:
     from .manager import BluetoothManager
 
 
-@dataclass
+@dataclass(slots=True)
 class _HaWrappedBleakBackend:
     """Wrap bleak backend to make it usable by Home Assistant."""
 
@@ -58,6 +63,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
         self._advertisement_data_callback: AdvertisementDataCallback | None = None
+        self._background_tasks: set[asyncio.Task] = set()
         remapped_kwargs = {
             "detection_callback": detection_callback,
             "service_uuids": service_uuids or [],
@@ -128,12 +134,24 @@ class HaBleakScannerWrapper(BaseBleakScanner):
         """Set up the detection callback."""
         if self._advertisement_data_callback is None:
             return
+        callback = self._advertisement_data_callback
         self._cancel_callback()
         super().register_detection_callback(self._advertisement_data_callback)
         assert models.MANAGER is not None
-        assert self._callback is not None
+
+        if not inspect.iscoroutinefunction(callback):
+            detection_callback = callback
+        else:
+
+            def detection_callback(
+                ble_device: BLEDevice, advertisement_data: AdvertisementData
+            ) -> None:
+                task = asyncio.create_task(callback(ble_device, advertisement_data))
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
+
         self._detection_cancel = models.MANAGER.async_register_bleak_callback(
-            self._callback, self._mapped_filters
+            detection_callback, self._mapped_filters
         )
 
     def __del__(self) -> None:
@@ -251,8 +269,10 @@ class HaBleakClientWrapper(BleakClient):
         assert models.MANAGER is not None
         manager = models.MANAGER
         wrapped_backend = self._async_get_best_available_backend_and_device(manager)
+        device = wrapped_backend.device
+        scanner = wrapped_backend.scanner
         self._backend = wrapped_backend.client(
-            wrapped_backend.device,
+            device,
             disconnected_callback=self._make_disconnected_callback(
                 self.__disconnected_callback
             ),
@@ -261,8 +281,9 @@ class HaBleakClientWrapper(BleakClient):
         )
         if debug_logging := _LOGGER.isEnabledFor(logging.DEBUG):
             # Only lookup the description if we are going to log it
-            description = ble_device_description(wrapped_backend.device)
-            rssi = wrapped_backend.device.rssi
+            description = ble_device_description(device)
+            _, adv = scanner.discovered_devices_and_advertisement_data[device.address]
+            rssi = adv.rssi
             _LOGGER.debug("%s: Connecting (last rssi: %s)", description, rssi)
         connected = None
         try:
@@ -271,11 +292,11 @@ class HaBleakClientWrapper(BleakClient):
             # If we failed to connect and its a local adapter (no source)
             # we release the connection slot
             if not connected:
-                self.__connect_failures[wrapped_backend.scanner] = (
-                    self.__connect_failures.get(wrapped_backend.scanner, 0) + 1
+                self.__connect_failures[scanner] = (
+                    self.__connect_failures.get(scanner, 0) + 1
                 )
                 if not wrapped_backend.source:
-                    manager.async_release_connection_slot(wrapped_backend.device)
+                    manager.async_release_connection_slot(device)
 
         if debug_logging:
             _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)

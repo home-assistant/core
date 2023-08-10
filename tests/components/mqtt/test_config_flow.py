@@ -1,5 +1,6 @@
 """Test config flow."""
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits
 from ssl import SSLError
@@ -9,13 +10,11 @@ from uuid import uuid4
 
 import pytest
 import voluptuous as vol
-import yaml
 
-from homeassistant import config as hass_config, config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
@@ -138,19 +137,22 @@ def mock_process_uploaded_file(tmp_path: Path) -> Generator[MagicMock, None, Non
     file_id_cert = str(uuid4())
     file_id_key = str(uuid4())
 
-    def _mock_process_uploaded_file(hass: HomeAssistant, file_id) -> None:
+    @contextmanager
+    def _mock_process_uploaded_file(
+        hass: HomeAssistant, file_id: str
+    ) -> Iterator[Path | None]:
         if file_id == file_id_ca:
             with open(tmp_path / "ca.crt", "wb") as cafile:
                 cafile.write(b"## mock CA certificate file ##")
-            return tmp_path / "ca.crt"
+            yield tmp_path / "ca.crt"
         elif file_id == file_id_cert:
             with open(tmp_path / "client.crt", "wb") as certfile:
                 certfile.write(b"## mock client certificate file ##")
-            return tmp_path / "client.crt"
+            yield tmp_path / "client.crt"
         elif file_id == file_id_key:
             with open(tmp_path / "client.key", "wb") as keyfile:
                 keyfile.write(b"## mock key file ##")
-            return tmp_path / "client.key"
+            yield tmp_path / "client.key"
         else:
             pytest.fail(f"Unexpected file_id: {file_id}")
 
@@ -185,7 +187,7 @@ async def test_user_connection_works(
     assert result["type"] == "form"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"broker": "127.0.0.1", "advanced_options": False}
+        result["flow_id"], {"broker": "127.0.0.1"}
     )
 
     assert result["type"] == "create_entry"
@@ -193,7 +195,6 @@ async def test_user_connection_works(
         "broker": "127.0.0.1",
         "port": 1883,
         "discovery": True,
-        "discovery_prefix": "homeassistant",
     }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
@@ -211,7 +212,8 @@ async def test_user_v5_connection_works(
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": config_entries.SOURCE_USER}
+        "mqtt",
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
     assert result["type"] == "form"
 
@@ -233,7 +235,6 @@ async def test_user_v5_connection_works(
     assert result["result"].data == {
         "broker": "another-broker",
         "discovery": True,
-        "discovery_prefix": "homeassistant",
         "port": 2345,
         "protocol": "5",
     }
@@ -267,39 +268,13 @@ async def test_user_connection_fails(
     assert len(mock_finish_setup.mock_calls) == 0
 
 
-async def test_manual_config_starts_discovery_flow(
-    hass: HomeAssistant,
-    mock_try_connection: MqttMockPahoClient,
-    mock_finish_setup: MagicMock,
-) -> None:
-    """Test manual config initiates a discovery flow."""
-    # No flows in progress
-    assert hass.config_entries.flow.async_progress() == []
-
-    # MQTT config present in yaml config
-    assert await async_setup_component(hass, "mqtt", {"mqtt": {}})
-    await hass.async_block_till_done()
-    assert len(mock_finish_setup.mock_calls) == 0
-
-    # There should now be a discovery flow
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == "integration_discovery"
-    assert flows[0]["handler"] == "mqtt"
-    assert flows[0]["step_id"] == "broker"
-
-
+@pytest.mark.parametrize("hass_config", [{"mqtt": {"sensor": {"state_topic": "test"}}}])
 async def test_manual_config_set(
     hass: HomeAssistant,
     mock_try_connection: MqttMockPahoClient,
     mock_finish_setup: MagicMock,
 ) -> None:
     """Test manual config does not create an entry, and entry can be setup late."""
-    # MQTT config present in yaml config
-    assert await async_setup_component(hass, "mqtt", {"mqtt": {"broker": "bla"}})
-    await hass.async_block_till_done()
-    # do not try to reload
-    hass.data["mqtt"].reload_needed = False
     assert len(mock_finish_setup.mock_calls) == 0
 
     mock_try_connection.return_value = True
@@ -311,7 +286,7 @@ async def test_manual_config_set(
     assert result["type"] == "form"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"broker": "127.0.0.1"}
+        result["flow_id"], {"broker": "127.0.0.1", "port": "1883"}
     )
 
     assert result["type"] == "create_entry"
@@ -319,7 +294,6 @@ async def test_manual_config_set(
         "broker": "127.0.0.1",
         "port": 1883,
         "discovery": True,
-        "discovery_prefix": "homeassistant",
     }
     # Check we tried the connection, with precedence for config entry settings
     mock_try_connection.assert_called_once_with(
@@ -374,6 +348,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             },
             name="Mosquitto",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -404,6 +379,7 @@ async def test_hassio_confirm(
             },
             name="Mock Addon",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -423,7 +399,6 @@ async def test_hassio_confirm(
         "username": "mock-user",
         "password": "mock-pass",
         "discovery": True,
-        "discovery_prefix": "homeassistant",
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -453,6 +428,7 @@ async def test_hassio_cannot_connect(
             },
             name="Mock Addon",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -475,14 +451,14 @@ async def test_hassio_cannot_connect(
 
 async def test_option_flow(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
 ) -> None:
     """Test config flow options."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", AsyncMock(return_value={})
     ) as yaml_mock:
-        mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+        mqtt_mock = await mqtt_mock_entry()
         mock_try_connection.return_value = True
         config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
         config_entry.data = {
@@ -572,7 +548,7 @@ async def test_option_flow(
 )
 async def test_bad_certificate(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection_success: MqttMockPahoClient,
     mock_ssl_context: dict[str, MagicMock],
     mock_process_uploaded_file: MagicMock,
@@ -609,7 +585,7 @@ async def test_bad_certificate(
         # Client key file without client cert, client cert without key file
         test_input.pop(mqtt.CONF_CLIENT_KEY)
 
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
@@ -668,7 +644,7 @@ async def test_bad_certificate(
 )
 async def test_keepalive_validation(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
     input_value: str,
@@ -682,7 +658,7 @@ async def test_keepalive_validation(
         mqtt.CONF_KEEPALIVE: input_value,
     }
 
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
@@ -714,12 +690,12 @@ async def test_keepalive_validation(
 
 async def test_disable_birth_will(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test disabling birth and will."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
@@ -785,12 +761,12 @@ async def test_disable_birth_will(
 
 async def test_invalid_discovery_prefix(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test setting an invalid discovery prefix."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
@@ -864,12 +840,12 @@ def get_suggested(schema: vol.Schema, key: str) -> Any:
 
 async def test_option_flow_default_suggested_values(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection_success: MqttMockPahoClient,
     mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test config flow options has default/suggested values."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
@@ -1019,7 +995,7 @@ async def test_option_flow_default_suggested_values(
 )
 async def test_skipping_advanced_options(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
     advanced_options: bool,
@@ -1033,7 +1009,7 @@ async def test_skipping_advanced_options(
         "advanced_options": advanced_options,
     }
 
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Initiate with a basic setup
@@ -1044,7 +1020,9 @@ async def test_skipping_advanced_options(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "broker"
 
@@ -1162,6 +1140,9 @@ async def test_options_bad_will_message_fails(
     }
 
 
+@pytest.mark.parametrize(
+    "hass_config", [{"mqtt": {"sensor": [{"state_topic": "some-topic"}]}}]
+)
 async def test_try_connection_with_advanced_parameters(
     hass: HomeAssistant,
     mock_try_connection_success: MqttMockPahoClient,
@@ -1170,23 +1151,6 @@ async def test_try_connection_with_advanced_parameters(
     mock_process_uploaded_file: MagicMock,
 ) -> None:
     """Test config flow with advanced parameters from config."""
-
-    with open(tmp_path / "client.crt", "wb") as certfile:
-        certfile.write(MOCK_CLIENT_CERT)
-    with open(tmp_path / "client.key", "wb") as keyfile:
-        keyfile.write(MOCK_CLIENT_KEY)
-
-    config = {
-        "certificate": "auto",
-        "tls_insecure": True,
-        "client_cert": str(tmp_path / "client.crt"),
-        "client_key": str(tmp_path / "client.key"),
-    }
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump({mqtt.DOMAIN: config})
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
-
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
     config_entry.add_to_hass(hass)
     config_entry.data = {
@@ -1195,6 +1159,10 @@ async def test_try_connection_with_advanced_parameters(
         mqtt.CONF_USERNAME: "user",
         mqtt.CONF_PASSWORD: "pass",
         mqtt.CONF_TRANSPORT: "websockets",
+        mqtt.CONF_CERTIFICATE: "auto",
+        mqtt.CONF_TLS_INSECURE: True,
+        mqtt.CONF_CLIENT_CERT: MOCK_CLIENT_CERT.decode(encoding="utf-8)"),
+        mqtt.CONF_CLIENT_KEY: MOCK_CLIENT_KEY.decode(encoding="utf-8"),
         mqtt.CONF_WS_PATH: "/path/",
         mqtt.CONF_WS_HEADERS: {"h1": "v1", "h2": "v2"},
         mqtt.CONF_KEEPALIVE: 30,
@@ -1212,95 +1180,81 @@ async def test_try_connection_with_advanced_parameters(
             mqtt.ATTR_RETAIN: False,
         },
     }
+    # Test default/suggested values from config
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "broker"
+    defaults = {
+        mqtt.CONF_BROKER: "test-broker",
+        mqtt.CONF_PORT: 1234,
+        "set_client_cert": True,
+        "set_ca_cert": "auto",
+    }
+    suggested = {
+        mqtt.CONF_USERNAME: "user",
+        mqtt.CONF_PASSWORD: "pass",
+        mqtt.CONF_TLS_INSECURE: True,
+        mqtt.CONF_PROTOCOL: "3.1.1",
+        mqtt.CONF_TRANSPORT: "websockets",
+        mqtt.CONF_WS_PATH: "/path/",
+        mqtt.CONF_WS_HEADERS: '{"h1":"v1","h2":"v2"}',
+    }
+    for k, v in defaults.items():
+        assert get_default(result["data_schema"].schema, k) == v
+    for k, v in suggested.items():
+        assert get_suggested(result["data_schema"].schema, k) == v
 
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
-        await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-        await hass.async_block_till_done()
-        # Test default/suggested values from config
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "broker"
-        defaults = {
-            mqtt.CONF_BROKER: "test-broker",
-            mqtt.CONF_PORT: 1234,
-            "set_client_cert": True,
+    # test we can change username and password
+    # as it was configured as auto in configuration.yaml is is migrated now
+    mock_try_connection_success.reset_mock()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "another-broker",
+            mqtt.CONF_PORT: 2345,
+            mqtt.CONF_USERNAME: "us3r",
+            mqtt.CONF_PASSWORD: "p4ss",
             "set_ca_cert": "auto",
-        }
-        suggested = {
-            mqtt.CONF_USERNAME: "user",
-            mqtt.CONF_PASSWORD: "pass",
+            "set_client_cert": True,
             mqtt.CONF_TLS_INSECURE: True,
-            mqtt.CONF_PROTOCOL: "3.1.1",
             mqtt.CONF_TRANSPORT: "websockets",
-            mqtt.CONF_WS_PATH: "/path/",
-            mqtt.CONF_WS_HEADERS: '{"h1":"v1","h2":"v2"}',
-        }
-        for k, v in defaults.items():
-            assert get_default(result["data_schema"].schema, k) == v
-        for k, v in suggested.items():
-            assert get_suggested(result["data_schema"].schema, k) == v
+            mqtt.CONF_WS_PATH: "/new/path",
+            mqtt.CONF_WS_HEADERS: '{"h3": "v3"}',
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "options"
+    await hass.async_block_till_done()
 
-        # test the client cert and key were migrated to the entry
-        assert config_entry.data[mqtt.CONF_CLIENT_CERT] == MOCK_CLIENT_CERT.decode(
-            "utf-8"
-        )
-        assert config_entry.data[mqtt.CONF_CLIENT_KEY] == MOCK_CLIENT_KEY.decode(
-            "utf-8"
-        )
-        assert config_entry.data[mqtt.CONF_CERTIFICATE] == "auto"
+    # check if the username and password was set from config flow and not from configuration.yaml
+    assert mock_try_connection_success.username_pw_set.mock_calls[0][1] == (
+        "us3r",
+        "p4ss",
+    )
+    # check if tls_insecure_set is called
+    assert mock_try_connection_success.tls_insecure_set.mock_calls[0][1] == (True,)
 
-        # test we can change username and password
-        # as it was configured as auto in configuration.yaml is is migrated now
-        mock_try_connection_success.reset_mock()
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                mqtt.CONF_BROKER: "another-broker",
-                mqtt.CONF_PORT: 2345,
-                mqtt.CONF_USERNAME: "us3r",
-                mqtt.CONF_PASSWORD: "p4ss",
-                "set_ca_cert": "auto",
-                "set_client_cert": True,
-                mqtt.CONF_TLS_INSECURE: True,
-                mqtt.CONF_TRANSPORT: "websockets",
-                mqtt.CONF_WS_PATH: "/new/path",
-                mqtt.CONF_WS_HEADERS: '{"h3": "v3"}',
-            },
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"] == {}
-        assert result["step_id"] == "options"
-        await hass.async_block_till_done()
+    # check if the ca certificate settings were not set during connection test
+    assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
+        "certfile"
+    ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_CERT)
+    assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
+        "keyfile"
+    ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_KEY)
 
-        # check if the username and password was set from config flow and not from configuration.yaml
-        assert mock_try_connection_success.username_pw_set.mock_calls[0][1] == (
-            "us3r",
-            "p4ss",
-        )
-        # check if tls_insecure_set is called
-        assert mock_try_connection_success.tls_insecure_set.mock_calls[0][1] == (True,)
-
-        # check if the ca certificate settings were not set during connection test
-        assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
-            "certfile"
-        ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_CERT)
-        assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
-            "keyfile"
-        ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_KEY)
-
-        # check if websockets options are set
-        assert mock_try_connection_success.ws_set_options.mock_calls[0][1] == (
-            "/new/path",
-            {"h3": "v3"},
-        )
-
-        # Accept default option
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        await hass.async_block_till_done()
+    # check if websockets options are set
+    assert mock_try_connection_success.ws_set_options.mock_calls[0][1] == (
+        "/new/path",
+        {"h3": "v3"},
+    )
+    # Accept default option
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
 
 
 async def test_setup_with_advanced_settings(
@@ -1321,7 +1275,9 @@ async def test_setup_with_advanced_settings(
 
     mock_try_connection.return_value = True
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["advanced_options"]

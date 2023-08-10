@@ -23,6 +23,7 @@ async def async_setup_entry(
 class DSMRSensor(SensorEntity):
     """Representation of a DSMR sensor that is updated via MQTT."""
 
+    _attr_has_entity_name = True
     entity_description: DSMRReaderSensorEntityDescription
 
     def __init__(

@@ -49,6 +49,8 @@ async def async_setup_entry(
 class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -90,18 +92,13 @@ class Volumio(MediaPlayerEntity):
         return self._uid
 
     @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Volumio",
             model=self._info["hardware"],
-            name=self.name,
+            name=self._name,
             sw_version=self._info["systemversion"],
         )
 

@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.button import SERVICE_PRESS, ButtonEntity
@@ -56,7 +55,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-class InputButtonStorageCollection(collection.StorageCollection):
+class InputButtonStorageCollection(collection.DictStorageCollection):
     """Input button collection stored in storage."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
@@ -70,10 +69,10 @@ class InputButtonStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: data[CONF_ID]} | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -95,7 +94,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = InputButtonStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -107,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 

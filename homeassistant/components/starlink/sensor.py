@@ -12,7 +12,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEGREE, EntityCategory, UnitOfDataRate, UnitOfTime
+from homeassistant.const import (
+    DEGREE,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -62,7 +68,7 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
 SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
         key="ping",
-        name="Ping",
+        translation_key="ping",
         icon="mdi:speedometer",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
@@ -71,7 +77,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="azimuth",
-        name="Azimuth",
+        translation_key="azimuth",
         icon="mdi:compass",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -82,7 +88,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="elevation",
-        name="Elevation",
+        translation_key="elevation",
         icon="mdi:compass",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -93,7 +99,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="uplink_throughput",
-        name="Uplink throughput",
+        translation_key="uplink_throughput",
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
@@ -103,7 +109,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="downlink_throughput",
-        name="Downlink throughput",
+        translation_key="downlink_throughput",
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
@@ -113,10 +119,17 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="last_boot_time",
-        name="Last boot time",
+        translation_key="last_boot_time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: now() - timedelta(seconds=data.status["uptime"]),
+    ),
+    StarlinkSensorEntityDescription(
+        key="ping_drop_rate",
+        translation_key="ping_drop_rate",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda data: data.status["pop_ping_drop_rate"] * 100,
     ),
 )

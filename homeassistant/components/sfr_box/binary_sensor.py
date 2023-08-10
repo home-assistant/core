@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,28 +43,28 @@ class SFRBoxBinarySensorEntityDescription(
 DSL_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[DslInfo], ...] = (
     SFRBoxBinarySensorEntityDescription[DslInfo](
         key="status",
-        name="DSL status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
+        translation_key="dsl_status",
     ),
 )
 FTTH_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[FtthInfo], ...] = (
     SFRBoxBinarySensorEntityDescription[FtthInfo](
         key="status",
-        name="FTTH status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
+        translation_key="ftth_status",
     ),
 )
 WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
     SFRBoxBinarySensorEntityDescription[WanInfo](
         key="status",
-        name="WAN status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
+        translation_key="wan_status",
     ),
 )
 
@@ -112,7 +113,9 @@ class SFRBoxBinarySensor(
         self._attr_unique_id = (
             f"{system_info.mac_addr}_{coordinator.name}_{description.key}"
         )
-        self._attr_device_info = {"identifiers": {(DOMAIN, system_info.mac_addr)}}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, system_info.mac_addr)},
+        )
 
     @property
     def is_on(self) -> bool | None:

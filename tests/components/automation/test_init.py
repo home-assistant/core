@@ -25,6 +25,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
     Context,
@@ -1428,8 +1429,13 @@ async def test_automation_bad_config_validation(
         f" {details}"
     ) in caplog.text
 
-    # Make sure one bad automation does not prevent other automations from setting up
-    assert hass.states.async_entity_ids("automation") == ["automation.good_automation"]
+    # Make sure both automations are setup
+    assert set(hass.states.async_entity_ids("automation")) == {
+        "automation.bad_automation",
+        "automation.good_automation",
+    }
+    # The automation failing validation should be unavailable
+    assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
 
 
 async def test_automation_with_error_in_script(
@@ -1537,8 +1543,55 @@ async def test_automation_restore_last_triggered_with_initial_state(
     assert state.attributes["last_triggered"] == time
 
 
+async def test_extraction_functions_not_setup(hass: HomeAssistant) -> None:
+    """Test extraction functions when automation is not setup."""
+    assert automation.automations_with_area(hass, "area-in-both") == []
+    assert automation.areas_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_blueprint(hass, "blabla.yaml") == []
+    assert automation.blueprint_in_automation(hass, "automation.test") is None
+    assert automation.automations_with_device(hass, "device-in-both") == []
+    assert automation.devices_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_entity(hass, "light.in_both") == []
+    assert automation.entities_in_automation(hass, "automation.test") == []
+
+
+async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> None:
+    """Test extraction functions for an unknown automation."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert automation.areas_in_automation(hass, "automation.unknown") == []
+    assert automation.blueprint_in_automation(hass, "automation.unknown") is None
+    assert automation.devices_in_automation(hass, "automation.unknown") == []
+    assert automation.entities_in_automation(hass, "automation.unknown") == []
+
+
+async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) -> None:
+    """Test extraction functions for an unknown automation."""
+    entity_id = "automation.test1"
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                }
+            ]
+        },
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert automation.automations_with_area(hass, "area-in-both") == []
+    assert automation.areas_in_automation(hass, entity_id) == []
+    assert automation.automations_with_blueprint(hass, "blabla.yaml") == []
+    assert automation.blueprint_in_automation(hass, entity_id) is None
+    assert automation.automations_with_device(hass, "device-in-both") == []
+    assert automation.devices_in_automation(hass, entity_id) == []
+    assert automation.automations_with_entity(hass, "light.in_both") == []
+    assert automation.entities_in_automation(hass, entity_id) == []
+
+
 async def test_extraction_functions(hass: HomeAssistant) -> None:
     """Test extraction functions."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     assert await async_setup_component(
         hass,
@@ -1603,6 +1656,10 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
                             "entity_id": "light.bla",
                             "type": "turn_on",
                         },
+                        {
+                            "service": "test.test",
+                            "target": {"area_id": "area-in-both"},
+                        },
                     ],
                 },
                 {
@@ -1634,7 +1691,7 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
                         {
                             "platform": "event",
                             "event_type": "esphome.button_pressed",
-                            "event_data": {"device_id": ["device-trigger-event"]},
+                            "event_data": {"device_id": ["device-trigger-event2"]},
                         },
                         # device_id is not a string
                         {
@@ -1675,6 +1732,55 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
                         },
                     ],
                 },
+                {
+                    "alias": "test3",
+                    "trigger": [
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"area_id": "area-trigger-event"},
+                        },
+                        # area_id is a list of strings (not supported)
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"area_id": ["area-trigger-event2"]},
+                        },
+                        # area_id is not a string
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"area_id": 123},
+                        },
+                    ],
+                    "condition": {
+                        "condition": "device",
+                        "device_id": "condition-device",
+                        "domain": "light",
+                        "type": "is_on",
+                        "entity_id": "light.bla",
+                    },
+                    "action": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_both"},
+                        },
+                        {
+                            "condition": "state",
+                            "entity_id": "sensor.condition",
+                            "state": "100",
+                        },
+                        {"scene": "scene.hello"},
+                        {
+                            "service": "test.test",
+                            "target": {"area_id": "area-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"area_id": "area-in-last"},
+                        },
+                    ],
+                },
             ]
         },
     )
@@ -1682,6 +1788,7 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
     assert set(automation.automations_with_entity(hass, "light.in_both")) == {
         "automation.test1",
         "automation.test2",
+        "automation.test3",
     }
     assert set(automation.entities_in_automation(hass, "automation.test1")) == {
         "calendar.trigger_calendar",
@@ -1706,6 +1813,15 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
         "device-trigger-tag2",
         "device-trigger-tag3",
     }
+    assert set(automation.automations_with_area(hass, "area-in-both")) == {
+        "automation.test1",
+        "automation.test3",
+    }
+    assert set(automation.areas_in_automation(hass, "automation.test3")) == {
+        "area-in-both",
+        "area-in-last",
+    }
+    assert automation.blueprint_in_automation(hass, "automation.test3") is None
 
 
 async def test_logbook_humanify_automation_triggered_event(hass: HomeAssistant) -> None:
@@ -1978,6 +2094,13 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
     assert automation.entities_in_automation(hass, "automation.automation_0") == [
         "light.kitchen"
+    ]
+    assert (
+        automation.blueprint_in_automation(hass, "automation.automation_0")
+        == "test_event_service.yaml"
+    )
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
+        "automation.automation_0"
     ]
 
 

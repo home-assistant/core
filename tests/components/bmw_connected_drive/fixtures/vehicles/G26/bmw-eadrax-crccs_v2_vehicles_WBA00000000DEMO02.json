@@ -1,0 +1,80 @@
+{
+  "chargeAndClimateSettings": {
+    "chargeAndClimateTimer": {
+      "chargingMode": "Sofort laden",
+      "chargingModeSemantics": "Sofort laden",
+      "departureTimer": ["Aus"],
+      "departureTimerSemantics": "Aus",
+      "preconditionForDeparture": "Aus",
+      "showDepartureTimers": false
+    },
+    "chargingFlap": {
+      "permanentlyUnlockLabel": "Aus"
+    },
+    "chargingSettings": {
+      "acCurrentLimitLabel": "16A",
+      "acCurrentLimitLabelSemantics": "16 Ampere",
+      "chargingTargetLabel": "80%",
+      "dcLoudnessLabel": "Nicht begrenzt",
+      "unlockCableAutomaticallyLabel": "Aus"
+    }
+  },
+  "chargeAndClimateTimerDetail": {
+    "chargingMode": {
+      "chargingPreference": "NO_PRESELECTION",
+      "endTimeSlot": "0001-01-01T00:00:00",
+      "startTimeSlot": "0001-01-01T00:00:00",
+      "type": "CHARGING_IMMEDIATELY"
+    },
+    "departureTimer": {
+      "type": "WEEKLY_DEPARTURE_TIMER",
+      "weeklyTimers": [
+        {
+          "daysOfTheWeek": [],
+          "id": 1,
+          "time": "0001-01-01T00:00:00",
+          "timerAction": "DEACTIVATE"
+        },
+        {
+          "daysOfTheWeek": [],
+          "id": 2,
+          "time": "0001-01-01T00:00:00",
+          "timerAction": "DEACTIVATE"
+        },
+        {
+          "daysOfTheWeek": [],
+          "id": 3,
+          "time": "0001-01-01T00:00:00",
+          "timerAction": "DEACTIVATE"
+        },
+        {
+          "daysOfTheWeek": [],
+          "id": 4,
+          "time": "0001-01-01T00:00:00",
+          "timerAction": "DEACTIVATE"
+        }
+      ]
+    },
+    "isPreconditionForDepartureActive": false
+  },
+  "chargingFlapDetail": {
+    "isPermanentlyUnlock": false
+  },
+  "chargingSettingsDetail": {
+    "acLimit": {
+      "current": {
+        "unit": "A",
+        "value": 16
+      },
+      "isUnlimited": false,
+      "max": 32,
+      "min": 6,
+      "values": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 32]
+    },
+    "chargingTarget": 80,
+    "dcLoudness": "UNLIMITED_LOUD",
+    "isUnlockCableActive": false,
+    "minChargingTargetToWarning": 0
+  },
+  "servicePack": "WAVE_01"
+}

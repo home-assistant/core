@@ -2,7 +2,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from freezegun import freeze_time
+import pytest
 
 from homeassistant.components.weather import (
     ATTR_FORECAST,
@@ -100,7 +100,7 @@ async def test_daily_forecast(hass: HomeAssistant) -> None:
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"
 
 
-@freeze_time("2020-01-14 23:00:00")
+@pytest.mark.freeze_time("2020-01-14 23:00:00")
 async def test_hourly_forecast(hass: HomeAssistant) -> None:
     """Test for successfully getting daily forecast."""
     with patch(

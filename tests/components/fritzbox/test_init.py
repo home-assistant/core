@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from unittest.mock import Mock, call, patch
-from xml.etree.ElementTree import ParseError
 
 from pyfritzhome import LoginError
 import pytest
@@ -170,7 +169,7 @@ async def test_coordinator_update_after_reboot(
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert fritz().update_devices.call_count == 2
-    assert fritz().update_templates.call_count == 2
+    assert fritz().update_templates.call_count == 1
     assert fritz().get_devices.call_count == 1
     assert fritz().get_templates.call_count == 1
     assert fritz().login.call_count == 2
@@ -270,17 +269,3 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
     entries = hass.config_entries.async_entries()
     config_entry = entries[0]
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_disable_smarthome_templates(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test smarthome templates are disabled."""
-    entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        unique_id="any",
-    )
-    entry.add_to_hass(hass)
-    fritz().update_templates.side_effect = [ParseError(), ""]
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().update_templates.call_count == 1

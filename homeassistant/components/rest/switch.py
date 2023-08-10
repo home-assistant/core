@@ -6,8 +6,8 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-import aiohttp
 import async_timeout
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -28,9 +28,10 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.template_entity import (
     TEMPLATE_ENTITY_BASE_SCHEMA,
     TemplateEntity,
@@ -88,8 +89,8 @@ async def async_setup_platform(
         switch = RestSwitch(hass, config, unique_id)
 
         req = await switch.get_device_state(hass)
-        if req.status >= HTTPStatus.BAD_REQUEST:
-            _LOGGER.error("Got non-ok response from resource: %s", req.status)
+        if req.status_code >= HTTPStatus.BAD_REQUEST:
+            _LOGGER.error("Got non-ok response from resource: %s", req.status_code)
         else:
             async_add_entities([switch])
     except (TypeError, ValueError):
@@ -97,8 +98,8 @@ async def async_setup_platform(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"
         )
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("No route to resource/endpoint: %s", resource)
+    except (asyncio.TimeoutError, httpx.RequestError) as exc:
+        raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
 
 
 class RestSwitch(TemplateEntity, SwitchEntity):
@@ -119,11 +120,11 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             unique_id=unique_id,
         )
 
-        auth: aiohttp.BasicAuth | None = None
+        auth: httpx.BasicAuth | None = None
         username: str | None = None
         if username := config.get(CONF_USERNAME):
             password: str = config[CONF_PASSWORD]
-            auth = aiohttp.BasicAuth(username, password=password)
+            auth = httpx.BasicAuth(username, password=password)
 
         self._resource: str = config[CONF_RESOURCE]
         self._state_resource: str = config.get(CONF_STATE_RESOURCE) or self._resource
@@ -154,13 +155,13 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         try:
             req = await self.set_device_state(body_on_t)
 
-            if req.status == HTTPStatus.OK:
+            if req.status_code == HTTPStatus.OK:
                 self._attr_is_on = True
             else:
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
                 )
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (asyncio.TimeoutError, httpx.RequestError):
             _LOGGER.error("Error while switching on %s", self._resource)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -169,27 +170,27 @@ class RestSwitch(TemplateEntity, SwitchEntity):
 
         try:
             req = await self.set_device_state(body_off_t)
-            if req.status == HTTPStatus.OK:
+            if req.status_code == HTTPStatus.OK:
                 self._attr_is_on = False
             else:
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
                 )
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (asyncio.TimeoutError, httpx.RequestError):
             _LOGGER.error("Error while switching off %s", self._resource)
 
-    async def set_device_state(self, body: Any) -> aiohttp.ClientResponse:
+    async def set_device_state(self, body: Any) -> httpx.Response:
         """Send a state update to the device."""
-        websession = async_get_clientsession(self.hass, self._verify_ssl)
+        websession = get_async_client(self.hass, self._verify_ssl)
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
         async with async_timeout.timeout(self._timeout):
-            req: aiohttp.ClientResponse = await getattr(websession, self._method)(
+            req: httpx.Response = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
-                data=bytes(body, "utf-8"),
+                content=bytes(body, "utf-8"),
                 headers=rendered_headers,
                 params=rendered_params,
             )
@@ -201,12 +202,12 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             await self.get_device_state(self.hass)
         except asyncio.TimeoutError:
             _LOGGER.exception("Timed out while fetching data")
-        except aiohttp.ClientError as err:
+        except httpx.RequestError as err:
             _LOGGER.exception("Error while fetching data: %s", err)
 
-    async def get_device_state(self, hass: HomeAssistant) -> aiohttp.ClientResponse:
+    async def get_device_state(self, hass: HomeAssistant) -> httpx.Response:
         """Get the latest data from REST API and update the state."""
-        websession = async_get_clientsession(hass, self._verify_ssl)
+        websession = get_async_client(hass, self._verify_ssl)
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
@@ -218,7 +219,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
                 headers=rendered_headers,
                 params=rendered_params,
             )
-            text = await req.text()
+            text = req.text
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(
@@ -231,12 +232,11 @@ class RestSwitch(TemplateEntity, SwitchEntity):
                 self._attr_is_on = False
             else:
                 self._attr_is_on = None
+        elif text == self._body_on.template:
+            self._attr_is_on = True
+        elif text == self._body_off.template:
+            self._attr_is_on = False
         else:
-            if text == self._body_on.template:
-                self._attr_is_on = True
-            elif text == self._body_off.template:
-                self._attr_is_on = False
-            else:
-                self._attr_is_on = None
+            self._attr_is_on = None
 
         return req

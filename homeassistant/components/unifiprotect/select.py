@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 from enum import Enum
 import logging
 from typing import Any, Final
@@ -25,22 +24,15 @@ from pyunifiprotect.data import (
     Sensor,
     Viewer,
 )
-import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_DURATION, ATTR_MESSAGE, DISPATCH_ADOPT, DOMAIN, TYPE_EMPTY_VALUE
+from .const import DISPATCH_ADOPT, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
@@ -98,16 +90,6 @@ DEVICE_RECORDING_MODES = [
 ]
 
 DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
-
-SERVICE_SET_DOORBELL_MESSAGE = "set_doorbell_message"
-
-SET_DOORBELL_LCD_MESSAGE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DURATION, default=""): cv.string,
-    }
-)
 
 
 @dataclass
@@ -352,12 +334,6 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_DOORBELL_MESSAGE,
-        SET_DOORBELL_LCD_MESSAGE_SCHEMA,
-        "async_set_doorbell_message",
-    )
 
 
 class ProtectSelects(ProtectDeviceEntity, SelectEntity):
@@ -380,15 +356,15 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
+        entity_description = self.entity_description
         # entities with categories are not exposed for voice
         # and safe to update dynamically
         if (
-            self.entity_description.entity_category is not None
-            and self.entity_description.ufp_options_fn is not None
+            entity_description.entity_category is not None
+            and entity_description.ufp_options_fn is not None
         ):
             _LOGGER.debug(
-                "Updating dynamic select options for %s", self.entity_description.name
+                "Updating dynamic select options for %s", entity_description.name
             )
             self._async_set_options()
 
@@ -428,43 +404,3 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         if self.entity_description.ufp_enum_type is not None:
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)
         await self.entity_description.ufp_set(self.device, unifi_value)
-
-    async def async_set_doorbell_message(self, message: str, duration: str) -> None:
-        """Set LCD Message on Doorbell display."""
-
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "deprecated_service_set_doorbell_message",
-            breaks_in_ha_version="2023.3.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_placeholders={
-                "link": (
-                    "https://www.home-assistant.io/integrations"
-                    "/text#service-textset_value"
-                )
-            },
-            translation_key="deprecated_service_set_doorbell_message",
-        )
-
-        if self.entity_description.device_class != DEVICE_CLASS_LCD_MESSAGE:
-            raise HomeAssistantError("Not a doorbell text select entity")
-
-        assert isinstance(self.device, Camera)
-        reset_at = None
-        timeout_msg = ""
-        if duration.isnumeric():
-            reset_at = utcnow() + timedelta(minutes=int(duration))
-            timeout_msg = f" with timeout of {duration} minute(s)"
-
-        _LOGGER.debug(
-            'Setting message for %s to "%s"%s',
-            self.device.display_name,
-            message,
-            timeout_msg,
-        )
-        await self.device.set_lcd_text(
-            DoorbellMessageType.CUSTOM_MESSAGE, message, reset_at=reset_at
-        )

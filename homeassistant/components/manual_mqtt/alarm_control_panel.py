@@ -29,13 +29,15 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -186,13 +188,19 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the manual MQTT alarm platform."""
+    # Make sure MQTT integration is enabled and the client is available
+    # We cannot count on dependencies as the alarm_control_panel platform setup
+    # also will be triggered when mqtt is loading the `alarm_control_panel` platform
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return
     add_entities(
         [
             ManualMQTTAlarm(
@@ -345,56 +353,34 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if not self._async_validate_code(code, STATE_ALARM_DISARMED):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_DISARMED)
         self._state = STATE_ALARM_DISARMED
         self._state_ts = dt_util.utcnow()
         self.async_schedule_update_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_HOME
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_HOME)
         self._async_update_state(STATE_ALARM_ARMED_HOME)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_AWAY
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_AWAY)
         self._async_update_state(STATE_ALARM_ARMED_AWAY)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_NIGHT
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_NIGHT)
         self._async_update_state(STATE_ALARM_ARMED_NIGHT)
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_VACATION
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_VACATION)
         self._async_update_state(STATE_ALARM_ARMED_VACATION)
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_CUSTOM_BYPASS
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_CUSTOM_BYPASS)
         self._async_update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
@@ -436,18 +422,22 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     def _async_validate_code(self, code, state):
         """Validate given code."""
-        if self._code is None:
-            return True
+        if (
+            state != STATE_ALARM_DISARMED and not self.code_arm_required
+        ) or self._code is None:
+            return
+
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
             alarm_code = self._code.async_render(
                 from_state=self._state, to_state=state, parse_result=False
             )
-        check = not alarm_code or code == alarm_code
-        if not check:
-            _LOGGER.warning("Invalid code given for %s", state)
-        return check
+
+        if not alarm_code or code == alarm_code:
+            return
+
+        raise HomeAssistantError("Invalid alarm code provided")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -492,9 +482,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             self.hass, self._command_topic, message_received, self._qos
         )
 
-    async def _async_state_changed_listener(self, event):
+    async def _async_state_changed_listener(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Publish state change to MQTT."""
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             return
         await mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True

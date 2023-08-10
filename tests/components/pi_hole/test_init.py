@@ -36,43 +36,43 @@ async def test_setup_with_defaults(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     state = hass.states.get("sensor.pi_hole_ads_blocked_today")
-    assert state.name == "Pi-Hole Ads Blocked Today"
+    assert state.name == "Pi-Hole Ads blocked today"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_ads_percentage_blocked_today")
-    assert state.name == "Pi-Hole Ads Percentage Blocked Today"
+    assert state.name == "Pi-Hole Ads percentage blocked today"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_queries_cached")
-    assert state.name == "Pi-Hole DNS Queries Cached"
+    assert state.name == "Pi-Hole DNS queries cached"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_queries_forwarded")
-    assert state.name == "Pi-Hole DNS Queries Forwarded"
+    assert state.name == "Pi-Hole DNS queries forwarded"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_queries_today")
-    assert state.name == "Pi-Hole DNS Queries Today"
+    assert state.name == "Pi-Hole DNS queries today"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_unique_clients")
-    assert state.name == "Pi-Hole DNS Unique Clients"
+    assert state.name == "Pi-Hole DNS unique clients"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_unique_domains")
-    assert state.name == "Pi-Hole DNS Unique Domains"
+    assert state.name == "Pi-Hole DNS unique domains"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_domains_blocked")
-    assert state.name == "Pi-Hole Domains Blocked"
+    assert state.name == "Pi-Hole Domains blocked"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_seen_clients")
-    assert state.name == "Pi-Hole Seen Clients"
+    assert state.name == "Pi-Hole Seen clients"
     assert state.state == "0"
 
-    state = hass.states.get("binary_sensor.pi_hole")
-    assert state.name == "Pi-Hole"
+    state = hass.states.get("binary_sensor.pi_hole_status")
+    assert state.name == "Pi-Hole Status"
     assert state.state == "off"
 
 
@@ -90,7 +90,7 @@ async def test_setup_name_config(hass: HomeAssistant) -> None:
 
     assert (
         hass.states.get("sensor.custom_ads_blocked_today").name
-        == "Custom Ads Blocked Today"
+        == "Custom Ads blocked today"
     )
 
 

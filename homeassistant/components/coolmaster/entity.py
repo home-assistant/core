@@ -12,6 +12,8 @@ from .const import DOMAIN
 class CoolmasterEntity(CoordinatorEntity[CoolmasterDataUpdateCoordinator]):
     """Representation of a Coolmaster entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: CoolmasterDataUpdateCoordinator,

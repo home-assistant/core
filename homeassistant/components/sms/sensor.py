@@ -17,7 +17,6 @@ from .const import DOMAIN, GATEWAY, NETWORK_COORDINATOR, SIGNAL_COORDINATOR, SMS
 SIGNAL_SENSORS = (
     SensorEntityDescription(
         key="SignalStrength",
-        name="Signal Strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -27,14 +26,14 @@ SIGNAL_SENSORS = (
     SensorEntityDescription(
         key="SignalPercent",
         icon="mdi:signal-cellular-3",
-        name="Signal Percent",
+        translation_key="signal_percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="BitErrorRate",
-        name="Bit Error Rate",
+        translation_key="bit_error_rate",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
@@ -45,31 +44,31 @@ SIGNAL_SENSORS = (
 NETWORK_SENSORS = (
     SensorEntityDescription(
         key="NetworkName",
-        name="Network Name",
+        translation_key="network_name",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="State",
-        name="Network Status",
+        translation_key="state",
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
         key="NetworkCode",
-        name="GSM network code",
+        translation_key="network_code",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="CID",
-        name="Cell ID",
+        translation_key="cid",
         icon="mdi:radio-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="LAC",
-        name="Local Area Code",
+        translation_key="lac",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -101,6 +100,8 @@ async def async_setup_entry(
 
 class DeviceSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a device sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator, description, unique_id, gateway):
         """Initialize the device sensor."""

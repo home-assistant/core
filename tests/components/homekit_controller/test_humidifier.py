@@ -118,20 +118,24 @@ async def test_humidifier_read_humidity(hass: HomeAssistant, utcnow) -> None:
         {
             CharacteristicsTypes.ACTIVE: True,
             CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD: 75,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: 45,
         },
     )
     assert state.state == "on"
     assert state.attributes["humidity"] == 75
+    assert state.attributes["current_humidity"] == 45
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
         {
             CharacteristicsTypes.ACTIVE: False,
             CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD: 10,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: 30,
         },
     )
     assert state.state == "off"
     assert state.attributes["humidity"] == 10
+    assert state.attributes["current_humidity"] == 30
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
@@ -140,6 +144,7 @@ async def test_humidifier_read_humidity(hass: HomeAssistant, utcnow) -> None:
         },
     )
     assert state.attributes["humidity"] == 10
+    assert state.attributes["current_humidity"] == 30
     assert state.state == "off"
 
 
@@ -152,20 +157,24 @@ async def test_dehumidifier_read_humidity(hass: HomeAssistant, utcnow) -> None:
         {
             CharacteristicsTypes.ACTIVE: True,
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD: 75,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: 45,
         },
     )
     assert state.state == "on"
     assert state.attributes["humidity"] == 75
+    assert state.attributes["current_humidity"] == 45
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
         {
             CharacteristicsTypes.ACTIVE: False,
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD: 40,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: 39,
         },
     )
     assert state.state == "off"
     assert state.attributes["humidity"] == 40
+    assert state.attributes["current_humidity"] == 39
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
@@ -368,6 +377,7 @@ async def test_humidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -> 
     )
     assert state.attributes["mode"] == "auto"
     assert state.attributes["humidity"] == 37
+    assert state.attributes["current_humidity"] == 51
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
@@ -377,6 +387,7 @@ async def test_humidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -> 
     )
     assert state.attributes["mode"] == "normal"
     assert state.attributes["humidity"] == 37
+    assert state.attributes["current_humidity"] == 51
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
@@ -411,6 +422,7 @@ async def test_dehumidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -
     )
     assert state.attributes["mode"] == "auto"
     assert state.attributes["humidity"] == 73
+    assert state.attributes["current_humidity"] == 51
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
@@ -420,6 +432,7 @@ async def test_dehumidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -
     )
     assert state.attributes["mode"] == "normal"
     assert state.attributes["humidity"] == 73
+    assert state.attributes["current_humidity"] == 51
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
@@ -429,6 +442,7 @@ async def test_dehumidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -
     )
     assert state.attributes["mode"] == "normal"
     assert state.attributes["humidity"] == 73
+    assert state.attributes["current_humidity"] == 51
 
     state = await helper.async_update(
         ServicesTypes.HUMIDIFIER_DEHUMIDIFIER,
@@ -438,6 +452,7 @@ async def test_dehumidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -
     )
     assert state.attributes["mode"] == "normal"
     assert state.attributes["humidity"] == 73
+    assert state.attributes["current_humidity"] == 51
 
 
 async def test_migrate_entity_ids(hass: HomeAssistant, utcnow) -> None:

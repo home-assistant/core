@@ -44,6 +44,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
 async def test_service_calls(hass: HomeAssistant) -> None:
     """Test service calls affecting the switch as lock entity."""
     await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -51,33 +52,33 @@ async def test_service_calls(hass: HomeAssistant) -> None:
             CONF_ENTITY_ID: "switch.decorative_lights",
             CONF_TARGET_DOMAIN: Platform.LOCK,
         },
-        title="candy_jar",
+        title="Title is ignored",
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("lock.candy_jar").state == STATE_UNLOCKED
+    assert hass.states.get("lock.decorative_lights").state == STATE_UNLOCKED
 
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_LOCK,
-        {CONF_ENTITY_ID: "lock.candy_jar"},
+        {CONF_ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("lock.candy_jar").state == STATE_LOCKED
+    assert hass.states.get("lock.decorative_lights").state == STATE_LOCKED
 
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_UNLOCK,
-        {CONF_ENTITY_ID: "lock.candy_jar"},
+        {CONF_ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("lock.candy_jar").state == STATE_UNLOCKED
+    assert hass.states.get("lock.decorative_lights").state == STATE_UNLOCKED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -87,7 +88,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("lock.candy_jar").state == STATE_LOCKED
+    assert hass.states.get("lock.decorative_lights").state == STATE_LOCKED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -97,7 +98,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("lock.candy_jar").state == STATE_UNLOCKED
+    assert hass.states.get("lock.decorative_lights").state == STATE_UNLOCKED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -107,4 +108,4 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("lock.candy_jar").state == STATE_LOCKED
+    assert hass.states.get("lock.decorative_lights").state == STATE_LOCKED

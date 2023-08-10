@@ -1,100 +1,69 @@
 """The Nextcloud integration."""
-import logging
 
-from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
-import voluptuous as vol
+from nextcloudmonitor import (
+    NextcloudMonitor,
+    NextcloudMonitorAuthorizationError,
+    NextcloudMonitorConnectionError,
+    NextcloudMonitorRequestError,
+)
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
+from .coordinator import NextcloudDataUpdateCoordinator
 
 PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
 
-# Validate user configuration
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_URL): cv.url,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Nextcloud integration."""
-    # Fetch Nextcloud Monitor api data
-    conf = config[DOMAIN]
+
+    def _connect_nc():
+        return NextcloudMonitor(
+            entry.data[CONF_URL],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data[CONF_VERIFY_SSL],
+        )
 
     try:
-        ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
-    except NextcloudMonitorError:
-        _LOGGER.error("Nextcloud setup failed - Check configuration")
-        return False
+        ncm = await hass.async_add_executor_job(_connect_nc)
+    except NextcloudMonitorAuthorizationError as ex:
+        raise ConfigEntryAuthFailed from ex
+    except (NextcloudMonitorConnectionError, NextcloudMonitorRequestError) as ex:
+        raise ConfigEntryNotReady from ex
 
-    hass.data[DOMAIN] = get_data_points(ncm.data)
-    hass.data[DOMAIN]["instance"] = conf[CONF_URL]
+    coordinator = NextcloudDataUpdateCoordinator(
+        hass,
+        ncm,
+        entry,
+    )
 
-    def nextcloud_update(event_time):
-        """Update data from nextcloud api."""
-        try:
-            ncm.update()
-        except NextcloudMonitorError:
-            _LOGGER.error("Nextcloud update failed")
-            return False
+    await coordinator.async_config_entry_first_refresh()
 
-        hass.data[DOMAIN] = get_data_points(ncm.data)
-        hass.data[DOMAIN]["instance"] = conf[CONF_URL]
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    # Update sensors on time interval
-    track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
-
-    for platform in PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-# Use recursion to create list of sensors & values based on nextcloud api data
-def get_data_points(api_data, key_path="", leaf=False):
-    """Use Recursion to discover data-points and values.
-
-    Get dictionary of data-points by recursing through dict returned by api until
-    the dictionary value does not contain another dictionary and use the
-    resulting path of dictionary keys and resulting value as the name/value
-    for the data-point.
-
-    returns: dictionary of data-point/values
-    """
-    result = {}
-    for key, value in api_data.items():
-        if isinstance(value, dict):
-            if leaf:
-                key_path = f"{key}_"
-            if not leaf:
-                key_path += f"{key}_"
-            leaf = True
-            result.update(get_data_points(value, key_path, leaf))
-        else:
-            result[f"{DOMAIN}_{key_path}{key}"] = value
-            leaf = False
-    return result
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Nextcloud integration."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+    return unload_ok

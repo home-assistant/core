@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping
 import datetime
 import itertools
 import logging
@@ -119,7 +119,16 @@ def _time_weighted_average(
         duration = end - old_start_time
         accumulated += old_fstate * duration.total_seconds()
 
-    return accumulated / (end - start).total_seconds()
+    period_seconds = (end - start).total_seconds()
+    if period_seconds == 0:
+        # If the only state changed that happened was at the exact moment
+        # at the end of the period, we can't calculate a meaningful average
+        # so we return 0.0 since it represents a time duration smaller than
+        # we can measure. This probably means the precision of statistics
+        # column schema in the database is incorrect but it is actually possible
+        # to happen if the state change event fired at the exact microsecond
+        return 0.0
+    return accumulated / period_seconds
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
@@ -140,7 +149,7 @@ def _equivalent_units(units: set[str | None]) -> bool:
 def _parse_float(state: str) -> float:
     """Parse a float string, throw on inf or nan."""
     fstate = float(state)
-    if math.isnan(fstate) or math.isinf(fstate):
+    if not math.isfinite(fstate):
         raise ValueError
     return fstate
 
@@ -215,6 +224,8 @@ def _normalize_states(
 
     converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
+    convert: Callable[[float], float]
+    last_unit: str | None | object = object()
 
     for fstate, state in fstates:
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -238,15 +249,13 @@ def _normalize_states(
                     LINK_DEV_STATISTICS,
                 )
             continue
+        if state_unit != last_unit:
+            # The unit of measurement has changed since the last state change
+            # recreate the converter factory
+            convert = converter.converter_factory(state_unit, statistics_unit)
+            last_unit = state_unit
 
-        valid_fstates.append(
-            (
-                converter.convert(
-                    fstate, from_unit=state_unit, to_unit=statistics_unit
-                ),
-                state,
-            )
-        )
+        valid_fstates.append((convert(fstate), state))
 
     return statistics_unit, valid_fstates
 
@@ -548,8 +557,11 @@ def _compile_statistics(  # noqa: C901
                 last_stat = last_stats[entity_id][0]
                 last_reset = _timestamp_to_isoformat_or_none(last_stat["last_reset"])
                 old_last_reset = last_reset
-                new_state = old_state = last_stat["state"]
-                _sum = last_stat["sum"] or 0.0
+                # If there are no previous values and has_sum
+                # was previously false there will be no last_stat
+                # for state or sum
+                new_state = old_state = last_stat.get("state")
+                _sum = last_stat.get("sum") or 0.0
 
             for fstate, state in valid_float_states:
                 reset = False

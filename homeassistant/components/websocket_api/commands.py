@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import suppress
 import datetime as dt
-from functools import lru_cache
+from functools import lru_cache, partial
 import json
 from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
@@ -26,6 +26,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -34,8 +35,10 @@ from homeassistant.helpers.json import (
     JSON_DUMP,
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
+    json_dumps,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.typing import EventType
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -49,6 +52,9 @@ from homeassistant.util.json import format_unserializable_data
 from . import const, decorators, messages
 from .connection import ActiveConnection
 from .const import ERR_NOT_FOUND
+from .messages import construct_event_message, construct_result_message
+
+ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
 
 
 @callback
@@ -85,6 +91,32 @@ def pong_message(iden: int) -> dict[str, Any]:
     return {"id": iden, "type": "pong"}
 
 
+def _forward_events_check_permissions(
+    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    user: User,
+    msg_id: int,
+    event: Event,
+) -> None:
+    """Forward state changed events to websocket."""
+    # We have to lookup the permissions again because the user might have
+    # changed since the subscription was created.
+    permissions = user.permissions
+    if not permissions.access_all_entities(
+        POLICY_READ
+    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+        return
+    send_message(messages.cached_event_message(msg_id, event))
+
+
+def _forward_events_unconditional(
+    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    msg_id: int,
+    event: Event,
+) -> None:
+    """Forward events to websocket."""
+    send_message(messages.cached_event_message(msg_id, event))
+
+
 @callback
 @decorators.websocket_command(
     {
@@ -106,23 +138,18 @@ def handle_subscribe_events(
         raise Unauthorized
 
     if event_type == EVENT_STATE_CHANGED:
-
-        @callback
-        def forward_events(event: Event) -> None:
-            """Forward state changed events to websocket."""
-            if not connection.user.permissions.check_entity(
-                event.data["entity_id"], POLICY_READ
-            ):
-                return
-
-            connection.send_message(messages.cached_event_message(msg["id"], event))
-
+        forward_events = callback(
+            partial(
+                _forward_events_check_permissions,
+                connection.send_message,
+                connection.user,
+                msg["id"],
+            )
+        )
     else:
-
-        @callback
-        def forward_events(event: Event) -> None:
-            """Forward events to websocket."""
-            connection.send_message(messages.cached_event_message(msg["id"], event))
+        forward_events = callback(
+            partial(_forward_events_unconditional, connection.send_message, msg["id"])
+        )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events, run_immediately=True
@@ -224,13 +251,13 @@ async def handle_call_service(
 def _async_get_allowed_states(
     hass: HomeAssistant, connection: ActiveConnection
 ) -> list[State]:
-    if connection.user.permissions.access_all_entities("read"):
+    if connection.user.permissions.access_all_entities(POLICY_READ):
         return hass.states.async_all()
     entity_perm = connection.user.permissions.check_entity
     return [
         state
         for state in hass.states.async_all()
-        if entity_perm(state.entity_id, "read")
+        if entity_perm(state.entity_id, POLICY_READ)
     ]
 
 
@@ -242,33 +269,57 @@ def handle_get_states(
     """Handle get states command."""
     states = _async_get_allowed_states(hass, connection)
 
-    # JSON serialize here so we can recover if it blows up due to the
-    # state machine containing unserializable data. This command is required
-    # to succeed for the UI to show.
-    response = messages.result_message(msg["id"], states)
     try:
-        connection.send_message(JSON_DUMP(response))
-        return
+        serialized_states = [state.as_dict_json() for state in states]
     except (ValueError, TypeError):
-        connection.logger.error(
-            "Unable to serialize to JSON. Bad data found at %s",
-            format_unserializable_data(
-                find_paths_unserializable_data(response, dump=JSON_DUMP)
-            ),
-        )
-    del response
+        pass
+    else:
+        _send_handle_get_states_response(connection, msg["id"], serialized_states)
+        return
 
     # If we can't serialize, we'll filter out unserializable states
-    serialized = []
+    serialized_states = []
     for state in states:
-        # Error is already logged above
-        with suppress(ValueError, TypeError):
-            serialized.append(JSON_DUMP(state))
+        try:
+            serialized_states.append(state.as_dict_json())
+        except (ValueError, TypeError):
+            connection.logger.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(state, dump=JSON_DUMP)
+                ),
+            )
 
-    # We now have partially serialized states. Craft some JSON.
-    response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
-    response2 = response2.replace('"TO_REPLACE"', ", ".join(serialized))
-    connection.send_message(response2)
+    _send_handle_get_states_response(connection, msg["id"], serialized_states)
+
+
+def _send_handle_get_states_response(
+    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+) -> None:
+    """Send handle get states response."""
+    joined_states = ",".join(serialized_states)
+    connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
+
+
+def _forward_entity_changes(
+    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    entity_ids: set[str],
+    user: User,
+    msg_id: int,
+    event: Event,
+) -> None:
+    """Forward entity state changed events to websocket."""
+    entity_id = event.data["entity_id"]
+    if entity_ids and entity_id not in entity_ids:
+        return
+    # We have to lookup the permissions again because the user might have
+    # changed since the subscription was created.
+    permissions = user.permissions
+    if not permissions.access_all_entities(
+        POLICY_READ
+    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+        return
+    send_message(messages.cached_state_diff_message(msg_id, event))
 
 
 @callback
@@ -283,63 +334,78 @@ def handle_subscribe_entities(
 ) -> None:
     """Handle subscribe entities command."""
     entity_ids = set(msg.get("entity_ids", []))
-
-    @callback
-    def forward_entity_changes(event: Event) -> None:
-        """Forward entity state changed events to websocket."""
-        if not connection.user.permissions.check_entity(
-            event.data["entity_id"], POLICY_READ
-        ):
-            return
-        if entity_ids and event.data["entity_id"] not in entity_ids:
-            return
-
-        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
-
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        EVENT_STATE_CHANGED, forward_entity_changes, run_immediately=True
+        EVENT_STATE_CHANGED,
+        callback(
+            partial(
+                _forward_entity_changes,
+                connection.send_message,
+                entity_ids,
+                connection.user,
+                msg["id"],
+            )
+        ),
+        run_immediately=True,
     )
     connection.send_result(msg["id"])
-    data: dict[str, dict[str, dict]] = {
-        messages.ENTITY_EVENT_ADD: {
-            state.entity_id: state.as_compressed_state()
-            for state in states
-            if not entity_ids or state.entity_id in entity_ids
-        }
-    }
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
     # to succeed for the UI to show.
-    response = messages.event_message(msg["id"], data)
     try:
-        connection.send_message(JSON_DUMP(response))
-        return
+        serialized_states = [
+            state.as_compressed_state_json()
+            for state in states
+            if not entity_ids or state.entity_id in entity_ids
+        ]
     except (ValueError, TypeError):
-        connection.logger.error(
-            "Unable to serialize to JSON. Bad data found at %s",
-            format_unserializable_data(
-                find_paths_unserializable_data(response, dump=JSON_DUMP)
-            ),
-        )
-    del response
+        pass
+    else:
+        _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+        return
 
-    add_entities = data[messages.ENTITY_EVENT_ADD]
-    cannot_serialize: list[str] = []
-    for entity_id, state_dict in add_entities.items():
+    serialized_states = []
+    for state in states:
         try:
-            JSON_DUMP(state_dict)
+            serialized_states.append(state.as_compressed_state_json())
         except (ValueError, TypeError):
-            cannot_serialize.append(entity_id)
+            connection.logger.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(state, dump=JSON_DUMP)
+                ),
+            )
 
-    for entity_id in cannot_serialize:
-        del add_entities[entity_id]
+    _send_handle_entities_init_response(connection, msg["id"], serialized_states)
 
-    connection.send_message(JSON_DUMP(messages.event_message(msg["id"], data)))
+
+def _send_handle_entities_init_response(
+    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+) -> None:
+    """Send handle entities init response."""
+    joined_states = ",".join(serialized_states)
+    connection.send_message(
+        construct_event_message(msg_id, f'{{"a":{{{joined_states}}}}}')
+    )
+
+
+async def _async_get_all_descriptions_json(hass: HomeAssistant) -> str:
+    """Return JSON of descriptions (i.e. user documentation) for all service calls."""
+    descriptions = await async_get_all_descriptions(hass)
+    if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
+        cached_descriptions, cached_json_payload = hass.data[
+            ALL_SERVICE_DESCRIPTIONS_JSON_CACHE
+        ]
+        # If the descriptions are the same, return the cached JSON payload
+        if cached_descriptions is descriptions:
+            return cast(str, cached_json_payload)
+    json_payload = json_dumps(descriptions)
+    hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    return json_payload
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
@@ -348,8 +414,8 @@ async def handle_get_services(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get services command."""
-    descriptions = await async_get_all_descriptions(hass)
-    connection.send_result(msg["id"], descriptions)
+    payload = await _async_get_all_descriptions_json(hass)
+    connection.send_message(construct_result_message(msg["id"], payload))
 
 
 @callback
@@ -399,9 +465,9 @@ async def handle_manifest_get(
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
 
 
+@callback
 @decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
-@decorators.async_response
-async def handle_integration_setup_info(
+def handle_integration_setup_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
@@ -471,7 +537,8 @@ async def handle_render_template(
 
     @callback
     def _template_listener(
-        event: Event | None, updates: list[TrackTemplateResult]
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
     ) -> None:
         nonlocal info
         track_template_result = updates.pop()
@@ -517,13 +584,13 @@ def handle_entity_source(
     entity_perm = connection.user.permissions.check_entity
 
     if "entity_id" not in msg:
-        if connection.user.permissions.access_all_entities("read"):
+        if connection.user.permissions.access_all_entities(POLICY_READ):
             sources = raw_sources
         else:
             sources = {
                 entity_id: source
                 for entity_id, source in raw_sources.items()
-                if entity_perm(entity_id, "read")
+                if entity_perm(entity_id, POLICY_READ)
             }
 
         connection.send_result(msg["id"], sources)
@@ -532,7 +599,7 @@ def handle_entity_source(
     sources = {}
 
     for entity_id in msg["entity_id"]:
-        if not entity_perm(entity_id, "read"):
+        if not entity_perm(entity_id, POLICY_READ):
             raise Unauthorized(
                 context=connection.context(msg),
                 permission=POLICY_READ,
@@ -640,14 +707,23 @@ async def handle_execute_script(
     """Handle execute script command."""
     # Circular dep
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.script import Script
+    from homeassistant.helpers.script import Script, async_validate_actions_config
+
+    script_config = await async_validate_actions_config(hass, msg["sequence"])
 
     context = connection.context(msg)
-    script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
-    await script_obj.async_run(msg.get("variables"), context=context)
-    connection.send_result(msg["id"], {"context": context})
+    script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
+    response = await script_obj.async_run(msg.get("variables"), context=context)
+    connection.send_result(
+        msg["id"],
+        {
+            "context": context,
+            "response": response,
+        },
+    )
 
 
+@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "fire_event",
@@ -656,8 +732,7 @@ async def handle_execute_script(
     }
 )
 @decorators.require_admin
-@decorators.async_response
-async def handle_fire_event(
+def handle_fire_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle fire event command."""
@@ -688,14 +763,14 @@ async def handle_validate_config(
 
     for key, schema, validator in (
         ("trigger", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
-        ("condition", cv.CONDITION_SCHEMA, condition.async_validate_condition_config),
+        ("condition", cv.CONDITIONS_SCHEMA, condition.async_validate_conditions_config),
         ("action", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
     ):
         if key not in msg:
             continue
 
         try:
-            await validator(hass, schema(msg[key]))  # type: ignore[operator]
+            await validator(hass, schema(msg[key]))
         except vol.Invalid as err:
             result[key] = {"valid": False, "error": str(err)}
         else:
@@ -715,7 +790,7 @@ def handle_supported_features(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle setting supported features."""
-    connection.supported_features = msg["features"]
+    connection.set_supported_features(msg["features"])
     connection.send_result(msg["id"])
 
 

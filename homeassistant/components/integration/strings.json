@@ -7,7 +7,7 @@
         "description": "Create a sensor that calculates a Riemann sum to estimate the integral of a sensor.",
         "data": {
           "method": "Integration method",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "round": "Precision",
           "source": "Input sensor",
           "unit_prefix": "Metric prefix",

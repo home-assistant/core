@@ -1,19 +1,22 @@
 """Websocket API for OTBR."""
-from typing import TYPE_CHECKING
+
+from typing import cast
 
 import python_otbr_api
-from python_otbr_api import tlv_parser
+from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
+from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    is_multiprotocol_url,
+)
 from homeassistant.components.thread import async_add_dataset, async_get_dataset
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-
-if TYPE_CHECKING:
-    from . import OTBRData
+from .util import OTBRData, get_allowed_channel, update_issues
 
 
 @callback
@@ -22,6 +25,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_info)
     websocket_api.async_register_command(hass, websocket_create_network)
     websocket_api.async_register_command(hass, websocket_get_extended_address)
+    websocket_api.async_register_command(hass, websocket_set_channel)
     websocket_api.async_register_command(hass, websocket_set_network)
 
 
@@ -43,7 +47,8 @@ async def websocket_info(
     data: OTBRData = hass.data[DOMAIN]
 
     try:
-        dataset = await data.get_active_dataset_tlvs()
+        dataset = await data.get_active_dataset()
+        dataset_tlvs = await data.get_active_dataset_tlvs()
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "get_dataset_failed", str(exc))
         return
@@ -52,7 +57,8 @@ async def websocket_info(
         msg["id"],
         {
             "url": data.url,
-            "active_dataset_tlvs": dataset.hex() if dataset else None,
+            "active_dataset_tlvs": dataset_tlvs.hex() if dataset_tlvs else None,
+            "channel": dataset.channel if dataset else None,
         },
     )
 
@@ -72,11 +78,8 @@ async def websocket_create_network(
         connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
-    # We currently have no way to know which channel zha is using, assume it's
-    # the default
-    zha_channel = DEFAULT_CHANNEL
-
     data: OTBRData = hass.data[DOMAIN]
+    channel = await get_allowed_channel(hass, data.url) or DEFAULT_CHANNEL
 
     try:
         await data.set_enabled(False)
@@ -85,9 +88,15 @@ async def websocket_create_network(
         return
 
     try:
+        await data.factory_reset()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "factory_reset_failed", str(exc))
+        return
+
+    try:
         await data.create_active_dataset(
-            python_otbr_api.OperationalDataSet(
-                channel=zha_channel, network_name="home-assistant"
+            python_otbr_api.ActiveDataSet(
+                channel=channel, network_name="home-assistant"
             )
         )
     except HomeAssistantError as exc:
@@ -110,6 +119,9 @@ async def websocket_create_network(
         return
 
     await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
+
+    # Update repair issues
+    await update_issues(hass, data, dataset_tlvs)
 
     connection.send_result(msg["id"])
 
@@ -136,23 +148,20 @@ async def websocket_set_network(
         connection.send_error(msg["id"], "unknown_dataset", "Unknown dataset")
         return
     dataset = tlv_parser.parse_tlv(dataset_tlv)
-    if channel_str := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL):
-        thread_dataset_channel = int(channel_str, base=16)
+    if channel := dataset.get(MeshcopTLVType.CHANNEL):
+        thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
 
-    # We currently have no way to know which channel zha is using, assume it's
-    # the default
-    zha_channel = DEFAULT_CHANNEL
+    data: OTBRData = hass.data[DOMAIN]
+    allowed_channel = await get_allowed_channel(hass, data.url)
 
-    if thread_dataset_channel != zha_channel:
+    if allowed_channel and thread_dataset_channel != allowed_channel:
         connection.send_error(
             msg["id"],
             "channel_conflict",
             f"Can't connect to network on channel {thread_dataset_channel}, ZHA is "
-            f"using channel {zha_channel}",
+            f"using channel {allowed_channel}",
         )
         return
-
-    data: OTBRData = hass.data[DOMAIN]
 
     try:
         await data.set_enabled(False)
@@ -171,6 +180,9 @@ async def websocket_set_network(
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "set_enabled_failed", str(exc))
         return
+
+    # Update repair issues
+    await update_issues(hass, data, bytes.fromhex(dataset_tlv))
 
     connection.send_result(msg["id"])
 
@@ -199,3 +211,41 @@ async def websocket_get_extended_address(
         return
 
     connection.send_result(msg["id"], {"extended_address": extended_address.hex()})
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "otbr/set_channel",
+        vol.Required("channel"): int,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_set_channel(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Set current channel."""
+    if DOMAIN not in hass.data:
+        connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
+        return
+
+    data: OTBRData = hass.data[DOMAIN]
+
+    if is_multiprotocol_url(data.url):
+        connection.send_error(
+            msg["id"],
+            "multiprotocol_enabled",
+            "Channel change not allowed when in multiprotocol mode",
+        )
+        return
+
+    channel: int = msg["channel"]
+    delay: float = PENDING_DATASET_DELAY_TIMER / 1000
+
+    try:
+        await data.set_channel(channel)
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "set_channel_failed", str(exc))
+        return
+
+    connection.send_result(msg["id"], {"delay": delay})

@@ -62,16 +62,16 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             SensorStateClass.MEASUREMENT,
         ],
         [
-            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power_consumption",
+            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power",
             "5.678",
-            f"{CONF_FAKE_NAME} Power Consumption",
+            f"{CONF_FAKE_NAME} Power",
             UnitOfPower.WATT,
             SensorStateClass.MEASUREMENT,
         ],
         [
-            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_total_energy",
+            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_energy",
             "1.234",
-            f"{CONF_FAKE_NAME} Total Energy",
+            f"{CONF_FAKE_NAME} Energy",
             UnitOfEnergy.KILO_WATT_HOUR,
             SensorStateClass.TOTAL_INCREASING,
         ],
@@ -83,9 +83,9 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             SensorStateClass.MEASUREMENT,
         ],
         [
-            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_electric_current",
+            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_current",
             "0.025",
-            f"{CONF_FAKE_NAME} Electric Current",
+            f"{CONF_FAKE_NAME} Current",
             UnitOfElectricCurrent.AMPERE,
             SensorStateClass.MEASUREMENT,
         ],
@@ -107,7 +107,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_switch_state_on.call_count == 1
@@ -120,7 +120,7 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_switch_state_off.call_count == 1

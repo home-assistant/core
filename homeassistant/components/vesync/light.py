@@ -66,6 +66,8 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncBaseLight(VeSyncDevice, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
+    _attr_name = None
+
     @property
     def brightness(self) -> int:
         """Get light brightness."""

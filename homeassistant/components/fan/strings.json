@@ -2,18 +2,18 @@
   "title": "Fan",
   "device_automation": {
     "condition_type": {
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
     "trigger_type": {
-      "changed_states": "{entity_name} turned on or off",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     },
     "action_type": {
-      "toggle": "Toggle {entity_name}",
-      "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}"
+      "toggle": "[%key:common::device_automation::action_type::toggle%]",
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
     }
   },
   "entity_component": {
@@ -32,7 +32,11 @@
           }
         },
         "oscillating": {
-          "name": "Oscillating"
+          "name": "Oscillating",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
         },
         "percentage": {
           "name": "Speed"
@@ -46,6 +50,98 @@
         "preset_mode": {
           "name": "Preset mode"
         }
+      }
+    }
+  },
+  "services": {
+    "set_preset_mode": {
+      "name": "Set preset mode",
+      "description": "Sets preset mode.",
+      "fields": {
+        "preset_mode": {
+          "name": "Preset mode",
+          "description": "Preset mode."
+        }
+      }
+    },
+    "set_percentage": {
+      "name": "Set speed",
+      "description": "Sets the fan speed.",
+      "fields": {
+        "percentage": {
+          "name": "Percentage",
+          "description": "Speed of the fan."
+        }
+      }
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns fan on.",
+      "fields": {
+        "percentage": {
+          "name": "[%key:component::fan::services::set_percentage::fields::percentage::name%]",
+          "description": "[%key:component::fan::services::set_percentage::fields::percentage::description%]"
+        },
+        "preset_mode": {
+          "name": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::name%]",
+          "description": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::description%]"
+        }
+      }
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns fan off."
+    },
+    "oscillate": {
+      "name": "Oscillate",
+      "description": "Controls oscillatation of the fan.",
+      "fields": {
+        "oscillating": {
+          "name": "Oscillating",
+          "description": "Turn on/off oscillation."
+        }
+      }
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles the fan on/off."
+    },
+    "set_direction": {
+      "name": "Set direction",
+      "description": "Sets the fan rotation direction.",
+      "fields": {
+        "direction": {
+          "name": "Direction",
+          "description": "Direction to rotate."
+        }
+      }
+    },
+    "increase_speed": {
+      "name": "Increase speed",
+      "description": "Increases the speed of the fan.",
+      "fields": {
+        "percentage_step": {
+          "name": "Increment",
+          "description": "Increases the speed by a percentage step."
+        }
+      }
+    },
+    "decrease_speed": {
+      "name": "Decrease speed",
+      "description": "Decreases the speed of the fan.",
+      "fields": {
+        "percentage_step": {
+          "name": "Decrement",
+          "description": "Decreases the speed by a percentage step."
+        }
+      }
+    }
+  },
+  "selector": {
+    "direction": {
+      "options": {
+        "forward": "Forward",
+        "reverse": "Reverse"
       }
     }
   }

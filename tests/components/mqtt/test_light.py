@@ -196,7 +196,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -243,26 +242,23 @@ def light_platform_only():
         yield
 
 
+@pytest.mark.parametrize(
+    "hass_config", [{mqtt.DOMAIN: {light.DOMAIN: {"name": "test"}}}]
+)
 async def test_fail_setup_if_no_command_topic(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if command fails with command topic."""
-    assert not await async_setup_component(
-        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {light.DOMAIN: {"name": "test"}}}
-    )
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']. Got None."
-        in caplog.text
-    )
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
 
 
-async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test if there is no color and brightness if no topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -271,10 +267,14 @@ async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
                     "command_topic": "test_light_rgb/set",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test if there is no color and brightness if no topic."""
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -315,41 +315,46 @@ async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test_light_rgb/status",
+                    "command_topic": "test_light_rgb/set",
+                    "brightness_state_topic": "test_light_rgb/brightness/status",
+                    "brightness_command_topic": "test_light_rgb/brightness/set",
+                    "rgb_state_topic": "test_light_rgb/rgb/status",
+                    "rgb_command_topic": "test_light_rgb/rgb/set",
+                    "rgbw_state_topic": "test_light_rgb/rgbw/status",
+                    "rgbw_command_topic": "test_light_rgb/rgbw/set",
+                    "rgbww_state_topic": "test_light_rgb/rgbww/status",
+                    "rgbww_command_topic": "test_light_rgb/rgbww/set",
+                    "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                    "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                    "effect_state_topic": "test_light_rgb/effect/status",
+                    "effect_command_topic": "test_light_rgb/effect/set",
+                    "hs_state_topic": "test_light_rgb/hs/status",
+                    "hs_command_topic": "test_light_rgb/hs/set",
+                    "xy_state_topic": "test_light_rgb/xy/status",
+                    "xy_command_topic": "test_light_rgb/xy/set",
+                    "qos": "0",
+                    "payload_on": 1,
+                    "payload_off": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_controlling_state_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the controlling of the state via topic."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "state_topic": "test_light_rgb/status",
-            "command_topic": "test_light_rgb/set",
-            "brightness_state_topic": "test_light_rgb/brightness/status",
-            "brightness_command_topic": "test_light_rgb/brightness/set",
-            "rgb_state_topic": "test_light_rgb/rgb/status",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "rgbw_state_topic": "test_light_rgb/rgbw/status",
-            "rgbw_command_topic": "test_light_rgb/rgbw/set",
-            "rgbww_state_topic": "test_light_rgb/rgbww/status",
-            "rgbww_command_topic": "test_light_rgb/rgbww/set",
-            "color_temp_state_topic": "test_light_rgb/color_temp/status",
-            "color_temp_command_topic": "test_light_rgb/color_temp/set",
-            "effect_state_topic": "test_light_rgb/effect/status",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_state_topic": "test_light_rgb/hs/status",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "xy_state_topic": "test_light_rgb/xy/status",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "qos": "0",
-            "payload_on": 1,
-            "payload_off": 0,
-        }
-    }
     color_modes = ["color_temp", "hs", "rgb", "rgbw", "rgbww", "xy"]
 
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -436,43 +441,47 @@ async def test_controlling_state_via_topic(
     assert light_state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test_light_rgb/status",
+                    "command_topic": "test_light_rgb/set",
+                    "brightness_state_topic": "test_light_rgb/brightness/status",
+                    "brightness_command_topic": "test_light_rgb/brightness/set",
+                    "color_mode_state_topic": "test_light_rgb/color_mode/status",
+                    "rgb_state_topic": "test_light_rgb/rgb/status",
+                    "rgb_command_topic": "test_light_rgb/rgb/set",
+                    "rgbw_state_topic": "test_light_rgb/rgbw/status",
+                    "rgbw_command_topic": "test_light_rgb/rgbw/set",
+                    "rgbww_state_topic": "test_light_rgb/rgbww/status",
+                    "rgbww_command_topic": "test_light_rgb/rgbww/set",
+                    "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                    "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                    "effect_state_topic": "test_light_rgb/effect/status",
+                    "effect_command_topic": "test_light_rgb/effect/set",
+                    "hs_state_topic": "test_light_rgb/hs/status",
+                    "hs_command_topic": "test_light_rgb/hs/set",
+                    "xy_state_topic": "test_light_rgb/xy/status",
+                    "xy_command_topic": "test_light_rgb/xy/set",
+                    "qos": "0",
+                    "payload_on": 1,
+                    "payload_off": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_invalid_state_via_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of empty data via topic."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "state_topic": "test_light_rgb/status",
-            "command_topic": "test_light_rgb/set",
-            "brightness_state_topic": "test_light_rgb/brightness/status",
-            "brightness_command_topic": "test_light_rgb/brightness/set",
-            "color_mode_state_topic": "test_light_rgb/color_mode/status",
-            "rgb_state_topic": "test_light_rgb/rgb/status",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "rgbw_state_topic": "test_light_rgb/rgbw/status",
-            "rgbw_command_topic": "test_light_rgb/rgbw/set",
-            "rgbww_state_topic": "test_light_rgb/rgbww/status",
-            "rgbww_command_topic": "test_light_rgb/rgbww/set",
-            "color_temp_state_topic": "test_light_rgb/color_temp/status",
-            "color_temp_command_topic": "test_light_rgb/color_temp/set",
-            "effect_state_topic": "test_light_rgb/effect/status",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_state_topic": "test_light_rgb/hs/status",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "xy_state_topic": "test_light_rgb/xy/status",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "qos": "0",
-            "payload_on": 1,
-            "payload_off": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -564,13 +573,9 @@ async def test_invalid_state_via_topic(
     assert light_state.attributes["color_temp"] == 153
 
 
-async def test_brightness_controlling_scale(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the brightness controlling scale."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -585,10 +590,14 @@ async def test_brightness_controlling_scale(
                     "payload_off": "off",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_brightness_controlling_scale(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the brightness controlling scale."""
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -614,13 +623,9 @@ async def test_brightness_controlling_scale(
     assert light_state.attributes["brightness"] == 255
 
 
-async def test_brightness_from_rgb_controlling_scale(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the brightness controlling scale."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -634,9 +639,14 @@ async def test_brightness_from_rgb_controlling_scale(
                     "payload_off": "off",
                 }
             }
-        },
-    )
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_brightness_from_rgb_controlling_scale(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the brightness controlling scale."""
+    mqtt_mock = await mqtt_mock_entry()
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
@@ -652,6 +662,12 @@ async def test_brightness_from_rgb_controlling_scale(
 
     async_fire_mqtt_message(hass, "test_scale_rgb/rgb/status", "128,64,32")
 
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+
+    # Test zero rgb is ignored
+    async_fire_mqtt_message(hass, "test_scale_rgb/rgb/status", "0,0,0")
     state = hass.states.get("light.test")
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("rgb_color") == (255, 128, 64)
@@ -675,47 +691,52 @@ async def test_brightness_from_rgb_controlling_scale(
     assert state.attributes.get("rgb_color") == (255, 127, 63)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test_light_rgb/status",
+                    "command_topic": "test_light_rgb/set",
+                    "brightness_command_topic": "test_light_rgb/brightness/set",
+                    "rgb_command_topic": "test_light_rgb/rgb/set",
+                    "rgbw_command_topic": "test_light_rgb/rgbw/set",
+                    "rgbww_command_topic": "test_light_rgb/rgbw/set",
+                    "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                    "effect_command_topic": "test_light_rgb/effect/set",
+                    "hs_command_topic": "test_light_rgb/hs/set",
+                    "xy_command_topic": "test_light_rgb/xy/set",
+                    "brightness_state_topic": "test_light_rgb/brightness/status",
+                    "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                    "effect_state_topic": "test_light_rgb/effect/status",
+                    "hs_state_topic": "test_light_rgb/hs/status",
+                    "rgb_state_topic": "test_light_rgb/rgb/status",
+                    "rgbw_state_topic": "test_light_rgb/rgbw/status",
+                    "rgbww_state_topic": "test_light_rgb/rgbww/status",
+                    "xy_state_topic": "test_light_rgb/xy/status",
+                    "state_value_template": "{{ value_json.hello }}",
+                    "brightness_value_template": "{{ value_json.hello }}",
+                    "color_temp_value_template": "{{ value_json.hello }}",
+                    "effect_value_template": "{{ value_json.hello }}",
+                    "hs_value_template": '{{ value_json.hello | join(",") }}',
+                    "rgb_value_template": '{{ value_json.hello | join(",") }}',
+                    "rgbw_value_template": '{{ value_json.hello | join(",") }}',
+                    "rgbww_value_template": '{{ value_json.hello | join(",") }}',
+                    "xy_value_template": '{{ value_json.hello | join(",") }}',
+                }
+            }
+        }
+    ],
+)
 async def test_controlling_state_via_topic_with_templates(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of the state with a template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "state_topic": "test_light_rgb/status",
-            "command_topic": "test_light_rgb/set",
-            "brightness_command_topic": "test_light_rgb/brightness/set",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "rgbw_command_topic": "test_light_rgb/rgbw/set",
-            "rgbww_command_topic": "test_light_rgb/rgbw/set",
-            "color_temp_command_topic": "test_light_rgb/color_temp/set",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "brightness_state_topic": "test_light_rgb/brightness/status",
-            "color_temp_state_topic": "test_light_rgb/color_temp/status",
-            "effect_state_topic": "test_light_rgb/effect/status",
-            "hs_state_topic": "test_light_rgb/hs/status",
-            "rgb_state_topic": "test_light_rgb/rgb/status",
-            "rgbw_state_topic": "test_light_rgb/rgbw/status",
-            "rgbww_state_topic": "test_light_rgb/rgbww/status",
-            "xy_state_topic": "test_light_rgb/xy/status",
-            "state_value_template": "{{ value_json.hello }}",
-            "brightness_value_template": "{{ value_json.hello }}",
-            "color_temp_value_template": "{{ value_json.hello }}",
-            "effect_value_template": "{{ value_json.hello }}",
-            "hs_value_template": '{{ value_json.hello | join(",") }}',
-            "rgb_value_template": '{{ value_json.hello | join(",") }}',
-            "rgbw_value_template": '{{ value_json.hello | join(",") }}',
-            "rgbww_value_template": '{{ value_json.hello | join(",") }}',
-            "xy_value_template": '{{ value_json.hello | join(",") }}',
-        }
-    }
     color_modes = ["color_temp", "hs", "rgb", "rgbw", "rgbww", "xy"]
 
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -776,29 +797,49 @@ async def test_controlling_state_via_topic_with_templates(
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "xy"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 100}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 100
 
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 50}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 50
+
+    # test zero brightness received is ignored
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 0}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 50
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_rgb/set",
+                    "brightness_command_topic": "test_light_rgb/brightness/set",
+                    "rgb_command_topic": "test_light_rgb/rgb/set",
+                    "rgbw_command_topic": "test_light_rgb/rgbw/set",
+                    "rgbww_command_topic": "test_light_rgb/rgbww/set",
+                    "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                    "effect_command_topic": "test_light_rgb/effect/set",
+                    "hs_command_topic": "test_light_rgb/hs/set",
+                    "xy_command_topic": "test_light_rgb/xy/set",
+                    "effect_list": ["colorloop", "random"],
+                    "qos": 2,
+                    "payload_on": "on",
+                    "payload_off": "off",
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_commands_and_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of command in optimistic mode."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_rgb/set",
-            "brightness_command_topic": "test_light_rgb/brightness/set",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "rgbw_command_topic": "test_light_rgb/rgbw/set",
-            "rgbww_command_topic": "test_light_rgb/rgbww/set",
-            "color_temp_command_topic": "test_light_rgb/color_temp/set",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "effect_list": ["colorloop", "random"],
-            "qos": 2,
-            "payload_on": "on",
-            "payload_off": "off",
-        }
-    }
     color_modes = ["color_temp", "hs", "rgb", "rgbw", "rgbww", "xy"]
     fake_state = State(
         "light.test",
@@ -813,9 +854,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
     mock_restore_cache(hass, (fake_state,))
 
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
@@ -966,26 +1005,30 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_rgb/set",
+                    "rgb_command_topic": "test_light_rgb/rgb/set",
+                    "rgb_command_template": '{{ "#%02x%02x%02x" | '
+                    "format(red, green, blue)}}",
+                    "payload_on": "on",
+                    "payload_off": "off",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_rgb_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of RGB command with template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_rgb/set",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "rgb_command_template": '{{ "#%02x%02x%02x" | '
-            "format(red, green, blue)}}",
-            "payload_on": "on",
-            "payload_off": "off",
-            "qos": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1005,26 +1048,30 @@ async def test_sending_mqtt_rgb_command_with_template(
     assert state.attributes["rgb_color"] == (255, 128, 64)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_rgb/set",
+                    "rgbw_command_topic": "test_light_rgb/rgbw/set",
+                    "rgbw_command_template": '{{ "#%02x%02x%02x%02x" | '
+                    "format(red, green, blue, white)}}",
+                    "payload_on": "on",
+                    "payload_off": "off",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_rgbw_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of RGBW command with template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_rgb/set",
-            "rgbw_command_topic": "test_light_rgb/rgbw/set",
-            "rgbw_command_template": '{{ "#%02x%02x%02x%02x" | '
-            "format(red, green, blue, white)}}",
-            "payload_on": "on",
-            "payload_off": "off",
-            "qos": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1044,26 +1091,30 @@ async def test_sending_mqtt_rgbw_command_with_template(
     assert state.attributes["rgbw_color"] == (255, 128, 64, 32)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_rgb/set",
+                    "rgbww_command_topic": "test_light_rgb/rgbww/set",
+                    "rgbww_command_template": '{{ "#%02x%02x%02x%02x%02x" | '
+                    "format(red, green, blue, cold_white, warm_white)}}",
+                    "payload_on": "on",
+                    "payload_off": "off",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_rgbww_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of RGBWW command with template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_rgb/set",
-            "rgbww_command_topic": "test_light_rgb/rgbww/set",
-            "rgbww_command_template": '{{ "#%02x%02x%02x%02x%02x" | '
-            "format(red, green, blue, cold_white, warm_white)}}",
-            "payload_on": "on",
-            "payload_off": "off",
-            "qos": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1083,25 +1134,29 @@ async def test_sending_mqtt_rgbww_command_with_template(
     assert state.attributes["rgbww_color"] == (255, 128, 64, 32, 16)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_color_temp/set",
+                    "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                    "color_temp_command_template": "{{ (1000 / value) | round(0) }}",
+                    "payload_on": "on",
+                    "payload_off": "off",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_color_temp_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of Color Temp command with template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_color_temp/set",
-            "color_temp_command_topic": "test_light_color_temp/color_temp/set",
-            "color_temp_command_template": "{{ (1000 / value) | round(0) }}",
-            "payload_on": "on",
-            "payload_off": "off",
-            "qos": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1121,22 +1176,26 @@ async def test_sending_mqtt_color_temp_command_with_template(
     assert state.attributes["color_temp"] == 100
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "brightness_command_topic": "test_light/bright",
+                    "on_command_type": "first",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_first(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command being sent before brightness."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "brightness_command_topic": "test_light/bright",
-            "on_command_type": "first",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1159,21 +1218,25 @@ async def test_on_command_first(
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "brightness_command_topic": "test_light/bright",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_last(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command being sent after brightness."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "brightness_command_topic": "test_light/bright",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1196,23 +1259,27 @@ async def test_on_command_last(
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "brightness_command_topic": "test_light/bright",
+                    "rgb_command_topic": "test_light/rgb",
+                    "on_command_type": "brightness",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_brightness(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command being sent as only brightness."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "brightness_command_topic": "test_light/bright",
-            "rgb_command_topic": "test_light/rgb",
-            "on_command_type": "brightness",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1253,24 +1320,28 @@ async def test_on_command_brightness(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "brightness_command_topic": "test_light/bright",
+                    "brightness_scale": 100,
+                    "rgb_command_topic": "test_light/rgb",
+                    "on_command_type": "brightness",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_brightness_scaled(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test brightness scale."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "brightness_command_topic": "test_light/bright",
-            "brightness_scale": 100,
-            "rgb_command_topic": "test_light/rgb",
-            "on_command_type": "brightness",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1325,21 +1396,25 @@ async def test_on_command_brightness_scaled(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "rgb_command_topic": "test_light/rgb",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_rgb(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command in RGB brightness mode."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "rgb_command_topic": "test_light/rgb",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1417,21 +1492,25 @@ async def test_on_command_rgb(
     mqtt_mock.async_publish.reset_mock()
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "rgbw_command_topic": "test_light/rgbw",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_rgbw(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command in RGBW brightness mode."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "rgbw_command_topic": "test_light/rgbw",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1509,21 +1588,25 @@ async def test_on_command_rgbw(
     mqtt_mock.async_publish.reset_mock()
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "rgbww_command_topic": "test_light/rgbww",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_rgbww(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command in RGBWW brightness mode."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "rgbww_command_topic": "test_light/rgbww",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1601,22 +1684,26 @@ async def test_on_command_rgbww(
     mqtt_mock.async_publish.reset_mock()
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "rgb_command_topic": "test_light/rgb",
+                    "rgb_command_template": "{{ red }}/{{ green }}/{{ blue }}",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_rgb_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command in RGB brightness mode with RGB template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "rgb_command_topic": "test_light/rgb",
-            "rgb_command_template": "{{ red }}/{{ green }}/{{ blue }}",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1640,22 +1727,26 @@ async def test_on_command_rgb_template(
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "rgbw_command_topic": "test_light/rgbw",
+                    "rgbw_command_template": "{{ red }}/{{ green }}/{{ blue }}/{{ white }}",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_rgbw_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command in RGBW brightness mode with RGBW template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "rgbw_command_topic": "test_light/rgbw",
-            "rgbw_command_template": "{{ red }}/{{ green }}/{{ blue }}/{{ white }}",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1678,22 +1769,27 @@ async def test_on_command_rgbw_template(
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "rgbww_command_topic": "test_light/rgbww",
+                    "rgbww_command_template": "{{ red }}/{{ green }}/{{ blue }}"
+                    "/{{ cold_white }}/{{ warm_white }}",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_rgbww_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test on command in RGBWW brightness mode with RGBWW template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "rgbww_command_topic": "test_light/rgbww",
-            "rgbww_command_template": "{{ red }}/{{ green }}/{{ blue }}/{{ cold_white }}/{{ warm_white }}",
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1717,34 +1813,39 @@ async def test_on_command_rgbww_template(
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "tasmota_B94927/cmnd/POWER",
+                    "state_value_template": "{{ value_json.POWER }}",
+                    "payload_off": "OFF",
+                    "payload_on": "ON",
+                    "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
+                    "brightness_scale": 100,
+                    "on_command_type": "brightness",
+                    "brightness_value_template": "{{ value_json.Dimmer }}",
+                    "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
+                    "rgb_value_template": "{{value_json.Color.split(',')[0:3]|join(',')}}",
+                    "white_command_topic": "tasmota_B94927/cmnd/White",
+                    "white_scale": 100,
+                    "color_mode_value_template": "{% if value_json.White %} white {% else %} rgb {% endif %}",
+                    "qos": "0",
+                }
+            }
+        }
+    ],
+)
 async def test_on_command_white(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test sending commands for RGB + white light."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "tasmota_B94927/cmnd/POWER",
-            "state_value_template": "{{ value_json.POWER }}",
-            "payload_off": "OFF",
-            "payload_on": "ON",
-            "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
-            "brightness_scale": 100,
-            "on_command_type": "brightness",
-            "brightness_value_template": "{{ value_json.Dimmer }}",
-            "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
-            "rgb_value_template": "{{value_json.Color.split(',')[0:3]|join(',')}}",
-            "white_command_topic": "tasmota_B94927/cmnd/White",
-            "white_scale": 100,
-            "color_mode_value_template": "{% if value_json.White %} white {% else %} rgb {% endif %}",
-            "qos": "0",
-        }
-    }
     color_modes = ["rgb", "white"]
 
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1796,42 +1897,47 @@ async def test_on_command_white(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test_light_rgb/status",
+                    "command_topic": "test_light_rgb/set",
+                    "color_mode_state_topic": "test_light_rgb/color_mode/status",
+                    "brightness_state_topic": "test_light_rgb/brightness/status",
+                    "brightness_command_topic": "test_light_rgb/brightness/set",
+                    "rgb_state_topic": "test_light_rgb/rgb/status",
+                    "rgb_command_topic": "test_light_rgb/rgb/set",
+                    "rgbw_state_topic": "test_light_rgb/rgbw/status",
+                    "rgbw_command_topic": "test_light_rgb/rgbw/set",
+                    "rgbww_state_topic": "test_light_rgb/rgbww/status",
+                    "rgbww_command_topic": "test_light_rgb/rgbww/set",
+                    "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                    "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                    "effect_state_topic": "test_light_rgb/effect/status",
+                    "effect_command_topic": "test_light_rgb/effect/set",
+                    "hs_state_topic": "test_light_rgb/hs/status",
+                    "hs_command_topic": "test_light_rgb/hs/set",
+                    "xy_state_topic": "test_light_rgb/xy/status",
+                    "xy_command_topic": "test_light_rgb/xy/set",
+                    "qos": "0",
+                    "payload_on": 1,
+                    "payload_off": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_explicit_color_mode(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test explicit color mode over mqtt."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "state_topic": "test_light_rgb/status",
-            "command_topic": "test_light_rgb/set",
-            "color_mode_state_topic": "test_light_rgb/color_mode/status",
-            "brightness_state_topic": "test_light_rgb/brightness/status",
-            "brightness_command_topic": "test_light_rgb/brightness/set",
-            "rgb_state_topic": "test_light_rgb/rgb/status",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "rgbw_state_topic": "test_light_rgb/rgbw/status",
-            "rgbw_command_topic": "test_light_rgb/rgbw/set",
-            "rgbww_state_topic": "test_light_rgb/rgbww/status",
-            "rgbww_command_topic": "test_light_rgb/rgbww/set",
-            "color_temp_state_topic": "test_light_rgb/color_temp/status",
-            "color_temp_command_topic": "test_light_rgb/color_temp/set",
-            "effect_state_topic": "test_light_rgb/effect/status",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_state_topic": "test_light_rgb/hs/status",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "xy_state_topic": "test_light_rgb/xy/status",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "qos": "0",
-            "payload_on": 1,
-            "payload_off": 0,
-        }
-    }
     color_modes = ["color_temp", "hs", "rgb", "rgbw", "rgbww", "xy"]
 
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1946,33 +2052,38 @@ async def test_explicit_color_mode(
     assert light_state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test_light_rgb/status",
+                    "command_topic": "test_light_rgb/set",
+                    "color_mode_state_topic": "test_light_rgb/color_mode/status",
+                    "color_mode_value_template": "{{ value_json.color_mode }}",
+                    "brightness_state_topic": "test_light_rgb/brightness/status",
+                    "brightness_command_topic": "test_light_rgb/brightness/set",
+                    "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                    "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                    "hs_state_topic": "test_light_rgb/hs/status",
+                    "hs_command_topic": "test_light_rgb/hs/set",
+                    "qos": "0",
+                    "payload_on": 1,
+                    "payload_off": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_explicit_color_mode_templated(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test templated explicit color mode over mqtt."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "state_topic": "test_light_rgb/status",
-            "command_topic": "test_light_rgb/set",
-            "color_mode_state_topic": "test_light_rgb/color_mode/status",
-            "color_mode_value_template": "{{ value_json.color_mode }}",
-            "brightness_state_topic": "test_light_rgb/brightness/status",
-            "brightness_command_topic": "test_light_rgb/brightness/set",
-            "color_temp_state_topic": "test_light_rgb/color_temp/status",
-            "color_temp_command_topic": "test_light_rgb/color_temp/set",
-            "hs_state_topic": "test_light_rgb/hs/status",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "qos": "0",
-            "payload_on": 1,
-            "payload_off": 0,
-        }
-    }
     color_modes = ["color_temp", "hs"]
 
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -2029,38 +2140,45 @@ async def test_explicit_color_mode_templated(
     assert light_state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "tasmota_B94927/tele/STATE",
+                    "command_topic": "tasmota_B94927/cmnd/POWER",
+                    "state_value_template": "{{ value_json.POWER }}",
+                    "payload_off": "OFF",
+                    "payload_on": "ON",
+                    "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
+                    "brightness_state_topic": "tasmota_B94927/tele/STATE",
+                    "brightness_scale": 100,
+                    "on_command_type": "brightness",
+                    "brightness_value_template": "{{ value_json.Dimmer }}",
+                    "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
+                    "rgb_state_topic": "tasmota_B94927/tele/STATE",
+                    "rgb_value_template": "{{value_json.Color.split(',')"
+                    "[0:3]|join(',')}}",
+                    "white_command_topic": "tasmota_B94927/cmnd/White",
+                    "white_scale": 100,
+                    "color_mode_state_topic": "tasmota_B94927/tele/STATE",
+                    "color_mode_value_template": "{% if value_json.White %} white "
+                    "{% else %} rgb {% endif %}",
+                    "qos": "0",
+                }
+            }
+        }
+    ],
+)
 async def test_white_state_update(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test state updates for RGB + white light."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "state_topic": "tasmota_B94927/tele/STATE",
-            "command_topic": "tasmota_B94927/cmnd/POWER",
-            "state_value_template": "{{ value_json.POWER }}",
-            "payload_off": "OFF",
-            "payload_on": "ON",
-            "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
-            "brightness_state_topic": "tasmota_B94927/tele/STATE",
-            "brightness_scale": 100,
-            "on_command_type": "brightness",
-            "brightness_value_template": "{{ value_json.Dimmer }}",
-            "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
-            "rgb_state_topic": "tasmota_B94927/tele/STATE",
-            "rgb_value_template": "{{value_json.Color.split(',')[0:3]|join(',')}}",
-            "white_command_topic": "tasmota_B94927/cmnd/White",
-            "white_scale": 100,
-            "color_mode_state_topic": "tasmota_B94927/tele/STATE",
-            "color_mode_value_template": "{% if value_json.White %} white {% else %} rgb {% endif %}",
-            "qos": "0",
-        }
-    }
     color_modes = ["rgb", "white"]
 
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -2095,22 +2213,26 @@ async def test_white_state_update(
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "effect_command_topic": "test_light/effect/set",
+                    "effect_list": ["rainbow", "colorloop"],
+                }
+            }
+        }
+    ],
+)
 async def test_effect(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test effect."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light/set",
-            "effect_command_topic": "test_light/effect/set",
-            "effect_list": ["rainbow", "colorloop"],
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -2136,58 +2258,58 @@ async def test_effect(
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_when_connection_lost(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN
+        hass, mqtt_mock_entry, light.DOMAIN
     )
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_without_topic(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_default_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_custom_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_setting_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         light.DOMAIN,
         DEFAULT_CONFIG,
         MQTT_LIGHT_ATTRIBUTES_BLOCKED,
@@ -2195,23 +2317,23 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 
 
 async def test_setting_attribute_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         light.DOMAIN,
         DEFAULT_CONFIG,
@@ -2220,13 +2342,13 @@ async def test_update_with_json_attrs_not_dict(
 
 async def test_update_with_json_attrs_bad_json(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         light.DOMAIN,
         DEFAULT_CONFIG,
@@ -2235,13 +2357,13 @@ async def test_update_with_json_attrs_bad_json(
 
 async def test_discovery_update_attr(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         light.DOMAIN,
         DEFAULT_CONFIG,
@@ -2272,15 +2394,15 @@ async def test_discovery_update_attr(
     ],
 )
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unique id option only creates one light per unique_id."""
-    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN)
+    await help_test_unique_id(hass, mqtt_mock_entry, light.DOMAIN)
 
 
 async def test_discovery_removal_light(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered light."""
@@ -2289,22 +2411,18 @@ async def test_discovery_removal_light(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, light.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, light.DOMAIN, data)
 
 
 async def test_discovery_ignores_extra_keys(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test discovery ignores extra keys that are not blocked."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     # inserted `platform` key should be ignored
-    data = (
-        '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
-    )
+    data = '{ "name": "Beer",  "platform": "mqtt",  "command_topic": "test_topic"}'
     async_fire_mqtt_message(hass, "homeassistant/light/bla/config", data)
     await hass.async_block_till_done()
     state = hass.states.get("light.beer")
@@ -2314,7 +2432,7 @@ async def test_discovery_ignores_extra_keys(
 
 async def test_discovery_update_light_topic_and_template(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered light."""
@@ -2559,7 +2677,7 @@ async def test_discovery_update_light_topic_and_template(
 
     await help_test_discovery_update(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         light.DOMAIN,
         config1,
@@ -2571,7 +2689,7 @@ async def test_discovery_update_light_topic_and_template(
 
 async def test_discovery_update_light_template(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered light."""
@@ -2774,7 +2892,7 @@ async def test_discovery_update_light_template(
 
     await help_test_discovery_update(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         light.DOMAIN,
         config1,
@@ -2786,7 +2904,7 @@ async def test_discovery_update_light_template(
 
 async def test_discovery_update_unchanged_light(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered light."""
@@ -2800,7 +2918,7 @@ async def test_discovery_update_unchanged_light(
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,
-            mqtt_mock_entry_no_yaml_config,
+            mqtt_mock_entry,
             caplog,
             light.DOMAIN,
             data1,
@@ -2811,7 +2929,7 @@ async def test_discovery_update_unchanged_light(
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
@@ -2822,93 +2940,97 @@ async def test_discovery_broken(
         '  "command_topic": "test_topic" }'
     )
     await help_test_discovery_broken(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, light.DOMAIN, data1, data2
+        hass, mqtt_mock_entry, caplog, light.DOMAIN, data1, data2
     )
 
 
 async def test_entity_device_info_with_connection(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT light device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_with_identifier(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT light device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_remove(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_subscriptions(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_discovery_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_debug_info_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         light.DOMAIN,
         DEFAULT_CONFIG,
         light.SERVICE_TURN_ON,
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_max_mireds/set",
+                    "color_temp_command_topic": "test_max_mireds/color_temp/set",
+                    "max_mireds": 370,
+                }
+            }
+        }
+    ],
+)
 async def test_max_mireds(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting min_mireds and max_mireds."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_max_mireds/set",
-            "color_temp_command_topic": "test_max_mireds/color_temp/set",
-            "max_mireds": 370,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.attributes.get("min_mireds") == 153
@@ -3003,7 +3125,7 @@ async def test_max_mireds(
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     service: str,
     topic: str,
@@ -3023,7 +3145,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         caplog,
         domain,
         config,
@@ -3079,7 +3201,7 @@ async def test_reloadable(
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     topic: str,
     value: str,
     attribute: str | None,
@@ -3101,7 +3223,7 @@ async def test_encoding_subscribable_topics(
 
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         light.DOMAIN,
         config,
         topic,
@@ -3120,7 +3242,7 @@ async def test_encoding_subscribable_topics(
 )
 async def test_encoding_subscribable_topics_brightness(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     topic: str,
     value: str,
@@ -3134,7 +3256,7 @@ async def test_encoding_subscribable_topics_brightness(
 
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_no_yaml_config,
+        mqtt_mock_entry,
         light.DOMAIN,
         config,
         topic,
@@ -3145,25 +3267,29 @@ async def test_encoding_subscribable_topics_brightness(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_brightness/set",
+                    "brightness_command_topic": "test_light_brightness/brightness/set",
+                    "brightness_command_template": "{{ (1000 / value) | round(0) }}",
+                    "payload_on": "on",
+                    "payload_off": "off",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_brightness_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of Brightness command with template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_brightness/set",
-            "brightness_command_topic": "test_light_brightness/brightness/set",
-            "brightness_command_template": "{{ (1000 / value) | round(0) }}",
-            "payload_on": "on",
-            "payload_off": "off",
-            "qos": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -3183,27 +3309,31 @@ async def test_sending_mqtt_brightness_command_with_template(
     assert state.attributes["brightness"] == 100
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_brightness/set",
+                    "brightness_command_topic": "test_light_brightness/brightness/set",
+                    "effect_command_topic": "test_light_brightness/effect/set",
+                    "effect_command_template": '{ "effect": "{{ value }}" }',
+                    "effect_list": ["colorloop", "random"],
+                    "payload_on": "on",
+                    "payload_off": "off",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_effect_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of Effect command with template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_brightness/set",
-            "brightness_command_topic": "test_light_brightness/brightness/set",
-            "effect_command_topic": "test_light_brightness/effect/set",
-            "effect_command_template": '{ "effect": "{{ value }}" }',
-            "effect_list": ["colorloop", "random"],
-            "payload_on": "on",
-            "payload_off": "off",
-            "qos": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -3227,23 +3357,27 @@ async def test_sending_mqtt_effect_command_with_template(
     assert state.attributes.get("effect") == "colorloop"
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_hs/set",
+                    "hs_command_topic": "test_light_hs/hs_color/set",
+                    "hs_command_template": '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}',
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_hs_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of HS Color command with template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_hs/set",
-            "hs_command_topic": "test_light_hs/hs_color/set",
-            "hs_command_template": '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}',
-            "qos": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -3263,23 +3397,30 @@ async def test_sending_mqtt_hs_command_with_template(
     assert state.attributes["hs_color"] == (30, 100)
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_xy/set",
+                    "xy_command_topic": "test_light_xy/xy_color/set",
+                    "xy_command_template": "{"
+                    '"Color": "{{ (x * 65536) | round | int }},'
+                    '{{ (y * 65536) | round | int }}"'
+                    "}",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
 async def test_sending_mqtt_xy_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the sending of XY Color command with template."""
-    config = {
-        light.DOMAIN: {
-            "name": "test",
-            "command_topic": "test_light_xy/set",
-            "xy_command_topic": "test_light_xy/xy_color/set",
-            "xy_command_template": '{"Color": "{{ (x * 65536) | round | int }},{{ (y * 65536) | round | int }}"}',
-            "qos": 0,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -3299,23 +3440,27 @@ async def test_sending_mqtt_xy_command_with_template(
     assert state.attributes["xy_color"] == (0.151, 0.343)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup manual configured MQTT entity."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     platform = light.DOMAIN
     assert hass.states.get(f"{platform}.test")
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = light.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_no_yaml_config, domain, config
+        hass, mqtt_mock_entry, domain, config
     )
