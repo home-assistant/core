@@ -41,6 +41,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
     """Representation of Advantage Air Light."""
 
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_name = None
 
     def __init__(self, instance: AdvantageAirData, light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Light."""

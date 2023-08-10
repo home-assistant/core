@@ -891,14 +891,15 @@ async def async_get_integrations(
     results: dict[str, Integration | Exception] = {}
     needed: dict[str, asyncio.Future[None]] = {}
     in_progress: dict[str, asyncio.Future[None]] = {}
+    if TYPE_CHECKING:
+        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     for domain in domains:
-        int_or_fut: Integration | asyncio.Future[None] | None = cache.get(
-            domain, _UNDEF
-        )
-        if isinstance(int_or_fut, asyncio.Future):
-            in_progress[domain] = int_or_fut
+        int_or_fut = cache.get(domain, _UNDEF)
+        # Integration is never subclassed, so we can check for type
+        if type(int_or_fut) is Integration:  # pylint: disable=unidiomatic-typecheck
+            results[domain] = int_or_fut
         elif int_or_fut is not _UNDEF:
-            results[domain] = cast(Integration, int_or_fut)
+            in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
         elif "." in domain:
             results[domain] = ValueError(f"Invalid domain {domain}")
         else:
@@ -915,19 +916,21 @@ async def async_get_integrations(
             else:
                 results[domain] = cast(Integration, int_or_fut)
 
-    # First we look for custom components
-    if needed:
-        # Instead of using resolve_from_root we use the cache of custom
-        # components to find the integration.
-        custom = await async_get_custom_components(hass)
-        for domain, future in needed.items():
-            if integration := custom.get(domain):
-                results[domain] = cache[domain] = integration
-                future.set_result(None)
+    if not needed:
+        return results
 
-        for domain in results:
-            if domain in needed:
-                del needed[domain]
+    # First we look for custom components
+    # Instead of using resolve_from_root we use the cache of custom
+    # components to find the integration.
+    custom = await async_get_custom_components(hass)
+    for domain, future in needed.items():
+        if integration := custom.get(domain):
+            results[domain] = cache[domain] = integration
+            future.set_result(None)
+
+    for domain in results:
+        if domain in needed:
+            del needed[domain]
 
     # Now the rest use resolve_from_root
     if needed:
@@ -1095,7 +1098,11 @@ class Helpers:
 
 
 def bind_hass(func: _CallableT) -> _CallableT:
-    """Decorate function to indicate that first argument is hass."""
+    """Decorate function to indicate that first argument is hass.
+
+    The use of this decorator is discouraged, and it should not be used
+    for new functions.
+    """
     setattr(func, "__bind_hass", True)
     return func
 

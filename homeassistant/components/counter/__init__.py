@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -244,10 +245,6 @@ class Counter(collection.CollectionEntity, RestoreEntity):
             and (state := await self.async_get_last_state()) is not None
         ):
             self._state = self.compute_next_state(int(state.state))
-            self._config[CONF_INITIAL] = state.attributes.get(ATTR_INITIAL)
-            self._config[CONF_MAXIMUM] = state.attributes.get(ATTR_MAXIMUM)
-            self._config[CONF_MINIMUM] = state.attributes.get(ATTR_MINIMUM)
-            self._config[CONF_STEP] = state.attributes.get(ATTR_STEP)
 
     @callback
     def async_decrement(self) -> None:
@@ -291,6 +288,17 @@ class Counter(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_configure(self, **kwargs) -> None:
         """Change the counter's settings with a service."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_configure_service",
+            breaks_in_ha_version="2023.12.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_configure_service",
+        )
+
         new_state = kwargs.pop(VALUE, self._state)
         self._config = {**self._config, **kwargs}
         self._state = self.compute_next_state(new_state)

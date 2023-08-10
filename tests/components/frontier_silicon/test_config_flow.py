@@ -11,7 +11,7 @@ from homeassistant.components.frontier_silicon.const import (
     DEFAULT_PIN,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -35,122 +35,6 @@ INVALID_MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
     ssdp_location=None,
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
-
-
-@pytest.mark.parametrize(
-    ("radio_id_return_value", "radio_id_side_effect"),
-    [("mock_radio_id", None), (None, NotImplementedException)],
-)
-async def test_import_success(
-    hass: HomeAssistant,
-    radio_id_return_value: str | None,
-    radio_id_side_effect: Exception | None,
-) -> None:
-    """Test successful import."""
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
-        return_value=radio_id_return_value,
-        side_effect=radio_id_side_effect,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.1.1.1",
-                CONF_PORT: 80,
-                CONF_PIN: "1234",
-                CONF_NAME: "Test name",
-            },
-        )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test name"
-    assert result["data"] == {
-        CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
-        CONF_PIN: "1234",
-    }
-
-
-@pytest.mark.parametrize(
-    ("webfsapi_endpoint_error", "result_reason"),
-    [
-        (ConnectionError, "cannot_connect"),
-        (ValueError, "unknown"),
-    ],
-)
-async def test_import_webfsapi_endpoint_failures(
-    hass: HomeAssistant, webfsapi_endpoint_error: Exception, result_reason: str
-) -> None:
-    """Test various failure of get_webfsapi_endpoint."""
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_webfsapi_endpoint",
-        side_effect=webfsapi_endpoint_error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.1.1.1",
-                CONF_PORT: 80,
-                CONF_PIN: "1234",
-                CONF_NAME: "Test name",
-            },
-        )
-
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == result_reason
-
-
-@pytest.mark.parametrize(
-    ("radio_id_error", "result_reason"),
-    [
-        (ConnectionError, "cannot_connect"),
-        (InvalidPinException, "invalid_auth"),
-        (ValueError, "unknown"),
-    ],
-)
-async def test_import_radio_id_failures(
-    hass: HomeAssistant, radio_id_error: Exception, result_reason: str
-) -> None:
-    """Test various failure of get_radio_id."""
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
-        side_effect=radio_id_error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.1.1.1",
-                CONF_PORT: 80,
-                CONF_PIN: "1234",
-                CONF_NAME: "Test name",
-            },
-        )
-
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == result_reason
-
-
-async def test_import_already_exists(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test import of device which already exists."""
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 80,
-            CONF_PIN: "1234",
-            CONF_NAME: "Test name",
-        },
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(

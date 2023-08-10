@@ -91,7 +91,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="no2",
     ),
     GiosSensorEntityDescription(
         key=ATTR_NO2,
@@ -109,7 +108,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="o3",
     ),
     GiosSensorEntityDescription(
         key=ATTR_O3,
@@ -127,7 +125,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="pm10",
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM10,
@@ -145,7 +142,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="pm25",
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM25,
@@ -163,7 +159,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="so2",
     ),
     GiosSensorEntityDescription(
         key=ATTR_SO2,

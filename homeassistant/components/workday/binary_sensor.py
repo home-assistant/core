@@ -14,14 +14,14 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_DAYS,
@@ -90,12 +90,17 @@ async def async_setup_platform(
     """Set up the Workday sensor."""
     async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.7.0",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.11.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Workday",
+        },
     )
 
     hass.async_create_task(
@@ -120,15 +125,16 @@ async def async_setup_entry(
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
 
-    year: int = (dt.now() + timedelta(days=days_offset)).year
-    obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
+    cls: HolidayBase = getattr(holidays, country)
+    year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
-    if province:
-        try:
-            obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
-        except NotImplementedError:
-            LOGGER.error("There is no subdivision %s in country %s", province, country)
-            return
+    if province and province not in cls.subdivisions:
+        LOGGER.error("There is no subdivision %s in country %s", province, country)
+        return
+
+    obj_holidays = cls(
+        subdiv=province, years=year, language=cls.default_language
+    )  # type: ignore[operator]
 
     # Add custom holidays
     try:
@@ -140,7 +146,7 @@ async def async_setup_entry(
     for remove_holiday in remove_holidays:
         try:
             # is this formatted as a date?
-            if dt.parse_date(remove_holiday):
+            if dt_util.parse_date(remove_holiday):
                 # remove holiday by date
                 removed = obj_holidays.pop(remove_holiday)
                 LOGGER.debug("Removed %s", remove_holiday)
@@ -178,6 +184,7 @@ class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -231,7 +238,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         self._attr_is_on = False
 
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        adjusted_date = dt.now() + timedelta(days=self._days_offset)
+        adjusted_date = dt_util.now() + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
         day_of_week = ALLOWED_DAYS[day]
 

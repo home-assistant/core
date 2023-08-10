@@ -3,10 +3,10 @@
   "name": "AccuWeather",
   "codeowners": ["@bieniu"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/accuweather/",
+  "documentation": "https://www.home-assistant.io/integrations/accuweather",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["accuweather"],
   "quality_scale": "platinum",
-  "requirements": ["accuweather==0.5.2"]
+  "requirements": ["accuweather==1.0.0"]
 }

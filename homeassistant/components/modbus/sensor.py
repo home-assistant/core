@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DEVICE_CLASS_NAME
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -50,7 +49,7 @@ async def async_setup_platform(
     hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_SENSORS]:
         slave_count = entry.get(CONF_SLAVE_COUNT, 0)
-        sensor = ModbusRegisterSensor(hub, entry)
+        sensor = ModbusRegisterSensor(hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
         sensors.append(sensor)
@@ -64,9 +63,12 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         self,
         hub: ModbusHub,
         entry: dict[str, Any],
+        slave_count: int,
     ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
+        if slave_count:
+            self._count = self._count * slave_count
         self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
@@ -80,11 +82,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         # this ensures that idx = bit position of value in result
         # polling is done with the base class
         name = self._attr_name if self._attr_name else "modbus_sensor"
-
-        # DataUpdateCoordinator does not support DEVICE_CLASS_NAME
-        # the assert satisfies the type checker and will catch attempts
-        # to use DEVICE_CLASS_NAME in _attr_name.
-        assert name is not DEVICE_CLASS_NAME
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
@@ -107,7 +104,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        raw_result = await self._hub.async_pymodbus_call(
+        raw_result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
         if raw_result is None:

@@ -19,7 +19,14 @@ from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DEVICE_TIMEOUT, DOMAIN
+from .const import (
+    CONF_ALWAYS_CONNECTED,
+    CONF_KEY,
+    CONF_LOCAL_NAME,
+    CONF_SLOT,
+    DEVICE_TIMEOUT,
+    DOMAIN,
+)
 from .models import YaleXSBLEData
 from .util import async_find_existing_service_info, bluetooth_callback_matcher
 
@@ -33,7 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     key = entry.data[CONF_KEY]
     slot = entry.data[CONF_SLOT]
     has_unique_local_name = local_name_is_unique(local_name)
-    push_lock = PushLock(local_name, address, None, key, slot)
+    always_connected = entry.options.get(CONF_ALWAYS_CONNECTED, False)
+    push_lock = PushLock(
+        local_name, address, None, key, slot, always_connected=always_connected
+    )
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
 
@@ -79,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
-        entry.title, push_lock
+        entry.title, push_lock, always_connected
     )
 
     @callback
@@ -115,7 +125,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
-    if entry.title != data.title:
+    if entry.title != data.title or data.always_connected != entry.options.get(
+        CONF_ALWAYS_CONNECTED
+    ):
         await hass.config_entries.async_reload(entry.entry_id)
 
 

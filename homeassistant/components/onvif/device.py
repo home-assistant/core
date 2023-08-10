@@ -23,12 +23,14 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util
 
 from .const import (
     ABSOLUTE_MOVE,
+    CONF_ENABLE_WEBHOOKS,
     CONTINUOUS_MOVE,
+    DEFAULT_ENABLE_WEBHOOKS,
     GET_CAPABILITIES_EXCEPTIONS,
     GOTOPRESET_MOVE,
     LOGGER,
@@ -52,6 +54,7 @@ class ONVIFDevice:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
         self.config_entry: ConfigEntry = config_entry
+        self._original_options = dict(config_entry.options)
         self.available: bool = True
 
         self.info: DeviceInfo = DeviceInfo()
@@ -62,6 +65,13 @@ class ONVIFDevice:
         self.platforms: list[Platform] = []
 
         self._dt_diff_seconds: float = 0
+
+    async def _async_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        if self._original_options != entry.options:
+            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
     @property
     def name(self) -> str:
@@ -151,6 +161,14 @@ class ONVIFDevice:
         self.capabilities.events = await self.async_start_events()
         LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
 
+        # Bind the listener to the ONVIFDevice instance since
+        # async_update_listener only creates a weak reference to the listener
+        # and we need to make sure it doesn't get garbage collected since only
+        # the ONVIFDevice instance is stored in hass.data
+        self.config_entry.async_on_unload(
+            self.config_entry.add_update_listener(self._async_update_listener)
+        )
+
     async def async_stop(self, event=None):
         """Shut it all down."""
         if self.events:
@@ -171,14 +189,19 @@ class ONVIFDevice:
         dt_param.DateTimeType = "Manual"
         # Retrieve DST setting from system
         dt_param.DaylightSavings = bool(time.localtime().tm_isdst)
-        dt_param.UTCDateTime = device_time.UTCDateTime
+        dt_param.UTCDateTime = {
+            "Date": {
+                "Year": system_date.year,
+                "Month": system_date.month,
+                "Day": system_date.day,
+            },
+            "Time": {
+                "Hour": system_date.hour,
+                "Minute": system_date.minute,
+                "Second": system_date.second,
+            },
+        }
         # Retrieve timezone from system
-        dt_param.UTCDateTime.Date.Year = system_date.year
-        dt_param.UTCDateTime.Date.Month = system_date.month
-        dt_param.UTCDateTime.Date.Day = system_date.day
-        dt_param.UTCDateTime.Time.Hour = system_date.hour
-        dt_param.UTCDateTime.Time.Minute = system_date.minute
-        dt_param.UTCDateTime.Time.Second = system_date.second
         system_timezone = str(system_date.astimezone().tzinfo)
         timezone_names: list[str | None] = [system_timezone]
         if (time_zone := device_time.TimeZone) and system_timezone != time_zone.TZ:
@@ -265,6 +288,22 @@ class ONVIFDevice:
         if abs(self._dt_diff_seconds) < 5:
             return
 
+        if device_time.DateTimeType != "Manual":
+            self._async_log_time_out_of_sync(cam_date_utc, system_date)
+            return
+
+        # Set Date and Time ourselves if Date and Time is set manually in the camera.
+        try:
+            await self.async_manually_set_date_and_time()
+        except (RequestError, TransportError, IndexError, Fault):
+            LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
+            self._async_log_time_out_of_sync(cam_date_utc, system_date)
+
+    @callback
+    def _async_log_time_out_of_sync(
+        self, cam_date_utc: dt.datetime, system_date: dt.datetime
+    ) -> None:
+        """Log a warning if the camera and system date/time are not synced."""
         LOGGER.warning(
             (
                 "The date/time on %s (UTC) is '%s', "
@@ -275,15 +314,6 @@ class ONVIFDevice:
             cam_date_utc,
             system_date,
         )
-
-        if device_time.DateTimeType != "Manual":
-            return
-
-        # Set Date and Time ourselves if Date and Time is set manually in the camera.
-        try:
-            await self.async_manually_set_date_and_time()
-        except (RequestError, TransportError, IndexError, Fault):
-            LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
 
     async def async_get_device_info(self) -> DeviceInfo:
         """Obtain information about this device."""
@@ -357,7 +387,16 @@ class ONVIFDevice:
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
-            return await self.events.async_start(pull_point_support is not False, True)
+            # Even if the camera claims it does not support PullPoint, try anyway
+            # since at least some AXIS and Bosch models do. The reverse is also
+            # true where some cameras claim they support PullPoint but don't so
+            # the only way to know is to try.
+            return await self.events.async_start(
+                True,
+                self.config_entry.options.get(
+                    CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
+                ),
+            )
 
         return False
 

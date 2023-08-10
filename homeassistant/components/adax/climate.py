@@ -1,7 +1,7 @@
 """Support for Adax wifi-enabled home heaters."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from adax import Adax
 from adax_local import Adax as AdaxLocal
@@ -79,7 +79,10 @@ class AdaxDevice(ClimateEntity):
         self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater_data["id"])},
-            name=self.name,
+            # Instead of setting the device name to the entity name, adax
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
             manufacturer="Adax",
         )
 

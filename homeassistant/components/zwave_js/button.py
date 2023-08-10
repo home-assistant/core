@@ -36,6 +36,8 @@ async def async_setup_entry(
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "notification idle":
             entities.append(ZWaveNotificationIdleButton(config_entry, driver, info))
+        else:
+            entities.append(ZwaveBooleanNodeButton(config_entry, driver, info))
 
         async_add_entities(entities)
 
@@ -63,6 +65,21 @@ async def async_setup_entry(
     )
 
 
+class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
+    """Representation of a ZWave button entity for a boolean value."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = self.generate_name(include_value_name=True)
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self._async_set_value(self.info.primary_value, True)
+
+
 class ZWaveNodePingButton(ButtonEntity):
     """Representation of a ping button entity."""
 
@@ -83,6 +100,9 @@ class ZWaveNodePingButton(ButtonEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
         LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"
@@ -98,6 +118,9 @@ class ZWaveNodePingButton(ButtonEntity):
             )
         )
 
+        # we don't listen for `remove_entity_on_ready_node` signal because this entity
+        # is created when the node is added which occurs before ready. It only needs to
+        # be removed if the node is removed from the network.
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -122,7 +145,9 @@ class ZWaveNotificationIdleButton(ZWaveBaseEntity, ButtonEntity):
         """Initialize a ZWaveNotificationIdleButton entity."""
         super().__init__(config_entry, driver, info)
         self._attr_name = self.generate_name(
-            include_value_name=True, name_prefix="Idle"
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
+            name_prefix="Idle",
         )
         self._attr_unique_id = f"{self._attr_unique_id}.notification_idle"
 

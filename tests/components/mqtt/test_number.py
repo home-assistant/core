@@ -48,6 +48,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_entity_name,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
@@ -183,6 +184,14 @@ async def test_value_template(
     await mqtt_mock_entry()
 
     async_fire_mqtt_message(hass, topic, '{"val":10}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "10"
+
+    # Assert an empty value from a template is ignored
+    async_fire_mqtt_message(hass, topic, '{"other_val":12}')
 
     await hass.async_block_till_done()
 
@@ -1089,7 +1098,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -1108,4 +1121,22 @@ async def test_unload_entry(
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    ("expected_friendly_name", "device_class"),
+    [("test", None), ("Humidity", "humidity"), ("Temperature", "temperature")],
+)
+async def test_entity_name(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_friendly_name: str | None,
+    device_class: str | None,
+) -> None:
+    """Test the entity name setup."""
+    domain = number.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_name(
+        hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
     )

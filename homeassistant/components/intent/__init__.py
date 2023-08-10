@@ -34,6 +34,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""
@@ -73,17 +75,21 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            await hass.services.async_call(
-                COVER_DOMAIN,
-                SERVICE_OPEN_COVER
-                if self.service == SERVICE_TURN_ON
-                else SERVICE_CLOSE_COVER,
-                {ATTR_ENTITY_ID: state.entity_id},
-                context=intent_obj.context,
-                blocking=True,
-                limit=self.service_timeout,
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        COVER_DOMAIN,
+                        SERVICE_OPEN_COVER
+                        if self.service == SERVICE_TURN_ON
+                        else SERVICE_CLOSE_COVER,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
             )
-
+            return
+          
         elif state.domain == LOCK_DOMAIN:
             # on = lock
             # off = unlock

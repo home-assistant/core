@@ -19,5 +19,30 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "fajr": {
+        "name": "Fajr prayer"
+      },
+      "sunrise": {
+        "name": "Sunrise time"
+      },
+      "dhuhr": {
+        "name": "Dhuhr prayer"
+      },
+      "asr": {
+        "name": "Asr prayer"
+      },
+      "maghrib": {
+        "name": "Maghrib prayer"
+      },
+      "isha": {
+        "name": "Isha prayer"
+      },
+      "midnight": {
+        "name": "Midnight time"
+      }
+    }
   }
 }

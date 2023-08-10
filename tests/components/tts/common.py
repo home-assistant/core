@@ -1,8 +1,11 @@
 """Provide common tests tools for tts."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
+from unittest.mock import MagicMock, patch
 
+import pytest
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -14,6 +17,7 @@ from homeassistant.components.tts import (
     TextToSpeechEntity,
     TtsAudioType,
     Voice,
+    _get_cache_files,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -32,6 +36,62 @@ from tests.common import (
 DEFAULT_LANG = "en_US"
 SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
+
+
+def mock_tts_get_cache_files_fixture_helper():
+    """Mock the list TTS cache function."""
+    with patch(
+        "homeassistant.components.tts._get_cache_files", return_value={}
+    ) as mock_cache_files:
+        yield mock_cache_files
+
+
+def mock_tts_init_cache_dir_fixture_helper(
+    init_tts_cache_dir_side_effect: Any,
+) -> Generator[MagicMock, None, None]:
+    """Mock the TTS cache dir in memory."""
+    with patch(
+        "homeassistant.components.tts._init_tts_cache_dir",
+        side_effect=init_tts_cache_dir_side_effect,
+    ) as mock_cache_dir:
+        yield mock_cache_dir
+
+
+def init_tts_cache_dir_side_effect_fixture_helper() -> Any:
+    """Return the cache dir."""
+    return None
+
+
+def mock_tts_cache_dir_fixture_helper(
+    tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
+):
+    """Mock the TTS cache dir with empty dir."""
+    mock_tts_init_cache_dir.return_value = str(tmp_path)
+
+    # Restore original get cache files behavior, we're working with a real dir.
+    mock_tts_get_cache_files.side_effect = _get_cache_files
+
+    yield tmp_path
+
+    if not hasattr(request.node, "rep_call") or request.node.rep_call.passed:
+        return
+
+    # Print contents of dir if failed
+    print("Content of dir for", request.node.nodeid)  # noqa: T201
+    for fil in tmp_path.iterdir():
+        print(fil.relative_to(tmp_path))  # noqa: T201
+
+    # To show the log.
+    pytest.fail("Test failed, see log for details")
+
+
+def tts_mutagen_mock_fixture_helper():
+    """Mock writing tags."""
+    with patch(
+        "homeassistant.components.tts.SpeechManager.write_tags",
+        side_effect=lambda *args: args[1],
+    ) as mock_write_tags:
+        yield mock_write_tags
 
 
 async def get_media_source_url(hass: HomeAssistant, media_content_id: str) -> str:
@@ -76,7 +136,7 @@ class BaseProvider:
         return ["voice", "age"]
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS dat."""
         return ("mp3", b"")
@@ -151,7 +211,7 @@ async def mock_config_entry_setup(
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
-        """Unload up test config entry."""
+        """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(config_entry, TTS_DOMAIN)
         return True
 

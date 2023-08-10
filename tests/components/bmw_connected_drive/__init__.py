@@ -1,9 +1,11 @@
 """Tests for the for the BMW Connected Drive integration."""
 
 from pathlib import Path
+from urllib.parse import urlparse
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.const import (
+    REMOTE_SERVICE_POSITION_URL,
     VEHICLE_CHARGING_DETAILS_URL,
     VEHICLE_STATE_URL,
     VEHICLES_URL,
@@ -115,6 +117,18 @@ def mock_vehicles() -> respx.Router:
     router.get(VEHICLE_CHARGING_DETAILS_URL).mock(
         side_effect=vehicle_charging_sideeffect
     )
+
+    # Get vehicle position after remote service
+    router.post(urlparse(REMOTE_SERVICE_POSITION_URL).netloc).mock(
+        httpx.Response(
+            200,
+            json=load_json_object_fixture(
+                FIXTURE_PATH / "remote_service" / "eventposition.json",
+                integration=BMW_DOMAIN,
+            ),
+        )
+    )
+
     return router
 
 

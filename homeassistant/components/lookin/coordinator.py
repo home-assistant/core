@@ -10,11 +10,10 @@ from typing import TypeVar
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .const import NEVER_TIME, POLLING_FALLBACK_SECONDS
+
 _LOGGER = logging.getLogger(__name__)
 _DataT = TypeVar("_DataT")
-
-NEVER_TIME = -120.0  # Time that will never match time.monotonic()
-ACTIVE_UPDATES_INTERVAL = 3  # Consider active for 3x the update interval
 
 
 class LookinPushCoordinator:
@@ -32,9 +31,7 @@ class LookinPushCoordinator:
     def active(self, interval: timedelta) -> bool:
         """Check if the last push update was recently."""
         time_since_last_update = time.monotonic() - self.last_update
-        is_active = (
-            time_since_last_update < interval.total_seconds() * ACTIVE_UPDATES_INTERVAL
-        )
+        is_active = time_since_last_update < POLLING_FALLBACK_SECONDS
         _LOGGER.debug(
             "%s: push updates active: %s (time_since_last_update=%s)",
             self.name,
@@ -63,6 +60,7 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             name=name,
             update_interval=update_interval,
             update_method=update_method,
+            always_update=False,
         )
 
     @callback

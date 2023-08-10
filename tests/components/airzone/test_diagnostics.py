@@ -14,7 +14,6 @@ from aioairzone.const import (
     AZD_SYSTEM,
     AZD_SYSTEMS,
     AZD_ZONES,
-    AZD_ZONES_NUM,
     RAW_HVAC,
     RAW_VERSION,
     RAW_WEBSERVER,
@@ -93,7 +92,6 @@ async def test_config_entry_diagnostics(
         diag["coord_data"][AZD_SYSTEMS]["1"].items()
         >= {
             AZD_ID: 1,
-            AZD_ZONES_NUM: 5,
         }.items()
     )
 

@@ -20,7 +20,7 @@ from . import (
     register_entity,
 )
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache_with_extra_data
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -137,7 +137,9 @@ async def test_block_restored_sleeping_sensor(
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
-    mock_restore_cache(hass, [State(entity_id, "20.4")])
+    extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
+
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -216,7 +218,9 @@ async def test_block_not_matched_restored_sleeping_sensor(
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
-    mock_restore_cache(hass, [State(entity_id, "20.4")])
+    extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
+
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -272,6 +276,16 @@ async def test_rpc_sensor(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
     mock_rpc_device.mock_update()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+async def test_rpc_illuminance_sensor(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test RPC illuminacne sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_illuminance"
+    await init_integration(hass, 2)
+
+    assert hass.states.get(entity_id).state == "345"
 
 
 async def test_rpc_sensor_error(
@@ -347,8 +361,9 @@ async def test_rpc_restored_sleeping_sensor(
         "temperature:0-temperature_0",
         entry,
     )
+    extra_data = {"native_value": "21.0", "native_unit_of_measurement": "°C"}
 
-    mock_restore_cache(hass, [State(entity_id, "21.0")])
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
 
     await hass.config_entries.async_setup(entry.entry_id)

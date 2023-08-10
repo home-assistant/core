@@ -3,11 +3,19 @@ import pytest
 
 from homeassistant.components.websocket_api.auth import TYPE_AUTH_REQUIRED
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.typing import (
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture
-async def websocket_client(hass, hass_ws_client):
+async def websocket_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Create a websocket client."""
     return await hass_ws_client(hass)
 

@@ -61,6 +61,7 @@ from .const import (
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
     ATTR_INPUT,
+    ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_REPOSITORY,
     ATTR_SLUG,
@@ -158,9 +159,14 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
 
 SCHEMA_BACKUP_FULL = vol.Schema(
     {
-        vol.Optional(ATTR_NAME): cv.string,
+        vol.Optional(
+            ATTR_NAME, default=lambda: utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        ): cv.string,
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_COMPRESSED): cv.boolean,
+        vol.Optional(ATTR_LOCATION): vol.All(
+            cv.string, lambda v: None if v == "/backup" else v
+        ),
     }
 )
 
@@ -295,7 +301,7 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 @callback
 @bind_hass
-def get_addons_info(hass):
+def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
     """Return Addons info.
 
     Async friendly.
@@ -361,6 +367,16 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     Async friendly.
     """
     return hass.data.get(DATA_CORE_INFO)
+
+
+@callback
+@bind_hass
+def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
+    """Return Supervisor issues info.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_KEY_SUPERVISOR_ISSUES)
 
 
 @callback
@@ -631,8 +647,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = dr.async_get(hass)
     coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
-    hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_config_entry_first_refresh()
+    hass.data[ADDONS_COORDINATOR] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -742,7 +758,7 @@ def async_remove_addons_from_dev_reg(
 ) -> None:
     """Remove addons from the device registry."""
     for addon_slug in addons:
-        if dev := dev_reg.async_get_device({(DOMAIN, addon_slug)}):
+        if dev := dev_reg.async_get_device(identifiers={(DOMAIN, addon_slug)}):
             dev_reg.async_remove_device(dev.id)
 
 
@@ -774,7 +790,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         new_data: dict[str, Any] = {}
         supervisor_info = get_supervisor_info(self.hass) or {}
-        addons_info = get_addons_info(self.hass)
+        addons_info = get_addons_info(self.hass) or {}
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
         store_data = get_store(self.hass) or {}
@@ -839,7 +855,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
 
         if not self.is_hass_os and (
-            dev := self.dev_reg.async_get_device({(DOMAIN, "OS")})
+            dev := self.dev_reg.async_get_device(identifiers={(DOMAIN, "OS")})
         ):
             # Remove the OS device if it exists and the installation is not hassos
             self.dev_reg.async_remove_device(dev.id)

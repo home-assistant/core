@@ -5,7 +5,6 @@ import enum
 
 from zigpy.zcl.clusters import homeautomation
 
-from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
     CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
@@ -13,6 +12,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
+from . import AttrReportConfig, ClusterHandler
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(

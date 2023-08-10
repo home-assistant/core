@@ -1,18 +1,17 @@
 """Constants used by Home Assistant components."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
-
-from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 6
+MINOR_VERSION: Final = 9
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
@@ -32,10 +31,13 @@ class Platform(StrEnum):
     CLIMATE = "climate"
     COVER = "cover"
     DATE = "date"
+    DATETIME = "datetime"
     DEVICE_TRACKER = "device_tracker"
+    EVENT = "event"
     FAN = "fan"
     GEO_LOCATION = "geo_location"
     HUMIDIFIER = "humidifier"
+    IMAGE = "image"
     IMAGE_PROCESSING = "image_processing"
     LIGHT = "light"
     LOCK = "lock"
@@ -55,6 +57,7 @@ class Platform(StrEnum):
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
+    WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
 
@@ -219,8 +222,9 @@ CONF_RECIPIENT: Final = "recipient"
 CONF_REGION: Final = "region"
 CONF_REPEAT: Final = "repeat"
 CONF_RESOURCE: Final = "resource"
-CONF_RESOURCES: Final = "resources"
 CONF_RESOURCE_TEMPLATE: Final = "resource_template"
+CONF_RESOURCES: Final = "resources"
+CONF_RESPONSE_VARIABLE: Final = "response_variable"
 CONF_RGB: Final = "rgb"
 CONF_ROOM: Final = "room"
 CONF_SCAN_INTERVAL: Final = "scan_interval"
@@ -1098,6 +1102,7 @@ SERVER_PORT: Final = 8123
 URL_ROOT: Final = "/"
 URL_API: Final = "/api/"
 URL_API_STREAM: Final = "/api/stream"
+URL_API_CORE_STATE: Final = "/api/core/state"
 URL_API_CONFIG: Final = "/api/config"
 URL_API_STATES: Final = "/api/states"
 URL_API_STATES_ENTITY: Final = "/api/states/{}"
@@ -1164,6 +1169,11 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+# Date/Time formats
+FORMAT_DATE: Final = "%Y-%m-%d"
+FORMAT_TIME: Final = "%H:%M:%S"
+FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
 
 
 class EntityCategory(StrEnum):

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/opnsense",
   "iot_class": "local_polling",
   "loggers": ["pbr", "pyopnsense"],
-  "requirements": ["pyopnsense==0.2.0"]
+  "requirements": ["pyopnsense==0.4.0"]
 }

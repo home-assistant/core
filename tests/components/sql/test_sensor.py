@@ -13,14 +13,20 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.const import CONF_QUERY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_UNIQUE_ID, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_ICON,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import (
     YAML_CONFIG,
+    YAML_CONFIG_ALL_TEMPLATES,
     YAML_CONFIG_BINARY,
     YAML_CONFIG_FULL_TABLE_SCAN,
     YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
@@ -32,13 +38,14 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_query(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
         "query": "SELECT 5 as value",
         "column": "value",
         "name": "Select value SQL query",
+        "unique_id": "very_unique_id",
     }
     await init_integration(hass, config)
 
@@ -218,7 +225,7 @@ async def test_invalid_url_on_update(
         await init_integration(hass, config)
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=1),
+            dt_util.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
@@ -233,6 +240,65 @@ async def test_query_from_yaml(recorder_mock: Recorder, hass: HomeAssistant) -> 
 
     state = hass.states.get("sensor.get_value")
     assert state.state == "5"
+
+
+async def test_templates_with_yaml(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the SQL sensor from yaml config with templates."""
+
+    hass.states.async_set("sensor.input1", "on")
+    hass.states.async_set("sensor.input2", "on")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG_ALL_TEMPLATES)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_values_with_template")
+    assert state.state == "5"
+    assert state.attributes[CONF_ICON] == "mdi:on"
+    assert state.attributes["entity_picture"] == "/local/picture1.jpg"
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_values_with_template")
+    assert state.state == "5"
+    assert state.attributes[CONF_ICON] == "mdi:off"
+    assert state.attributes["entity_picture"] == "/local/picture2.jpg"
+
+    hass.states.async_set("sensor.input2", "off")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=2),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_values_with_template")
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.input1", "on")
+    hass.states.async_set("sensor.input2", "on")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=3),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_values_with_template")
+    assert state.state == "5"
+    assert state.attributes[CONF_ICON] == "mdi:on"
+    assert state.attributes["entity_picture"] == "/local/picture1.jpg"
 
 
 async def test_config_from_old_yaml(
@@ -399,7 +465,7 @@ async def test_no_issue_when_view_has_the_text_entity_id_in_it(
         )
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=1),
+            dt_util.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
@@ -457,3 +523,47 @@ async def test_engine_is_disposed_at_stop(
         await hass.async_stop()
 
     assert mock_engine_dispose.call_count == 2
+
+
+async def test_attributes_from_entry_config(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test attributes from entry config."""
+
+    await init_integration(
+        hass,
+        config={
+            "name": "Get Value - With",
+            "query": "SELECT 5 as value",
+            "column": "value",
+            "unit_of_measurement": "MiB",
+            "device_class": SensorDeviceClass.DATA_SIZE,
+            "state_class": SensorStateClass.TOTAL,
+        },
+        entry_id="8693d4782ced4fb1ecca4743f29ab8f1",
+    )
+
+    state = hass.states.get("sensor.get_value_with")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+    assert state.attributes["unit_of_measurement"] == "MiB"
+    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
+    assert state.attributes["state_class"] == SensorStateClass.TOTAL
+
+    await init_integration(
+        hass,
+        config={
+            "name": "Get Value - Without",
+            "query": "SELECT 5 as value",
+            "column": "value",
+            "unit_of_measurement": "MiB",
+        },
+        entry_id="7aec7cd8045fba4778bb0621469e3cd9",
+    )
+
+    state = hass.states.get("sensor.get_value_without")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+    assert state.attributes["unit_of_measurement"] == "MiB"
+    assert "device_class" not in state.attributes
+    assert "state_class" not in state.attributes

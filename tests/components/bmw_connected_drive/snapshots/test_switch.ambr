@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_entity_state_attrs
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i4 eDrive40 Climate',
+        'icon': 'mdi:fan',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.i4_edrive40_climate',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i4 eDrive40 Charging',
+        'icon': 'mdi:ev-station',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.i4_edrive40_charging',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  ])
+# ---

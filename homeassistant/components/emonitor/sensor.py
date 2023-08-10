@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import UNDEFINED, StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -80,7 +80,7 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         mac_address = self.emonitor_status.network.mac_address
         device_name = name_short_mac(mac_address[-6:])
         label = self.channel_data.label or f"{device_name} {channel_number}"
-        if description.name:
+        if description.name is not UNDEFINED:
             self._attr_name = f"{label} {description.name}"
             self._attr_unique_id = f"{mac_address}_{channel_number}_{description.key}"
         else:

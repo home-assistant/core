@@ -25,5 +25,405 @@
       }
     }
   },
-  "title": "Growatt Server"
+  "title": "Growatt Server",
+  "entity": {
+    "sensor": {
+      "inverter_energy_today": {
+        "name": "Energy today"
+      },
+      "inverter_energy_total": {
+        "name": "Lifetime energy output"
+      },
+      "inverter_voltage_input_1": {
+        "name": "Input 1 voltage"
+      },
+      "inverter_amperage_input_1": {
+        "name": "Input 1 Amperage"
+      },
+      "inverter_wattage_input_1": {
+        "name": "Input 1 Wattage"
+      },
+      "inverter_voltage_input_2": {
+        "name": "Input 2 voltage"
+      },
+      "inverter_amperage_input_2": {
+        "name": "Input 2 Amperage"
+      },
+      "inverter_wattage_input_2": {
+        "name": "Input 2 Wattage"
+      },
+      "inverter_voltage_input_3": {
+        "name": "Input 3 voltage"
+      },
+      "inverter_amperage_input_3": {
+        "name": "Input 3 Amperage"
+      },
+      "inverter_wattage_input_3": {
+        "name": "Input 3 Wattage"
+      },
+      "inverter_internal_wattage": {
+        "name": "Internal wattage"
+      },
+      "inverter_reactive_voltage": {
+        "name": "Reactive voltage"
+      },
+      "inverter_reactive_amperage": {
+        "name": "Reactive amperage"
+      },
+      "inverter_frequency": {
+        "name": "AC frequency"
+      },
+      "inverter_current_wattage": {
+        "name": "Output power"
+      },
+      "inverter_current_reactive_wattage": {
+        "name": "Reactive wattage"
+      },
+      "inverter_ipm_temperature": {
+        "name": "Intelligent Power Management temperature"
+      },
+      "inverter_temperature": {
+        "name": "Inverter temperature"
+      },
+      "mix_statement_of_charge": {
+        "name": "Statement of charge"
+      },
+      "mix_battery_charge_today": {
+        "name": "Battery charged today"
+      },
+      "mix_battery_charge_lifetime": {
+        "name": "Lifetime battery charged"
+      },
+      "mix_battery_discharge_today": {
+        "name": "Battery discharged today"
+      },
+      "mix_battery_discharge_lifetime": {
+        "name": "Lifetime battery discharged"
+      },
+      "mix_solar_generation_today": {
+        "name": "Solar energy today"
+      },
+      "mix_solar_generation_lifetime": {
+        "name": "Lifetime solar energy"
+      },
+      "mix_battery_discharge_w": {
+        "name": "Battery discharging W"
+      },
+      "mix_battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "mix_pv1_voltage": {
+        "name": "PV1 voltage"
+      },
+      "mix_pv2_voltage": {
+        "name": "PV2 voltage"
+      },
+      "mix_load_consumption_today": {
+        "name": "Load consumption today"
+      },
+      "mix_load_consumption_lifetime": {
+        "name": "Lifetime load consumption"
+      },
+      "mix_export_to_grid_today": {
+        "name": "Export to grid today"
+      },
+      "mix_export_to_grid_lifetime": {
+        "name": "Lifetime export to grid"
+      },
+      "mix_battery_charge": {
+        "name": "Battery charging"
+      },
+      "mix_load_consumption": {
+        "name": "Load consumption"
+      },
+      "mix_wattage_pv_1": {
+        "name": "PV1 Wattage"
+      },
+      "mix_wattage_pv_2": {
+        "name": "PV2 Wattage"
+      },
+      "mix_wattage_pv_all": {
+        "name": "All PV Wattage"
+      },
+      "mix_export_to_grid": {
+        "name": "Export to grid"
+      },
+      "mix_import_from_grid": {
+        "name": "Import from grid"
+      },
+      "mix_battery_discharge_kw": {
+        "name": "Battery discharging kW"
+      },
+      "mix_grid_voltage": {
+        "name": "Grid voltage"
+      },
+      "mix_system_production_today": {
+        "name": "System production today (self-consumption + export)"
+      },
+      "mix_load_consumption_solar_today": {
+        "name": "Load consumption today (solar)"
+      },
+      "mix_self_consumption_today": {
+        "name": "Self consumption today (solar + battery)"
+      },
+      "mix_load_consumption_battery_today": {
+        "name": "Load consumption today (battery)"
+      },
+      "mix_import_from_grid_today": {
+        "name": "Import from grid today (load)"
+      },
+      "mix_last_update": {
+        "name": "Last Data Update"
+      },
+      "mix_import_from_grid_today_combined": {
+        "name": "Import from grid today (load + charging)"
+      },
+      "storage_storage_production_today": {
+        "name": "Storage production today"
+      },
+      "storage_storage_production_lifetime": {
+        "name": "Lifetime Storage production"
+      },
+      "storage_grid_discharge_today": {
+        "name": "Grid discharged today"
+      },
+      "storage_load_consumption_today": {
+        "name": "[%key:component::growatt_server::entity::sensor::mix_load_consumption_today::name%]"
+      },
+      "storage_load_consumption_lifetime": {
+        "name": "[%key:component::growatt_server::entity::sensor::mix_load_consumption_lifetime::name%]"
+      },
+      "storage_grid_charged_today": {
+        "name": "Grid charged today"
+      },
+      "storage_charge_storage_lifetime": {
+        "name": "Lifetime stored charged"
+      },
+      "storage_solar_production": {
+        "name": "Solar power production"
+      },
+      "storage_battery_percentage": {
+        "name": "Battery percentage"
+      },
+      "storage_power_flow": {
+        "name": "Storage charging/ discharging(-ve)"
+      },
+      "storage_load_consumption_solar_storage": {
+        "name": "Load consumption (Solar + Storage)"
+      },
+      "storage_charge_today": {
+        "name": "Charge today"
+      },
+      "storage_import_from_grid": {
+        "name": "[%key:component::growatt_server::entity::sensor::mix_import_from_grid::name%]"
+      },
+      "storage_import_from_grid_today": {
+        "name": "Import from grid today"
+      },
+      "storage_import_from_grid_total": {
+        "name": "Import from grid total"
+      },
+      "storage_load_consumption": {
+        "name": "[%key:component::growatt_server::entity::sensor::mix_load_consumption::name%]"
+      },
+      "storage_grid_voltage": {
+        "name": "AC input voltage"
+      },
+      "storage_pv_charging_voltage": {
+        "name": "PV charging voltage"
+      },
+      "storage_ac_input_frequency_out": {
+        "name": "AC input frequency"
+      },
+      "storage_output_voltage": {
+        "name": "Output voltage"
+      },
+      "storage_ac_output_frequency": {
+        "name": "Ac output frequency"
+      },
+      "storage_current_pv": {
+        "name": "Solar charge current"
+      },
+      "storage_current_1": {
+        "name": "Solar current to storage"
+      },
+      "storage_grid_amperage_input": {
+        "name": "Grid charge current"
+      },
+      "storage_grid_out_current": {
+        "name": "Grid out current"
+      },
+      "storage_battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "storage_load_percentage": {
+        "name": "Load percentage"
+      },
+      "tlx_energy_today": {
+        "name": "Energy today"
+      },
+      "tlx_energy_total": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_energy_total::name%]"
+      },
+      "tlx_energy_total_input_1": {
+        "name": "Lifetime total energy input 1"
+      },
+      "tlx_energy_today_input_1": {
+        "name": "Energy Today Input 1"
+      },
+      "tlx_voltage_input_1": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_voltage_input_1::name%]"
+      },
+      "tlx_amperage_input_1": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_amperage_input_1::name%]"
+      },
+      "tlx_wattage_input_1": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_wattage_input_1::name%]"
+      },
+      "tlx_energy_total_input_2": {
+        "name": "Lifetime total energy input 2"
+      },
+      "tlx_energy_today_input_2": {
+        "name": "Energy Today Input 2"
+      },
+      "tlx_voltage_input_2": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_voltage_input_2::name%]"
+      },
+      "tlx_amperage_input_2": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_amperage_input_2::name%]"
+      },
+      "tlx_wattage_input_2": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_wattage_input_2::name%]"
+      },
+      "tlx_energy_total_input_3": {
+        "name": "Lifetime total energy input 3"
+      },
+      "tlx_energy_today_input_3": {
+        "name": "Energy Today Input 3"
+      },
+      "tlx_voltage_input_3": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_voltage_input_3::name%]"
+      },
+      "tlx_amperage_input_3": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_amperage_input_3::name%]"
+      },
+      "tlx_wattage_input_3": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_wattage_input_3::name%]"
+      },
+      "tlx_energy_total_input_4": {
+        "name": "Lifetime total energy input 4"
+      },
+      "tlx_energy_today_input_4": {
+        "name": "Energy Today Input 4"
+      },
+      "tlx_voltage_input_4": {
+        "name": "Input 4 voltage"
+      },
+      "tlx_amperage_input_4": {
+        "name": "Input 4 Amperage"
+      },
+      "tlx_wattage_input_4": {
+        "name": "Input 4 Wattage"
+      },
+      "tlx_solar_generation_total": {
+        "name": "Lifetime total solar energy"
+      },
+      "tlx_internal_wattage": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_internal_wattage::name%]"
+      },
+      "tlx_reactive_voltage": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_reactive_voltage::name%]"
+      },
+      "tlx_frequency": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_frequency::name%]"
+      },
+      "tlx_current_wattage": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_current_wattage::name%]"
+      },
+      "tlx_temperature_1": {
+        "name": "Temperature 1"
+      },
+      "tlx_temperature_2": {
+        "name": "Temperature 2"
+      },
+      "tlx_temperature_3": {
+        "name": "Temperature 3"
+      },
+      "tlx_temperature_4": {
+        "name": "Temperature 4"
+      },
+      "tlx_temperature_5": {
+        "name": "Temperature 5"
+      },
+      "tlx_all_batteries_discharge_today": {
+        "name": "All batteries discharged today"
+      },
+      "tlx_all_batteries_discharge_total": {
+        "name": "Lifetime total all batteries discharged"
+      },
+      "tlx_battery_1_discharge_w": {
+        "name": "Battery 1 discharging W"
+      },
+      "tlx_battery_1_discharge_total": {
+        "name": "Lifetime total battery 1 discharged"
+      },
+      "tlx_battery_2_discharge_w": {
+        "name": "Battery 2 discharging W"
+      },
+      "tlx_battery_2_discharge_total": {
+        "name": "Lifetime total battery 2 discharged"
+      },
+      "tlx_all_batteries_charge_today": {
+        "name": "All batteries charged today"
+      },
+      "tlx_all_batteries_charge_total": {
+        "name": "Lifetime total all batteries charged"
+      },
+      "tlx_battery_1_charge_w": {
+        "name": "Battery 1 charging W"
+      },
+      "tlx_battery_1_charge_total": {
+        "name": "Lifetime total battery 1 charged"
+      },
+      "tlx_battery_2_charge_w": {
+        "name": "Battery 2 charging W"
+      },
+      "tlx_battery_2_charge_total": {
+        "name": "Lifetime total battery 2 charged"
+      },
+      "tlx_export_to_grid_today": {
+        "name": "[%key:component::growatt_server::entity::sensor::mix_export_to_grid_today::name%]"
+      },
+      "tlx_export_to_grid_total": {
+        "name": "Lifetime total export to grid"
+      },
+      "tlx_load_consumption_today": {
+        "name": "[%key:component::growatt_server::entity::sensor::mix_load_consumption_today::name%]"
+      },
+      "mix_load_consumption_total": {
+        "name": "Lifetime total load consumption"
+      },
+      "tlx_statement_of_charge": {
+        "name": "Statement of charge (SoC)"
+      },
+      "total_money_today": {
+        "name": "Total money today"
+      },
+      "total_money_total": {
+        "name": "Money lifetime"
+      },
+      "total_energy_today": {
+        "name": "Energy Today"
+      },
+      "total_output_power": {
+        "name": "Output Power"
+      },
+      "total_energy_output": {
+        "name": "[%key:component::growatt_server::entity::sensor::inverter_energy_total::name%]"
+      },
+      "total_maximum_output": {
+        "name": "Maximum power"
+      }
+    }
+  }
 }

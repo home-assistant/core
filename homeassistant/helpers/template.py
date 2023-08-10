@@ -329,6 +329,22 @@ _cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
 class RenderInfo:
     """Holds information about a template render."""
 
+    __slots__ = (
+        "template",
+        "filter_lifecycle",
+        "filter",
+        "_result",
+        "is_static",
+        "exception",
+        "all_states",
+        "all_states_lifecycle",
+        "domains",
+        "domains_lifecycle",
+        "entities",
+        "rate_limit",
+        "has_time",
+    )
+
     def __init__(self, template: Template) -> None:
         """Initialise."""
         self.template = template
@@ -1918,7 +1934,7 @@ def is_number(value):
         fvalue = float(value)
     except (ValueError, TypeError):
         return False
-    if math.isnan(fvalue) or math.isinf(fvalue):
+    if not math.isfinite(fvalue):
         return False
     return True
 
