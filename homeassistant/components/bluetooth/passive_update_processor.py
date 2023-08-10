@@ -16,14 +16,8 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.entity import (
-    DeviceInfo,
-    Entity,
-    EntityDescription,
-)
-from homeassistant.helpers.entity_platform import (
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.entity_platform import async_get_current_platform
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.util.enum import try_parse_enum

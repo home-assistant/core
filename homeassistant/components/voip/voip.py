@@ -37,13 +37,7 @@ from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.ulid import ulid
 
-from .const import (
-    CHANNELS,
-    DOMAIN,
-    RATE,
-    RTP_AUDIO_SETTINGS,
-    WIDTH,
-)
+from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
 
 if TYPE_CHECKING:
     from .devices import VoIPDevice, VoIPDevices

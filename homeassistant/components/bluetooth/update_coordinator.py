@@ -12,14 +12,8 @@ from .api import (
     async_register_callback,
     async_track_unavailable,
 )
-from .match import (
-    BluetoothCallbackMatcher,
-)
-from .models import (
-    BluetoothChange,
-    BluetoothScanningMode,
-    BluetoothServiceInfoBleak,
-)
+from .match import BluetoothCallbackMatcher
+from .models import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
 class BasePassiveBluetoothCoordinator(ABC):
