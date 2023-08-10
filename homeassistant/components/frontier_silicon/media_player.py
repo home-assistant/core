@@ -39,7 +39,16 @@ async def async_setup_entry(
 
     afsapi: AFSAPI = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities([AFSAPIDevice(config_entry.title, afsapi)], True)
+    async_add_entities(
+        [
+            AFSAPIDevice(
+                config_entry.unique_id or config_entry.entry_id,
+                config_entry.title,
+                afsapi,
+            )
+        ],
+        True,
+    )
 
 
 class AFSAPIDevice(MediaPlayerEntity):
@@ -67,15 +76,15 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
+    def __init__(self, unique_id: str, name: str | None, afsapi: AFSAPI) -> None:
         """Initialize the Frontier Silicon API device."""
         self.fs_device = afsapi
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
+            identifiers={(DOMAIN, unique_id)},
             name=name,
         )
-
+        self._attr_unique_id = f"{unique_id}_media_player"
         self._max_volume: int | None = None
 
         self.__modes_by_label: dict[str, str] | None = None
@@ -114,8 +123,6 @@ class AFSAPIDevice(MediaPlayerEntity):
             )
 
             self._attr_available = True
-        if not self._attr_name:
-            self._attr_name = await afsapi.get_friendly_name()
 
         if not self._attr_source_list:
             self.__modes_by_label = {
