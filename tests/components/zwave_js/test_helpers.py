@@ -9,12 +9,16 @@ from homeassistant.components.zwave_js.helpers import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 
+from tests.common import MockConfigEntry
+
 
 async def test_async_get_node_status_sensor_entity_id(hass: HomeAssistant) -> None:
     """Test async_get_node_status_sensor_entity_id for non zwave_js device."""
     dev_reg = dr.async_get(hass)
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
     device = dev_reg.async_get_or_create(
-        config_entry_id="123",
+        config_entry_id=config_entry.entry_id,
         identifiers={("test", "test")},
     )
     assert async_get_node_status_sensor_entity_id(hass, device.id) is None
