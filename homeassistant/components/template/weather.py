@@ -421,11 +421,10 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         if result is None or isinstance(result, TemplateError):
             return None
 
-        set().union()
         if isinstance(result, list):
             for forecast in result:
                 diff_result = (
-                    set().union(forecast.items()).difference(CHECK_FORECAST_KEYS)
+                    set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
                 )
                 if diff_result:
                     raise vol.Invalid(
