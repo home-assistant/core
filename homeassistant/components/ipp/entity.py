@@ -11,13 +11,14 @@ from .coordinator import IPPDataUpdateCoordinator
 class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
     """Defines a base IPP entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         *,
         entry_id: str,
         device_id: str,
         coordinator: IPPDataUpdateCoordinator,
-        name: str,
         icon: str,
         enabled_default: bool = True,
     ) -> None:
@@ -25,7 +26,6 @@ class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
         self._entry_id = entry_id
-        self._attr_name = name
         self._attr_icon = icon
         self._attr_entity_registry_enabled_default = enabled_default
 
