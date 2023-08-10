@@ -76,6 +76,7 @@ SENSOR_SCHEMA = {
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_AVAILABILITY): cv.template,
 }
 
 BINARY_SENSOR_SCHEMA = {
