@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for coordinator in device_coordinators
         ]
     )
-    hass.data[DOMAIN][entry.entry_id] = device_coordinators
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device_coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

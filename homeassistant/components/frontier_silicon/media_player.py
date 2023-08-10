@@ -10,10 +10,8 @@ from afsapi import (
     NotImplementedException as FSNotImplementedException,
     PlayState,
 )
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
@@ -21,61 +19,15 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .browse_media import browse_node, browse_top_level
-from .const import CONF_PIN, DEFAULT_PIN, DEFAULT_PORT, DOMAIN, MEDIA_CONTENT_ID_PRESET
+from .const import DOMAIN, MEDIA_CONTENT_ID_PRESET
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PIN): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Frontier Silicon platform.
-
-    YAML is deprecated, and imported automatically.
-    """
-
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "remove_yaml",
-        breaks_in_ha_version="2023.6.0",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="removed_yaml",
-    )
-
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_NAME: config.get(CONF_NAME),
-            CONF_HOST: config.get(CONF_HOST),
-            CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
-            CONF_PIN: config.get(CONF_PASSWORD, DEFAULT_PIN),
-        },
-    )
 
 
 async def async_setup_entry(
@@ -87,13 +39,24 @@ async def async_setup_entry(
 
     afsapi: AFSAPI = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities([AFSAPIDevice(config_entry.title, afsapi)], True)
+    async_add_entities(
+        [
+            AFSAPIDevice(
+                config_entry.entry_id,
+                config_entry.title,
+                afsapi,
+            )
+        ],
+        True,
+    )
 
 
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
     _attr_media_content_type: str = MediaType.CHANNEL
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -113,16 +76,15 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
+    def __init__(self, unique_id: str, name: str | None, afsapi: AFSAPI) -> None:
         """Initialize the Frontier Silicon API device."""
         self.fs_device = afsapi
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
+            identifiers={(DOMAIN, unique_id)},
             name=name,
         )
-        self._attr_name = name
-
+        self._attr_unique_id = unique_id
         self._max_volume: int | None = None
 
         self.__modes_by_label: dict[str, str] | None = None
@@ -161,8 +123,6 @@ class AFSAPIDevice(MediaPlayerEntity):
             )
 
             self._attr_available = True
-        if not self._attr_name:
-            self._attr_name = await afsapi.get_friendly_name()
 
         if not self._attr_source_list:
             self.__modes_by_label = {

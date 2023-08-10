@@ -162,6 +162,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_name = None
 
     device: SmartBulb
 

@@ -59,7 +59,7 @@ def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None
         host_mock.user_level = "admin"
         host_mock.sw_version_update_required = False
         host_mock.timeout = 60
-        host_mock.renewtimer = 600
+        host_mock.renewtimer.return_value = 600
         yield host_mock
 
 

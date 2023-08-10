@@ -34,6 +34,7 @@ class OpenMeteoWeatherEntity(
     """Defines an Open-Meteo weather entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR

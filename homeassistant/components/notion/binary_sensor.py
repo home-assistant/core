@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
@@ -37,7 +37,7 @@ from .model import NotionEntityDescriptionMixin
 class NotionBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary and regular sensors."""
 
-    on_state: Literal["alarm", "critical", "leak", "not_missing", "open"]
+    on_state: Literal["alarm", "leak", "low", "not_missing", "open"]
 
 
 @dataclass
@@ -52,36 +52,31 @@ class NotionBinarySensorDescription(
 BINARY_SENSOR_DESCRIPTIONS = (
     NotionBinarySensorDescription(
         key=SENSOR_BATTERY,
-        name="Low battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         listener_kind=ListenerKind.BATTERY,
-        on_state="critical",
+        on_state="low",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_DOOR,
-        name="Door",
         device_class=BinarySensorDeviceClass.DOOR,
         listener_kind=ListenerKind.DOOR,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_GARAGE_DOOR,
-        name="Garage door",
         device_class=BinarySensorDeviceClass.GARAGE_DOOR,
         listener_kind=ListenerKind.GARAGE_DOOR,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_LEAK,
-        name="Leak detector",
         device_class=BinarySensorDeviceClass.MOISTURE,
         listener_kind=ListenerKind.LEAK_STATUS,
         on_state="leak",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_MISSING,
-        name="Missing",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         listener_kind=ListenerKind.CONNECTED,
@@ -89,28 +84,28 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     NotionBinarySensorDescription(
         key=SENSOR_SAFE,
-        name="Safe",
+        translation_key="safe",
         device_class=BinarySensorDeviceClass.DOOR,
         listener_kind=ListenerKind.SAFE,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_SLIDING,
-        name="Sliding door/window",
+        translation_key="sliding_door_window",
         device_class=BinarySensorDeviceClass.DOOR,
         listener_kind=ListenerKind.SLIDING_DOOR_OR_WINDOW,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_SMOKE_CO,
-        name="Smoke/Carbon monoxide detector",
+        translation_key="smoke_carbon_monoxide_detector",
         device_class=BinarySensorDeviceClass.SMOKE,
         listener_kind=ListenerKind.SMOKE,
         on_state="alarm",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_WINDOW_HINGED,
-        name="Hinged window",
+        translation_key="hinged_window",
         listener_kind=ListenerKind.HINGED_WINDOW,
         on_state="open",
     ),
@@ -146,17 +141,10 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
 
     entity_description: NotionBinarySensorDescription
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Fetch new state data for the sensor."""
-        listener = self.coordinator.data.listeners[self._listener_id]
-
-        if listener.status.trigger_value:
-            state = listener.status.trigger_value
-        elif listener.insights.primary.value:
-            state = listener.insights.primary.value
-        else:
-            LOGGER.warning("Unknown listener structure: %s", listener)
-            state = None
-
-        self._attr_is_on = self.entity_description.on_state == state
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if not self.listener.insights.primary.value:
+            LOGGER.warning("Unknown listener structure: %s", self.listener.dict())
+            return False
+        return self.listener.insights.primary.value == self.entity_description.on_state

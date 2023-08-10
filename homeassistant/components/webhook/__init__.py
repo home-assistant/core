@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -29,6 +30,8 @@ DOMAIN = "webhook"
 DEFAULT_METHODS = (METH_POST, METH_PUT)
 SUPPORTED_METHODS = (METH_GET, METH_HEAD, METH_POST, METH_PUT)
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @callback
@@ -142,16 +145,26 @@ async def async_handle_webhook(
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     if webhook["local_only"] in (True, None) and not isinstance(request, MockRequest):
-        if TYPE_CHECKING:
-            assert isinstance(request, Request)
-            assert request.remote is not None
-        try:
-            remote = ip_address(request.remote)
-        except ValueError:
-            _LOGGER.debug("Unable to parse remote ip %s", request.remote)
-            return Response(status=HTTPStatus.OK)
+        if has_cloud := "cloud" in hass.config.components:
+            from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
 
-        if not network.is_local(remote):
+        is_local = True
+        if has_cloud and remote.is_cloud_request.get():
+            is_local = False
+        else:
+            if TYPE_CHECKING:
+                assert isinstance(request, Request)
+                assert request.remote is not None
+
+            try:
+                request_remote = ip_address(request.remote)
+            except ValueError:
+                _LOGGER.debug("Unable to parse remote ip %s", request.remote)
+                return Response(status=HTTPStatus.OK)
+
+            is_local = network.is_local(request_remote)
+
+        if not is_local:
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
             if webhook["local_only"]:
                 return Response(status=HTTPStatus.OK)
@@ -160,7 +173,7 @@ async def async_handle_webhook(
                 _LOGGER.warning(
                     "Deprecation warning: "
                     "Webhook '%s' does not provide a value for local_only. "
-                    "This webhook will be blocked after the 2023.7.0 release. "
+                    "This webhook will be blocked after the 2023.11.0 release. "
                     "Use `local_only: false` to keep this webhook operating as-is",
                     webhook_id,
                 )

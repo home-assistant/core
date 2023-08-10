@@ -48,6 +48,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
     """Define a ReCollect Waste calendar."""
 
     _attr_icon = "mdi:delete-empty"
+    _attr_name = None
 
     def __init__(
         self,

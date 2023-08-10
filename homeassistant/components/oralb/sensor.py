@@ -111,7 +111,9 @@ async def async_setup_entry(
             OralBBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class OralBBluetoothSensorEntity(
@@ -124,3 +126,20 @@ class OralBBluetoothSensorEntity(
     def native_value(self) -> str | int | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available.
+
+        The sensor is only created when the device is seen.
+
+        Since these are sleepy devices which stop broadcasting
+        when not in use, we can't rely on the last update time
+        so once we have seen the device we always return True.
+        """
+        return True
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if the device is no longer broadcasting."""
+        return not self.processor.available

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from greeclimate.device import Device
 
@@ -32,6 +32,10 @@ class GreeRequiredKeysMixin:
 @dataclass
 class GreeSwitchEntityDescription(SwitchEntityDescription, GreeRequiredKeysMixin):
     """Describes Gree switch entity."""
+
+    # GreeSwitch does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -130,7 +134,7 @@ class GreeSwitch(GreeEntity, SwitchEntity):
         """Initialize the Gree device."""
         self.entity_description = description
 
-        super().__init__(coordinator, cast(str, description.name))
+        super().__init__(coordinator, description.name)
 
     @property
     def is_on(self) -> bool:

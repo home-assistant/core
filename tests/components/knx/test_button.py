@@ -13,7 +13,7 @@ from homeassistant.components.knx.const import (
 from homeassistant.components.knx.schema import ButtonSchema
 from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -42,7 +42,7 @@ async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # received telegrams on button GA are ignored by the entity
     old_state = hass.states.get("button.test")
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await knx.receive_write("1/2/3", False)
     await knx.receive_write("1/2/3", True)
     new_state = hass.states.get("button.test")

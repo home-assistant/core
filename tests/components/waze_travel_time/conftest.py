@@ -1,8 +1,8 @@
 """Fixtures for Waze Travel Time tests."""
 from unittest.mock import patch
 
-from WazeRouteCalculator import WRCError
 import pytest
+from WazeRouteCalculator import WRCError
 
 
 @pytest.fixture(name="mock_wrc", autouse=True)

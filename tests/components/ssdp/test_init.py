@@ -53,6 +53,7 @@ async def test_ssdp_flow_dispatched_on_st(
             "usn": "uuid:mock-udn::mock-st",
             "server": "mock-server",
             "ext": "",
+            "_source": "search",
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
@@ -96,6 +97,7 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
             "usn": "uuid:mock-udn::mock-st",
             "server": "mock-server",
             "ext": "",
+            "_source": "search",
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
@@ -149,6 +151,7 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
             "st": "mock-st",
             "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
+            "_source": "search",
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
@@ -193,6 +196,7 @@ async def test_scan_match_upnp_devicedesc_devicetype(
             "st": "mock-st",
             "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
+            "_source": "search",
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
@@ -290,6 +294,7 @@ async def test_scan_not_all_match(
             "st": "mock-st",
             "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
+            "_source": "search",
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
@@ -333,6 +338,7 @@ async def test_flow_start_only_alive(
             "st": "mock-st",
             "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
+            "_source": "search",
         }
     )
     ssdp_listener._on_search(mock_ssdp_search_response)
@@ -350,6 +356,7 @@ async def test_flow_start_only_alive(
             "usn": "uuid:mock-udn::mock-st",
             "nt": "upnp:rootdevice",
             "nts": "ssdp:alive",
+            "_source": "advertisement",
         }
     )
     ssdp_listener._on_alive(mock_ssdp_advertisement)
@@ -407,6 +414,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
             "nts": "ssdp:alive",
             "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
+            "_source": "advertisement",
         }
     )
     ssdp_listener._on_alive(mock_ssdp_advertisement)
@@ -481,6 +489,7 @@ async def test_scan_with_registered_callback(
             "server": "mock-server",
             "x-rincon-bootseq": "55",
             "ext": "",
+            "_source": "search",
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
@@ -577,6 +586,7 @@ async def test_getting_existing_headers(
             "USN": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
             "SERVER": "mock-server",
             "EXT": "",
+            "_source": "search",
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
@@ -732,6 +742,8 @@ async def test_bind_failure_skips_adapter(
     SsdpListener.async_start = _async_start
     UpnpServer.async_start = _async_start
     await init_ssdp_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
     assert "Failed to setup listener for" in caplog.text
 
@@ -818,6 +830,7 @@ async def test_flow_dismiss_on_byebye(
             "st": "mock-st",
             "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
+            "_source": "search",
         }
     )
     ssdp_listener._on_search(mock_ssdp_search_response)
@@ -835,6 +848,7 @@ async def test_flow_dismiss_on_byebye(
             "usn": "uuid:mock-udn::mock-st",
             "nt": "upnp:rootdevice",
             "nts": "ssdp:alive",
+            "_source": "advertisement",
         }
     )
     ssdp_listener._on_alive(mock_ssdp_advertisement)

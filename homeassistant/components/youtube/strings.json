@@ -1,0 +1,55 @@
+{
+  "config": {
+    "abort": {
+      "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
+      "no_channel": "Please create a YouTube channel to be able to use the integration. Instructions can be found at {support_url}.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "channels": {
+        "description": "Select the channels you want to add.",
+        "data": {
+          "channels": "YouTube channels"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The YouTube integration needs to re-authenticate your account"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "[%key:component::youtube::config::step::channels::description%]",
+        "data": {
+          "channels": "[%key:component::youtube::config::step::channels::data::channels%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_upload": {
+        "name": "Latest upload",
+        "state_attributes": {
+          "video_id": {
+            "name": "Video ID"
+          },
+          "published_at": {
+            "name": "Published at"
+          }
+        }
+      },
+      "subscribers": {
+        "name": "Subscribers"
+      }
+    }
+  }
+}

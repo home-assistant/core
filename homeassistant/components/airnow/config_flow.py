@@ -2,7 +2,7 @@
 import logging
 
 from pyairnow import WebServiceAPI
-from pyairnow.errors import AirNowError, InvalidKeyError
+from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -35,6 +35,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth from exc
     except AirNowError as exc:
         raise CannotConnect from exc
+    except EmptyResponseError as exc:
+        raise InvalidLocation from exc
 
     if not test_data:
         raise InvalidLocation

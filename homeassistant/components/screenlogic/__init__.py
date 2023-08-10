@@ -168,4 +168,3 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
             if self.gateway.is_connected:
                 await self.gateway.async_disconnect()
             raise UpdateFailed(ex.msg) from ex
-        return None

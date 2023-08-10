@@ -101,7 +101,7 @@ async def test_disabled_statistics(hass: HomeAssistant, client) -> None:
 
 
 async def test_noop_statistics(hass: HomeAssistant, client) -> None:
-    """Test that we don't make any statistics calls if user hasn't provided preference."""
+    """Test that we don't make statistics calls if user hasn't set preference."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
@@ -963,7 +963,7 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 36
+    assert len(entity_entries) == 91
 
     # Remove a node and reload the entry
     old_node = driver.controller.nodes.pop(13)
@@ -975,8 +975,10 @@ async def test_removed_device(
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 2
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 23
-    assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
+    assert len(entity_entries) == 60
+    assert (
+        dev_reg.async_get_device(identifiers={get_device_id(driver, old_node)}) is None
+    )
 
 
 async def test_suggested_area(hass: HomeAssistant, client, eaton_rf9640_dimmer) -> None:
@@ -1003,7 +1005,7 @@ async def test_node_removed(
     event = {
         "source": "controller",
         "event": "node added",
-        "node": node.data,
+        "node": multisensor_6_state,
         "result": {},
     }
 
@@ -1012,7 +1014,7 @@ async def test_node_removed(
     old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert old_device.id
 
-    event = {"node": node, "replaced": False}
+    event = {"node": node, "reason": 0}
 
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
@@ -1045,14 +1047,14 @@ async def test_replace_same_node(
 
     assert hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    # A replace node event has the extra field "replaced" set to True
+    # A replace node event has the extra field "reason"
     # to distinguish it from an exclusion
     event = Event(
         type="node removed",
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": multisensor_6_state,
         },
     )
@@ -1137,8 +1139,8 @@ async def test_replace_different_node(
     """Test when a node is replaced with a different node."""
     dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
-    hank_binary_switch_state = deepcopy(hank_binary_switch_state)
-    hank_binary_switch_state["nodeId"] = node_id
+    state = deepcopy(hank_binary_switch_state)
+    state["nodeId"] = node_id
 
     device_id = f"{client.driver.controller.home_id}-{node_id}"
     multisensor_6_device_id = (
@@ -1146,9 +1148,9 @@ async def test_replace_different_node(
         f"{multisensor_6.product_type}:{multisensor_6.product_id}"
     )
     hank_device_id = (
-        f"{device_id}-{hank_binary_switch_state['manufacturerId']}:"
-        f"{hank_binary_switch_state['productType']}:"
-        f"{hank_binary_switch_state['productId']}"
+        f"{device_id}-{state['manufacturerId']}:"
+        f"{state['productType']}:"
+        f"{state['productId']}"
     )
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
@@ -1169,7 +1171,7 @@ async def test_replace_different_node(
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": multisensor_6_state,
         },
     )
@@ -1226,7 +1228,7 @@ async def test_replace_different_node(
             "source": "node",
             "event": "ready",
             "nodeId": node_id,
-            "nodeState": hank_binary_switch_state,
+            "nodeState": state,
         },
     )
     client.driver.receive_event(event)
@@ -1332,7 +1334,7 @@ async def test_node_model_change(
 async def test_disabled_node_status_entity_on_node_replaced(
     hass: HomeAssistant, zp3111_state, zp3111, client, integration
 ) -> None:
-    """Test that when a node replacement event is received the node status sensor is removed."""
+    """Test when node replacement event is received, node status sensor is removed."""
     node_status_entity = "sensor.4_in_1_sensor_node_status"
     state = hass.states.get(node_status_entity)
     assert state
@@ -1343,7 +1345,7 @@ async def test_disabled_node_status_entity_on_node_replaced(
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": zp3111_state,
         },
     )
@@ -1362,8 +1364,10 @@ async def test_disabled_entity_on_value_removed(
     er_reg = er.async_get(hass)
 
     # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_cover_status"
-    idle_cover_status_button_entity = "button.4_in_1_sensor_idle_cover_status"
+    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
+    idle_cover_status_button_entity = (
+        "button.4_in_1_sensor_idle_home_security_cover_status"
+    )
     er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
     await hass.async_block_till_done()
 

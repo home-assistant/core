@@ -329,7 +329,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
 
         if (
-            (brightness is not None or transition)
+            (brightness is not None or transition is not None)
             and not new_color_provided_while_off
             and brightness_supported(self._attr_supported_color_modes)
         ):
@@ -350,11 +350,11 @@ class BaseLight(LogMixin, light.LightEntity):
                 self._attr_brightness = level
 
         if (
-            brightness is None
+            (brightness is None and transition is None)
             and not new_color_provided_while_off
-            or (self._FORCE_ON and brightness)
+            or (self._FORCE_ON and brightness != 0)
         ):
-            # since some lights don't always turn on with move_to_level_with_on_off,
+            # since FORCE_ON lights don't turn on with move_to_level_with_on_off,
             # we should call the on command on the on_off cluster
             # if brightness is not 0.
             result = await self._on_off_cluster_handler.on()
@@ -385,7 +385,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
 
         if new_color_provided_while_off:
-            # The light is has the correct color, so we can now transition
+            # The light has the correct color, so we can now transition
             # it to the correct brightness level.
             result = await self._level_cluster_handler.move_to_level(
                 level=level, transition_time=int(10 * duration)
@@ -622,7 +622,7 @@ class BaseLight(LogMixin, light.LightEntity):
             )
             if self._debounced_member_refresh is not None:
                 self.debug("transition complete - refreshing group member states")
-                assert self.platform and self.platform.config_entry
+                assert self.platform.config_entry
                 self.platform.config_entry.async_create_background_task(
                     self.hass,
                     self._debounced_member_refresh.async_call(),
@@ -1076,7 +1076,7 @@ class HueLight(Light):
     manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink"},
 )
 class ForceOnLight(Light):
-    """Representation of a light which does not respect move_to_level_with_on_off."""
+    """Representation of a light which does not respect on/off for move_to_level_with_on_off commands."""
 
     _attr_name: str = "Light"
     _FORCE_ON = True

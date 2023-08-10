@@ -236,6 +236,15 @@ class IASZone(BinarySensor):
         )
 
 
+@STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ZONE, models={"WL4200", "WL4200S"})
+class SinopeLeakStatus(BinarySensor):
+    """Sinope water leak sensor."""
+
+    SENSOR_ATTR = "leak_status"
+    _attr_name = "Moisture"
+    _attr_device_class = BinarySensorDeviceClass.MOISTURE
+
+
 @MULTI_MATCH(
     cluster_handler_names="tuya_manufacturer",
     manufacturers={

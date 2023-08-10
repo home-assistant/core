@@ -16,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
-from . import const as zha_const, registries as zha_regs
 from .. import (  # noqa: F401 pylint: disable=unused-import,
     alarm_control_panel,
     binary_sensor,
@@ -33,6 +32,7 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     siren,
     switch,
 )
+from . import const as zha_const, registries as zha_regs
 
 # importing cluster handlers updates registries
 from .cluster_handlers import (  # noqa: F401 pylint: disable=unused-import,

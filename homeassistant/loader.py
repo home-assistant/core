@@ -889,43 +889,48 @@ async def async_get_integrations(
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
     results: dict[str, Integration | Exception] = {}
-    needed: dict[str, asyncio.Event] = {}
-    in_progress: dict[str, asyncio.Event] = {}
+    needed: dict[str, asyncio.Future[None]] = {}
+    in_progress: dict[str, asyncio.Future[None]] = {}
+    if TYPE_CHECKING:
+        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     for domain in domains:
-        int_or_evt: Integration | asyncio.Event | None = cache.get(domain, _UNDEF)
-        if isinstance(int_or_evt, asyncio.Event):
-            in_progress[domain] = int_or_evt
-        elif int_or_evt is not _UNDEF:
-            results[domain] = cast(Integration, int_or_evt)
+        int_or_fut = cache.get(domain, _UNDEF)
+        # Integration is never subclassed, so we can check for type
+        if type(int_or_fut) is Integration:  # pylint: disable=unidiomatic-typecheck
+            results[domain] = int_or_fut
+        elif int_or_fut is not _UNDEF:
+            in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
         elif "." in domain:
             results[domain] = ValueError(f"Invalid domain {domain}")
         else:
-            needed[domain] = cache[domain] = asyncio.Event()
+            needed[domain] = cache[domain] = hass.loop.create_future()
 
     if in_progress:
-        await asyncio.gather(*[event.wait() for event in in_progress.values()])
+        await asyncio.gather(*in_progress.values())
         for domain in in_progress:
             # When we have waited and it's _UNDEF, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it
             # and then restart, because their config will never be valid.
-            if (int_or_evt := cache.get(domain, _UNDEF)) is _UNDEF:
+            if (int_or_fut := cache.get(domain, _UNDEF)) is _UNDEF:
                 results[domain] = IntegrationNotFound(domain)
             else:
-                results[domain] = cast(Integration, int_or_evt)
+                results[domain] = cast(Integration, int_or_fut)
+
+    if not needed:
+        return results
 
     # First we look for custom components
-    if needed:
-        # Instead of using resolve_from_root we use the cache of custom
-        # components to find the integration.
-        custom = await async_get_custom_components(hass)
-        for domain, event in needed.items():
-            if integration := custom.get(domain):
-                results[domain] = cache[domain] = integration
-                event.set()
+    # Instead of using resolve_from_root we use the cache of custom
+    # components to find the integration.
+    custom = await async_get_custom_components(hass)
+    for domain, future in needed.items():
+        if integration := custom.get(domain):
+            results[domain] = cache[domain] = integration
+            future.set_result(None)
 
-        for domain in results:
-            if domain in needed:
-                del needed[domain]
+    for domain in results:
+        if domain in needed:
+            del needed[domain]
 
     # Now the rest use resolve_from_root
     if needed:
@@ -934,7 +939,7 @@ async def async_get_integrations(
         integrations = await hass.async_add_executor_job(
             _resolve_integrations_from_root, hass, components, list(needed)
         )
-        for domain, event in needed.items():
+        for domain, future in needed.items():
             int_or_exc = integrations.get(domain)
             if not int_or_exc:
                 cache.pop(domain)
@@ -946,7 +951,7 @@ async def async_get_integrations(
                 results[domain] = exc
             else:
                 results[domain] = cache[domain] = int_or_exc
-            event.set()
+            future.set_result(None)
 
     return results
 
@@ -1093,7 +1098,11 @@ class Helpers:
 
 
 def bind_hass(func: _CallableT) -> _CallableT:
-    """Decorate function to indicate that first argument is hass."""
+    """Decorate function to indicate that first argument is hass.
+
+    The use of this decorator is discouraged, and it should not be used
+    for new functions.
+    """
     setattr(func, "__bind_hass", True)
     return func
 

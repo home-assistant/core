@@ -1,8 +1,8 @@
 """Protocol cluster handlers module for Zigbee Home Automation."""
 from zigpy.zcl.clusters import protocol
 
-from . import ClusterHandler
 from .. import registries
+from . import ClusterHandler
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(

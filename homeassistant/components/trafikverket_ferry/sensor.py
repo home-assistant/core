@@ -51,7 +51,7 @@ class TrafikverketSensorEntityDescription(
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_time",
-        name="Departure time",
+        translation_key="departure_time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time"]),
@@ -59,21 +59,21 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="departure_from",
-        name="Departure from",
+        translation_key="departure_from",
         icon="mdi:ferry",
         value_fn=lambda data: cast(str, data["departure_from"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_to",
-        name="Departure to",
+        translation_key="departure_to",
         icon="mdi:ferry",
         value_fn=lambda data: cast(str, data["departure_to"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_modified",
-        name="Departure modified",
+        translation_key="departure_modified",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_modified"]),
@@ -82,7 +82,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="departure_time_next",
-        name="Departure time next",
+        translation_key="departure_time_next",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time_next"]),
@@ -91,7 +91,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="departure_time_next_next",
-        name="Departure time next after",
+        translation_key="departure_time_next_next",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time_next_next"]),

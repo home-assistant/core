@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import Enum
 
 from hass_nabucasa import Cloud
@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,7 +31,6 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.aiohttp import MockRequest
 
 from . import account_link, http_api
 from .client import CloudClient
@@ -184,8 +183,10 @@ async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
-    hook = await hass.data[DOMAIN].cloudhooks.async_create(webhook_id, True)
-    return hook["cloudhook_url"]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    hook = await cloud.cloudhooks.async_create(webhook_id, True)
+    cloudhook_url: str = hook["cloudhook_url"]
+    return cloudhook_url
 
 
 @bind_hass
@@ -213,14 +214,6 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     return f"https://{remote_domain}"
 
 
-def is_cloudhook_request(request):
-    """Test if a request came from a cloudhook.
-
-    Async friendly.
-    """
-    return isinstance(request, MockRequest)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
     # Process configs
@@ -241,9 +234,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websession = async_get_clientsession(hass)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
-    cloud.iot.register_on_connect(client.on_cloud_connected)
 
-    async def _shutdown(event):
+    async def _shutdown(event: Event) -> None:
         """Shutdown event."""
         await cloud.stop()
 
@@ -263,7 +255,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
-    async def async_startup_repairs(_=None) -> None:
+    async def async_startup_repairs(_: datetime) -> None:
         """Create repair issues after startup."""
         if not cloud.is_logged_in:
             return
@@ -273,7 +265,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     loaded = False
 
-    async def _on_start():
+    async def _on_start() -> None:
         """Discover platforms."""
         nonlocal loaded
 
@@ -292,19 +284,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
         await asyncio.gather(stt_platform_loaded.wait(), tts_platform_loaded.wait())
 
-    async def _on_connect():
+    async def _on_connect() -> None:
         """Handle cloud connect."""
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
         )
 
-    async def _on_disconnect():
+    async def _on_disconnect() -> None:
         """Handle cloud disconnect."""
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_DISCONNECTED
         )
 
-    async def _on_initialized():
+    async def _on_initialized() -> None:
         """Update preferences."""
         await prefs.async_update(remote_domain=cloud.remote.instance_domain)
 
@@ -330,7 +322,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def _remote_handle_prefs_updated(cloud: Cloud) -> None:
+def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
     """Handle remote preferences updated."""
     cur_pref = cloud.client.prefs.remote_enabled
     lock = asyncio.Lock()
