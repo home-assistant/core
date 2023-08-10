@@ -88,14 +88,14 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    name = config.get(CONF_NAME) or Template(DEFAULT_BINARY_SENSOR_NAME, hass)
+    name = conf.get(CONF_NAME) or Template(DEFAULT_BINARY_SENSOR_NAME, hass)
 
     trigger_entity_config = {CONF_NAME: name}
 
     for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in config:
+        if key not in conf:
             continue
-        trigger_entity_config[key] = config[key]
+        trigger_entity_config[key] = conf[key]
 
     async_add_entities(
         [
