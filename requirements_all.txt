@@ -365,6 +365,9 @@ aiounifi==51
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
 
+# homeassistant.components.waqi
+aiowaqi==0.2.1
+
 # homeassistant.components.watttime
 aiowatttime==0.1.1
 
@@ -2654,9 +2657,6 @@ wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
 wallbox==0.4.12
-
-# homeassistant.components.waqi
-waqiasync==1.1.0
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
