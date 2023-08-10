@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 
-from .const import COORDINATOR, DOMAIN, PLATFORMS
+from .const import COORDINATOR, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import YaleDataUpdateCoordinator
 
 
@@ -23,24 +23,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,
     }
-
-    # Migrate lock default code from config entry to lock entity
-    if config_entry_default_code := entry.options.get(CONF_CODE):
-        entity_reg = er.async_get(hass)
-        entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
-        for entity in entries:
-            if entity.entity_id.startswith("lock"):
-                entity_reg.async_update_entity_options(
-                    entity.entity_id,
-                    LOCK_DOMAIN,
-                    {CONF_DEFAULT_CODE: config_entry_default_code},
-                )
-        new_options = entry.options.copy()
-        del new_options[CONF_CODE]
-        hass.config_entries.async_update_entry(entry, options=new_options)
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -57,3 +39,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
         return True
     return False
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        config_entry_default_code = entry.options.get(CONF_CODE)
+        entity_reg = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+        for entity in entries:
+            if entity.entity_id.startswith("lock"):
+                entity_reg.async_update_entity_options(
+                    entity.entity_id,
+                    LOCK_DOMAIN,
+                    {CONF_DEFAULT_CODE: config_entry_default_code},
+                )
+        new_options = entry.options.copy()
+        del new_options[CONF_CODE]
+
+        entry.version = 2
+        hass.config_entries.async_update_entry(entry, options=new_options)
+
+    LOGGER.info("Migration to version %s successful", entry.version)
+
+    return True

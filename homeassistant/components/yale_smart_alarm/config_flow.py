@@ -44,7 +44,7 @@ DATA_SCHEMA_AUTH = vol.Schema(
 class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
-    VERSION = 1
+    VERSION = 2
 
     entry: ConfigEntry | None
 

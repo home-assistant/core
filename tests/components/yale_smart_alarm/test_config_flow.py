@@ -121,6 +121,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             "name": "Yale Smart Alarm",
             "area_id": "1",
         },
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -187,6 +188,7 @@ async def test_reauth_flow_error(
             "name": "Yale Smart Alarm",
             "area_id": "1",
         },
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -248,13 +250,18 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-username",
-        data={},
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "name": "Yale Smart Alarm",
+            "area_id": "1",
+        },
+        version=2,
     )
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
-        return_value=True,
+        "homeassistant.components.yale_smart_alarm.coordinator.YaleSmartAlarmClient",
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
