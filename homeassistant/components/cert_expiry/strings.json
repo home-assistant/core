@@ -20,5 +20,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "import_failed": "Import from config failed"
     }
+  },
+  "entity": {
+    "sensor": {
+      "certificate_expiry_timestamp": {
+        "name": "Certificate expiry timestamp"
+      }
+    }
   }
 }
