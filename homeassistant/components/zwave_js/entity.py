@@ -7,7 +7,11 @@ from typing import Any
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
+from zwave_js_server.model.value import (
+    SetValueResult,
+    Value as ZwaveValue,
+    get_value_id_str,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
@@ -70,9 +74,9 @@ class ZWaveBaseEntity(Entity):
 
     async def _async_poll_value(self, value_or_id: str | ZwaveValue) -> None:
         """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task and we don't want to raise the exception in that separate task
-        # because it is confusing to the user.
+        # We log an error instead of raising an exception because this service call
+        # occurs in a separate task and we don't want to raise the exception in that
+        # separate task because it is confusing to the user.
         try:
             await self.info.node.async_poll_value(value_or_id)
         except BaseZwaveJSServerError as err:
@@ -312,7 +316,7 @@ class ZWaveBaseEntity(Entity):
         new_value: Any,
         options: dict | None = None,
         wait_for_result: bool | None = None,
-    ) -> bool | None:
+    ) -> SetValueResult | None:
         """Set value on node."""
         try:
             return await self.info.node.async_set_value(
