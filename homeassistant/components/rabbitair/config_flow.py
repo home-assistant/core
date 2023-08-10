@@ -35,12 +35,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except ValueError as err:
         # Most likely caused by the invalid access token.
         raise InvalidAccessToken from err
-    except OSError as err:
-        # Most likely caused by the invalid host.
-        raise InvalidHost from err
     except asyncio.TimeoutError as err:
         # Either the host doesn't respond or the auth failed.
         raise TimeoutConnect from err
+    except OSError as err:
+        # Most likely caused by the invalid host.
+        raise InvalidHost from err
     except Exception as err:
         # Other possible errors.
         raise CannotConnect from err
