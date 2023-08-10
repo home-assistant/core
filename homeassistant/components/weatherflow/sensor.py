@@ -181,9 +181,11 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="rain_rate",
         translation_key="rain_rate",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         icon="mdi:weather-rainy",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-        imperial_suggested_unit=UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        # imperial_suggested_unit=UnitOfVolumetricFlux.INCHES_PER_HOUR,
     ),
     WeatherFlowSensorEntityDescription(
         key="relative_humidity",
@@ -213,7 +215,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="solar_radiation",
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
-        device_class=SensorDeviceClass.ILLUMINANCE,
+        device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WeatherFlowSensorEntityDescription(
@@ -388,11 +390,13 @@ class WeatherFlowSensorEntity(SensorEntity):
         if isinstance(normalized_data, Quantity):
             sensor_value = normalized_data.magnitude
             return sensor_value
-
         if isinstance(normalized_data, Enum):
             sensor_value = normalized_data.name
             return sensor_value
-
+        if isinstance(normalized_data, float):
+            return normalized_data
+        if isinstance(normalized_data, int):
+            return normalized_data
         return None
 
     async def async_added_to_hass(self) -> None:
