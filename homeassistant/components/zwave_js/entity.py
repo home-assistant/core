@@ -188,10 +188,19 @@ class ZWaveBaseEntity(Entity):
         # Only include non empty additional info
         if additional_info := [item for item in (additional_info or []) if item]:
             name = f"{name} {' '.join(additional_info)}"
-        # append endpoint if > 1
-        if (
-            self.info.primary_value.endpoint is not None
-            and self.info.primary_value.endpoint > 1
+
+        # Only append endpoint to name if there are no equivalent values on a lower
+        # endpoint
+        if self.info.primary_value.endpoint is not None and any(
+            get_value_id_str(
+                self.info.node,
+                self.info.primary_value.command_class,
+                self.info.primary_value.property_,
+                endpoint=endpoint_idx,
+                property_key=self.info.primary_value.property_key,
+            )
+            in self.info.node.values
+            for endpoint_idx in range(0, self.info.primary_value.endpoint)
         ):
             name += f" ({self.info.primary_value.endpoint})"
 
