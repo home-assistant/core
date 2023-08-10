@@ -4,9 +4,7 @@ from unittest.mock import patch
 
 from aiowaqi import WAQIAirQuality, WAQIError, WAQISearchResult
 
-from homeassistant.components.waqi.const import (
-    DOMAIN,
-)
+from homeassistant.components.waqi.const import DOMAIN
 from homeassistant.components.waqi.sensor import CONF_LOCATIONS, CONF_STATIONS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PLATFORM, CONF_TOKEN, Platform
