@@ -4590,6 +4590,10 @@ async def test_validate_action_config(hass: HomeAssistant) -> None:
         cv.SCRIPT_ACTION_PARALLEL: {
             "parallel": [templated_device_action("parallel_event")],
         },
+        cv.SCRIPT_ACTION_TRY_EXCEPT: {
+            "try": [templated_device_action("try_event")],
+            "except": [templated_device_action("except_event")],
+        },
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
@@ -4599,6 +4603,7 @@ async def test_validate_action_config(hass: HomeAssistant) -> None:
         cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: None,
         cv.SCRIPT_ACTION_IF: None,
         cv.SCRIPT_ACTION_PARALLEL: None,
+        cv.SCRIPT_ACTION_TRY_EXCEPT: None,
     }
 
     for key in cv.ACTION_TYPE_SCHEMAS:
