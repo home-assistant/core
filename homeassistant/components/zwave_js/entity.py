@@ -189,7 +189,7 @@ class ZWaveBaseEntity(Entity):
         if additional_info := [item for item in (additional_info or []) if item]:
             name = f"{name} {' '.join(additional_info)}"
 
-        # Only append endpoint to name if there are no equivalent values on a lower
+        # Only append endpoint to name if there are equivalent values on a lower
         # endpoint
         if self.info.primary_value.endpoint is not None and any(
             get_value_id_str(
