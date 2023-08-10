@@ -303,13 +303,6 @@ async def async_setup_entry(
             )
             or hasattr(device, description.key)
         ]
-        for sensor in sensors:
-            LOGGER.info(
-                ">> Adding %s [%s] [%s]",
-                sensor.name,
-                sensor.native_unit_of_measurement,
-                sensor.suggested_unit_of_measurement,
-            )
 
         custom_sensors = [
             WeatherFlowAirDensitySensorEntity(
