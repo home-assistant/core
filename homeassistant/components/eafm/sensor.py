@@ -95,6 +95,8 @@ class Measurement(CoordinatorEntity, SensorEntity):
         "from the real-time data API"
     )
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator, key):
         """Initialise the gauge with a data instance and station."""
@@ -123,11 +125,6 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return self.coordinator.data["measures"][self.key]["parameterName"]
 
     @property
-    def name(self):
-        """Return the name of the gauge."""
-        return f"{self.station_name} {self.parameter_name} {self.qualifier}"
-
-    @property
     def device_info(self):
         """Return the device info."""
         return DeviceInfo(
@@ -135,7 +132,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, "measure-id", self.station_id)},
             manufacturer="https://environment.data.gov.uk/",
             model=self.parameter_name,
-            name=self.name,
+            name=f"{self.station_name} {self.parameter_name} {self.qualifier}",
         )
 
     @property

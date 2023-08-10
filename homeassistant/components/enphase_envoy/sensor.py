@@ -7,9 +7,9 @@ import datetime
 import logging
 
 from pyenphase import (
-    EnvoyData,
     EnvoyEncharge,
     EnvoyEnchargePower,
+    EnvoyEnpower,
     EnvoyInverter,
     EnvoySystemConsumption,
     EnvoySystemProduction,
@@ -32,13 +32,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
+from .entity import EnvoyBaseEntity
 
 ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)
@@ -259,6 +257,36 @@ ENCHARGE_POWER_SENSORS = (
 )
 
 
+@dataclass
+class EnvoyEnpowerRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[EnvoyEnpower], datetime.datetime | int | float]
+
+
+@dataclass
+class EnvoyEnpowerSensorEntityDescription(
+    SensorEntityDescription, EnvoyEnpowerRequiredKeysMixin
+):
+    """Describes an Envoy Encharge sensor entity."""
+
+
+ENPOWER_SENSORS = (
+    EnvoyEnpowerSensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        value_fn=lambda enpower: enpower.temperature,
+    ),
+    EnvoyEnpowerSensorEntityDescription(
+        key=LAST_REPORTED_KEY,
+        translation_key=LAST_REPORTED_KEY,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda enpower: dt_util.utc_from_timestamp(enpower.last_report_date),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -300,38 +328,23 @@ async def async_setup_entry(
             for description in ENCHARGE_POWER_SENSORS
             for encharge in envoy_data.encharge_power
         )
+    if envoy_data.enpower:
+        entities.extend(
+            EnvoyEnpowerEntity(coordinator, description)
+            for description in ENPOWER_SENSORS
+        )
 
     async_add_entities(entities)
 
 
-class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator], SensorEntity):
+class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
     """Defines a base envoy entity."""
 
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Init the envoy base entity."""
-        self.entity_description = description
-        serial_number = coordinator.envoy.serial_number
-        assert serial_number is not None
-        self.envoy_serial_num = serial_number
-        super().__init__(coordinator)
 
-    @property
-    def data(self) -> EnvoyData:
-        """Return envoy data."""
-        data = self.coordinator.envoy.data
-        assert data is not None
-        return data
-
-
-class EnvoyEntity(EnvoyBaseEntity, SensorEntity):
-    """Envoy inverter entity."""
+class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
+    """Envoy system base entity."""
 
     _attr_icon = ICON
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -350,7 +363,7 @@ class EnvoyEntity(EnvoyBaseEntity, SensorEntity):
         )
 
 
-class EnvoyProductionEntity(EnvoyEntity):
+class EnvoyProductionEntity(EnvoySystemSensorEntity):
     """Envoy production entity."""
 
     entity_description: EnvoyProductionSensorEntityDescription
@@ -363,7 +376,7 @@ class EnvoyProductionEntity(EnvoyEntity):
         return self.entity_description.value_fn(system_production)
 
 
-class EnvoyConsumptionEntity(EnvoyEntity):
+class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
     """Envoy consumption entity."""
 
     entity_description: EnvoyConsumptionSensorEntityDescription
@@ -376,11 +389,10 @@ class EnvoyConsumptionEntity(EnvoyEntity):
         return self.entity_description.value_fn(system_consumption)
 
 
-class EnvoyInverterEntity(EnvoyBaseEntity, SensorEntity):
+class EnvoyInverterEntity(EnvoySensorBaseEntity):
     """Envoy inverter entity."""
 
     _attr_icon = ICON
-    _attr_has_entity_name = True
     entity_description: EnvoyInverterSensorEntityDescription
 
     def __init__(
@@ -417,10 +429,8 @@ class EnvoyInverterEntity(EnvoyBaseEntity, SensorEntity):
         return self.entity_description.value_fn(inverters[self._serial_number])
 
 
-class EnvoyEnchargeEntity(EnvoyBaseEntity, SensorEntity):
+class EnvoyEnchargeEntity(EnvoySensorBaseEntity):
     """Envoy Encharge sensor entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -469,3 +479,37 @@ class EnvoyEnchargePowerEntity(EnvoyEnchargeEntity):
         encharge_power = self.data.encharge_power
         assert encharge_power is not None
         return self.entity_description.value_fn(encharge_power[self._serial_number])
+
+
+class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
+    """Envoy Enpower sensor entity."""
+
+    entity_description: EnvoyEnpowerSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyEnpowerSensorEntityDescription,
+    ) -> None:
+        """Initialize Enpower entity."""
+        super().__init__(coordinator, description)
+        assert coordinator.envoy.data is not None
+        enpower_data = coordinator.envoy.data.enpower
+        assert enpower_data is not None
+        self._serial_number = enpower_data.serial_number
+        self._attr_unique_id = f"{self._serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._serial_number)},
+            manufacturer="Enphase",
+            model="Enpower",
+            name=f"Enpower {self._serial_number}",
+            sw_version=str(enpower_data.firmware_version),
+            via_device=(DOMAIN, self.envoy_serial_num),
+        )
+
+    @property
+    def native_value(self) -> datetime.datetime | int | float | None:
+        """Return the state of the power sensors."""
+        enpower = self.data.enpower
+        assert enpower is not None
+        return self.entity_description.value_fn(enpower)

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
@@ -22,10 +21,12 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone
 
-# Config for rova requests.
-CONF_ZIP_CODE = "zip_code"
-CONF_HOUSE_NUMBER = "house_number"
-CONF_HOUSE_NUMBER_SUFFIX = "house_number_suffix"
+from .const import (
+    CONF_HOUSE_NUMBER,
+    CONF_HOUSE_NUMBER_SUFFIX,
+    CONF_ZIP_CODE,
+    LOGGER,
+)
 
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
@@ -66,8 +67,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(
     hass: HomeAssistant,
@@ -87,10 +86,10 @@ def setup_platform(
 
     try:
         if not api.is_rova_area():
-            _LOGGER.error("ROVA does not collect garbage in this area")
+            LOGGER.error("ROVA does not collect garbage in this area")
             return
     except (ConnectTimeout, HTTPError):
-        _LOGGER.error("Could not retrieve details from ROVA API")
+        LOGGER.error("Could not retrieve details from ROVA API")
         return
 
     # Create rova data service which will retrieve and update the data.
@@ -140,7 +139,7 @@ class RovaData:
         try:
             items = self.api.get_calendar_items()
         except (ConnectTimeout, HTTPError):
-            _LOGGER.error("Could not retrieve data, retry again later")
+            LOGGER.error("Could not retrieve data, retry again later")
             return
 
         self.data = {}
@@ -153,4 +152,4 @@ class RovaData:
             if code not in self.data:
                 self.data[code] = date
 
-        _LOGGER.debug("Updated Rova calendar: %s", self.data)
+        LOGGER.debug("Updated Rova calendar: %s", self.data)

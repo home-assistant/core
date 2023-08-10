@@ -632,7 +632,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.90.1
+dbus-fast==1.91.2
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -1365,7 +1365,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.20
+opower==0.0.26
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1662,7 +1662,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.1.1
+pyenphase==1.3.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1824,7 +1824,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.10
+pymazda==0.3.11
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
@@ -2785,7 +2785,7 @@ zigpy==0.56.4
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.49.0
+zwave-js-server-python==0.50.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
