@@ -63,8 +63,8 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
 
 
 @dataclass
-class CustomWeatherFlowSensorEntityDescription(WeatherFlowSensorEntityDescription):
-    """Air Density uses special units so this will help handle this specific case."""
+class AirDensityWeatherFlowSensorEntityDescription(WeatherFlowSensorEntityDescription):
+    """Custom class to handle the conversion between backing lib and Home Assistant Compatible VOC sensor."""
 
     imperial_unit_of_measurement: str | None = None
 
@@ -81,14 +81,13 @@ class WeatherFlowWindSensorEntityDescription(WeatherFlowSensorEntityDescription)
         self.suggested_display_precision = 2
 
 
-CUSTOM_SENSORS: tuple[CustomWeatherFlowSensorEntityDescription, ...] = (
-    CustomWeatherFlowSensorEntityDescription(
+CUSTOM_SENSORS: tuple[AirDensityWeatherFlowSensorEntityDescription, ...] = (
+    AirDensityWeatherFlowSensorEntityDescription(
         key="air_density",
         translation_key="air_density",
-        native_unit_of_measurement=CONCENTRATION_KILOGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement="µg/m³",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         state_class=SensorStateClass.MEASUREMENT,
-        imperial_unit_of_measurement=CONCENTRATION_POUNDS_PER_CUBIC_FOOT,
         suggested_display_precision=5,
     ),
 )
@@ -410,7 +409,7 @@ class WeatherFlowSensorEntity(SensorEntity):
 class WeatherFlowAirDensitySensorEntity(WeatherFlowSensorEntity):
     """Special case where we have a custom function."""
 
-    entity_description: CustomWeatherFlowSensorEntityDescription
+    entity_description: AirDensityWeatherFlowSensorEntityDescription
 
     def __init__(
         self,
@@ -422,15 +421,9 @@ class WeatherFlowAirDensitySensorEntity(WeatherFlowSensorEntity):
         super().__init__(device, description, is_metric)
         self.is_metric = is_metric
 
-        if not is_metric:
-            self._attr_native_unit_of_measurement = (
-                self.entity_description.imperial_unit_of_measurement
-            )
-
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor - with custom conversion."""
         raw_sensor_data = getattr(self.device, self.entity_description.key)
-        if not self.is_metric:
-            return raw_sensor_data.to(CONCENTRATION_POUNDS_PER_CUBIC_FOOT).m
-        return raw_sensor_data.m
+        # Raw data is in kilograms / cubic meter
+        return raw_sensor_data.m * 1000000
