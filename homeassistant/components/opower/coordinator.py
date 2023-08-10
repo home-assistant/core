@@ -216,6 +216,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         """Get cost reads within the past 30 days to allow corrections in data from utilities."""
         if account.read_resolution in [
             ReadResolution.HOUR,
+            ReadResolution.HALF_HOUR,
             ReadResolution.QUARTER_HOUR,
         ]:
             aggregate_type = AggregateType.HOUR
