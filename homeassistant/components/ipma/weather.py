@@ -31,8 +31,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
@@ -58,28 +57,6 @@ async def async_setup_entry(
     """Add a weather entity from a config_entry."""
     api = hass.data[DOMAIN][config_entry.entry_id][DATA_API]
     location = hass.data[DOMAIN][config_entry.entry_id][DATA_LOCATION]
-    mode = config_entry.data[CONF_MODE]
-
-    # Migrate old unique_id
-    @callback
-    def _async_migrator(entity_entry: er.RegistryEntry):
-        # Reject if new unique_id
-        if entity_entry.unique_id.count(",") == 2:
-            return None
-
-        new_unique_id = (
-            f"{location.station_latitude}, {location.station_longitude}, {mode}"
-        )
-
-        _LOGGER.info(
-            "Migrating unique_id from [%s] to [%s]",
-            entity_entry.unique_id,
-            new_unique_id,
-        )
-        return {"new_unique_id": new_unique_id}
-
-    await er.async_migrate_entries(hass, config_entry.entry_id, _async_migrator)
-
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
 
 
