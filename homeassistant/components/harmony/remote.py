@@ -83,6 +83,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
     """Remote representation used to control a Harmony device."""
 
     _attr_supported_features = RemoteEntityFeature.ACTIVITY
+    _attr_name = None
 
     def __init__(self, data, activity, delay_secs, out_path):
         """Initialize HarmonyRemote class."""
@@ -97,7 +98,6 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self._config_path = out_path
         self._attr_unique_id = data.unique_id
         self._attr_device_info = self._data.device_info(DOMAIN)
-        self._attr_name = data.name
 
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
@@ -130,7 +130,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         """Complete the initialization."""
         await super().async_added_to_hass()
 
-        _LOGGER.debug("%s: Harmony Hub added", self.name)
+        _LOGGER.debug("%s: Harmony Hub added", self._data.name)
 
         self.async_on_remove(self._clear_disconnection_delay)
         self._setup_callbacks()
@@ -187,7 +187,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
     def async_new_activity(self, activity_info: tuple) -> None:
         """Call for updating the current activity."""
         activity_id, activity_name = activity_info
-        _LOGGER.debug("%s: activity reported as: %s", self.name, activity_name)
+        _LOGGER.debug("%s: activity reported as: %s", self._data.name, activity_name)
         self._current_activity = activity_name
         if self._is_initial_update:
             self._is_initial_update = False
@@ -203,13 +203,13 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
 
     async def async_new_config(self, _=None):
         """Call for updating the current activity."""
-        _LOGGER.debug("%s: configuration has been updated", self.name)
+        _LOGGER.debug("%s: configuration has been updated", self._data.name)
         self.async_new_activity(self._data.current_activity)
         await self.hass.async_add_executor_job(self.write_config_file)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start an activity from the Harmony device."""
-        _LOGGER.debug("%s: Turn On", self.name)
+        _LOGGER.debug("%s: Turn On", self._data.name)
 
         activity = kwargs.get(ATTR_ACTIVITY, self.default_activity)
 
@@ -222,7 +222,9 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         if activity:
             await self._data.async_start_activity(activity)
         else:
-            _LOGGER.error("%s: No activity specified with turn_on service", self.name)
+            _LOGGER.error(
+                "%s: No activity specified with turn_on service", self._data.name
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Start the PowerOff activity."""
@@ -230,9 +232,9 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to one device."""
-        _LOGGER.debug("%s: Send Command", self.name)
+        _LOGGER.debug("%s: Send Command", self._data.name)
         if (device := kwargs.get(ATTR_DEVICE)) is None:
-            _LOGGER.error("%s: Missing required argument: device", self.name)
+            _LOGGER.error("%s: Missing required argument: device", self._data.name)
             return
 
         num_repeats = kwargs[ATTR_NUM_REPEATS]
@@ -257,10 +259,12 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         This is a handy way for users to figure out the available commands for automations.
         """
         _LOGGER.debug(
-            "%s: Writing hub configuration to file: %s", self.name, self._config_path
+            "%s: Writing hub configuration to file: %s",
+            self._data.name,
+            self._config_path,
         )
         if (json_config := self._data.json_config) is None:
-            _LOGGER.warning("%s: No configuration received from hub", self.name)
+            _LOGGER.warning("%s: No configuration received from hub", self._data.name)
             return
 
         try:
@@ -269,7 +273,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         except OSError as exc:
             _LOGGER.error(
                 "%s: Unable to write HUB configuration to %s: %s",
-                self.name,
+                self._data.name,
                 self._config_path,
                 exc,
             )

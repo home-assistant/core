@@ -29,7 +29,7 @@ class HarmonyData(HarmonySubscriberMixin):
     ) -> None:
         """Initialize a data object."""
         super().__init__(hass)
-        self._name = name
+        self.name = name
         self._unique_id = unique_id
         self._available = False
         self._address = address
@@ -59,11 +59,6 @@ class HarmonyData(HarmonySubscriberMixin):
         devices = [device["label"] for device in device_infos]
 
         return devices
-
-    @property
-    def name(self):
-        """Return the Harmony device's name."""
-        return self._name
 
     @property
     def unique_id(self):
@@ -105,7 +100,7 @@ class HarmonyData(HarmonySubscriberMixin):
 
     async def connect(self) -> None:
         """Connect to the Harmony Hub."""
-        _LOGGER.debug("%s: Connecting", self._name)
+        _LOGGER.debug("%s: Connecting", self.name)
 
         callbacks = {
             "config_updated": self._config_updated,
@@ -124,27 +119,27 @@ class HarmonyData(HarmonySubscriberMixin):
         except (asyncio.TimeoutError, aioexc.TimeOut) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self._name}: Connection timed-out to {self._address}:8088"
+                f"{self.name}: Connection timed-out to {self._address}:8088"
             ) from err
         except (ValueError, AttributeError) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self._name}: Error {err} while connected HUB at:"
+                f"{self.name}: Error {err} while connected HUB at:"
                 f" {self._address}:8088"
             ) from err
         if not connected:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self._name}: Unable to connect to HUB at: {self._address}:8088"
+                f"{self.name}: Unable to connect to HUB at: {self._address}:8088"
             )
 
     async def shutdown(self):
         """Close connection on shutdown."""
-        _LOGGER.debug("%s: Closing Harmony Hub", self._name)
+        _LOGGER.debug("%s: Closing Harmony Hub", self.name)
         try:
             await self._client.close()
         except aioexc.TimeOut:
-            _LOGGER.warning("%s: Disconnect timed-out", self._name)
+            _LOGGER.warning("%s: Disconnect timed-out", self.name)
 
     async def async_start_activity(self, activity: str):
         """Start an activity from the Harmony device."""

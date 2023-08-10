@@ -4,7 +4,6 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -25,9 +24,7 @@ async def async_setup_entry(
 
     switches = []
     for activity in activities:
-        _LOGGER.debug("creating switch for activity: %s", activity)
-        name = f"{entry.data[CONF_NAME]} {activity['label']}"
-        switches.append(HarmonyActivitySwitch(name, activity, data))
+        switches.append(HarmonyActivitySwitch(activity, data))
 
     async_add_entities(switches, True)
 
@@ -35,14 +32,14 @@ async def async_setup_entry(
 class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
     """Switch representation of a Harmony activity."""
 
-    def __init__(self, name: str, activity: dict, data: HarmonyData) -> None:
+    def __init__(self, activity: dict, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySwitch class."""
         super().__init__(data=data)
         self._activity_name = activity["label"]
         self._activity_id = activity["id"]
         self._attr_entity_registry_enabled_default = False
         self._attr_unique_id = f"activity_{self._activity_id}"
-        self._attr_name = name
+        self._attr_name = self._activity_name
         self._attr_device_info = self._data.device_info(DOMAIN)
 
     @property
