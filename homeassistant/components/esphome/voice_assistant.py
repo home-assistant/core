@@ -8,13 +8,14 @@ import logging
 import socket
 from typing import cast
 
-from aioesphomeapi import VoiceAssistantEventType
+from aioesphomeapi import VoiceAssistantCommandFlag, VoiceAssistantEventType
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     PipelineNotFound,
+    PipelineStage,
     async_pipeline_from_audio_stream,
     select as pipeline_select,
 )
@@ -47,6 +48,8 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: PipelineEventType.INTENT_END,
         VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: PipelineEventType.TTS_START,
         VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: PipelineEventType.TTS_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: PipelineEventType.WAKE_WORD_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: PipelineEventType.WAKE_WORD_END,
     }
 )
 
@@ -183,17 +186,26 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 )
             else:
                 self._tts_done.set()
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END:
+            assert event.data is not None
+            if not event.data["wake_word_output"]:
+                event_type = VoiceAssistantEventType.VOICE_ASSISTANT_ERROR
+                data_to_send = {
+                    "code": "no_wake_word",
+                    "message": "No wake word detected",
+                }
+                error = True
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
             assert event.data is not None
             data_to_send = {
                 "code": event.data["code"],
                 "message": event.data["message"],
             }
-            self._tts_done.set()
             error = True
 
         self.handle_event(event_type, data_to_send)
         if error:
+            self._tts_done.set()
             self.handle_finished()
 
     async def _wait_for_speech(
@@ -297,7 +309,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self,
         device_id: str,
         conversation_id: str | None,
-        use_vad: bool = False,
+        flags: int = 0,
         pipeline_timeout: float = 30.0,
     ) -> None:
         """Run the Voice Assistant pipeline."""
@@ -306,7 +318,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
         )
 
-        if use_vad:
+        if flags & VoiceAssistantCommandFlag.USE_VAD:
             stt_stream = await self._iterate_packets_with_vad(
                 pipeline_timeout,
                 silence_seconds=VadSensitivity.to_seconds(
@@ -324,6 +336,10 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             stt_stream = self._iterate_packets
 
         _LOGGER.debug("Starting pipeline")
+        if flags & VoiceAssistantCommandFlag.USE_WAKE_WORD:
+            start_stage = PipelineStage.WAKE_WORD
+        else:
+            start_stage = PipelineStage.STT
         try:
             async with asyncio.timeout(pipeline_timeout):
                 await async_pipeline_from_audio_stream(
@@ -345,6 +361,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                     conversation_id=conversation_id,
                     device_id=device_id,
                     tts_audio_output=tts_audio_output,
+                    start_stage=start_stage,
                 )
 
                 # Block until TTS is done sending
@@ -361,6 +378,9 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             )
             _LOGGER.warning("Pipeline not found")
         except asyncio.TimeoutError:
+            if self.stopped:
+                # The pipeline was stopped gracefully
+                return
             self.handle_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
                 {
@@ -397,7 +417,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
                 self.transport.sendto(chunk, self.remote_addr)
                 await asyncio.sleep(
-                    samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.99
+                    samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.9
                 )
 
                 sample_offset += samples_in_chunk
