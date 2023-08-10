@@ -15,6 +15,8 @@ from .util import get_mac_address_from_doorstation_info
 class DoorBirdEntity(Entity):
     """Base class for doorbird entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, doorstation, doorstation_info):
         """Initialize the entity."""
         super().__init__()
