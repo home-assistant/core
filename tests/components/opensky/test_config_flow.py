@@ -237,3 +237,37 @@ async def test_options_flow_failures(
             CONF_PASSWORD: "secret",
             CONF_CONTRIBUTING_USER: True,
         }
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow."""
+    await setup_integration(config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.async_block_till_done()
+    with patch("python_opensky.OpenSky.authenticate"), patch(
+        "python_opensky.OpenSky.get_states",
+        return_value=get_states_response_fixture("opensky/states_1.json"),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RADIUS: 10000,
+                CONF_USERNAME: "homeassistant",
+                CONF_PASSWORD: "secret",
+                CONF_CONTRIBUTING_USER: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["data"] == {
+            CONF_RADIUS: 10000,
+            CONF_USERNAME: "homeassistant",
+            CONF_PASSWORD: "secret",
+            CONF_CONTRIBUTING_USER: True,
+        }
