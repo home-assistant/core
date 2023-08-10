@@ -12,10 +12,12 @@ from typing import Generic
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
+from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
+from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
 
@@ -39,6 +41,7 @@ from .entity import (
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
 
@@ -77,8 +80,20 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
             client.mac
             for client in controller.api.clients.values()
             if client.essid == wlan.name
+            and dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
+            < controller.option_detection_time
         ]
     )
+
+
+@callback
+def async_device_outlet_power_supported_fn(
+    controller: UniFiController, obj_id: str
+) -> bool:
+    """Determine if an outlet has the power property."""
+    # At this time, an outlet_caps value of 3 is expected to indicate that the outlet
+    # supports metering
+    return controller.api.outlets[obj_id].caps == 3
 
 
 @dataclass
@@ -177,18 +192,37 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="WLAN clients",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=True,
-        allowed_fn=lambda controller, _: True,
+        allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
-        available_fn=lambda controller, obj_id: controller.available,
+        available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        name_fn=lambda client: None,
+        name_fn=lambda wlan: None,
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         should_poll=True,
-        supported_fn=lambda controller, _: True,
+        supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"wlan_clients-{obj_id}",
         value_fn=async_wlan_client_value_fn,
+    ),
+    UnifiSensorEntityDescription[Outlets, Outlet](
+        key="Outlet power metering",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        has_entity_name=True,
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.outlets,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        name_fn=lambda outlet: f"{outlet.name} Outlet Power",
+        object_fn=lambda api, obj_id: api.outlets[obj_id],
+        should_poll=True,
+        supported_fn=async_device_outlet_power_supported_fn,
+        unique_id_fn=lambda controller, obj_id: f"outlet_power-{obj_id}",
+        value_fn=lambda _, obj: obj.power if obj.relay_state else "0",
     ),
 )
 
