@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         regions,
         entry.data[CONF_HEADLINE_FILTER],
-        entry.data.get(CONF_AREA_FILTER, ALL_MATCH_REGEX),
+        entry.data[CONF_AREA_FILTER],
     )
 
     await coordinator.async_config_entry_first_refresh()
