@@ -48,6 +48,14 @@ PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
 )
 
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -80,21 +88,14 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    name = conf.get(CONF_NAME)
-    if not name:
-        name = Template(DEFAULT_BINARY_SENSOR_NAME, hass)
+    name = config.get(CONF_NAME) or Template(DEFAULT_BINARY_SENSOR_NAME, hass)
 
-    trigger_entity_config = {
-        CONF_NAME: name,
-        CONF_DEVICE_CLASS: conf.get(CONF_DEVICE_CLASS),
-        CONF_UNIQUE_ID: conf.get(CONF_UNIQUE_ID),
-    }
-    if available := conf.get(CONF_AVAILABILITY):
-        trigger_entity_config[CONF_AVAILABILITY] = available
-    if icon := conf.get(CONF_ICON):
-        trigger_entity_config[CONF_ICON] = icon
-    if picture := conf.get(CONF_PICTURE):
-        trigger_entity_config[CONF_PICTURE] = picture
+    trigger_entity_config = {CONF_NAME: name}
+
+    for key in TRIGGER_ENTITY_OPTIONS:
+        if key not in config:
+            continue
+        trigger_entity_config[key] = config[key]
 
     async_add_entities(
         [
