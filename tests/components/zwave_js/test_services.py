@@ -959,7 +959,6 @@ async def test_set_value_options(
     hass: HomeAssistant, client, aeon_smart_switch_6, integration
 ) -> None:
     """Test set_value service with options."""
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
@@ -996,7 +995,6 @@ async def test_set_value_gather(
     integration,
 ) -> None:
     """Test the set_value service gather functionality."""
-
     # Test setting value by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
     with pytest.raises(HomeAssistantError):
@@ -1040,7 +1038,6 @@ async def test_multicast_set_value(
     integration,
 ) -> None:
     """Test multicast_set_value service."""
-
     # Test successful multicast call
     await hass.services.async_call(
         DOMAIN,
@@ -1342,7 +1339,6 @@ async def test_multicast_set_value_options(
     integration,
 ) -> None:
     """Test multicast_set_value service with options."""
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_MULTICAST_SET_VALUE,
