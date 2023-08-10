@@ -6,10 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.image import (
-    DOMAIN as IMAGE_DOMAIN,
-    ImageEntity,
-)
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
 from homeassistant.const import CONF_UNIQUE_ID, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -20,10 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
-from .template_entity import (
-    TemplateEntity,
-    make_template_entity_common_schema,
-)
+from .template_entity import TemplateEntity, make_template_entity_common_schema
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)

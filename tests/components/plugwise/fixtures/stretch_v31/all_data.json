@@ -1,10 +1,5 @@
-[
-  {
-    "smile_name": "Stretch",
-    "gateway_id": "0000aaaa0000aaaa0000aaaa0000aa00",
-    "notifications": {}
-  },
-  {
+{
+  "devices": {
     "0000aaaa0000aaaa0000aaaa0000aa00": {
       "dev_class": "gateway",
       "firmware": "3.1.11",
@@ -12,8 +7,27 @@
       "mac_address": "01:23:45:67:89:AB",
       "model": "Gateway",
       "name": "Stretch",
-      "zigbee_mac_address": "ABCD012345670101",
-      "vendor": "Plugwise"
+      "vendor": "Plugwise",
+      "zigbee_mac_address": "ABCD012345670101"
+    },
+    "059e4d03c7a34d278add5c7a4a781d19": {
+      "dev_class": "washingmachine",
+      "firmware": "2011-06-27T10:52:18+02:00",
+      "hardware": "0000-0440-0107",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": "Circle type F",
+      "name": "Wasmachine (52AC1)",
+      "sensors": {
+        "electricity_consumed": 0.0,
+        "electricity_consumed_interval": 0.0,
+        "electricity_produced": 0.0
+      },
+      "switches": {
+        "lock": false,
+        "relay": true
+      },
+      "vendor": "Plugwise",
+      "zigbee_mac_address": "ABCD012345670A01"
     },
     "5871317346d045bc9f6b987ef25ee638": {
       "dev_class": "water_heater_vessel",
@@ -22,35 +36,25 @@
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
       "model": "Circle type F",
       "name": "Boiler (1EB31)",
-      "zigbee_mac_address": "ABCD012345670A07",
-      "vendor": "Plugwise",
       "sensors": {
         "electricity_consumed": 1.19,
         "electricity_consumed_interval": 0.0,
         "electricity_produced": 0.0
       },
       "switches": {
-        "relay": true,
-        "lock": false
-      }
-    },
-    "e1c884e7dede431dadee09506ec4f859": {
-      "dev_class": "refrigerator",
-      "firmware": "2011-06-27T10:47:37+02:00",
-      "hardware": "6539-0700-7330",
-      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
-      "model": "Circle+ type F",
-      "name": "Koelkast (92C4A)",
-      "zigbee_mac_address": "0123456789AB",
-      "vendor": "Plugwise",
-      "sensors": {
-        "electricity_consumed": 50.5,
-        "electricity_consumed_interval": 0.08,
-        "electricity_produced": 0.0
+        "lock": false,
+        "relay": true
       },
+      "vendor": "Plugwise",
+      "zigbee_mac_address": "ABCD012345670A07"
+    },
+    "71e1944f2a944b26ad73323e399efef0": {
+      "dev_class": "switching",
+      "members": ["5ca521ac179d468e91d772eeeb8a2117"],
+      "model": "Switchgroup",
+      "name": "Test",
       "switches": {
-        "relay": true,
-        "lock": false
+        "relay": true
       }
     },
     "aac7b735042c4832ac9ff33aae4f453b": {
@@ -60,17 +64,17 @@
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
       "model": "Circle type F",
       "name": "Vaatwasser (2a1ab)",
-      "zigbee_mac_address": "ABCD012345670A02",
-      "vendor": "Plugwise",
       "sensors": {
         "electricity_consumed": 0.0,
         "electricity_consumed_interval": 0.71,
         "electricity_produced": 0.0
       },
       "switches": {
-        "relay": true,
-        "lock": false
-      }
+        "lock": false,
+        "relay": true
+      },
+      "vendor": "Plugwise",
+      "zigbee_mac_address": "ABCD012345670A02"
     },
     "cfe95cf3de1948c0b8955125bf754614": {
       "dev_class": "dryer",
@@ -79,50 +83,32 @@
       "location": "0000aaaa0000aaaa0000aaaa0000aa00",
       "model": "Circle type F",
       "name": "Droger (52559)",
-      "zigbee_mac_address": "ABCD012345670A04",
-      "vendor": "Plugwise",
       "sensors": {
         "electricity_consumed": 0.0,
         "electricity_consumed_interval": 0.0,
         "electricity_produced": 0.0
       },
       "switches": {
-        "relay": true,
-        "lock": false
-      }
-    },
-    "059e4d03c7a34d278add5c7a4a781d19": {
-      "dev_class": "washingmachine",
-      "firmware": "2011-06-27T10:52:18+02:00",
-      "hardware": "0000-0440-0107",
-      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
-      "model": "Circle type F",
-      "name": "Wasmachine (52AC1)",
-      "zigbee_mac_address": "ABCD012345670A01",
-      "vendor": "Plugwise",
-      "sensors": {
-        "electricity_consumed": 0.0,
-        "electricity_consumed_interval": 0.0,
-        "electricity_produced": 0.0
+        "lock": false,
+        "relay": true
       },
-      "switches": {
-        "relay": true,
-        "lock": false
-      }
+      "vendor": "Plugwise",
+      "zigbee_mac_address": "ABCD012345670A04"
     },
-    "71e1944f2a944b26ad73323e399efef0": {
+    "d03738edfcc947f7b8f4573571d90d2d": {
       "dev_class": "switching",
+      "members": [
+        "059e4d03c7a34d278add5c7a4a781d19",
+        "cfe95cf3de1948c0b8955125bf754614"
+      ],
       "model": "Switchgroup",
-      "name": "Test",
-      "members": ["5ca521ac179d468e91d772eeeb8a2117"],
+      "name": "Schakel",
       "switches": {
         "relay": true
       }
     },
     "d950b314e9d8499f968e6db8d82ef78c": {
       "dev_class": "report",
-      "model": "Switchgroup",
-      "name": "Stroomvreters",
       "members": [
         "059e4d03c7a34d278add5c7a4a781d19",
         "5871317346d045bc9f6b987ef25ee638",
@@ -130,21 +116,35 @@
         "cfe95cf3de1948c0b8955125bf754614",
         "e1c884e7dede431dadee09506ec4f859"
       ],
+      "model": "Switchgroup",
+      "name": "Stroomvreters",
       "switches": {
         "relay": true
       }
     },
-    "d03738edfcc947f7b8f4573571d90d2d": {
-      "dev_class": "switching",
-      "model": "Switchgroup",
-      "name": "Schakel",
-      "members": [
-        "059e4d03c7a34d278add5c7a4a781d19",
-        "cfe95cf3de1948c0b8955125bf754614"
-      ],
+    "e1c884e7dede431dadee09506ec4f859": {
+      "dev_class": "refrigerator",
+      "firmware": "2011-06-27T10:47:37+02:00",
+      "hardware": "6539-0700-7330",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": "Circle+ type F",
+      "name": "Koelkast (92C4A)",
+      "sensors": {
+        "electricity_consumed": 50.5,
+        "electricity_consumed_interval": 0.08,
+        "electricity_produced": 0.0
+      },
       "switches": {
+        "lock": false,
         "relay": true
-      }
+      },
+      "vendor": "Plugwise",
+      "zigbee_mac_address": "0123456789AB"
     }
+  },
+  "gateway": {
+    "gateway_id": "0000aaaa0000aaaa0000aaaa0000aa00",
+    "notifications": {},
+    "smile_name": "Stretch"
   }
-]
+}
