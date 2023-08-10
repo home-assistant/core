@@ -1,8 +1,5 @@
 """The enphase_envoy component."""
-from pyenphase import (
-    EnvoyAuthenticationError,
-    EnvoyAuthenticationRequired,
-)
+from pyenphase import EnvoyAuthenticationError, EnvoyAuthenticationRequired
 
 from homeassistant.const import Platform
 
