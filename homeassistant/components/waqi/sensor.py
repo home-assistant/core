@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from aiowaqi import WAQIClient, WAQIConnectionError
+from aiowaqi import WAQIAuthenticationError, WAQIClient, WAQIConnectionError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -111,7 +111,30 @@ async def async_setup_platform(
                             },
                         )
                     )
+    except WAQIAuthenticationError as err:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_invalid_auth",
+            breaks_in_ha_version="2024.02.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_invalid_auth",
+        )
+        _LOGGER.exception("Could not authenticate with WAQI")
+        raise PlatformNotReady from err
     except WAQIConnectionError as err:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_cannot_connect",
+            breaks_in_ha_version="2024.02.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_cannot_connect",
+        )
         _LOGGER.exception("Failed to connect to WAQI servers")
         raise PlatformNotReady from err
 
