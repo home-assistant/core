@@ -149,7 +149,7 @@ def _equivalent_units(units: set[str | None]) -> bool:
 def _parse_float(state: str) -> float:
     """Parse a float string, throw on inf or nan."""
     fstate = float(state)
-    if math.isnan(fstate) or math.isinf(fstate):
+    if not math.isfinite(fstate):
         raise ValueError
     return fstate
 

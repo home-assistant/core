@@ -58,6 +58,7 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             assert self.host
             api = create_api(self.hass, self.host, enable_ime=False)
             try:
+                await api.async_generate_cert_if_missing()
                 self.name, self.mac = await api.async_get_name_and_mac()
                 assert self.mac
                 await self.async_set_unique_id(format_mac(self.mac))
