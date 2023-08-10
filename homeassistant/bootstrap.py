@@ -134,6 +134,7 @@ async def async_setup_hass(
 
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
+    loader.async_setup(hass)
     config_dict = None
     basic_setup_success = False
 

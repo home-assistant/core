@@ -256,6 +256,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     # Load the registries
     entity.async_setup(hass)
+    loader.async_setup(hass)
     if load_registries:
         with patch(
             "homeassistant.helpers.storage.Store.async_load", return_value=None
