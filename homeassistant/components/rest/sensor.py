@@ -35,7 +35,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
-    ManualTriggerEntity,
     ManualTriggerSensorEntity,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -98,14 +97,14 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    name = config.get(CONF_NAME) or Template(DEFAULT_SENSOR_NAME, hass)
+    name = conf.get(CONF_NAME) or Template(DEFAULT_SENSOR_NAME, hass)
 
     trigger_entity_config = {CONF_NAME: name}
 
     for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in config:
+        if key not in conf:
             continue
-        trigger_entity_config[key] = config[key]
+        trigger_entity_config[key] = conf[key]
 
     async_add_entities(
         [
@@ -146,11 +145,6 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity, SensorEntity):
         self._json_attrs = config.get(CONF_JSON_ATTRS)
         self._json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
         self._attr_extra_state_attributes = {}
-
-    async def async_added_to_hass(self) -> None:
-        """Ensure the data from the initial update is reflected in the state."""
-        await RestEntity.async_added_to_hass(self)
-        await ManualTriggerEntity.async_added_to_hass(self)
 
     @property
     def available(self) -> bool:
