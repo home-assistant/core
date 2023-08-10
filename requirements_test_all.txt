@@ -69,7 +69,7 @@ PyMetno==0.10.0
 PyMicroBot==0.0.9
 
 # homeassistant.components.nina
-PyNINA==0.3.1
+PyNINA==0.3.2
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -172,7 +172,7 @@ aioairq==0.2.4
 aioairzone-cloud==0.2.1
 
 # homeassistant.components.airzone
-aioairzone==0.6.4
+aioairzone==0.6.5
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0

@@ -71,9 +71,11 @@ async def init_integration(hass) -> MockConfigEntry:
     entry = mock_config_entry()
     entry.add_to_hass(hass)
     # Make device tied to other integration so device tracker entities get enabled
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
     dr.async_get(hass).async_get_or_create(
         name="Device from other integration",
-        config_entry_id=MockConfigEntry().entry_id,
+        config_entry_id=other_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, TEST_CLIENT[API_MAC])},
     )
     with patch(

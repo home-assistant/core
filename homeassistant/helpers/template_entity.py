@@ -653,3 +653,17 @@ class ManualTriggerEntity(TriggerBaseEntity):
         variables = {"this": this, **(run_variables or {})}
 
         self._render_templates(variables)
+
+
+class ManualTriggerSensorEntity(ManualTriggerEntity):
+    """Template entity based on manual trigger data for sensor."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict,
+    ) -> None:
+        """Initialize the sensor entity."""
+        ManualTriggerEntity.__init__(self, hass, config)
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)

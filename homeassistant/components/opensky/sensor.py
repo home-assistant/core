@@ -1,43 +1,26 @@
 """Sensor for the Open Sky Network."""
 from __future__ import annotations
 
-from datetime import timedelta
-
-from python_opensky import BoundingBox, OpenSky, StateVector
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_RADIUS,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_RADIUS
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_ALTITUDE,
-    ATTR_CALLSIGN,
-    ATTR_ICAO24,
-    ATTR_SENSOR,
-    CLIENT,
-    CONF_ALTITUDE,
-    DEFAULT_ALTITUDE,
-    DOMAIN,
-    EVENT_OPENSKY_ENTRY,
-    EVENT_OPENSKY_EXIT,
-)
-
-# OpenSky free user has 400 credits, with 4 credits per API call. 100/24 = ~4 requests per hour
-SCAN_INTERVAL = timedelta(minutes=15)
-
+from .const import CONF_ALTITUDE, DEFAULT_ALTITUDE, DOMAIN, MANUFACTURER
+from .coordinator import OpenSkyDataUpdateCoordinator
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -87,125 +70,45 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    opensky = hass.data[DOMAIN][entry.entry_id][CLIENT]
-    bounding_box = OpenSky.get_bounding_box(
-        entry.data[CONF_LATITUDE],
-        entry.data[CONF_LONGITUDE],
-        entry.options[CONF_RADIUS],
-    )
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             OpenSkySensor(
-                entry.title,
-                opensky,
-                bounding_box,
-                entry.options.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
-                entry.entry_id,
+                coordinator,
+                entry,
             )
         ],
-        True,
     )
 
 
-class OpenSkySensor(SensorEntity):
+class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntity):
     """Open Sky Network Sensor."""
 
     _attr_attribution = (
         "Information provided by the OpenSky Network (https://opensky-network.org)"
     )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_icon = "mdi:airplane"
+    _attr_native_unit_of_measurement = "flights"
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
-        name: str,
-        opensky: OpenSky,
-        bounding_box: BoundingBox,
-        altitude: float,
-        entry_id: str,
+        coordinator: OpenSkyDataUpdateCoordinator,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the sensor."""
-        self._altitude = altitude
-        self._state = 0
-        self._name = name
-        self._previously_tracked: set[str] = set()
-        self._opensky = opensky
-        self._bounding_box = bounding_box
-        self._attr_unique_id = f"{entry_id}_opensky"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{config_entry.entry_id}_opensky"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}")},
+            manufacturer=MANUFACTURER,
+            name=config_entry.title,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
-        return self._state
-
-    def _handle_boundary(
-        self, flights: set[str], event: str, metadata: dict[str, StateVector]
-    ) -> None:
-        """Handle flights crossing region boundary."""
-        for flight in flights:
-            if flight in metadata:
-                altitude = metadata[flight].barometric_altitude
-                longitude = metadata[flight].longitude
-                latitude = metadata[flight].latitude
-                icao24 = metadata[flight].icao24
-            else:
-                # Assume Flight has landed if missing.
-                altitude = 0
-                longitude = None
-                latitude = None
-                icao24 = None
-
-            data = {
-                ATTR_CALLSIGN: flight,
-                ATTR_ALTITUDE: altitude,
-                ATTR_SENSOR: self._name,
-                ATTR_LONGITUDE: longitude,
-                ATTR_LATITUDE: latitude,
-                ATTR_ICAO24: icao24,
-            }
-            self.hass.bus.fire(event, data)
-
-    async def async_update(self) -> None:
-        """Update device state."""
-        currently_tracked = set()
-        flight_metadata: dict[str, StateVector] = {}
-        response = await self._opensky.get_states(bounding_box=self._bounding_box)
-        for flight in response.states:
-            if not flight.callsign:
-                continue
-            callsign = flight.callsign.strip()
-            if callsign != "":
-                flight_metadata[callsign] = flight
-            else:
-                continue
-            if (
-                flight.longitude is None
-                or flight.latitude is None
-                or flight.on_ground
-                or flight.barometric_altitude is None
-            ):
-                continue
-            altitude = flight.barometric_altitude
-            if altitude > self._altitude and self._altitude != 0:
-                continue
-            currently_tracked.add(callsign)
-        if self._previously_tracked is not None:
-            entries = currently_tracked - self._previously_tracked
-            exits = self._previously_tracked - currently_tracked
-            self._handle_boundary(entries, EVENT_OPENSKY_ENTRY, flight_metadata)
-            self._handle_boundary(exits, EVENT_OPENSKY_EXIT, flight_metadata)
-        self._state = len(currently_tracked)
-        self._previously_tracked = currently_tracked
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return "flights"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:airplane"
+        return self.coordinator.data

@@ -537,6 +537,7 @@ known-first-party = [
     "homeassistant",
 ]
 combine-as-imports = true
+split-on-trailing-comma = false
 
 [tool.ruff.per-file-ignores]
 
