@@ -1,116 +1,57 @@
 """Tests for IPMA config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from homeassistant.components.ipma import config_flow
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.ipma.const import DOMAIN
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 
-async def test_show_config_form() -> None:
+@pytest.fixture(name="ipma_setup", autouse=True)
+def ipma_setup_fixture(request):
+    """Patch ipma setup entry."""
+    if "disable_autouse_fixture" in request.keywords:
+        yield
+    else:
+        with patch(
+            "homeassistant.components.ipma.async_setup_entry", return_value=True
+        ):
+            yield
+
+
+async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test show configuration form."""
-    hass = Mock()
-    flow = config_flow.IpmaFlowHandler()
-    flow.hass = hass
-
-    result = await flow._show_config_form()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
 
-async def test_show_config_form_default_values() -> None:
-    """Test show configuration form."""
-    hass = Mock()
-    flow = config_flow.IpmaFlowHandler()
-    flow.hass = hass
+async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
+    """Test user input for config_entry that already exists.
 
-    result = await flow._show_config_form(name="test", latitude="0", longitude="0")
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-
-async def test_flow_with_home_location(hass: HomeAssistant) -> None:
-    """Test config flow .
-
-    Tests the flow when a default location is configured
-    then it should return a form with default values
+    Test when the form should show when user puts existing location
+    in the config gui. Then the form should show with error.
     """
-    flow = config_flow.IpmaFlowHandler()
-    flow.hass = hass
+    test_data = {
+        CONF_NAME: "home",
+        CONF_LONGITUDE: 0,
+        CONF_LATITUDE: 0,
+    }
 
-    hass.config.location_name = "Home"
-    hass.config.latitude = 1
-    hass.config.longitude = 1
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+    )
+    await hass.async_block_till_done()
 
-    result = await flow.async_step_user()
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+    )
+    await hass.async_block_till_done()
 
-
-async def test_flow_show_form() -> None:
-    """Test show form scenarios first time.
-
-    Test when the form should show when no configurations exists
-    """
-    hass = Mock()
-    flow = config_flow.IpmaFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.ipma.config_flow.IpmaFlowHandler._show_config_form"
-    ) as config_form:
-        await flow.async_step_user()
-        assert len(config_form.mock_calls) == 1
-
-
-async def test_flow_entry_created_from_user_input() -> None:
-    """Test that create data from user input.
-
-    Test when the form should show when no configurations exists
-    """
-    hass = Mock()
-    flow = config_flow.IpmaFlowHandler()
-    flow.hass = hass
-
-    test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
-
-    # Test that entry created when user_input name not exists
-    with patch(
-        "homeassistant.components.ipma.config_flow.IpmaFlowHandler._show_config_form"
-    ) as config_form, patch.object(
-        flow.hass.config_entries,
-        "async_entries",
-        return_value=[],
-    ) as config_entries:
-        result = await flow.async_step_user(user_input=test_data)
-
-        assert result["type"] == "create_entry"
-        assert result["data"] == test_data
-        assert len(config_entries.mock_calls) == 1
-        assert not config_form.mock_calls
-
-
-async def test_flow_entry_config_entry_already_exists() -> None:
-    """Test that create data from user input and config_entry already exists.
-
-    Test when the form should show when user puts existing name
-    in the config gui. Then the form should show with error
-    """
-    hass = Mock()
-    flow = config_flow.IpmaFlowHandler()
-    flow.hass = hass
-
-    test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
-
-    # Test that entry created when user_input name not exists
-    with patch(
-        "homeassistant.components.ipma.config_flow.IpmaFlowHandler._show_config_form"
-    ) as config_form, patch.object(
-        flow.hass.config_entries, "async_entries", return_value={"home": test_data}
-    ) as config_entries:
-        await flow.async_step_user(user_input=test_data)
-
-        assert len(config_form.mock_calls) == 1
-        assert len(config_entries.mock_calls) == 1
-        assert len(flow._errors) == 1
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
