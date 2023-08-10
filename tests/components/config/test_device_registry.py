@@ -26,15 +26,17 @@ async def test_list_devices(
     hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test list entries."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
     device1 = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     device2 = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
         model="model",
@@ -50,7 +52,7 @@ async def test_list_devices(
     assert msg["result"] == [
         {
             "area_id": None,
-            "config_entries": ["1234"],
+            "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "disabled_by": None,
@@ -66,7 +68,7 @@ async def test_list_devices(
         },
         {
             "area_id": None,
-            "config_entries": ["1234"],
+            "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [],
             "disabled_by": None,
@@ -94,7 +96,7 @@ async def test_list_devices(
     assert msg["result"] == [
         {
             "area_id": None,
-            "config_entries": ["1234"],
+            "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "disabled_by": None,
@@ -135,8 +137,10 @@ async def test_update_device(
     payload_value,
 ) -> None:
     """Test update entry."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
