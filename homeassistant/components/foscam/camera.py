@@ -11,9 +11,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .const import (
+    CONF_RTSP_PORT,
+    CONF_STREAM,
+    DOMAIN,
+    LOGGER,
+    SERVICE_PTZ,
+    SERVICE_PTZ_PRESET,
+)
 
 DIR_UP = "up"
 DIR_DOWN = "down"
@@ -107,6 +115,10 @@ class HassFoscamCamera(Camera):
         self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
         if self._rtsp_port:
             self._attr_supported_features = CameraEntityFeature.STREAM
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name=config_entry.title,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
