@@ -71,6 +71,9 @@ async def async_setup_entry(
 class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     _attr_supported_features = (
         MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
@@ -87,7 +90,6 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         """Initialize entity to control Epson projector."""
         self._projector = projector
         self._entry = entry
-        self._attr_name = name
         self._attr_available = False
         self._cmode = None
         self._attr_source_list = list(DEFAULT_SOURCES.values())
@@ -97,7 +99,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer="Epson",
                 model="Epson",
-                name="Epson projector",
+                name=name,
                 via_device=(DOMAIN, unique_id),
             )
 
