@@ -808,6 +808,57 @@ async def test_option_flow_addon_installed_same_device_do_not_uninstall_multi_pa
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
+async def test_option_flow_flasher_already_running_failure(
+    hass: HomeAssistant,
+    addon_info,
+    addon_store_info,
+    addon_installed,
+    install_addon,
+    start_addon,
+    stop_addon,
+    uninstall_addon,
+    set_addon_options,
+    options_flow_poll_addon_state,
+) -> None:
+    """Test uninstalling the multi pan addon but with the flasher addon running."""
+    mock_integration(hass, MockModule("hassio"))
+    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=TEST_DOMAIN,
+        options={},
+        title="Test HW",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        side_effect=Mock(return_value=True),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == FlowResultType.MENU
+        assert result["step_id"] == "addon_menu"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "uninstall_addon"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "uninstall_addon"
+
+    # The flasher addon is already installed and running, this is bad
+    addon_store_info.return_value["installed"] = True
+    addon_info.return_value["state"] = "started"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {silabs_multiprotocol_addon.CONF_DISABLE_MULTI_PAN: True}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "addon_install_failed"
+
+
 async def test_option_flow_addon_installed_same_device_flasher_already_installed(
     hass: HomeAssistant,
     addon_info,
