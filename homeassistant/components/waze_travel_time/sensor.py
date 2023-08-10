@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from WazeRouteCalculator import WazeRouteCalculator, WRCError
+from pywaze.route_calculator import WazeRouteCalculator, WRCError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -132,15 +132,15 @@ class WazeTravelTime(SensorEntity):
 
     async def first_update(self, _=None) -> None:
         """Run first update and write state."""
-        await self.hass.async_add_executor_job(self.update)
+        await self.async_update()
         self.async_write_ha_state()
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
         self._waze_data.origin = find_coordinates(self.hass, self._origin)
         self._waze_data.destination = find_coordinates(self.hass, self._destination)
-        self._waze_data.update()
+        await self._waze_data.async_update()
 
 
 class WazeTravelTimeData:
@@ -156,7 +156,7 @@ class WazeTravelTimeData:
         self.distance = None
         self.route = None
 
-    def update(self):
+    async def async_update(self):
         """Update WazeRouteCalculator Sensor."""
         _LOGGER.debug(
             "Getting update for origin: %s destination: %s",
@@ -177,17 +177,18 @@ class WazeTravelTimeData:
             avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
             units = self.config_entry.options[CONF_UNITS]
 
+            routes = {}
             try:
-                params = WazeRouteCalculator(
-                    self.origin,
-                    self.destination,
-                    self.region,
-                    vehicle_type,
-                    avoid_toll_roads,
-                    avoid_subscription_roads,
-                    avoid_ferries,
-                )
-                routes = params.calc_all_routes_info(real_time=realtime)
+                async with WazeRouteCalculator(
+                    region=self.region,
+                    vehicle_type=vehicle_type,
+                    avoid_toll_roads=avoid_toll_roads,
+                    avoid_subscription_roads=avoid_subscription_roads,
+                    avoid_ferries=avoid_ferries,
+                ) as client:
+                    routes = await client.calc_all_routes_info(
+                        self.origin, self.destination, real_time=realtime
+                    )
 
                 if incl_filter not in {None, ""}:
                     routes = {
