@@ -44,7 +44,7 @@ from homeassistant.util.unit_conversion import (
 
 from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
 
-CHECK_FORECAST_KEYS = Forecast.__annotations__.keys()
+CHECK_FORECAST_KEYS = set().union(Forecast.__annotations__.keys())
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -381,21 +381,21 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
                 "_forecast_daily",
                 self._forecast_daily_template,
                 on_update=partial(self._update_forecast, "daily"),
-                validator=self._validate_forecast,
+                validator=partial(self._validate_forecast, "daily"),
             )
         if self._forecast_hourly_template:
             self.add_template_attribute(
                 "_forecast_hourly",
                 self._forecast_hourly_template,
                 on_update=partial(self._update_forecast, "hourly"),
-                validator=self._validate_forecast,
+                validator=partial(self._validate_forecast, "hourly"),
             )
         if self._forecast_twice_daily_template:
             self.add_template_attribute(
                 "_forecast_twice_daily",
                 self._forecast_twice_daily_template,
                 on_update=partial(self._update_forecast, "twice_daily"),
-                validator=self._validate_forecast,
+                validator=partial(self._validate_forecast, "twice_daily"),
             )
 
         await super().async_added_to_hass()
@@ -413,18 +413,34 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
 
     @callback
     def _validate_forecast(
-        self, result: list[Forecast] | TemplateError
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+        result: list[Forecast] | TemplateError,
     ) -> list[Forecast] | None:
         """Validate the forecasts."""
         if result is None or isinstance(result, TemplateError):
             return None
 
+        set().union()
         if isinstance(result, list):
             for forecast in result:
-                for key, _ in forecast.items():
-                    if key not in CHECK_FORECAST_KEYS:
-                        raise vol.Invalid(
-                            "Only valid keys in Forecast are allowed, see Weather documentation https://www.home-assistant.io/integrations/weather/"
-                        )
-                    continue
+                diff_result = (
+                    set().union(forecast.items()).difference(CHECK_FORECAST_KEYS)
+                )
+                if diff_result:
+                    raise vol.Invalid(
+                        "Only valid keys in Forecast are allowed, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+                    )
+                if (
+                    forecast_type == "twice_daily"
+                    and "is_daytime" not in forecast.keys()
+                ):
+                    raise vol.Invalid(
+                        "`is_daytime` is missing in twice_daily forecast, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+                    )
+                if "datetime" not in forecast.keys():
+                    raise vol.Invalid(
+                        "`datetime` is required in forecasts, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+                    )
+                continue
         return result
