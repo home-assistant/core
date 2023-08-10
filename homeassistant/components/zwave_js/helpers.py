@@ -252,7 +252,7 @@ def async_get_node_from_entity_id(
     entity_entry = ent_reg.async_get(entity_id)
 
     if entity_entry is None or entity_entry.platform != DOMAIN:
-        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity.")
+        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity")
 
     # Assert for mypy, safe because we know that zwave_js entities are always
     # tied to a device
@@ -414,9 +414,7 @@ def copy_available_params(
     )
 
 
-def get_value_state_schema(
-    value: ZwaveValue,
-) -> vol.Schema | None:
+def get_value_state_schema(value: ZwaveValue) -> vol.Schema | None:
     """Return device automation schema for a config entry."""
     if isinstance(value, ConfigurationValue):
         min_ = value.metadata.min
@@ -426,6 +424,9 @@ def get_value_state_schema(
             ConfigurationValueType.MANUAL_ENTRY,
         ):
             return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
+
+        if value.configuration_value_type == ConfigurationValueType.BOOLEAN:
+            return vol.Coerce(bool)
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             return vol.In({int(k): v for k, v in value.metadata.states.items()})

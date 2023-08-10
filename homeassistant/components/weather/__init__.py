@@ -1,6 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
+import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -204,7 +205,25 @@ class WeatherEntityDescription(EntityDescription):
     """A class that describes weather entities."""
 
 
-class WeatherEntity(Entity):
+class PostInitMeta(abc.ABCMeta):
+    """Meta class which calls __post_init__ after __new__ and __init__."""
+
+    def __call__(cls, *args: Any, **kwargs: Any) -> Any:
+        """Create an instance."""
+        instance: PostInit = super().__call__(*args, **kwargs)
+        instance.__post_init__(*args, **kwargs)
+        return instance
+
+
+class PostInit(metaclass=PostInitMeta):
+    """Class which calls __post_init__ after __new__ and __init__."""
+
+    @abc.abstractmethod
+    def __post_init__(self, *args: Any, **kwargs: Any) -> None:
+        """Finish initializing."""
+
+
+class WeatherEntity(Entity, PostInit):
     """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
@@ -271,9 +290,14 @@ class WeatherEntity(Entity):
     _weather_option_precipitation_unit: str | None = None
     _weather_option_wind_speed_unit: str | None = None
 
+    def __post_init__(self, *args: Any, **kwargs: Any) -> None:
+        """Finish initializing."""
+        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
+
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
+
         _reported = False
         if any(
             method in cls.__dict__
@@ -326,7 +350,6 @@ class WeatherEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
         await super().async_internal_added_to_hass()
-        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
         if not self.registry_entry:
             return
         self.async_registry_entry_updated()
@@ -1072,12 +1095,6 @@ class WeatherEntity(Entity):
         self, forecast_types: Iterable[Literal["daily", "hourly", "twice_daily"]] | None
     ) -> None:
         """Push updated forecast to all listeners."""
-        if not hasattr(self, "_forecast_listeners"):
-            # Required for entities initiated with `update_before_add`
-            # as `self._forecast_listeners` has not yet been set.
-            # `async_internal_added_to_hass()` will execute once entity has been added.
-            return
-
         if forecast_types is None:
             forecast_types = {"daily", "hourly", "twice_daily"}
         for forecast_type in forecast_types:

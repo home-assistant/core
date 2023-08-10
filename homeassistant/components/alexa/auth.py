@@ -76,7 +76,8 @@ class Auth:
             assert self._prefs is not None
             if self.is_token_valid():
                 _LOGGER.debug("Token still valid, using it")
-                return self._prefs[STORAGE_ACCESS_TOKEN]
+                token: str = self._prefs[STORAGE_ACCESS_TOKEN]
+                return token
 
             if self._prefs[STORAGE_REFRESH_TOKEN] is None:
                 _LOGGER.debug("Token invalid and no refresh token available")
