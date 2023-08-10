@@ -9,10 +9,7 @@ from homeassistant.components.bluetooth import (
     async_address_present,
 )
 from homeassistant.components.oralb.const import DOMAIN
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_FRIENDLY_NAME,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 

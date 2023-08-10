@@ -2,24 +2,13 @@
 
 from aiounifi.websocket import WebsocketState
 
-from homeassistant.components.button import (
-    DOMAIN as BUTTON_DOMAIN,
-    ButtonDeviceClass,
-)
-from homeassistant.components.unifi.const import (
-    DOMAIN as UNIFI_DOMAIN,
-)
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    STATE_UNAVAILABLE,
-    EntityCategory,
-)
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
+from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_controller import (
-    setup_unifi_integration,
-)
+from .test_controller import setup_unifi_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
