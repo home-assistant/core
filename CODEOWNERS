@@ -1176,6 +1176,8 @@ build.json @home-assistant/supervisor
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
 /tests/components/spaceapi/ @fabaff
+/homeassistant/components/spanet/ @enheron
+/tests/components/spanet/ @enheron
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /tests/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /homeassistant/components/spider/ @peternijssen

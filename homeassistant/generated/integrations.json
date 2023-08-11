@@ -5311,6 +5311,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "spanet": {
+      "name": "SpaNET",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "spc": {
       "name": "Vanderbilt SPC",
       "integration_type": "hub",
