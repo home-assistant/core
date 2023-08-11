@@ -176,7 +176,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         icon="mdi:weather-rainy",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-        # imperial_suggested_unit=UnitOfVolumetricFlux.INCHES_PER_HOUR,
     ),
     WeatherFlowSensorEntityDescription(
         key="relative_humidity",
