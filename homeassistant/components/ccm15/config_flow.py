@@ -22,7 +22,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
+            vol.Coerce(int), vol.Range(min=10)
+        ),
     }
 )
 
