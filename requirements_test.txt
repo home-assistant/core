@@ -47,3 +47,4 @@ types-python-slugify==0.1.2
 types-pytz==2023.3.0.0
 types-PyYAML==6.0.12.2
 types-requests==2.31.0.1
+types-xmltodict==0.13.0.3
