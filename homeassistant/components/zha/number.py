@@ -979,9 +979,9 @@ class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
         """Return the current value."""
         return super().native_value / ZCL_TEMP
 
-    async def async_set_native_value(self, value: float):
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
-        return super().async_set_native_value(int(value * ZCL_TEMP))
+        return await super().async_set_native_value(int(value * ZCL_TEMP))
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
@@ -1164,6 +1164,6 @@ class DanfossRegulationSetpointOffset(
         """Return the current value."""
         return super().native_value / self.OFFSET_RESOLUTION
 
-    async def async_set_native_value(self, value: float):
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
-        return super().async_set_native_value(int(value * self.OFFSET_RESOLUTION))
+        return await super().async_set_native_value(int(value * self.OFFSET_RESOLUTION))
