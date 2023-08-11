@@ -89,7 +89,6 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     def __init__(self, api: IPMA_API, location: Location, entry: ConfigEntry) -> None:
         """Initialise the platform with a data instance and station name."""
         IPMADevice.__init__(self, api, location, entry)
-        self._api = api
         self._mode = entry.data.get(CONF_MODE)
         self._period = 1 if entry.data.get(CONF_MODE) == "hourly" else 24
         self._observation = None
