@@ -197,7 +197,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2023.06.1
+        uses: home-assistant/builder@2023.08.0
         with:
           args: |
             $BUILD_ARGS \
@@ -251,6 +251,7 @@ jobs:
           - raspberrypi4-64
           - tinker
           - yellow
+          - green
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3.5.3
@@ -274,7 +275,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2023.06.1
+        uses: home-assistant/builder@2023.08.0
         with:
           args: |
             $BUILD_ARGS \

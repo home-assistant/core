@@ -343,8 +343,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/enigma2/ @fbradyirl
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
-/homeassistant/components/enphase_envoy/ @gtdiehl
-/tests/components/enphase_envoy/ @gtdiehl
+/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek
+/tests/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
@@ -1373,6 +1373,8 @@ build.json @home-assistant/supervisor
 /tests/components/vulcan/ @Antoni-Czaplicki
 /homeassistant/components/wake_on_lan/ @ntilley905
 /tests/components/wake_on_lan/ @ntilley905
+/homeassistant/components/wake_word/ @home-assistant/core @synesthesiam
+/tests/components/wake_word/ @home-assistant/core @synesthesiam
 /homeassistant/components/wallbox/ @hesselonline
 /tests/components/wallbox/ @hesselonline
 /homeassistant/components/waqi/ @andrey-git

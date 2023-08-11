@@ -14,6 +14,8 @@ from .coordinator import EzvizDataUpdateCoordinator
 class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
     """Generic entity encapsulating common features of EZVIZ device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: EzvizDataUpdateCoordinator,
