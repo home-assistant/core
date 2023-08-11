@@ -421,6 +421,7 @@ omit =
     homeassistant/components/garadget/cover.py
     homeassistant/components/garages_amsterdam/__init__.py
     homeassistant/components/garages_amsterdam/binary_sensor.py
+    homeassistant/components/garages_amsterdam/entity.py
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*

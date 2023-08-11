@@ -117,3 +117,8 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
             self._attr_native_value = time
             super()._handle_coordinator_update()
             return
+
+    @property
+    def available(self) -> bool:
+        """Sensor only available when open."""
+        return super().available and self._attr_native_value is not None

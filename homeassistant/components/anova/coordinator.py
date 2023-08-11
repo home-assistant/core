@@ -6,7 +6,7 @@ from anova_wifi import AnovaOffline, AnovaPrecisionCooker, APCUpdate
 import async_timeout
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN

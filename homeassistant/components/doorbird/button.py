@@ -85,9 +85,9 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
         self.entity_description = entity_description
 
         if self._relay == IR_RELAY:
-            self._attr_name = f"{self._doorstation.name} IR"
+            self._attr_name = "IR"
         else:
-            self._attr_name = f"{self._doorstation.name} Relay {self._relay}"
+            self._attr_name = f"Relay {self._relay}"
         self._attr_unique_id = f"{self._mac_addr}_{self._relay}"
 
     def press(self) -> None:
