@@ -29,7 +29,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._app_id: str | None = None
         self._app_secret: str | None = None

@@ -21,7 +21,7 @@ from . import TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
 from tests.common import MockConfigEntry
 
 
-async def test_initial_state(hass: HomeAssistant):
+async def test_initial_state(hass: HomeAssistant) -> None:
     """Validate that entity and device states are updated on startup."""
     entity, device, _, _ = await _create_entries(hass)
 
@@ -42,7 +42,7 @@ async def test_initial_state(hass: HomeAssistant):
     assert device.manufacturer == "LEDWORKS"
 
 
-async def test_turn_on_off(hass: HomeAssistant):
+async def test_turn_on_off(hass: HomeAssistant) -> None:
     """Test support of the light.turn_on service."""
     client = ClientMock()
     client.state = False
@@ -61,7 +61,7 @@ async def test_turn_on_off(hass: HomeAssistant):
     assert state.attributes[ATTR_BRIGHTNESS] == 51
 
 
-async def test_turn_on_with_brightness(hass: HomeAssistant):
+async def test_turn_on_with_brightness(hass: HomeAssistant) -> None:
     """Test support of the light.turn_on service with a brightness parameter."""
     client = ClientMock()
     client.state = False
@@ -94,7 +94,7 @@ async def test_turn_on_with_brightness(hass: HomeAssistant):
     assert state.state == "off"
 
 
-async def test_turn_on_with_color_rgbw(hass: HomeAssistant):
+async def test_turn_on_with_color_rgbw(hass: HomeAssistant) -> None:
     """Test support of the light.turn_on service with a rgbw parameter."""
     client = ClientMock()
     client.state = False
@@ -123,7 +123,7 @@ async def test_turn_on_with_color_rgbw(hass: HomeAssistant):
     assert client.mode == "color"
 
 
-async def test_turn_on_with_color_rgb(hass: HomeAssistant):
+async def test_turn_on_with_color_rgb(hass: HomeAssistant) -> None:
     """Test support of the light.turn_on service with a rgb parameter."""
     client = ClientMock()
     client.state = False
@@ -152,7 +152,7 @@ async def test_turn_on_with_color_rgb(hass: HomeAssistant):
     assert client.mode == "color"
 
 
-async def test_turn_on_with_effect(hass: HomeAssistant):
+async def test_turn_on_with_effect(hass: HomeAssistant) -> None:
     """Test support of the light.turn_on service with effects."""
     client = ClientMock()
     client.state = False
@@ -182,7 +182,7 @@ async def test_turn_on_with_effect(hass: HomeAssistant):
     assert client.mode == "movie"
 
 
-async def test_turn_on_with_color_rgbw_and_missing_effect(hass: HomeAssistant):
+async def test_turn_on_with_color_rgbw_and_missing_effect(hass: HomeAssistant) -> None:
     """Test support of the light.turn_on service with rgbw color and missing effect support."""
     client = ClientMock()
     client.state = False
@@ -212,7 +212,7 @@ async def test_turn_on_with_color_rgbw_and_missing_effect(hass: HomeAssistant):
     assert client.default_mode == "movie"
 
 
-async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant):
+async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant) -> None:
     """Test support of the light.turn_on service with rgb color and missing effect support."""
     client = ClientMock()
     client.state = False
@@ -242,7 +242,7 @@ async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant):
     assert client.default_mode == "movie"
 
 
-async def test_turn_on_with_effect_missing_effects(hass: HomeAssistant):
+async def test_turn_on_with_effect_missing_effects(hass: HomeAssistant) -> None:
     """Test support of the light.turn_on service with effect set even if effects are not supported."""
     client = ClientMock()
     client.state = False
@@ -273,7 +273,7 @@ async def test_turn_on_with_effect_missing_effects(hass: HomeAssistant):
     assert client.mode == "movie"
 
 
-async def test_turn_off(hass: HomeAssistant):
+async def test_turn_off(hass: HomeAssistant) -> None:
     """Test support of the light.turn_off service."""
     entity, _, _, _ = await _create_entries(hass)
 
@@ -288,7 +288,7 @@ async def test_turn_off(hass: HomeAssistant):
     assert state.state == "off"
 
 
-async def test_update_name(hass: HomeAssistant):
+async def test_update_name(hass: HomeAssistant) -> None:
     """Validate device's name update behavior.
 
     Validate that if device name is changed from the Twinkly app,
@@ -308,7 +308,7 @@ async def test_update_name(hass: HomeAssistant):
     assert state.attributes["friendly_name"] == "new_device_name"
 
 
-async def test_unload(hass: HomeAssistant):
+async def test_unload(hass: HomeAssistant) -> None:
     """Validate that entities can be unloaded from the UI."""
 
     _, _, client, _ = await _create_entries(hass)
@@ -342,7 +342,7 @@ async def _create_entries(
 
     entity_id = entity_registry.async_get_entity_id("light", TWINKLY_DOMAIN, client.id)
     entity_entry = entity_registry.async_get(entity_id)
-    device = device_registry.async_get_device({(TWINKLY_DOMAIN, client.id)})
+    device = device_registry.async_get_device(identifiers={(TWINKLY_DOMAIN, client.id)})
 
     assert entity_entry is not None
     assert device is not None

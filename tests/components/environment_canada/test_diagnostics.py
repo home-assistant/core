@@ -1,5 +1,4 @@
 """Test Environment Canada diagnostics."""
-
 from datetime import datetime, timezone
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -14,6 +13,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 FIXTURE_USER_INPUT = {
     CONF_LATITUDE: 55.55,
@@ -71,7 +71,9 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
-async def test_entry_diagnostics(hass, hass_client):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test config entry diagnostics."""
 
     config_entry = await init_integration(hass)

@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
+from enum import IntFlag, StrEnum
+from functools import cache
+from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
 from uuid import UUID
 
-from typing_extensions import Required
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
@@ -79,27 +79,108 @@ class Selector(Generic[_T]):
         return {"selector": {self.selector_type: self.config}}
 
 
-SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+@cache
+def _entity_features() -> dict[str, type[IntFlag]]:
+    """Return a cached lookup of entity feature enums."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.alarm_control_panel import (
+        AlarmControlPanelEntityFeature,
+    )
+    from homeassistant.components.calendar import CalendarEntityFeature
+    from homeassistant.components.camera import CameraEntityFeature
+    from homeassistant.components.climate import ClimateEntityFeature
+    from homeassistant.components.cover import CoverEntityFeature
+    from homeassistant.components.fan import FanEntityFeature
+    from homeassistant.components.humidifier import HumidifierEntityFeature
+    from homeassistant.components.light import LightEntityFeature
+    from homeassistant.components.lock import LockEntityFeature
+    from homeassistant.components.media_player import MediaPlayerEntityFeature
+    from homeassistant.components.remote import RemoteEntityFeature
+    from homeassistant.components.siren import SirenEntityFeature
+    from homeassistant.components.update import UpdateEntityFeature
+    from homeassistant.components.vacuum import VacuumEntityFeature
+    from homeassistant.components.water_heater import WaterHeaterEntityFeature
+    from homeassistant.components.weather import WeatherEntityFeature
+
+    return {
+        "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
+        "CalendarEntityFeature": CalendarEntityFeature,
+        "CameraEntityFeature": CameraEntityFeature,
+        "ClimateEntityFeature": ClimateEntityFeature,
+        "CoverEntityFeature": CoverEntityFeature,
+        "FanEntityFeature": FanEntityFeature,
+        "HumidifierEntityFeature": HumidifierEntityFeature,
+        "LightEntityFeature": LightEntityFeature,
+        "LockEntityFeature": LockEntityFeature,
+        "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
+        "RemoteEntityFeature": RemoteEntityFeature,
+        "SirenEntityFeature": SirenEntityFeature,
+        "UpdateEntityFeature": UpdateEntityFeature,
+        "VacuumEntityFeature": VacuumEntityFeature,
+        "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
+        "WeatherEntityFeature": WeatherEntityFeature,
+    }
+
+
+def _validate_supported_feature(supported_feature: str) -> int:
+    """Validate a supported feature and resolve an enum string to its value."""
+
+    known_entity_features = _entity_features()
+
+    try:
+        _, enum, feature = supported_feature.split(".", 2)
+    except ValueError as exc:
+        raise vol.Invalid(
+            f"Invalid supported feature '{supported_feature}', expected "
+            "<domain>.<enum>.<member>"
+        ) from exc
+
+    try:
+        return cast(int, getattr(known_entity_features[enum], feature).value)
+    except (AttributeError, KeyError) as exc:
+        raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
+
+
+def _validate_supported_features(supported_features: int | list[str]) -> int:
+    """Validate a supported feature and resolve an enum string to its value."""
+
+    if isinstance(supported_features, int):
+        return supported_features
+
+    feature_mask = 0
+
+    for supported_feature in supported_features:
+        feature_mask |= _validate_supported_feature(supported_feature)
+
+    return feature_mask
+
+
+ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration that provided the entity
         vol.Optional("integration"): str,
         # Domain the entity belongs to
-        vol.Optional("domain"): vol.Any(str, [str]),
+        vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
         # Device class of the entity
-        vol.Optional("device_class"): str,
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
+        # Features supported by the entity
+        vol.Optional("supported_features"): [
+            vol.All(cv.ensure_list, [str], _validate_supported_features)
+        ],
     }
 )
 
 
-class SingleEntitySelectorConfig(TypedDict, total=False):
+class EntityFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single entity selector config."""
 
     integration: str
     domain: str | list[str]
-    device_class: str
+    device_class: str | list[str]
+    supported_features: list[str]
 
 
-SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration linked to it with a config entry
         vol.Optional("integration"): str,
@@ -108,18 +189,19 @@ SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Model of device
         vol.Optional("model"): str,
         # Device has to contain entities matching this selector
-        vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+        vol.Optional("entity"): vol.All(
+            cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+        ),
     }
 )
 
 
-class SingleDeviceSelectorConfig(TypedDict, total=False):
+class DeviceFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single device selector config."""
 
     integration: str
     manufacturer: str
     model: str
-    entity: SingleEntitySelectorConfig
 
 
 class ActionSelectorConfig(TypedDict):
@@ -176,8 +258,8 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 class AreaSelectorConfig(TypedDict, total=False):
     """Class to represent an area selector config."""
 
-    entity: SingleEntitySelectorConfig
-    device: SingleDeviceSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
     multiple: bool
 
 
@@ -189,8 +271,14 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
@@ -207,6 +295,28 @@ class AreaSelector(Selector[AreaSelectorConfig]):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [vol.Schema(str)(val) for val in data]
+
+
+class AssistPipelineSelectorConfig(TypedDict, total=False):
+    """Class to represent an assist pipeline selector config."""
+
+
+@SELECTORS.register("assist_pipeline")
+class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
+    """Selector for an assist pipeline."""
+
+    selector_type = "assist_pipeline"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: AssistPipelineSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        pipeline: str = vol.Schema(str)(data)
+        return pipeline
 
 
 class AttributeSelectorConfig(TypedDict, total=False):
@@ -239,6 +349,28 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
         """Validate the passed selection."""
         attribute: str = vol.Schema(str)(data)
         return attribute
+
+
+class BackupLocationSelectorConfig(TypedDict, total=False):
+    """Class to represent a backup location selector config."""
+
+
+@SELECTORS.register("backup_location")
+class BackupLocationSelector(Selector[BackupLocationSelectorConfig]):
+    """Selector of a backup location."""
+
+    selector_type = "backup_location"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: BackupLocationSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        name: str = vol.Match(r"^(?:\/backup|\w+)$")(data)
+        return name
 
 
 class BooleanSelectorConfig(TypedDict):
@@ -321,6 +453,27 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         return value
 
 
+class ConditionSelectorConfig(TypedDict):
+    """Class to represent an action selector config."""
+
+
+@SELECTORS.register("condition")
+class ConditionSelector(Selector[ConditionSelectorConfig]):
+    """Selector of an condition sequence (script syntax)."""
+
+    selector_type = "condition"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: ConditionSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.CONDITIONS_SCHEMA)(data)
+
+
 class ConfigEntrySelectorConfig(TypedDict, total=False):
     """Class to represent a config entry selector config."""
 
@@ -347,6 +500,66 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
         """Validate the passed selection."""
         config: str = vol.Schema(str)(data)
         return config
+
+
+class ConstantSelectorConfig(TypedDict, total=False):
+    """Class to represent a constant selector config."""
+
+    label: str
+    translation_key: str
+    value: str | int | bool
+
+
+@SELECTORS.register("constant")
+class ConstantSelector(Selector[ConstantSelectorConfig]):
+    """Constant selector."""
+
+    selector_type = "constant"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("label"): str,
+            vol.Optional("translation_key"): cv.string,
+            vol.Required("value"): vol.Any(str, int, bool),
+        }
+    )
+
+    def __init__(self, config: ConstantSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        vol.Schema(self.config["value"])(data)
+        return self.config["value"]
+
+
+class ConversationAgentSelectorConfig(TypedDict, total=False):
+    """Class to represent a conversation agent selector config."""
+
+    language: str
+
+
+@SELECTORS.register("conversation_agent")
+class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
+    """Selector for a conversation agent."""
+
+    selector_type = "conversation_agent"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("language"): str,
+        }
+    )
+
+    def __init__(self, config: ConversationAgentSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        agent: str = vol.Schema(str)(data)
+        return agent
 
 
 class DateSelectorConfig(TypedDict):
@@ -393,14 +606,12 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         return data
 
 
-class DeviceSelectorConfig(TypedDict, total=False):
+class DeviceSelectorConfig(DeviceFilterSelectorConfig, total=False):
     """Class to represent a device selector config."""
 
-    integration: str
-    manufacturer: str
-    model: str
-    entity: SingleEntitySelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     multiple: bool
+    filter: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 @SELECTORS.register("device")
@@ -409,8 +620,14 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
 
     selector_type = "device"
 
-    CONFIG_SCHEMA = SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA.extend(
-        {vol.Optional("multiple", default=False): cv.boolean}
+    CONFIG_SCHEMA = DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("filter"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+        },
     )
 
     def __init__(self, config: DeviceSelectorConfig | None = None) -> None:
@@ -457,12 +674,13 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
+class EntitySelectorConfig(EntityFilterSelectorConfig, total=False):
     """Class to represent an entity selector config."""
 
     exclude_entities: list[str]
     include_entities: list[str]
     multiple: bool
+    filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
 
 
 @SELECTORS.register("entity")
@@ -471,11 +689,15 @@ class EntitySelector(Selector[EntitySelectorConfig]):
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("filter"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
         }
     )
 
@@ -538,6 +760,40 @@ class IconSelector(Selector[IconSelectorConfig]):
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
         return icon
+
+
+class LanguageSelectorConfig(TypedDict, total=False):
+    """Class to represent an language selector config."""
+
+    languages: list[str]
+    native_name: bool
+    no_sort: bool
+
+
+@SELECTORS.register("language")
+class LanguageSelector(Selector[LanguageSelectorConfig]):
+    """Selector for an language."""
+
+    selector_type = "language"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("languages"): [str],
+            vol.Optional("native_name", default=False): cv.boolean,
+            vol.Optional("no_sort", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: LanguageSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        language: str = vol.Schema(str)(data)
+        if "languages" in self.config and language not in self.config["languages"]:
+            raise vol.Invalid(f"Value {language} is not a valid option")
+        return language
 
 
 class LocationSelectorConfig(TypedDict, total=False):
@@ -734,6 +990,7 @@ class SelectSelectorConfig(TypedDict, total=False):
     custom_value: bool
     mode: SelectSelectorMode
     translation_key: str
+    sort: bool
 
 
 @SELECTORS.register("select")
@@ -751,6 +1008,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
             vol.Optional("translation_key"): cv.string,
+            vol.Optional("sort", default=False): cv.boolean,
         }
     )
 
@@ -784,8 +1042,8 @@ class SelectSelector(Selector[SelectSelectorConfig]):
 class TargetSelectorConfig(TypedDict, total=False):
     """Class to represent a target selector config."""
 
-    entity: SingleEntitySelectorConfig
-    device: SingleDeviceSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 class StateSelectorConfig(TypedDict, total=False):
@@ -832,8 +1090,14 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
         }
     )
 
@@ -875,6 +1139,7 @@ class TextSelectorConfig(TypedDict, total=False):
     """Class to represent a text selector config."""
 
     multiline: bool
+    prefix: str
     suffix: str
     type: TextSelectorType
     autocomplete: str
@@ -907,6 +1172,7 @@ class TextSelector(Selector[TextSelectorConfig]):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("multiline", default=False): bool,
+            vol.Optional("prefix"): str,
             vol.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.
@@ -937,7 +1203,11 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     selector_type = "theme"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("include_default", default=False): cv.boolean,
+        }
+    )
 
     def __init__(self, config: ThemeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

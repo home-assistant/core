@@ -95,7 +95,7 @@ async def test_vacuum_with_error(
 
 
 @pytest.mark.parametrize(
-    "service,command,extra",
+    ("service", "command", "extra"),
     [
         (SERVICE_START, "start_cleaning", None),
         (SERVICE_TURN_OFF, "set_power_status", None),

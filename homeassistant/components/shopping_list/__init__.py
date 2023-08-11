@@ -13,10 +13,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import JsonArrayType, load_json_array
 
 from .const import (
+    ATTR_REVERSE,
+    DEFAULT_REVERSE,
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
@@ -26,6 +29,7 @@ from .const import (
     SERVICE_INCOMPLETE_ALL,
     SERVICE_INCOMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
+    SERVICE_SORT,
 )
 
 ATTR_COMPLETE = "complete"
@@ -37,6 +41,9 @@ PERSISTENCE = ".shopping_list.json"
 
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 SERVICE_LIST_SCHEMA = vol.Schema({})
+SERVICE_SORT_SCHEMA = vol.Schema(
+    {vol.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -110,6 +117,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Clear all completed items from the list."""
         await data.async_clear_completed()
 
+    async def sort_list_service(call: ServiceCall) -> None:
+        """Sort all items by name."""
+        await data.async_sort(call.data[ATTR_REVERSE])
+
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
 
@@ -146,6 +157,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         clear_completed_items_service,
         schema=SERVICE_LIST_SCHEMA,
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SORT,
+        sort_list_service,
+        schema=SERVICE_SORT_SCHEMA,
+    )
 
     hass.http.register_view(ShoppingListView)
     hass.http.register_view(CreateShoppingListItemView)
@@ -173,10 +190,10 @@ class NoMatchingShoppingListItem(Exception):
 class ShoppingData:
     """Class to hold shopping list data."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the shopping list."""
         self.hass = hass
-        self.items = []
+        self.items: JsonArrayType = []
 
     async def async_add(self, name, context=None):
         """Add a shopping list item."""
@@ -276,16 +293,26 @@ class ShoppingData:
             context=context,
         )
 
-    async def async_load(self):
+    async def async_sort(self, reverse=False, context=None):
+        """Sort items by name."""
+        self.items = sorted(self.items, key=lambda item: item["name"], reverse=reverse)
+        self.hass.async_add_executor_job(self.save)
+        self.hass.bus.async_fire(
+            EVENT_SHOPPING_LIST_UPDATED,
+            {"action": "sorted"},
+            context=context,
+        )
+
+    async def async_load(self) -> None:
         """Load items."""
 
-        def load():
+        def load() -> JsonArrayType:
             """Load the items synchronously."""
-            return load_json(self.hass.config.path(PERSISTENCE), default=[])
+            return load_json_array(self.hass.config.path(PERSISTENCE))
 
         self.items = await self.hass.async_add_executor_job(load)
 
-    def save(self):
+    def save(self) -> None:
         """Save the items."""
         save_json(self.hass.config.path(PERSISTENCE), self.items)
 

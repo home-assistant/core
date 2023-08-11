@@ -10,9 +10,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
@@ -49,12 +49,12 @@ class ValveControllerBinarySensorDescription(
 PAIRED_SENSOR_DESCRIPTIONS = (
     BinarySensorEntityDescription(
         key=SENSOR_KIND_LEAK_DETECTED,
-        name="Leak detected",
+        translation_key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     BinarySensorEntityDescription(
         key=SENSOR_KIND_MOVED,
-        name="Recently moved",
+        translation_key="moved",
         device_class=BinarySensorDeviceClass.MOVING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -63,7 +63,7 @@ PAIRED_SENSOR_DESCRIPTIONS = (
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerBinarySensorDescription(
         key=SENSOR_KIND_LEAK_DETECTED,
-        name="Leak detected",
+        translation_key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
         api_category=API_SYSTEM_ONBOARD_SENSOR_STATUS,
     ),

@@ -7,12 +7,13 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.canary.const import CONF_FFMPEG_ARGUMENTS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import YAML_CONFIG, init_integration
 
 
-async def test_import_from_yaml(hass, canary) -> None:
+async def test_import_from_yaml(hass: HomeAssistant, canary) -> None:
     """Test import from YAML."""
     with patch(
         "homeassistant.components.canary.async_setup_entry",
@@ -29,7 +30,7 @@ async def test_import_from_yaml(hass, canary) -> None:
     assert entries[0].data[CONF_TIMEOUT] == 5
 
 
-async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
+async def test_import_from_yaml_ffmpeg(hass: HomeAssistant, canary) -> None:
     """Test import from YAML with ffmpeg arguments."""
     with patch(
         "homeassistant.components.canary.async_setup_entry",
@@ -54,7 +55,7 @@ async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
     assert entries[0].data.get(CONF_FFMPEG_ARGUMENTS) == "-v"
 
 
-async def test_unload_entry(hass, canary):
+async def test_unload_entry(hass: HomeAssistant, canary) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 
@@ -69,7 +70,7 @@ async def test_unload_entry(hass, canary):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_raises_entry_not_ready(hass, canary):
+async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant, canary) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     canary.side_effect = ConnectTimeout()
 

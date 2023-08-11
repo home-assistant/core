@@ -10,16 +10,22 @@ from homeassistant.components.home_plus_control.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_full_flow(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -83,7 +89,9 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_entry_in_progress(hass, current_request_with_host):
+async def test_abort_if_entry_in_progress(
+    hass: HomeAssistant, current_request_with_host: None
+) -> None:
     """Check flow abort when an entry is already in progress."""
     assert await setup.async_setup_component(
         hass,
@@ -110,7 +118,9 @@ async def test_abort_if_entry_in_progress(hass, current_request_with_host):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_abort_if_entry_exists(hass, current_request_with_host):
+async def test_abort_if_entry_exists(
+    hass: HomeAssistant, current_request_with_host: None
+) -> None:
     """Check flow abort when an entry already exists."""
     existing_entry = MockConfigEntry(domain=DOMAIN)
     existing_entry.add_to_hass(hass)
@@ -136,8 +146,11 @@ async def test_abort_if_entry_exists(hass, current_request_with_host):
 
 
 async def test_abort_if_invalid_token(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check flow abort when the token has an invalid value."""
     assert await setup.async_setup_component(
         hass,

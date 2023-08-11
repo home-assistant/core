@@ -1,7 +1,0 @@
-{
-    "config": {
-        "error": {
-            "cannot_receive_deviceinfo": "No se pudo recuperar la direcci\u00f3n MAC. Aseg\u00farate de que el dispositivo est\u00e9 encendido"
-        }
-    }
-}

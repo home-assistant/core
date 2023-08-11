@@ -1,10 +1,10 @@
 {
   "domain": "remember_the_milk",
   "name": "Remember The Milk",
-  "documentation": "https://www.home-assistant.io/integrations/remember_the_milk",
-  "requirements": ["RtmAPI==0.7.2", "httplib2==0.20.4"],
-  "dependencies": ["configurator"],
   "codeowners": [],
+  "dependencies": ["configurator"],
+  "documentation": "https://www.home-assistant.io/integrations/remember_the_milk",
   "iot_class": "cloud_push",
-  "loggers": ["rtmapi"]
+  "loggers": ["rtmapi"],
+  "requirements": ["RtmAPI==0.7.2", "httplib2==0.20.4"]
 }

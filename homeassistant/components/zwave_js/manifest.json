@@ -1,12 +1,15 @@
 {
   "domain": "zwave_js",
   "name": "Z-Wave",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/zwave_js",
-  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.45.1"],
   "codeowners": ["@home-assistant/z-wave"],
+  "config_flow": true,
   "dependencies": ["usb", "http", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/zwave_js",
+  "integration_type": "hub",
   "iot_class": "local_push",
+  "loggers": ["zwave_js_server"],
+  "quality_scale": "platinum",
+  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.50.1"],
   "usb": [
     {
       "vid": "0658",
@@ -20,7 +23,5 @@
       "known_devices": ["Nortek HUSBZB-1"]
     }
   ],
-  "zeroconf": ["_zwave-js-server._tcp.local."],
-  "loggers": ["zwave_js_server"],
-  "integration_type": "hub"
+  "zeroconf": ["_zwave-js-server._tcp.local."]
 }

@@ -13,8 +13,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Pla
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
@@ -26,6 +25,7 @@ from .const import (
     COORDINATOR_OBSERVATION,
     DOMAIN,
     NWS_DATA,
+    UPDATE_TIME_PERIOD,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,11 +110,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     nws_data = SimpleNWS(latitude, longitude, api_key, client_session)
     await nws_data.set_station(station)
 
+    async def update_observation() -> None:
+        """Retrieve recent observations."""
+        await nws_data.update_observation(start_time=utcnow() - UPDATE_TIME_PERIOD)
+
     coordinator_observation = NwsDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"NWS observation station {station}",
-        update_method=nws_data.update_observation,
+        update_method=update_observation,
         update_interval=DEFAULT_SCAN_INTERVAL,
         failed_update_interval=FAILED_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(

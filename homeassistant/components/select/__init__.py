@@ -102,7 +102,7 @@ async def async_select_option(entity: SelectEntity, service_call: ServiceCall) -
     """Service call wrapper to set a new value."""
     option = service_call.data[ATTR_OPTION]
     if option not in entity.options:
-        raise ValueError(f"Option {option} not valid for {entity.name}")
+        raise ValueError(f"Option {option} not valid for {entity.entity_id}")
     await entity.async_select_option(option)
 
 
@@ -144,9 +144,10 @@ class SelectEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if self.current_option is None or self.current_option not in self.options:
+        current_option = self.current_option
+        if current_option is None or current_option not in self.options:
             return None
-        return self.current_option
+        return current_option
 
     @property
     def options(self) -> list[str]:
@@ -209,21 +210,24 @@ class SelectEntity(Entity):
     async def _async_offset_index(self, offset: int, cycle: bool) -> None:
         """Offset current index."""
         current_index = 0
-        if self.current_option is not None and self.current_option in self.options:
-            current_index = self.options.index(self.current_option)
+        current_option = self.current_option
+        options = self.options
+        if current_option is not None and current_option in self.options:
+            current_index = self.options.index(current_option)
 
         new_index = current_index + offset
         if cycle:
-            new_index = new_index % len(self.options)
+            new_index = new_index % len(options)
         elif new_index < 0:
             new_index = 0
-        elif new_index >= len(self.options):
-            new_index = len(self.options) - 1
+        elif new_index >= len(options):
+            new_index = len(options) - 1
 
-        await self.async_select_option(self.options[new_index])
+        await self.async_select_option(options[new_index])
 
     @final
     async def _async_select_index(self, idx: int) -> None:
         """Select new option by index."""
-        new_index = idx % len(self.options)
-        await self.async_select_option(self.options[new_index])
+        options = self.options
+        new_index = idx % len(options)
+        await self.async_select_option(options[new_index])

@@ -10,8 +10,8 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -20,9 +20,8 @@ from .const import (
     NAME_FORMAT,
     PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
-    SERVERS,
 )
-from .helpers import pretty_title
+from .helpers import get_plex_server, pretty_title
 
 LIBRARY_ATTRIBUTE_TYPES = {
     "artist": ["artist", "album"],
@@ -57,7 +56,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    plexserver = hass.data[DOMAIN][SERVERS][server_id]
+    plexserver = get_plex_server(hass, server_id)
     sensors = [PlexSensor(hass, plexserver)]
 
     def create_library_sensors():

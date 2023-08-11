@@ -23,13 +23,13 @@
           "port": "[%key:common::config_flow::data::port%]",
           "host": "[%key:common::config_flow::data::host%]",
           "route_back": "Route back / NAT mode",
-          "local_ip": "Local IP of Home Assistant"
+          "local_ip": "Local IP interface"
         },
         "data_description": {
           "port": "Port of the KNX/IP tunneling device.",
-          "host": "IP address of the KNX/IP tunneling device.",
+          "host": "IP address or hostname of the KNX/IP tunneling device.",
           "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT. Only applies for UDP connections.",
-          "local_ip": "Leave blank to use auto-discovery."
+          "local_ip": "Local IP or interface name used for the connection from Home Assistant. Leave blank to use auto-discovery."
         }
       },
       "secure_key_source": {
@@ -42,14 +42,13 @@
         }
       },
       "secure_knxkeys": {
-        "title": "Keyfile",
-        "description": "Please enter the information for your `.knxkeys` file.",
+        "title": "Import KNX Keyring",
+        "description": "Please select a `.knxkeys` file to import.",
         "data": {
-          "knxkeys_filename": "The filename of your `.knxkeys` file (including extension)",
+          "knxkeys_file": "Keyring file",
           "knxkeys_password": "The password to decrypt the `.knxkeys` file"
         },
         "data_description": {
-          "knxkeys_filename": "The file is expected to be found in your config directory in `.storage/knx/`.\nIn Home Assistant OS this would be `/config/.storage/knx/`\nExample: `my_project.knxkeys`",
           "knxkeys_password": "This was set when exporting the file from ETS."
         }
       },
@@ -76,7 +75,7 @@
       },
       "secure_routing_manual": {
         "title": "Secure routing",
-        "description": "Please enter your IP secure information.",
+        "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
         "data": {
           "backbone_key": "Backbone key",
           "sync_latency_tolerance": "Network latency tolerance"
@@ -94,11 +93,11 @@
           "routing_secure": "Use KNX IP Secure",
           "multicast_group": "Multicast group",
           "multicast_port": "Multicast port",
-          "local_ip": "Local IP of Home Assistant"
+          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]"
         },
         "data_description": {
           "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
-          "local_ip": "Leave blank to use auto-discovery."
+          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
         }
       }
     },
@@ -126,25 +125,28 @@
         "title": "KNX Settings",
         "menu_options": {
           "connection_type": "Configure KNX interface",
-          "communication_settings": "Communication settings"
+          "communication_settings": "Communication settings",
+          "secure_knxkeys": "Import a `.knxkeys` file"
         }
       },
       "communication_settings": {
-        "title": "Communication settings",
+        "title": "[%key:component::knx::options::step::options_init::menu_options::communication_settings%]",
         "data": {
           "state_updater": "State updater",
-          "rate_limit": "Rate limit"
+          "rate_limit": "Rate limit",
+          "telegram_log_size": "Telegram history limit"
         },
         "data_description": {
           "state_updater": "Set default for reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve entity states from the KNX Bus. Can be overridden by `sync_state` entity options.",
-          "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: 0 or 20 to 40"
+          "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: 0 or 20 to 40",
+          "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
         }
       },
       "connection_type": {
         "title": "[%key:component::knx::config::step::connection_type::title%]",
-        "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
+        "description": "[%key:component::knx::config::step::connection_type::description%]",
         "data": {
-          "connection_type": "KNX Connection Type"
+          "connection_type": "[%key:component::knx::config::step::connection_type::data::connection_type%]"
         }
       },
       "tunnel": {
@@ -184,11 +186,10 @@
         "title": "[%key:component::knx::config::step::secure_knxkeys::title%]",
         "description": "[%key:component::knx::config::step::secure_knxkeys::description%]",
         "data": {
-          "knxkeys_filename": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_filename%]",
+          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
           "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]"
         },
         "data_description": {
-          "knxkeys_filename": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_filename%]",
           "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
         }
       },
@@ -253,6 +254,125 @@
       "no_router_discovered": "[%key:component::knx::config::error::no_router_discovered%]",
       "no_tunnel_discovered": "[%key:component::knx::config::error::no_tunnel_discovered%]",
       "unsupported_tunnel_type": "[%key:component::knx::config::error::unsupported_tunnel_type%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "individual_address": {
+        "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
+      },
+      "connected_since": {
+        "name": "Connection established"
+      },
+      "connection_type": {
+        "name": "Connection type"
+      },
+      "telegrams_incoming": {
+        "name": "Incoming telegrams"
+      },
+      "telegrams_incoming_error": {
+        "name": "Incoming telegram errors"
+      },
+      "telegrams_outgoing": {
+        "name": "Outgoing telegrams"
+      },
+      "telegrams_outgoing_error": {
+        "name": "Outgoing telegram errors"
+      },
+      "telegram_count": {
+        "name": "Telegrams"
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "telegram": "Telegram sent or received"
+    }
+  },
+  "services": {
+    "send": {
+      "name": "Send to KNX bus",
+      "description": "Sends arbitrary data directly to the KNX bus.",
+      "fields": {
+        "address": {
+          "name": "Group address",
+          "description": "Group address(es) to write to. Lists will send to multiple group addresses successively."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
+        },
+        "type": {
+          "name": "Value type",
+          "description": "If set, the payload will not be sent as raw bytes, but encoded as given DPT. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
+        },
+        "response": {
+          "name": "Send as Response",
+          "description": "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
+        }
+      }
+    },
+    "read": {
+      "name": "Reads from KNX bus",
+      "description": "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
+      "fields": {
+        "address": {
+          "name": "[%key:component::knx::services::send::fields::address::name%]",
+          "description": "Group address(es) to send read request to. Lists will read multiple group addresses."
+        }
+      }
+    },
+    "event_register": {
+      "name": "Registers knx_event",
+      "description": "Add or remove group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed.",
+      "fields": {
+        "address": {
+          "name": "[%key:component::knx::services::send::fields::address::name%]",
+          "description": "Group address(es) that shall be added or removed. Lists are allowed."
+        },
+        "type": {
+          "name": "Value type",
+          "description": "If set, the payload will be decoded as given DPT in the event data `value` key. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
+        },
+        "remove": {
+          "name": "Remove event registration",
+          "description": "If `True` the group address(es) will be removed."
+        }
+      }
+    },
+    "exposure_register": {
+      "name": "Expose to KNX bus",
+      "description": "Adds or remove exposures to KNX bus. Only exposures added with this service can be removed.",
+      "fields": {
+        "address": {
+          "name": "[%key:component::knx::services::send::fields::address::name%]",
+          "description": "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered."
+        },
+        "type": {
+          "name": "Value type",
+          "description": "Telegrams will be encoded as given DPT. 'binary' and all KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity id whose state or attribute shall be exposed."
+        },
+        "attribute": {
+          "name": "Entity attribute",
+          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
+        },
+        "default": {
+          "name": "Default value",
+          "description": "Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value."
+        },
+        "remove": {
+          "name": "Remove exposure",
+          "description": "If `True` the exposure will be removed. Only `address` is required for removal."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads the KNX integration."
     }
   }
 }

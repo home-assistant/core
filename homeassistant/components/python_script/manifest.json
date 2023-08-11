@@ -1,9 +1,9 @@
 {
   "domain": "python_script",
   "name": "Python Scripts",
-  "documentation": "https://www.home-assistant.io/integrations/python_script",
-  "requirements": ["restrictedpython==6.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/python_script",
+  "loggers": ["RestrictedPython"],
   "quality_scale": "internal",
-  "loggers": ["RestrictedPython"]
+  "requirements": ["RestrictedPython==6.1"]
 }

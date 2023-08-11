@@ -1,12 +1,12 @@
 {
   "domain": "twentemilieu",
   "name": "Twente Milieu",
+  "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/twentemilieu",
-  "requirements": ["twentemilieu==0.6.1"],
-  "codeowners": ["@frenck"],
-  "quality_scale": "platinum",
-  "iot_class": "cloud_polling",
   "integration_type": "service",
-  "loggers": ["twentemilieu"]
+  "iot_class": "cloud_polling",
+  "loggers": ["twentemilieu"],
+  "quality_scale": "platinum",
+  "requirements": ["twentemilieu==1.0.0"]
 }

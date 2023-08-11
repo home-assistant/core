@@ -22,6 +22,7 @@ REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
 RE_TRANSLATION_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-z0-9-_]+(?<![_-])$")
+RE_COMBINED_REFERENCE = re.compile(r"(.+\[%)|(%\].+)")
 
 # Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
@@ -30,13 +31,16 @@ ALLOW_NAME_TRANSLATION = {
     "emulated_roku",
     "faa_delays",
     "garages_amsterdam",
+    "generic",
     "google_travel_time",
     "homekit_controller",
     "islamic_prayer_times",
+    "local_calendar",
     "local_ip",
     "nmap_tracker",
     "rpi_power",
     "waze_travel_time",
+    "zodiac",
 }
 
 REMOVED_TITLE_MSG = (
@@ -57,8 +61,9 @@ def allow_name_translation(integration: Integration) -> bool:
     """Validate that the translation name is not the same as the integration name."""
     # Only enforce for core because custom integrations can't be
     # added to allow list.
-    return integration.core and (
-        integration.domain in ALLOW_NAME_TRANSLATION
+    return (
+        not integration.core
+        or integration.domain in ALLOW_NAME_TRANSLATION
         or integration.quality_scale == "internal"
     )
 
@@ -116,6 +121,18 @@ def translation_key_validator(value: str) -> str:
     return value
 
 
+def translation_value_validator(value: Any) -> str:
+    """Validate that the value is a valid translation.
+
+    - prevents string with HTML
+    - prevents combined translations
+    """
+    value = cv.string_with_no_html(value)
+    if RE_COMBINED_REFERENCE.search(value):
+        raise vol.Invalid("the string should not contain combined translations")
+    return str(value)
+
+
 def gen_data_entry_schema(
     *,
     config: Config,
@@ -127,23 +144,24 @@ def gen_data_entry_schema(
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
     schema = {
-        vol.Optional("flow_title"): cv.string_with_no_html,
+        vol.Optional("flow_title"): translation_value_validator,
         vol.Required("step"): {
             str: {
-                step_title_class("title"): cv.string_with_no_html,
-                vol.Optional("description"): cv.string_with_no_html,
-                vol.Optional("data"): {str: cv.string_with_no_html},
-                vol.Optional("data_description"): {str: cv.string_with_no_html},
-                vol.Optional("menu_options"): {str: cv.string_with_no_html},
+                step_title_class("title"): translation_value_validator,
+                vol.Optional("description"): translation_value_validator,
+                vol.Optional("data"): {str: translation_value_validator},
+                vol.Optional("data_description"): {str: translation_value_validator},
+                vol.Optional("menu_options"): {str: translation_value_validator},
+                vol.Optional("submit"): translation_value_validator,
             }
         },
-        vol.Optional("error"): {str: cv.string_with_no_html},
-        vol.Optional("abort"): {str: cv.string_with_no_html},
-        vol.Optional("progress"): {str: cv.string_with_no_html},
-        vol.Optional("create_entry"): {str: cv.string_with_no_html},
+        vol.Optional("error"): {str: translation_value_validator},
+        vol.Optional("abort"): {str: translation_value_validator},
+        vol.Optional("progress"): {str: translation_value_validator},
+        vol.Optional("create_entry"): {str: translation_value_validator},
     }
     if flow_title == REQUIRED:
-        schema[vol.Required("title")] = cv.string_with_no_html
+        schema[vol.Required("title")] = translation_value_validator
     elif flow_title == REMOVED:
         schema[vol.Optional("title", msg=REMOVED_TITLE_MSG)] = partial(
             removed_title_validator, config, integration
@@ -200,7 +218,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
     return vol.Schema(
         {
-            vol.Optional("title"): cv.string_with_no_html,
+            vol.Optional("title"): translation_value_validator,
             vol.Optional("config"): gen_data_entry_schema(
                 config=config,
                 integration=integration,
@@ -219,59 +237,43 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             vol.Optional("selector"): cv.schema_with_slug_keys(
                 {
                     "options": cv.schema_with_slug_keys(
-                        cv.string_with_no_html, slug_validator=translation_key_validator
+                        translation_value_validator,
+                        slug_validator=translation_key_validator,
                     )
                 },
                 slug_validator=vol.Any("_", cv.slug),
             ),
             vol.Optional("device_automation"): {
-                vol.Optional("action_type"): {str: cv.string_with_no_html},
-                vol.Optional("condition_type"): {str: cv.string_with_no_html},
-                vol.Optional("trigger_type"): {str: cv.string_with_no_html},
-                vol.Optional("trigger_subtype"): {str: cv.string_with_no_html},
+                vol.Optional("action_type"): {str: translation_value_validator},
+                vol.Optional("condition_type"): {str: translation_value_validator},
+                vol.Optional("trigger_type"): {str: translation_value_validator},
+                vol.Optional("trigger_subtype"): {str: translation_value_validator},
             },
-            vol.Optional("state"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    cv.string_with_no_html, slug_validator=translation_key_validator
-                ),
-                slug_validator=vol.Any("_", cv.slug),
-            ),
-            vol.Optional("state_attributes"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    {
-                        vol.Optional("name"): str,
-                        vol.Optional("state"): cv.schema_with_slug_keys(
-                            cv.string_with_no_html,
-                            slug_validator=translation_key_validator,
-                        ),
-                    },
-                    slug_validator=translation_key_validator,
-                ),
-                slug_validator=vol.Any("_", cv.slug),
-            ),
             vol.Optional("system_health"): {
                 vol.Optional("info"): cv.schema_with_slug_keys(
-                    cv.string_with_no_html, slug_validator=translation_key_validator
+                    translation_value_validator,
+                    slug_validator=translation_key_validator,
                 ),
             },
             vol.Optional("config_panel"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(
-                    cv.string_with_no_html, slug_validator=translation_key_validator
+                    translation_value_validator,
+                    slug_validator=translation_key_validator,
                 ),
                 slug_validator=vol.Any("_", cv.slug),
             ),
             vol.Optional("application_credentials"): {
-                vol.Optional("description"): cv.string_with_no_html,
+                vol.Optional("description"): translation_value_validator,
             },
             vol.Optional("issues"): {
                 str: vol.All(
                     cv.has_at_least_one_key("description", "fix_flow"),
                     vol.Schema(
                         {
-                            vol.Required("title"): cv.string_with_no_html,
+                            vol.Required("title"): translation_value_validator,
                             vol.Exclusive(
                                 "description", "fixable"
-                            ): cv.string_with_no_html,
+                            ): translation_value_validator,
                             vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
                                 config=config,
                                 integration=integration,
@@ -282,25 +284,64 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     ),
                 )
             },
-            vol.Optional("entity"): {
-                str: {
-                    str: {
-                        vol.Optional("state_attributes"): {
-                            str: {
-                                vol.Optional("name"): cv.string_with_no_html,
-                                vol.Optional("state"): cv.schema_with_slug_keys(
-                                    cv.string_with_no_html,
-                                    slug_validator=translation_key_validator,
-                                ),
-                            }
+            vol.Optional("entity_component"): cv.schema_with_slug_keys(
+                {
+                    vol.Optional("name"): str,
+                    vol.Optional("state"): cv.schema_with_slug_keys(
+                        translation_value_validator,
+                        slug_validator=translation_key_validator,
+                    ),
+                    vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+                        {
+                            vol.Optional("name"): str,
+                            vol.Optional("state"): cv.schema_with_slug_keys(
+                                translation_value_validator,
+                                slug_validator=translation_key_validator,
+                            ),
                         },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=vol.Any("_", cv.slug),
+            ),
+            vol.Optional("entity"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    {
+                        vol.Optional("name"): translation_value_validator,
                         vol.Optional("state"): cv.schema_with_slug_keys(
-                            cv.string_with_no_html,
+                            translation_value_validator,
                             slug_validator=translation_key_validator,
                         ),
-                    }
-                }
-            },
+                        vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+                            {
+                                vol.Optional("name"): translation_value_validator,
+                                vol.Optional("state"): cv.schema_with_slug_keys(
+                                    translation_value_validator,
+                                    slug_validator=translation_key_validator,
+                                ),
+                            },
+                            slug_validator=translation_key_validator,
+                        ),
+                    },
+                    slug_validator=translation_key_validator,
+                ),
+                slug_validator=cv.slug,
+            ),
+            vol.Optional("services"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Optional("fields"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("example"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
         }
     )
 
@@ -380,7 +421,9 @@ def gen_platform_strings_schema(config: Config, integration: Integration) -> vol
     )
 
 
-ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: cv.string_with_no_html}})
+ONBOARDING_SCHEMA = vol.Schema(
+    {vol.Required("area"): {str: translation_value_validator}}
+)
 
 
 def validate_translation_file(  # noqa: C901
@@ -405,14 +448,6 @@ def validate_translation_file(  # noqa: C901
         strings_schema = gen_auth_schema(config, integration)
     elif integration.domain == "onboarding":
         strings_schema = ONBOARDING_SCHEMA
-    elif integration.domain == "binary_sensor":
-        strings_schema = gen_strings_schema(config, integration).extend(
-            {
-                vol.Optional("device_class"): cv.schema_with_slug_keys(
-                    cv.string_with_no_html, slug_validator=vol.Any("_", cv.slug)
-                )
-            }
-        )
     elif integration.domain == "homeassistant_hardware":
         strings_schema = gen_ha_hardware_schema(config, integration)
     else:

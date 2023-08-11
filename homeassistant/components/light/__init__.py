@@ -5,14 +5,13 @@ from collections.abc import Iterable
 import csv
 import dataclasses
 from datetime import timedelta
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 import logging
 import os
-from typing import Any, cast, final
+from typing import Any, Self, cast, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
@@ -67,16 +66,20 @@ ATTR_SUPPORTED_COLOR_MODES = "supported_color_modes"
 class ColorMode(StrEnum):
     """Possible light color modes."""
 
-    UNKNOWN = "unknown"  # Ambiguous color mode
-    ONOFF = "onoff"  # Must be the only supported mode
-    BRIGHTNESS = "brightness"  # Must be the only supported mode
+    UNKNOWN = "unknown"
+    """Ambiguous color mode"""
+    ONOFF = "onoff"
+    """Must be the only supported mode"""
+    BRIGHTNESS = "brightness"
+    """Must be the only supported mode"""
     COLOR_TEMP = "color_temp"
     HS = "hs"
     XY = "xy"
     RGB = "rgb"
     RGBW = "rgbw"
     RGBWW = "rgbww"
-    WHITE = "white"  # Must *NOT* be the only supported mode
+    WHITE = "white"
+    """Must *NOT* be the only supported mode"""
 
 
 # These COLOR_MODE_* constants are deprecated as of Home Assistant 2022.5.
@@ -275,7 +278,7 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
     ),
-    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): VALID_BRIGHTNESS,
+    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): vol.Any(True, VALID_BRIGHTNESS),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
@@ -404,7 +407,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         base["params"] = data
         return base
 
-    async def async_handle_light_on_service(
+    async def async_handle_light_on_service(  # noqa: C901
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle turning a light on.
@@ -556,6 +559,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
 
+        # If white is set to True, set it to the light's brightness
+        # Add a warning in Home Assistant Core 2023.5 if the brightness is set to an
+        # integer.
+        if params.get(ATTR_WHITE) is True:
+            params[ATTR_WHITE] = light.brightness
+
         # If both white and brightness are specified, override white
         if (
             supported_color_modes
@@ -679,7 +688,7 @@ class Profile:
         )
 
     @classmethod
-    def from_csv_row(cls, csv_row: list[str]) -> Profile:
+    def from_csv_row(cls, csv_row: list[str]) -> Self:
         """Create profile from a CSV row tuple."""
         return cls(*cls.SCHEMA(csv_row))
 

@@ -1,8 +1,6 @@
 """Tests for the Meross MSS425f power strip."""
-
-
-from homeassistant.const import STATE_ON, STATE_UNKNOWN
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -14,7 +12,7 @@ from ..common import (
 )
 
 
-async def test_meross_mss425f_setup(hass):
+async def test_meross_mss425f_setup(hass: HomeAssistant) -> None:
     """Test that a MSS425f can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "mss425f.json")
     await setup_test_accessories(hass, accessories)

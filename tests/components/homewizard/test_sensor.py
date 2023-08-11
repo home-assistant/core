@@ -1,5 +1,4 @@
 """Test the update coordinator for HomeWizard."""
-
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -24,6 +23,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -33,8 +33,8 @@ from tests.common import async_fire_time_changed
 
 
 async def test_sensor_entity_smr_version(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads smr version."""
 
     api = get_mock_device()
@@ -71,8 +71,8 @@ async def test_sensor_entity_smr_version(
 
 
 async def test_sensor_entity_meter_model(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads meter model."""
 
     api = get_mock_device()
@@ -111,8 +111,8 @@ async def test_sensor_entity_meter_model(
 
 
 async def test_sensor_entity_unique_meter_id(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads unique meter id."""
 
     api = get_mock_device()
@@ -150,7 +150,9 @@ async def test_sensor_entity_unique_meter_id(
     assert state.attributes.get(ATTR_ICON) == "mdi:alphabetical-variant"
 
 
-async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensor_entity_wifi_ssid(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads wifi ssid."""
 
     api = get_mock_device()
@@ -187,8 +189,8 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
 
 
 async def test_sensor_entity_active_tariff(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active_tariff."""
 
     api = get_mock_device()
@@ -226,8 +228,8 @@ async def test_sensor_entity_active_tariff(
 
 
 async def test_sensor_entity_wifi_strength(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads wifi strength."""
 
     api = get_mock_device()
@@ -252,9 +254,9 @@ async def test_sensor_entity_wifi_strength(
     assert entry.disabled
 
 
-async def test_sensor_entity_total_power_import_t1_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_total_power_import_tariff_1_kwh(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total power import t1."""
 
     api = get_mock_device()
@@ -275,9 +277,11 @@ async def test_sensor_entity_total_power_import_t1_kwh(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_total_power_import_t1")
+    state = hass.states.get(
+        "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
+    )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_total_power_import_t1"
+        "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
     )
     assert entry
     assert state
@@ -286,7 +290,7 @@ async def test_sensor_entity_total_power_import_t1_kwh(
     assert state.state == "1234.123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Total power import T1"
+        == "Product Name (aabbccddeeff) Total power import tariff 1"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
@@ -294,9 +298,9 @@ async def test_sensor_entity_total_power_import_t1_kwh(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_power_import_t2_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_total_power_import_tariff_2_kwh(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total power import t2."""
 
     api = get_mock_device()
@@ -317,9 +321,11 @@ async def test_sensor_entity_total_power_import_t2_kwh(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_total_power_import_t2")
+    state = hass.states.get(
+        "sensor.product_name_aabbccddeeff_total_power_import_tariff_2"
+    )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_total_power_import_t2"
+        "sensor.product_name_aabbccddeeff_total_power_import_tariff_2"
     )
     assert entry
     assert state
@@ -328,7 +334,7 @@ async def test_sensor_entity_total_power_import_t2_kwh(
     assert state.state == "1234.123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Total power import T2"
+        == "Product Name (aabbccddeeff) Total power import tariff 2"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
@@ -336,9 +342,9 @@ async def test_sensor_entity_total_power_import_t2_kwh(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_power_export_t1_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_total_power_export_tariff_1_kwh(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total power export t1."""
 
     api = get_mock_device()
@@ -359,9 +365,11 @@ async def test_sensor_entity_total_power_export_t1_kwh(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_total_power_export_t1")
+    state = hass.states.get(
+        "sensor.product_name_aabbccddeeff_total_power_export_tariff_1"
+    )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_total_power_export_t1"
+        "sensor.product_name_aabbccddeeff_total_power_export_tariff_1"
     )
     assert entry
     assert state
@@ -370,7 +378,7 @@ async def test_sensor_entity_total_power_export_t1_kwh(
     assert state.state == "1234.123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Total power export T1"
+        == "Product Name (aabbccddeeff) Total power export tariff 1"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
@@ -378,9 +386,9 @@ async def test_sensor_entity_total_power_export_t1_kwh(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_power_export_t2_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_total_power_export_tariff_2_kwh(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total power export t2."""
 
     api = get_mock_device()
@@ -401,9 +409,11 @@ async def test_sensor_entity_total_power_export_t2_kwh(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_total_power_export_t2")
+    state = hass.states.get(
+        "sensor.product_name_aabbccddeeff_total_power_export_tariff_2"
+    )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_total_power_export_t2"
+        "sensor.product_name_aabbccddeeff_total_power_export_tariff_2"
     )
     assert entry
     assert state
@@ -412,7 +422,7 @@ async def test_sensor_entity_total_power_export_t2_kwh(
     assert state.state == "1234.123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Total power export T2"
+        == "Product Name (aabbccddeeff) Total power export tariff 2"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
@@ -421,8 +431,8 @@ async def test_sensor_entity_total_power_export_t2_kwh(
 
 
 async def test_sensor_entity_active_power(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power."""
 
     api = get_mock_device()
@@ -459,8 +469,8 @@ async def test_sensor_entity_active_power(
 
 
 async def test_sensor_entity_active_power_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power l1."""
 
     api = get_mock_device()
@@ -479,9 +489,9 @@ async def test_sensor_entity_active_power_l1(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_l1")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_phase_1")
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_active_power_l1"
+        "sensor.product_name_aabbccddeeff_active_power_phase_1"
     )
     assert entry
     assert state
@@ -490,7 +500,7 @@ async def test_sensor_entity_active_power_l1(
     assert state.state == "123.123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Active power L1"
+        == "Product Name (aabbccddeeff) Active power phase 1"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
@@ -499,8 +509,8 @@ async def test_sensor_entity_active_power_l1(
 
 
 async def test_sensor_entity_active_power_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power l2."""
 
     api = get_mock_device()
@@ -519,9 +529,9 @@ async def test_sensor_entity_active_power_l2(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_l2")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_phase_2")
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_active_power_l2"
+        "sensor.product_name_aabbccddeeff_active_power_phase_2"
     )
     assert entry
     assert state
@@ -530,7 +540,7 @@ async def test_sensor_entity_active_power_l2(
     assert state.state == "456.456"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Active power L2"
+        == "Product Name (aabbccddeeff) Active power phase 2"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
@@ -539,8 +549,8 @@ async def test_sensor_entity_active_power_l2(
 
 
 async def test_sensor_entity_active_power_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power l3."""
 
     api = get_mock_device()
@@ -559,9 +569,9 @@ async def test_sensor_entity_active_power_l3(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_l3")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_phase_3")
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_active_power_l3"
+        "sensor.product_name_aabbccddeeff_active_power_phase_3"
     )
     assert entry
     assert state
@@ -570,7 +580,7 @@ async def test_sensor_entity_active_power_l3(
     assert state.state == "789.789"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Active power L3"
+        == "Product Name (aabbccddeeff) Active power phase 3"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
@@ -578,7 +588,9 @@ async def test_sensor_entity_active_power_l3(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensor_entity_total_gas(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total gas."""
 
     api = get_mock_device()
@@ -615,8 +627,8 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
 
 
 async def test_sensor_entity_unique_gas_meter_id(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads unique gas meter id."""
 
     api = get_mock_device()
@@ -655,8 +667,8 @@ async def test_sensor_entity_unique_gas_meter_id(
 
 
 async def test_sensor_entity_active_voltage_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active voltage l1."""
 
     api = get_mock_device()
@@ -676,7 +688,7 @@ async def test_sensor_entity_active_voltage_l1(
         entity_registry = er.async_get(hass)
 
         disabled_entry = entity_registry.async_get(
-            "sensor.product_name_aabbccddeeff_active_voltage_l1"
+            "sensor.product_name_aabbccddeeff_active_voltage_phase_1"
         )
         assert disabled_entry
         assert disabled_entry.disabled
@@ -697,12 +709,14 @@ async def test_sensor_entity_active_voltage_l1(
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.product_name_aabbccddeeff_active_voltage_l1")
+        state = hass.states.get(
+            "sensor.product_name_aabbccddeeff_active_voltage_phase_1"
+        )
         assert state
         assert state.state == "230.123"
         assert (
             state.attributes.get(ATTR_FRIENDLY_NAME)
-            == "Product Name (aabbccddeeff) Active voltage L1"
+            == "Product Name (aabbccddeeff) Active voltage phase 1"
         )
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
         assert (
@@ -714,8 +728,8 @@ async def test_sensor_entity_active_voltage_l1(
 
 
 async def test_sensor_entity_active_voltage_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active voltage l2."""
 
     api = get_mock_device()
@@ -735,7 +749,7 @@ async def test_sensor_entity_active_voltage_l2(
         entity_registry = er.async_get(hass)
 
         disabled_entry = entity_registry.async_get(
-            "sensor.product_name_aabbccddeeff_active_voltage_l2"
+            "sensor.product_name_aabbccddeeff_active_voltage_phase_2"
         )
         assert disabled_entry
         assert disabled_entry.disabled
@@ -756,12 +770,14 @@ async def test_sensor_entity_active_voltage_l2(
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.product_name_aabbccddeeff_active_voltage_l2")
+        state = hass.states.get(
+            "sensor.product_name_aabbccddeeff_active_voltage_phase_2"
+        )
         assert state
         assert state.state == "230.123"
         assert (
             state.attributes.get(ATTR_FRIENDLY_NAME)
-            == "Product Name (aabbccddeeff) Active voltage L2"
+            == "Product Name (aabbccddeeff) Active voltage phase 2"
         )
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
         assert (
@@ -773,8 +789,8 @@ async def test_sensor_entity_active_voltage_l2(
 
 
 async def test_sensor_entity_active_voltage_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active voltage l3."""
 
     api = get_mock_device()
@@ -794,7 +810,7 @@ async def test_sensor_entity_active_voltage_l3(
         entity_registry = er.async_get(hass)
 
         disabled_entry = entity_registry.async_get(
-            "sensor.product_name_aabbccddeeff_active_voltage_l3"
+            "sensor.product_name_aabbccddeeff_active_voltage_phase_3"
         )
         assert disabled_entry
         assert disabled_entry.disabled
@@ -815,12 +831,14 @@ async def test_sensor_entity_active_voltage_l3(
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.product_name_aabbccddeeff_active_voltage_l3")
+        state = hass.states.get(
+            "sensor.product_name_aabbccddeeff_active_voltage_phase_3"
+        )
         assert state
         assert state.state == "230.123"
         assert (
             state.attributes.get(ATTR_FRIENDLY_NAME)
-            == "Product Name (aabbccddeeff) Active voltage L3"
+            == "Product Name (aabbccddeeff) Active voltage phase 3"
         )
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
         assert (
@@ -832,8 +850,8 @@ async def test_sensor_entity_active_voltage_l3(
 
 
 async def test_sensor_entity_active_current_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active current l1."""
 
     api = get_mock_device()
@@ -853,7 +871,7 @@ async def test_sensor_entity_active_current_l1(
         entity_registry = er.async_get(hass)
 
         disabled_entry = entity_registry.async_get(
-            "sensor.product_name_aabbccddeeff_active_current_l1"
+            "sensor.product_name_aabbccddeeff_active_current_phase_1"
         )
         assert disabled_entry
         assert disabled_entry.disabled
@@ -874,12 +892,14 @@ async def test_sensor_entity_active_current_l1(
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.product_name_aabbccddeeff_active_current_l1")
+        state = hass.states.get(
+            "sensor.product_name_aabbccddeeff_active_current_phase_1"
+        )
         assert state
         assert state.state == "12.34"
         assert (
             state.attributes.get(ATTR_FRIENDLY_NAME)
-            == "Product Name (aabbccddeeff) Active current L1"
+            == "Product Name (aabbccddeeff) Active current phase 1"
         )
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
         assert (
@@ -891,8 +911,8 @@ async def test_sensor_entity_active_current_l1(
 
 
 async def test_sensor_entity_active_current_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active current l2."""
 
     api = get_mock_device()
@@ -912,7 +932,7 @@ async def test_sensor_entity_active_current_l2(
         entity_registry = er.async_get(hass)
 
         disabled_entry = entity_registry.async_get(
-            "sensor.product_name_aabbccddeeff_active_current_l2"
+            "sensor.product_name_aabbccddeeff_active_current_phase_2"
         )
         assert disabled_entry
         assert disabled_entry.disabled
@@ -933,12 +953,14 @@ async def test_sensor_entity_active_current_l2(
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.product_name_aabbccddeeff_active_current_l2")
+        state = hass.states.get(
+            "sensor.product_name_aabbccddeeff_active_current_phase_2"
+        )
         assert state
         assert state.state == "12.34"
         assert (
             state.attributes.get(ATTR_FRIENDLY_NAME)
-            == "Product Name (aabbccddeeff) Active current L2"
+            == "Product Name (aabbccddeeff) Active current phase 2"
         )
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
         assert (
@@ -950,8 +972,8 @@ async def test_sensor_entity_active_current_l2(
 
 
 async def test_sensor_entity_active_current_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active current l3."""
 
     api = get_mock_device()
@@ -971,7 +993,7 @@ async def test_sensor_entity_active_current_l3(
         entity_registry = er.async_get(hass)
 
         disabled_entry = entity_registry.async_get(
-            "sensor.product_name_aabbccddeeff_active_current_l3"
+            "sensor.product_name_aabbccddeeff_active_current_phase_3"
         )
         assert disabled_entry
         assert disabled_entry.disabled
@@ -992,12 +1014,14 @@ async def test_sensor_entity_active_current_l3(
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.product_name_aabbccddeeff_active_current_l3")
+        state = hass.states.get(
+            "sensor.product_name_aabbccddeeff_active_current_phase_3"
+        )
         assert state
         assert state.state == "12.34"
         assert (
             state.attributes.get(ATTR_FRIENDLY_NAME)
-            == "Product Name (aabbccddeeff) Active current L3"
+            == "Product Name (aabbccddeeff) Active current phase 3"
         )
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
         assert (
@@ -1009,8 +1033,8 @@ async def test_sensor_entity_active_current_l3(
 
 
 async def test_sensor_entity_active_frequency(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active frequency."""
 
     api = get_mock_device()
@@ -1065,8 +1089,8 @@ async def test_sensor_entity_active_frequency(
 
 
 async def test_sensor_entity_voltage_sag_count_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_sag_count_l1."""
 
     api = get_mock_device()
@@ -1085,9 +1109,11 @@ async def test_sensor_entity_voltage_sag_count_l1(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_voltage_sags_detected_l1")
+    state = hass.states.get(
+        "sensor.product_name_aabbccddeeff_voltage_sags_detected_phase_1"
+    )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_voltage_sags_detected_l1"
+        "sensor.product_name_aabbccddeeff_voltage_sags_detected_phase_1"
     )
     assert entry
     assert state
@@ -1096,7 +1122,7 @@ async def test_sensor_entity_voltage_sag_count_l1(
     assert state.state == "123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Voltage sags detected L1"
+        == "Product Name (aabbccddeeff) Voltage sags detected phase 1"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -1104,8 +1130,8 @@ async def test_sensor_entity_voltage_sag_count_l1(
 
 
 async def test_sensor_entity_voltage_sag_count_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_sag_count_l2."""
 
     api = get_mock_device()
@@ -1124,9 +1150,11 @@ async def test_sensor_entity_voltage_sag_count_l2(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_voltage_sags_detected_l2")
+    state = hass.states.get(
+        "sensor.product_name_aabbccddeeff_voltage_sags_detected_phase_2"
+    )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_voltage_sags_detected_l2"
+        "sensor.product_name_aabbccddeeff_voltage_sags_detected_phase_2"
     )
     assert entry
     assert state
@@ -1135,7 +1163,7 @@ async def test_sensor_entity_voltage_sag_count_l2(
     assert state.state == "123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Voltage sags detected L2"
+        == "Product Name (aabbccddeeff) Voltage sags detected phase 2"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -1143,8 +1171,8 @@ async def test_sensor_entity_voltage_sag_count_l2(
 
 
 async def test_sensor_entity_voltage_sag_count_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_sag_count_l3."""
 
     api = get_mock_device()
@@ -1163,9 +1191,11 @@ async def test_sensor_entity_voltage_sag_count_l3(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_voltage_sags_detected_l3")
+    state = hass.states.get(
+        "sensor.product_name_aabbccddeeff_voltage_sags_detected_phase_3"
+    )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_voltage_sags_detected_l3"
+        "sensor.product_name_aabbccddeeff_voltage_sags_detected_phase_3"
     )
     assert entry
     assert state
@@ -1174,7 +1204,7 @@ async def test_sensor_entity_voltage_sag_count_l3(
     assert state.state == "123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Voltage sags detected L3"
+        == "Product Name (aabbccddeeff) Voltage sags detected phase 3"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -1182,8 +1212,8 @@ async def test_sensor_entity_voltage_sag_count_l3(
 
 
 async def test_sensor_entity_voltage_swell_count_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_swell_count_l1."""
 
     api = get_mock_device()
@@ -1203,10 +1233,10 @@ async def test_sensor_entity_voltage_swell_count_l1(
     entity_registry = er.async_get(hass)
 
     state = hass.states.get(
-        "sensor.product_name_aabbccddeeff_voltage_swells_detected_l1"
+        "sensor.product_name_aabbccddeeff_voltage_swells_detected_phase_1"
     )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_voltage_swells_detected_l1"
+        "sensor.product_name_aabbccddeeff_voltage_swells_detected_phase_1"
     )
     assert entry
     assert state
@@ -1215,7 +1245,7 @@ async def test_sensor_entity_voltage_swell_count_l1(
     assert state.state == "123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Voltage swells detected L1"
+        == "Product Name (aabbccddeeff) Voltage swells detected phase 1"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -1223,8 +1253,8 @@ async def test_sensor_entity_voltage_swell_count_l1(
 
 
 async def test_sensor_entity_voltage_swell_count_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_swell_count_l2."""
 
     api = get_mock_device()
@@ -1244,10 +1274,10 @@ async def test_sensor_entity_voltage_swell_count_l2(
     entity_registry = er.async_get(hass)
 
     state = hass.states.get(
-        "sensor.product_name_aabbccddeeff_voltage_swells_detected_l2"
+        "sensor.product_name_aabbccddeeff_voltage_swells_detected_phase_2"
     )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_voltage_swells_detected_l2"
+        "sensor.product_name_aabbccddeeff_voltage_swells_detected_phase_2"
     )
     assert entry
     assert state
@@ -1256,7 +1286,7 @@ async def test_sensor_entity_voltage_swell_count_l2(
     assert state.state == "123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Voltage swells detected L2"
+        == "Product Name (aabbccddeeff) Voltage swells detected phase 2"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -1264,8 +1294,8 @@ async def test_sensor_entity_voltage_swell_count_l2(
 
 
 async def test_sensor_entity_voltage_swell_count_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_swell_count_l3."""
 
     api = get_mock_device()
@@ -1285,10 +1315,10 @@ async def test_sensor_entity_voltage_swell_count_l3(
     entity_registry = er.async_get(hass)
 
     state = hass.states.get(
-        "sensor.product_name_aabbccddeeff_voltage_swells_detected_l3"
+        "sensor.product_name_aabbccddeeff_voltage_swells_detected_phase_3"
     )
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_voltage_swells_detected_l3"
+        "sensor.product_name_aabbccddeeff_voltage_swells_detected_phase_3"
     )
     assert entry
     assert state
@@ -1297,7 +1327,7 @@ async def test_sensor_entity_voltage_swell_count_l3(
     assert state.state == "123"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Voltage swells detected L3"
+        == "Product Name (aabbccddeeff) Voltage swells detected phase 3"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -1305,8 +1335,8 @@ async def test_sensor_entity_voltage_swell_count_l3(
 
 
 async def test_sensor_entity_any_power_fail_count(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads any power fail count."""
 
     api = get_mock_device()
@@ -1344,8 +1374,8 @@ async def test_sensor_entity_any_power_fail_count(
 
 
 async def test_sensor_entity_long_power_fail_count(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads long power fail count."""
 
     api = get_mock_device()
@@ -1385,8 +1415,8 @@ async def test_sensor_entity_long_power_fail_count(
 
 
 async def test_sensor_entity_active_power_average(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power average."""
 
     api = get_mock_device()
@@ -1428,8 +1458,8 @@ async def test_sensor_entity_active_power_average(
 
 
 async def test_sensor_entity_monthly_power_peak(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads monthly power peak."""
 
     api = get_mock_device()
@@ -1471,8 +1501,8 @@ async def test_sensor_entity_monthly_power_peak(
 
 
 async def test_sensor_entity_active_liters(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active liters (watermeter)."""
 
     api = get_mock_device()
@@ -1512,8 +1542,8 @@ async def test_sensor_entity_active_liters(
 
 
 async def test_sensor_entity_total_liters(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total liters (watermeter)."""
 
     api = get_mock_device()
@@ -1553,8 +1583,8 @@ async def test_sensor_entity_total_liters(
 
 
 async def test_sensor_entity_disabled_when_null(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test sensor disables data with null by default."""
 
     api = get_mock_device()
@@ -1578,12 +1608,12 @@ async def test_sensor_entity_disabled_when_null(
     entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_active_power_l2"
+        "sensor.product_name_aabbccddeeff_active_power_phase_2"
     )
     assert entry is None
 
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_active_power_l3"
+        "sensor.product_name_aabbccddeeff_active_power_phase_3"
     )
     assert entry is None
 
@@ -1592,8 +1622,8 @@ async def test_sensor_entity_disabled_when_null(
 
 
 async def test_sensor_entity_export_disabled_when_unused(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test sensor disables export if value is 0."""
 
     api = get_mock_device()
@@ -1629,19 +1659,21 @@ async def test_sensor_entity_export_disabled_when_unused(
     assert entry.disabled
 
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_total_power_export_t1"
+        "sensor.product_name_aabbccddeeff_total_power_export_tariff_1"
     )
     assert entry
     assert entry.disabled
 
     entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_total_power_export_t2"
+        "sensor.product_name_aabbccddeeff_total_power_export_tariff_2"
     )
     assert entry
     assert entry.disabled
 
 
-async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensors_unreachable(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test sensor handles api unreachable."""
 
     api = get_mock_device()
@@ -1663,7 +1695,7 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
 
         assert (
             hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
             ).state
             == "1234.123"
         )
@@ -1673,7 +1705,7 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
         await hass.async_block_till_done()
         assert (
             hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
             ).state
             == "unavailable"
         )
@@ -1683,13 +1715,15 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
         await hass.async_block_till_done()
         assert (
             hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
             ).state
             == "1234.123"
         )
 
 
-async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
+async def test_api_disabled(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test sensor handles api unreachable."""
 
     api = get_mock_device()
@@ -1711,7 +1745,7 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
 
         assert (
             hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
             ).state
             == "1234.123"
         )
@@ -1721,7 +1755,7 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
         await hass.async_block_till_done()
         assert (
             hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
+                "sensor.product_name_aabbccddeeff_total_power_import_tariff_1"
             ).state
             == "unavailable"
         )

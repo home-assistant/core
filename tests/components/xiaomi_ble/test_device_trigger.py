@@ -18,9 +18,8 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import make_advertisement
@@ -59,7 +58,7 @@ async def _async_setup_xiaomi_device(hass, mac: str):
     return config_entry
 
 
-async def test_event_motion_detected(hass):
+async def test_event_motion_detected(hass: HomeAssistant) -> None:
     """Make sure that a motion detected event is fired."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -82,7 +81,9 @@ async def test_event_motion_detected(hass):
     await hass.async_block_till_done()
 
 
-async def test_get_triggers(hass):
+async def test_get_triggers(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we get the expected triggers from a Xiaomi BLE motion sensor."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -98,8 +99,7 @@ async def test_get_triggers(hass):
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -118,7 +118,9 @@ async def test_get_triggers(hass):
     await hass.async_block_till_done()
 
 
-async def test_get_triggers_for_invalid_xiami_ble_device(hass):
+async def test_get_triggers_for_invalid_xiami_ble_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we don't get triggers for an invalid device."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -134,8 +136,7 @@ async def test_get_triggers_for_invalid_xiami_ble_device(hass):
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    dev_reg = async_get_dev_reg(hass)
-    invalid_device = dev_reg.async_get_or_create(
+    invalid_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "invdevmac")},
     )
@@ -149,7 +150,9 @@ async def test_get_triggers_for_invalid_xiami_ble_device(hass):
     await hass.async_block_till_done()
 
 
-async def test_get_triggers_for_invalid_device_id(hass):
+async def test_get_triggers_for_invalid_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we don't get triggers when using an invalid device_id."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -163,11 +166,9 @@ async def test_get_triggers_for_invalid_device_id(hass):
     # wait for the event
     await hass.async_block_till_done()
 
-    dev_reg = async_get_dev_reg(hass)
-
-    invalid_device = dev_reg.async_get_or_create(
+    invalid_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert invalid_device
     triggers = await async_get_device_automations(
@@ -179,7 +180,9 @@ async def test_get_triggers_for_invalid_device_id(hass):
     await hass.async_block_till_done()
 
 
-async def test_if_fires_on_motion_detected(hass, calls):
+async def test_if_fires_on_motion_detected(
+    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+) -> None:
     """Test for motion event trigger firing."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -193,8 +196,7 @@ async def test_if_fires_on_motion_detected(hass, calls):
     # wait for the event
     await hass.async_block_till_done()
 
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(
@@ -236,7 +238,11 @@ async def test_if_fires_on_motion_detected(hass, calls):
     await hass.async_block_till_done()
 
 
-async def test_automation_with_invalid_trigger_type(hass, caplog):
+async def test_automation_with_invalid_trigger_type(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test for automation with invalid trigger type."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -250,8 +256,7 @@ async def test_automation_with_invalid_trigger_type(hass, caplog):
     # wait for the event
     await hass.async_block_till_done()
 
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(
@@ -282,7 +287,11 @@ async def test_automation_with_invalid_trigger_type(hass, caplog):
     await hass.async_block_till_done()
 
 
-async def test_automation_with_invalid_trigger_event_property(hass, caplog):
+async def test_automation_with_invalid_trigger_event_property(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test for automation with invalid trigger event property."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -296,8 +305,7 @@ async def test_automation_with_invalid_trigger_event_property(hass, caplog):
     # wait for the event
     await hass.async_block_till_done()
 
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(
@@ -328,7 +336,9 @@ async def test_automation_with_invalid_trigger_event_property(hass, caplog):
     await hass.async_block_till_done()
 
 
-async def test_triggers_for_invalid__model(hass, calls):
+async def test_triggers_for_invalid__model(
+    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+) -> None:
     """Test invalid model doesn't return triggers."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -342,9 +352,8 @@ async def test_triggers_for_invalid__model(hass, calls):
     # wait for the event
     await hass.async_block_till_done()
 
-    dev_reg = async_get_dev_reg(hass)
     # modify model to invalid model
-    invalid_model = dev_reg.async_get_or_create(
+    invalid_model = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, mac)},
         model="invalid model",

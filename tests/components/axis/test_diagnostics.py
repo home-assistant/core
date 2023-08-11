@@ -1,16 +1,19 @@
 """Test Axis diagnostics."""
-
 import pytest
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
 from .const import API_DISCOVERY_BASIC_DEVICE_INFO
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
-async def test_entry_diagnostics(hass, hass_client, setup_config_entry):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, setup_config_entry
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, setup_config_entry
@@ -34,6 +37,11 @@ async def test_entry_diagnostics(hass, hass_client, setup_config_entry):
             "source": "user",
             "unique_id": REDACTED,
             "disabled_by": None,
+        },
+        "camera_sources": {
+            "Image": "http://1.2.3.4:80/axis-cgi/jpg/image.cgi",
+            "MJPEG": "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi",
+            "Stream": "rtsp://user:pass@1.2.3.4/axis-media/media.amp?videocodec=h264",
         },
         "api_discovery": [
             {

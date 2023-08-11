@@ -4,9 +4,9 @@ This Koogeek device has a custom power sensor that extra handling.
 
 It should have 2 entities - the actual switch and a sensor for power usage.
 """
-
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import POWER_WATT
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -18,7 +18,7 @@ from ..common import (
 )
 
 
-async def test_koogeek_sw2_setup(hass):
+async def test_koogeek_sw2_setup(hass: HomeAssistant) -> None:
     """Test that a Koogeek LS1 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "koogeek_sw2.json")
     await setup_test_accessories(hass, accessories)

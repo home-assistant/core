@@ -25,6 +25,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -69,7 +70,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -79,8 +80,8 @@ async def test_setup(hass):
         (38.0, -3.0),
         category="Category 1",
         attribution="Attribution 1",
-        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
-        updated=datetime.datetime(2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc),
+        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        updated=datetime.datetime(2018, 9, 22, 8, 10, tzinfo=datetime.UTC),
         status="Status 1",
     )
     mock_entry_2 = _generate_mock_feed_entry("2345", "Title 2", 20.5, (38.1, -3.1))
@@ -118,10 +119,10 @@ async def test_setup(hass):
                 ATTR_CATEGORY: "Category 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
                 ),
                 ATTR_UPDATED_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 10, tzinfo=datetime.UTC
                 ),
                 ATTR_STATUS: "Status 1",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
@@ -188,7 +189,7 @@ async def test_setup(hass):
             assert len(all_states) == 0
 
 
-async def test_setup_with_custom_location(hass):
+async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(

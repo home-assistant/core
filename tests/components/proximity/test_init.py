@@ -1,10 +1,10 @@
 """The tests for the Proximity component."""
-
 from homeassistant.components.proximity import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_proximities(hass):
+async def test_proximities(hass: HomeAssistant) -> None:
     """Test a list of proximities."""
     config = {
         "proximity": {
@@ -33,7 +33,7 @@ async def test_proximities(hass):
         assert state.state == "0"
 
 
-async def test_proximities_setup(hass):
+async def test_proximities_setup(hass: HomeAssistant) -> None:
     """Test a list of proximities with missing devices."""
     config = {
         "proximity": {
@@ -49,7 +49,7 @@ async def test_proximities_setup(hass):
     assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_proximity(hass):
+async def test_proximity(hass: HomeAssistant) -> None:
     """Test the proximity."""
     config = {
         "proximity": {
@@ -74,7 +74,7 @@ async def test_proximity(hass):
     assert state.state == "0"
 
 
-async def test_device_tracker_test1_in_zone(hass):
+async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
     """Test for tracker in zone."""
     config = {
         "proximity": {
@@ -100,7 +100,7 @@ async def test_device_tracker_test1_in_zone(hass):
     assert state.attributes.get("dir_of_travel") == "arrived"
 
 
-async def test_device_trackers_in_zone(hass):
+async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
     """Test for trackers in zone."""
     config = {
         "proximity": {
@@ -134,7 +134,7 @@ async def test_device_trackers_in_zone(hass):
     assert state.attributes.get("dir_of_travel") == "arrived"
 
 
-async def test_device_tracker_test1_away(hass):
+async def test_device_tracker_test1_away(hass: HomeAssistant) -> None:
     """Test for tracker state away."""
     config = {
         "proximity": {
@@ -160,7 +160,7 @@ async def test_device_tracker_test1_away(hass):
     assert state.attributes.get("dir_of_travel") == "unknown"
 
 
-async def test_device_tracker_test1_awayfurther(hass):
+async def test_device_tracker_test1_awayfurther(hass: HomeAssistant) -> None:
     """Test for tracker state away further."""
 
     config_zones(hass)
@@ -199,7 +199,7 @@ async def test_device_tracker_test1_awayfurther(hass):
     assert state.attributes.get("dir_of_travel") == "away_from"
 
 
-async def test_device_tracker_test1_awaycloser(hass):
+async def test_device_tracker_test1_awaycloser(hass: HomeAssistant) -> None:
     """Test for tracker state away closer."""
     config_zones(hass)
     await hass.async_block_till_done()
@@ -237,7 +237,7 @@ async def test_device_tracker_test1_awaycloser(hass):
     assert state.attributes.get("dir_of_travel") == "towards"
 
 
-async def test_all_device_trackers_in_ignored_zone(hass):
+async def test_all_device_trackers_in_ignored_zone(hass: HomeAssistant) -> None:
     """Test for tracker in ignored zone."""
     config = {
         "proximity": {
@@ -259,7 +259,7 @@ async def test_all_device_trackers_in_ignored_zone(hass):
     assert state.attributes.get("dir_of_travel") == "not set"
 
 
-async def test_device_tracker_test1_no_coordinates(hass):
+async def test_device_tracker_test1_no_coordinates(hass: HomeAssistant) -> None:
     """Test for tracker with no coordinates."""
     config = {
         "proximity": {
@@ -282,7 +282,9 @@ async def test_device_tracker_test1_no_coordinates(hass):
     assert state.attributes.get("dir_of_travel") == "not set"
 
 
-async def test_device_tracker_test1_awayfurther_than_test2_first_test1(hass):
+async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
+    hass: HomeAssistant,
+) -> None:
     """Test for tracker ordering."""
     config_zones(hass)
     await hass.async_block_till_done()
@@ -332,7 +334,9 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(hass):
     assert state.attributes.get("dir_of_travel") == "unknown"
 
 
-async def test_device_tracker_test1_awayfurther_than_test2_first_test2(hass):
+async def test_device_tracker_test1_awayfurther_than_test2_first_test2(
+    hass: HomeAssistant,
+) -> None:
     """Test for tracker ordering."""
     config_zones(hass)
     await hass.async_block_till_done()
@@ -380,7 +384,9 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(hass):
     assert state.attributes.get("dir_of_travel") == "unknown"
 
 
-async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(hass):
+async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(
+    hass: HomeAssistant,
+) -> None:
     """Test for tracker states."""
     hass.states.async_set(
         "device_tracker.test1", "not_home", {"friendly_name": "test1"}
@@ -413,7 +419,9 @@ async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(hass):
     assert state.attributes.get("dir_of_travel") == "unknown"
 
 
-async def test_device_tracker_test1_awayfurther_test2_first(hass):
+async def test_device_tracker_test1_awayfurther_test2_first(
+    hass: HomeAssistant,
+) -> None:
     """Test for tracker state."""
     config_zones(hass)
     await hass.async_block_till_done()
@@ -477,7 +485,7 @@ async def test_device_tracker_test1_awayfurther_test2_first(hass):
     assert state.attributes.get("dir_of_travel") == "unknown"
 
 
-async def test_device_tracker_test1_awayfurther_a_bit(hass):
+async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> None:
     """Test for tracker states."""
     assert await async_setup_component(
         hass,
@@ -515,7 +523,9 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass):
     assert state.attributes.get("dir_of_travel") == "stationary"
 
 
-async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(hass):
+async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
+    hass: HomeAssistant,
+) -> None:
     """Test for tracker states."""
     config_zones(hass)
     await hass.async_block_till_done()

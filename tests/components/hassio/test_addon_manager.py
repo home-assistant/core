@@ -257,7 +257,7 @@ async def test_get_addon_info_not_installed(
 
 
 @pytest.mark.parametrize(
-    "addon_info_state, addon_state",
+    ("addon_info_state", "addon_state"),
     [("started", AddonState.RUNNING), ("stopped", AddonState.NOT_RUNNING)],
 )
 async def test_get_addon_info(
@@ -279,7 +279,12 @@ async def test_get_addon_info(
 
 
 @pytest.mark.parametrize(
-    "addon_info_error, addon_info_calls, addon_store_info_error, addon_store_info_calls",
+    (
+        "addon_info_error",
+        "addon_info_calls",
+        "addon_store_info_error",
+        "addon_store_info_calls",
+    ),
     [(HassioAPIError("Boom"), 1, None, 1), (None, 0, HassioAPIError("Boom"), 1)],
 )
 async def test_get_addon_info_error(
@@ -746,9 +751,11 @@ async def test_schedule_update_addon(
 
 @pytest.mark.parametrize(
     (
-        "create_backup_error, create_backup_calls, "
-        "update_addon_error, update_addon_calls, "
-        "error_message"
+        "create_backup_error",
+        "create_backup_calls",
+        "update_addon_error",
+        "update_addon_calls",
+        "error_message",
     ),
     [
         (
@@ -794,9 +801,11 @@ async def test_schedule_update_addon_error(
 
 @pytest.mark.parametrize(
     (
-        "create_backup_error, create_backup_calls, "
-        "update_addon_error, update_addon_calls, "
-        "error_log"
+        "create_backup_error",
+        "create_backup_calls",
+        "update_addon_error",
+        "update_addon_calls",
+        "error_log",
     ),
     [
         (
@@ -918,10 +927,13 @@ async def test_schedule_install_setup_addon(
 
 @pytest.mark.parametrize(
     (
-        "install_addon_error, install_addon_calls, "
-        "set_addon_options_error, set_addon_options_calls, "
-        "start_addon_error, start_addon_calls, "
-        "error_message"
+        "install_addon_error",
+        "install_addon_calls",
+        "set_addon_options_error",
+        "set_addon_options_calls",
+        "start_addon_error",
+        "start_addon_calls",
+        "error_message",
     ),
     [
         (
@@ -984,10 +996,13 @@ async def test_schedule_install_setup_addon_error(
 
 @pytest.mark.parametrize(
     (
-        "install_addon_error, install_addon_calls, "
-        "set_addon_options_error, set_addon_options_calls, "
-        "start_addon_error, start_addon_calls, "
-        "error_log"
+        "install_addon_error",
+        "install_addon_calls",
+        "set_addon_options_error",
+        "set_addon_options_calls",
+        "start_addon_error",
+        "start_addon_calls",
+        "error_log",
     ),
     [
         (
@@ -1081,9 +1096,11 @@ async def test_schedule_setup_addon(
 
 @pytest.mark.parametrize(
     (
-        "set_addon_options_error, set_addon_options_calls, "
-        "start_addon_error, start_addon_calls, "
-        "error_message"
+        "set_addon_options_error",
+        "set_addon_options_calls",
+        "start_addon_error",
+        "start_addon_calls",
+        "error_message",
     ),
     [
         (
@@ -1128,9 +1145,11 @@ async def test_schedule_setup_addon_error(
 
 @pytest.mark.parametrize(
     (
-        "set_addon_options_error, set_addon_options_calls, "
-        "start_addon_error, start_addon_calls, "
-        "error_log"
+        "set_addon_options_error",
+        "set_addon_options_calls",
+        "start_addon_error",
+        "start_addon_calls",
+        "error_log",
     ),
     [
         (

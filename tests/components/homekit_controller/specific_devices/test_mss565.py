@@ -1,7 +1,6 @@
 """Tests for the Meross MSS565 wall switch."""
-
-
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -13,7 +12,7 @@ from ..common import (
 )
 
 
-async def test_meross_mss565_setup(hass):
+async def test_meross_mss565_setup(hass: HomeAssistant) -> None:
     """Test that a MSS565 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "mss565.json")
     await setup_test_accessories(hass, accessories)

@@ -6,6 +6,7 @@ import plexapi.audio
 from plexapi.exceptions import NotFound
 import plexapi.playqueue
 import pytest
+import requests_mock
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.components.plex.const import (
@@ -19,6 +20,7 @@ from homeassistant.components.plex.const import (
 )
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, SECONDARY_DATA
@@ -27,14 +29,14 @@ from tests.common import MockConfigEntry
 
 
 async def test_refresh_library(
-    hass,
+    hass: HomeAssistant,
     mock_plex_server,
     setup_plex_server,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     empty_payload,
     plex_server_accounts,
     plex_server_base,
-):
+) -> None:
     """Test refresh_library service call."""
     url = mock_plex_server.url_in_use
     refresh = requests_mock.get(
@@ -43,7 +45,7 @@ async def test_refresh_library(
 
     # Test with non-existent server
     with pytest.raises(HomeAssistantError):
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_LIBRARY,
             {"server_name": "Not a Server", "library_name": "Movies"},
@@ -52,7 +54,7 @@ async def test_refresh_library(
     assert not refresh.called
 
     # Test with non-existent library
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
         {"library_name": "Not a Library"},
@@ -61,7 +63,7 @@ async def test_refresh_library(
     assert not refresh.called
 
     # Test with valid library
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
         {"library_name": "Movies"},
@@ -94,7 +96,7 @@ async def test_refresh_library(
 
     # Test multiple servers available but none specified
     with pytest.raises(HomeAssistantError) as excinfo:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_LIBRARY,
             {"library_name": "Movies"},
@@ -104,9 +106,9 @@ async def test_refresh_library(
     assert refresh.call_count == 1
 
 
-async def test_scan_clients(hass, mock_plex_server):
+async def test_scan_clients(hass: HomeAssistant, mock_plex_server) -> None:
     """Test scan_for_clients service call."""
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SCAN_CLIENTS,
         blocking=True,
@@ -114,13 +116,13 @@ async def test_scan_clients(hass, mock_plex_server):
 
 
 async def test_lookup_media_for_other_integrations(
-    hass,
+    hass: HomeAssistant,
     entry,
     setup_plex_server,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     playqueue_1234,
     playqueue_created,
-):
+) -> None:
     """Test media lookup for media_player.play_media calls from cast/sonos."""
     CONTENT_ID = PLEX_URI_SCHEME + '{"library_name": "Music", "artist_name": "Artist"}'
     CONTENT_ID_KEY = PLEX_URI_SCHEME + "100"
@@ -212,7 +214,7 @@ async def test_lookup_media_for_other_integrations(
     assert isinstance(result.media, plexapi.playqueue.PlayQueue)
 
 
-async def test_lookup_media_with_urls(hass, mock_plex_server):
+async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> None:
     """Test media lookup for media_player.play_media calls from cast/sonos."""
     CONTENT_ID_URL = f"{PLEX_URI_SCHEME}{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/100"
 

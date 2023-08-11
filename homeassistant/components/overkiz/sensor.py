@@ -20,6 +20,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
@@ -28,12 +29,17 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OVERKIZ_STATE_TO_TRANSLATION
+from .const import (
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    OVERKIZ_STATE_TO_TRANSLATION,
+    OVERKIZ_UNIT_TO_HA,
+)
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
@@ -61,7 +67,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery",
         device_class=SensorDeviceClass.ENUM,
-        options=["full", "normal", "low", "verylow"],
+        options=["full", "normal", "medium", "low", "verylow"],
         translation_key="battery",
     ),
     OverkizSensorDescription(
@@ -110,8 +116,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.IO_OUTLET_ENGINE,
         name="Outlet engine",
         icon="mdi:fan-chevron-down",
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
@@ -472,6 +477,29 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
 
         return state.value
 
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        if (
+            not (default_unit := self.entity_description.native_unit_of_measurement)
+            or not (state := self.device.states.get(self.entity_description.key))
+            or not state.value
+        ):
+            return default_unit
+
+        attrs = self.device.attributes
+        if (unit := attrs[f"{state.name}MeasuredValueType"]) and (
+            unit_value := unit.value_as_str
+        ):
+            return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
+
+        if (unit := attrs[OverkizAttribute.CORE_MEASURED_VALUE_TYPE]) and (
+            unit_value := unit.value_as_str
+        ):
+            return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
+
+        return default_unit
+
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
     """Representation of an Overkiz HomeKit Setup Code."""
@@ -499,6 +527,6 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         # By default this sensor will be listed at a virtual HomekitStack device,
         # but it makes more sense to show this at the gateway device
         # in the entity registry.
-        return {
-            "identifiers": {(DOMAIN, self.executor.get_gateway_id())},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.executor.get_gateway_id())},
+        )

@@ -4,21 +4,22 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import datetime
+import logging
 import os
 from pathlib import Path
 from typing import Any
 
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
+from freebox_api.api.home import Home
 from freebox_api.api.wifi import Wifi
-from freebox_api.exceptions import NotOpenError
+from freebox_api.exceptions import HttpRequestError, NotOpenError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
@@ -27,9 +28,12 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
+    HOME_COMPATIBLE_PLATFORMS,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -67,14 +71,19 @@ class FreeboxRouter:
 
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
+        self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
+        self.home_granted = True
+        self.home_devices: dict[str, Any] = {}
+        self.listeners: list[dict[str, Any]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
         await self.update_device_trackers()
         await self.update_sensors()
+        await self.update_home_devices()
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
@@ -136,6 +145,8 @@ class FreeboxRouter:
 
         await self._update_disks_sensors()
 
+        await self._update_raids_sensors()
+
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
     async def _update_disks_sensors(self) -> None:
@@ -145,6 +156,41 @@ class FreeboxRouter:
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
+
+    async def _update_raids_sensors(self) -> None:
+        """Update Freebox raids."""
+        # None at first request
+        try:
+            fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
+        except HttpRequestError:
+            _LOGGER.warning("Unable to enumerate raid disks")
+        else:
+            for fbx_raid in fbx_raids:
+                self.raids[fbx_raid["id"]] = fbx_raid
+
+    async def update_home_devices(self) -> None:
+        """Update Home devices (alarm, light, sensor, switch, remote ...)."""
+        if not self.home_granted:
+            return
+
+        try:
+            home_nodes: list[Any] = await self.home.get_home_nodes() or []
+        except HttpRequestError:
+            self.home_granted = False
+            _LOGGER.warning("Home access is not granted")
+            return
+
+        new_device = False
+        for home_node in home_nodes:
+            if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
+                if self.home_devices.get(home_node["id"]) is None:
+                    new_device = True
+                self.home_devices[home_node["id"]] = home_node
+
+        async_dispatcher_send(self.hass, self.signal_home_device_update)
+
+        if new_device:
+            async_dispatcher_send(self.hass, self.signal_home_device_new)
 
     async def reboot(self) -> None:
         """Reboot the Freebox."""
@@ -173,6 +219,11 @@ class FreeboxRouter:
         return f"{DOMAIN}-{self._host}-device-new"
 
     @property
+    def signal_home_device_new(self) -> str:
+        """Event specific per Freebox entry to signal new home device."""
+        return f"{DOMAIN}-{self._host}-home-device-new"
+
+    @property
     def signal_device_update(self) -> str:
         """Event specific per Freebox entry to signal updates in devices."""
         return f"{DOMAIN}-{self._host}-device-update"
@@ -181,6 +232,11 @@ class FreeboxRouter:
     def signal_sensor_update(self) -> str:
         """Event specific per Freebox entry to signal updates in sensors."""
         return f"{DOMAIN}-{self._host}-sensor-update"
+
+    @property
+    def signal_home_device_update(self) -> str:
+        """Event specific per Freebox entry to signal update in home devices."""
+        return f"{DOMAIN}-{self._host}-home-device-update"
 
     @property
     def sensors(self) -> dict[str, Any]:
@@ -196,3 +252,8 @@ class FreeboxRouter:
     def wifi(self) -> Wifi:
         """Return the wifi."""
         return self._api.wifi
+
+    @property
+    def home(self) -> Home:
+        """Return the home."""
+        return self._api.home

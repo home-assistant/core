@@ -1,7 +1,7 @@
 {
   "domain": "thomson",
   "name": "Thomson",
-  "documentation": "https://www.home-assistant.io/integrations/thomson",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/thomson",
   "iot_class": "local_polling"
 }

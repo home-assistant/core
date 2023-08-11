@@ -203,7 +203,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Determine if the device is a homekit bridge or accessory."""
         dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device(
-            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
+            connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
         )
 
         if device is None:
@@ -375,9 +375,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # pylint: disable-next=import-outside-toplevel
         from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement
 
-        await self.async_set_unique_id(discovery_info.address)
-        self._abort_if_unique_id_configured()
-
         mfr_data = discovery_info.manufacturer_data
 
         try:
@@ -386,6 +383,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except ValueError:
             return self.async_abort(reason="ignored_model")
+
+        await self.async_set_unique_id(normalize_hkid(device.id))
+        self._abort_if_unique_id_configured()
 
         if not (device.status_flags & StatusFlags.UNPAIRED):
             return self.async_abort(reason="already_paired")

@@ -13,6 +13,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -54,7 +55,7 @@ def _mock_config_entry():
     )
 
 
-async def test_sensors(hass):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test data coming back from inverter."""
     mock_entry = _mock_config_entry()
 
@@ -81,20 +82,20 @@ async def test_sensors(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        power = hass.states.get("sensor.power_output")
+        power = hass.states.get("sensor.mydevicename_power_output")
         assert power
         assert power.state == "45.7"
 
-        temperature = hass.states.get("sensor.temperature")
+        temperature = hass.states.get("sensor.mydevicename_temperature")
         assert temperature
         assert temperature.state == "9.9"
 
-        energy = hass.states.get("sensor.total_energy")
+        energy = hass.states.get("sensor.mydevicename_total_energy")
         assert energy
         assert energy.state == "12.35"
 
 
-async def test_sensor_dark(hass):
+async def test_sensor_dark(hass: HomeAssistant) -> None:
     """Test that darkness (no comms) is handled correctly."""
     mock_entry = _mock_config_entry()
 
@@ -119,7 +120,7 @@ async def test_sensor_dark(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        power = hass.states.get("sensor.power_output")
+        power = hass.states.get("sensor.mydevicename_power_output")
         assert power is not None
         assert power.state == "45.7"
 
@@ -130,7 +131,7 @@ async def test_sensor_dark(hass):
     ):
         async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
         await hass.async_block_till_done()
-        power = hass.states.get("sensor.power_output")
+        power = hass.states.get("sensor.mydevicename_power_output")
         assert power.state == "unknown"
     # sun rose again
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
@@ -138,7 +139,7 @@ async def test_sensor_dark(hass):
     ):
         async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
         await hass.async_block_till_done()
-        power = hass.states.get("sensor.power_output")
+        power = hass.states.get("sensor.mydevicename_power_output")
         assert power is not None
         assert power.state == "45.7"
     # sunset
@@ -148,11 +149,11 @@ async def test_sensor_dark(hass):
     ):
         async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
         await hass.async_block_till_done()
-        power = hass.states.get("sensor.power_output")
+        power = hass.states.get("sensor.mydevicename_power_output")
         assert power.state == "unknown"  # should this be 'available'?
 
 
-async def test_sensor_unknown_error(hass):
+async def test_sensor_unknown_error(hass: HomeAssistant) -> None:
     """Test other comms error is handled correctly."""
     mock_entry = _mock_config_entry()
 
@@ -163,5 +164,5 @@ async def test_sensor_unknown_error(hass):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
-        power = hass.states.get("sensor.power_output")
+        power = hass.states.get("sensor.mydevicename_power_output")
         assert power is None

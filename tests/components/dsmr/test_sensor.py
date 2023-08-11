@@ -4,7 +4,6 @@ Tests setup of the DSMR component and ensure incoming telegrams cause
 Entity to be updated with new values.
 
 """
-
 import asyncio
 import datetime
 from decimal import Decimal
@@ -20,6 +19,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -28,12 +28,13 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, patch
 
 
-async def test_default_setup(hass, dsmr_connection_fixture):
+async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -119,6 +120,10 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert (
+        active_tariff.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Electricity Meter Active tariff"
+    )
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
@@ -127,6 +132,10 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+    assert (
+        gas_consumption.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Gas Meter Gas consumption"
+    )
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
@@ -137,7 +146,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     )
 
 
-async def test_setup_only_energy(hass, dsmr_connection_fixture):
+async def test_setup_only_energy(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test the default setup."""
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -166,7 +175,7 @@ async def test_setup_only_energy(hass, dsmr_connection_fixture):
     assert not entry
 
 
-async def test_v4_meter(hass, dsmr_connection_fixture):
+async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v4 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -242,7 +251,7 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     )
 
 
-async def test_v5_meter(hass, dsmr_connection_fixture):
+async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -314,7 +323,7 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     )
 
 
-async def test_luxembourg_meter(hass, dsmr_connection_fixture):
+async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -403,7 +412,7 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     )
 
 
-async def test_belgian_meter(hass, dsmr_connection_fixture):
+async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -475,7 +484,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     )
 
 
-async def test_belgian_meter_low(hass, dsmr_connection_fixture):
+async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -523,7 +532,7 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
 
-async def test_swedish_meter(hass, dsmr_connection_fixture):
+async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -596,7 +605,7 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     )
 
 
-async def test_easymeter(hass, dsmr_connection_fixture):
+async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Q3D meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -672,7 +681,7 @@ async def test_easymeter(hass, dsmr_connection_fixture):
     )
 
 
-async def test_tcp(hass, dsmr_connection_fixture):
+async def test_tcp(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """If proper config provided TCP connection should be made."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -700,7 +709,7 @@ async def test_tcp(hass, dsmr_connection_fixture):
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
-async def test_rfxtrx_tcp(hass, rfxtrx_dsmr_connection_fixture):
+async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -> None:
     """If proper config provided RFXtrx TCP connection should be made."""
     (connection_factory, transport, protocol) = rfxtrx_dsmr_connection_fixture
 
@@ -728,7 +737,9 @@ async def test_rfxtrx_tcp(hass, rfxtrx_dsmr_connection_fixture):
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
-async def test_connection_errors_retry(hass, dsmr_connection_fixture):
+async def test_connection_errors_retry(
+    hass: HomeAssistant, dsmr_connection_fixture
+) -> None:
     """Connection should be retried on error during setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -765,7 +776,7 @@ async def test_connection_errors_retry(hass, dsmr_connection_fixture):
         assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
 
 
-async def test_reconnect(hass, dsmr_connection_fixture):
+async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """If transport disconnects, the connection should be retried."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -822,7 +833,9 @@ async def test_reconnect(hass, dsmr_connection_fixture):
     assert mock_entry.state == config_entries.ConfigEntryState.NOT_LOADED
 
 
-async def test_gas_meter_providing_energy_reading(hass, dsmr_connection_fixture):
+async def test_gas_meter_providing_energy_reading(
+    hass: HomeAssistant, dsmr_connection_fixture
+) -> None:
     """Test that gas providing energy readings use the correct device class."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 

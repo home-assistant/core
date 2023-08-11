@@ -2,6 +2,7 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import get_next_aid, setup_test_component
@@ -38,9 +39,28 @@ def create_window_covering_service_with_h_tilt(accessory):
 
     tilt_current = service.add_char(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT)
     tilt_current.value = 0
+    tilt_current.minValue = 0
+    tilt_current.maxValue = 90
 
     tilt_target = service.add_char(CharacteristicsTypes.HORIZONTAL_TILT_TARGET)
     tilt_target.value = 0
+    tilt_target.minValue = 0
+    tilt_target.maxValue = 90
+
+
+def create_window_covering_service_with_h_tilt_2(accessory):
+    """Define a window-covering characteristics as per page 219 of HAP spec."""
+    service = create_window_covering_service(accessory)
+
+    tilt_current = service.add_char(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT)
+    tilt_current.value = 0
+    tilt_current.minValue = -90
+    tilt_current.maxValue = 0
+
+    tilt_target = service.add_char(CharacteristicsTypes.HORIZONTAL_TILT_TARGET)
+    tilt_target.value = 0
+    tilt_target.minValue = -90
+    tilt_target.maxValue = 0
 
 
 def create_window_covering_service_with_v_tilt(accessory):
@@ -49,12 +69,31 @@ def create_window_covering_service_with_v_tilt(accessory):
 
     tilt_current = service.add_char(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
     tilt_current.value = 0
+    tilt_current.minValue = 0
+    tilt_current.maxValue = 90
 
     tilt_target = service.add_char(CharacteristicsTypes.VERTICAL_TILT_TARGET)
     tilt_target.value = 0
+    tilt_target.minValue = 0
+    tilt_target.maxValue = 90
 
 
-async def test_change_window_cover_state(hass, utcnow):
+def create_window_covering_service_with_v_tilt_2(accessory):
+    """Define a window-covering characteristics as per page 219 of HAP spec."""
+    service = create_window_covering_service(accessory)
+
+    tilt_current = service.add_char(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
+    tilt_current.value = 0
+    tilt_current.minValue = -90
+    tilt_current.maxValue = 0
+
+    tilt_target = service.add_char(CharacteristicsTypes.VERTICAL_TILT_TARGET)
+    tilt_target.value = 0
+    tilt_target.minValue = -90
+    tilt_target.maxValue = 0
+
+
+async def test_change_window_cover_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can turn a HomeKit alarm on and off again."""
     helper = await setup_test_component(hass, create_window_covering_service)
 
@@ -79,7 +118,7 @@ async def test_change_window_cover_state(hass, utcnow):
     )
 
 
-async def test_read_window_cover_state(hass, utcnow):
+async def test_read_window_cover_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit alarm accessory."""
     helper = await setup_test_component(hass, create_window_covering_service)
 
@@ -112,7 +151,7 @@ async def test_read_window_cover_state(hass, utcnow):
     assert state.attributes["obstruction-detected"] is True
 
 
-async def test_read_window_cover_tilt_horizontal(hass, utcnow):
+async def test_read_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) -> None:
     """Test that horizontal tilt is handled correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_h_tilt
@@ -123,10 +162,26 @@ async def test_read_window_cover_tilt_horizontal(hass, utcnow):
         {CharacteristicsTypes.HORIZONTAL_TILT_CURRENT: 75},
     )
     state = await helper.poll_and_get_state()
-    assert state.attributes["current_tilt_position"] == 75
+    # Expect converted value from arcdegree scale to percentage scale.
+    assert state.attributes["current_tilt_position"] == 83
 
 
-async def test_read_window_cover_tilt_vertical(hass, utcnow):
+async def test_read_window_cover_tilt_horizontal_2(hass: HomeAssistant, utcnow) -> None:
+    """Test that horizontal tilt is handled correctly."""
+    helper = await setup_test_component(
+        hass, create_window_covering_service_with_h_tilt_2
+    )
+
+    await helper.async_update(
+        ServicesTypes.WINDOW_COVERING,
+        {CharacteristicsTypes.HORIZONTAL_TILT_CURRENT: -75},
+    )
+    state = await helper.poll_and_get_state()
+    # Expect converted value from arcdegree scale to percentage scale.
+    assert state.attributes["current_tilt_position"] == 83
+
+
+async def test_read_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> None:
     """Test that vertical tilt is handled correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_v_tilt
@@ -137,10 +192,26 @@ async def test_read_window_cover_tilt_vertical(hass, utcnow):
         {CharacteristicsTypes.VERTICAL_TILT_CURRENT: 75},
     )
     state = await helper.poll_and_get_state()
-    assert state.attributes["current_tilt_position"] == 75
+    # Expect converted value from arcdegree scale to percentage scale.
+    assert state.attributes["current_tilt_position"] == 83
 
 
-async def test_write_window_cover_tilt_horizontal(hass, utcnow):
+async def test_read_window_cover_tilt_vertical_2(hass: HomeAssistant, utcnow) -> None:
+    """Test that vertical tilt is handled correctly."""
+    helper = await setup_test_component(
+        hass, create_window_covering_service_with_v_tilt_2
+    )
+
+    await helper.async_update(
+        ServicesTypes.WINDOW_COVERING,
+        {CharacteristicsTypes.VERTICAL_TILT_CURRENT: -75},
+    )
+    state = await helper.poll_and_get_state()
+    # Expect converted value from arcdegree scale to percentage scale.
+    assert state.attributes["current_tilt_position"] == 83
+
+
+async def test_write_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) -> None:
     """Test that horizontal tilt is written correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_h_tilt
@@ -152,15 +223,39 @@ async def test_write_window_cover_tilt_horizontal(hass, utcnow):
         {"entity_id": helper.entity_id, "tilt_position": 90},
         blocking=True,
     )
+    # Expect converted value from percentage scale to arcdegree scale.
     helper.async_assert_service_values(
         ServicesTypes.WINDOW_COVERING,
         {
-            CharacteristicsTypes.HORIZONTAL_TILT_TARGET: 90,
+            CharacteristicsTypes.HORIZONTAL_TILT_TARGET: 81,
         },
     )
 
 
-async def test_write_window_cover_tilt_vertical(hass, utcnow):
+async def test_write_window_cover_tilt_horizontal_2(
+    hass: HomeAssistant, utcnow
+) -> None:
+    """Test that horizontal tilt is written correctly."""
+    helper = await setup_test_component(
+        hass, create_window_covering_service_with_h_tilt_2
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_tilt_position",
+        {"entity_id": helper.entity_id, "tilt_position": 90},
+        blocking=True,
+    )
+    # Expect converted value from percentage scale to arcdegree scale.
+    helper.async_assert_service_values(
+        ServicesTypes.WINDOW_COVERING,
+        {
+            CharacteristicsTypes.HORIZONTAL_TILT_TARGET: -81,
+        },
+    )
+
+
+async def test_write_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> None:
     """Test that vertical tilt is written correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_v_tilt
@@ -172,15 +267,37 @@ async def test_write_window_cover_tilt_vertical(hass, utcnow):
         {"entity_id": helper.entity_id, "tilt_position": 90},
         blocking=True,
     )
+    # Expect converted value from percentage scale to arcdegree scale.
     helper.async_assert_service_values(
         ServicesTypes.WINDOW_COVERING,
         {
-            CharacteristicsTypes.VERTICAL_TILT_TARGET: 90,
+            CharacteristicsTypes.VERTICAL_TILT_TARGET: 81,
         },
     )
 
 
-async def test_window_cover_stop(hass, utcnow):
+async def test_write_window_cover_tilt_vertical_2(hass: HomeAssistant, utcnow) -> None:
+    """Test that vertical tilt is written correctly."""
+    helper = await setup_test_component(
+        hass, create_window_covering_service_with_v_tilt_2
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_tilt_position",
+        {"entity_id": helper.entity_id, "tilt_position": 90},
+        blocking=True,
+    )
+    # Expect converted value from percentage scale to arcdegree scale.
+    helper.async_assert_service_values(
+        ServicesTypes.WINDOW_COVERING,
+        {
+            CharacteristicsTypes.VERTICAL_TILT_TARGET: -81,
+        },
+    )
+
+
+async def test_window_cover_stop(hass: HomeAssistant, utcnow) -> None:
     """Test that vertical tilt is written correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_v_tilt
@@ -216,7 +333,7 @@ def create_garage_door_opener_service(accessory):
     return service
 
 
-async def test_change_door_state(hass, utcnow):
+async def test_change_door_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can turn open and close a HomeKit garage door."""
     helper = await setup_test_component(hass, create_garage_door_opener_service)
 
@@ -241,7 +358,7 @@ async def test_change_door_state(hass, utcnow):
     )
 
 
-async def test_read_door_state(hass, utcnow):
+async def test_read_door_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit garage door."""
     helper = await setup_test_component(hass, create_garage_door_opener_service)
 
@@ -281,7 +398,7 @@ async def test_read_door_state(hass, utcnow):
     assert state.attributes["obstruction-detected"] is True
 
 
-async def test_migrate_unique_id(hass, utcnow):
+async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
     """Test a we can migrate a cover unique id."""
     entity_registry = er.async_get(hass)
     aid = get_next_aid()

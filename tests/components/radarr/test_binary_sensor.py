@@ -8,7 +8,9 @@ from . import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_binary_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_binary_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test for binary sensor values."""
     await setup_integration(hass, aioclient_mock)
 

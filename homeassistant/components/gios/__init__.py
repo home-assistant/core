@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
-from gios import ApiError, Gios, InvalidSensorsData, NoStationError
+from gios import Gios
+from gios.exceptions import GiosError
+from gios.model import GiosSensors
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
@@ -30,13 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Using station_id: %d", station_id)
 
     # We used to use int as config_entry unique_id, convert this to str.
-    if isinstance(entry.unique_id, int):  # type: ignore[unreachable]
+    if isinstance(entry.unique_id, int):
         hass.config_entries.async_update_entry(entry, unique_id=str(station_id))  # type: ignore[unreachable]
 
     # We used to use int in device_entry identifiers, convert this to str.
     device_registry = dr.async_get(hass)
     old_ids = (DOMAIN, station_id)
-    device_entry = device_registry.async_get_device({old_ids})  # type: ignore[arg-type]
+    device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
     if device_entry and entry.entry_id in device_entry.config_entries:
         new_ids = (DOMAIN, str(station_id))
         device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
@@ -73,7 +74,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class GiosDataUpdateCoordinator(DataUpdateCoordinator):
+class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
     """Define an object to hold GIOS data."""
 
     def __init__(
@@ -84,15 +85,10 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> GiosSensors:
         """Update data via library."""
         try:
             async with timeout(API_TIMEOUT):
-                return cast(dict[str, Any], await self.gios.async_update())
-        except (
-            ApiError,
-            NoStationError,
-            ClientConnectorError,
-            InvalidSensorsData,
-        ) as error:
+                return await self.gios.async_update()
+        except (GiosError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error

@@ -7,7 +7,7 @@ from typing import Any
 from pyhap.const import CATEGORY_SENSOR
 
 from homeassistant.core import CALLBACK_TYPE, Context
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 
 from .accessories import TYPES, HomeAccessory
@@ -42,15 +42,17 @@ class DeviceTriggerAccessory(HomeAccessory):
         self._remove_triggers: CALLBACK_TYPE | None = None
         self.triggers = []
         assert device_triggers is not None
-        ent_reg = entity_registry.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
         for idx, trigger in enumerate(device_triggers):
             type_: str = trigger["type"]
             subtype: str | None = trigger.get("subtype")
             unique_id = f'{type_}-{subtype or ""}'
-            if (entity_id := trigger.get("entity_id")) and (
-                entry := ent_reg.async_get(entity_id)
+            entity_id: str | None = None
+            if (entity_id_or_uuid := trigger.get("entity_id")) and (
+                entry := ent_reg.async_get(entity_id_or_uuid)
             ):
                 unique_id += f"-entity_unique_id:{get_system_unique_id(entry)}"
+                entity_id = entry.entity_id
             trigger_name_parts = []
             if entity_id and (state := self.hass.states.get(entity_id)):
                 trigger_name_parts.append(state.name)

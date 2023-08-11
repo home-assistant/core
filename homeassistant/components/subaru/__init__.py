@@ -10,7 +10,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_US
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -66,7 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     vehicle_info = {}
     for vin in controller.get_vehicles():
-        vehicle_info[vin] = get_vehicle_info(controller, vin)
+        if controller.get_subscription_status(vin):
+            vehicle_info[vin] = get_vehicle_info(controller, vin)
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -115,10 +116,6 @@ async def refresh_subaru_data(config_entry, vehicle_info, controller):
 
     for vehicle in vehicle_info.values():
         vin = vehicle[VEHICLE_VIN]
-
-        # Active subscription required
-        if not vehicle[VEHICLE_HAS_SAFETY_SERVICE]:
-            continue
 
         # Optionally send an "update" remote command to vehicle (throttled with update_interval)
         if config_entry.options.get(CONF_UPDATE_ENABLED, False):

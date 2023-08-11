@@ -20,6 +20,7 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -32,8 +33,6 @@ from .common import (
     send_attributes_report,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
-
-from tests.common import mock_coro
 
 ON = 1
 OFF = 0
@@ -130,12 +129,14 @@ async def device_switch_2(hass, zigpy_device_mock, zha_device_joined):
     return zha_device
 
 
-async def test_switch(hass, zha_device_joined_restored, zigpy_device):
+async def test_switch(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
     """Test ZHA switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).on_off
-    entity_id = await find_entity_id(Platform.SWITCH, zha_device, hass)
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -160,7 +161,7 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     # turn on from HA
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         # turn on via UI
         await hass.services.async_call(
@@ -173,14 +174,13 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
             cluster.commands_by_name["on"].schema,
             expect_reply=True,
             manufacturer=None,
-            tries=1,
             tsn=None,
         )
 
     # turn off from HA
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x01, zcl_f.Status.SUCCESS]),
+        return_value=[0x01, zcl_f.Status.SUCCESS],
     ):
         # turn off via UI
         await hass.services.async_call(
@@ -193,7 +193,6 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
             cluster.commands_by_name["off"].schema,
             expect_reply=True,
             manufacturer=None,
-            tries=1,
             tsn=None,
         )
 
@@ -261,8 +260,8 @@ async def zigpy_device_tuya(hass, zigpy_device_mock, zha_device_joined):
     new=0,
 )
 async def test_zha_group_switch_entity(
-    hass, device_switch_1, device_switch_2, coordinator
-):
+    hass: HomeAssistant, device_switch_1, device_switch_2, coordinator
+) -> None:
     """Test the switch entity for a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -310,7 +309,7 @@ async def test_zha_group_switch_entity(
     # turn on from HA
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         # turn on via UI
         await hass.services.async_call(
@@ -323,7 +322,6 @@ async def test_zha_group_switch_entity(
             group_cluster_on_off.commands_by_name["on"].schema,
             expect_reply=True,
             manufacturer=None,
-            tries=1,
             tsn=None,
         )
     assert hass.states.get(entity_id).state == STATE_ON
@@ -331,7 +329,7 @@ async def test_zha_group_switch_entity(
     # turn off from HA
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x01, zcl_f.Status.SUCCESS]),
+        return_value=[0x01, zcl_f.Status.SUCCESS],
     ):
         # turn off via UI
         await hass.services.async_call(
@@ -344,7 +342,6 @@ async def test_zha_group_switch_entity(
             group_cluster_on_off.commands_by_name["off"].schema,
             expect_reply=True,
             manufacturer=None,
-            tries=1,
             tsn=None,
         )
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -376,12 +373,14 @@ async def test_zha_group_switch_entity(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_device_tuya):
+async def test_switch_configurable(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_tuya
+) -> None:
     """Test ZHA configurable switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_tuya)
     cluster = zigpy_device_tuya.endpoints.get(1).tuya_manufacturer
-    entity_id = await find_entity_id(Platform.SWITCH, zha_device, hass)
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -406,7 +405,7 @@ async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_devic
     # turn on from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+        return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS],
     ):
         # turn on via UI
         await hass.services.async_call(
@@ -420,7 +419,7 @@ async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_devic
     # turn off from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+        return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS],
     ):
         # turn off via UI
         await hass.services.async_call(

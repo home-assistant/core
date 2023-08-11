@@ -1,15 +1,20 @@
 {
   "domain": "devolo_home_network",
   "name": "devolo Home Network",
-  "integration_type": "device",
+  "codeowners": ["@2Fake", "@Shutgun"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_network",
-  "requirements": ["devolo-plc-api==1.1.0"],
-  "zeroconf": [
-    { "type": "_dvl-deviceapi._tcp.local.", "properties": { "MT": "*" } }
-  ],
-  "codeowners": ["@2Fake", "@Shutgun"],
-  "quality_scale": "platinum",
+  "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["devolo_plc_api"]
+  "loggers": ["devolo_plc_api"],
+  "quality_scale": "platinum",
+  "requirements": ["devolo-plc-api==1.4.0"],
+  "zeroconf": [
+    {
+      "type": "_dvl-deviceapi._tcp.local.",
+      "properties": {
+        "MT": "*"
+      }
+    }
+  ]
 }

@@ -5,10 +5,14 @@ import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
+from homeassistant.core import HomeAssistant
+
 from tests.common import async_capture_events
 
 
-async def test_scenes(hass, hank_binary_switch, integration, client):
+async def test_scenes(
+    hass: HomeAssistant, hank_binary_switch, integration, client
+) -> None:
     """Test scene events."""
     # just pick a random node to fake the value notification events
     node = hank_binary_switch
@@ -137,7 +141,9 @@ async def test_scenes(hass, hank_binary_switch, integration, client):
     assert events[2].data["value_raw"] == 4
 
 
-async def test_notifications(hass, hank_binary_switch, integration, client):
+async def test_notifications(
+    hass: HomeAssistant, hank_binary_switch, integration, client
+) -> None:
     """Test notification events."""
     # just pick a random node to fake the value notification events
     node = hank_binary_switch
@@ -231,7 +237,9 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[2].data["command_class_name"] == "Multilevel Switch"
 
 
-async def test_value_updated(hass, vision_security_zl7432, integration, client):
+async def test_value_updated(
+    hass: HomeAssistant, vision_security_zl7432, integration, client
+) -> None:
     """Test value updated events."""
     node = vision_security_zl7432
     # Add states to the value we are updating to ensure the translation happens
@@ -298,7 +306,9 @@ async def test_value_updated(hass, vision_security_zl7432, integration, client):
     assert len(events) == 1
 
 
-async def test_power_level_notification(hass, hank_binary_switch, integration, client):
+async def test_power_level_notification(
+    hass: HomeAssistant, hank_binary_switch, integration, client
+) -> None:
     """Test power level notification events."""
     # just pick a random node to fake the notification event
     node = hank_binary_switch
@@ -330,7 +340,9 @@ async def test_power_level_notification(hass, hank_binary_switch, integration, c
     assert events[0].data["acknowledged_frames"] == 2
 
 
-async def test_unknown_notification(hass, hank_binary_switch, integration, client):
+async def test_unknown_notification(
+    hass: HomeAssistant, hank_binary_switch, integration, client
+) -> None:
     """Test behavior of unknown notification type events."""
     # just pick a random node to fake the notification event
     node = hank_binary_switch

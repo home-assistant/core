@@ -3,11 +3,18 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Check the documentation for how to find the offline key.",
+        "description": "Check the documentation for how to find the offline key. If you are using the August cloud integration to obtain the key, you may need to reload the August cloud integration while the lock is in Bluetooth range.",
         "data": {
           "address": "Bluetooth address",
           "key": "Offline Key (32-byte hex string)",
           "slot": "Offline Key Slot (Integer between 0 and 255)"
+        }
+      },
+      "reauth_validate": {
+        "description": "Enter the updated key for the {title} lock with address {address}. If you are using the August cloud integration to obtain the key, you may be able to avoid manual reauthentication by reloading the August cloud integration while the lock is in Bluetooth range.",
+        "data": {
+          "key": "[%key:component::yalexs_ble::config::step::user::data::key%]",
+          "slot": "[%key:component::yalexs_ble::config::step::user::data::slot%]"
         }
       },
       "integration_discovery_confirm": {
@@ -15,6 +22,7 @@
       }
     },
     "error": {
+      "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and try again.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -24,8 +32,25 @@
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_unconfigured_devices": "No unconfigured devices found.",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "device_options": {
+        "description": "If the lock does not support push updates via advertisements or you want lock operation to be more responsive, you can enable always connected mode. Always connected will cause the lock to stay connected to Home Assistant via Bluetooth, which will use more battery.",
+        "data": {
+          "always_connected": "Always connected"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      }
     }
   }
 }

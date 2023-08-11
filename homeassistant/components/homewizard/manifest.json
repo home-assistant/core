@@ -1,13 +1,12 @@
 {
   "domain": "homewizard",
   "name": "HomeWizard Energy",
-  "documentation": "https://www.home-assistant.io/integrations/homewizard",
   "codeowners": ["@DCSBL"],
-  "dependencies": [],
-  "requirements": ["python-homewizard-energy==1.8.0"],
-  "zeroconf": ["_hwenergy._tcp.local."],
   "config_flow": true,
-  "quality_scale": "platinum",
+  "documentation": "https://www.home-assistant.io/integrations/homewizard",
   "iot_class": "local_polling",
-  "loggers": ["homewizard_energy"]
+  "loggers": ["homewizard_energy"],
+  "quality_scale": "platinum",
+  "requirements": ["python-homewizard-energy==2.0.2"],
+  "zeroconf": ["_hwenergy._tcp.local."]
 }

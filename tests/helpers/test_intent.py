@@ -1,18 +1,24 @@
 """Tests for the intent helpers."""
+import asyncio
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import conversation
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import State
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import (
-    area_registry,
+    area_registry as ar,
     config_validation as cv,
-    device_registry,
-    entity_registry,
+    device_registry as dr,
+    entity_registry as er,
     intent,
 )
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -23,12 +29,15 @@ class MockIntentHandler(intent.IntentHandler):
         self.slot_schema = slot_schema
 
 
-async def test_async_match_states(hass):
+async def test_async_match_states(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test async_match_state helper."""
-    areas = area_registry.async_get(hass)
-    area_kitchen = areas.async_get_or_create("kitchen")
-    areas.async_update(area_kitchen.id, aliases={"food room"})
-    area_bedroom = areas.async_get_or_create("bedroom")
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+    area_registry.async_update(area_kitchen.id, aliases={"food room"})
+    area_bedroom = area_registry.async_get_or_create("bedroom")
 
     state1 = State(
         "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
@@ -38,14 +47,15 @@ async def test_async_match_states(hass):
     )
 
     # Put entities into different areas
-    entities = entity_registry.async_get(hass)
-    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
-    entities.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
 
-    entities.async_get_or_create(
+    entity_registry.async_get_or_create(
         "switch", "demo", "5678", suggested_object_id="bedroom"
     )
-    entities.async_update_entity(
+    entity_registry.async_update_entity(
         state2.entity_id,
         area_id=area_bedroom.id,
         device_class=SwitchDeviceClass.OUTLET,
@@ -101,17 +111,24 @@ async def test_async_match_states(hass):
     ) == [state2]
 
 
-async def test_match_device_area(hass):
+async def test_match_device_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test async_match_state with a device in an area."""
-    areas = area_registry.async_get(hass)
-    area_kitchen = areas.async_get_or_create("kitchen")
-    area_bedroom = areas.async_get_or_create("bedroom")
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom")
 
-    devices = device_registry.async_get(hass)
-    kitchen_device = devices.async_get_or_create(
-        config_entry_id="1234", connections=set(), identifiers={("demo", "id-1234")}
+    kitchen_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "id-1234")},
     )
-    devices.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
+    device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
     state1 = State(
         "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
@@ -122,12 +139,15 @@ async def test_match_device_area(hass):
     state3 = State(
         "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
     )
-    entities = entity_registry.async_get(hass)
-    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
-    entities.async_update_entity(state1.entity_id, device_id=kitchen_device.id)
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity(state1.entity_id, device_id=kitchen_device.id)
 
-    entities.async_get_or_create("light", "demo", "5678", suggested_object_id="bedroom")
-    entities.async_update_entity(state2.entity_id, area_id=area_bedroom.id)
+    entity_registry.async_get_or_create(
+        "light", "demo", "5678", suggested_object_id="bedroom"
+    )
+    entity_registry.async_update_entity(state2.entity_id, area_id=area_bedroom.id)
 
     # Match on area/domain
     assert list(
@@ -140,7 +160,7 @@ async def test_match_device_area(hass):
     ) == [state1]
 
 
-def test_async_validate_slots():
+def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
     handler1 = MockIntentHandler({vol.Required("name"): cv.string})
 
@@ -154,3 +174,120 @@ def test_async_validate_slots():
     handler1.async_validate_slots(
         {"name": {"value": "kitchen"}, "probability": {"value": "0.5"}}
     )
+
+
+async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:
+    """Test that we can't turn on entities that don't support it."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "lock", {})
+
+    hass.states.async_set(
+        "lock.test", "123", attributes={ATTR_FRIENDLY_NAME: "Test Lock"}
+    )
+
+    result = await conversation.async_converse(
+        hass, "turn on test lock", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+
+
+def test_async_register(hass: HomeAssistant) -> None:
+    """Test registering an intent and verifying it is stored correctly."""
+    handler = MagicMock()
+    handler.intent_type = "test_intent"
+
+    intent.async_register(hass, handler)
+
+    assert hass.data[intent.DATA_KEY]["test_intent"] == handler
+
+
+def test_async_register_overwrite(hass: HomeAssistant) -> None:
+    """Test registering multiple intents with the same type, ensuring the last one overwrites the previous one and a warning is emitted."""
+    handler1 = MagicMock()
+    handler1.intent_type = "test_intent"
+
+    handler2 = MagicMock()
+    handler2.intent_type = "test_intent"
+
+    with patch.object(intent._LOGGER, "warning") as mock_warning:
+        intent.async_register(hass, handler1)
+        intent.async_register(hass, handler2)
+
+        mock_warning.assert_called_once_with(
+            "Intent %s is being overwritten by %s", "test_intent", handler2
+        )
+
+    assert hass.data[intent.DATA_KEY]["test_intent"] == handler2
+
+
+def test_async_remove(hass: HomeAssistant) -> None:
+    """Test removing an intent and verifying it is no longer present in the Home Assistant data."""
+    handler = MagicMock()
+    handler.intent_type = "test_intent"
+
+    intent.async_register(hass, handler)
+    intent.async_remove(hass, "test_intent")
+
+    assert "test_intent" not in hass.data[intent.DATA_KEY]
+
+
+def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
+    """Test the removal of a non-existing intent from Home Assistant's data."""
+    handler = MagicMock()
+    handler.intent_type = "test_intent"
+    intent.async_register(hass, handler)
+
+    intent.async_remove(hass, "test_intent2")
+
+    assert "test_intent2" not in hass.data[intent.DATA_KEY]
+
+
+def test_async_remove_no_existing(hass: HomeAssistant) -> None:
+    """Test the removal of an intent where no config exists."""
+
+    intent.async_remove(hass, "test_intent2")
+    # simply shouldn't cause an exception
+
+    assert intent.DATA_KEY not in hass.data
+
+
+async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
+    """Test we don't execute a service in foreground forever."""
+    hass.states.async_set("light.kitchen", "off")
+    call_done = asyncio.Event()
+    calls = []
+
+    # Register a service that takes 0.1 seconds to execute
+    async def mock_service(call):
+        """Mock service."""
+        await asyncio.sleep(0.1)
+        call_done.set()
+        calls.append(call)
+
+    hass.services.async_register("light", "turn_on", mock_service)
+
+    # Create intent handler with a service timeout of 0.05 seconds
+    handler = intent.ServiceIntentHandler(
+        "TestType", "light", "turn_on", "Turned {} on"
+    )
+    handler.service_timeout = 0.05
+    intent.async_register(hass, handler)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"name": {"value": "kitchen"}},
+    )
+
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    assert not call_done.is_set()
+    await call_done.wait()
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "light.kitchen"}

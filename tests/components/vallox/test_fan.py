@@ -21,7 +21,8 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "metrics, expected_state", [({"A_CYC_MODE": 0}, "on"), ({"A_CYC_MODE": 5}, "off")]
+    ("metrics", "expected_state"),
+    [({"A_CYC_MODE": 0}, "on"), ({"A_CYC_MODE": 5}, "off")],
 )
 async def test_fan_state(
     metrics: dict[str, int],
@@ -43,7 +44,7 @@ async def test_fan_state(
 
 
 @pytest.mark.parametrize(
-    "profile, expected_preset",
+    ("profile", "expected_preset"),
     [
         (PROFILE.HOME, "Home"),
         (PROFILE.AWAY, "Away"),
@@ -71,7 +72,7 @@ async def test_fan_profile(
 
 
 @pytest.mark.parametrize(
-    "service, initial_metrics, expected_called_with",
+    ("service", "initial_metrics", "expected_called_with"),
     [
         (SERVICE_TURN_ON, {"A_CYC_MODE": 5}, {"A_CYC_MODE": 0}),
         (SERVICE_TURN_OFF, {"A_CYC_MODE": 0}, {"A_CYC_MODE": 5}),
@@ -98,7 +99,7 @@ async def test_turn_on_off(
 
 
 @pytest.mark.parametrize(
-    "initial_metrics, expected_call_args_list",
+    ("initial_metrics", "expected_call_args_list"),
     [
         (
             {"A_CYC_MODE": 5},
@@ -142,7 +143,7 @@ async def test_turn_on_with_parameters(
 
 
 @pytest.mark.parametrize(
-    "preset, initial_profile, expected_call_args_list",
+    ("preset", "initial_profile", "expected_call_args_list"),
     [
         ("Home", PROFILE.AWAY, [call(PROFILE.HOME)]),
         ("Away", PROFILE.HOME, [call(PROFILE.AWAY)]),
@@ -209,7 +210,7 @@ async def test_set_preset_mode_exception(
 
 
 @pytest.mark.parametrize(
-    "profile, percentage, expected_call_args_list",
+    ("profile", "percentage", "expected_call_args_list"),
     [
         (PROFILE.HOME, 40, [call({"A_CYC_HOME_SPEED_SETTING": 40})]),
         (PROFILE.AWAY, 30, [call({"A_CYC_AWAY_SPEED_SETTING": 30})]),

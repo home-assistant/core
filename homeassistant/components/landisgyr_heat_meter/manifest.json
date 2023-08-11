@@ -1,13 +1,10 @@
 {
   "domain": "landisgyr_heat_meter",
   "name": "Landis+Gyr Heat Meter",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/landisgyr_heat_meter",
-  "requirements": ["ultraheat-api==0.5.1"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "codeowners": ["@vpathuis"],
+  "config_flow": true,
   "dependencies": ["usb"],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/landisgyr_heat_meter",
+  "iot_class": "local_polling",
+  "requirements": ["ultraheat-api==0.5.1"]
 }

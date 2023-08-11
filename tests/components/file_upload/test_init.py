@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.components.image_upload import TEST_IMAGE
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -33,7 +34,7 @@ async def uploaded_file_dir(hass: HomeAssistant, hass_client) -> Path:
     return file_dir
 
 
-async def test_using_file(hass: HomeAssistant, uploaded_file_dir):
+async def test_using_file(hass: HomeAssistant, uploaded_file_dir) -> None:
     """Test uploading and using a file."""
     # Test we can use it
     with file_upload.process_uploaded_file(hass, uploaded_file_dir.name) as file_path:
@@ -45,7 +46,9 @@ async def test_using_file(hass: HomeAssistant, uploaded_file_dir):
     assert not uploaded_file_dir.exists()
 
 
-async def test_removing_file(hass: HomeAssistant, hass_client, uploaded_file_dir):
+async def test_removing_file(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, uploaded_file_dir
+) -> None:
     """Test uploading and using a file."""
     client = await hass_client()
 
@@ -58,7 +61,9 @@ async def test_removing_file(hass: HomeAssistant, hass_client, uploaded_file_dir
     assert not uploaded_file_dir.exists()
 
 
-async def test_removed_on_stop(hass: HomeAssistant, hass_client, uploaded_file_dir):
+async def test_removed_on_stop(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, uploaded_file_dir
+) -> None:
     """Test uploading and using a file."""
     await hass.async_stop()
 
@@ -66,7 +71,9 @@ async def test_removed_on_stop(hass: HomeAssistant, hass_client, uploaded_file_d
     assert not uploaded_file_dir.exists()
 
 
-async def test_upload_large_file(hass: HomeAssistant, hass_client, large_file_io):
+async def test_upload_large_file(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
+) -> None:
     """Test uploading large file."""
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()
@@ -96,8 +103,8 @@ async def test_upload_large_file(hass: HomeAssistant, hass_client, large_file_io
 
 
 async def test_upload_with_wrong_key_fails(
-    hass: HomeAssistant, hass_client, large_file_io
-):
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
+) -> None:
     """Test uploading fails."""
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()

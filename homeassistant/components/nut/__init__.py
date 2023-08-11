@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import cast
 
 import async_timeout
 from pynut2.nut2 import PyNUTClient, PyNUTError
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -26,9 +28,11 @@ from .const import (
     COORDINATOR,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    INTEGRATION_SUPPORTED_COMMANDS,
     PLATFORMS,
     PYNUT_DATA,
     PYNUT_UNIQUE_ID,
+    USER_AVAILABLE_COMMANDS,
 )
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
@@ -73,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="NUT resource status",
         update_method=async_update_data,
         update_interval=timedelta(seconds=scan_interval),
+        always_update=False,
     )
 
     # Fetch initial data so we have data when entities subscribe
@@ -86,11 +91,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unique_id is None:
         unique_id = entry.entry_id
 
+    if username is not None and password is not None:
+        user_available_commands = {
+            device_supported_command
+            for device_supported_command in data.list_commands() or {}
+            if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS
+        }
+    else:
+        user_available_commands = set()
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         PYNUT_DATA: data,
         PYNUT_UNIQUE_ID: unique_id,
+        USER_AVAILABLE_COMMANDS: user_available_commands,
     }
 
     device_registry = dr.async_get(hass)
@@ -270,3 +285,24 @@ class PyNUTData:
         self._status = self._get_status()
         if self._device_info is None:
             self._device_info = self._get_device_info()
+
+    async def async_run_command(
+        self, hass: HomeAssistant, command_name: str | None
+    ) -> None:
+        """Invoke instant command in UPS."""
+        try:
+            await hass.async_add_executor_job(
+                self._client.run_command, self._alias, command_name
+            )
+        except PyNUTError as err:
+            raise HomeAssistantError(
+                f"Error running command {command_name}, {err}"
+            ) from err
+
+    def list_commands(self) -> dict[str, str] | None:
+        """Fetch the list of supported commands."""
+        try:
+            return cast(dict[str, str], self._client.list_commands(self._alias))
+        except PyNUTError as err:
+            _LOGGER.error("Error retrieving supported commands %s", err)
+            return None

@@ -3,13 +3,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import time
+from typing import Any
 from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BaseHaRemoteScanner,
     HaBluetoothConnector,
     storage,
@@ -22,21 +25,26 @@ from homeassistant.components.bluetooth.const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.json import json_loads
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads
 
-from . import MockBleakClient, _get_manager, generate_advertisement_data
+from . import (
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from tests.common import async_fire_time_changed, load_fixture
 
 
-async def test_remote_scanner(hass, enable_bluetooth):
+async def test_remote_scanner(hass: HomeAssistant, enable_bluetooth: None) -> None:
     """Test the remote scanner base class merges advertisement_data."""
     manager = _get_manager()
 
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
@@ -49,7 +57,7 @@ async def test_remote_scanner(hass, enable_bluetooth):
         manufacturer_data={1: b"\x01"},
         rssi=-100,
     )
-    switchbot_device_2 = BLEDevice(
+    switchbot_device_2 = generate_ble_device(
         "44:44:33:11:23:45",
         "w",
         {},
@@ -77,6 +85,7 @@ async def test_remote_scanner(hass, enable_bluetooth):
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -118,11 +127,13 @@ async def test_remote_scanner(hass, enable_bluetooth):
     unsetup()
 
 
-async def test_remote_scanner_expires_connectable(hass, enable_bluetooth):
+async def test_remote_scanner_expires_connectable(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
     """Test the remote scanner expires stale connectable data."""
     manager = _get_manager()
 
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
@@ -149,6 +160,7 @@ async def test_remote_scanner_expires_connectable(hass, enable_bluetooth):
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -190,11 +202,13 @@ async def test_remote_scanner_expires_connectable(hass, enable_bluetooth):
     unsetup()
 
 
-async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
+async def test_remote_scanner_expires_non_connectable(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
     """Test the remote scanner expires stale non connectable data."""
     manager = _get_manager()
 
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
@@ -221,6 +235,7 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -285,11 +300,13 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
     unsetup()
 
 
-async def test_base_scanner_connecting_behavior(hass, enable_bluetooth):
+async def test_base_scanner_connecting_behavior(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
     """Test that the default behavior is to mark the scanner as not scanning when connecting."""
     manager = _get_manager()
 
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
@@ -316,6 +333,7 @@ async def test_base_scanner_connecting_behavior(hass, enable_bluetooth):
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -346,8 +364,8 @@ async def test_base_scanner_connecting_behavior(hass, enable_bluetooth):
 
 
 async def test_restore_history_remote_adapter(
-    hass, hass_storage, disable_new_discovery_flows
-):
+    hass: HomeAssistant, hass_storage: dict[str, Any], disable_new_discovery_flows
+) -> None:
     """Test we can restore history for a remote adapter."""
 
     data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
@@ -407,12 +425,12 @@ async def test_restore_history_remote_adapter(
 
 
 async def test_device_with_ten_minute_advertising_interval(
-    hass, caplog, enable_bluetooth
-):
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, enable_bluetooth: None
+) -> None:
     """Test a device with a 10 minute advertising interval."""
     manager = _get_manager()
 
-    bparasite_device = BLEDevice(
+    bparasite_device = generate_ble_device(
         "44:44:33:11:23:45",
         "bparasite",
         {},
@@ -439,6 +457,7 @@ async def test_device_with_ten_minute_advertising_interval(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -468,13 +487,31 @@ async def test_device_with_ten_minute_advertising_interval(
         connectable=False,
     )
 
-    for _ in range(0, 20):
+    with patch(
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        return_value=new_time,
+    ):
+        scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+
+    original_device = scanner.discovered_devices_and_advertisement_data[
+        bparasite_device.address
+    ][0]
+    assert original_device is not bparasite_device
+
+    for _ in range(1, 20):
         new_time += advertising_interval
         with patch(
             "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
             return_value=new_time,
         ):
             scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+
+    # Make sure the BLEDevice object gets updated
+    # and not replaced
+    assert (
+        scanner.discovered_devices_and_advertisement_data[bparasite_device.address][0]
+        is original_device
+    )
 
     future_time = new_time
     assert (

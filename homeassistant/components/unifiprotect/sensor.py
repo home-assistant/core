@@ -1,4 +1,4 @@
-"""This component provides sensors for UniFi Protect."""
+"""Component providing sensors for UniFi Protect."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,7 +15,6 @@ from pyunifiprotect.data import (
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
-    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -29,6 +28,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfDataRate,
     UnitOfElectricPotential,
     UnitOfInformation,
@@ -37,7 +37,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_ADOPT, DOMAIN
@@ -53,7 +52,6 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
-DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
@@ -525,22 +523,13 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 
 EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
-        key="detected_object",
-        name="Detected Object",
-        device_class=DEVICE_CLASS_DETECTION,
-        entity_registry_enabled_default=False,
-        ufp_value="is_smart_detected",
-        ufp_event_obj="last_smart_detect_event",
-    ),
-    ProtectSensorEventEntityDescription(
         key="smart_obj_licenseplate",
         name="License Plate Detected",
         icon="mdi:car",
         translation_key="license_plate",
-        ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_license_plate",
-        ufp_event_obj="last_smart_detect_event",
+        ufp_event_obj="last_license_plate_detect_event",
     ),
 )
 
@@ -721,15 +710,6 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
 
     entity_description: ProtectSensorEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
@@ -740,15 +720,6 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
     """A Ubiquiti UniFi Protect Sensor."""
 
     entity_description: ProtectSensorEntityDescription
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: NVR,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
@@ -761,33 +732,22 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 
     entity_description: ProtectSensorEventEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectSensorEventEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventEntityMixin._async_update_device_from_protect(self, device)
-        is_on = self.entity_description.get_is_on(device)
+        event = self._event
+        entity_description = self.entity_description
+        is_on = entity_description.get_is_on(event)
         is_license_plate = (
-            self.entity_description.ufp_smart_type
-            == SmartDetectObjectType.LICENSE_PLATE
+            entity_description.ufp_event_obj == "last_license_plate_detect_event"
         )
         if (
             not is_on
-            or self._event is None
+            or event is None
             or (
                 is_license_plate
-                and (
-                    self._event.metadata is None
-                    or self._event.metadata.license_plate is None
-                )
+                and (event.metadata is None or event.metadata.license_plate is None)
             )
         ):
             self._attr_native_value = OBJECT_TYPE_NONE
@@ -797,6 +757,6 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 
         if is_license_plate:
             # type verified above
-            self._attr_native_value = self._event.metadata.license_plate.name  # type: ignore[union-attr]
+            self._attr_native_value = event.metadata.license_plate.name  # type: ignore[union-attr]
         else:
-            self._attr_native_value = self._event.smart_detect_types[0].value
+            self._attr_native_value = event.smart_detect_types[0].value

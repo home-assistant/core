@@ -1,5 +1,4 @@
 """UniFi Network sensor platform tests."""
-
 from copy import deepcopy
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -17,15 +16,17 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
 from .test_controller import setup_unifi_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_1 = {
     "board_rev": 2,
@@ -95,8 +96,192 @@ DEVICE_1 = {
     "version": "4.0.42.10433",
 }
 
+WLAN = {
+    "_id": "012345678910111213141516",
+    "bc_filter_enabled": False,
+    "bc_filter_list": [],
+    "dtim_mode": "default",
+    "dtim_na": 1,
+    "dtim_ng": 1,
+    "enabled": True,
+    "group_rekey": 3600,
+    "mac_filter_enabled": False,
+    "mac_filter_list": [],
+    "mac_filter_policy": "allow",
+    "minrate_na_advertising_rates": False,
+    "minrate_na_beacon_rate_kbps": 6000,
+    "minrate_na_data_rate_kbps": 6000,
+    "minrate_na_enabled": False,
+    "minrate_na_mgmt_rate_kbps": 6000,
+    "minrate_ng_advertising_rates": False,
+    "minrate_ng_beacon_rate_kbps": 1000,
+    "minrate_ng_data_rate_kbps": 1000,
+    "minrate_ng_enabled": False,
+    "minrate_ng_mgmt_rate_kbps": 1000,
+    "name": "SSID 1",
+    "no2ghz_oui": False,
+    "schedule": [],
+    "security": "wpapsk",
+    "site_id": "5a32aa4ee4b0412345678910",
+    "usergroup_id": "012345678910111213141518",
+    "wep_idx": 1,
+    "wlangroup_id": "012345678910111213141519",
+    "wpa_enc": "ccmp",
+    "wpa_mode": "wpa2",
+    "x_iapp_key": "01234567891011121314151617181920",
+    "x_passphrase": "password",
+}
 
-async def test_no_clients(hass, aioclient_mock):
+PDU_DEVICE_1 = {
+    "_id": "123456654321abcdef012345",
+    "required_version": "5.28.0",
+    "port_table": [],
+    "license_state": "registered",
+    "lcm_brightness_override": False,
+    "type": "usw",
+    "board_rev": 4,
+    "hw_caps": 136,
+    "reboot_duration": 70,
+    "snmp_contact": "",
+    "config_network": {"type": "dhcp", "bonding_enabled": False},
+    "outlet_table": [
+        {
+            "index": 1,
+            "relay_state": True,
+            "cycle_enabled": False,
+            "name": "USB Outlet 1",
+            "outlet_caps": 1,
+        },
+        {
+            "index": 2,
+            "relay_state": True,
+            "cycle_enabled": False,
+            "name": "Outlet 2",
+            "outlet_caps": 3,
+            "outlet_voltage": "119.644",
+            "outlet_current": "0.935",
+            "outlet_power": "73.827",
+            "outlet_power_factor": "0.659",
+        },
+    ],
+    "model": "USPPDUP",
+    "manufacturer_id": 4,
+    "ip": "192.168.1.76",
+    "fw2_caps": 0,
+    "jumboframe_enabled": False,
+    "version": "6.5.59.14777",
+    "unsupported_reason": 0,
+    "adoption_completed": True,
+    "outlet_enabled": True,
+    "stp_version": "rstp",
+    "name": "Dummy USP-PDU-Pro",
+    "fw_caps": 1732968229,
+    "lcm_brightness": 80,
+    "internet": True,
+    "mgmt_network_id": "123456654321abcdef012347",
+    "gateway_mac": "01:02:03:04:05:06",
+    "stp_priority": "32768",
+    "lcm_night_mode_begins": "22:00",
+    "two_phase_adopt": False,
+    "connected_at": 1690626493,
+    "inform_ip": "192.168.1.1",
+    "cfgversion": "ba8f30a5a17aad64",
+    "mac": "01:02:03:04:05:ff",
+    "provisioned_at": 1690989511,
+    "inform_url": "http://192.168.1.1:8080/inform",
+    "upgrade_duration": 100,
+    "ethernet_table": [{"num_port": 1, "name": "eth0", "mac": "01:02:03:04:05:a1"}],
+    "flowctrl_enabled": False,
+    "unsupported": False,
+    "ble_caps": 0,
+    "sys_error_caps": 0,
+    "dot1x_portctrl_enabled": False,
+    "last_uplink": {},
+    "disconnected_at": 1690626452,
+    "architecture": "mips",
+    "x_aes_gcm": True,
+    "has_fan": False,
+    "outlet_overrides": [
+        {
+            "cycle_enabled": False,
+            "name": "USB Outlet 1",
+            "relay_state": True,
+            "index": 1,
+        },
+        {"cycle_enabled": False, "name": "Outlet 2", "relay_state": True, "index": 2},
+    ],
+    "model_incompatible": False,
+    "satisfaction": 100,
+    "model_in_eol": False,
+    "anomalies": -1,
+    "has_temperature": False,
+    "switch_caps": {},
+    "adopted_by_client": "web",
+    "snmp_location": "",
+    "model_in_lts": False,
+    "kernel_version": "4.14.115",
+    "serial": "abc123",
+    "power_source_ctrl_enabled": False,
+    "lcm_night_mode_ends": "08:00",
+    "adopted": True,
+    "hash_id": "abcdef123456",
+    "device_id": "mock-pdu",
+    "uplink": {},
+    "state": 1,
+    "start_disconnected_millis": 1690626383386,
+    "credential_caps": 0,
+    "default": False,
+    "discovered_via": "l2",
+    "adopt_ip": "10.0.10.4",
+    "adopt_url": "http://192.168.1.1:8080/inform",
+    "last_seen": 1691518814,
+    "min_inform_interval_seconds": 10,
+    "upgradable": False,
+    "adoptable_when_upgraded": False,
+    "rollupgrade": False,
+    "known_cfgversion": "abcfde03929",
+    "uptime": 1193042,
+    "_uptime": 1193042,
+    "locating": False,
+    "start_connected_millis": 1690626493324,
+    "prev_non_busy_state": 5,
+    "next_interval": 47,
+    "sys_stats": {},
+    "system-stats": {"cpu": "1.4", "mem": "28.9", "uptime": "1193042"},
+    "ssh_session_table": [],
+    "lldp_table": [],
+    "displayable_version": "6.5.59",
+    "connection_network_id": "123456654321abcdef012349",
+    "connection_network_name": "Default",
+    "startup_timestamp": 1690325774,
+    "is_access_point": False,
+    "safe_for_autoupgrade": True,
+    "overheating": False,
+    "power_source": "0",
+    "total_max_power": 0,
+    "outlet_ac_power_budget": "1875.000",
+    "outlet_ac_power_consumption": "201.683",
+    "downlink_table": [],
+    "uplink_depth": 1,
+    "downlink_lldp_macs": [],
+    "dhcp_server_table": [],
+    "connect_request_ip": "10.0.10.4",
+    "connect_request_port": "57951",
+    "ipv4_lease_expiration_timestamp_seconds": 1691576686,
+    "stat": {},
+    "tx_bytes": 1426780,
+    "rx_bytes": 1435064,
+    "bytes": 2861844,
+    "num_sta": 0,
+    "user-num_sta": 0,
+    "guest-num_sta": 0,
+    "x_has_ssh_hostkey": True,
+}
+
+
+async def test_no_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(
         hass,
@@ -110,7 +295,9 @@ async def test_no_clients(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
 
 
-async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
+async def test_bandwidth_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Verify that bandwidth sensors are working as expected."""
     wired_client = {
         "hostname": "Wired client",
@@ -179,9 +366,22 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("sensor.wired_client_rx") is None
     assert hass.states.get("sensor.wired_client_tx") is None
 
+    # Enable option
+
+    options[CONF_ALLOW_BANDWIDTH_SENSORS] = True
+    hass.config_entries.async_update_entry(config_entry, options=options.copy())
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert hass.states.get("sensor.wireless_client_rx")
+    assert hass.states.get("sensor.wireless_client_tx")
+    assert hass.states.get("sensor.wired_client_rx")
+    assert hass.states.get("sensor.wired_client_tx")
+
 
 @pytest.mark.parametrize(
-    "initial_uptime,event_uptime,new_uptime",
+    ("initial_uptime", "event_uptime", "new_uptime"),
     [
         # Uptime listed in epoch time should never change
         (1609462800, 1609462800, 1612141200),
@@ -190,13 +390,14 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     ],
 )
 async def test_uptime_sensors(
-    hass,
-    aioclient_mock,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
+    entity_registry_enabled_by_default: None,
     initial_uptime,
     event_uptime,
     new_uptime,
-):
+) -> None:
     """Verify that uptime sensors are working as expected."""
     uptime_client = {
         "mac": "00:00:00:00:00:01",
@@ -262,8 +463,24 @@ async def test_uptime_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
     assert hass.states.get("sensor.client1_uptime") is None
 
+    # Enable option
 
-async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
+    options[CONF_ALLOW_UPTIME_SENSORS] = True
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.config_entries.async_update_entry(config_entry, options=options.copy())
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.client1_uptime")
+
+
+async def test_remove_sensors(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    entity_registry_enabled_by_default: None,
+) -> None:
     """Verify removing of clients work as expected."""
     wired_client = {
         "hostname": "Wired client",
@@ -320,7 +537,9 @@ async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("sensor.wireless_client_uptime")
 
 
-async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_poe_port_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
@@ -388,3 +607,143 @@ async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
     mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mock_name_port_1_poe_power")
+
+
+async def test_wlan_client_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
+    """Verify that WLAN client sensors are working as expected."""
+    wireless_client_1 = {
+        "essid": "SSID 1",
+        "is_wired": False,
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        "mac": "00:00:00:00:00:01",
+        "name": "Wireless client",
+        "oui": "Producer",
+        "rx_bytes-r": 2345000000,
+        "tx_bytes-r": 6789000000,
+    }
+    wireless_client_2 = {
+        "essid": "SSID 2",
+        "is_wired": False,
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        "mac": "00:00:00:00:00:02",
+        "name": "Wireless client2",
+        "oui": "Producer2",
+        "rx_bytes-r": 2345000000,
+        "tx_bytes-r": 6789000000,
+    }
+
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        clients_response=[wireless_client_1, wireless_client_2],
+        wlans_response=[WLAN],
+    )
+
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+
+    ent_reg = er.async_get(hass)
+    ent_reg_entry = ent_reg.async_get("sensor.ssid_1")
+    assert ent_reg_entry.unique_id == "wlan_clients-012345678910111213141516"
+    assert ent_reg_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    # Validate state object
+    ssid_1 = hass.states.get("sensor.ssid_1")
+    assert ssid_1 is not None
+    assert ssid_1.state == "1"
+
+    # Verify state update - increasing number
+
+    wireless_client_1["essid"] = "SSID 1"
+    wireless_client_2["essid"] = "SSID 1"
+
+    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_1)
+    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_2)
+    await hass.async_block_till_done()
+
+    ssid_1 = hass.states.get("sensor.ssid_1")
+    assert ssid_1.state == "1"
+
+    async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    ssid_1 = hass.states.get("sensor.ssid_1")
+    assert ssid_1.state == "2"
+
+    # Verify state update - decreasing number
+
+    wireless_client_1["essid"] = "SSID"
+    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_1)
+
+    async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    ssid_1 = hass.states.get("sensor.ssid_1")
+    assert ssid_1.state == "1"
+
+    # Verify state update - decreasing number
+
+    wireless_client_2["last_seen"] = 0
+    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_2)
+
+    async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    ssid_1 = hass.states.get("sensor.ssid_1")
+    assert ssid_1.state == "0"
+
+    # Availability signalling
+
+    # Controller disconnects
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.ssid_1").state == "0"
+
+    # WLAN gets disabled
+    wlan_1 = deepcopy(WLAN)
+    wlan_1["enabled"] = False
+    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
+
+    # WLAN gets re-enabled
+    wlan_1["enabled"] = True
+    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.ssid_1").state == "0"
+
+
+async def test_outlet_power_readings(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
+    """Test the outlet power reporting on PDU devices."""
+    await setup_unifi_integration(hass, aioclient_mock, devices_response=[PDU_DEVICE_1])
+
+    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+
+    ent_reg = er.async_get(hass)
+    ent_reg_entry = ent_reg.async_get("sensor.dummy_usp_pdu_pro_outlet_2_outlet_power")
+    assert ent_reg_entry.unique_id == "outlet_power-01:02:03:04:05:ff_2"
+    assert ent_reg_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    outlet_2 = hass.states.get("sensor.dummy_usp_pdu_pro_outlet_2_outlet_power")
+    assert outlet_2.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
+    assert outlet_2.state == "73.827"
+
+    # Verify state update
+    pdu_device_state_update = deepcopy(PDU_DEVICE_1)
+
+    pdu_device_state_update["outlet_table"][1]["outlet_power"] = "123.45"
+
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=pdu_device_state_update)
+    await hass.async_block_till_done()
+
+    outlet_2 = hass.states.get("sensor.dummy_usp_pdu_pro_outlet_2_outlet_power")
+    assert outlet_2.state == "123.45"

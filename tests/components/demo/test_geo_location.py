@@ -1,5 +1,4 @@
 """The tests for the demo platform."""
-
 from freezegun import freeze_time
 
 from homeassistant.components import geo_location
@@ -13,6 +12,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -21,7 +21,7 @@ from tests.common import assert_setup_component, async_fire_time_changed
 CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
 
 
-async def test_setup_platform(hass):
+async def test_setup_platform(hass: HomeAssistant, disable_platforms) -> None:
     """Test setup of demo platform via configuration."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.

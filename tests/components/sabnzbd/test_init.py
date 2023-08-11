@@ -1,14 +1,13 @@
 """Tests for the SABnzbd Integration."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN, OLD_SENSOR_KEYS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 MOCK_ENTRY_ID = "mock_entry_id"
 
@@ -27,19 +26,11 @@ MOCK_ENTRY_VERSION_1 = MockConfigEntry(
 )
 
 
-@pytest.fixture
-def device_registry(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_registry(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
-
-
-async def test_unique_id_migrate(hass, device_registry, entity_registry):
+async def test_unique_id_migrate(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that config flow entry is migrated correctly."""
     # Start with the config entry at Version 1.
     mock_entry = MOCK_ENTRY_VERSION_1
@@ -49,7 +40,7 @@ async def test_unique_id_migrate(hass, device_registry, entity_registry):
         config_entry_id=mock_entry.entry_id,
         identifiers={(DOMAIN, DOMAIN)},
         name=DEFAULT_NAME,
-        entry_type=DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     entity_id_sensor_key = []

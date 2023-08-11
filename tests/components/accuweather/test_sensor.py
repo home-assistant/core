@@ -1,13 +1,11 @@
 """Test sensor of AccuWeather integration."""
 from datetime import timedelta
-import json
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.accuweather.const import ATTRIBUTION, DOMAIN
+from homeassistant.components.accuweather.const import ATTRIBUTION
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -21,12 +19,14 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     UV_INDEX,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolumetricFlux,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -34,10 +34,16 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import (
+    async_fire_time_changed,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
-async def test_sensor_without_forecast(hass):
+async def test_sensor_without_forecast(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test states of the sensor without forecast."""
     await init_integration(hass)
     registry = er.async_get(hass)
@@ -114,259 +120,6 @@ async def test_sensor_without_forecast(hass):
     assert entry
     assert entry.unique_id == "0123456-uvindex"
 
-
-async def test_sensor_with_forecast(hass):
-    """Test states of the sensor with forecast."""
-    await init_integration(hass, forecast=True)
-    registry = er.async_get(hass)
-
-    state = hass.states.get("sensor.home_hours_of_sun_0d")
-    assert state
-    assert state.state == "7.2"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_ICON) == "mdi:weather-partly-cloudy"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.HOURS
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_hours_of_sun_0d")
-    assert entry
-    assert entry.unique_id == "0123456-hoursofsun-0"
-
-    state = hass.states.get("sensor.home_realfeel_temperature_max_0d")
-    assert state
-    assert state.state == "29.8"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_realfeel_temperature_max_0d")
-    assert entry
-
-    state = hass.states.get("sensor.home_realfeel_temperature_min_0d")
-    assert state
-    assert state.state == "15.1"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_realfeel_temperature_min_0d")
-    assert entry
-    assert entry.unique_id == "0123456-realfeeltemperaturemin-0"
-
-    state = hass.states.get("sensor.home_thunderstorm_probability_day_0d")
-    assert state
-    assert state.state == "40"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_ICON) == "mdi:weather-lightning"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_thunderstorm_probability_day_0d")
-    assert entry
-    assert entry.unique_id == "0123456-thunderstormprobabilityday-0"
-
-    state = hass.states.get("sensor.home_thunderstorm_probability_night_0d")
-    assert state
-    assert state.state == "40"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_ICON) == "mdi:weather-lightning"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_thunderstorm_probability_night_0d")
-    assert entry
-    assert entry.unique_id == "0123456-thunderstormprobabilitynight-0"
-
-    state = hass.states.get("sensor.home_uv_index_0d")
-    assert state
-    assert state.state == "5"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UV_INDEX
-    assert state.attributes.get("level") == "Moderate"
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_uv_index_0d")
-    assert entry
-    assert entry.unique_id == "0123456-uvindex-0"
-
-
-async def test_sensor_disabled(hass):
-    """Test sensor disabled by default."""
-    await init_integration(hass)
-    registry = er.async_get(hass)
-
-    entry = registry.async_get("sensor.home_apparent_temperature")
-    assert entry
-    assert entry.unique_id == "0123456-apparenttemperature"
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-    # Test enabling entity
-    updated_entry = registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
-    )
-
-    assert updated_entry != entry
-    assert updated_entry.disabled is False
-
-
-async def test_sensor_enabled_without_forecast(hass):
-    """Test enabling an advanced sensor."""
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-apparenttemperature",
-        suggested_object_id="home_apparent_temperature",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-cloudcover",
-        suggested_object_id="home_cloud_cover",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-dewpoint",
-        suggested_object_id="home_dew_point",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-realfeeltemperatureshade",
-        suggested_object_id="home_realfeel_temperature_shade",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-wetbulbtemperature",
-        suggested_object_id="home_wet_bulb_temperature",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-wind",
-        suggested_object_id="home_wind",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-windchilltemperature",
-        suggested_object_id="home_wind_chill_temperature",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-windgust",
-        suggested_object_id="home_wind_gust",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-cloudcoverday-0",
-        suggested_object_id="home_cloud_cover_day_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-cloudcovernight-0",
-        suggested_object_id="home_cloud_cover_night_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-grass-0",
-        suggested_object_id="home_grass_pollen_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-mold-0",
-        suggested_object_id="home_mold_pollen_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-ozone-0",
-        suggested_object_id="home_ozone_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-ragweed-0",
-        suggested_object_id="home_ragweed_pollen_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-realfeeltemperatureshademax-0",
-        suggested_object_id="home_realfeel_temperature_shade_max_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-realfeeltemperatureshademin-0",
-        suggested_object_id="home_realfeel_temperature_shade_min_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-tree-0",
-        suggested_object_id="home_tree_pollen_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-windgustday-0",
-        suggested_object_id="home_wind_gust_day_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-windgustnight-0",
-        suggested_object_id="home_wind_gust_night_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-windday-0",
-        suggested_object_id="home_wind_day_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-windnight-0",
-        suggested_object_id="home_wind_night_0d",
-        disabled_by=None,
-    )
-
-    await init_integration(hass, forecast=True)
-
     state = hass.states.get("sensor.home_apparent_temperature")
     assert state
     assert state.state == "22.8"
@@ -439,7 +192,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert entry
     assert entry.unique_id == "0123456-windchilltemperature"
 
-    state = hass.states.get("sensor.home_wind_gust")
+    state = hass.states.get("sensor.home_wind_gust_speed")
     assert state
     assert state.state == "20.3"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -451,11 +204,11 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
 
-    entry = registry.async_get("sensor.home_wind_gust")
+    entry = registry.async_get("sensor.home_wind_gust_speed")
     assert entry
     assert entry.unique_id == "0123456-windgust"
 
-    state = hass.states.get("sensor.home_wind")
+    state = hass.states.get("sensor.home_wind_speed")
     assert state
     assert state.state == "14.5"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -467,11 +220,106 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
 
-    entry = registry.async_get("sensor.home_wind")
+    entry = registry.async_get("sensor.home_wind_speed")
     assert entry
     assert entry.unique_id == "0123456-wind"
 
-    state = hass.states.get("sensor.home_cloud_cover_day_0d")
+
+async def test_sensor_with_forecast(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
+    """Test states of the sensor with forecast."""
+    await init_integration(hass, forecast=True)
+    registry = er.async_get(hass)
+
+    state = hass.states.get("sensor.home_hours_of_sun_today")
+    assert state
+    assert state.state == "7.2"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-partly-cloudy"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.HOURS
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+    entry = registry.async_get("sensor.home_hours_of_sun_today")
+    assert entry
+    assert entry.unique_id == "0123456-hoursofsun-0"
+
+    state = hass.states.get("sensor.home_realfeel_temperature_max_today")
+    assert state
+    assert state.state == "29.8"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+    entry = registry.async_get("sensor.home_realfeel_temperature_max_today")
+    assert entry
+
+    state = hass.states.get("sensor.home_realfeel_temperature_min_today")
+    assert state
+    assert state.state == "15.1"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+    entry = registry.async_get("sensor.home_realfeel_temperature_min_today")
+    assert entry
+    assert entry.unique_id == "0123456-realfeeltemperaturemin-0"
+
+    state = hass.states.get("sensor.home_thunderstorm_probability_today")
+    assert state
+    assert state.state == "40"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-lightning"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+    entry = registry.async_get("sensor.home_thunderstorm_probability_today")
+    assert entry
+    assert entry.unique_id == "0123456-thunderstormprobabilityday-0"
+
+    state = hass.states.get("sensor.home_thunderstorm_probability_tonight")
+    assert state
+    assert state.state == "40"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-lightning"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+    entry = registry.async_get("sensor.home_thunderstorm_probability_tonight")
+    assert entry
+    assert entry.unique_id == "0123456-thunderstormprobabilitynight-0"
+
+    state = hass.states.get("sensor.home_uv_index_today")
+    assert state
+    assert state.state == "5"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UV_INDEX
+    assert state.attributes.get("level") == "moderate"
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+    entry = registry.async_get("sensor.home_uv_index_today")
+    assert entry
+    assert entry.unique_id == "0123456-uvindex-0"
+
+    state = hass.states.get("sensor.home_air_quality_today")
+    assert state
+    assert state.state == "good"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "good",
+        "hazardous",
+        "high",
+        "low",
+        "moderate",
+        "unhealthy",
+    ]
+
+    state = hass.states.get("sensor.home_cloud_cover_today")
     assert state
     assert state.state == "58"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -479,11 +327,11 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-cloudy"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
-    entry = registry.async_get("sensor.home_cloud_cover_day_0d")
+    entry = registry.async_get("sensor.home_cloud_cover_today")
     assert entry
     assert entry.unique_id == "0123456-cloudcoverday-0"
 
-    state = hass.states.get("sensor.home_cloud_cover_night_0d")
+    state = hass.states.get("sensor.home_cloud_cover_tonight")
     assert state
     assert state.state == "65"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -491,10 +339,10 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-cloudy"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
-    entry = registry.async_get("sensor.home_cloud_cover_night_0d")
+    entry = registry.async_get("sensor.home_cloud_cover_tonight")
     assert entry
 
-    state = hass.states.get("sensor.home_grass_pollen_0d")
+    state = hass.states.get("sensor.home_grass_pollen_today")
     assert state
     assert state.state == "0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -502,15 +350,15 @@ async def test_sensor_enabled_without_forecast(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:grass"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
-    entry = registry.async_get("sensor.home_grass_pollen_0d")
+    entry = registry.async_get("sensor.home_grass_pollen_today")
     assert entry
     assert entry.unique_id == "0123456-grass-0"
 
-    state = hass.states.get("sensor.home_mold_pollen_0d")
+    state = hass.states.get("sensor.home_mold_pollen_today")
     assert state
     assert state.state == "0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -518,26 +366,14 @@ async def test_sensor_enabled_without_forecast(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
-    entry = registry.async_get("sensor.home_mold_pollen_0d")
+    entry = registry.async_get("sensor.home_mold_pollen_today")
     assert entry
     assert entry.unique_id == "0123456-mold-0"
 
-    state = hass.states.get("sensor.home_ozone_0d")
-    assert state
-    assert state.state == "32"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get("level") == "Good"
-    assert state.attributes.get(ATTR_ICON) == "mdi:vector-triangle"
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_ozone_0d")
-    assert entry
-    assert entry.unique_id == "0123456-ozone-0"
-
-    state = hass.states.get("sensor.home_ragweed_pollen_0d")
+    state = hass.states.get("sensor.home_ragweed_pollen_today")
     assert state
     assert state.state == "0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -545,14 +381,14 @@ async def test_sensor_enabled_without_forecast(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:sprout"
 
-    entry = registry.async_get("sensor.home_ragweed_pollen_0d")
+    entry = registry.async_get("sensor.home_ragweed_pollen_today")
     assert entry
     assert entry.unique_id == "0123456-ragweed-0"
 
-    state = hass.states.get("sensor.home_realfeel_temperature_shade_max_0d")
+    state = hass.states.get("sensor.home_realfeel_temperature_shade_max_today")
     assert state
     assert state.state == "28.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -560,22 +396,22 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
-    entry = registry.async_get("sensor.home_realfeel_temperature_shade_max_0d")
+    entry = registry.async_get("sensor.home_realfeel_temperature_shade_max_today")
     assert entry
     assert entry.unique_id == "0123456-realfeeltemperatureshademax-0"
 
-    state = hass.states.get("sensor.home_realfeel_temperature_shade_min_0d")
+    state = hass.states.get("sensor.home_realfeel_temperature_shade_min_today")
     assert state
     assert state.state == "15.1"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
 
-    entry = registry.async_get("sensor.home_realfeel_temperature_shade_min_0d")
+    entry = registry.async_get("sensor.home_realfeel_temperature_shade_min_today")
     assert entry
     assert entry.unique_id == "0123456-realfeeltemperatureshademin-0"
 
-    state = hass.states.get("sensor.home_tree_pollen_0d")
+    state = hass.states.get("sensor.home_tree_pollen_today")
     assert state
     assert state.state == "0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -583,15 +419,15 @@ async def test_sensor_enabled_without_forecast(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:tree-outline"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
-    entry = registry.async_get("sensor.home_tree_pollen_0d")
+    entry = registry.async_get("sensor.home_tree_pollen_today")
     assert entry
     assert entry.unique_id == "0123456-tree-0"
 
-    state = hass.states.get("sensor.home_wind_day_0d")
+    state = hass.states.get("sensor.home_wind_speed_today")
     assert state
     assert state.state == "13.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -603,11 +439,11 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
 
-    entry = registry.async_get("sensor.home_wind_day_0d")
+    entry = registry.async_get("sensor.home_wind_speed_today")
     assert entry
     assert entry.unique_id == "0123456-windday-0"
 
-    state = hass.states.get("sensor.home_wind_night_0d")
+    state = hass.states.get("sensor.home_wind_speed_tonight")
     assert state
     assert state.state == "7.4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -620,11 +456,11 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
 
-    entry = registry.async_get("sensor.home_wind_night_0d")
+    entry = registry.async_get("sensor.home_wind_speed_tonight")
     assert entry
     assert entry.unique_id == "0123456-windnight-0"
 
-    state = hass.states.get("sensor.home_wind_gust_day_0d")
+    state = hass.states.get("sensor.home_wind_gust_speed_today")
     assert state
     assert state.state == "29.6"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -637,11 +473,11 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
 
-    entry = registry.async_get("sensor.home_wind_gust_day_0d")
+    entry = registry.async_get("sensor.home_wind_gust_speed_today")
     assert entry
     assert entry.unique_id == "0123456-windgustday-0"
 
-    state = hass.states.get("sensor.home_wind_gust_night_0d")
+    state = hass.states.get("sensor.home_wind_gust_speed_tonight")
     assert state
     assert state.state == "18.5"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -654,12 +490,65 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
 
-    entry = registry.async_get("sensor.home_wind_gust_night_0d")
+    entry = registry.async_get("sensor.home_wind_gust_speed_tonight")
     assert entry
     assert entry.unique_id == "0123456-windgustnight-0"
 
+    entry = registry.async_get("sensor.home_air_quality_today")
+    assert entry
+    assert entry.unique_id == "0123456-airquality-0"
 
-async def test_availability(hass):
+    state = hass.states.get("sensor.home_solar_irradiance_today")
+    assert state
+    assert state.state == "7447.1"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfIrradiance.WATTS_PER_SQUARE_METER
+    )
+
+    entry = registry.async_get("sensor.home_solar_irradiance_today")
+    assert entry
+    assert entry.unique_id == "0123456-solarirradianceday-0"
+
+    state = hass.states.get("sensor.home_solar_irradiance_tonight")
+    assert state
+    assert state.state == "271.6"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfIrradiance.WATTS_PER_SQUARE_METER
+    )
+
+    entry = registry.async_get("sensor.home_solar_irradiance_tonight")
+    assert entry
+    assert entry.unique_id == "0123456-solarirradiancenight-0"
+
+    state = hass.states.get("sensor.home_condition_today")
+    assert state
+    assert (
+        state.state
+        == "Clouds and sunshine with a couple of showers and a thunderstorm around late this afternoon"
+    )
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+
+    entry = registry.async_get("sensor.home_condition_today")
+    assert entry
+    assert entry.unique_id == "0123456-longphraseday-0"
+
+    state = hass.states.get("sensor.home_condition_tonight")
+    assert state
+    assert state.state == "Partly cloudy"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+
+    entry = registry.async_get("sensor.home_condition_tonight")
+    assert entry
+    assert entry.unique_id == "0123456-longphrasenight-0"
+
+
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass)
 
@@ -683,8 +572,8 @@ async def test_availability(hass):
     future = utcnow() + timedelta(minutes=120)
     with patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=json.loads(
-            load_fixture("accuweather/current_conditions_data.json")
+        return_value=load_json_object_fixture(
+            "accuweather/current_conditions_data.json"
         ),
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.requests_remaining",
@@ -700,20 +589,20 @@ async def test_availability(hass):
         assert state.state == "3200.0"
 
 
-async def test_manual_update_entity(hass):
+async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, forecast=True)
 
     await async_setup_component(hass, "homeassistant", {})
 
-    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
-    forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
+    current = load_json_object_fixture("accuweather/current_conditions_data.json")
+    forecast = load_json_array_fixture("accuweather/forecast_data.json")
 
     with patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
         return_value=current,
     ) as mock_current, patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
+        "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
         return_value=forecast,
     ) as mock_forecast, patch(
         "homeassistant.components.accuweather.AccuWeather.requests_remaining",
@@ -730,20 +619,30 @@ async def test_manual_update_entity(hass):
         assert mock_forecast.call_count == 1
 
 
-async def test_sensor_imperial_units(hass):
+async def test_sensor_imperial_units(hass: HomeAssistant) -> None:
     """Test states of the sensor without forecast."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "10500.0"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
+    assert state.state == "10498.687664042"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.FEET
 
+    state = hass.states.get("sensor.home_wind_speed")
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfSpeed.MILES_PER_HOUR
 
-async def test_state_update(hass):
+    state = hass.states.get("sensor.home_realfeel_temperature")
+    assert state
+    assert state.state == "77.2"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT
+    )
+
+
+async def test_state_update(hass: HomeAssistant) -> None:
     """Ensure the sensor state changes after updating the data."""
     await init_integration(hass)
 
@@ -754,8 +653,8 @@ async def test_state_update(hass):
 
     future = utcnow() + timedelta(minutes=60)
 
-    current_condition = json.loads(
-        load_fixture("accuweather/current_conditions_data.json")
+    current_condition = load_json_object_fixture(
+        "accuweather/current_conditions_data.json"
     )
     current_condition["Ceiling"]["Metric"]["Value"] = 3300
 

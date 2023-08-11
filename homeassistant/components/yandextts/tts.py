@@ -114,11 +114,10 @@ class YandexSpeechKitProvider(Provider):
         """Return list of supported options."""
         return SUPPORTED_OPTIONS
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
         actual_language = language
-        options = options or {}
 
         try:
             async with async_timeout.timeout(10):

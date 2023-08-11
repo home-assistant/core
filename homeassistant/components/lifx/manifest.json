@@ -1,15 +1,18 @@
 {
   "domain": "lifx",
   "name": "LIFX",
+  "codeowners": ["@bdraco"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/lifx",
-  "requirements": [
-    "aiolifx==0.8.7",
-    "aiolifx_effects==0.3.1",
-    "aiolifx_themes==0.4.0"
-  ],
-  "quality_scale": "platinum",
   "dependencies": ["network"],
+  "dhcp": [
+    {
+      "macaddress": "D073D5*"
+    },
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/lifx",
   "homekit": {
     "models": [
       "LIFX A19",
@@ -34,8 +37,12 @@
       "LIFX Z"
     ]
   },
-  "dhcp": [{ "macaddress": "D073D5*" }, { "registered_devices": true }],
-  "codeowners": ["@bdraco", "@Djelibeybi"],
   "iot_class": "local_polling",
-  "loggers": ["aiolifx", "aiolifx_effects", "bitstring"]
+  "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
+  "quality_scale": "platinum",
+  "requirements": [
+    "aiolifx==0.8.10",
+    "aiolifx-effects==0.3.2",
+    "aiolifx-themes==0.4.5"
+  ]
 }

@@ -1,4 +1,6 @@
 """Test KNX init."""
+from unittest.mock import patch
+
 import pytest
 from xknx.io import (
     DEFAULT_MCAST_GRP,
@@ -8,6 +10,7 @@ from xknx.io import (
     SecureConfig,
 )
 
+from homeassistant import config_entries
 from homeassistant.components.knx.config_flow import DEFAULT_ROUTING_IA
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -45,7 +48,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "config_entry_data,connection_config",
+    ("config_entry_data", "connection_config"),
     [
         (
             {
@@ -110,12 +113,17 @@ from tests.common import MockConfigEntry
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
                 CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
+                CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
+                CONF_KNX_KNXKEY_PASSWORD: "password",
             },
             ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP,
                 gateway_ip="192.168.0.2",
                 gateway_port=3675,
                 auto_reconnect=True,
+                secure_config=SecureConfig(
+                    knxkeys_file_path="keyring.knxkeys", knxkeys_password="password"
+                ),
                 threaded=True,
             ),
         ),
@@ -202,7 +210,7 @@ async def test_init_connection_handling(
     knx: KNXTestKit,
     config_entry_data: KNXConfigEntryData,
     connection_config: ConnectionConfig,
-):
+) -> None:
     """Test correctly generating connection config."""
 
     config_entry = MockConfigEntry(
@@ -251,3 +259,30 @@ async def test_init_connection_handling(
                 .connection_config()
                 .secure_config.knxkeys_file_path
             )
+
+
+async def test_async_remove_entry(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test async_setup_entry (for coverage)."""
+    config_entry = MockConfigEntry(
+        title="KNX",
+        domain=KNX_DOMAIN,
+        data={
+            CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
+        },
+    )
+    knx.mock_config_entry = config_entry
+    await knx.setup_integration({})
+
+    with patch("pathlib.Path.unlink") as unlink_mock, patch(
+        "pathlib.Path.rmdir"
+    ) as rmdir_mock:
+        assert await hass.config_entries.async_remove(config_entry.entry_id)
+        assert unlink_mock.call_count == 3
+        rmdir_mock.assert_called_once()
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries() == []
+    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED

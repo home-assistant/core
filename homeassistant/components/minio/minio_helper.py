@@ -1,13 +1,14 @@
 """Minio helper methods."""
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 import json
 import logging
 from queue import Queue
 import re
 import threading
 import time
+from typing import Self
 from urllib.parse import unquote
 
 from minio import Minio
@@ -53,7 +54,7 @@ def get_minio_notification_response(
 class MinioEventStreamIterator(Iterable):
     """Iterator wrapper over notification http response stream."""
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Self:
         """Return self."""
         return self
 

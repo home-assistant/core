@@ -26,8 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -72,6 +71,8 @@ from .const import (
     TMRW_ATTR_TEMPERATURE,
     TMRW_ATTR_TEMPERATURE_HIGH,
     TMRW_ATTR_TEMPERATURE_LOW,
+    TMRW_ATTR_UV_HEALTH_CONCERN,
+    TMRW_ATTR_UV_INDEX,
     TMRW_ATTR_VISIBILITY,
     TMRW_ATTR_WIND_DIRECTION,
     TMRW_ATTR_WIND_GUST,
@@ -291,6 +292,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
                         TMRW_ATTR_SOLAR_GHI,
                         TMRW_ATTR_SULPHUR_DIOXIDE,
+                        TMRW_ATTR_UV_INDEX,
+                        TMRW_ATTR_UV_HEALTH_CONCERN,
                         TMRW_ATTR_WIND_GUST,
                     ],
                     [

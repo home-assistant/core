@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
-from matter_server.common.models.node import MatterNode
+from matter_server.client.models.node import MatterNode
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -24,6 +24,8 @@ async def switch_node_fixture(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_turn_on(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -46,7 +48,7 @@ async def test_turn_on(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=switch_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.OnOff.Commands.On(),
     )
 
@@ -58,6 +60,8 @@ async def test_turn_on(
     assert state.state == "on"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_turn_off(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -80,6 +84,6 @@ async def test_turn_off(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=switch_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.OnOff.Commands.Off(),
     )

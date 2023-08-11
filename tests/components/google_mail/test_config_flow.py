@@ -13,12 +13,13 @@ from .conftest import CLIENT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, SCOPES, TITL
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -70,7 +71,7 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    "fixture,abort_reason,placeholders,calls,access_token",
+    ("fixture", "abort_reason", "placeholders", "calls", "access_token"),
     [
         ("get_profile", "reauth_successful", None, 1, "updated-access-token"),
         (
@@ -166,8 +167,8 @@ async def test_reauth(
 
 async def test_already_configured(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    current_request_with_host: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test case where config flow discovers unique id was already configured."""

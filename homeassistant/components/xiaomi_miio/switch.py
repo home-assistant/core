@@ -24,10 +24,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -500,7 +500,9 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 if not hasattr(device, method["method"]):
                     continue
                 await getattr(device, method["method"])(**params)
-                update_tasks.append(device.async_update_ha_state(True))
+                update_tasks.append(
+                    asyncio.create_task(device.async_update_ha_state(True))
+                )
 
             if update_tasks:
                 await asyncio.wait(update_tasks)

@@ -1,5 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
+from functools import lru_cache
 from http import HTTPStatus
 import logging
 
@@ -17,6 +18,7 @@ from homeassistant.const import (
     URL_API,
     URL_API_COMPONENTS,
     URL_API_CONFIG,
+    URL_API_CORE_STATE,
     URL_API_ERROR_LOG,
     URL_API_EVENTS,
     URL_API_SERVICES,
@@ -27,10 +29,11 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
-from homeassistant.helpers import template
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.json import json_loads
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +50,13 @@ DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
+    hass.http.register_view(APICoreStateView)
     hass.http.register_view(APIEventStream)
     hass.http.register_view(APIConfigView)
     hass.http.register_view(APIStatesView)
@@ -78,6 +84,24 @@ class APIStatusView(HomeAssistantView):
     def get(self, request):
         """Retrieve if API is running."""
         return self.json_message("API running.")
+
+
+class APICoreStateView(HomeAssistantView):
+    """View to handle core state requests."""
+
+    url = URL_API_CORE_STATE
+    name = "api:core:state"
+
+    @ha.callback
+    def get(self, request: web.Request) -> web.Response:
+        """Retrieve the current core state.
+
+        This API is intended to be a fast and lightweight way to check if the
+        Home Assistant core is running. Its primary use case is for supervisor
+        to check if Home Assistant is running.
+        """
+        hass: HomeAssistant = request.app["hass"]
+        return self.json({"state": hass.state.value})
 
 
 class APIEventStream(HomeAssistantView):
@@ -349,6 +373,12 @@ class APIComponentsView(HomeAssistantView):
         return self.json(request.app["hass"].config.components)
 
 
+@lru_cache
+def _cached_template(template_str: str, hass: ha.HomeAssistant) -> template.Template:
+    """Return a cached template."""
+    return template.Template(template_str, hass)
+
+
 class APITemplateView(HomeAssistantView):
     """View to handle Template requests."""
 
@@ -361,7 +391,7 @@ class APITemplateView(HomeAssistantView):
             raise Unauthorized()
         try:
             data = await request.json()
-            tpl = template.Template(data["template"], request.app["hass"])
+            tpl = _cached_template(data["template"], request.app["hass"])
             return tpl.async_render(variables=data.get("variables"), parse_result=False)
         except (ValueError, TemplateError) as ex:
             return self.json_message(

@@ -9,10 +9,9 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -28,7 +27,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "dgnbj": (
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
-            name="Time",
+            translation_key="time",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -37,35 +36,35 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "bh": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            name="Temperature",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
-            name="Temperature",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_BOILING_C,
-            name="Temperature after boiling",
+            translation_key="temperature_after_boiling",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_BOILING_F,
-            name="Temperature after boiling",
+            translation_key="temperature_after_boiling",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
-            name="Heat preservation time",
+            translation_key="heat_preservation_time",
             icon="mdi:timer",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -75,12 +74,12 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "cwwsq": (
         NumberEntityDescription(
             key=DPCode.MANUAL_FEED,
-            name="Feed",
+            translation_key="feed",
             icon="mdi:bowl",
         ),
         NumberEntityDescription(
             key=DPCode.VOICE_TIMES,
-            name="Voice times",
+            translation_key="voice_times",
             icon="mdi:microphone",
         ),
     ),
@@ -89,18 +88,18 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "hps": (
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
-            name="Sensitivity",
+            translation_key="sensitivity",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.NEAR_DETECTION,
-            name="Near detection",
+            translation_key="near_detection",
             icon="mdi:signal-distance-variant",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.FAR_DETECTION,
-            name="Far detection",
+            translation_key="far_detection",
             icon="mdi:signal-distance-variant",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -110,26 +109,26 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "kfj": (
         NumberEntityDescription(
             key=DPCode.WATER_SET,
-            name="Water level",
+            translation_key="water_level",
             icon="mdi:cup-water",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            name="Temperature",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
-            name="Heat preservation time",
+            translation_key="heat_preservation_time",
             icon="mdi:timer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
-            name="Powder",
+            translation_key="powder",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -138,20 +137,20 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "mzj": (
         NumberEntityDescription(
             key=DPCode.COOK_TEMPERATURE,
-            name="Cook temperature",
+            translation_key="cook_temperature",
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.COOK_TIME,
-            name="Cook time",
+            translation_key="cook_time",
             icon="mdi:timer",
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.CLOUD_RECIPE_NUMBER,
-            name="Cloud recipe",
+            translation_key="cloud_recipe",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -160,7 +159,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "sd": (
         NumberEntityDescription(
             key=DPCode.VOLUME_SET,
-            name="Volume",
+            translation_key="volume",
             icon="mdi:volume-high",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -170,7 +169,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "sgbj": (
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
-            name="Time",
+            translation_key="time",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -179,7 +178,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "sp": (
         NumberEntityDescription(
             key=DPCode.BASIC_DEVICE_VOLUME,
-            name="Volume",
+            translation_key="volume",
             icon="mdi:volume-high",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -189,37 +188,37 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "tgkg": (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
-            name="Minimum brightness",
+            translation_key="minimum_brightness",
             icon="mdi:lightbulb-outline",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
-            name="Maximum brightness",
+            translation_key="maximum_brightness",
             icon="mdi:lightbulb-on-outline",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
-            name="Minimum brightness 2",
+            translation_key="minimum_brightness_2",
             icon="mdi:lightbulb-outline",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            name="Maximum brightness 2",
+            translation_key="maximum_brightness_2",
             icon="mdi:lightbulb-on-outline",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_3,
-            name="Minimum brightness 3",
+            translation_key="minimum_brightness_3",
             icon="mdi:lightbulb-outline",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_3,
-            name="Maximum brightness 3",
+            translation_key="maximum_brightness_3",
             icon="mdi:lightbulb-on-outline",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -229,25 +228,25 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "tgq": (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
-            name="Minimum brightness",
+            translation_key="minimum_brightness",
             icon="mdi:lightbulb-outline",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
-            name="Maximum brightness",
+            translation_key="maximum_brightness",
             icon="mdi:lightbulb-on-outline",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
-            name="Minimum brightness 2",
+            translation_key="minimum_brightness_2",
             icon="mdi:lightbulb-outline",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            name="Maximum brightness 2",
+            translation_key="maximum_brightness_2",
             icon="mdi:lightbulb-on-outline",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -257,7 +256,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "zd": (
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
-            name="Sensitivity",
+            translation_key="sensitivity",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -265,19 +264,21 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "szjqr": (
         NumberEntityDescription(
             key=DPCode.ARM_DOWN_PERCENT,
-            name="Move down %",
+            translation_key="move_down",
             icon="mdi:arrow-down-bold",
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.ARM_UP_PERCENT,
-            name="Move up %",
+            translation_key="move_up",
             icon="mdi:arrow-up-bold",
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.CLICK_SUSTAIN_TIME,
-            name="Down delay",
+            translation_key="down_delay",
             icon="mdi:timer",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -287,7 +288,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "fs": (
         NumberEntityDescription(
             key=DPCode.TEMP,
-            name="Temperature",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),
@@ -297,13 +298,13 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "jsq": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            name="Temperature",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
-            name="Temperature",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),

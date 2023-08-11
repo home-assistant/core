@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_ZONE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -27,7 +27,7 @@ TRIGGER_TYPES: Final[set[str]] = {"enters", "leaves"}
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN_ZONE),
     }
@@ -38,11 +38,11 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for Device Tracker devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     triggers = []
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
@@ -51,7 +51,7 @@ async def async_get_triggers(
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                CONF_ENTITY_ID: entry.id,
                 CONF_TYPE: "enters",
             }
         )
@@ -60,7 +60,7 @@ async def async_get_triggers(
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                CONF_ENTITY_ID: entry.id,
                 CONF_TYPE: "leaves",
             }
         )

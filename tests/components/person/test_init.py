@@ -1,12 +1,17 @@
 """The tests for the person component."""
-import logging
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import person
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SourceType
-from homeassistant.components.person import ATTR_SOURCE, ATTR_USER_ID, DOMAIN
+from homeassistant.components.person import (
+    ATTR_DEVICE_TRACKERS,
+    ATTR_SOURCE,
+    ATTR_USER_ID,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_GPS_ACCURACY,
@@ -17,51 +22,17 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, State
-from homeassistant.helpers import collection, entity_registry as er
+from homeassistant.core import Context, CoreState, HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component, mock_restore_cache
+from .conftest import DEVICE_TRACKER, DEVICE_TRACKER_2
 
-DEVICE_TRACKER = "device_tracker.test_tracker"
-DEVICE_TRACKER_2 = "device_tracker.test_tracker_2"
-
-
-@pytest.fixture
-def storage_collection(hass):
-    """Return an empty storage collection."""
-    id_manager = collection.IDManager()
-    return person.PersonStorageCollection(
-        person.PersonStore(hass, person.STORAGE_VERSION, person.STORAGE_KEY),
-        logging.getLogger(f"{person.__name__}.storage_collection"),
-        id_manager,
-        collection.YamlCollection(
-            logging.getLogger(f"{person.__name__}.yaml_collection"), id_manager
-        ),
-    )
+from tests.common import MockUser, mock_component, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 
-@pytest.fixture
-def storage_setup(hass, hass_storage, hass_admin_user):
-    """Storage setup."""
-    hass_storage[DOMAIN] = {
-        "key": DOMAIN,
-        "version": 1,
-        "data": {
-            "persons": [
-                {
-                    "id": "1234",
-                    "name": "tracked person",
-                    "user_id": hass_admin_user.id,
-                    "device_trackers": [DEVICE_TRACKER],
-                }
-            ]
-        },
-    }
-    assert hass.loop.run_until_complete(async_setup_component(hass, DOMAIN, {}))
-
-
-async def test_minimal_setup(hass):
+async def test_minimal_setup(hass: HomeAssistant) -> None:
     """Test minimal config with only name."""
     config = {DOMAIN: {"id": "1234", "name": "test person"}}
     assert await async_setup_component(hass, DOMAIN, config)
@@ -75,19 +46,19 @@ async def test_minimal_setup(hass):
     assert state.attributes.get(ATTR_ENTITY_PICTURE) is None
 
 
-async def test_setup_no_id(hass):
+async def test_setup_no_id(hass: HomeAssistant) -> None:
     """Test config with no id."""
     config = {DOMAIN: {"name": "test user"}}
     assert not await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_setup_no_name(hass):
+async def test_setup_no_name(hass: HomeAssistant) -> None:
     """Test config with no name."""
     config = {DOMAIN: {"id": "1234"}}
     assert not await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_setup_user_id(hass, hass_admin_user):
+async def test_setup_user_id(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test config with user id."""
     user_id = hass_admin_user.id
     config = {DOMAIN: {"id": "1234", "name": "test person", "user_id": user_id}}
@@ -102,7 +73,9 @@ async def test_setup_user_id(hass, hass_admin_user):
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
 
-async def test_valid_invalid_user_ids(hass, hass_admin_user):
+async def test_valid_invalid_user_ids(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test a person with valid user id and a person with invalid user id ."""
     user_id = hass_admin_user.id
     config = {
@@ -124,7 +97,7 @@ async def test_valid_invalid_user_ids(hass, hass_admin_user):
     assert state is None
 
 
-async def test_setup_tracker(hass, hass_admin_user):
+async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test set up person with one device tracker."""
     hass.state = CoreState.not_running
     user_id = hass_admin_user.id
@@ -162,6 +135,7 @@ async def test_setup_tracker(hass, hass_admin_user):
     assert state.attributes.get(ATTR_LONGITUDE) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
     hass.states.async_set(
         DEVICE_TRACKER,
@@ -178,9 +152,12 @@ async def test_setup_tracker(hass, hass_admin_user):
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 10
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
 
-async def test_setup_two_trackers(hass, hass_admin_user):
+async def test_setup_two_trackers(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test set up person with two device trackers."""
     hass.state = CoreState.not_running
     user_id = hass_admin_user.id
@@ -215,6 +192,10 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER,
+        DEVICE_TRACKER_2,
+    ]
 
     hass.states.async_set(
         DEVICE_TRACKER_2,
@@ -240,6 +221,10 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 12
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER,
+        DEVICE_TRACKER_2,
+    ]
 
     hass.states.async_set(DEVICE_TRACKER_2, "zone1", {ATTR_SOURCE_TYPE: SourceType.GPS})
     await hass.async_block_till_done()
@@ -258,7 +243,9 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
 
 
-async def test_ignore_unavailable_states(hass, hass_admin_user):
+async def test_ignore_unavailable_states(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test set up person with two device trackers, one unavailable."""
     hass.state = CoreState.not_running
     user_id = hass_admin_user.id
@@ -301,7 +288,9 @@ async def test_ignore_unavailable_states(hass, hass_admin_user):
     assert state.state == "not_home"
 
 
-async def test_restore_home_state(hass, hass_admin_user):
+async def test_restore_home_state(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test that the state is restored for a person on startup."""
     user_id = hass_admin_user.id
     attrs = {
@@ -337,7 +326,7 @@ async def test_restore_home_state(hass, hass_admin_user):
     assert state.attributes.get(ATTR_ENTITY_PICTURE) == "/bla"
 
 
-async def test_duplicate_ids(hass, hass_admin_user):
+async def test_duplicate_ids(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test we don't allow duplicate IDs."""
     config = {
         DOMAIN: [
@@ -352,7 +341,7 @@ async def test_duplicate_ids(hass, hass_admin_user):
     assert hass.states.get("person.test_user_2") is None
 
 
-async def test_create_person_during_run(hass):
+async def test_create_person_during_run(hass: HomeAssistant) -> None:
     """Test that person is updated if created while hass is running."""
     config = {DOMAIN: {}}
     assert await async_setup_component(hass, DOMAIN, config)
@@ -368,7 +357,9 @@ async def test_create_person_during_run(hass):
     assert state.state == "home"
 
 
-async def test_load_person_storage(hass, hass_admin_user, storage_setup):
+async def test_load_person_storage(
+    hass: HomeAssistant, hass_admin_user: MockUser, storage_setup
+) -> None:
     """Test set up person from storage."""
     state = hass.states.get("person.tracked_person")
     assert state.state == STATE_UNKNOWN
@@ -392,7 +383,9 @@ async def test_load_person_storage(hass, hass_admin_user, storage_setup):
     assert state.attributes.get(ATTR_USER_ID) == hass_admin_user.id
 
 
-async def test_load_person_storage_two_nonlinked(hass, hass_storage):
+async def test_load_person_storage_two_nonlinked(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading two users with both not having a user linked."""
     hass_storage[DOMAIN] = {
         "key": DOMAIN,
@@ -421,7 +414,9 @@ async def test_load_person_storage_two_nonlinked(hass, hass_storage):
     assert hass.states.get("person.tracked_person_2") is not None
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     manager = hass.data[DOMAIN][1]
 
@@ -435,7 +430,12 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert len(resp["result"]["config"]) == 0
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup, hass_read_only_user):
+async def test_ws_create(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+    hass_read_only_user: MockUser,
+) -> None:
     """Test creating via WS."""
     manager = hass.data[DOMAIN][1]
 
@@ -461,8 +461,12 @@ async def test_ws_create(hass, hass_ws_client, storage_setup, hass_read_only_use
 
 
 async def test_ws_create_requires_admin(
-    hass, hass_ws_client, storage_setup, hass_admin_user, hass_read_only_user
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
     """Test creating via WS requires admin."""
     hass_admin_user.groups = []
     manager = hass.data[DOMAIN][1]
@@ -486,7 +490,9 @@ async def test_ws_create_requires_admin(
     assert not resp["success"]
 
 
-async def test_ws_update(hass, hass_ws_client, storage_setup):
+async def test_ws_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating via WS."""
     manager = hass.data[DOMAIN][1]
 
@@ -534,8 +540,11 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
 
 
 async def test_ws_update_require_admin(
-    hass, hass_ws_client, storage_setup, hass_admin_user
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+    hass_admin_user: MockUser,
+) -> None:
     """Test updating via WS requires admin."""
     hass_admin_user.groups = []
     manager = hass.data[DOMAIN][1]
@@ -560,7 +569,9 @@ async def test_ws_update_require_admin(
     assert original == not_updated
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test deleting via WS."""
     manager = hass.data[DOMAIN][1]
 
@@ -582,8 +593,11 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
 
 async def test_ws_delete_require_admin(
-    hass, hass_ws_client, storage_setup, hass_admin_user
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+    hass_admin_user: MockUser,
+) -> None:
     """Test deleting via WS requires admin."""
     hass_admin_user.groups = []
     manager = hass.data[DOMAIN][1]
@@ -607,7 +621,7 @@ async def test_ws_delete_require_admin(
     assert len(persons) == 1
 
 
-async def test_create_invalid_user_id(hass, storage_collection):
+async def test_create_invalid_user_id(hass: HomeAssistant, storage_collection) -> None:
     """Test we do not allow invalid user ID during creation."""
     with pytest.raises(ValueError):
         await storage_collection.async_create_item(
@@ -615,7 +629,9 @@ async def test_create_invalid_user_id(hass, storage_collection):
         )
 
 
-async def test_create_duplicate_user_id(hass, hass_admin_user, storage_collection):
+async def test_create_duplicate_user_id(
+    hass: HomeAssistant, hass_admin_user: MockUser, storage_collection
+) -> None:
     """Test we do not allow duplicate user ID during creation."""
     await storage_collection.async_create_item(
         {"name": "Hello", "user_id": hass_admin_user.id}
@@ -627,7 +643,9 @@ async def test_create_duplicate_user_id(hass, hass_admin_user, storage_collectio
         )
 
 
-async def test_update_double_user_id(hass, hass_admin_user, storage_collection):
+async def test_update_double_user_id(
+    hass: HomeAssistant, hass_admin_user: MockUser, storage_collection
+) -> None:
     """Test we do not allow double user ID during update."""
     await storage_collection.async_create_item(
         {"name": "Hello", "user_id": hass_admin_user.id}
@@ -640,7 +658,7 @@ async def test_update_double_user_id(hass, hass_admin_user, storage_collection):
         )
 
 
-async def test_update_invalid_user_id(hass, storage_collection):
+async def test_update_invalid_user_id(hass: HomeAssistant, storage_collection) -> None:
     """Test updating to invalid user ID."""
     person = await storage_collection.async_create_item({"name": "Hello"})
 
@@ -651,8 +669,8 @@ async def test_update_invalid_user_id(hass, storage_collection):
 
 
 async def test_update_person_when_user_removed(
-    hass, storage_setup, hass_read_only_user
-):
+    hass: HomeAssistant, storage_setup, hass_read_only_user: MockUser
+) -> None:
     """Update person when user is removed."""
     storage_collection = hass.data[DOMAIN][1]
 
@@ -666,7 +684,7 @@ async def test_update_person_when_user_removed(
     assert storage_collection.data[person["id"]]["user_id"] is None
 
 
-async def test_removing_device_tracker(hass, storage_setup):
+async def test_removing_device_tracker(hass: HomeAssistant, storage_setup) -> None:
     """Test we automatically remove removed device trackers."""
     storage_collection = hass.data[DOMAIN][1]
     reg = er.async_get(hass)
@@ -684,7 +702,9 @@ async def test_removing_device_tracker(hass, storage_setup):
     assert storage_collection.data[person["id"]]["device_trackers"] == []
 
 
-async def test_add_user_device_tracker(hass, storage_setup, hass_read_only_user):
+async def test_add_user_device_tracker(
+    hass: HomeAssistant, storage_setup, hass_read_only_user: MockUser
+) -> None:
     """Test adding a device tracker to a person tied to a user."""
     storage_collection = hass.data[DOMAIN][1]
     pers = await storage_collection.async_create_item(
@@ -705,7 +725,7 @@ async def test_add_user_device_tracker(hass, storage_setup, hass_read_only_user)
     ]
 
 
-async def test_reload(hass, hass_admin_user):
+async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test reloading the YAML config."""
     assert await async_setup_component(
         hass,
@@ -761,7 +781,7 @@ async def test_reload(hass, hass_admin_user):
     assert state_3.name == "Person 3"
 
 
-async def test_person_storage_fixing_device_trackers(storage_collection):
+async def test_person_storage_fixing_device_trackers(storage_collection) -> None:
     """Test None device trackers become lists."""
     with patch.object(
         storage_collection.store,
@@ -773,7 +793,7 @@ async def test_person_storage_fixing_device_trackers(storage_collection):
     assert storage_collection.data["bla"]["device_trackers"] == []
 
 
-async def test_persons_with_entity(hass):
+async def test_persons_with_entity(hass: HomeAssistant) -> None:
     """Test finding persons with an entity."""
     assert await async_setup_component(
         hass,
@@ -804,7 +824,7 @@ async def test_persons_with_entity(hass):
     ]
 
 
-async def test_entities_in_person(hass):
+async def test_entities_in_person(hass: HomeAssistant) -> None:
     """Test finding entities tracked by person."""
     assert await async_setup_component(
         hass,

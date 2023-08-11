@@ -10,12 +10,14 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockUser
 
 
 @pytest.mark.parametrize(
-    "exc,code,err,log",
+    ("exc", "code", "err", "log"),
     [
         (
             exceptions.Unauthorized(),
@@ -56,17 +58,19 @@ from tests.common import MockUser
     ],
 )
 async def test_exception_handling(
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     exc: Exception,
     code: str,
     err: str,
     log: str,
-):
+) -> None:
     """Test handling of exceptions."""
     send_messages = []
     user = MockUser()
     refresh_token = Mock()
     current_request = AsyncMock()
+    hass.data[DOMAIN] = {}
 
     def get_extra_info(key: str) -> Any:
         if key == "sslcontext":
@@ -89,7 +93,7 @@ async def test_exception_handling(
     ) as current_request:
         current_request.get.return_value = mocked_request
         conn = websocket_api.ActiveConnection(
-            logging.getLogger(__name__), None, send_messages.append, user, refresh_token
+            logging.getLogger(__name__), hass, send_messages.append, user, refresh_token
         )
 
         conn.async_handle_exception({"id": 5}, exc)
@@ -97,3 +101,27 @@ async def test_exception_handling(
     assert send_messages[0]["error"]["code"] == code
     assert send_messages[0]["error"]["message"] == err
     assert log in caplog.text
+
+
+async def test_binary_handler_registration() -> None:
+    """Test binary handler registration."""
+    connection = websocket_api.ActiveConnection(
+        None, Mock(data={websocket_api.DOMAIN: None}), None, None, Mock()
+    )
+
+    # One filler to align indexes with prefix numbers
+    unsubs = [None]
+    fake_handler = object()
+    for i in range(255):
+        prefix, unsub = connection.async_register_binary_handler(fake_handler)
+        assert prefix == i + 1
+        unsubs.append(unsub)
+
+    with pytest.raises(RuntimeError):
+        connection.async_register_binary_handler(None)
+
+    unsubs[15]()
+
+    # Verify we reuse an unsubscribed prefix
+    prefix, unsub = connection.async_register_binary_handler(None)
+    assert prefix == 15

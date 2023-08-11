@@ -9,9 +9,13 @@ from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import (
     CONF_INTERFACE,
     DOMAIN,
+    MODE_ROUTER,
     PROTOCOL_TELNET,
+    SENSORS_BYTES,
+    SENSORS_LOAD_AVG,
+    SENSORS_RATES,
+    SENSORS_TEMPERATURES,
 )
-from homeassistant.components.asuswrt.router import DEFAULT_NAME
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -25,13 +29,14 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-ASUSWRT_LIB = "homeassistant.components.asuswrt.router.AsusWrt"
+ASUSWRT_LIB = "homeassistant.components.asuswrt.bridge.AsusWrtLegacy"
 
 HOST = "myrouter.asuswrt.com"
 IP_ADDRESS = "192.168.1.1"
@@ -42,7 +47,7 @@ CONFIG_DATA = {
     CONF_PROTOCOL: PROTOCOL_TELNET,
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
-    CONF_MODE: "router",
+    CONF_MODE: MODE_ROUTER,
 }
 
 MAC_ADDR = "a1:b2:c3:d4:e5:f6"
@@ -50,32 +55,14 @@ MAC_ADDR = "a1:b2:c3:d4:e5:f6"
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
-MOCK_TEMPERATURES = {"2.4GHz": 40, "5.0GHz": 0, "CPU": 71.2}
+MOCK_TEMPERATURES = {"2.4GHz": 40.0, "5.0GHz": 0.0, "CPU": 71.2}
 MOCK_MAC_1 = "A1:B1:C1:D1:E1:F1"
 MOCK_MAC_2 = "A2:B2:C2:D2:E2:F2"
 MOCK_MAC_3 = "A3:B3:C3:D3:E3:F3"
 MOCK_MAC_4 = "A4:B4:C4:D4:E4:F4"
 
-SENSORS_DEFAULT = [
-    "Download Speed",
-    "Download",
-    "Upload Speed",
-    "Upload",
-]
-
-SENSORS_LOADAVG = [
-    "Load Avg (1m)",
-    "Load Avg (5m)",
-    "Load Avg (15m)",
-]
-
-SENSORS_TEMP = [
-    "2.4GHz Temperature",
-    "5GHz Temperature",
-    "CPU Temperature",
-]
-
-SENSORS_ALL = [*SENSORS_DEFAULT, *SENSORS_LOADAVG, *SENSORS_TEMP]
+SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_RATES]
+SENSORS_ALL = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES]
 
 PATCH_SETUP_ENTRY = patch(
     "homeassistant.components.asuswrt.async_setup_entry",
@@ -104,10 +91,11 @@ def mock_available_temps_fixture():
 
 
 @pytest.fixture(name="create_device_registry_devices")
-def create_device_registry_devices_fixture(hass):
+def create_device_registry_devices_fixture(hass: HomeAssistant):
     """Create device registry devices so the device tracker entities are enabled when added."""
     dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
+    config_entry.add_to_hass(hass)
 
     for idx, device in enumerate(
         (
@@ -181,7 +169,7 @@ def mock_controller_connect_sens_fail():
         yield service_mock
 
 
-def _setup_entry(hass, config, sensors, unique_id=None):
+def _setup_entry(hass: HomeAssistant, config, sensors, unique_id=None):
     """Create mock config entry with enabled sensors."""
     entity_reg = er.async_get(hass)
 
@@ -194,16 +182,17 @@ def _setup_entry(hass, config, sensors, unique_id=None):
     )
 
     # init variable
-    obj_prefix = slugify(HOST if unique_id else DEFAULT_NAME)
+    obj_prefix = slugify(HOST)
     sensor_prefix = f"{sensor.DOMAIN}.{obj_prefix}"
+    unique_id_prefix = slugify(unique_id or config_entry.entry_id)
 
     # Pre-enable the status sensor
-    for sensor_name in sensors:
-        sensor_id = slugify(sensor_name)
+    for sensor_key in sensors:
+        sensor_id = slugify(sensor_key)
         entity_reg.async_get_or_create(
             sensor.DOMAIN,
             DOMAIN,
-            f"{DOMAIN} {unique_id or DEFAULT_NAME} {sensor_name}",
+            f"{unique_id_prefix}_{sensor_id}",
             suggested_object_id=f"{obj_prefix}_{sensor_id}",
             config_entry=config_entry,
             disabled_by=None,
@@ -217,12 +206,12 @@ def _setup_entry(hass, config, sensors, unique_id=None):
     [None, MAC_ADDR],
 )
 async def test_sensors(
-    hass,
+    hass: HomeAssistant,
     connect,
     mock_devices,
     create_device_registry_devices,
     entry_unique_id,
-):
+) -> None:
     """Test creating AsusWRT default sensors and tracker."""
     config_entry, sensor_prefix = _setup_entry(
         hass, CONFIG_DATA, SENSORS_DEFAULT, entry_unique_id
@@ -254,10 +243,10 @@ async def test_sensors(
 
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
-    assert hass.states.get(f"{sensor_prefix}_download_speed").state == "160.0"
-    assert hass.states.get(f"{sensor_prefix}_download").state == "60.0"
-    assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.0"
-    assert hass.states.get(f"{sensor_prefix}_upload").state == "50.0"
+    assert hass.states.get(f"{sensor_prefix}_sensor_rx_rates").state == "160.0"
+    assert hass.states.get(f"{sensor_prefix}_sensor_rx_bytes").state == "60.0"
+    assert hass.states.get(f"{sensor_prefix}_sensor_tx_rates").state == "80.0"
+    assert hass.states.get(f"{sensor_prefix}_sensor_tx_bytes").state == "50.0"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # remove first tracked device
@@ -291,11 +280,11 @@ async def test_sensors(
 
 
 async def test_loadavg_sensors(
-    hass,
+    hass: HomeAssistant,
     connect,
-):
+) -> None:
     """Test creating an AsusWRT load average sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_LOADAVG)
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_LOAD_AVG)
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -305,39 +294,17 @@ async def test_loadavg_sensors(
     await hass.async_block_till_done()
 
     # assert temperature sensor available
-    assert hass.states.get(f"{sensor_prefix}_load_avg_1m").state == "1.1"
-    assert hass.states.get(f"{sensor_prefix}_load_avg_5m").state == "1.2"
-    assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
-
-
-async def test_temperature_sensors_fail(
-    hass,
-    connect,
-    mock_available_temps,
-):
-    """Test fail creating AsusWRT temperature sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_TEMP)
-    config_entry.add_to_hass(hass)
-
-    # Only length of 3 booleans is valid. Checking the exception handling.
-    mock_available_temps.pop(2)
-
-    # initial devices setup
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # assert temperature availability exception is handled correctly
-    assert not hass.states.get(f"{sensor_prefix}_2_4ghz_temperature")
-    assert not hass.states.get(f"{sensor_prefix}_5ghz_temperature")
-    assert not hass.states.get(f"{sensor_prefix}_cpu_temperature")
+    assert hass.states.get(f"{sensor_prefix}_sensor_load_avg1").state == "1.1"
+    assert hass.states.get(f"{sensor_prefix}_sensor_load_avg5").state == "1.2"
+    assert hass.states.get(f"{sensor_prefix}_sensor_load_avg15").state == "1.3"
 
 
 async def test_temperature_sensors(
-    hass,
+    hass: HomeAssistant,
     connect,
-):
+) -> None:
     """Test creating a AsusWRT temperature sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_TEMP)
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_TEMPERATURES)
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -347,16 +314,16 @@ async def test_temperature_sensors(
     await hass.async_block_till_done()
 
     # assert temperature sensor available
-    assert hass.states.get(f"{sensor_prefix}_2_4ghz_temperature").state == "40.0"
-    assert not hass.states.get(f"{sensor_prefix}_5ghz_temperature")
-    assert hass.states.get(f"{sensor_prefix}_cpu_temperature").state == "71.2"
+    assert hass.states.get(f"{sensor_prefix}_2_4ghz").state == "40.0"
+    assert not hass.states.get(f"{sensor_prefix}_5_0ghz")
+    assert hass.states.get(f"{sensor_prefix}_cpu").state == "71.2"
 
 
 @pytest.mark.parametrize(
     "side_effect",
     [OSError, None],
 )
-async def test_connect_fail(hass, side_effect):
+async def test_connect_fail(hass: HomeAssistant, side_effect) -> None:
     """Test AsusWRT connect fail."""
 
     # init config entry
@@ -379,7 +346,7 @@ async def test_connect_fail(hass, side_effect):
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_sensors_polling_fails(hass, connect_sens_fail):
+async def test_sensors_polling_fails(hass: HomeAssistant, connect_sens_fail) -> None:
     """Test AsusWRT sensors are unavailable when polling fails."""
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_ALL)
     config_entry.add_to_hass(hass)
@@ -398,7 +365,7 @@ async def test_sensors_polling_fails(hass, connect_sens_fail):
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "0"
 
 
-async def test_options_reload(hass, connect):
+async def test_options_reload(hass: HomeAssistant, connect) -> None:
     """Test AsusWRT integration is reload changing an options that require this."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, unique_id=MAC_ADDR)
     config_entry.add_to_hass(hass)
@@ -417,3 +384,31 @@ async def test_options_reload(hass, connect):
 
         assert setup_entry_call.called
         assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_unique_id_migration(hass: HomeAssistant, connect) -> None:
+    """Test AsusWRT entities unique id format migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        unique_id=MAC_ADDR,
+    )
+    config_entry.add_to_hass(hass)
+
+    entity_reg = er.async_get(hass)
+    obj_entity_id = slugify(f"{HOST} Upload")
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{DOMAIN} {MAC_ADDR} Upload",
+        suggested_object_id=obj_entity_id,
+        config_entry=config_entry,
+        disabled_by=None,
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migr_entity = entity_reg.async_get(f"{sensor.DOMAIN}.{obj_entity_id}")
+    assert migr_entity is not None
+    assert migr_entity.unique_id == slugify(f"{MAC_ADDR}_sensor_tx_bytes")

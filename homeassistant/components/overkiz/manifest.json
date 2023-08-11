@@ -1,23 +1,23 @@
 {
   "domain": "overkiz",
   "name": "Overkiz",
+  "codeowners": ["@imicknl", "@vlebourl", "@tetienne", "@nyroDev"],
   "config_flow": true,
-  "integration_type": "hub",
-  "documentation": "https://www.home-assistant.io/integrations/overkiz",
-  "requirements": ["pyoverkiz==1.7.3"],
-  "zeroconf": [
-    {
-      "type": "_kizbox._tcp.local.",
-      "name": "gateway*"
-    }
-  ],
   "dhcp": [
     {
       "hostname": "gateway*",
       "macaddress": "F8811A*"
     }
   ],
-  "codeowners": ["@imicknl", "@vlebourl", "@tetienne", "@nyroDev"],
+  "documentation": "https://www.home-assistant.io/integrations/overkiz",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["boto3", "botocore", "pyhumps", "pyoverkiz", "s3transfer"]
+  "loggers": ["boto3", "botocore", "pyhumps", "pyoverkiz", "s3transfer"],
+  "requirements": ["pyoverkiz==1.10.1"],
+  "zeroconf": [
+    {
+      "type": "_kizbox._tcp.local.",
+      "name": "gateway*"
+    }
+  ]
 }

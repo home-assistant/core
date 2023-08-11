@@ -12,7 +12,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test diagnostics."""
 
     diagnostics_fixture = json.loads(load_fixture("bsblan/diagnostics.json"))

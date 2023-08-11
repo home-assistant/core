@@ -1,6 +1,4 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
-
-
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +6,7 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.zha.core.const import DATA_ZHA, DATA_ZHA_GATEWAY
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.const import Platform
@@ -20,6 +19,7 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
     "config",
@@ -56,41 +56,52 @@ def zigpy_device(zigpy_device_mock):
 
 async def test_diagnostics_for_config_entry(
     hass: HomeAssistant,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     config_entry,
     zha_device_joined,
     zigpy_device,
-):
+) -> None:
     """Test diagnostics for config entry."""
     await zha_device_joined(zigpy_device)
-    diagnostics_data = await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry
-    )
-    assert diagnostics_data
+
+    gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    scan = {c: c for c in range(11, 26 + 1)}
+
+    with patch.object(gateway.application_controller, "energy_scan", return_value=scan):
+        diagnostics_data = await get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry
+        )
+
     for key in CONFIG_ENTRY_DIAGNOSTICS_KEYS:
         assert key in diagnostics_data
         assert diagnostics_data[key] is not None
 
+    # Energy scan results are presented as a percentage. JSON object keys also must be
+    # strings, not integers.
+    assert diagnostics_data["energy_scan"] == {
+        str(k): 100 * v / 255 for k, v in scan.items()
+    }
+
 
 async def test_diagnostics_for_device(
     hass: HomeAssistant,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     config_entry,
     zha_device_joined,
     zigpy_device,
-):
+) -> None:
     """Test diagnostics for device."""
 
     zha_device: ZHADevice = await zha_device_joined(zigpy_device)
     dev_reg = async_get(hass)
-    device = dev_reg.async_get_device({("zha", str(zha_device.ieee))})
+    device = dev_reg.async_get_device(identifiers={("zha", str(zha_device.ieee))})
     assert device
     diagnostics_data = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     )
     assert diagnostics_data
     device_info: dict = zha_device.zha_device_info
-    for key, value in device_info.items():
+    for key in device_info:
         assert key in diagnostics_data
         if key not in KEYS_TO_REDACT:
             assert key in diagnostics_data

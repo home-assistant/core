@@ -24,7 +24,7 @@ from .utils import (
 
 async def test_text_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -38,7 +38,7 @@ async def test_text_camera_remove(
 
 async def test_text_camera_setup(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test text entity setup for camera devices."""
 
     doorbell.lcd_message = LCDMessage(
@@ -66,7 +66,7 @@ async def test_text_camera_setup(
 
 async def test_text_camera_set(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test text entity setting value camera devices."""
 
     await init_entry(hass, ufp, [doorbell])

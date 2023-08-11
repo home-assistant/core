@@ -1,10 +1,10 @@
 {
   "domain": "usgs_earthquakes_feed",
   "name": "U.S. Geological Survey Earthquake Hazards (USGS)",
-  "documentation": "https://www.home-assistant.io/integrations/usgs_earthquakes_feed",
-  "requirements": ["aio_geojson_usgs_earthquakes==0.2"],
   "codeowners": ["@exxamalte"],
+  "documentation": "https://www.home-assistant.io/integrations/usgs_earthquakes_feed",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aio_geojson_usgs_earthquakes"],
-  "integration_type": "service"
+  "requirements": ["aio-geojson-usgs-earthquakes==0.2"]
 }

@@ -1,5 +1,6 @@
 """The tests the History component websocket_api."""
 # pylint: disable=protected-access,invalid-name
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -9,12 +10,9 @@ import pytest
 
 from homeassistant.components import history
 from homeassistant.components.history import websocket_api
-from homeassistant.const import (
-    CONF_DOMAINS,
-    CONF_ENTITIES,
-    CONF_INCLUDE,
-    EVENT_HOMEASSISTANT_FINAL_WRITE,
-)
+from homeassistant.components.recorder import Recorder
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -23,6 +21,7 @@ from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
 )
+from tests.typing import WebSocketGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
@@ -35,12 +34,14 @@ def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
 
 
 @pytest.mark.usefixtures("hass_history")
-def test_setup():
+def test_setup() -> None:
     """Test setup method of history."""
     # Verification occurs in the fixture
 
 
-async def test_history_during_period(recorder_mock, hass, hass_ws_client):
+async def test_history_during_period(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history_during_period."""
     now = dt_util.utcnow()
 
@@ -97,7 +98,7 @@ async def test_history_during_period(recorder_mock, hass, hass_ws_client):
     assert len(sensor_test_history) == 3
 
     assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {}
+    assert "a" not in sensor_test_history[0]  # no_attributes = True
     assert isinstance(sensor_test_history[0]["lu"], float)
     assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
@@ -173,8 +174,8 @@ async def test_history_during_period(recorder_mock, hass, hass_ws_client):
 
 
 async def test_history_during_period_impossible_conditions(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history_during_period returns when condition cannot be true."""
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
@@ -235,8 +236,11 @@ async def test_history_during_period_impossible_conditions(
     "time_zone", ["UTC", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
 )
 async def test_history_during_period_significant_domain(
-    time_zone, recorder_mock, hass, hass_ws_client
-):
+    time_zone,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test history_during_period with climate domain."""
     hass.config.set_time_zone(time_zone)
     now = dt_util.utcnow()
@@ -400,8 +404,8 @@ async def test_history_during_period_significant_domain(
 
 
 async def test_history_during_period_bad_start_time(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history_during_period bad state time."""
     await async_setup_component(
         hass,
@@ -414,6 +418,7 @@ async def test_history_during_period_bad_start_time(
         {
             "id": 1,
             "type": "history/history_during_period",
+            "entity_ids": ["sensor.pet"],
             "start_time": "cats",
         }
     )
@@ -422,7 +427,9 @@ async def test_history_during_period_bad_start_time(
     assert response["error"]["code"] == "invalid_start_time"
 
 
-async def test_history_during_period_bad_end_time(recorder_mock, hass, hass_ws_client):
+async def test_history_during_period_bad_end_time(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history_during_period bad end time."""
     now = dt_util.utcnow()
 
@@ -437,6 +444,7 @@ async def test_history_during_period_bad_end_time(recorder_mock, hass, hass_ws_c
         {
             "id": 1,
             "type": "history/history_during_period",
+            "entity_ids": ["sensor.pet"],
             "start_time": now.isoformat(),
             "end_time": "dogs",
         }
@@ -446,22 +454,15 @@ async def test_history_during_period_bad_end_time(recorder_mock, hass, hass_ws_c
     assert response["error"]["code"] == "invalid_end_time"
 
 
-async def test_history_stream_historical_only(recorder_mock, hass, hass_ws_client):
+async def test_history_stream_historical_only(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -488,6 +489,7 @@ async def test_history_stream_historical_only(recorder_mock, hass, hass_ws_clien
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two", "sensor.three", "sensor.four"],
             "start_time": now.isoformat(),
             "end_time": end_time.isoformat(),
             "include_start_time_state": True,
@@ -509,17 +511,13 @@ async def test_history_stream_historical_only(recorder_mock, hass, hass_ws_clien
             "start_time": now.timestamp(),
             "states": {
                 "sensor.four": [
-                    {"a": {}, "lu": sensor_four_last_updated.timestamp(), "s": "off"}
+                    {"lu": sensor_four_last_updated.timestamp(), "s": "off"}
                 ],
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
                 "sensor.three": [
-                    {"a": {}, "lu": sensor_three_last_updated.timestamp(), "s": "off"}
+                    {"lu": sensor_three_last_updated.timestamp(), "s": "off"}
                 ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -528,8 +526,8 @@ async def test_history_stream_historical_only(recorder_mock, hass, hass_ws_clien
 
 
 async def test_history_stream_significant_domain_historical_only(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the stream with climate domain with historical states only."""
     now = dt_util.utcnow()
 
@@ -728,7 +726,9 @@ async def test_history_stream_significant_domain_historical_only(
     assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
 
-async def test_history_stream_bad_start_time(recorder_mock, hass, hass_ws_client):
+async def test_history_stream_bad_start_time(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream bad state time."""
     await async_setup_component(
         hass,
@@ -741,6 +741,7 @@ async def test_history_stream_bad_start_time(recorder_mock, hass, hass_ws_client
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["climate.test"],
             "start_time": "cats",
         }
     )
@@ -750,8 +751,8 @@ async def test_history_stream_bad_start_time(recorder_mock, hass, hass_ws_client
 
 
 async def test_history_stream_end_time_before_start_time(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream with an end_time before the start_time."""
     end_time = dt_util.utcnow() - timedelta(seconds=2)
     start_time = dt_util.utcnow() - timedelta(seconds=1)
@@ -767,6 +768,7 @@ async def test_history_stream_end_time_before_start_time(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["climate.test"],
             "start_time": start_time.isoformat(),
             "end_time": end_time.isoformat(),
         }
@@ -776,7 +778,9 @@ async def test_history_stream_end_time_before_start_time(
     assert response["error"]["code"] == "invalid_end_time"
 
 
-async def test_history_stream_bad_end_time(recorder_mock, hass, hass_ws_client):
+async def test_history_stream_bad_end_time(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream bad end time."""
     now = dt_util.utcnow()
 
@@ -791,6 +795,7 @@ async def test_history_stream_bad_end_time(recorder_mock, hass, hass_ws_client):
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["climate.test"],
             "start_time": now.isoformat(),
             "end_time": "dogs",
         }
@@ -801,23 +806,14 @@ async def test_history_stream_bad_end_time(recorder_mock, hass, hass_ws_client):
 
 
 async def test_history_stream_live_no_attributes_minimal_response(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream with history and live data and no_attributes and minimal_response."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -837,6 +833,7 @@ async def test_history_stream_live_no_attributes_minimal_response(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two"],
             "start_time": now.isoformat(),
             "include_start_time_state": True,
             "significant_changes_only": False,
@@ -857,12 +854,8 @@ async def test_history_stream_live_no_attributes_minimal_response(
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -889,22 +882,15 @@ async def test_history_stream_live_no_attributes_minimal_response(
     }
 
 
-async def test_history_stream_live(recorder_mock, hass, hass_ws_client):
+async def test_history_stream_live(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream with history and live data."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -924,6 +910,7 @@ async def test_history_stream_live(recorder_mock, hass, hass_ws_client):
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two"],
             "start_time": now.isoformat(),
             "include_start_time_state": True,
             "significant_changes_only": False,
@@ -999,23 +986,14 @@ async def test_history_stream_live(recorder_mock, hass, hass_ws_client):
 
 
 async def test_history_stream_live_minimal_response(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream with history and live data and minimal_response."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -1035,6 +1013,7 @@ async def test_history_stream_live_minimal_response(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two"],
             "start_time": now.isoformat(),
             "include_start_time_state": True,
             "significant_changes_only": False,
@@ -1103,22 +1082,15 @@ async def test_history_stream_live_minimal_response(
     }
 
 
-async def test_history_stream_live_no_attributes(recorder_mock, hass, hass_ws_client):
+async def test_history_stream_live_no_attributes(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream with history and live data and no_attributes."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -1139,6 +1111,7 @@ async def test_history_stream_live_no_attributes(recorder_mock, hass, hass_ws_cl
             "id": 1,
             "type": "history/stream",
             "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensor.two"],
             "include_start_time_state": True,
             "significant_changes_only": False,
             "no_attributes": True,
@@ -1191,8 +1164,8 @@ async def test_history_stream_live_no_attributes(recorder_mock, hass, hass_ws_cl
 
 
 async def test_history_stream_live_no_attributes_minimal_response_specific_entities(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream with history and live data and no_attributes and minimal_response with specific entities."""
     now = dt_util.utcnow()
     wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
@@ -1240,12 +1213,8 @@ async def test_history_stream_live_no_attributes_minimal_response_specific_entit
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -1273,8 +1242,8 @@ async def test_history_stream_live_no_attributes_minimal_response_specific_entit
 
 
 async def test_history_stream_live_with_future_end_time(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream with history and live data with future end time."""
     now = dt_util.utcnow()
     wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
@@ -1326,12 +1295,8 @@ async def test_history_stream_live_with_future_end_time(
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -1370,22 +1335,16 @@ async def test_history_stream_live_with_future_end_time(
 
 @pytest.mark.parametrize("include_start_time_state", (True, False))
 async def test_history_stream_before_history_starts(
-    recorder_mock, hass, hass_ws_client, include_start_time_state
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    include_start_time_state,
+) -> None:
     """Test history stream before we have history."""
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -1427,22 +1386,13 @@ async def test_history_stream_before_history_starts(
 
 
 async def test_history_stream_for_entity_with_no_possible_changes(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test history stream for future with no possible changes where end time is less than or equal to now."""
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -1486,7 +1436,9 @@ async def test_history_stream_for_entity_with_no_possible_changes(
         }
 
 
-async def test_overflow_queue(recorder_mock, hass, hass_ws_client):
+async def test_overflow_queue(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test overflowing the history stream queue."""
     now = dt_util.utcnow()
     wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
@@ -1538,10 +1490,10 @@ async def test_overflow_queue(recorder_mock, hass, hass_ws_client):
                 "start_time": now.timestamp(),
                 "states": {
                     "sensor.one": [
-                        {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+                        {"lu": sensor_one_last_updated.timestamp(), "s": "on"}
                     ],
                     "sensor.two": [
-                        {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+                        {"lu": sensor_two_last_updated.timestamp(), "s": "off"}
                     ],
                 },
             },
@@ -1559,3 +1511,402 @@ async def test_overflow_queue(recorder_mock, hass, hass_ws_client):
     assert listeners_without_writes(
         hass.bus.async_listeners()
     ) == listeners_without_writes(init_listeners)
+
+
+async def test_history_during_period_for_invalid_entity_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history_during_period for valid and invalid entity ids."""
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.three", "off", attributes={"any": "again"})
+    await async_recorder_block_till_done(hass)
+    await async_wait_recording_done(hass)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response == {
+        "result": {
+            "sensor.one": [
+                {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+            ],
+        },
+        "id": 1,
+        "type": "result",
+        "success": True,
+    }
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensor.two"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response == {
+        "result": {
+            "sensor.one": [
+                {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+            ],
+            "sensor.two": [
+                {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+            ],
+        },
+        "id": 2,
+        "type": "result",
+        "success": True,
+    }
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sens!or.one", "two"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 3,
+        "type": "result",
+        "success": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensortwo."],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 4,
+        "type": "result",
+        "success": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["one", ".sensortwo"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 5,
+        "type": "result",
+        "success": False,
+    }
+
+
+async def test_history_stream_for_invalid_entity_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history stream for invalid and valid entity ids."""
+
+    now = dt_util.utcnow()
+    await async_setup_component(
+        hass,
+        "history",
+        {history.DOMAIN: {}},
+    )
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.three", "off", attributes={"any": "again"})
+    await async_recorder_block_till_done(hass)
+    await async_wait_recording_done(hass)
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "end_time": sensor_one_last_updated.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensor.two"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "end_time": sensor_two_last_updated.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
+            },
+        },
+        "id": 2,
+        "type": "event",
+    }
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sens!or.one", "two"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["id"] == 3
+    assert response["type"] == "result"
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 3,
+        "type": "result",
+        "success": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensortwo."],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["id"] == 4
+    assert response["type"] == "result"
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 4,
+        "type": "result",
+        "success": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["one", ".sensortwo"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["id"] == 5
+    assert response["type"] == "result"
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 5,
+        "type": "result",
+        "success": False,
+    }
+
+
+async def test_history_stream_historical_only_with_start_time_state_past(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history stream."""
+    await async_setup_component(
+        hass,
+        "history",
+        {},
+    )
+    await async_setup_component(hass, "sensor", {})
+
+    hass.states.async_set("sensor.one", "first", attributes={"any": "attr"})
+    hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+
+    await asyncio.sleep(0.00002)
+    now = dt_util.utcnow()
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "second", attributes={"any": "attr"})
+    sensor_one_last_updated_second = hass.states.get("sensor.one").last_updated
+
+    await asyncio.sleep(0.00001)
+    hass.states.async_set("sensor.one", "third", attributes={"any": "attr"})
+    sensor_one_last_updated_third = hass.states.get("sensor.one").last_updated
+
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.three", "off", attributes={"any": "changed"})
+    sensor_three_last_updated = hass.states.get("sensor.three").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.four", "off", attributes={"any": "again"})
+    sensor_four_last_updated = hass.states.get("sensor.four").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
+    await async_wait_recording_done(hass)
+
+    end_time = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two", "sensor.three", "sensor.four"],
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+
+    assert response == {
+        "event": {
+            "end_time": sensor_four_last_updated.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.four": [
+                    {"lu": sensor_four_last_updated.timestamp(), "s": "off"}
+                ],
+                "sensor.one": [
+                    {
+                        "lu": now.timestamp(),
+                        "s": "first",
+                    },  # should use start time state
+                    {"lu": sensor_one_last_updated_second.timestamp(), "s": "second"},
+                    {"lu": sensor_one_last_updated_third.timestamp(), "s": "third"},
+                ],
+                "sensor.three": [
+                    {"lu": sensor_three_last_updated.timestamp(), "s": "off"}
+                ],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }

@@ -99,7 +99,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:
-            return self.async_abort(reason="no_unconfigured_devices")
+            return self.async_abort(reason="no_devices_found")
 
         if user_input is not None:
             self._name = name_from_discovery(self._discovered_adv)
@@ -138,7 +138,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._client.connect(init=True)
             return self.async_show_form(step_id="link")
 
-        if not self._client.is_connected():
+        if not await self._client.is_connected():
             errors["base"] = "linking"
         else:
             await self._client.disconnect()

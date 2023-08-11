@@ -8,10 +8,14 @@ from typing import Any
 
 from melnor_bluetooth.device import Valve
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -44,10 +48,33 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneNumberEntityDescription] = [
         native_min_value=1,
         icon="mdi:timer-cog-outline",
         key="manual_minutes",
-        name="Manual Minutes",
+        translation_key="manual_minutes",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         set_num_fn=lambda valve, value: valve.set_manual_watering_minutes(value),
         state_fn=lambda valve: valve.manual_watering_minutes,
-    )
+    ),
+    MelnorZoneNumberEntityDescription(
+        entity_category=EntityCategory.CONFIG,
+        native_max_value=168,
+        native_min_value=1,
+        icon="mdi:calendar-refresh-outline",
+        key="frequency_interval_hours",
+        translation_key="frequency_interval_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        set_num_fn=lambda valve, value: valve.set_frequency_interval_hours(value),
+        state_fn=lambda valve: valve.frequency.interval_hours,
+    ),
+    MelnorZoneNumberEntityDescription(
+        entity_category=EntityCategory.CONFIG,
+        native_max_value=360,
+        native_min_value=1,
+        icon="mdi:timer-outline",
+        key="frequency_duration_minutes",
+        translation_key="frequency_duration_minutes",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        set_num_fn=lambda valve, value: valve.set_frequency_duration_minutes(value),
+        state_fn=lambda valve: valve.frequency.duration_minutes,
+    ),
 ]
 
 
@@ -75,6 +102,7 @@ class MelnorZoneNumber(MelnorZoneEntity, NumberEntity):
     """A number implementation for a melnor device."""
 
     entity_description: MelnorZoneNumberEntityDescription
+    _attr_mode = NumberMode.BOX
 
     def __init__(
         self,
@@ -88,7 +116,7 @@ class MelnorZoneNumber(MelnorZoneEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        return self._valve.manual_watering_minutes
+        return self.entity_description.state_fn(self._valve)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""

@@ -5,10 +5,14 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from matter_server.common.models.server_information import ServerInfo
+from matter_server.client.models.node import MatterNode
+from matter_server.common.const import SCHEMA_VERSION
+from matter_server.common.models import ServerInfoMessage
 import pytest
 
 from homeassistant.core import HomeAssistant
+
+from .common import setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
 
@@ -38,13 +42,14 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
 
         client.connect = AsyncMock(side_effect=connect)
         client.start_listening = AsyncMock(side_effect=listen)
-        client.server_info = ServerInfo(
+        client.server_info = ServerInfoMessage(
             fabric_id=MOCK_FABRIC_ID,
             compressed_fabric_id=MOCK_COMPR_FABRIC_ID,
             schema_version=1,
             sdk_version="2022.11.1",
             wifi_credentials_set=True,
             thread_credentials_set=True,
+            min_supported_schema_version=SCHEMA_VERSION,
         )
 
         yield client
@@ -208,3 +213,21 @@ def update_addon_fixture() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.hassio.addon_manager.async_update_addon"
     ) as update_addon:
         yield update_addon
+
+
+@pytest.fixture(name="door_lock")
+async def door_lock_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a door lock node."""
+    return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
+
+
+@pytest.fixture(name="eve_contact_sensor_node")
+async def eve_contact_sensor_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a contact sensor node."""
+    return await setup_integration_with_node_fixture(
+        hass, "eve-contact-sensor", matter_client
+    )

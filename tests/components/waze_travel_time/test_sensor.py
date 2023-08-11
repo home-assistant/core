@@ -1,7 +1,6 @@
 """Test Waze Travel Time sensors."""
-
-from WazeRouteCalculator import WRCError
 import pytest
+from WazeRouteCalculator import WRCError
 
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
@@ -14,6 +13,7 @@ from homeassistant.components.waze_travel_time.const import (
     DOMAIN,
     IMPERIAL_UNITS,
 )
+from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
 
@@ -49,11 +49,11 @@ def mock_update_keyerror_fixture(mock_wrc):
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
 @pytest.mark.usefixtures("mock_update", "mock_config")
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor works."""
     assert hass.states.get("sensor.waze_travel_time").state == "150"
     assert (
@@ -78,7 +78,7 @@ async def test_sensor(hass):
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,
@@ -94,7 +94,7 @@ async def test_sensor(hass):
     ],
 )
 @pytest.mark.usefixtures("mock_update", "mock_config")
-async def test_imperial(hass):
+async def test_imperial(hass: HomeAssistant) -> None:
     """Test that the imperial option works."""
     assert hass.states.get("sensor.waze_travel_time").attributes[
         "distance"
@@ -102,7 +102,9 @@ async def test_imperial(hass):
 
 
 @pytest.mark.usefixtures("mock_update_wrcerror")
-async def test_sensor_failed_wrcerror(hass, caplog):
+async def test_sensor_failed_wrcerror(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that sensor update fails with log message."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"
@@ -116,7 +118,9 @@ async def test_sensor_failed_wrcerror(hass, caplog):
 
 
 @pytest.mark.usefixtures("mock_update_keyerror")
-async def test_sensor_failed_keyerror(hass, caplog):
+async def test_sensor_failed_keyerror(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that sensor update fails with log message."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"

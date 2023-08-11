@@ -1,5 +1,4 @@
 """The tests for the Alexa component."""
-
 from http import HTTPStatus
 import json
 
@@ -8,7 +7,7 @@ import pytest
 from homeassistant.components import alexa
 from homeassistant.components.alexa import intent
 from homeassistant.const import CONTENT_TYPE_JSON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
@@ -78,6 +77,12 @@ def alexa_client(event_loop, hass, hass_client):
                             "text": "You told us your sign is {{ ZodiacSign }}.",
                         }
                     },
+                    "GetZodiacHoroscopeIDIntent": {
+                        "speech": {
+                            "type": "plain",
+                            "text": "You told us your sign is {{ ZodiacSign_Id }}.",
+                        }
+                    },
                     "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
                         "speech": {
                             "type": "plain",
@@ -131,7 +136,7 @@ def _intent_req(client, data=None):
     )
 
 
-async def test_intent_launch_request(alexa_client):
+async def test_intent_launch_request(alexa_client) -> None:
     """Test the launch of a request."""
     data = {
         "version": "1.0",
@@ -156,7 +161,7 @@ async def test_intent_launch_request(alexa_client):
     assert data.get("response", {}).get("shouldEndSession")
 
 
-async def test_intent_launch_request_with_session_open(alexa_client):
+async def test_intent_launch_request_with_session_open(alexa_client) -> None:
     """Test the launch of a request."""
     data = {
         "version": "1.0",
@@ -185,7 +190,7 @@ async def test_intent_launch_request_with_session_open(alexa_client):
     assert not data.get("response", {}).get("shouldEndSession")
 
 
-async def test_intent_launch_request_not_configured(alexa_client):
+async def test_intent_launch_request_not_configured(alexa_client) -> None:
     """Test the launch of a request."""
     data = {
         "version": "1.0",
@@ -213,7 +218,7 @@ async def test_intent_launch_request_not_configured(alexa_client):
     assert text == "This intent is not yet configured within Home Assistant."
 
 
-async def test_intent_request_with_slots(alexa_client):
+async def test_intent_request_with_slots(alexa_client) -> None:
     """Test a request with slots."""
     data = {
         "version": "1.0",
@@ -247,7 +252,7 @@ async def test_intent_request_with_slots(alexa_client):
     assert text == "You told us your sign is virgo."
 
 
-async def test_intent_request_with_slots_and_synonym_resolution(alexa_client):
+async def test_intent_request_with_slots_and_synonym_resolution(alexa_client) -> None:
     """Test a request with slots and a name synonym."""
     data = {
         "version": "1.0",
@@ -300,7 +305,116 @@ async def test_intent_request_with_slots_and_synonym_resolution(alexa_client):
     assert text == "You told us your sign is Virgo."
 
 
-async def test_intent_request_with_slots_and_multi_synonym_resolution(alexa_client):
+async def test_intent_request_with_slots_and_synonym_id_resolution(
+    alexa_client,
+) -> None:
+    """Test a request with slots, id and a name synonym."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {"applicationId": APPLICATION_ID},
+            "attributes": {
+                "supportedHoroscopePeriods": {
+                    "daily": True,
+                    "weekly": False,
+                    "monthly": False,
+                }
+            },
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
+        },
+        "request": {
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "intent": {
+                "name": "GetZodiacHoroscopeIDIntent",
+                "slots": {
+                    "ZodiacSign": {
+                        "name": "ZodiacSign",
+                        "value": "V zodiac",
+                        "resolutions": {
+                            "resolutionsPerAuthority": [
+                                {
+                                    "authority": AUTHORITY_ID,
+                                    "status": {"code": "ER_SUCCESS_MATCH"},
+                                    "values": [{"value": {"name": "Virgo", "id": "1"}}],
+                                }
+                            ]
+                        },
+                    }
+                },
+            },
+        },
+    }
+    req = await _intent_req(alexa_client, data)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
+    assert text == "You told us your sign is 1."
+
+
+async def test_intent_request_with_slots_and_multi_synonym_id_resolution(
+    alexa_client,
+) -> None:
+    """Test a request with slots and multiple name synonyms (id)."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {"applicationId": APPLICATION_ID},
+            "attributes": {
+                "supportedHoroscopePeriods": {
+                    "daily": True,
+                    "weekly": False,
+                    "monthly": False,
+                }
+            },
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
+        },
+        "request": {
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "intent": {
+                "name": "GetZodiacHoroscopeIDIntent",
+                "slots": {
+                    "ZodiacSign": {
+                        "name": "ZodiacSign",
+                        "value": "Virgio Test",
+                        "resolutions": {
+                            "resolutionsPerAuthority": [
+                                {
+                                    "authority": AUTHORITY_ID,
+                                    "status": {"code": "ER_SUCCESS_MATCH"},
+                                    "values": [
+                                        {"value": {"name": "Virgio Test", "id": "2"}}
+                                    ],
+                                },
+                                {
+                                    "authority": AUTHORITY_ID,
+                                    "status": {"code": "ER_SUCCESS_MATCH"},
+                                    "values": [{"value": {"name": "Virgo", "id": "1"}}],
+                                },
+                            ]
+                        },
+                    }
+                },
+            },
+        },
+    }
+    req = await _intent_req(alexa_client, data)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
+    assert text == "You told us your sign is 2."
+
+
+async def test_intent_request_with_slots_and_multi_synonym_resolution(
+    alexa_client,
+) -> None:
     """Test a request with slots and multiple name synonyms."""
     data = {
         "version": "1.0",
@@ -353,7 +467,7 @@ async def test_intent_request_with_slots_and_multi_synonym_resolution(alexa_clie
     assert text == "You told us your sign is V zodiac."
 
 
-async def test_intent_request_with_slots_but_no_value(alexa_client):
+async def test_intent_request_with_slots_but_no_value(alexa_client) -> None:
     """Test a request with slots but no value."""
     data = {
         "version": "1.0",
@@ -387,7 +501,7 @@ async def test_intent_request_with_slots_but_no_value(alexa_client):
     assert text == "You told us your sign is ."
 
 
-async def test_intent_request_without_slots(hass, alexa_client):
+async def test_intent_request_without_slots(hass: HomeAssistant, alexa_client) -> None:
     """Test a request without slots."""
     data = {
         "version": "1.0",
@@ -428,7 +542,7 @@ async def test_intent_request_without_slots(hass, alexa_client):
     assert text == "You are both home, you silly"
 
 
-async def test_intent_request_calling_service(alexa_client):
+async def test_intent_request_calling_service(alexa_client) -> None:
     """Test a request for calling a service."""
     data = {
         "version": "1.0",
@@ -466,7 +580,7 @@ async def test_intent_request_calling_service(alexa_client):
     assert data["response"]["outputSpeech"]["text"] == "Service called for virgo"
 
 
-async def test_intent_session_ended_request(alexa_client):
+async def test_intent_session_ended_request(alexa_client) -> None:
     """Test the request for ending the session."""
     data = {
         "version": "1.0",
@@ -500,7 +614,7 @@ async def test_intent_session_ended_request(alexa_client):
     )
 
 
-async def test_intent_from_built_in_intent_library(alexa_client):
+async def test_intent_from_built_in_intent_library(alexa_client) -> None:
     """Test intents from the Built-in Intent Library."""
     data = {
         "request": {

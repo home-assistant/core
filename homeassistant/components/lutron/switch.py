@@ -107,8 +107,5 @@ class LutronLed(LutronDevice, SwitchEntity):
 
     def update(self) -> None:
         """Call when forcing a refresh of the device."""
-        if self._lutron_device.last_state is not None:
-            return
-
         # The following property getter actually triggers an update in Lutron
         self._lutron_device.state  # pylint: disable=pointless-statement

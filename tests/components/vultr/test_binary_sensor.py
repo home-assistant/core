@@ -24,7 +24,7 @@ CONFIGS = [
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_binary_sensor(hass: HomeAssistant):
+def test_binary_sensor(hass: HomeAssistant) -> None:
     """Test successful instance."""
     hass_devices = []
 
@@ -74,14 +74,14 @@ def test_binary_sensor(hass: HomeAssistant):
             assert device_attrs[ATTR_SUBSCRIPTION_ID] == "123456"
 
 
-def test_invalid_sensor_config():
+def test_invalid_sensor_config() -> None:
     """Test config type failures."""
     with pytest.raises(vol.Invalid):  # No subs
         vultr.PLATFORM_SCHEMA({CONF_PLATFORM: base_vultr.DOMAIN})
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_sensors(hass: HomeAssistant):
+def test_invalid_sensors(hass: HomeAssistant) -> None:
     """Test the VultrBinarySensor fails."""
     hass_devices = []
 

@@ -34,6 +34,7 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Abode."""
 
     _attr_icon = ICON
+    _attr_name = None
     _attr_code_arm_required = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
@@ -68,7 +69,7 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            "device_id": self._device.device_id,
+            "device_id": self._device.id,
             "battery_backup": self._device.battery,
             "cellular_backup": self._device.is_cellular,
         }

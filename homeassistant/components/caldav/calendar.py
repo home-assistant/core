@@ -1,7 +1,7 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
@@ -29,7 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +105,12 @@ def setup_platform(
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEntity(
-                    name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH]
+                    name=name,
+                    calendar=calendar,
+                    entity_id=entity_id,
+                    days=days,
+                    all_day=True,
+                    search=cust_calendar[CONF_SEARCH],
                 )
             )
 
@@ -126,7 +131,12 @@ class WebDavCalendarEntity(CalendarEntity):
 
     def __init__(self, name, calendar, entity_id, days, all_day=False, search=None):
         """Create the WebDav Calendar Event Device."""
-        self.data = WebDavCalendarData(calendar, days, all_day, search)
+        self.data = WebDavCalendarData(
+            calendar=calendar,
+            days=days,
+            include_all_day=all_day,
+            search=search,
+        )
         self.entity_id = entity_id
         self._event: CalendarEvent | None = None
         self._attr_name = name
@@ -204,8 +214,8 @@ class WebDavCalendarData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
-        start_of_today = dt.start_of_local_day()
-        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=self.days)
+        start_of_today = dt_util.start_of_local_day()
+        start_of_tomorrow = dt_util.start_of_local_day() + timedelta(days=self.days)
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
@@ -312,7 +322,7 @@ class WebDavCalendarData:
     @staticmethod
     def is_over(vevent):
         """Return if the event is over."""
-        return dt.now() >= WebDavCalendarData.to_datetime(
+        return dt_util.now() >= WebDavCalendarData.to_datetime(
             WebDavCalendarData.get_end_date(vevent)
         )
 
@@ -321,9 +331,7 @@ class WebDavCalendarData:
         """Return a datetime."""
         if isinstance(obj, datetime):
             return WebDavCalendarData.to_local(obj)
-        return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
-            tzinfo=dt.DEFAULT_TIME_ZONE
-        )
+        return datetime.combine(obj, time.min).replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
     @staticmethod
     def to_local(obj: datetime | date) -> datetime | date:
@@ -334,7 +342,7 @@ class WebDavCalendarData:
         used by the caldav client and dateutil so the datetime can be copied.
         """
         if isinstance(obj, datetime):
-            return dt.as_local(obj)
+            return dt_util.as_local(obj)
         return obj
 
     @staticmethod
@@ -349,11 +357,15 @@ class WebDavCalendarData:
         """Return the end datetime as determined by dtend or duration."""
         if hasattr(obj, "dtend"):
             enddate = obj.dtend.value
-
         elif hasattr(obj, "duration"):
             enddate = obj.dtstart.value + obj.duration.value
-
         else:
             enddate = obj.dtstart.value + timedelta(days=1)
+
+        # End date for an all day event is exclusive. This fixes the case where
+        # an all day event has a start and end values are the same, or the event
+        # has a zero duration.
+        if not isinstance(enddate, datetime) and obj.dtstart.value == enddate:
+            enddate += timedelta(days=1)
 
         return enddate

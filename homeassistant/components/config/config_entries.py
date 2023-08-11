@@ -1,7 +1,6 @@
 """Http views to control the config manager."""
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 from typing import Any
 
@@ -26,6 +25,7 @@ from homeassistant.loader import (
     IntegrationNotFound,
     async_get_config_flows,
     async_get_integration,
+    async_get_integrations,
 )
 
 
@@ -43,6 +43,7 @@ async def async_setup(hass):
 
     websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
+    websocket_api.async_register_command(hass, config_entry_get_single)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
@@ -287,6 +288,28 @@ def get_entry(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        "type": "config_entries/get_single",
+        "entry_id": str,
+    }
+)
+@websocket_api.async_response
+async def config_entry_get_single(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update config entry."""
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
+    if entry is None:
+        return
+
+    result = {"config_entry": entry_json(entry)}
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         "type": "config_entries/update",
         "entry_id": str,
         vol.Optional("title"): str,
@@ -493,14 +516,12 @@ async def async_matching_config_entries(
 
     integrations = {}
     # Fetch all the integrations so we can check their type
-    tasks = (
-        async_get_integration(hass, domain)
-        for domain in {entry.domain for entry in entries}
-    )
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    for integration_or_exc in results:
+    domains = {entry.domain for entry in entries}
+    for domain_key, integration_or_exc in (
+        await async_get_integrations(hass, domains)
+    ).items():
         if isinstance(integration_or_exc, Integration):
-            integrations[integration_or_exc.domain] = integration_or_exc
+            integrations[domain_key] = integration_or_exc
         elif not isinstance(integration_or_exc, IntegrationNotFound):
             raise integration_or_exc
 
@@ -537,8 +558,8 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "source": entry.source,
         "state": entry.state.value,
         "supports_options": supports_options,
-        "supports_remove_device": entry.supports_remove_device,
-        "supports_unload": entry.supports_unload,
+        "supports_remove_device": entry.supports_remove_device or False,
+        "supports_unload": entry.supports_unload or False,
         "pref_disable_new_entities": entry.pref_disable_new_entities,
         "pref_disable_polling": entry.pref_disable_polling,
         "disabled_by": entry.disabled_by,

@@ -1,9 +1,0 @@
-{
-    "config": {
-        "error": {
-            "invalid_api_token": "Chave de API inv\u00e1lida",
-            "no_site": "Nenhum site fornecido",
-            "unknown_error": "Erro inesperado"
-        }
-    }
-}

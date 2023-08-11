@@ -46,7 +46,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_init_auth_failure(hass: HomeAssistant):
+async def test_init_auth_failure(hass: HomeAssistant) -> None:
     """Test auth failure during setup."""
     with patch(
         "homeassistant.components.mazda.MazdaAPI.validate_credentials",
@@ -67,7 +67,7 @@ async def test_init_auth_failure(hass: HomeAssistant):
     assert flows[0]["step_id"] == "user"
 
 
-async def test_update_auth_failure(hass: HomeAssistant):
+async def test_update_auth_failure(hass: HomeAssistant) -> None:
     """Test auth failure during data update."""
     get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
     get_vehicle_status_fixture = json.loads(
@@ -106,7 +106,7 @@ async def test_update_auth_failure(hass: HomeAssistant):
     assert flows[0]["step_id"] == "user"
 
 
-async def test_update_general_failure(hass: HomeAssistant):
+async def test_update_general_failure(hass: HomeAssistant) -> None:
     """Test general failure during data update."""
     get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
     get_vehicle_status_fixture = json.loads(
@@ -159,7 +159,7 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     assert entries[0].state is ConfigEntryState.NOT_LOADED
 
 
-async def test_init_electric_vehicle(hass):
+async def test_init_electric_vehicle(hass: HomeAssistant) -> None:
     """Test initialization of the integration with an electric vehicle."""
     client_mock = await init_integration(hass, electric_vehicle=True)
 
@@ -172,7 +172,7 @@ async def test_init_electric_vehicle(hass):
     assert entries[0].state is ConfigEntryState.LOADED
 
 
-async def test_device_nickname(hass):
+async def test_device_nickname(hass: HomeAssistant) -> None:
     """Test creation of the device when vehicle has a nickname."""
     await init_integration(hass, use_nickname=True)
 
@@ -186,7 +186,7 @@ async def test_device_nickname(hass):
     assert reg_device.name == "My Mazda3"
 
 
-async def test_device_no_nickname(hass):
+async def test_device_no_nickname(hass: HomeAssistant) -> None:
     """Test creation of the device when vehicle has no nickname."""
     await init_integration(hass, use_nickname=False)
 
@@ -201,7 +201,7 @@ async def test_device_no_nickname(hass):
 
 
 @pytest.mark.parametrize(
-    "service, service_data, expected_args",
+    ("service", "service_data", "expected_args"),
     [
         (
             "send_poi",
@@ -210,7 +210,9 @@ async def test_device_no_nickname(hass):
         ),
     ],
 )
-async def test_services(hass, service, service_data, expected_args):
+async def test_services(
+    hass: HomeAssistant, service, service_data, expected_args
+) -> None:
     """Test service calls."""
     client_mock = await init_integration(hass)
 
@@ -229,7 +231,7 @@ async def test_services(hass, service, service_data, expected_args):
     api_method.assert_called_once_with(*expected_args)
 
 
-async def test_service_invalid_device_id(hass):
+async def test_service_invalid_device_id(hass: HomeAssistant) -> None:
     """Test service call when the specified device ID is invalid."""
     await init_integration(hass)
 
@@ -250,15 +252,17 @@ async def test_service_invalid_device_id(hass):
     assert "Invalid device ID" in str(err.value)
 
 
-async def test_service_device_id_not_mazda_vehicle(hass):
+async def test_service_device_id_not_mazda_vehicle(hass: HomeAssistant) -> None:
     """Test service call when the specified device ID is not the device ID of a Mazda vehicle."""
     await init_integration(hass)
 
     device_registry = dr.async_get(hass)
     # Create another device and pass its device ID.
     # Service should fail because device is from wrong domain.
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
     other_device = device_registry.async_get_or_create(
-        config_entry_id="test_config_entry_id",
+        config_entry_id=other_config_entry.entry_id,
         identifiers={("OTHER_INTEGRATION", "ID_FROM_OTHER_INTEGRATION")},
     )
 
@@ -279,7 +283,7 @@ async def test_service_device_id_not_mazda_vehicle(hass):
     assert "Device ID is not a Mazda vehicle" in str(err.value)
 
 
-async def test_service_vehicle_id_not_found(hass):
+async def test_service_vehicle_id_not_found(hass: HomeAssistant) -> None:
     """Test service call when the vehicle ID is not found."""
     await init_integration(hass)
 
@@ -312,7 +316,7 @@ async def test_service_vehicle_id_not_found(hass):
     assert str(err.value) == "Vehicle ID not found"
 
 
-async def test_service_mazda_api_error(hass):
+async def test_service_mazda_api_error(hass: HomeAssistant) -> None:
     """Test the Mazda API raising an error when a service is called."""
     get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
     get_vehicle_status_fixture = json.loads(

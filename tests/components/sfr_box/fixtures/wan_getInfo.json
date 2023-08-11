@@ -1,0 +1,11 @@
+{
+  "status": "up",
+  "uptime": 297464,
+  "ip_addr": "1.2.3.4",
+  "infra": "adsl",
+  "mode": "adsl/routed",
+  "infra6": "",
+  "status6": "down",
+  "uptime6": null,
+  "ipv6_addr": ""
+}

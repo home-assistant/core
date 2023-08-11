@@ -5,7 +5,9 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import (
     ATTR_EFFECT_LIST,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MAX_MIREDS,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
 )
@@ -19,4 +21,6 @@ def exclude_attributes(hass: HomeAssistant) -> set[str]:
         ATTR_EFFECT_LIST,
         ATTR_MIN_MIREDS,
         ATTR_MAX_MIREDS,
+        ATTR_MIN_COLOR_TEMP_KELVIN,
+        ATTR_MAX_COLOR_TEMP_KELVIN,
     }

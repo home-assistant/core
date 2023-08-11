@@ -10,19 +10,56 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
+    PERCENTAGE,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_local
 
-from .const import ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN, SENSOR_TYPES
+from .const import ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="battery_level",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:battery-50",
+    ),
+    SensorEntityDescription(
+        key="last_activity_time",
+        name="Last Activity",
+        icon="mdi:history",
+    ),
+    SensorEntityDescription(
+        key="recording",
+        name="Recording Mode",
+        icon="mdi:eye",
+    ),
+    SensorEntityDescription(
+        key="signal_strength_category",
+        name="WiFi Signal Category",
+        icon="mdi:wifi",
+    ),
+    SensorEntityDescription(
+        key="signal_strength_percentage",
+        name="WiFi Signal Strength",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:wifi",
+    ),
+    SensorEntityDescription(
+        key="streaming",
+        name="Streaming Mode",
+        icon="mdi:camera",
+    ),
+)
 
 
 async def async_setup_platform(
@@ -59,7 +96,7 @@ class LogiSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, camera, time_zone, description: SensorEntityDescription):
+    def __init__(self, camera, time_zone, description: SensorEntityDescription) -> None:
         """Initialize a sensor for Logi Circle camera."""
         self.entity_description = description
         self._camera = camera

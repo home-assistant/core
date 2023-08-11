@@ -12,10 +12,10 @@ from aiohttp.client_exceptions import ClientError
 from pykoplenti import ApiClient, ApiException, AuthenticationException
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -23,6 +23,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DataT = TypeVar("_DataT")
+_KNOWN_HOSTNAME_IDS = ("Network:Hostname", "Hostname")
 
 
 class Plenticore:
@@ -69,6 +70,7 @@ class Plenticore:
         )
 
         # get some device meta data
+        hostname_id = await get_hostname_id(self._client)
         settings = await self._client.get_setting_values(
             {
                 "devices:local": [
@@ -78,7 +80,7 @@ class Plenticore:
                     "Properties:VersionIOC",
                     "Properties:VersionMC",
                 ],
-                "scb:network": ["Hostname"],
+                "scb:network": [hostname_id],
             }
         )
 
@@ -91,7 +93,7 @@ class Plenticore:
             identifiers={(DOMAIN, device_local["Properties:SerialNo"])},
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",
-            name=settings["scb:network"]["Hostname"],
+            name=settings["scb:network"][hostname_id],
             sw_version=f'IOC: {device_local["Properties:VersionIOC"]}'
             + f' MC: {device_local["Properties:VersionMC"]}',
         )
@@ -171,7 +173,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._fetch: dict[str, list[str]] = defaultdict(list)
         self._plenticore = plenticore
 
-    def start_fetch_data(self, module_id: str, data_id: str) -> None:
+    def start_fetch_data(self, module_id: str, data_id: str) -> CALLBACK_TYPE:
         """Start fetching the given data (module-id and data-id)."""
         self._fetch[module_id].append(data_id)
 
@@ -180,7 +182,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         async def force_refresh(event_time: datetime) -> None:
             await self.async_request_refresh()
 
-        async_call_later(self.hass, 2, force_refresh)
+        return async_call_later(self.hass, 2, force_refresh)
 
     def stop_fetch_data(self, module_id: str, data_id: str) -> None:
         """Stop fetching the given data (module-id and data-id)."""
@@ -251,7 +253,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     def start_fetch_data(
         self, module_id: str, data_id: str, all_options: list[str]
-    ) -> None:
+    ) -> CALLBACK_TYPE:
         """Start fetching the given data (module-id and entry-id)."""
         self._fetch[module_id].append(data_id)
         self._fetch[module_id].append(all_options)
@@ -261,7 +263,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         async def force_refresh(event_time: datetime) -> None:
             await self.async_request_refresh()
 
-        async_call_later(self.hass, 2, force_refresh)
+        return async_call_later(self.hass, 2, force_refresh)
 
     def stop_fetch_data(
         self, module_id: str, data_id: str, all_options: list[str]
@@ -403,3 +405,12 @@ class PlenticoreDataFormatter:
             return state
 
         return PlenticoreDataFormatter.EM_STATES.get(value)
+
+
+async def get_hostname_id(client: ApiClient) -> str:
+    """Check for known existing hostname ids."""
+    all_settings = await client.get_settings()
+    for entry in all_settings["scb:network"]:
+        if entry.id in _KNOWN_HOSTNAME_IDS:
+            return entry.id
+    raise ApiException("Hostname identifier not found in KNOWN_HOSTNAME_IDS")

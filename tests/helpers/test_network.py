@@ -32,7 +32,7 @@ def mock_current_request_mock():
         yield mock_current_request
 
 
-async def test_get_url_internal(hass: HomeAssistant):
+async def test_get_url_internal(hass: HomeAssistant) -> None:
     """Test getting an instance URL when the user has set an internal URL."""
     assert hass.config.internal_url is None
 
@@ -174,7 +174,7 @@ async def test_get_url_internal(hass: HomeAssistant):
             _get_internal_url(hass, require_current_request=True, require_ssl=True)
 
 
-async def test_get_url_internal_fallback(hass: HomeAssistant):
+async def test_get_url_internal_fallback(hass: HomeAssistant) -> None:
     """Test getting an instance URL when the user has not set an internal URL."""
     assert hass.config.internal_url is None
 
@@ -230,7 +230,7 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
         _get_internal_url(hass, require_ssl=True)
 
 
-async def test_get_url_external(hass: HomeAssistant):
+async def test_get_url_external(hass: HomeAssistant) -> None:
     """Test getting an instance URL when the user has set an external URL."""
     assert hass.config.external_url is None
 
@@ -356,7 +356,7 @@ async def test_get_url_external(hass: HomeAssistant):
             _get_external_url(hass, require_current_request=True, require_ssl=True)
 
 
-async def test_get_cloud_url(hass: HomeAssistant):
+async def test_get_cloud_url(hass: HomeAssistant) -> None:
     """Test getting an instance URL when the user has set an external URL."""
     assert hass.config.external_url is None
     hass.config.components.add("cloud")
@@ -394,7 +394,7 @@ async def test_get_cloud_url(hass: HomeAssistant):
         _get_cloud_url(hass)
 
 
-async def test_get_external_url_cloud_fallback(hass: HomeAssistant):
+async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
     """Test getting an external instance URL with cloud fallback."""
     assert hass.config.external_url is None
 
@@ -454,7 +454,7 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant):
         )
 
 
-async def test_get_url(hass: HomeAssistant):
+async def test_get_url(hass: HomeAssistant) -> None:
     """Test getting an instance URL."""
     assert hass.config.external_url is None
     assert hass.config.internal_url is None
@@ -552,7 +552,7 @@ async def test_get_url(hass: HomeAssistant):
         assert get_url(hass, allow_internal=False)
 
 
-async def test_get_request_host(hass: HomeAssistant):
+async def test_get_request_host(hass: HomeAssistant) -> None:
     """Test getting the host of the current web request from the request context."""
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
@@ -567,7 +567,7 @@ async def test_get_request_host(hass: HomeAssistant):
 
 async def test_get_current_request_url_with_known_host(
     hass: HomeAssistant, current_request
-):
+) -> None:
     """Test getting current request URL with known hosts addresses."""
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="127.0.0.1")
     assert hass.config.internal_url is None
@@ -623,7 +623,7 @@ async def test_get_current_request_url_with_known_host(
         get_url(hass, require_current_request=True)
 
 
-async def test_is_internal_request(hass: HomeAssistant, mock_current_request):
+async def test_is_internal_request(hass: HomeAssistant, mock_current_request) -> None:
     """Test if accessing an instance on its internal URL."""
     # Test with internal URL: http://example.local:8123
     await async_process_ha_core_config(
@@ -674,7 +674,7 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request):
             assert is_internal_request(hass), mock_current_request.return_value.url
 
 
-async def test_is_hass_url(hass):
+async def test_is_hass_url(hass: HomeAssistant) -> None:
     """Test is_hass_url."""
     assert hass.config.api is None
     assert hass.config.internal_url is None
@@ -721,7 +721,7 @@ async def test_is_hass_url(hass):
         assert is_hass_url(hass, "http://example.nabu.casa") is False
 
 
-async def test_is_hass_url_addon_url(hass):
+async def test_is_hass_url_addon_url(hass: HomeAssistant) -> None:
     """Test is_hass_url with a supervisor network URL."""
     assert is_hass_url(hass, "http://homeassistant:8123") is False
 
@@ -741,7 +741,7 @@ async def test_is_hass_url_addon_url(hass):
     assert is_hass_url(hass, "https://homeassistant:8123")
 
 
-async def test_get_supervisor_network_url(hass):
+async def test_get_supervisor_network_url(hass: HomeAssistant) -> None:
     """Test get_supervisor_network_url."""
     assert get_supervisor_network_url(hass) is None
 

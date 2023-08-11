@@ -23,6 +23,8 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -32,11 +34,14 @@ from tests.common import (
     async_fire_time_changed,
 )
 from tests.components.alarm_control_panel import common
+from tests.typing import MqttMockHAClient
 
 CODE = "HELLO_CODE"
 
 
-async def test_fail_setup_without_state_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_fail_setup_without_state_topic(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test for failing with no state topic."""
     with assert_setup_component(0, alarm_control_panel.DOMAIN) as config:
         assert await async_setup_component(
@@ -52,7 +57,9 @@ async def test_fail_setup_without_state_topic(hass, mqtt_mock_entry_with_yaml_co
         assert not config[alarm_control_panel.DOMAIN]
 
 
-async def test_fail_setup_without_command_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_fail_setup_without_command_topic(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test failing with no command topic."""
     with assert_setup_component(0, alarm_control_panel.DOMAIN):
         assert await async_setup_component(
@@ -68,7 +75,7 @@ async def test_fail_setup_without_command_topic(hass, mqtt_mock_entry_with_yaml_
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -78,8 +85,11 @@ async def test_fail_setup_without_command_topic(hass, mqtt_mock_entry_with_yaml_
     ],
 )
 async def test_no_pending(
-    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    service,
+    expected_state,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
     """Test arm method."""
     assert await async_setup_component(
         hass,
@@ -113,7 +123,7 @@ async def test_no_pending(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -123,8 +133,11 @@ async def test_no_pending(
     ],
 )
 async def test_no_pending_when_code_not_req(
-    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    service,
+    expected_state,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
     """Test arm method."""
     assert await async_setup_component(
         hass,
@@ -159,7 +172,7 @@ async def test_no_pending_when_code_not_req(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -169,8 +182,11 @@ async def test_no_pending_when_code_not_req(
     ],
 )
 async def test_with_pending(
-    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    service,
+    expected_state,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
     """Test arm method."""
     assert await async_setup_component(
         hass,
@@ -228,7 +244,7 @@ async def test_with_pending(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -238,8 +254,11 @@ async def test_with_pending(
     ],
 )
 async def test_with_invalid_code(
-    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    service,
+    expected_state,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
     """Attempt to arm without a valid code."""
     assert await async_setup_component(
         hass,
@@ -262,18 +281,19 @@ async def test_with_invalid_code(
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await hass.services.async_call(
-        alarm_control_panel.DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: f"{CODE}2"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await hass.services.async_call(
+            alarm_control_panel.DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: f"{CODE}2"},
+            blocking=True,
+        )
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -283,8 +303,11 @@ async def test_with_invalid_code(
     ],
 )
 async def test_with_template_code(
-    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    service,
+    expected_state,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
     """Attempt to arm with a template-based code."""
     assert await async_setup_component(
         hass,
@@ -319,7 +342,7 @@ async def test_with_template_code(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -329,8 +352,11 @@ async def test_with_template_code(
     ],
 )
 async def test_with_specific_pending(
-    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    service,
+    expected_state,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
     """Test arm method."""
     assert await async_setup_component(
         hass,
@@ -370,7 +396,9 @@ async def test_with_specific_pending(
     assert hass.states.get(entity_id).state == expected_state
 
 
-async def test_trigger_no_pending(hass, mqtt_mock_entry_with_yaml_config):
+async def test_trigger_no_pending(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test triggering when no pending submitted method."""
     assert await async_setup_component(
         hass,
@@ -408,7 +436,9 @@ async def test_trigger_no_pending(hass, mqtt_mock_entry_with_yaml_config):
     assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
 
 
-async def test_trigger_with_delay(hass, mqtt_mock_entry_with_yaml_config):
+async def test_trigger_with_delay(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test trigger method and switch from pending to triggered."""
     assert await async_setup_component(
         hass,
@@ -454,7 +484,9 @@ async def test_trigger_with_delay(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_ALARM_TRIGGERED
 
 
-async def test_trigger_zero_trigger_time(hass, mqtt_mock_entry_with_yaml_config):
+async def test_trigger_zero_trigger_time(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disabled trigger."""
     assert await async_setup_component(
         hass,
@@ -483,8 +515,8 @@ async def test_trigger_zero_trigger_time(hass, mqtt_mock_entry_with_yaml_config)
 
 
 async def test_trigger_zero_trigger_time_with_pending(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disabled trigger."""
     assert await async_setup_component(
         hass,
@@ -512,7 +544,9 @@ async def test_trigger_zero_trigger_time_with_pending(
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
 
-async def test_trigger_with_pending(hass, mqtt_mock_entry_with_yaml_config):
+async def test_trigger_with_pending(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test arm home method."""
     assert await async_setup_component(
         hass,
@@ -564,8 +598,8 @@ async def test_trigger_with_pending(hass, mqtt_mock_entry_with_yaml_config):
 
 
 async def test_trigger_with_disarm_after_trigger(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disarm after trigger."""
     assert await async_setup_component(
         hass,
@@ -604,8 +638,8 @@ async def test_trigger_with_disarm_after_trigger(
 
 
 async def test_trigger_with_zero_specific_trigger_time(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test trigger method."""
     assert await async_setup_component(
         hass,
@@ -635,8 +669,8 @@ async def test_trigger_with_zero_specific_trigger_time(
 
 
 async def test_trigger_with_unused_zero_specific_trigger_time(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disarm after trigger."""
     assert await async_setup_component(
         hass,
@@ -676,8 +710,8 @@ async def test_trigger_with_unused_zero_specific_trigger_time(
 
 
 async def test_trigger_with_specific_trigger_time(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disarm after trigger."""
     assert await async_setup_component(
         hass,
@@ -716,8 +750,8 @@ async def test_trigger_with_specific_trigger_time(
 
 
 async def test_back_to_back_trigger_with_no_disarm_after_trigger(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test no disarm after back to back trigger."""
     assert await async_setup_component(
         hass,
@@ -773,7 +807,9 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
 
 
-async def test_disarm_while_pending_trigger(hass, mqtt_mock_entry_with_yaml_config):
+async def test_disarm_while_pending_trigger(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disarming while pending state."""
     assert await async_setup_component(
         hass,
@@ -815,8 +851,8 @@ async def test_disarm_while_pending_trigger(hass, mqtt_mock_entry_with_yaml_conf
 
 
 async def test_disarm_during_trigger_with_invalid_code(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disarming while code is invalid."""
     assert await async_setup_component(
         hass,
@@ -847,7 +883,8 @@ async def test_disarm_during_trigger_with_invalid_code(
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
-    await common.async_alarm_disarm(hass, entity_id=entity_id)
+    with pytest.raises(HomeAssistantError, match=r"Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, entity_id=entity_id)
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
@@ -863,8 +900,8 @@ async def test_disarm_during_trigger_with_invalid_code(
 
 
 async def test_trigger_with_unused_specific_delay(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test trigger method and switch from pending to triggered."""
     assert await async_setup_component(
         hass,
@@ -911,7 +948,9 @@ async def test_trigger_with_unused_specific_delay(
     assert state.state == STATE_ALARM_TRIGGERED
 
 
-async def test_trigger_with_specific_delay(hass, mqtt_mock_entry_with_yaml_config):
+async def test_trigger_with_specific_delay(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test trigger method and switch from pending to triggered."""
     assert await async_setup_component(
         hass,
@@ -958,7 +997,9 @@ async def test_trigger_with_specific_delay(hass, mqtt_mock_entry_with_yaml_confi
     assert state.state == STATE_ALARM_TRIGGERED
 
 
-async def test_trigger_with_pending_and_delay(hass, mqtt_mock_entry_with_yaml_config):
+async def test_trigger_with_pending_and_delay(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test trigger method and switch from pending to triggered."""
     assert await async_setup_component(
         hass,
@@ -1018,8 +1059,8 @@ async def test_trigger_with_pending_and_delay(hass, mqtt_mock_entry_with_yaml_co
 
 
 async def test_trigger_with_pending_and_specific_delay(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test trigger method and switch from pending to triggered."""
     assert await async_setup_component(
         hass,
@@ -1079,7 +1120,9 @@ async def test_trigger_with_pending_and_specific_delay(
     assert state.state == STATE_ALARM_TRIGGERED
 
 
-async def test_trigger_with_specific_pending(hass, mqtt_mock_entry_with_yaml_config):
+async def test_trigger_with_specific_pending(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test arm home method."""
     assert await async_setup_component(
         hass,
@@ -1127,8 +1170,8 @@ async def test_trigger_with_specific_pending(hass, mqtt_mock_entry_with_yaml_con
 
 
 async def test_trigger_with_no_disarm_after_trigger(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disarm after trigger."""
     assert await async_setup_component(
         hass,
@@ -1171,7 +1214,9 @@ async def test_trigger_with_no_disarm_after_trigger(
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
 
 
-async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock_entry_with_yaml_config):
+async def test_arm_away_after_disabled_disarmed(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test pending state with and without zero trigger time."""
     assert await async_setup_component(
         hass,
@@ -1235,7 +1280,9 @@ async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock_entry_with_yaml_
     assert state.state == STATE_ALARM_TRIGGERED
 
 
-async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config):
+async def test_disarm_with_template_code(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Attempt to disarm with a valid or invalid template-based code."""
     assert await async_setup_component(
         hass,
@@ -1263,7 +1310,8 @@ async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config)
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
 
-    await common.async_alarm_disarm(hass, "def")
+    with pytest.raises(HomeAssistantError, match=r"Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, "def")
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
@@ -1275,7 +1323,7 @@ async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config)
 
 
 @pytest.mark.parametrize(
-    "config,expected_state",
+    ("config", "expected_state"),
     [
         ("payload_arm_away", STATE_ALARM_ARMED_AWAY),
         ("payload_arm_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -1285,8 +1333,11 @@ async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config)
     ],
 )
 async def test_arm_via_command_topic(
-    hass, config, expected_state, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    config,
+    expected_state,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
     """Test arming via command topic."""
     command = config[8:].upper()
     assert await async_setup_component(
@@ -1326,7 +1377,9 @@ async def test_arm_via_command_topic(
     assert hass.states.get(entity_id).state == expected_state
 
 
-async def test_disarm_pending_via_command_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_disarm_pending_via_command_topic(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test disarming pending alarm via command topic."""
     assert await async_setup_component(
         hass,
@@ -1361,8 +1414,8 @@ async def test_disarm_pending_via_command_topic(hass, mqtt_mock_entry_with_yaml_
 
 
 async def test_state_changes_are_published_to_mqtt(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test publishing of MQTT messages when state changes."""
     assert await async_setup_component(
         hass,
@@ -1382,7 +1435,6 @@ async def test_state_changes_are_published_to_mqtt(
 
     # Component should send disarmed alarm state on startup
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
     mqtt_mock.async_publish.assert_called_once_with(
         "alarm/state", STATE_ALARM_DISARMED, 0, True
     )
@@ -1454,3 +1506,24 @@ async def test_state_changes_are_published_to_mqtt(
     mqtt_mock.async_publish.assert_called_once_with(
         "alarm/state", STATE_ALARM_DISARMED, 0, True
     )
+
+
+async def test_no_mqtt(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test publishing of MQTT messages when state changes."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            alarm_control_panel.DOMAIN: {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "state_topic": "alarm/state",
+                "command_topic": "alarm/command",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+    assert hass.states.get(entity_id) is None
+    assert "MQTT integration is not available" in caplog.text

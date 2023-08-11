@@ -1,7 +1,6 @@
 """Support for Plum Lightpad lights."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from plumlightpad import Plum
@@ -15,7 +14,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
@@ -51,13 +50,15 @@ async def async_setup_entry(
         setup_entities(device)
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
-    asyncio.create_task(
+    entry.async_create_background_task(
+        hass,
         plum.discover(
             hass.loop,
             loadListener=new_load,
             lightpadListener=new_lightpad,
             websession=device_web_session,
-        )
+        ),
+        "plum.light-discover",
     )
 
 
@@ -65,6 +66,8 @@ class PlumLight(LightEntity):
     """Representation of a Plum Lightpad dimmer."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, load):
         """Initialize the light."""
@@ -86,18 +89,13 @@ class PlumLight(LightEntity):
         return f"{self._load.llid}.light"
 
     @property
-    def name(self):
-        """Return the name of the switch if any."""
-        return self._load.name
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Plum",
             model="Dimmer",
-            name=self.name,
+            name=self._load.name,
         )
 
     @property

@@ -3,16 +3,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -20,7 +21,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import EntityCategory, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -130,7 +131,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         entity.installed_version == entity.latest_version
         or entity.latest_version is None
     ):
-        raise HomeAssistantError(f"No update available for {entity.name}")
+        raise HomeAssistantError(f"No update available for {entity.entity_id}")
 
     # If version is specified, but not supported by the entity.
     if (
@@ -138,19 +139,19 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         and not entity.supported_features & UpdateEntityFeature.SPECIFIC_VERSION
     ):
         raise HomeAssistantError(
-            f"Installing a specific version is not supported for {entity.name}"
+            f"Installing a specific version is not supported for {entity.entity_id}"
         )
 
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data[ATTR_BACKUP]
     ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
-        raise HomeAssistantError(f"Backup is not supported for {entity.name}")
+        raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
 
     # Update is already in progress.
     if entity.in_progress is not False:
         raise HomeAssistantError(
-            f"Update installation already in progress for {entity.name}"
+            f"Update installation already in progress for {entity.entity_id}"
         )
 
     await entity.async_install_with_progress(version, backup)
@@ -159,7 +160,9 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
 async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to validate the call."""
     if entity.auto_update:
-        raise HomeAssistantError(f"Skipping update is not supported for {entity.name}")
+        raise HomeAssistantError(
+            f"Skipping update is not supported for {entity.entity_id}"
+        )
     await entity.async_skip()
 
 
@@ -167,7 +170,7 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
     """Service call wrapper to validate the call."""
     if entity.auto_update:
         raise HomeAssistantError(
-            f"Clearing skipped update is not supported for {entity.name}"
+            f"Clearing skipped update is not supported for {entity.entity_id}"
         )
     await entity.async_clear_skipped()
 
@@ -178,6 +181,12 @@ class UpdateEntityDescription(EntityDescription):
 
     device_class: UpdateDeviceClass | None = None
     entity_category: EntityCategory | None = EntityCategory.CONFIG
+
+
+@lru_cache(maxsize=256)
+def _version_is_newer(latest_version: str, installed_version: str) -> bool:
+    """Return True if version is newer."""
+    return AwesomeVersion(latest_version) > installed_version
 
 
 class UpdateEntity(RestoreEntity):
@@ -234,9 +243,6 @@ class UpdateEntity(RestoreEntity):
         Update entities return the brand icon based on the integration
         domain by default.
         """
-        if self.platform is None:
-            return None
-
         return (
             f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
         )
@@ -356,7 +362,7 @@ class UpdateEntity(RestoreEntity):
             return STATE_OFF
 
         try:
-            newer = AwesomeVersion(latest_version) > installed_version
+            newer = _version_is_newer(latest_version, installed_version)
             return STATE_ON if newer else STATE_OFF
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match
@@ -376,25 +382,25 @@ class UpdateEntity(RestoreEntity):
         else:
             in_progress = self.__in_progress
 
+        installed_version = self.installed_version
+        latest_version = self.latest_version
+        skipped_version = self.__skipped_version
         # Clear skipped version in case it matches the current installed
         # version or the latest version diverged.
-        if (
-            self.installed_version is not None
-            and self.__skipped_version == self.installed_version
-        ) or (
-            self.latest_version is not None
-            and self.__skipped_version != self.latest_version
+        if (installed_version is not None and skipped_version == installed_version) or (
+            latest_version is not None and skipped_version != latest_version
         ):
+            skipped_version = None
             self.__skipped_version = None
 
         return {
             ATTR_AUTO_UPDATE: self.auto_update,
-            ATTR_INSTALLED_VERSION: self.installed_version,
+            ATTR_INSTALLED_VERSION: installed_version,
             ATTR_IN_PROGRESS: in_progress,
-            ATTR_LATEST_VERSION: self.latest_version,
+            ATTR_LATEST_VERSION: latest_version,
             ATTR_RELEASE_SUMMARY: release_summary,
             ATTR_RELEASE_URL: self.release_url,
-            ATTR_SKIPPED_VERSION: self.__skipped_version,
+            ATTR_SKIPPED_VERSION: skipped_version,
             ATTR_TITLE: self.title,
         }
 

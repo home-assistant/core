@@ -1,11 +1,16 @@
 {
   "domain": "zwave_me",
   "name": "Z-Wave.Me",
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@lawfulchaos", "@Z-Wave-Me", "@PoltoS"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave_me",
   "iot_class": "local_push",
-  "requirements": ["zwave_me_ws==0.3.1", "url-normalize==1.4.3"],
-  "after_dependencies": ["zeroconf"],
-  "zeroconf": [{ "type": "_hap._tcp.local.", "name": "*z.wave-me*" }],
-  "config_flow": true,
-  "codeowners": ["@lawfulchaos", "@Z-Wave-Me", "@PoltoS"]
+  "requirements": ["zwave-me-ws==0.4.3", "url-normalize==1.4.3"],
+  "zeroconf": [
+    {
+      "type": "_hap._tcp.local.",
+      "name": "*z.wave-me*"
+    }
+  ]
 }

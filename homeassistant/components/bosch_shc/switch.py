@@ -20,8 +20,8 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -111,7 +111,7 @@ async def async_setup_entry(
             )
         )
 
-    for switch in session.device_helper.light_switches:
+    for switch in session.device_helper.light_switches_bsm:
         entities.append(
             SHCSwitch(
                 device=switch,

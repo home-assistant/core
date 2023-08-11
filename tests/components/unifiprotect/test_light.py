@@ -28,7 +28,9 @@ from .utils import (
 )
 
 
-async def test_light_remove(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
+async def test_light_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
     """Test removing and re-adding a light device."""
 
     await init_entry(hass, ufp, [light])
@@ -41,7 +43,7 @@ async def test_light_remove(hass: HomeAssistant, ufp: MockUFPFixture, light: Lig
 
 async def test_light_setup(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
-):
+) -> None:
     """Test light entity setup."""
 
     await init_entry(hass, ufp, [light, unadopted_light])
@@ -63,7 +65,7 @@ async def test_light_setup(
 
 async def test_light_update(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
-):
+) -> None:
     """Test light entity update."""
 
     await init_entry(hass, ufp, [light, unadopted_light])
@@ -89,7 +91,7 @@ async def test_light_update(
 
 async def test_light_turn_on(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
-):
+) -> None:
     """Test light entity turn off."""
 
     await init_entry(hass, ufp, [light, unadopted_light])
@@ -111,7 +113,7 @@ async def test_light_turn_on(
 
 async def test_light_turn_off(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
-):
+) -> None:
     """Test light entity turn on."""
 
     await init_entry(hass, ufp, [light, unadopted_light])

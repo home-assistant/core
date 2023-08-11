@@ -39,7 +39,7 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
         ATTR_STATE: "fec0::1",
         ATTR_ICON: "mdi:earth",
     },
-    "sensor.mock_title_device_uptime": {
+    "sensor.mock_title_last_restart": {
         # ATTR_STATE: "2022-02-05T17:46:04+00:00",
         ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
     },
@@ -114,7 +114,7 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
 }
 
 
-async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
     """Test setup of Fritz!Tools sesnors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -136,7 +136,9 @@ async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
                 assert sensor.attributes.get(key) == val
 
 
-async def test_sensor_update_fail(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_sensor_update_fail(
+    hass: HomeAssistant, fc_class_mock, fh_class_mock
+) -> None:
     """Test failed update of Fritz!Tools sesnors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)

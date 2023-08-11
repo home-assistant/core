@@ -1,19 +1,13 @@
 # Describes the format for available Logi Circle services
 
 set_config:
-  name: Set config
-  description: Set a configuration property.
   fields:
     entity_id:
-      name: Entity
-      description: Name(s) of entities to apply the operation mode to.
       selector:
         entity:
           integration: logi_circle
           domain: camera
     mode:
-      name: Mode
-      description: "Operation mode. Allowed values: LED, RECORDING_MODE."
       required: true
       selector:
         select:
@@ -21,52 +15,36 @@ set_config:
             - "LED"
             - "RECORDING_MODE"
     value:
-      name: Value
-      description: "Operation value."
       required: true
       selector:
         boolean:
 
 livestream_snapshot:
-  name: Livestream snapshot
-  description: Take a snapshot from the camera's livestream. Will wake the camera from sleep if required.
   fields:
     entity_id:
-      name: Entity
-      description: Name(s) of entities to create snapshots from.
       selector:
         entity:
           integration: logi_circle
           domain: camera
     filename:
-      name: File name
-      description: Template of a Filename. Variable is entity_id.
       required: true
       example: "/tmp/snapshot_{{ entity_id }}.jpg"
       selector:
         text:
 
 livestream_record:
-  name: Livestream record
-  description: Take a video recording from the camera's livestream.
   fields:
     entity_id:
-      name: Entity
-      description: Name(s) of entities to create recordings from.
       selector:
         entity:
           integration: logi_circle
           domain: camera
     filename:
-      name: File name
-      description: Template of a Filename. Variable is entity_id.
       required: true
       example: "/tmp/snapshot_{{ entity_id }}.mp4"
       selector:
         text:
     duration:
-      name: Duration
-      description: Recording duration.
       required: true
       selector:
         number:

@@ -2,17 +2,16 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 import copy
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict
+from typing import Any, Required, TypedDict
 
-from typing_extensions import Required
 import voluptuous as vol
 
-from .backports.enum import StrEnum
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.frame import report
@@ -48,7 +47,7 @@ RESULT_TYPE_MENU = "menu"
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
 
-@dataclass
+@dataclass(slots=True)
 class BaseServiceInfo:
     """Base class for discovery ServiceInfo."""
 
@@ -138,6 +137,7 @@ class FlowManager(abc.ABC):
         self.hass = hass
         self._progress: dict[str, FlowHandler] = {}
         self._handler_progress_index: dict[str, set[str]] = {}
+        self._init_data_process_index: dict[type, set[str]] = {}
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -163,16 +163,19 @@ class FlowManager(abc.ABC):
 
     @callback
     def async_has_matching_flow(
-        self, handler: str, context: dict[str, Any], data: Any
+        self, handler: str, match_context: dict[str, Any], data: Any
     ) -> bool:
         """Check if an existing matching flow is in progress.
 
         A flow with the same handler, context, and data.
+
+        If match_context is passed, only return flows with a context that is a
+        superset of match_context.
         """
         return any(
             flow
-            for flow in self._async_progress_by_handler(handler)
-            if flow.context["source"] == context["source"] and flow.init_data == data
+            for flow in self._async_progress_by_handler(handler, match_context)
+            if flow.init_data == data
         )
 
     @callback
@@ -191,19 +194,59 @@ class FlowManager(abc.ABC):
 
     @callback
     def async_progress_by_handler(
-        self, handler: str, include_uninitialized: bool = False
+        self,
+        handler: str,
+        include_uninitialized: bool = False,
+        match_context: dict[str, Any] | None = None,
     ) -> list[FlowResult]:
-        """Return the flows in progress by handler as a partial FlowResult."""
+        """Return the flows in progress by handler as a partial FlowResult.
+
+        If match_context is specified, only return flows with a context that
+        is a superset of match_context.
+        """
         return _async_flow_handler_to_flow_result(
-            self._async_progress_by_handler(handler), include_uninitialized
+            self._async_progress_by_handler(handler, match_context),
+            include_uninitialized,
         )
 
     @callback
-    def _async_progress_by_handler(self, handler: str) -> list[FlowHandler]:
-        """Return the flows in progress by handler."""
+    def async_progress_by_init_data_type(
+        self,
+        init_data_type: type,
+        matcher: Callable[[Any], bool],
+        include_uninitialized: bool = False,
+    ) -> list[FlowResult]:
+        """Return flows in progress init matching by data type as a partial FlowResult."""
+        return _async_flow_handler_to_flow_result(
+            (
+                self._progress[flow_id]
+                for flow_id in self._init_data_process_index.get(init_data_type, {})
+                if matcher(self._progress[flow_id].init_data)
+            ),
+            include_uninitialized,
+        )
+
+    @callback
+    def _async_progress_by_handler(
+        self, handler: str, match_context: dict[str, Any] | None
+    ) -> list[FlowHandler]:
+        """Return the flows in progress by handler.
+
+        If match_context is specified, only return flows with a context that
+        is a superset of match_context.
+        """
+        match_context_items = match_context.items() if match_context else None
         return [
-            self._progress[flow_id]
+            progress
             for flow_id in self._handler_progress_index.get(handler, {})
+            if (progress := self._progress[flow_id])
+            and (
+                not match_context_items
+                or (
+                    (context := progress.context)
+                    and match_context_items <= context.items()
+                )
+            )
         ]
 
     async def async_init(
@@ -301,19 +344,33 @@ class FlowManager(abc.ABC):
     @callback
     def _async_add_flow_progress(self, flow: FlowHandler) -> None:
         """Add a flow to in progress."""
+        if flow.init_data is not None:
+            init_data_type = type(flow.init_data)
+            self._init_data_process_index.setdefault(init_data_type, set()).add(
+                flow.flow_id
+            )
         self._progress[flow.flow_id] = flow
         self._handler_progress_index.setdefault(flow.handler, set()).add(flow.flow_id)
+
+    @callback
+    def _async_remove_flow_from_index(self, flow: FlowHandler) -> None:
+        """Remove a flow from in progress."""
+        if flow.init_data is not None:
+            init_data_type = type(flow.init_data)
+            self._init_data_process_index[init_data_type].remove(flow.flow_id)
+            if not self._init_data_process_index[init_data_type]:
+                del self._init_data_process_index[init_data_type]
+        handler = flow.handler
+        self._handler_progress_index[handler].remove(flow.flow_id)
+        if not self._handler_progress_index[handler]:
+            del self._handler_progress_index[handler]
 
     @callback
     def _async_remove_flow_progress(self, flow_id: str) -> None:
         """Remove a flow from in progress."""
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
-        handler = flow.handler
-        self._handler_progress_index[handler].remove(flow.flow_id)
-        if not self._handler_progress_index[handler]:
-            del self._handler_progress_index[handler]
-
+        self._async_remove_flow_from_index(flow)
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except

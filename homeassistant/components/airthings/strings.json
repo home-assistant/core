@@ -17,5 +17,21 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "radon": {
+        "name": "Radon"
+      },
+      "light": {
+        "name": "Light"
+      },
+      "virus_risk": {
+        "name": "Virus Risk"
+      },
+      "mold": {
+        "name": "Mold"
+      }
+    }
   }
 }

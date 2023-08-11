@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     PERCENTAGE,
+    EntityCategory,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -34,7 +35,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -266,7 +266,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="power",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=UnitOfPower.WATT,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
 )

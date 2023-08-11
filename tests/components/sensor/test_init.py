@@ -1,6 +1,7 @@
 """The test for sensor entity."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Any
@@ -11,10 +12,15 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
+    async_rounded_state,
     async_update_suggested_units,
 )
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -30,16 +36,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_mock_restore_state_shutdown_restart,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache_with_extra_data,
+)
+
+TEST_DOMAIN = "test"
 
 
 @pytest.mark.parametrize(
-    "unit_system,native_unit,state_unit,native_value,state_value",
+    ("unit_system", "native_unit", "state_unit", "native_value", "state_value"),
     [
         (
             US_CUSTOMARY_SYSTEM,
@@ -72,14 +90,14 @@ from tests.common import mock_restore_cache_with_extra_data
     ],
 )
 async def test_temperature_conversion(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     unit_system,
     native_unit,
     state_unit,
     native_value,
     state_value,
-):
+) -> None:
     """Test temperature conversion."""
     hass.config.units = unit_system
     platform = getattr(hass.components, "test.sensor")
@@ -102,8 +120,8 @@ async def test_temperature_conversion(
 
 @pytest.mark.parametrize("device_class", (None, SensorDeviceClass.PRESSURE))
 async def test_temperature_conversion_wrong_device_class(
-    hass, device_class, enable_custom_integrations
-):
+    hass: HomeAssistant, device_class, enable_custom_integrations: None
+) -> None:
     """Test temperatures are not converted if the sensor has wrong device class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -126,8 +144,11 @@ async def test_temperature_conversion_wrong_device_class(
 
 @pytest.mark.parametrize("state_class", ("measurement", "total_increasing"))
 async def test_deprecated_last_reset(
-    hass, caplog, enable_custom_integrations, state_class
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    state_class,
+) -> None:
     """Test warning on deprecated last reset."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -150,7 +171,11 @@ async def test_deprecated_last_reset(
     assert "last_reset" not in state.attributes
 
 
-async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
+async def test_datetime_conversion(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test conversion of datetime."""
     test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
     test_local_timestamp = test_timestamp.astimezone(
@@ -198,16 +223,62 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
     assert state.state == test_timestamp.isoformat()
 
 
+async def test_a_sensor_with_a_non_numeric_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Test that a sensor with a non numeric device class will be non numeric.
+
+    A non numeric sensor with a valid device class should never be
+    handled as numeric because it has a device class.
+    """
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_local_timestamp = test_timestamp.astimezone(
+        dt_util.get_time_zone("Europe/Amsterdam")
+    )
+
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=test_local_timestamp,
+        native_unit_of_measurement="",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    )
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test",
+        native_value=test_local_timestamp,
+        state_class="",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(platform.ENTITIES["0"].entity_id)
+    assert state.state == test_timestamp.isoformat()
+
+    state = hass.states.get(platform.ENTITIES["1"].entity_id)
+    assert state.state == test_timestamp.isoformat()
+
+
 @pytest.mark.parametrize(
-    "device_class,state_value,provides",
+    ("device_class", "state_value", "provides"),
     [
         (SensorDeviceClass.DATE, "2021-01-09", "date"),
         (SensorDeviceClass.TIMESTAMP, "2021-01-09T12:00:00+00:00", "datetime"),
     ],
 )
 async def test_deprecated_datetime_str(
-    hass, caplog, enable_custom_integrations, device_class, state_value, provides
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class,
+    state_value,
+    provides,
+) -> None:
     """Test warning on deprecated str for a date(time) value."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -225,8 +296,10 @@ async def test_deprecated_datetime_str(
 
 
 async def test_reject_timezoneless_datetime_str(
-    hass, caplog, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test rejection of timezone-less datetime objects as timestamp."""
     test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=None)
     platform = getattr(hass.components, "test.sensor")
@@ -283,7 +356,7 @@ RESTORE_DATA = {
 
 # None | str | int | float | date | datetime | Decimal:
 @pytest.mark.parametrize(
-    "native_value, native_value_type, expected_extra_data, device_class, uom",
+    ("native_value", "native_value_type", "expected_extra_data", "device_class", "uom"),
     [
         ("abc123", str, RESTORE_DATA["str"], None, None),
         (
@@ -318,15 +391,15 @@ RESTORE_DATA = {
     ],
 )
 async def test_restore_sensor_save_state(
-    hass,
-    enable_custom_integrations,
-    hass_storage,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    hass_storage: dict[str, Any],
     native_value,
     native_value_type,
     expected_extra_data,
     device_class,
     uom,
-):
+) -> None:
     """Test RestoreSensor."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -342,7 +415,7 @@ async def test_restore_sensor_save_state(
     await hass.async_block_till_done()
 
     # Trigger saving state
-    await hass.async_stop()
+    await async_mock_restore_state_shutdown_restart(hass)
 
     assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
@@ -353,7 +426,7 @@ async def test_restore_sensor_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_value, native_value_type, extra_data, device_class, uom",
+    ("native_value", "native_value_type", "extra_data", "device_class", "uom"),
     [
         ("abc123", str, RESTORE_DATA["str"], None, None),
         (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE, "°F"),
@@ -387,15 +460,15 @@ async def test_restore_sensor_save_state(
     ],
 )
 async def test_restore_sensor_restore_state(
-    hass,
-    enable_custom_integrations,
-    hass_storage,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    hass_storage: dict[str, Any],
     native_value,
     native_value_type,
     extra_data,
     device_class,
     uom,
-):
+) -> None:
     """Test RestoreSensor."""
     mock_restore_cache_with_extra_data(hass, ((State("sensor.test", ""), extra_data),))
 
@@ -418,7 +491,14 @@ async def test_restore_sensor_restore_state(
 
 
 @pytest.mark.parametrize(
-    "device_class, native_unit, custom_unit, state_unit, native_value, custom_state",
+    (
+        "device_class",
+        "native_unit",
+        "custom_unit",
+        "state_unit",
+        "native_value",
+        "custom_state",
+    ),
     [
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
@@ -478,18 +558,34 @@ async def test_restore_sensor_restore_state(
             100,
             "38",
         ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
+            -0.00,
+            "0.0",
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
+            -0.00001,
+            "0",
+        ),
     ],
 )
 async def test_custom_unit(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     device_class,
     native_unit,
     custom_unit,
     state_unit,
     native_value,
     custom_state,
-):
+) -> None:
     """Test custom unit."""
     entity_registry = er.async_get(hass)
 
@@ -513,13 +609,26 @@ async def test_custom_unit(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity0.entity_id)
+    entity_id = entity0.entity_id
+    state = hass.states.get(entity_id)
     assert state.state == custom_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
+    assert (
+        async_rounded_state(hass, entity_id, hass.states.get(entity_id)) == custom_state
+    )
+
 
 @pytest.mark.parametrize(
-    "native_unit, custom_unit, state_unit, native_value, native_state, custom_state, device_class",
+    (
+        "native_unit",
+        "custom_unit",
+        "state_unit",
+        "native_value",
+        "native_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -731,8 +840,8 @@ async def test_custom_unit(
     ],
 )
 async def test_custom_unit_change(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     native_unit,
     custom_unit,
     state_unit,
@@ -740,7 +849,7 @@ async def test_custom_unit_change(
     native_state,
     custom_state,
     device_class,
-):
+) -> None:
     """Test custom unit changes are picked up."""
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
@@ -788,7 +897,19 @@ async def test_custom_unit_change(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit, native_value, native_state, automatic_state, suggested_state, custom_state, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "automatic_unit",
+        "suggested_unit",
+        "custom_unit",
+        "native_value",
+        "native_state",
+        "automatic_state",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -803,12 +924,12 @@ async def test_custom_unit_change(
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
-        ),
+        )
     ],
 )
 async def test_unit_conversion_priority(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     unit_system,
     native_unit,
     automatic_unit,
@@ -820,7 +941,7 @@ async def test_unit_conversion_priority(
     suggested_state,
     custom_state,
     device_class,
-):
+) -> None:
     """Test priority of unit conversion."""
 
     hass.config.units = unit_system
@@ -874,6 +995,7 @@ async def test_unit_conversion_priority(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit
     # Assert the automatic unit conversion is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.unit_of_measurement == automatic_unit
     assert entry.options == {
         "sensor.private": {"suggested_unit_of_measurement": automatic_unit}
     }
@@ -889,6 +1011,7 @@ async def test_unit_conversion_priority(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity2.entity_id)
+    assert entry.unit_of_measurement == suggested_unit
     assert entry.options == {
         "sensor.private": {"suggested_unit_of_measurement": suggested_unit}
     }
@@ -919,7 +1042,186 @@ async def test_unit_conversion_priority(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, original_unit, suggested_unit, native_value, original_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "automatic_unit",
+        "suggested_unit",
+        "custom_unit",
+        "suggested_precision",
+        "native_value",
+        "native_state",
+        "automatic_state",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
+    [
+        # Distance
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
+            UnitOfLength.METERS,
+            UnitOfLength.YARDS,
+            2,
+            1000,
+            "1000",
+            621.371,
+            1000000,
+            1093613,
+            SensorDeviceClass.DISTANCE,
+        ),
+    ],
+)
+async def test_unit_conversion_priority_precision(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    unit_system,
+    native_unit,
+    automatic_unit,
+    suggested_unit,
+    custom_unit,
+    suggested_precision,
+    native_value,
+    native_state,
+    automatic_state,
+    suggested_state,
+    custom_state,
+    device_class,
+) -> None:
+    """Test priority of unit conversion for sensors with suggested_display_precision."""
+
+    hass.config.units = unit_system
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+    )
+    entity1 = platform.ENTITIES["1"]
+
+    platform.ENTITIES["2"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_2",
+    )
+    entity2 = platform.ENTITIES["2"]
+
+    platform.ENTITIES["3"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        suggested_unit_of_measurement=suggested_unit,
+    )
+    entity3 = platform.ENTITIES["3"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Registered entity -> Follow automatic unit conversion
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(automatic_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit
+    # Assert the automatic unit conversion is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.unit_of_measurement == automatic_unit
+    assert entry.options == {
+        "sensor": {"suggested_display_precision": 2},
+        "sensor.private": {"suggested_unit_of_measurement": automatic_unit},
+    }
+    assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
+        round(automatic_state, 2)
+    )
+
+    # Unregistered entity -> Follow native unit
+    state = hass.states.get(entity1.entity_id)
+    assert state.state == native_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    # Registered entity with suggested unit
+    state = hass.states.get(entity2.entity_id)
+    assert float(state.state) == pytest.approx(suggested_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity2.entity_id)
+    assert entry.unit_of_measurement == suggested_unit
+    assert entry.options == {
+        "sensor": {"suggested_display_precision": 2},
+        "sensor.private": {"suggested_unit_of_measurement": suggested_unit},
+    }
+
+    # Unregistered entity with suggested unit
+    state = hass.states.get(entity3.entity_id)
+    assert float(state.state) == pytest.approx(suggested_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+    # Set a custom unit, this should have priority over the automatic unit conversion
+    entity_registry.async_update_entity_options(
+        entity0.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(custom_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    entity_registry.async_update_entity_options(
+        entity2.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity2.entity_id)
+    assert float(state.state) == pytest.approx(custom_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    # Set a display_precision, this should have priority over suggested_display_precision
+    entity_registry.async_update_entity_options(
+        entity0.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2, "display_precision": 4},
+    )
+    entry0 = entity_registry.async_get(entity0.entity_id)
+    assert entry0.options["sensor"]["suggested_display_precision"] == 2
+    assert entry0.options["sensor"]["display_precision"] == 4
+    await hass.async_block_till_done()
+    assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
+        round(custom_state, 4)
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "unit_system",
+        "native_unit",
+        "original_unit",
+        "suggested_unit",
+        "native_value",
+        "original_value",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -934,8 +1236,8 @@ async def test_unit_conversion_priority(
     ],
 )
 async def test_unit_conversion_priority_suggested_unit_change(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     unit_system,
     native_unit,
     original_unit,
@@ -943,7 +1245,7 @@ async def test_unit_conversion_priority_suggested_unit_change(
     native_value,
     original_value,
     device_class,
-):
+) -> None:
     """Test priority of unit conversion."""
 
     hass.config.units = unit_system
@@ -953,13 +1255,17 @@ async def test_unit_conversion_priority_suggested_unit_change(
     platform.init(empty=True)
 
     # Pre-register entities
-    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique", unit_of_measurement=original_unit
+    )
     entity_registry.async_update_entity_options(
         entry.entity_id,
         "sensor.private",
         {"suggested_unit_of_measurement": original_unit},
     )
-    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique_2")
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique_2", unit_of_measurement=original_unit
+    )
     entity_registry.async_update_entity_options(
         entry.entity_id,
         "sensor.private",
@@ -992,34 +1298,173 @@ async def test_unit_conversion_priority_suggested_unit_change(
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.unit_of_measurement == original_unit
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": original_unit},
+    }
 
     # Registered entity -> Follow suggested unit the first time the entity was seen
     state = hass.states.get(entity1.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity1.entity_id)
+    assert entry.unit_of_measurement == original_unit
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": original_unit},
+    }
 
 
 @pytest.mark.parametrize(
-    "native_unit, suggested_precision, native_value, device_class",
+    (
+        "native_unit_1",
+        "native_unit_2",
+        "suggested_unit",
+        "native_value",
+        "original_value",
+        "device_class",
+    ),
     [
         # Distance
         (
             UnitOfLength.KILOMETERS,
+            UnitOfLength.METERS,
+            UnitOfLength.KILOMETERS,
+            1000000,
+            1000,
+            SensorDeviceClass.DISTANCE,
+        ),
+        # Energy
+        (
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfEnergy.WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            1000000,
+            1000,
+            SensorDeviceClass.ENERGY,
+        ),
+    ],
+)
+async def test_unit_conversion_priority_suggested_unit_change_2(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    native_unit_1,
+    native_unit_2,
+    suggested_unit,
+    native_value,
+    original_value,
+    device_class,
+) -> None:
+    """Test priority of unit conversion."""
+
+    hass.config.units = METRIC_SYSTEM
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    # Pre-register entities
+    entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique", unit_of_measurement=native_unit_1
+    )
+    entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique_2", unit_of_measurement=native_unit_1
+    )
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit_2,
+        native_value=str(native_value),
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit_2,
+        native_value=str(native_value),
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_2",
+    )
+    entity1 = platform.ENTITIES["1"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Registered entity -> Follow unit in entity registry
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(float(original_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit_1
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.unit_of_measurement == native_unit_1
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": native_unit_1},
+    }
+
+    # Registered entity -> Follow unit in entity registry
+    state = hass.states.get(entity1.entity_id)
+    assert float(state.state) == pytest.approx(float(original_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit_1
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.unit_of_measurement == native_unit_1
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": native_unit_1},
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "unit_system",
+        "native_unit",
+        "integration_suggested_precision",
+        "options_suggested_precision",
+        "native_value",
+        "device_class",
+        "extra_options",
+    ),
+    [
+        # Distance
+        (
+            METRIC_SYSTEM,
+            UnitOfLength.KILOMETERS,
+            4,
             4,
             1000,
             SensorDeviceClass.DISTANCE,
+            {},
+        ),
+        # Air pressure
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfPressure.HPA,
+            0,
+            1,
+            1000,
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            {"sensor.private": {"suggested_unit_of_measurement": "inHg"}},
         ),
     ],
 )
 async def test_suggested_precision_option(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    unit_system,
     native_unit,
-    suggested_precision,
+    integration_suggested_precision,
+    options_suggested_precision,
     native_value,
     device_class,
-):
+    extra_options,
+) -> None:
     """Test suggested precision is stored in the registry."""
+
+    hass.config.units = unit_system
 
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
@@ -1030,7 +1475,7 @@ async def test_suggested_precision_option(
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
-        suggested_display_precision=suggested_precision,
+        suggested_display_precision=integration_suggested_precision,
         unique_id="very_unique",
     )
     entity0 = platform.ENTITIES["0"]
@@ -1040,33 +1485,66 @@ async def test_suggested_precision_option(
 
     # Assert the suggested precision is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
-    assert entry.options == {
-        "sensor": {"suggested_display_precision": suggested_precision}
+    assert entry.options == extra_options | {
+        "sensor": {"suggested_display_precision": options_suggested_precision}
     }
 
 
 @pytest.mark.parametrize(
-    "native_unit, old_precision, new_precision, native_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "suggested_unit",
+        "old_precision",
+        "new_precision",
+        "opt_precision",
+        "native_value",
+        "device_class",
+        "extra_options",
+    ),
     [
+        # Distance
         (
+            METRIC_SYSTEM,
+            UnitOfLength.KILOMETERS,
             UnitOfLength.KILOMETERS,
             4,
             1,
+            1,
             1000,
             SensorDeviceClass.DISTANCE,
+            {},
+        ),
+        # Air pressure
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+            1,
+            1,
+            2,
+            1000,
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            {"sensor.private": {"suggested_unit_of_measurement": "inHg"}},
         ),
     ],
 )
 async def test_suggested_precision_option_update(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    unit_system,
     native_unit,
+    suggested_unit,
     old_precision,
     new_precision,
+    opt_precision,
     native_value,
     device_class,
-):
+    extra_options,
+) -> None:
     """Test suggested precision stored in the registry is updated."""
+
+    hass.config.units = unit_system
 
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
@@ -1085,7 +1563,7 @@ async def test_suggested_precision_option_update(
         entry.entity_id,
         "sensor.private",
         {
-            "suggested_unit_of_measurement": native_unit,
+            "suggested_unit_of_measurement": suggested_unit,
         },
     )
 
@@ -1106,16 +1584,23 @@ async def test_suggested_precision_option_update(
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.options == {
         "sensor": {
-            "suggested_display_precision": new_precision,
+            "suggested_display_precision": opt_precision,
         },
         "sensor.private": {
-            "suggested_unit_of_measurement": native_unit,
+            "suggested_unit_of_measurement": suggested_unit,
         },
     }
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, original_unit, native_value, original_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "original_unit",
+        "native_value",
+        "original_value",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -1137,15 +1622,15 @@ async def test_suggested_precision_option_update(
     ],
 )
 async def test_unit_conversion_priority_legacy_conversion_removed(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     unit_system,
     native_unit,
     original_unit,
     native_value,
     original_value,
     device_class,
-):
+) -> None:
     """Test priority of unit conversion."""
 
     hass.config.units = unit_system
@@ -1176,7 +1661,7 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
 
 
-def test_device_classes_aligned():
+def test_device_classes_aligned() -> None:
     """Make sure all number device classes are also available in SensorDeviceClass."""
 
     for device_class in NumberDeviceClass:
@@ -1188,7 +1673,7 @@ async def test_value_unknown_in_enumeration(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
-):
+) -> None:
     """Test warning on invalid enum value."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -1212,7 +1697,7 @@ async def test_invalid_enumeration_entity_with_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
-):
+) -> None:
     """Test warning on entities that provide an enum with a device class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -1236,7 +1721,7 @@ async def test_invalid_enumeration_entity_without_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
-):
+) -> None:
     """Test warning on entities that provide an enum without a device class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -1268,7 +1753,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     device_class: SensorDeviceClass,
-):
+) -> None:
     """Test error on numeric entities that provide an unit of measurement."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -1314,6 +1799,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.NITROGEN_MONOXIDE,
         SensorDeviceClass.NITROUS_OXIDE,
         SensorDeviceClass.OZONE,
+        SensorDeviceClass.PH,
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
@@ -1329,6 +1815,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TEMPERATURE,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         SensorDeviceClass.VOLTAGE,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
@@ -1341,7 +1828,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     device_class: SensorDeviceClass,
-):
+) -> None:
     """Test error when unit of measurement is not valid for used device class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -1366,7 +1853,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit",
+    ("device_class", "state_class", "unit"),
     [
         (SensorDeviceClass.AQI, None, None),
         (None, SensorStateClass.MEASUREMENT, None),
@@ -1374,20 +1861,20 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     ],
 )
 @pytest.mark.parametrize(
-    "native_value,expected",
+    "native_value",
     [
-        ("abc", "abc"),
-        ("13.7.1", "13.7.1"),
-        (datetime(2012, 11, 10, 7, 35, 1), "2012-11-10 07:35:01"),
-        (date(2012, 11, 10), "2012-11-10"),
+        "",
+        "abc",
+        "13.7.1",
+        datetime(2012, 11, 10, 7, 35, 1),
+        date(2012, 11, 10),
     ],
 )
-async def test_non_numeric_validation_warn(
+async def test_non_numeric_validation_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     native_value: Any,
-    expected: str,
     device_class: SensorDeviceClass | None,
     state_class: SensorStateClass | None,
     unit: str | None,
@@ -1408,19 +1895,19 @@ async def test_non_numeric_validation_warn(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert state.state == expected
+    assert state is None
 
     assert (
         "thus indicating it has a numeric value; "
-        f"however, it has the non-numeric value: {native_value}"
+        f"however, it has the non-numeric value: '{native_value}'"
     ) in caplog.text
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit,precision", ((None, None, None, 1),)
+    ("device_class", "state_class", "unit", "precision"), ((None, None, None, 1),)
 )
 @pytest.mark.parametrize(
-    "native_value,expected",
+    ("native_value", "expected"),
     [
         ("abc", "abc"),
         ("13.7.1", "13.7.1"),
@@ -1462,7 +1949,7 @@ async def test_non_numeric_validation_raise(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit",
+    ("device_class", "state_class", "unit"),
     [
         (SensorDeviceClass.AQI, None, None),
         (None, SensorStateClass.MEASUREMENT, None),
@@ -1470,10 +1957,11 @@ async def test_non_numeric_validation_raise(
     ],
 )
 @pytest.mark.parametrize(
-    "native_value,expected",
+    ("native_value", "expected"),
     [
         (13, "13"),
         (17.50, "17.5"),
+        ("1e-05", "1e-05"),
         (Decimal(18.50), "18.5"),
         ("19.70", "19.70"),
         (None, STATE_UNKNOWN),
@@ -1550,7 +2038,7 @@ async def test_device_classes_with_invalid_state_class(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     device_class: SensorDeviceClass,
-):
+) -> None:
     """Test error when unit of measurement is not valid for used device class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -1576,7 +2064,13 @@ async def test_device_classes_with_invalid_state_class(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,native_unit_of_measurement,suggested_precision,is_numeric",
+    (
+        "device_class",
+        "state_class",
+        "native_unit_of_measurement",
+        "suggested_precision",
+        "is_numeric",
+    ),
     [
         (SensorDeviceClass.ENUM, None, None, None, False),
         (SensorDeviceClass.DATE, None, None, None, False),
@@ -1621,7 +2115,21 @@ async def test_numeric_state_expected_helper(
 
 
 @pytest.mark.parametrize(
-    "unit_system_1, unit_system_2, native_unit, automatic_unit_1, automatic_unit_2, suggested_unit, custom_unit, native_value, automatic_state_1, automatic_state_2, suggested_state, custom_state, device_class",
+    (
+        "unit_system_1",
+        "unit_system_2",
+        "native_unit",
+        "automatic_unit_1",
+        "automatic_unit_2",
+        "suggested_unit",
+        "custom_unit",
+        "native_value",
+        "automatic_state_1",
+        "automatic_state_2",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -1642,8 +2150,8 @@ async def test_numeric_state_expected_helper(
     ],
 )
 async def test_unit_conversion_update(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     unit_system_1,
     unit_system_2,
     native_unit,
@@ -1657,7 +2165,7 @@ async def test_unit_conversion_update(
     suggested_state,
     custom_state,
     device_class,
-):
+) -> None:
     """Test suggested unit can be updated."""
 
     hass.config.units = unit_system_1
@@ -1806,3 +2314,127 @@ async def test_unit_conversion_update(
     state = hass.states.get(entity3.entity_id)
     assert state.state == suggested_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+
+class MockFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture(autouse=True)
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Mock config flow."""
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    with mock_config_flow(TEST_DOMAIN, MockFlow):
+        yield
+
+
+async def test_name(hass: HomeAssistant) -> None:
+    """Test sensor name."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(config_entry, SENSOR_DOMAIN)
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Unnamed sensor without device class -> no name
+    entity1 = SensorEntity()
+    entity1.entity_id = "sensor.test1"
+
+    # Unnamed sensor with device class but has_entity_name False -> no name
+    entity2 = SensorEntity()
+    entity2.entity_id = "sensor.test2"
+    entity2._attr_device_class = SensorDeviceClass.BATTERY
+
+    # Unnamed sensor with device class and has_entity_name True -> named
+    entity3 = SensorEntity()
+    entity3.entity_id = "sensor.test3"
+    entity3._attr_device_class = SensorDeviceClass.BATTERY
+    entity3._attr_has_entity_name = True
+
+    # Unnamed sensor with device class and has_entity_name True -> named
+    entity4 = SensorEntity()
+    entity4.entity_id = "sensor.test4"
+    entity4.entity_description = SensorEntityDescription(
+        "test",
+        SensorDeviceClass.BATTERY,
+        has_entity_name=True,
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test stt platform via config entry."""
+        async_add_entities([entity1, entity2, entity3, entity4])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{SENSOR_DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity1.entity_id)
+    assert state.attributes == {}
+
+    state = hass.states.get(entity2.entity_id)
+    assert state.attributes == {"device_class": "battery"}
+
+    state = hass.states.get(entity3.entity_id)
+    assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+
+    state = hass.states.get(entity4.entity_id)
+    assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+
+
+def test_async_rounded_state_unregistered_entity_is_passthrough(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_rounded_state on unregistered entity is passthrough."""
+    hass.states.async_set("sensor.test", "1.004")
+    state = hass.states.get("sensor.test")
+    assert async_rounded_state(hass, "sensor.test", state) == "1.004"
+    hass.states.async_set("sensor.test", "-0.0")
+    state = hass.states.get("sensor.test")
+    assert async_rounded_state(hass, "sensor.test", state) == "-0.0"
+
+
+def test_async_rounded_state_registered_entity_with_display_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_rounded_state on registered with display precision.
+
+    The -0 should be dropped.
+    """
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2, "display_precision": 4},
+    )
+    entity_id = entry.entity_id
+    hass.states.async_set(entity_id, "1.004")
+    state = hass.states.get(entity_id)
+    assert async_rounded_state(hass, entity_id, state) == "1.0040"
+    hass.states.async_set(entity_id, "-0.0")
+    state = hass.states.get(entity_id)
+    assert async_rounded_state(hass, entity_id, state) == "0.0000"

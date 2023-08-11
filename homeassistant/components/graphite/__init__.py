@@ -69,7 +69,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         _LOGGER.debug("No connection check for UDP possible")
 
-    GraphiteFeeder(hass, host, port, protocol, prefix)
+    hass.data[DOMAIN] = GraphiteFeeder(hass, host, port, protocol, prefix)
     return True
 
 
@@ -87,27 +87,31 @@ class GraphiteFeeder(threading.Thread):
         self._prefix = prefix.rstrip(".")
         self._queue = queue.Queue()
         self._quit_object = object()
-        self._we_started = False
+        self._unsub_state_changed = None
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.start_listen)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
-        hass.bus.listen(EVENT_STATE_CHANGED, self.event_listener)
         _LOGGER.debug("Graphite feeding to %s:%i initialized", self._host, self._port)
 
     def start_listen(self, event):
         """Start event-processing thread."""
         _LOGGER.debug("Event processing thread started")
-        self._we_started = True
+        self._hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
+        self._unsub_state_changed = self._hass.bus.listen(
+            EVENT_STATE_CHANGED, self.event_listener
+        )
         self.start()
 
     def shutdown(self, event):
         """Signal shutdown of processing event."""
         _LOGGER.debug("Event processing signaled exit")
+        self._unsub_state_changed()
+        self._unsub_state_changed = None
         self._queue.put(self._quit_object)
+        self._queue.join()
 
     def event_listener(self, event):
         """Queue an event for processing."""
-        if self.is_alive() or not self._we_started:
+        if self._unsub_state_changed is not None:
             _LOGGER.debug("Received event")
             self._queue.put(event)
         else:

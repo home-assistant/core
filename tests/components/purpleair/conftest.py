@@ -19,6 +19,7 @@ def api_fixture(get_sensors_response):
     """Define a fixture to return a mocked aiopurple API object."""
     return Mock(
         async_check_api_key=AsyncMock(),
+        get_map_url=Mock(return_value="http://example.com"),
         sensors=Mock(
             async_get_nearby_sensors=AsyncMock(
                 return_value=[
@@ -75,7 +76,7 @@ async def mock_aiopurpleair_fixture(api):
     with patch(
         "homeassistant.components.purpleair.config_flow.API", return_value=api
     ), patch("homeassistant.components.purpleair.coordinator.API", return_value=api):
-        yield
+        yield api
 
 
 @pytest.fixture(name="setup_config_entry")

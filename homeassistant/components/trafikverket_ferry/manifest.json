@@ -1,10 +1,10 @@
 {
   "domain": "trafikverket_ferry",
   "name": "Trafikverket Ferry",
-  "documentation": "https://www.home-assistant.io/integrations/trafikverket_ferry",
-  "requirements": ["pytrafikverket==0.2.3"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/trafikverket_ferry",
   "iot_class": "cloud_polling",
-  "loggers": ["pytrafikverket"]
+  "loggers": ["pytrafikverket"],
+  "requirements": ["pytrafikverket==0.3.5"]
 }

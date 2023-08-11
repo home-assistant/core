@@ -4,9 +4,16 @@ import logging
 
 from async_timeout import timeout
 from pyezviz.client import EzvizClient
-from pyezviz.exceptions import HTTPError, InvalidURL, PyEzvizError
+from pyezviz.exceptions import (
+    EzvizAuthTokenExpired,
+    EzvizAuthVerificationCode,
+    HTTPError,
+    InvalidURL,
+    PyEzvizError,
+)
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -27,15 +34,16 @@ class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    def _update_data(self) -> dict:
-        """Fetch data from EZVIZ via camera load function."""
-        return self.ezviz_client.load_cameras()
-
     async def _async_update_data(self) -> dict:
         """Fetch data from EZVIZ."""
         try:
             async with timeout(self._api_timeout):
-                return await self.hass.async_add_executor_job(self._update_data)
+                return await self.hass.async_add_executor_job(
+                    self.ezviz_client.load_cameras
+                )
+
+        except (EzvizAuthTokenExpired, EzvizAuthVerificationCode) as error:
+            raise ConfigEntryAuthFailed from error
 
         except (InvalidURL, HTTPError, PyEzvizError) as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error

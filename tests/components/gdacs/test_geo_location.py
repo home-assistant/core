@@ -31,6 +31,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -43,7 +44,7 @@ from tests.common import async_fire_time_changed
 CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -57,8 +58,8 @@ async def test_setup(hass):
         alert_level="Alert Level 1",
         country="Country 1",
         attribution="Attribution 1",
-        from_date=datetime.datetime(2020, 1, 10, 8, 0, tzinfo=datetime.timezone.utc),
-        to_date=datetime.datetime(2020, 1, 20, 8, 0, tzinfo=datetime.timezone.utc),
+        from_date=datetime.datetime(2020, 1, 10, 8, 0, tzinfo=datetime.UTC),
+        to_date=datetime.datetime(2020, 1, 20, 8, 0, tzinfo=datetime.UTC),
         duration_in_week=1,
         population="Population 1",
         severity="Severity 1",
@@ -119,12 +120,8 @@ async def test_setup(hass):
             ATTR_DESCRIPTION: "Description 1",
             ATTR_COUNTRY: "Country 1",
             ATTR_ATTRIBUTION: "Attribution 1",
-            ATTR_FROM_DATE: datetime.datetime(
-                2020, 1, 10, 8, 0, tzinfo=datetime.timezone.utc
-            ),
-            ATTR_TO_DATE: datetime.datetime(
-                2020, 1, 20, 8, 0, tzinfo=datetime.timezone.utc
-            ),
+            ATTR_FROM_DATE: datetime.datetime(2020, 1, 10, 8, 0, tzinfo=datetime.UTC),
+            ATTR_TO_DATE: datetime.datetime(2020, 1, 20, 8, 0, tzinfo=datetime.UTC),
             ATTR_DURATION_IN_WEEK: 1,
             ATTR_ALERT_LEVEL: "Alert Level 1",
             ATTR_POPULATION: "Population 1",
@@ -206,7 +203,7 @@ async def test_setup(hass):
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass):
+async def test_setup_imperial(hass: HomeAssistant) -> None:
     """Test the setup of the integration using imperial unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.

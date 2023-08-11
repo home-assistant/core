@@ -2,11 +2,12 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import melissa
+from homeassistant.core import HomeAssistant
 
 VALID_CONFIG = {"melissa": {"username": "********", "password": "********"}}
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setting up the Melissa component."""
     with patch("melissa.AsyncMelissa") as mocked_melissa, patch.object(
         melissa, "async_load_platform"

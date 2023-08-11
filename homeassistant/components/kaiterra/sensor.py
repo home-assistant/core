@@ -71,7 +71,7 @@ class KaiterraSensor(SensorEntity):
 
     def __init__(
         self, api, name, device_id, description: KaiterraSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._api = api
         self._device_id = device_id

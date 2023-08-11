@@ -1,6 +1,10 @@
 {
   "domain": "roborock",
   "name": "Roborock",
-  "integration_type": "virtual",
-  "supported_by": "xiaomi_miio"
+  "codeowners": ["@humbertogontijo", "@Lash-L"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/roborock",
+  "iot_class": "local_polling",
+  "loggers": ["roborock"],
+  "requirements": ["python-roborock==0.32.2"]
 }

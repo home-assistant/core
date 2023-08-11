@@ -30,7 +30,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
@@ -659,7 +659,7 @@ class ViCareSensor(SensorEntity):
 
     def __init__(
         self, name, api, device_config, description: ViCareSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = name

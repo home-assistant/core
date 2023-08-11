@@ -1,9 +1,9 @@
 {
   "domain": "vasttrafik",
   "name": "V\u00e4sttrafik",
-  "documentation": "https://www.home-assistant.io/integrations/vasttrafik",
-  "requirements": ["vtjp==0.1.14"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/vasttrafik",
   "iot_class": "cloud_polling",
-  "loggers": ["vasttrafik"]
+  "loggers": ["vasttrafik"],
+  "requirements": ["vtjp==0.1.14"]
 }

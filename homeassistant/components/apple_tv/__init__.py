@@ -26,11 +26,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
@@ -88,14 +89,18 @@ class AppleTVEntity(Entity):
     """Device that sends commands to an Apple TV."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, name, identifier, manager):
         """Initialize device."""
         self.atv = None
         self.manager = manager
-        self._attr_name = name
         self._attr_unique_id = identifier
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, identifier)})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            name=name,
+        )
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
@@ -222,7 +227,7 @@ class AppleTVManager:
                 await self._connect(conf, raise_missing_credentials)
         except exceptions.AuthenticationError:
             self.config_entry.async_start_reauth(self.hass)
-            asyncio.create_task(self.disconnect())
+            await self.disconnect()
             _LOGGER.exception(
                 "Authentication failed for %s, try reconfiguring device",
                 self.config_entry.data[CONF_NAME],

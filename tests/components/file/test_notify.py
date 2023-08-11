@@ -13,7 +13,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component
 
 
-async def test_bad_config(hass: HomeAssistant):
+async def test_bad_config(hass: HomeAssistant) -> None:
     """Test set up the platform with bad/missing config."""
     config = {notify.DOMAIN: {"name": "test", "platform": "file"}}
     with assert_setup_component(0) as handle_config:
@@ -28,7 +28,7 @@ async def test_bad_config(hass: HomeAssistant):
         True,
     ],
 )
-async def test_notify_file(hass: HomeAssistant, timestamp: bool):
+async def test_notify_file(hass: HomeAssistant, timestamp: bool) -> None:
     """Test the notify file output."""
     filename = "mock_file"
     message = "one, two, testing, testing"

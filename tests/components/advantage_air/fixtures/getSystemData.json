@@ -2,6 +2,8 @@
   "aircons": {
     "ac1": {
       "info": {
+        "aaAutoFanModeEnabled": false,
+        "climateControlModeEnabled": false,
         "climateControlModeIsRunning": false,
         "countDownToOff": 10,
         "countDownToOn": 0,
@@ -9,8 +11,10 @@
         "filterCleanStatus": 0,
         "freshAirStatus": "off",
         "mode": "vent",
+        "myAutoModeEnabled": false,
+        "myAutoModeIsRunning": false,
         "myZone": 1,
-        "name": "AC One",
+        "name": "myzone",
         "setTemp": 24,
         "state": "on"
       },
@@ -94,20 +98,76 @@
     },
     "ac2": {
       "info": {
+        "aaAutoFanModeEnabled": true,
+        "climateControlModeEnabled": true,
         "climateControlModeIsRunning": false,
         "countDownToOff": 0,
         "countDownToOn": 20,
-        "fan": "low",
+        "fan": "autoAA",
+        "filterCleanStatus": 1,
+        "freshAirStatus": "none",
+        "mode": "cool",
+        "myAutoModeCurrentSetMode": "cool",
+        "myAutoModeEnabled": false,
+        "myAutoModeIsRunning": false,
+        "myZone": 1,
+        "name": "mytemp",
+        "setTemp": 24,
+        "state": "off"
+      },
+      "zones": {
+        "z01": {
+          "error": 0,
+          "maxDamper": 100,
+          "measuredTemp": 25,
+          "minDamper": 0,
+          "motion": 20,
+          "motionConfig": 2,
+          "name": "Zone A",
+          "number": 1,
+          "rssi": 40,
+          "setTemp": 24,
+          "state": "open",
+          "type": 1,
+          "value": 100
+        },
+        "z02": {
+          "error": 0,
+          "maxDamper": 100,
+          "measuredTemp": 26,
+          "minDamper": 0,
+          "motion": 21,
+          "motionConfig": 2,
+          "name": "Zone B",
+          "number": 2,
+          "rssi": 10,
+          "setTemp": 23,
+          "state": "open",
+          "type": 1,
+          "value": 50
+        }
+      }
+    },
+    "ac3": {
+      "info": {
+        "aaAutoFanModeEnabled": true,
+        "climateControlModeEnabled": false,
+        "climateControlModeIsRunning": false,
+        "countDownToOff": 0,
+        "countDownToOn": 0,
+        "fan": "autoAA",
         "filterCleanStatus": 1,
         "freshAirStatus": "none",
         "mode": "myauto",
         "myAutoModeCurrentSetMode": "cool",
         "myAutoModeEnabled": true,
         "myAutoModeIsRunning": true,
+        "myAutoCoolTargetTemp": 24,
+        "myAutoHeatTargetTemp": 20,
         "myZone": 0,
-        "name": "AC Two",
+        "name": "myauto",
         "setTemp": 24,
-        "state": "off"
+        "state": "on"
       },
       "zones": {
         "z01": {
@@ -117,7 +177,7 @@
           "minDamper": 0,
           "motion": 0,
           "motionConfig": 0,
-          "name": "Zone open without sensor",
+          "name": "Zone Y",
           "number": 1,
           "rssi": 0,
           "setTemp": 24,
@@ -132,7 +192,7 @@
           "minDamper": 0,
           "motion": 0,
           "motionConfig": 0,
-          "name": "Zone closed without sensor",
+          "name": "Zone Z",
           "number": 2,
           "rssi": 0,
           "setTemp": 24,
@@ -160,11 +220,64 @@
       }
     }
   },
+  "myThings": {
+    "things": {
+      "200": {
+        "buttonType": "upDown",
+        "channelDipState": 1,
+        "id": "200",
+        "name": "Blind 1",
+        "value": 100
+      },
+      "201": {
+        "buttonType": "upDown",
+        "channelDipState": 2,
+        "id": "201",
+        "name": "Blind 2",
+        "value": 0
+      },
+      "202": {
+        "buttonType": "openClose",
+        "channelDipState": 3,
+        "id": "202",
+        "name": "Garage",
+        "value": 100
+      },
+      "203": {
+        "buttonType": "onOff",
+        "channelDipState": 4,
+        "id": "203",
+        "name": "Thing Light",
+        "value": 100
+      },
+      "204": {
+        "buttonType": "upDown",
+        "channelDipState": 5,
+        "id": "204",
+        "name": "Thing Light Dimmable",
+        "value": 100
+      },
+      "205": {
+        "buttonType": "onOff",
+        "channelDipState": 8,
+        "id": "205",
+        "name": "Relay",
+        "value": 100
+      },
+      "206": {
+        "buttonType": "onOff",
+        "channelDipState": 9,
+        "id": "206",
+        "name": "Fan",
+        "value": 100
+      }
+    }
+  },
   "system": {
     "hasAircons": true,
     "hasLights": true,
     "hasSensors": false,
-    "hasThings": false,
+    "hasThings": true,
     "hasThingsBOG": false,
     "hasThingsLight": false,
     "needsUpdate": false,

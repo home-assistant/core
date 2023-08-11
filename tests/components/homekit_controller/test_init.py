@@ -1,5 +1,4 @@
 """Tests for homekit_controller init."""
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -26,6 +25,7 @@ from .common import (
 )
 
 from tests.common import async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 ALIVE_DEVICE_NAME = "testdevice"
 ALIVE_DEVICE_ENTITY_ID = "light.testdevice"
@@ -38,7 +38,7 @@ def create_motion_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_unload_on_stop(hass, utcnow):
+async def test_unload_on_stop(hass: HomeAssistant, utcnow) -> None:
     """Test async_unload is called on stop."""
     await setup_test_component(hass, create_motion_sensor_service)
     with patch(
@@ -50,7 +50,7 @@ async def test_unload_on_stop(hass, utcnow):
     assert async_unlock_mock.called
 
 
-async def test_async_remove_entry(hass: HomeAssistant):
+async def test_async_remove_entry(hass: HomeAssistant) -> None:
     """Test unpairing a component."""
     helper = await setup_test_component(hass, create_motion_sensor_service)
     controller = helper.pairing.controller
@@ -75,7 +75,9 @@ def create_alive_service(accessory):
     return service
 
 
-async def test_device_remove_devices(hass, hass_ws_client):
+async def test_device_remove_devices(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
     helper: Helper = await setup_test_component(hass, create_alive_service)
@@ -102,7 +104,7 @@ async def test_device_remove_devices(hass, hass_ws_client):
     )
 
 
-async def test_offline_device_raises(hass, controller):
+async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
     """Test an offline device raises ConfigEntryNotReady."""
 
     is_connected = False
@@ -153,7 +155,9 @@ async def test_offline_device_raises(hass, controller):
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
-async def test_ble_device_only_checks_is_available(hass, controller):
+async def test_ble_device_only_checks_is_available(
+    hass: HomeAssistant, controller
+) -> None:
     """Test a BLE device only checks is_available."""
 
     is_available = False

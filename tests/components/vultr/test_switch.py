@@ -127,14 +127,14 @@ def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
     assert mock_halt.call_count == 1
 
 
-def test_invalid_switch_config():
+def test_invalid_switch_config() -> None:
     """Test config type failures."""
     with pytest.raises(vol.Invalid):  # No subscription
         vultr.PLATFORM_SCHEMA({CONF_PLATFORM: base_vultr.DOMAIN})
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_switches(hass: HomeAssistant):
+def test_invalid_switches(hass: HomeAssistant) -> None:
     """Test the VultrSwitch fails."""
     hass_devices = []
 

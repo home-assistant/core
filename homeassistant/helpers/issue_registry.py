@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
+from enum import StrEnum
 import functools as ft
 from typing import Any, cast
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -32,7 +32,7 @@ class IssueSeverity(StrEnum):
     WARNING = "warning"
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(slots=True, frozen=True)
 class IssueEntry:
     """Issue Registry Entry."""
 
@@ -154,7 +154,7 @@ class IssueRegistry:
                 {"action": "create", "domain": domain, "issue_id": issue_id},
             )
         else:
-            issue = self.issues[(domain, issue_id)] = dataclasses.replace(
+            replacement = dataclasses.replace(
                 issue,
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
@@ -167,10 +167,14 @@ class IssueRegistry:
                 translation_key=translation_key,
                 translation_placeholders=translation_placeholders,
             )
-            self.hass.bus.async_fire(
-                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-                {"action": "update", "domain": domain, "issue_id": issue_id},
-            )
+            # Only fire is something changed
+            if replacement != issue:
+                issue = self.issues[(domain, issue_id)] = replacement
+                self.async_schedule_save()
+                self.hass.bus.async_fire(
+                    EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                    {"action": "update", "domain": domain, "issue_id": issue_id},
+                )
 
         return issue
 

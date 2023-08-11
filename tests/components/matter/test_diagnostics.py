@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.server_information import ServerDiagnostics
+from matter_server.common.models import ServerDiagnostics
 import pytest
 
 from homeassistant.components.matter.const import DOMAIN
@@ -44,20 +44,20 @@ def device_diagnostics_fixture() -> dict[str, Any]:
 
 async def test_matter_attribute_redact(device_diagnostics: dict[str, Any]) -> None:
     """Test the matter attribute redact helper."""
-    assert device_diagnostics["attributes"]["0/40/6"]["value"] == "XX"
+    assert device_diagnostics["attributes"]["0/40/6"] == "XX"
 
     redacted_device_diagnostics = redact_matter_attributes(device_diagnostics)
 
     # Check that the correct attribute value is redacted.
-    assert (
-        redacted_device_diagnostics["attributes"]["0/40/6"]["value"] == "**REDACTED**"
-    )
+    assert redacted_device_diagnostics["attributes"]["0/40/6"] == "**REDACTED**"
 
     # Check that the other attribute values are not redacted.
-    redacted_device_diagnostics["attributes"]["0/40/6"]["value"] = "XX"
+    redacted_device_diagnostics["attributes"]["0/40/6"] = "XX"
     assert redacted_device_diagnostics == device_diagnostics
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -76,6 +76,8 @@ async def test_config_entry_diagnostics(
     assert diagnostics == config_entry_diagnostics_redacted
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -107,5 +109,4 @@ async def test_device_diagnostics(
     diagnostics = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     )
-
     assert diagnostics == device_diagnostics_redacted

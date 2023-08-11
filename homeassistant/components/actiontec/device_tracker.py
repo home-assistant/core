@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
 from typing import Final
 
 import voluptuous as vol
@@ -40,7 +40,7 @@ def get_scanner(
 
 
 class ActiontecDeviceScanner(DeviceScanner):
-    """This class queries an actiontec router for connected devices."""
+    """Class which queries an actiontec router for connected devices."""
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner."""

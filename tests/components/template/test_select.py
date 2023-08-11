@@ -14,7 +14,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import assert_setup_component, async_capture_events
@@ -24,7 +24,7 @@ _TEST_SELECT = "select.template_select"
 _OPTION_INPUT_SELECT = "input_select.option"
 
 
-async def test_missing_optional_config(hass):
+async def test_missing_optional_config(hass: HomeAssistant) -> None:
     """Test: missing optional template is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -48,7 +48,7 @@ async def test_missing_optional_config(hass):
     _verify(hass, "a", ["a", "b"])
 
 
-async def test_multiple_configs(hass):
+async def test_multiple_configs(hass: HomeAssistant) -> None:
     """Test: multiple select entities get created."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -80,7 +80,7 @@ async def test_multiple_configs(hass):
     _verify(hass, "a", ["a", "b"], f"{_TEST_SELECT}_2")
 
 
-async def test_missing_required_keys(hass):
+async def test_missing_required_keys(hass: HomeAssistant) -> None:
     """Test: missing required fields will fail."""
     with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
@@ -131,7 +131,7 @@ async def test_missing_required_keys(hass):
     assert hass.states.async_all("select") == []
 
 
-async def test_templates_with_entities(hass, calls):
+async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(
@@ -229,7 +229,7 @@ async def test_templates_with_entities(hass, calls):
     assert calls[-1].data["option"] == "c"
 
 
-async def test_trigger_select(hass):
+async def test_trigger_select(hass: HomeAssistant) -> None:
     """Test trigger based template select."""
     events = async_capture_events(hass, "test_number_event")
     assert await setup.async_setup_component(
@@ -294,7 +294,7 @@ def _verify(hass, expected_current_option, expected_options, entity_name=_TEST_S
     assert attributes.get(SELECT_ATTR_OPTIONS) == expected_options
 
 
-async def test_template_icon_with_entities(hass):
+async def test_template_icon_with_entities(hass: HomeAssistant) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(
@@ -357,7 +357,7 @@ async def test_template_icon_with_entities(hass):
     assert state.attributes[ATTR_ICON] == "mdi:less"
 
 
-async def test_template_icon_with_trigger(hass):
+async def test_template_icon_with_trigger(hass: HomeAssistant) -> None:
     """Test trigger based template select."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(

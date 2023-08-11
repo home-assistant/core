@@ -1,4 +1,4 @@
-"""This component provides HA sensor support for Ring Door Bell/Chimes."""
+"""Component providing HA sensor support for Ring Door Bell/Chimes."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -35,13 +35,12 @@ class RingBinarySensorEntityDescription(
 BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
     RingBinarySensorEntityDescription(
         key="ding",
-        name="Ding",
+        translation_key="ding",
         category=["doorbots", "authorized_doorbots"],
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     RingBinarySensorEntityDescription(
         key="motion",
-        name="Motion",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         device_class=BinarySensorDeviceClass.MOTION,
     ),
@@ -80,12 +79,11 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
         ring,
         device,
         description: RingBinarySensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(config_entry_id, device)
         self.entity_description = description
         self._ring = ring
-        self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{device.id}-{description.key}"
         self._update_alert()
 

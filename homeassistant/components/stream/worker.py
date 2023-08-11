@@ -8,7 +8,7 @@ import datetime
 from io import SEEK_END, BytesIO
 import logging
 from threading import Event
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import attr
 import av
@@ -399,7 +399,7 @@ class PeekIterator(Iterator):
         # A pointer to either _iterator or _buffer
         self._next = self._iterator.__next__
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Self:
         """Return an iterator."""
         return self
 

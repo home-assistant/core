@@ -1,7 +1,7 @@
 """Support for the Airzone sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any, Final
 
 from aioairzone.common import GrilleAngle, SleepTimeout
@@ -18,8 +18,8 @@ from aioairzone.const import (
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -41,14 +41,14 @@ class AirzoneSelectDescription(SelectEntityDescription, AirzoneSelectDescription
 
 
 GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
-    "90º": GrilleAngle.DEG_90,
-    "50º": GrilleAngle.DEG_50,
-    "45º": GrilleAngle.DEG_45,
-    "40º": GrilleAngle.DEG_40,
+    "90deg": GrilleAngle.DEG_90,
+    "50deg": GrilleAngle.DEG_50,
+    "45deg": GrilleAngle.DEG_45,
+    "40deg": GrilleAngle.DEG_40,
 }
 
 SLEEP_DICT: Final[dict[str, int]] = {
-    "Off": SleepTimeout.SLEEP_OFF,
+    "off": SleepTimeout.SLEEP_OFF,
     "30m": SleepTimeout.SLEEP_30,
     "60m": SleepTimeout.SLEEP_60,
     "90m": SleepTimeout.SLEEP_90,
@@ -61,21 +61,27 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=AZD_COLD_ANGLE,
         name="Cold Angle",
+        options=list(GRILLE_ANGLE_DICT),
         options_dict=GRILLE_ANGLE_DICT,
+        translation_key="grille_angles",
     ),
     AirzoneSelectDescription(
         api_param=API_HEAT_ANGLE,
         entity_category=EntityCategory.CONFIG,
         key=AZD_HEAT_ANGLE,
         name="Heat Angle",
+        options=list(GRILLE_ANGLE_DICT),
         options_dict=GRILLE_ANGLE_DICT,
+        translation_key="grille_angles",
     ),
     AirzoneSelectDescription(
         api_param=API_SLEEP,
         entity_category=EntityCategory.CONFIG,
         key=AZD_SLEEP,
         name="Sleep",
+        options=list(SLEEP_DICT),
         options_dict=SLEEP_DICT,
+        translation_key="sleep_times",
     ),
 )
 
@@ -91,14 +97,10 @@ async def async_setup_entry(
     for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
         for description in ZONE_SELECT_TYPES:
             if description.key in zone_data:
-                _desc = replace(
-                    description,
-                    options=list(description.options_dict.keys()),
-                )
                 entities.append(
                     AirzoneZoneSelect(
                         coordinator,
-                        _desc,
+                        description,
                         entry,
                         system_zone_id,
                         zone_data,

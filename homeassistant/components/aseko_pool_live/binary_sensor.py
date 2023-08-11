@@ -15,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AsekoDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
 
 
@@ -31,7 +31,7 @@ class AsekoBinarySensorDescriptionMixin:
 class AsekoBinarySensorEntityDescription(
     BinarySensorEntityDescription, AsekoBinarySensorDescriptionMixin
 ):
-    """Describes a Aseko binary sensor entity."""
+    """Describes an Aseko binary sensor entity."""
 
 
 UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (

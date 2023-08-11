@@ -22,13 +22,14 @@ from .handler import HassIO, HassioAPIError
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class HassioServiceInfo(BaseServiceInfo):
     """Prepared info from hassio entries."""
 
     config: dict[str, Any]
     name: str
     slug: str
+    uuid: str
 
 
 @callback
@@ -47,7 +48,7 @@ def async_setup_discovery_view(hass: HomeAssistant, hassio):
             return
 
         jobs = [
-            hassio_discovery.async_process_new(discovery)
+            asyncio.create_task(hassio_discovery.async_process_new(discovery))
             for discovery in data[ATTR_DISCOVERY]
         ]
         if jobs:
@@ -93,6 +94,7 @@ class HassIODiscovery(HomeAssistantView):
         service: str = data[ATTR_SERVICE]
         config_data: dict[str, Any] = data[ATTR_CONFIG]
         slug: str = data[ATTR_ADDON]
+        uuid: str = data[ATTR_UUID]
 
         # Read additional Add-on info
         try:
@@ -109,7 +111,7 @@ class HassIODiscovery(HomeAssistantView):
             self.hass,
             service,
             context={"source": config_entries.SOURCE_HASSIO},
-            data=HassioServiceInfo(config=config_data, name=name, slug=slug),
+            data=HassioServiceInfo(config=config_data, name=name, slug=slug, uuid=uuid),
         )
 
     async def async_process_del(self, data):
@@ -128,6 +130,6 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         for entry in self.hass.config_entries.async_entries(service):
-            if entry.source != config_entries.SOURCE_HASSIO:
+            if entry.source != config_entries.SOURCE_HASSIO or entry.unique_id != uuid:
                 continue
-            await self.hass.config_entries.async_remove(entry)
+            await self.hass.config_entries.async_remove(entry.entry_id)

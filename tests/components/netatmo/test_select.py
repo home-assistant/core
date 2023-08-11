@@ -1,17 +1,22 @@
 """The tests for the Netatmo climate platform."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID, SERVICE_SELECT_OPTION
+from homeassistant.core import HomeAssistant
 
 from .common import selected_platforms, simulate_webhook
 
 
-async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_auth):
+async def test_select_schedule_thermostats(
+    hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture, netatmo_auth
+) -> None:
     """Test service for selecting Netatmo schedule with thermostats."""
     with selected_platforms(["climate", "select"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

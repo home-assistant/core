@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -137,7 +137,7 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
         },
     ],
 )
-async def test_config_switch(hass, mock_modbus):
+async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
     """Run configurationtest for switch."""
     assert SWITCH_DOMAIN in hass.config.components
 
@@ -168,7 +168,7 @@ async def test_config_switch(hass, mock_modbus):
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,config_addon,expected",
+    ("register_words", "do_exception", "config_addon", "expected"),
     [
         (
             [0x00],
@@ -202,7 +202,7 @@ async def test_config_switch(hass, mock_modbus):
         ),
     ],
 )
-async def test_all_switch(hass, mock_do_cycle, expected):
+async def test_all_switch(hass: HomeAssistant, mock_do_cycle, expected) -> None:
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 
@@ -226,7 +226,7 @@ async def test_all_switch(hass, mock_do_cycle, expected):
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,start_expect,end_expect",
+    ("register_words", "do_exception", "start_expect", "end_expect"),
     [
         (
             [0x00],
@@ -236,7 +236,9 @@ async def test_all_switch(hass, mock_do_cycle, expected):
         ),
     ],
 )
-async def test_lazy_error_switch(hass, start_expect, end_expect, mock_do_cycle):
+async def test_lazy_error_switch(
+    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle
+) -> None:
     """Run test for given config."""
     now = mock_do_cycle
     assert hass.states.get(ENTITY_ID).state == start_expect
@@ -265,7 +267,9 @@ async def test_lazy_error_switch(hass, start_expect, end_expect, mock_do_cycle):
         },
     ],
 )
-async def test_restore_state_switch(hass, mock_test_state, mock_modbus):
+async def test_restore_state_switch(
+    hass: HomeAssistant, mock_test_state, mock_modbus
+) -> None:
     """Run test for sensor restore state."""
     assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
 
@@ -292,7 +296,9 @@ async def test_restore_state_switch(hass, mock_test_state, mock_modbus):
         },
     ],
 )
-async def test_switch_service_turn(hass, caplog, mock_modbus):
+async def test_switch_service_turn(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+) -> None:
     """Run test for service turn_on/turn_off."""
     assert MODBUS_DOMAIN in hass.config.components
 
@@ -351,7 +357,7 @@ async def test_switch_service_turn(hass, caplog, mock_modbus):
         },
     ],
 )
-async def test_service_switch_update(hass, mock_modbus, mock_ha):
+async def test_service_switch_update(hass: HomeAssistant, mock_modbus, mock_ha) -> None:
     """Run test for service homeassistant.update_entity."""
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
@@ -382,7 +388,7 @@ async def test_service_switch_update(hass, mock_modbus, mock_ha):
         },
     ],
 )
-async def test_delay_switch(hass, mock_modbus):
+async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
     """Run test for switch verify delay."""
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     now = dt_util.utcnow()
@@ -398,7 +404,9 @@ async def test_delay_switch(hass, mock_modbus):
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_no_discovery_info_switch(hass, caplog):
+async def test_no_discovery_info_switch(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert SWITCH_DOMAIN not in hass.config.components
     assert await async_setup_component(

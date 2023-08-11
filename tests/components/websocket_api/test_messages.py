@@ -1,15 +1,19 @@
 """Test Websocket API messages module."""
+import pytest
 
 from homeassistant.components.websocket_api.messages import (
     _cached_event_message as lru_event_cache,
+    _state_diff_event,
     cached_event_message,
     message_to_json,
 )
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import callback
+from homeassistant.core import Context, Event, HomeAssistant, State, callback
+
+from tests.common import async_capture_events
 
 
-async def test_cached_event_message(hass):
+async def test_cached_event_message(hass: HomeAssistant) -> None:
     """Test that we cache event messages."""
 
     events = []
@@ -47,7 +51,7 @@ async def test_cached_event_message(hass):
     assert cache_info.currsize == 2
 
 
-async def test_cached_event_message_with_different_idens(hass):
+async def test_cached_event_message_with_different_idens(hass: HomeAssistant) -> None:
     """Test that we cache event messages when the subscrition idens differ."""
 
     events = []
@@ -78,7 +82,163 @@ async def test_cached_event_message_with_different_idens(hass):
     assert cache_info.currsize == 1
 
 
-async def test_message_to_json(caplog):
+async def test_state_diff_event(hass: HomeAssistant) -> None:
+    """Test building state_diff_message."""
+    state_change_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    context = Context(user_id="user-id", parent_id="parent-id", id="id")
+    hass.states.async_set("light.window", "on", context=context)
+    hass.states.async_set("light.window", "off", context=context)
+    await hass.async_block_till_done()
+
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {"lc": new_state.last_changed.timestamp(), "s": "off"}
+            }
+        }
+    }
+
+    hass.states.async_set(
+        "light.window",
+        "red",
+        context=Context(user_id="user-id", parent_id="new-parent-id", id="id"),
+    )
+    await hass.async_block_till_done()
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {
+                    "c": {"parent_id": "new-parent-id"},
+                    "lc": new_state.last_changed.timestamp(),
+                    "s": "red",
+                }
+            }
+        }
+    }
+
+    hass.states.async_set(
+        "light.window",
+        "green",
+        context=Context(
+            user_id="new-user-id", parent_id="another-new-parent-id", id="id"
+        ),
+    )
+    await hass.async_block_till_done()
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {
+                    "c": {
+                        "parent_id": "another-new-parent-id",
+                        "user_id": "new-user-id",
+                    },
+                    "lc": new_state.last_changed.timestamp(),
+                    "s": "green",
+                }
+            }
+        }
+    }
+
+    hass.states.async_set(
+        "light.window",
+        "blue",
+        context=Context(
+            user_id="another-new-user-id", parent_id="another-new-parent-id", id="id"
+        ),
+    )
+    await hass.async_block_till_done()
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {
+                    "c": {"user_id": "another-new-user-id"},
+                    "lc": new_state.last_changed.timestamp(),
+                    "s": "blue",
+                }
+            }
+        }
+    }
+
+    hass.states.async_set(
+        "light.window",
+        "yellow",
+        context=Context(
+            user_id="another-new-user-id",
+            parent_id="another-new-parent-id",
+            id="id-new",
+        ),
+    )
+    await hass.async_block_till_done()
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {
+                    "c": "id-new",
+                    "lc": new_state.last_changed.timestamp(),
+                    "s": "yellow",
+                }
+            }
+        }
+    }
+
+    new_context = Context()
+    hass.states.async_set(
+        "light.window", "purple", {"new": "attr"}, context=new_context
+    )
+    await hass.async_block_till_done()
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {
+                    "a": {"new": "attr"},
+                    "c": {"id": new_context.id, "parent_id": None, "user_id": None},
+                    "lc": new_state.last_changed.timestamp(),
+                    "s": "purple",
+                }
+            }
+        }
+    }
+
+    hass.states.async_set("light.window", "green", {}, context=new_context)
+    await hass.async_block_till_done()
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {"lc": new_state.last_changed.timestamp(), "s": "green"},
+                "-": {"a": ["new"]},
+            }
+        }
+    }
+
+
+async def test_message_to_json(caplog: pytest.LogCaptureFixture) -> None:
     """Test we can serialize websocket messages."""
 
     json_str = message_to_json({"id": 1, "message": "xyz"})

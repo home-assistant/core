@@ -69,7 +69,7 @@ def substitute_translation_references(integration_strings, flattened_translation
 
 def substitute_reference(value, flattened_translations):
     """Substitute localization key references in a translation string."""
-    matches = re.findall(r"\[\%key:((?:[\w]+|[:]{2})*)\%\]", value)
+    matches = re.findall(r"\[\%key:((?:[a-z0-9-_]+|[:]{2})*)\%\]", value)
     if not matches:
         return value
 
@@ -92,6 +92,7 @@ def substitute_reference(value, flattened_translations):
 
 def run_single(translations, flattened_translations, integration):
     """Run the script for a single integration."""
+    print(f"Generating translations for {integration}")
 
     if integration not in translations["component"]:
         print("Integration has no strings.json")
@@ -114,8 +115,6 @@ def run_single(translations, flattened_translations, integration):
 
     download.write_integration_translations()
 
-    print(f"Processed {integration}")
-
 
 def run():
     """Run the script."""
@@ -126,6 +125,7 @@ def run():
     if args.all:
         for integration in translations["component"]:
             run_single(translations, flattened_translations, integration)
+        print("🌎 Generated translation files for all integrations")
         return 0
 
     if args.integration:
