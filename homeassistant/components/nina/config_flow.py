@@ -202,9 +202,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None and not errors:
             user_input[CONF_REGIONS] = []
 
-            cv.is_regex(user_input[CONF_HEADLINE_FILTER])
-            cv.is_regex(user_input[CONF_AREA_FILTER])
-
             for group in CONST_REGIONS:
                 if group_input := user_input.get(group):
                     user_input[CONF_REGIONS] += group_input
