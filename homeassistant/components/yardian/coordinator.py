@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
 
 import async_timeout
-from pyyardian import AsyncYardianClient
+from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_WATERING_DURATION, DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,21 +47,11 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self._controller = controller
+        self.controller = controller
         self._name = entry.title
         self._model = entry.data["model"]
         self._yid = entry.data["yid"]
         self._amount_of_zones = entry.data["zones"]
-
-    @property
-    def controller(self) -> AsyncYardianClient:
-        """Return the API client for the device."""
-        return self._controller
-
-    @property
-    def yid(self) -> str:
-        """Return the device id."""
-        return self._yid
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -69,19 +60,20 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
             name=self._name,
             identifiers={(DOMAIN, self._yid)},
             manufacturer=MANUFACTURER,
+            model=self._model,
         )
-
-    def getZoneDefaultWateringDuration(self, zone_id) -> int:
-        """Return default watering duration for a given zone."""
-        return DEFAULT_WATERING_DURATION
 
     async def _async_update_data(self) -> YardianDeviceState:
         """Fetch data from Yardian device."""
         try:
             async with async_timeout.timeout(10):
-                zones = await self._controller.fetch_zone_info(self._amount_of_zones)
-                active_zones = await self._controller.fetch_active_zones()
+                zones = await self.controller.fetch_zone_info(self._amount_of_zones)
+                active_zones = await self.controller.fetch_active_zones()
                 return YardianDeviceState(zones=zones, active_zones=active_zones)
 
-        except Exception as err:
-            raise UpdateFailed(f"Failed to communicate with Device: {err}") from err
+        except asyncio.TimeoutError:
+            raise UpdateFailed("Communication with Device was time out")
+        except NotAuthorizedException:
+            raise UpdateFailed("Invalid access token")
+        except NetworkException:
+            raise UpdateFailed("Failed to communicate with Device")
