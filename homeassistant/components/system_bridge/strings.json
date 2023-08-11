@@ -67,7 +67,7 @@
         },
         "key": {
           "name": "Key",
-          "description": "Key to press. List available here: http://robotjs.io/docs/syntax#keys."
+          "description": "Key to press. List available here: https://robotjs.io/docs/syntax#keys."
         }
       }
     },
