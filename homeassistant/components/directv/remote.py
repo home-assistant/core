@@ -49,11 +49,11 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
         """Initialize DirecTV remote."""
         super().__init__(
             dtv=dtv,
+            name=name,
             address=address,
         )
 
         self._attr_unique_id = self._device_id
-        self._attr_name = name
         self._attr_available = False
         self._attr_is_on = True
 

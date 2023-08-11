@@ -26,6 +26,7 @@ from .entity import (
     HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
+    async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
 
@@ -41,7 +42,7 @@ class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
     image_fn: Callable[[UniFiController, ApiItemT], bytes]
-    value_fn: Callable[[ApiItemT], str]
+    value_fn: Callable[[ApiItemT], str | None]
 
 
 @dataclass
@@ -61,11 +62,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
-        available_fn=lambda controller, _: controller.available,
+        available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        name_fn=lambda _: "QR Code",
+        name_fn=lambda wlan: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         should_poll=False,
         supported_fn=lambda controller, obj_id: True,
@@ -99,7 +100,7 @@ class UnifiImageEntity(UnifiEntity[HandlerT, ApiItemT], ImageEntity):
     _attr_content_type = "image/png"
 
     current_image: bytes | None = None
-    previous_value = ""
+    previous_value: str | None = None
 
     def __init__(
         self,

@@ -297,7 +297,7 @@ async def async_setup_entry(
             _lights_setup_helper(YeelightColorLightWithNightlightSwitch)
             _lights_setup_helper(YeelightNightLightModeWithoutBrightnessControl)
         else:
-            _lights_setup_helper(YeelightColorLightWithoutNightlightSwitch)
+            _lights_setup_helper(YeelightColorLightWithoutNightlightSwitchLight)
     elif device_type == BulbType.WhiteTemp:
         if nl_switch_light and device.is_nightlight_supported:
             _lights_setup_helper(YeelightWithNightLight)
@@ -927,6 +927,12 @@ class YeelightWithoutNightlightSwitchMixIn(YeelightGenericLight):
 
 class YeelightColorLightWithoutNightlightSwitch(
     YeelightColorLightSupport, YeelightWithoutNightlightSwitchMixIn
+):
+    """Representation of a Color Yeelight light."""
+
+
+class YeelightColorLightWithoutNightlightSwitchLight(
+    YeelightColorLightWithoutNightlightSwitch
 ):
     """Representation of a Color Yeelight light."""
 

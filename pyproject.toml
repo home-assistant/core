@@ -41,10 +41,11 @@ dependencies    = [
     "lru-dict==1.2.0",
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==41.0.2",
+    "cryptography==41.0.3",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
-    "orjson==3.9.2",
+    "orjson==3.9.4",
+    "packaging>=23.1",
     "pip>=21.3.1",
     "python-slugify==4.0.1",
     "PyYAML==6.0.1",
@@ -536,6 +537,7 @@ known-first-party = [
     "homeassistant",
 ]
 combine-as-imports = true
+split-on-trailing-comma = false
 
 [tool.ruff.per-file-ignores]
 

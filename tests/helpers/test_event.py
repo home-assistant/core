@@ -1903,7 +1903,7 @@ async def test_track_template_result_with_wildcard(hass: HomeAssistant) -> None:
     template_complex_str = r"""
 
 {% for state in states %}
-  {% if state.entity_id | regex_match('.*\.office_') %}
+  {% if state.entity_id | regex_match('.*\\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}

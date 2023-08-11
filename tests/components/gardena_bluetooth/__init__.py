@@ -7,9 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-)
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 WATER_TIMER_SERVICE_INFO = BluetoothServiceInfo(
     name="Timer",

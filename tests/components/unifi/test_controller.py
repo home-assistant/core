@@ -9,6 +9,7 @@ import aiounifi
 from aiounifi.websocket import WebsocketState
 import pytest
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -222,10 +223,11 @@ async def test_controller_setup(
 
     entry = controller.config_entry
     assert len(forward_entry_setup.mock_calls) == len(PLATFORMS)
-    assert forward_entry_setup.mock_calls[0][1] == (entry, TRACKER_DOMAIN)
-    assert forward_entry_setup.mock_calls[1][1] == (entry, IMAGE_DOMAIN)
-    assert forward_entry_setup.mock_calls[2][1] == (entry, SENSOR_DOMAIN)
-    assert forward_entry_setup.mock_calls[3][1] == (entry, SWITCH_DOMAIN)
+    assert forward_entry_setup.mock_calls[0][1] == (entry, BUTTON_DOMAIN)
+    assert forward_entry_setup.mock_calls[1][1] == (entry, TRACKER_DOMAIN)
+    assert forward_entry_setup.mock_calls[2][1] == (entry, IMAGE_DOMAIN)
+    assert forward_entry_setup.mock_calls[3][1] == (entry, SENSOR_DOMAIN)
+    assert forward_entry_setup.mock_calls[4][1] == (entry, SWITCH_DOMAIN)
 
     assert controller.host == ENTRY_CONFIG[CONF_HOST]
     assert controller.site == ENTRY_CONFIG[CONF_SITE_ID]
