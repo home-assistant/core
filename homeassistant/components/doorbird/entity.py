@@ -1,7 +1,8 @@
 """The DoorBird integration base entity."""
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import (
     DOORBIRD_INFO_KEY_BUILD_NUMBER,
