@@ -59,18 +59,17 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
             or not mqtt.mqtt_config_entry_enabled(self.hass)
             or not data["settings"]["mqttEnabled"]
         ):
-            return
+            return None
 
-            @callback
-            def message_callback(message: mqtt.ReceiveMessage) -> None:
-                payload = json.loads(message.payload)
-                event_callback(**payload)
+        @callback
+        def message_callback(message: mqtt.ReceiveMessage) -> None:
+            payload = json.loads(message.payload)
+            event_callback(**payload)
 
-            topic_template = data["settings"]["mqttEventTopic"]
-            topic = (
-                topic_template.replace("$appId", "fully")
-                .replace("$event", event)
-                .replace("$deviceId", data["deviceID"])
-            )
-            return await mqtt.async_subscribe(self.hass, topic, message_callback)
-        return None
+        topic_template = data["settings"]["mqttEventTopic"]
+        topic = (
+            topic_template.replace("$appId", "fully")
+            .replace("$event", event)
+            .replace("$deviceId", data["deviceID"])
+        )
+        return await mqtt.async_subscribe(self.hass, topic, message_callback)
