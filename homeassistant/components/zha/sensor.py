@@ -767,6 +767,7 @@ class FormaldehydeConcentration(Sensor):
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ThermostatChannelSensor(Sensor):
     """All Sensors matched on Thermostatchannel need to have the same async_set_state."""
 
@@ -1058,6 +1059,7 @@ class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PiHeatingDemand(ThermostatChannelSensor, id_suffix="pi_heating_demand"):
     """Sensor that displays the percentage of heating power used.
 
@@ -1080,6 +1082,7 @@ class SetpointChangeSourceEnum(types.enum8):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SetpointChangeSource(ThermostatChannelSensor, id_suffix="setpoint_change_source"):
     """Sensor that displays the source of the setpoint change.
 
@@ -1107,6 +1110,7 @@ class DanfossOpenWindowDetectionEnum(types.enum8):
 
 
 @MULTI_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
     """Danfoss Proprietary attribute.
 
@@ -1124,6 +1128,7 @@ class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
 
 
 @MULTI_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
     """Danfoss Proprietary attribute for communicating its estimate of the radiator load."""
 
@@ -1133,6 +1138,7 @@ class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
 
 
 @MULTI_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
     """Danfoss Proprietary attribute for showing the status of the adaptation run."""
 
@@ -1160,6 +1166,7 @@ class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
 
 
 @MULTI_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
     """Danfoss Proprietary attribute for communicating the time when it starts pre-heating."""
 
@@ -1170,6 +1177,7 @@ class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
 
 
 @MULTI_MATCH(cluster_handler_names="danfoss_trv_diagnostic_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
     """Danfoss Proprietary attribute for communicating the error code."""
 
@@ -1210,6 +1218,7 @@ class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
 
 
 @MULTI_MATCH(cluster_handler_names="danfoss_trv_diagnostic_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossMotorStepCounter(Sensor, id_suffix="motor_step_counter"):
     """Danfoss Proprietary attribute for communicating the motor step counter."""
 

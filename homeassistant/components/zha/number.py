@@ -966,6 +966,7 @@ class AqaraThermostatAwayTemp(
 ZCL_TEMP = 100
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
     """Common Entity Class for ZCL Temperature input."""
 
@@ -978,12 +979,13 @@ class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
         """Return the current value."""
         return super().native_value / ZCL_TEMP
 
-    def async_set_native_value(self, value: float):
+    async def async_set_native_value(self, value: float):
         """Update the current value from HA."""
         return super().async_set_native_value(int(value * ZCL_TEMP))
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class MaxHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="max_heat_setpoint_limit"):
     """Max Heat Setpoint setting on thermostats.
 
@@ -1015,6 +1017,7 @@ class MaxHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="max_heat_setpoint_li
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class MinHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="min_heat_setpoint_limit"):
     """Min Heat Setpoint setting on thermostats.
 
@@ -1046,6 +1049,7 @@ class MinHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="min_heat_setpoint_li
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossHeatingSetpointScheduled(
     ZCLTemperatureEntity, id_suffix="occupied_heating_setpoint_scheduled"
 ):
@@ -1080,6 +1084,7 @@ class DanfossHeatingSetpointScheduled(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExerciseTriggerTime(
     ZHANumberConfigurationEntity, id_suffix="exercise_trigger_time"
 ):
@@ -1095,6 +1100,7 @@ class DanfossExerciseTriggerTime(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExternalMeasuredRoomSensor(
     ZCLTemperatureEntity, id_suffix="external_measured_room_sensor"
 ):
@@ -1108,6 +1114,7 @@ class DanfossExternalMeasuredRoomSensor(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadRoomMean(ZHANumberConfigurationEntity, id_suffix="load_room_mean"):
     """Danfoss Proprietary Attribute to set a value for the load."""
 
@@ -1120,6 +1127,7 @@ class DanfossLoadRoomMean(ZHANumberConfigurationEntity, id_suffix="load_room_mea
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossControlAlgorithmScaleFactor(
     ZHANumberConfigurationEntity, id_suffix="control_algorithm_scale_factor"
 ):
@@ -1134,6 +1142,7 @@ class DanfossControlAlgorithmScaleFactor(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossRegulationSetpointOffset(
     ZHANumberConfigurationEntity, id_suffix="regulation_setpoint_offset"
 ):
@@ -1155,6 +1164,6 @@ class DanfossRegulationSetpointOffset(
         """Return the current value."""
         return super().native_value / self.OFFSET_RESOLUTION
 
-    def async_set_native_value(self, value: float):
+    async def async_set_native_value(self, value: float):
         """Update the current value from HA."""
         return super().async_set_native_value(int(value * self.OFFSET_RESOLUTION))
