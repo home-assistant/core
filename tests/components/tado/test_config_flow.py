@@ -31,7 +31,7 @@ def _get_mock_tado_api(getMe=None):
         (ValueError, "unknown"),
     ],
 )
-async def test_form_exceptions(hass: HomeAssistant, error) -> None:
+async def test_form_exceptions(hass: HomeAssistant, exception: Exception, error: str) -> None:
     """Test we handle Exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
