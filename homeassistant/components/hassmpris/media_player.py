@@ -123,8 +123,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
           initial_state: the (optional) initial state of the entity
         """
         super().__init__()
-        self.client: hassmpris_client.AsyncMPRISClient | None = client
-        self._client_host = self.client.host
+        self.client = client
         self.player_id = player_id
         self._integration_id = integration_id
         self._attr_available = True
@@ -135,22 +134,16 @@ class HASSMPRISEntity(MediaPlayerEntity):
     async def set_unavailable(self):
         """Mark player as unavailable."""
         _LOGGER.debug("Marking %s as unavailable", self.name)
-        self.client = None
         self._attr_available = False
         await self.update_state(STATE_UNKNOWN)
 
-    async def set_available(
-        self,
-        client: hassmpris_client.AsyncMPRISClient,
-    ):
+    async def set_available(self):
         """Mark a player as available again.
 
         Arguments:
           client: the new client to use to talk to the agent
         """
         _LOGGER.debug("Marking %s as available", self.name)
-        self.client = client
-        self._client_host = self.client.host
         self._attr_available = True
         if self.hass:
             await self.async_update_ha_state(True)
@@ -171,7 +164,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         """Return the device information associated with the entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._integration_id)},
-            name=f"MPRIS agent at {self._client_host}",
+            name=f"MPRIS agent at {self.client.host}",
             manufacturer="Freedesktop",
         )
 
@@ -182,62 +175,48 @@ class HASSMPRISEntity(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Entity is about to be removed from HASS."""
         _LOGGER.debug("Will remove from hass: %s", self)
-        self.client = None
-
-    def _check_available(self) -> hassmpris_client.AsyncMPRISClient:
-        if not self.client:
-            raise HomeAssistantError(
-                f"{self.device_info['name']} is not available",
-            )
-        return self.client
 
     async def async_media_play(self) -> None:
         """Begin playback."""
-        client = self._check_available()
         try:
-            await client.play(self.player_id)
+            await self.client.play(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot play: %s" % exc) from exc
 
     async def async_media_pause(self) -> None:
         """Pause playback."""
-        client = self._check_available()
         try:
-            await client.pause(self.player_id)
+            await self.client.pause(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot pause: %s" % exc) from exc
 
     async def async_media_stop(self) -> None:
         """Stop playback."""
-        client = self._check_available()
         try:
-            await client.stop(self.player_id)
+            await self.client.stop(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot stop: %s" % exc) from exc
 
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
-        client = self._check_available()
         try:
-            await client.next(self.player_id)
+            await self.client.next(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot next: %s" % exc) from exc
 
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
-        client = self._check_available()
         try:
-            await client.previous(self.player_id)
+            await self.client.previous(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot previous: %s" % exc) from exc
 
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
-        client = self._check_available()
         try:
             trackid = self._metadata.get("mpris:trackid")
             if trackid:
-                await client.set_position(
+                await self.client.set_position(
                     self.player_id,
                     trackid,
                     position,
@@ -473,7 +452,7 @@ class EntityManager:
 
     async def _mark_all_entities_available(self):
         for entity in self.players.values():
-            await entity.set_available(self.client)
+            await entity.set_available()
 
     def _add_player(
         self,
