@@ -69,12 +69,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             raise ConfigEntryAuthFailed from err
         forecasts: list[Forecast] = await self.api.async_get_forecast()
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
-        await self._insert_statistics([forecast.account for forecast in forecasts])
+        await self._insert_statistics()
         return {forecast.account.utility_account_id: forecast for forecast in forecasts}
 
-    async def _insert_statistics(self, accounts: list[Account]) -> None:
+    async def _insert_statistics(self) -> None:
         """Insert Opower statistics."""
-        for account in accounts:
+        for account in await self.api.async_get_accounts():
             id_prefix = "_".join(
                 (
                     self.api.utility.subdomain(),
