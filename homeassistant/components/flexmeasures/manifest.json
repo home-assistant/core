@@ -1,0 +1,13 @@
+{
+  "domain": "flexmeasures",
+  "name": "FlexMeasures",
+  "codeowners": ["@flix6x"],
+  "config_flow": true,
+  "dependencies": ["websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/flexmeasures",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["flexmeasures-client==0.1.4"],
+  "ssdp": [],
+  "zeroconf": []
+}
