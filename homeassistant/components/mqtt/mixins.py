@@ -36,6 +36,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
+    DeviceInfo,
     EventDeviceRegistryUpdatedData,
 )
 from homeassistant.helpers.dispatcher import (
@@ -44,7 +45,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import (
     ENTITY_CATEGORIES_SCHEMA,
-    DeviceInfo,
     Entity,
     async_generate_entity_id,
 )

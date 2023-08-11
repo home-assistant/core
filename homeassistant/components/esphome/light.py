@@ -31,11 +31,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import (
-    EsphomeEntity,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
 

@@ -6,12 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_RADIUS,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_RADIUS
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType

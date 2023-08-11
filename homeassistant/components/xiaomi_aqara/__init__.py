@@ -23,8 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
