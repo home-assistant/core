@@ -9,7 +9,7 @@
         }
       },
       "connect": {
-        "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
+        "description": "You will need the 16 character API Key, see https://intercom.help/plaato/articles/5004720-auth_token for instructions",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
