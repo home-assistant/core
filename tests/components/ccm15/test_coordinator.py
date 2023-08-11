@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import AsyncMock, patch
 
+from ccm15 import CCM15DeviceState, CCM15SlaveDevice
 import pytest
 
 from homeassistant.components.ccm15 import CCM15Coordinator
@@ -17,9 +18,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -27,21 +26,32 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the coordinator."""
+
+    # Create a dictionary of CCM15SlaveDevice objects
+    ccm15_devices = {
+        0: CCM15SlaveDevice(bytes.fromhex("000000b0b8001b")),
+        1: CCM15SlaveDevice(bytes.fromhex("00000041c0001a")),
+    }
+    # Create an instance of the CCM15DeviceState class
+    device_state = CCM15DeviceState(devices=ccm15_devices)
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator._fetch_xml_data",
-        return_value="<response><a0>000000b0b8001b,</a0><a1>00000041c0001a,</a1><a2>-</a2></response>",
+        "ccm15.CCM15Device.CCM15Device.get_status_async",
+        return_value=device_state,
     ):
         coordinator = CCM15Coordinator("1.1.1.1", "80", 30, hass)
         await coordinator.async_refresh()
-        data = coordinator.data
-        devices = coordinator.get_devices()
+
+    data = coordinator.data
+    devices = coordinator.get_devices()
 
     assert len(data.devices) == 2
-    first_climate = data.devices[0]
+    assert len(devices) == 2
+
+    first_climate = list(devices)[0]
     assert first_climate is not None
-    assert first_climate.temperature == 27
-    assert first_climate.temperature_setpoint == 23
-    assert first_climate.unit == UnitOfTemperature.CELSIUS
+    assert first_climate.temperature_unit == UnitOfTemperature.CELSIUS
+    assert first_climate.current_temperature == 27
+    assert first_climate.target_temperature == 23
 
     assert len(devices) == 2
     climate = next(iter(devices))
@@ -79,32 +89,32 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert climate.target_temperature_step == 1
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_send_state",
+        "ccm15.CCM15Device.CCM15Device.async_send_state",
         return_value=200,
     ):
         await climate.async_set_fan_mode(FAN_HIGH)
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_send_state",
+        "ccm15.CCM15Device.CCM15Device.async_send_state",
         return_value=200,
     ):
         await climate.async_set_hvac_mode(HVACMode.COOL)
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_send_state",
+        "ccm15.CCM15Device.CCM15Device.async_send_state",
         return_value=200,
     ):
         await climate.async_set_temperature(ATTR_TEMPERATURE=25)
         await climate.async_set_temperature(**{ATTR_TEMPERATURE: 25})
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_send_state",
+        "ccm15.CCM15Device.CCM15Device.async_send_state",
         return_value=200,
     ):
         await climate.async_turn_off()
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_send_state",
+        "ccm15.CCM15Device.CCM15Device.async_send_state",
         return_value=200,
     ):
         await climate.async_turn_on()

@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
 from .climate import CCM15Coordinator
 from .const import DEFAULT_INTERVAL, DOMAIN
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=80): int,
+        vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): int,
     }
 )
