@@ -262,14 +262,13 @@ def async_fire_triggers(conn: HKDevice, events: dict[tuple[int, int], dict[str, 
     if not trigger_sources:
         return
     for (aid, iid), ev in events.items():
-        # If the value is None, we received the event via polling
-        # and we don't want to trigger on that
-        if ev["value"] is None:
-            continue
         if aid in conn.devices:
             device_id = conn.devices[aid]
             if source := trigger_sources.get(device_id):
-                source.fire(iid, ev)
+                # If the value is None, we received the event via polling
+                # and we don't want to trigger on that
+                if ev.get("value") is not None:
+                    source.fire(iid, ev)
 
 
 async def async_get_triggers(

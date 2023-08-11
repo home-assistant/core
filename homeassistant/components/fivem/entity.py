@@ -7,14 +7,9 @@ import logging
 from typing import Any
 
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import FiveMDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)

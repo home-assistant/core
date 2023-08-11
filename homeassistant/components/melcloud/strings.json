@@ -26,7 +26,7 @@
       "fields": {
         "position": {
           "name": "Position",
-          "description": "Horizontal vane position. Possible options can be found in the vane_horizontal_positions state attribute.\n."
+          "description": "Horizontal vane position. Possible options can be found in the vane_horizontal_positions state attribute."
         }
       }
     },
@@ -36,7 +36,7 @@
       "fields": {
         "position": {
           "name": "Position",
-          "description": "Vertical vane position. Possible options can be found in the vane_vertical_positions state attribute.\n."
+          "description": "Vertical vane position. Possible options can be found in the vane_vertical_positions state attribute."
         }
       }
     }
