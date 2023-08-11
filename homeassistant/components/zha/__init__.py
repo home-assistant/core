@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from . import websocket_api
+from . import repairs, websocket_api
 from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
@@ -135,7 +135,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
-    await zha_gateway.async_initialize()
+
+    try:
+        await zha_gateway.async_initialize()
+    except Exception:  # pylint: disable=broad-except
+        radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+        device = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+        if radio_type == RadioType.ezsp and not device.startswith("socket://"):
+            await repairs.warn_on_wrong_silabs_firmware(hass, device)
+
+        raise
+
+    repairs.async_delete_blocking_issues(hass)
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
