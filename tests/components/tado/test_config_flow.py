@@ -47,7 +47,7 @@ async def test_form_exceptions(hass: HomeAssistant, exception: Exception, error:
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": base_error}
+    assert result2["errors"] == {"base": error}
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
