@@ -8,6 +8,7 @@ from homeassistant.components.rainbird import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import (
@@ -17,6 +18,7 @@ from .conftest import (
     SERIAL_NUMBER,
     ComponentSetup,
     mock_response,
+    mock_response_error,
 )
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -85,5 +87,33 @@ async def test_set_value(
         },
         blocking=True,
     )
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+async def test_set_value_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    responses: list[str],
+    config_entry: ConfigEntry,
+) -> None:
+    """Test an error while talking to the device."""
+
+    assert await setup_integration()
+
+    aioclient_mock.mock_calls.clear()
+    responses.append(mock_response_error())
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            number.DOMAIN,
+            number.SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.rain_bird_controller_rain_delay",
+                number.ATTR_VALUE: 3,
+            },
+            blocking=True,
+        )
 
     assert len(aioclient_mock.mock_calls) == 1

@@ -150,6 +150,11 @@ def mock_response(data: str) -> AiohttpClientMockResponse:
     return AiohttpClientMockResponse("POST", URL, response=rainbird_response(data))
 
 
+def mock_response_error() -> AiohttpClientMockResponse:
+    """Create a fake AiohttpClientMockResponse."""
+    return AiohttpClientMockResponse("POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE)
+
+
 @pytest.fixture(name="stations_response")
 def mock_station_response() -> str:
     """Mock response to return available stations."""
