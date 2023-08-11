@@ -17,5 +17,28 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Could not connect.",
+            "invalid_auth": "Could not authenticate.",
+            "unknown": "Encountered unknown error."
+        },
+        "step": {
+            "init": {
+                "title": "Manage FlexMeasures Integration",
+                "description": "Update FlexMeasures credentials.",
+                "data": {
+                    "host": "Host",
+                    "username": "Username",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "host": "URL to your FlexMeasures host, for example: https://flexmeasures.seita.nl",
+                    "username": "Your FlexMeasures username",
+                    "password": "Your FlexMeasures user password"
+                }
+            }
+        }
     }
 }
