@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["metar", "pynws"],
   "quality_scale": "platinum",
-  "requirements": ["pynws==1.5.0"]
+  "requirements": ["pynws==1.5.1"]
 }

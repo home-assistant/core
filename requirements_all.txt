@@ -1878,7 +1878,7 @@ pynuki==1.6.2
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==1.5.0
+pynws==1.5.1
 
 # homeassistant.components.nx584
 pynx584==0.5
