@@ -22,17 +22,14 @@ from .const import DOMAIN
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONST.TEMP_STATUS_KEY,
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key=CONST.HUMI_STATUS_KEY,
-        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     SensorEntityDescription(
         key=CONST.LUX_STATUS_KEY,
-        name="Lux",
         device_class=SensorDeviceClass.ILLUMINANCE,
     ),
 )
@@ -66,7 +63,7 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self.entity_description = description
-        self._attr_unique_id = f"{device.device_uuid}-{description.key}"
+        self._attr_unique_id = f"{device.uuid}-{description.key}"
         if description.key == CONST.TEMP_STATUS_KEY:
             self._attr_native_unit_of_measurement = device.temp_unit
         elif description.key == CONST.HUMI_STATUS_KEY:

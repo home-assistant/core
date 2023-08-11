@@ -8,9 +8,9 @@ import secrets
 import shutil
 from typing import Any
 
-from PIL import Image, ImageOps, UnidentifiedImageError
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
+from PIL import Image, ImageOps, UnidentifiedImageError
 import voluptuous as vol
 
 from homeassistant.components.http.static import CACHE_HEADERS

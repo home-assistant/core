@@ -976,7 +976,7 @@ async def test_get_single(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
 
     assert entry.pref_disable_new_entities is False
@@ -993,7 +993,7 @@ async def test_get_single(
     assert response["success"]
     assert response["result"]["config_entry"] == {
         "disabled_by": None,
-        "domain": "demo",
+        "domain": "test",
         "entry_id": entry.entry_id,
         "pref_disable_new_entities": False,
         "pref_disable_polling": False,

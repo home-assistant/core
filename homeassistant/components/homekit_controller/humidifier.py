@@ -74,6 +74,11 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
         )
 
     @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
+
+    @property
     def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
@@ -176,6 +181,11 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         return self.service.value(
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
         )
+
+    @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
     @property
     def mode(self) -> str | None:

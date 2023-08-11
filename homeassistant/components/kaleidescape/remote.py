@@ -47,6 +47,8 @@ VALID_COMMANDS = {
 class KaleidescapeRemote(KaleidescapeEntity, RemoteEntity):
     """Representation of a Kaleidescape device."""
 
+    _attr_name = None
+
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""

@@ -415,7 +415,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         vid = discovery_info.vid
         pid = discovery_info.pid
         serial_number = discovery_info.serial_number
-        device = discovery_info.device
         manufacturer = discovery_info.manufacturer
         description = discovery_info.description
         # Zooz uses this vid/pid, but so do 2652 sticks
@@ -430,7 +429,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
         self._abort_if_unique_id_configured()
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        dev_path = discovery_info.device
         self.usb_path = dev_path
         self._title = usb.human_readable_device_name(
             dev_path,

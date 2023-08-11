@@ -20,15 +20,15 @@
     "zigpy_znp"
   ],
   "requirements": [
-    "bellows==0.35.5",
+    "bellows==0.35.9",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.100",
+    "zha-quirks==0.0.102",
     "zigpy-deconz==0.21.0",
-    "zigpy==0.55.0",
-    "zigpy-xbee==0.18.0",
+    "zigpy==0.56.4",
+    "zigpy-xbee==0.18.1",
     "zigpy-zigate==0.11.0",
-    "zigpy-znp==0.11.1"
+    "zigpy-znp==0.11.4"
   ],
   "usb": [
     {

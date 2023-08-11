@@ -1,8 +1,6 @@
 """Mock data for Roborock tests."""
 from __future__ import annotations
 
-import datetime
-
 from roborock.containers import (
     CleanRecord,
     CleanSummary,
@@ -322,8 +320,6 @@ DND_TIMER = DnDTimer.from_dict(
         "enabled": 1,
     }
 )
-DND_TIMER.start_time = datetime.datetime(year=2023, month=6, day=1, hour=22)
-DND_TIMER.end_time = datetime.datetime(year=2023, month=6, day=2, hour=7)
 
 STATUS = S7Status.from_dict(
     {
@@ -371,7 +367,12 @@ STATUS = S7Status.from_dict(
         "unsave_map_flag": 0,
     }
 )
-PROP = DeviceProp(STATUS, DND_TIMER, CLEAN_SUMMARY, CONSUMABLE, CLEAN_RECORD)
+PROP = DeviceProp(
+    status=STATUS,
+    clean_summary=CLEAN_SUMMARY,
+    consumable=CONSUMABLE,
+    last_clean_record=CLEAN_RECORD,
+)
 
 NETWORK_INFO = NetworkInfo(
     ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc", bssid="bssid", rssi=90

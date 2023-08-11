@@ -1,23 +1,33 @@
 """Test Discovergy diagnostics."""
+from unittest.mock import patch
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
-
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.discovergy.const import GET_METERS, LAST_READING
 from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
-    entry = await init_integration(hass)
+    with patch("pydiscovergy.Discovergy.meters", return_value=GET_METERS), patch(
+        "pydiscovergy.Discovergy.meter_last_reading", return_value=LAST_READING
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
 
     assert result["entry"] == {
-        "entry_id": entry.entry_id,
+        "entry_id": mock_config_entry.entry_id,
         "version": 1,
         "domain": "discovergy",
         "title": REDACTED,
@@ -33,18 +43,15 @@ async def test_entry_diagnostics(
     assert result["meters"] == [
         {
             "additional": {
-                "administrationNumber": REDACTED,
-                "currentScalingFactor": 1,
-                "firstMeasurementTime": 1517569090926,
-                "fullSerialNumber": REDACTED,
-                "internalMeters": 1,
-                "lastMeasurementTime": 1678430543742,
-                "loadProfileType": "SLP",
-                "manufacturerId": "TST",
-                "printedFullSerialNumber": REDACTED,
-                "scalingFactor": 1,
-                "type": "TST",
-                "voltageScalingFactor": 1,
+                "administration_number": REDACTED,
+                "current_scaling_factor": 1,
+                "first_measurement_time": 1517569090926,
+                "internal_meters": 1,
+                "last_measurement_time": 1678430543742,
+                "manufacturer_id": "TST",
+                "printed_full_serial_number": REDACTED,
+                "scaling_factor": 1,
+                "voltage_scaling_factor": 1,
             },
             "full_serial_number": REDACTED,
             "load_profile_type": "SLP",

@@ -47,6 +47,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
     "printer": (
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.state",
+            name=None,
             icon="mdi:printer-3d",
             value_fn=lambda data: (
                 "pausing"

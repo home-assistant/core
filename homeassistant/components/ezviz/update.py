@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 1
 
 UPDATE_ENTITY_TYPES = UpdateEntityDescription(
     key="version",
-    name="Firmware update",
+    translation_key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
 
@@ -49,7 +49,6 @@ async def async_setup_entry(
 class EzvizUpdateEntity(EzvizEntity, UpdateEntity):
     """Representation of a EZVIZ Update entity."""
 
-    _attr_has_entity_name = True
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.PROGRESS

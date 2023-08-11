@@ -45,7 +45,9 @@ async def async_setup_entry(
 
 
 class AcmedaCover(AcmedaBase, CoverEntity):
-    """Representation of a Acmeda cover device."""
+    """Representation of an Acmeda cover device."""
+
+    _attr_name = None
 
     @property
     def current_cover_position(self) -> int | None:

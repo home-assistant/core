@@ -9,15 +9,18 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config, setup
+from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.command_line.cover import CommandCover
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, SCAN_INTERVAL
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    SERVICE_RELOAD,
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import HomeAssistant
@@ -25,7 +28,7 @@ from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from tests.common import async_fire_time_changed
 
 
 async def test_no_covers_platform_yaml(
@@ -145,7 +148,7 @@ async def test_poll_when_cover_has_command_state(
         await hass.async_block_till_done()
         check_output.assert_called_once_with(
             "echo state",
-            shell=True,  # nosec # shell by design
+            shell=True,  # noqa: S604 # shell by design
             timeout=15,
             close_fds=False,
         )
@@ -208,45 +211,6 @@ async def test_state_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("cover.test")
         assert entity_state
         assert entity_state.state == "closed"
-
-
-@pytest.mark.parametrize(
-    "get_config",
-    [
-        {
-            "command_line": [
-                {
-                    "cover": {
-                        "command_state": "echo open",
-                        "value_template": "{{ value }}",
-                        "name": "Test",
-                    }
-                }
-            ]
-        }
-    ],
-)
-async def test_reload(hass: HomeAssistant, load_yaml_integration: None) -> None:
-    """Verify we can reload command_line covers."""
-
-    entity_state = hass.states.get("cover.test")
-    assert entity_state
-    assert entity_state.state == "unknown"
-
-    yaml_path = get_fixture_path("configuration.yaml", "command_line")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            "command_line",
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 1
-
-    assert not hass.states.get("cover.test")
-    assert hass.states.get("cover.from_yaml")
 
 
 @pytest.mark.parametrize(
@@ -329,16 +293,19 @@ async def test_updating_to_often(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test handling updating when command already running."""
+
     called = []
+    wait_till_event = asyncio.Event()
+    wait_till_event.set()
 
     class MockCommandCover(CommandCover):
-        """Mock entity that updates slow."""
+        """Mock entity that updates."""
 
         async def _async_update(self) -> None:
-            """Update slow."""
+            """Update the entity."""
             called.append(1)
             # Add waiting time
-            await asyncio.sleep(1)
+            await wait_till_event.wait()
 
     with patch(
         "homeassistant.components.command_line.cover.CommandCover",
@@ -354,7 +321,7 @@ async def test_updating_to_often(
                             "command_state": "echo 1",
                             "value_template": "{{ value }}",
                             "name": "Test",
-                            "scan_interval": 0.1,
+                            "scan_interval": 10,
                         }
                     }
                 ]
@@ -362,19 +329,83 @@ async def test_updating_to_often(
         )
         await hass.async_block_till_done()
 
-    assert len(called) == 0
+    assert not called
+    assert (
+        "Updating Command Line Cover Test took longer than the scheduled update interval"
+        not in caplog.text
+    )
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+    assert called
+    called.clear()
+
     assert (
         "Updating Command Line Cover Test took longer than the scheduled update interval"
         not in caplog.text
     )
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
-    await hass.async_block_till_done()
+    # Simulate update takes too long
+    wait_till_event.clear()
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    await asyncio.sleep(0)
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    wait_till_event.set()
 
-    assert len(called) == 1
+    # Finish processing update
+    await hass.async_block_till_done()
+    assert called
     assert (
         "Updating Command Line Cover Test took longer than the scheduled update interval"
         in caplog.text
     )
 
-    await asyncio.sleep(0.2)
+
+async def test_updating_manually(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling manual updating using homeassistant udate_entity service."""
+    await setup.async_setup_component(hass, HA_DOMAIN, {})
+    called = []
+
+    class MockCommandCover(CommandCover):
+        """Mock entity that updates."""
+
+        async def _async_update(self) -> None:
+            """Update."""
+            called.append(1)
+
+    with patch(
+        "homeassistant.components.command_line.cover.CommandCover",
+        side_effect=MockCommandCover,
+    ):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "cover": {
+                            "command_state": "echo 1",
+                            "value_template": "{{ value }}",
+                            "name": "Test",
+                            "scan_interval": 10,
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert called
+    called.clear()
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ["cover.test"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert called

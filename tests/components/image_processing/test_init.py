@@ -23,9 +23,9 @@ async def setup_homeassistant(hass: HomeAssistant):
 
 
 @pytest.fixture
-def aiohttp_unused_port(event_loop, aiohttp_unused_port, socket_enabled):
+def aiohttp_unused_port_factory(event_loop, unused_tcp_port_factory, socket_enabled):
     """Return aiohttp_unused_port and allow opening sockets."""
-    return aiohttp_unused_port
+    return unused_tcp_port_factory
 
 
 def get_url(hass):
@@ -34,12 +34,12 @@ def get_url(hass):
     return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
 
-async def setup_image_processing(hass, aiohttp_unused_port):
+async def setup_image_processing(hass, aiohttp_unused_port_factory):
     """Set up things to be run when tests are started."""
     await async_setup_component(
         hass,
         http.DOMAIN,
-        {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port()}},
+        {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port_factory()}},
     )
 
     config = {ip.DOMAIN: {"platform": "test"}, "camera": {"platform": "demo"}}
@@ -85,11 +85,11 @@ async def test_setup_component_with_service(hass: HomeAssistant) -> None:
 async def test_get_image_from_camera(
     mock_camera_read,
     hass: HomeAssistant,
-    aiohttp_unused_port,
+    aiohttp_unused_port_factory,
     enable_custom_integrations: None,
 ) -> None:
     """Grab an image from camera entity."""
-    await setup_image_processing(hass, aiohttp_unused_port)
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
 
     common.async_scan(hass, entity_id="image_processing.test")
     await hass.async_block_till_done()
@@ -108,11 +108,11 @@ async def test_get_image_from_camera(
 async def test_get_image_without_exists_camera(
     mock_image,
     hass: HomeAssistant,
-    aiohttp_unused_port,
+    aiohttp_unused_port_factory,
     enable_custom_integrations: None,
 ) -> None:
     """Try to get image without exists camera."""
-    await setup_image_processing(hass, aiohttp_unused_port)
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
 
     hass.states.async_remove("camera.demo_camera")
 

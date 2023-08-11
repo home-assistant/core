@@ -15,11 +15,5 @@
       "already_configured": "Warncell ID / name is already configured.",
       "invalid_identifier": "[%key:component::dwd_weather_warnings::config::error::invalid_identifier%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Deutscher Wetterdienst (DWD) Weather Warnings YAML configuration is being removed",
-      "description": "Configuring Deutscher Wetterdienst (DWD) Weather Warnings using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Deutscher Wetterdienst (DWD) Weather Warnings YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

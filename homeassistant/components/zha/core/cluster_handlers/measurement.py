@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 import zigpy.zcl
 from zigpy.zcl.clusters import measurement
 
-from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
     REPORT_CONFIG_DEFAULT,
@@ -14,6 +13,7 @@ from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
 )
+from . import AttrReportConfig, ClusterHandler
 from .helpers import is_hue_motion_sensor
 
 if TYPE_CHECKING:

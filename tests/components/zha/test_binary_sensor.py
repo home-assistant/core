@@ -116,7 +116,7 @@ async def test_binary_sensor(
     """Test ZHA binary_sensor platform."""
     zigpy_device = zigpy_device_mock(device)
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -192,7 +192,7 @@ async def test_binary_sensor_migration_not_migrated(
 
     zigpy_device = zigpy_device_mock(DEVICE_IAS)
     zha_device = await zha_device_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
 
     assert entity_id is not None
     assert hass.states.get(entity_id).state == restored_state
@@ -222,7 +222,7 @@ async def test_binary_sensor_migration_already_migrated(
     update_attribute_cache(cluster)
 
     zha_device = await zha_device_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
 
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_ON  # matches attribute cache
@@ -251,7 +251,7 @@ async def test_onoff_binary_sensor_restore_state(
 
     zigpy_device = zigpy_device_mock(DEVICE_ONOFF)
     zha_device = await zha_device_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
 
     assert entity_id is not None
     assert hass.states.get(entity_id).state == restored_state

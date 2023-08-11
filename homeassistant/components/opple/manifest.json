@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/opple",
   "iot_class": "local_polling",
   "loggers": ["pyoppleio"],
-  "requirements": ["pyoppleio==1.0.5"]
+  "requirements": ["pyoppleio-legacy==1.0.8"]
 }

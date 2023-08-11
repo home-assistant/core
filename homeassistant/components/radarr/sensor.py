@@ -76,7 +76,7 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     ),
     "movie": RadarrSensorEntityDescription[int](
         key="movies",
-        name="Movies",
+        translation_key="movies",
         native_unit_of_measurement="Movies",
         icon="mdi:television",
         entity_registry_enabled_default=False,
@@ -84,7 +84,7 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     ),
     "status": RadarrSensorEntityDescription[SystemStatus](
         key="start_time",
-        name="Start time",
+        translation_key="start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

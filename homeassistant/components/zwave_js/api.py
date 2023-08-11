@@ -1138,6 +1138,7 @@ async def websocket_remove_node(
         node = event["node"]
         node_details = {
             "node_id": node.node_id,
+            "reason": event["reason"],
         }
 
         connection.send_message(
@@ -2347,7 +2348,7 @@ def _get_node_statistics_dict(
         """Convert a node to a device id."""
         driver = node.client.driver
         assert driver
-        device = dev_reg.async_get_device({get_device_id(driver, node)})
+        device = dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
         assert device
         return device.id
 

@@ -114,7 +114,7 @@ async def test_websocket_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_actions = [
@@ -122,21 +122,21 @@ async def test_websocket_get_actions(
             "domain": "fake_integration",
             "type": "turn_off",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
             "domain": "fake_integration",
             "type": "turn_on",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
             "domain": "fake_integration",
             "type": "toggle",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
     ]
@@ -169,7 +169,7 @@ async def test_websocket_get_conditions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_conditions = [
@@ -178,7 +178,7 @@ async def test_websocket_get_conditions(
             "domain": "fake_integration",
             "type": "is_off",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
@@ -186,7 +186,7 @@ async def test_websocket_get_conditions(
             "domain": "fake_integration",
             "type": "is_on",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
     ]
@@ -223,7 +223,7 @@ async def test_websocket_get_triggers(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_triggers = [
@@ -232,7 +232,7 @@ async def test_websocket_get_triggers(
             "domain": "fake_integration",
             "type": "changed_states",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
@@ -240,7 +240,7 @@ async def test_websocket_get_triggers(
             "domain": "fake_integration",
             "type": "turned_off",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
@@ -248,7 +248,7 @@ async def test_websocket_get_triggers(
             "domain": "fake_integration",
             "type": "turned_on",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
     ]
@@ -1496,8 +1496,10 @@ async def test_automation_with_device_wrong_domain(
     module = module_cache["fake_integration.device_trigger"]
     module.async_validate_trigger_config = AsyncMock()
 
+    source_config_entry = MockConfigEntry(domain="not_fake_integration")
+    source_config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
-        config_entry_id="not_fake_integration_config_entry",
+        config_entry_id=source_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert await async_setup_component(
