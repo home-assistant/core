@@ -66,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -105,13 +105,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
-    def _username_already_configured(self, user_input):
-        """See if we already have a username matching user input configured."""
-        existing_username = {
-            entry.data[CONF_USERNAME] for entry in self._async_current_entries()
-        }
-        return user_input[CONF_USERNAME] in existing_username
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -122,13 +115,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for tado."""
+    """Handle a option flow for Tado."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
