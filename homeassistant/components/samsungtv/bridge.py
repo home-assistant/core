@@ -6,6 +6,7 @@ import asyncio
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 from collections.abc import Callable, Iterable, Mapping
 import contextlib
+from datetime import datetime, timedelta
 from typing import Any, Generic, TypeVar, cast
 
 from samsungctl import Remote
@@ -43,8 +44,10 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DESCRIPTION,
@@ -65,6 +68,13 @@ from .const import (
     VALUE_CONF_ID,
     VALUE_CONF_NAME,
     WEBSOCKET_PORTS,
+)
+
+# Since the TV will take a few seconds to go to sleep
+# and actually be seen as off, we need to wait just a bit
+# more than the next scan interval
+SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta(
+    seconds=5
 )
 
 KEY_PRESS_TIMEOUT = 1.2
@@ -161,6 +171,10 @@ class SamsungTVBridge(ABC):
         self._update_config_entry: Callable[[Mapping[str, Any]], None] | None = None
         self._app_list_callback: Callable[[dict[str, str]], None] | None = None
 
+        # Mark the end of a shutdown command (need to wait 15 seconds before
+        # sending the next command to avoid turning the TV back ON).
+        self._end_of_power_off: datetime | None = None
+
     def register_reauth_callback(self, func: CALLBACK_TYPE) -> None:
         """Register a callback function."""
         self._reauth_callback = func
@@ -203,8 +217,17 @@ class SamsungTVBridge(ABC):
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys to the tv."""
 
+    @property
+    def power_off_in_progress(self) -> bool:
+        """Return if power off has been recently requested."""
+        return (
+            self._end_of_power_off is not None
+            and self._end_of_power_off > dt_util.utcnow()
+        )
+
     async def async_power_off(self) -> None:
         """Send power off command to remote and close."""
+        self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
         await self._async_send_power_off()
         # Force closing of remote session to provide instant UI feedback
         await self.async_close_remote()
@@ -388,7 +411,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
         """Tells if the TV is on."""
         LOGGER.debug("Checking if TV %s is on using websocket", self.host)
         if remote := await self._async_get_remote():
-            return remote.is_alive()  # type: ignore[no-any-return]
+            return remote.is_alive()
         return False
 
     async def _async_send_commands(self, commands: list[_CommandT]) -> None:
@@ -399,7 +422,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        await remote.send_commands(commands)
+                        await remote.send_commands(commands)  # type: ignore[arg-type]
                     break
                 except (
                     BrokenPipeError,
@@ -416,7 +439,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
         """Create or return a remote control instance."""
         if (remote := self._remote) and remote.is_alive():
             # If we have one then try to use it
-            return remote  # type: ignore[no-any-return]
+            return remote
 
         async with self._remote_lock:
             # If we don't have one make sure we do it under the lock
@@ -526,7 +549,7 @@ class SamsungTVWSBridge(
             except (ConnectionFailure, OSError, AsyncioTimeoutError) as err:
                 LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
         # pylint: disable-next=useless-else-on-loop
-        else:
+        else:  # noqa: PLW0120
             if result:
                 return result
 

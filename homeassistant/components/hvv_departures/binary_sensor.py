@@ -15,8 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -88,7 +87,7 @@ async def async_setup_entry(
         so entities can quickly look up their data.
         """
 
-        payload = {"station": station}
+        payload = {"station": {"id": station["id"], "type": station["type"]}}
 
         try:
             async with async_timeout.timeout(10):

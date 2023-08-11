@@ -70,7 +70,7 @@ MOCK_NEARVY_STATIONS_OK = {
 }
 
 
-async def test_user(hass: HomeAssistant):
+async def test_user(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -110,7 +110,7 @@ async def test_user(hass: HomeAssistant):
     assert mock_setup_entry.called
 
 
-async def test_user_already_configured(hass: HomeAssistant):
+async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user with an already configured region."""
 
     mock_config = MockConfigEntry(
@@ -134,7 +134,7 @@ async def test_user_already_configured(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_exception_security(hass: HomeAssistant):
+async def test_exception_security(hass: HomeAssistant) -> None:
     """Test starting a flow by user with invalid api key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -154,7 +154,7 @@ async def test_exception_security(hass: HomeAssistant):
         assert result["errors"][CONF_API_KEY] == "invalid_auth"
 
 
-async def test_user_no_stations(hass: HomeAssistant):
+async def test_user_no_stations(hass: HomeAssistant) -> None:
     """Test starting a flow by user which does not find any station."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -174,7 +174,7 @@ async def test_user_no_stations(hass: HomeAssistant):
         assert result["errors"][CONF_RADIUS] == "no_stations"
 
 
-async def test_reauth(hass: HomeAssistant):
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test starting a flow by user to re-auth."""
 
     mock_config = MockConfigEntry(
@@ -227,7 +227,7 @@ async def test_reauth(hass: HomeAssistant):
     assert entry.data[CONF_API_KEY] == "269534f6-aaaa-bbbb-cccc-yyyyzzzzxxxx"
 
 
-async def test_options_flow(hass: HomeAssistant):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options flow."""
 
     mock_config = MockConfigEntry(

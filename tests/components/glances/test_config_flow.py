@@ -42,7 +42,7 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> None:
     """Test to return error if we cannot connect."""
 
-    mock_api.return_value.get_data.side_effect = GlancesApiConnectionError
+    mock_api.return_value.get_ha_sensor_data.side_effect = GlancesApiConnectionError
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

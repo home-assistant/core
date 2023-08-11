@@ -14,17 +14,22 @@ from homeassistant.components.device_tracker.const import (
     SourceType,
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_HOME, STATE_NOT_HOME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
 
-async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
+async def test_scanner_entity_device_tracker(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test ScannerEntity based device tracker."""
     # Make device tied to other integration so device tracker entities get enabled
+    other_config_entry = MockConfigEntry(domain="not_fake_integration")
+    other_config_entry.add_to_hass(hass)
     dr.async_get(hass).async_get_or_create(
         name="Device from other integration",
-        config_entry_id=MockConfigEntry().entry_id,
+        config_entry_id=other_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "ad:de:ef:be:ed:fe")},
     )
 
@@ -53,7 +58,7 @@ async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
     assert entity_state.state == STATE_HOME
 
 
-def test_scanner_entity():
+def test_scanner_entity() -> None:
     """Test coverage for base ScannerEntity entity class."""
     entity = ScannerEntity()
     with pytest.raises(NotImplementedError):
@@ -68,7 +73,7 @@ def test_scanner_entity():
     assert entity.hostname is None
 
 
-def test_base_tracker_entity():
+def test_base_tracker_entity() -> None:
     """Test coverage for base BaseTrackerEntity entity class."""
     entity = BaseTrackerEntity()
     with pytest.raises(NotImplementedError):

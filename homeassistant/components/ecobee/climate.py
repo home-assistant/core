@@ -31,10 +31,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+from . import EcobeeData
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 from .util import ecobee_date, ecobee_time
 
@@ -61,10 +62,13 @@ PRESET_HOLD_INDEFINITE = "indefinite"
 AWAY_MODE = "awayMode"
 PRESET_HOME = "home"
 PRESET_SLEEP = "sleep"
+HAS_HEAT_PUMP = "hasHeatPump"
 
 DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
 HUMIDIFIER_MANUAL_MODE = "manual"
+
+ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
 
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
@@ -161,7 +165,6 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
 SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
-    | ClimateEntityFeature.AUX_HEAT
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     | ClimateEntityFeature.FAN_MODE
 )
@@ -307,23 +310,24 @@ class Thermostat(ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_name = None
+    _attr_has_entity_name = True
 
-    def __init__(self, data, thermostat_index, thermostat):
+    def __init__(
+        self, data: EcobeeData, thermostat_index: int, thermostat: dict
+    ) -> None:
         """Initialize the thermostat."""
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = thermostat
-        self._name = self.thermostat["name"]
+        self._attr_unique_id = self.thermostat["identifier"]
         self.vacation = None
         self._last_active_hvac_mode = HVACMode.HEAT_COOL
 
         self._operation_list = []
-        if (
-            self.thermostat["settings"]["heatStages"]
-            or self.thermostat["settings"]["hasHeatPump"]
-        ):
+        if self.settings["heatStages"] or self.settings["hasHeatPump"]:
             self._operation_list.append(HVACMode.HEAT)
-        if self.thermostat["settings"]["coolStages"]:
+        if self.settings["coolStages"]:
             self._operation_list.append(HVACMode.COOL)
         if len(self._operation_list) == 2:
             self._operation_list.insert(0, HVACMode.HEAT_COOL)
@@ -355,19 +359,12 @@ class Thermostat(ClimateEntity):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
+        supported = SUPPORT_FLAGS
         if self.has_humidifier_control:
-            return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY
-        return SUPPORT_FLAGS
-
-    @property
-    def name(self):
-        """Return the name of the Ecobee Thermostat."""
-        return self.thermostat["name"]
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this ecobee thermostat."""
-        return self.thermostat["identifier"]
+            supported = supported | ClimateEntityFeature.TARGET_HUMIDITY
+        if self.has_aux_heat:
+            supported = supported | ClimateEntityFeature.AUX_HEAT
+        return supported
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -383,7 +380,7 @@ class Thermostat(ClimateEntity):
             identifiers={(DOMAIN, self.thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=model,
-            name=self.name,
+            name=self.thermostat["name"],
         )
 
     @property
@@ -411,12 +408,22 @@ class Thermostat(ClimateEntity):
         return PRECISION_HALVES
 
     @property
-    def has_humidifier_control(self):
+    def settings(self) -> dict[str, Any]:
+        """Return the settings of the thermostat."""
+        return self.thermostat["settings"]
+
+    @property
+    def has_humidifier_control(self) -> bool:
         """Return true if humidifier connected to thermostat and set to manual/on mode."""
         return (
-            self.thermostat["settings"]["hasHumidifier"]
-            and self.thermostat["settings"]["humidifierMode"] == HUMIDIFIER_MANUAL_MODE
+            bool(self.settings.get("hasHumidifier"))
+            and self.settings.get("humidifierMode") == HUMIDIFIER_MANUAL_MODE
         )
+
+    @property
+    def has_aux_heat(self) -> bool:
+        """Return true if the ecobee has a heat pump."""
+        return bool(self.settings.get(HAS_HEAT_PUMP))
 
     @property
     def target_humidity(self) -> int | None:
@@ -489,7 +496,7 @@ class Thermostat(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return current operation."""
-        return ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
+        return ECOBEE_HVAC_TO_HASS[self.settings["hvacMode"]]
 
     @property
     def hvac_modes(self):
@@ -541,23 +548,25 @@ class Thermostat(ClimateEntity):
                 self.thermostat["program"]["currentClimateRef"]
             ],
             "equipment_running": status,
-            "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
+            "fan_min_on_time": self.settings["fanMinOnTime"],
         }
 
     @property
-    def is_aux_heat(self):
+    def is_aux_heat(self) -> bool:
         """Return true if aux heater."""
-        return "auxHeat" in self.thermostat["equipmentStatus"]
+        return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
-    async def async_turn_aux_heat_on(self) -> None:
+    def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        if not self.is_aux_heat:
-            _LOGGER.warning("# Changing aux heat is not supported")
+        _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
+        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
+        self.update_without_throttle = True
 
-    async def async_turn_aux_heat_off(self) -> None:
+    def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        if self.is_aux_heat:
-            _LOGGER.warning("# Changing aux heat is not supported")
+        _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
+        self.set_hvac_mode(self._last_active_hvac_mode)
+        self.update_without_throttle = True
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
@@ -680,7 +689,7 @@ class Thermostat(ClimateEntity):
             heat_temp = temp
             cool_temp = temp
         else:
-            delta = self.thermostat["settings"]["heatCoolMinDelta"] / 10.0
+            delta = self.settings["heatCoolMinDelta"] / 10.0
             heat_temp = temp - delta
             cool_temp = temp + delta
         self.set_auto_temp_hold(heat_temp, cool_temp)
@@ -739,7 +748,7 @@ class Thermostat(ClimateEntity):
         #   "useEndTime2hour", "useEndTime4hour"
         #   "nextPeriod", "askMe"
         #   "indefinite"
-        device_preference = self.thermostat["settings"]["holdAction"]
+        device_preference = self.settings["holdAction"]
         # Currently supported pyecobee holdTypes:
         #   dateTime, nextTransition, indefinite, holdHours
         hold_pref_map = {
@@ -755,7 +764,7 @@ class Thermostat(ClimateEntity):
         #   "useEndTime2hour", "useEndTime4hour"
         #   "nextPeriod", "askMe"
         #   "indefinite"
-        device_preference = self.thermostat["settings"]["holdAction"]
+        device_preference = self.settings["holdAction"]
         hold_hours_map = {
             "useEndTime2hour": 2,
             "useEndTime4hour": 4,

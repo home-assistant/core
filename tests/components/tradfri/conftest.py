@@ -1,9 +1,21 @@
 """Common tradfri test fixtures."""
-from unittest.mock import Mock, PropertyMock, patch
+from __future__ import annotations
+
+from collections.abc import Generator
+import json
+from typing import Any
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytradfri.device import Device
+from pytradfri.device.air_purifier import AirPurifier
+from pytradfri.device.blind import Blind
+
+from homeassistant.components.tradfri.const import DOMAIN
 
 from . import GATEWAY_ID, TRADFRI_PATH
+
+from tests.common import load_fixture
 
 
 @pytest.fixture
@@ -43,6 +55,7 @@ def mock_gateway_fixture():
         get_devices=get_devices,
         get_groups=get_groups,
         get_gateway_info=get_gateway_info,
+        mock_commands=[],
         mock_devices=[],
         mock_groups=[],
         mock_responses=[],
@@ -62,13 +75,14 @@ def mock_api_fixture(mock_gateway):
         # Store the data for "real" command objects.
         if hasattr(command, "_data") and not isinstance(command, Mock):
             mock_gateway.mock_responses.append(command._data)
+            mock_gateway.mock_commands.append(command)
         return command
 
     return api
 
 
 @pytest.fixture
-def mock_api_factory(mock_api):
+def mock_api_factory(mock_api) -> Generator[MagicMock, None, None]:
     """Mock pytradfri api factory."""
     with patch(f"{TRADFRI_PATH}.APIFactory", autospec=True) as factory:
         factory.init.return_value = factory.return_value
@@ -76,17 +90,31 @@ def mock_api_factory(mock_api):
         yield factory.return_value
 
 
-@pytest.fixture(autouse=True)
-def setup(request):
-    """Set up patches for pytradfri methods for the fan platform.
+@pytest.fixture(scope="session")
+def air_purifier_response() -> dict[str, Any]:
+    """Return an air purifier response."""
+    return json.loads(load_fixture("air_purifier.json", DOMAIN))
 
-    This is used in test_fan as well as in test_sensor.
-    """
-    with patch(
-        "pytradfri.device.AirPurifierControl.raw",
-        new_callable=PropertyMock,
-        return_value=[{"mock": "mock"}],
-    ), patch(
-        "pytradfri.device.AirPurifierControl.air_purifiers",
-    ):
-        yield
+
+@pytest.fixture
+def air_purifier(air_purifier_response: dict[str, Any]) -> AirPurifier:
+    """Return air purifier."""
+    device = Device(air_purifier_response)
+    air_purifier_control = device.air_purifier_control
+    assert air_purifier_control
+    return air_purifier_control.air_purifiers[0]
+
+
+@pytest.fixture(scope="session")
+def blind_response() -> dict[str, Any]:
+    """Return a blind response."""
+    return json.loads(load_fixture("blind.json", DOMAIN))
+
+
+@pytest.fixture
+def blind(blind_response: dict[str, Any]) -> Blind:
+    """Return blind."""
+    device = Device(blind_response)
+    blind_control = device.blind_control
+    assert blind_control
+    return blind_control.blinds[0]

@@ -27,7 +27,7 @@ class SchemaFlowStep:
     """Define a config or options flow step."""
 
 
-@dataclass
+@dataclass(slots=True)
 class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
@@ -79,7 +79,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """
 
 
-@dataclass
+@dataclass(slots=True)
 class SchemaFlowMenuStep(SchemaFlowStep):
     """Define a config or options flow menu step."""
 
@@ -149,7 +149,7 @@ class SchemaCommonFlowHandler:
             and not self._handler.show_advanced_options
         ):
             # Add advanced field default if not set
-            for key in data_schema.schema.keys():
+            for key in data_schema.schema:
                 if isinstance(key, (vol.Optional, vol.Required)):
                     if (
                         key.description
@@ -275,7 +275,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
             )
 
         # Create an async_get_options_flow method
-        cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
+        cls.async_get_options_flow = _async_get_options_flow  # type: ignore[method-assign]
 
         # Create flow step methods for each step defined in the flow schema
         for step in cls.config_flow:

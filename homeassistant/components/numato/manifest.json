@@ -1,9 +1,9 @@
 {
   "domain": "numato",
   "name": "Numato USB GPIO Expander",
-  "documentation": "https://www.home-assistant.io/integrations/numato",
-  "requirements": ["numato-gpio==0.10.0"],
   "codeowners": ["@clssn"],
+  "documentation": "https://www.home-assistant.io/integrations/numato",
   "iot_class": "local_push",
-  "loggers": ["numato_gpio"]
+  "loggers": ["numato_gpio"],
+  "requirements": ["numato-gpio==0.10.0"]
 }

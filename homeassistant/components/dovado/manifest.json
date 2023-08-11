@@ -1,8 +1,8 @@
 {
   "domain": "dovado",
   "name": "Dovado",
-  "documentation": "https://www.home-assistant.io/integrations/dovado",
-  "requirements": ["dovado==0.4.1"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/dovado",
+  "iot_class": "local_polling",
+  "requirements": ["dovado==0.4.1"]
 }

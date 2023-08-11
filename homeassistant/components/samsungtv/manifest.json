@@ -1,14 +1,45 @@
 {
   "domain": "samsungtv",
   "name": "Samsung Smart TV",
-  "integration_type": "device",
+  "codeowners": ["@chemelli74", "@epenet"],
+  "config_flow": true,
+  "dependencies": ["ssdp"],
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "hostname": "tizen*"
+    },
+    {
+      "macaddress": "4844F7*"
+    },
+    {
+      "macaddress": "606BBD*"
+    },
+    {
+      "macaddress": "641CB0*"
+    },
+    {
+      "macaddress": "8CC8CD*"
+    },
+    {
+      "macaddress": "8CEA48*"
+    },
+    {
+      "macaddress": "F47B5E*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["samsungctl", "samsungtvws"],
   "requirements": [
     "getmac==0.8.2",
     "samsungctl[websocket]==0.7.1",
-    "samsungtvws[async,encrypted]==2.5.0",
+    "samsungtvws[async,encrypted]==2.6.0",
     "wakeonlan==2.1.0",
-    "async-upnp-client==0.33.1"
+    "async-upnp-client==0.34.1"
   ],
   "ssdp": [
     {
@@ -29,24 +60,9 @@
   "zeroconf": [
     {
       "type": "_airplay._tcp.local.",
-      "properties": { "manufacturer": "samsung*" }
+      "properties": {
+        "manufacturer": "samsung*"
+      }
     }
-  ],
-  "dependencies": ["ssdp"],
-  "dhcp": [
-    { "registered_devices": true },
-    {
-      "hostname": "tizen*"
-    },
-    { "macaddress": "4844F7*" },
-    { "macaddress": "606BBD*" },
-    { "macaddress": "641CB0*" },
-    { "macaddress": "8CC8CD*" },
-    { "macaddress": "8CEA48*" },
-    { "macaddress": "F47B5E*" }
-  ],
-  "codeowners": ["@chemelli74", "@epenet"],
-  "config_flow": true,
-  "iot_class": "local_push",
-  "loggers": ["samsungctl", "samsungtvws"]
+  ]
 }

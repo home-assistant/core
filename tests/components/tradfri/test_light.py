@@ -1,5 +1,4 @@
 """Tradfri lights platform tests."""
-
 from copy import deepcopy
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
@@ -7,6 +6,8 @@ import pytest
 from pytradfri.device import Device
 from pytradfri.device.light import Light
 from pytradfri.device.light_control import LightControl
+
+from homeassistant.core import HomeAssistant
 
 from .common import setup_integration
 
@@ -130,7 +131,7 @@ def mock_light(test_features=None, test_state=None, light_number=0):
     return _mock_light
 
 
-async def test_light(hass, mock_gateway, mock_api_factory):
+async def test_light(hass: HomeAssistant, mock_gateway, mock_api_factory) -> None:
     """Test that lights are correctly added."""
     features = {"can_set_dimmer": True, "can_set_color": True, "can_set_temp": True}
 
@@ -153,7 +154,9 @@ async def test_light(hass, mock_gateway, mock_api_factory):
     assert lamp_1.attributes["hs_color"] == (0.549, 0.153)
 
 
-async def test_light_observed(hass, mock_gateway, mock_api_factory):
+async def test_light_observed(
+    hass: HomeAssistant, mock_gateway, mock_api_factory
+) -> None:
     """Test that lights are correctly observed."""
     light = mock_light()
     mock_gateway.mock_devices.append(light)
@@ -161,7 +164,9 @@ async def test_light_observed(hass, mock_gateway, mock_api_factory):
     assert len(light.observe.mock_calls) > 0
 
 
-async def test_light_available(hass, mock_gateway, mock_api_factory):
+async def test_light_available(
+    hass: HomeAssistant, mock_gateway, mock_api_factory
+) -> None:
     """Test light available property."""
     light = mock_light({"state": True}, light_number=1)
     light.reachable = True
@@ -200,14 +205,14 @@ def create_all_turn_on_cases():
 
 @pytest.mark.parametrize(*create_all_turn_on_cases())
 async def test_turn_on(
-    hass,
+    hass: HomeAssistant,
     mock_gateway,
     mock_api_factory,
     test_features,
     test_data,
     expected_result,
     device_id,
-):
+) -> None:
     """Test turning on a light."""
     # Note pytradfri style, not hass. Values not really important.
     initial_state = {
@@ -265,7 +270,7 @@ async def test_turn_on(
             assert states.attributes[result] == pytest.approx(value, abs=0.01)
 
 
-async def test_turn_off(hass, mock_gateway, mock_api_factory):
+async def test_turn_off(hass: HomeAssistant, mock_gateway, mock_api_factory) -> None:
     """Test turning off a light."""
     state = {"state": True, "dimmer": 100}
 

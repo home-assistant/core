@@ -61,5 +61,5 @@ async def test_text_node(
         )
 
     assert str(err.value) == (
-        f"Value {value} for Text Node 1 1 is too long (maximum length 25)"
+        f"Value {value} for text.text_node_1_1 is too long (maximum length 25)"
     )

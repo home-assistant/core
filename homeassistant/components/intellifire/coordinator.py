@@ -9,7 +9,7 @@ from intellifire4py import IntellifirePollData
 from intellifire4py.intellifire import IntellifireAPILocal
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -67,7 +67,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         return DeviceInfo(
             manufacturer="Hearth and Home",
             model="IFT-WFM",
-            name="IntelliFire Fireplace",
+            name="IntelliFire",
             identifiers={("IntelliFire", f"{self.read_api.data.serial}]")},
             sw_version=self.read_api.data.fw_ver_str,
             configuration_url=f"http://{self._api.fireplace_ip}/poll",

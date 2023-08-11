@@ -1,9 +1,9 @@
 {
   "domain": "iglo",
   "name": "iGlo",
-  "documentation": "https://www.home-assistant.io/integrations/iglo",
-  "requirements": ["iglo==1.2.7"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/iglo",
   "iot_class": "local_polling",
-  "loggers": ["iglo"]
+  "loggers": ["iglo"],
+  "requirements": ["iglo==1.2.7"]
 }

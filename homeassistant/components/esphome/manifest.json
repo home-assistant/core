@@ -1,15 +1,24 @@
 {
   "domain": "esphome",
   "name": "ESPHome",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/esphome",
-  "requirements": ["aioesphomeapi==13.1.0", "esphome-dashboard-api==1.2.3"],
-  "zeroconf": ["_esphomelib._tcp.local."],
-  "dhcp": [{ "registered_devices": true }],
-  "codeowners": ["@OttoWinter", "@jesserockz"],
-  "dependencies": ["bluetooth"],
   "after_dependencies": ["zeroconf", "tag"],
-  "iot_class": "local_push",
+  "codeowners": ["@OttoWinter", "@jesserockz", "@bdraco"],
+  "config_flow": true,
+  "dependencies": ["assist_pipeline", "bluetooth"],
+  "dhcp": [
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/esphome",
   "integration_type": "device",
-  "loggers": ["aioesphomeapi", "noiseprotocol"]
+  "iot_class": "local_push",
+  "loggers": ["aioesphomeapi", "noiseprotocol"],
+  "requirements": [
+    "async_interrupt==1.1.1",
+    "aioesphomeapi==15.1.15",
+    "bluetooth-data-tools==1.8.0",
+    "esphome-dashboard-api==1.2.3"
+  ],
+  "zeroconf": ["_esphomelib._tcp.local."]
 }

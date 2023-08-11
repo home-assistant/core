@@ -8,8 +8,7 @@ import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
@@ -49,6 +48,8 @@ def async_handle_api_call(
 class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
     """Representation of a Sensibo Base Entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
@@ -67,8 +68,6 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
 
 class SensiboDeviceBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Device."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -92,8 +91,6 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Motion Entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

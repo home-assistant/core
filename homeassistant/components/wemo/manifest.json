@@ -1,18 +1,18 @@
 {
   "domain": "wemo",
   "name": "Belkin WeMo",
+  "codeowners": ["@esev"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wemo",
-  "requirements": ["pywemo==0.9.1"],
+  "homekit": {
+    "models": ["Socket", "Wemo"]
+  },
+  "iot_class": "local_push",
+  "loggers": ["pywemo"],
+  "requirements": ["pywemo==1.2.1"],
   "ssdp": [
     {
       "manufacturer": "Belkin International Inc."
     }
-  ],
-  "homekit": {
-    "models": ["Socket", "Wemo"]
-  },
-  "codeowners": ["@esev"],
-  "iot_class": "local_push",
-  "loggers": ["pywemo"]
+  ]
 }

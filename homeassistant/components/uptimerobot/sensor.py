@@ -9,8 +9,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UptimeRobotDataUpdateCoordinator
@@ -46,7 +46,6 @@ async def async_setup_entry(
             coordinator,
             SensorEntityDescription(
                 key=str(monitor.id),
-                name=monitor.friendly_name,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 device_class=SensorDeviceClass.ENUM,
                 options=["down", "not_checked_yet", "pause", "seems_down", "up"],

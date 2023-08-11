@@ -1,18 +1,24 @@
 {
   "domain": "nest",
   "name": "Google Nest",
+  "after_dependencies": ["media_source"],
+  "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["ffmpeg", "http", "application_credentials"],
-  "after_dependencies": ["media_source"],
-  "documentation": "https://www.home-assistant.io/integrations/nest",
-  "requirements": ["python-nest==4.2.0", "google-nest-sdm==2.2.4"],
-  "codeowners": ["@allenporter"],
-  "quality_scale": "platinum",
   "dhcp": [
-    { "macaddress": "18B430*" },
-    { "macaddress": "641666*" },
-    { "macaddress": "D8EB46*" }
+    {
+      "macaddress": "18B430*"
+    },
+    {
+      "macaddress": "641666*"
+    },
+    {
+      "macaddress": "D8EB46*"
+    }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/nest",
   "iot_class": "cloud_push",
-  "loggers": ["google_nest_sdm", "nest"]
+  "loggers": ["google_nest_sdm", "nest"],
+  "quality_scale": "platinum",
+  "requirements": ["google-nest-sdm==2.2.5"]
 }

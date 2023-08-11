@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .util import CONFIG, HVAC_MOCK, HVAC_WEBSERVER_MOCK
+from .util import CONFIG, HVAC_MOCK, HVAC_VERSION_MOCK, HVAC_WEBSERVER_MOCK
 
 from tests.common import MockConfigEntry
 
@@ -29,6 +29,9 @@ async def test_unique_id_migrate(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,
     ):
@@ -47,6 +50,9 @@ async def test_unique_id_migrate(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,

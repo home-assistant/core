@@ -5,9 +5,8 @@ from pynuki.device import NukiDevice
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NukiEntity
@@ -30,7 +29,6 @@ class NukiBatterySensor(NukiEntity[NukiDevice], SensorEntity):
     """Representation of a Nuki Lock Battery sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = "Battery"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC

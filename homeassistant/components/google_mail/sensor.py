@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 SENSOR_TYPE = SensorEntityDescription(
     key="vacation_end_date",
-    name="Vacation end date",
+    translation_key="vacation_end_date",
     icon="mdi:clock",
     device_class=SensorDeviceClass.TIMESTAMP,
 )
@@ -43,10 +43,10 @@ class GoogleMailSensor(GoogleMailEntity, SensorEntity):
         """Get the vacation data."""
         service = await self.auth.get_resource()
         settings: HttpRequest = service.users().settings().getVacation(userId="me")
-        data = await self.hass.async_add_executor_job(settings.execute)
+        data: dict = await self.hass.async_add_executor_job(settings.execute)
 
-        if data["enableAutoReply"]:
-            value = datetime.fromtimestamp(int(data["endTime"]) / 1000, tz=timezone.utc)
+        if data["enableAutoReply"] and (end := data.get("endTime")):
+            value = datetime.fromtimestamp(int(end) / 1000, tz=timezone.utc)
         else:
             value = None
         self._attr_native_value = value

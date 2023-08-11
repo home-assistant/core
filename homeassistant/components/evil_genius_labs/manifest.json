@@ -1,9 +1,9 @@
 {
   "domain": "evil_genius_labs",
   "name": "Evil Genius Labs",
+  "codeowners": ["@balloob"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/evil_genius_labs",
-  "requirements": ["pyevilgenius==2.0.0"],
-  "codeowners": ["@balloob"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "requirements": ["pyevilgenius==2.0.0"]
 }

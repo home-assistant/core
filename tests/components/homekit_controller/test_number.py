@@ -2,6 +2,7 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import Helper, get_next_aid, setup_test_component
@@ -28,7 +29,7 @@ def create_switch_with_spray_level(accessory):
     return service
 
 
-async def test_migrate_unique_id(hass, utcnow):
+async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
     """Test a we can migrate a number unique id."""
     entity_registry = er.async_get(hass)
     aid = get_next_aid()
@@ -46,7 +47,7 @@ async def test_migrate_unique_id(hass, utcnow):
     )
 
 
-async def test_read_number(hass, utcnow):
+async def test_read_number(hass: HomeAssistant, utcnow) -> None:
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_spray_level)
 
@@ -72,7 +73,7 @@ async def test_read_number(hass, utcnow):
     assert state.state == "5"
 
 
-async def test_write_number(hass, utcnow):
+async def test_write_number(hass: HomeAssistant, utcnow) -> None:
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_spray_level)
 

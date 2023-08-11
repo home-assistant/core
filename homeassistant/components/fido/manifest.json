@@ -1,9 +1,9 @@
 {
   "domain": "fido",
   "name": "Fido",
-  "documentation": "https://www.home-assistant.io/integrations/fido",
-  "requirements": ["pyfido==2.1.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/fido",
   "iot_class": "cloud_polling",
-  "loggers": ["pyfido"]
+  "loggers": ["pyfido"],
+  "requirements": ["pyfido==2.1.2"]
 }

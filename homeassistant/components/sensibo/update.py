@@ -12,8 +12,8 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -41,9 +41,9 @@ class SensiboDeviceUpdateEntityDescription(
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
     SensiboDeviceUpdateEntityDescription(
         key="fw_ver_available",
+        translation_key="fw_ver_available",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Update available",
         icon="mdi:rocket-launch",
         value_version=lambda data: data.fw_ver,
         value_available=lambda data: data.fw_ver_available,

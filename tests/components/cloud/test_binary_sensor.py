@@ -2,12 +2,13 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.cloud.const import DISPATCHER_REMOTE_UPDATE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 
-async def test_remote_connection_sensor(hass):
+async def test_remote_connection_sensor(hass: HomeAssistant) -> None:
     """Test the remote connection sensor."""
     assert await async_setup_component(hass, "cloud", {"cloud": {}})
     await hass.async_block_till_done()

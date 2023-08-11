@@ -1,0 +1,5 @@
+request_image:
+  target:
+    entity:
+      domain: camera
+      integration: prosegur

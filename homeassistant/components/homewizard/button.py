@@ -1,8 +1,9 @@
 """Support for HomeWizard buttons."""
-from homeassistant.components.button import ButtonEntity
+
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -16,7 +17,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Identify button."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.data.features.has_identify:
+    if coordinator.supports_identify():
         async_add_entities([HomeWizardIdentifyButton(coordinator, entry)])
 
 
@@ -24,8 +25,7 @@ class HomeWizardIdentifyButton(HomeWizardEntity, ButtonEntity):
     """Representation of a identify button."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:magnify"
-    _attr_name = "Identify"
+    _attr_device_class = ButtonDeviceClass.IDENTIFY
 
     def __init__(
         self,

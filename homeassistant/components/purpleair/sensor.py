@@ -17,13 +17,13 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PurpleAirEntity
@@ -50,7 +50,6 @@ class PurpleAirSensorEntityDescription(
 SENSOR_DESCRIPTIONS = [
     PurpleAirSensorEntityDescription(
         key="humidity",
-        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -58,7 +57,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm0.3_count_concentration",
-        name="PM0.3 count concentration",
+        translation_key="pm0_3_count_concentration",
         entity_registry_enabled_default=False,
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_100_MILLILITERS,
@@ -67,7 +66,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm0.5_count_concentration",
-        name="PM0.5 count concentration",
+        translation_key="pm0_5_count_concentration",
         entity_registry_enabled_default=False,
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_100_MILLILITERS,
@@ -76,7 +75,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm1.0_count_concentration",
-        name="PM1.0 count concentration",
+        translation_key="pm1_0_count_concentration",
         entity_registry_enabled_default=False,
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_100_MILLILITERS,
@@ -85,7 +84,6 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm1.0_mass_concentration",
-        name="PM1.0 mass concentration",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -93,7 +91,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm10.0_count_concentration",
-        name="PM10.0 count concentration",
+        translation_key="pm10_0_count_concentration",
         entity_registry_enabled_default=False,
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_100_MILLILITERS,
@@ -102,7 +100,6 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm10.0_mass_concentration",
-        name="PM10.0 mass concentration",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -110,7 +107,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm2.5_count_concentration",
-        name="PM2.5 count concentration",
+        translation_key="pm2_5_count_concentration",
         entity_registry_enabled_default=False,
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_100_MILLILITERS,
@@ -119,7 +116,6 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm2.5_mass_concentration",
-        name="PM2.5 mass concentration",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -127,7 +123,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pm5.0_count_concentration",
-        name="PM5.0 count concentration",
+        translation_key="pm5_0_count_concentration",
         entity_registry_enabled_default=False,
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_100_MILLILITERS,
@@ -136,7 +132,6 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="pressure",
-        name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -144,7 +139,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="rssi",
-        name="RSSI",
+        translation_key="rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -154,7 +149,6 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="temperature",
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -162,7 +156,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="uptime",
-        name="Uptime",
+        translation_key="uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
@@ -171,8 +165,9 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda sensor: sensor.uptime,
     ),
     PurpleAirSensorEntityDescription(
+        # This sensor is an air quality index for VOCs. More info at https://github.com/home-assistant/core/pull/84896
         key="voc",
-        name="VOC",
+        translation_key="voc_aqi",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda sensor: sensor.voc,

@@ -1,5 +1,4 @@
 """Test the SFR Box config flow."""
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -15,17 +14,12 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import load_fixture
 
-
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.sfr_box.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_config_flow_skip_auth(hass: HomeAssistant, mock_setup_entry: AsyncMock):
+async def test_config_flow_skip_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -75,7 +69,9 @@ async def test_config_flow_skip_auth(hass: HomeAssistant, mock_setup_entry: Asyn
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_flow_with_auth(hass: HomeAssistant, mock_setup_entry: AsyncMock):
+async def test_config_flow_with_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -142,7 +138,7 @@ async def test_config_flow_with_auth(hass: HomeAssistant, mock_setup_entry: Asyn
 @pytest.mark.usefixtures("config_entry")
 async def test_config_flow_duplicate_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
-):
+) -> None:
     """Test abort if unique_id configured."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -176,7 +172,7 @@ async def test_config_flow_duplicate_host(
 @pytest.mark.usefixtures("config_entry")
 async def test_config_flow_duplicate_mac(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
-):
+) -> None:
     """Test abort if unique_id configured."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 

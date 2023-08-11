@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "Configuring Wake on Lan using YAML has been moved to integration key.\n\nYour existing YAML configuration will be working for 2 more versions.\n\nMigrate your YAML configuration to the integration key according to the documentation.",
-            "title": "The Wake on Lan YAML configuration has been moved"
-        }
-    }
-}

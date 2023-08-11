@@ -14,7 +14,6 @@ from .conftest import (
     PASSWORD,
     RAIN_DELAY_OFF,
     RAIN_SENSOR_OFF,
-    SERIAL_RESPONSE,
     ZONE_3_ON_RESPONSE,
     ZONE_5_ON_RESPONSE,
     ZONE_OFF_RESPONSE,
@@ -211,35 +210,29 @@ async def test_irrigation_service(
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_data",
+    ("yaml_config", "config_entry_data"),
     [
         (
+            {},
             {
-                DOMAIN: {
-                    "host": HOST,
-                    "password": PASSWORD,
-                    "trigger_time": 360,
-                    "zones": {
-                        1: {
-                            "friendly_name": "Garden Sprinkler",
-                        },
-                        2: {
-                            "friendly_name": "Back Yard",
-                        },
-                    },
-                }
+                "host": HOST,
+                "password": PASSWORD,
+                "trigger_time": 360,
+                "serial_number": "0x1263613994342",
+                "imported_names": {
+                    "1": "Garden Sprinkler",
+                    "2": "Back Yard",
+                },
             },
-            None,
         )
     ],
 )
-async def test_yaml_config(
+async def test_yaml_imported_config(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
 ) -> None:
-    """Test switch platform with fake data that creates 7 zones with one enabled."""
-    responses.insert(0, mock_response(SERIAL_RESPONSE))  # Extra import request
+    """Test a config entry that was previously imported from yaml."""
     assert await setup_integration()
 
     assert hass.states.get("switch.garden_sprinkler")

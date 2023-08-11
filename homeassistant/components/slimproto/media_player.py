@@ -15,19 +15,22 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import DEFAULT_NAME, DOMAIN, PLAYER_EVENT
 
 STATE_MAPPING = {
-    PlayerState.IDLE: MediaPlayerState.IDLE,
+    PlayerState.STOPPED: MediaPlayerState.IDLE,
     PlayerState.PLAYING: MediaPlayerState.PLAYING,
+    PlayerState.BUFFER_READY: MediaPlayerState.PLAYING,
+    PlayerState.BUFFERING: MediaPlayerState.PLAYING,
     PlayerState.PAUSED: MediaPlayerState.PAUSED,
 }
 
@@ -87,6 +90,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_name = None
 
     def __init__(self, slimserver: SlimServer, player: SlimClient) -> None:
         """Initialize MediaPlayer entity."""
@@ -175,7 +179,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         await self.player.power(False)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         to_send_media_type: str | None = media_type
@@ -194,7 +198,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         await self.player.play_url(media_id, mime_type=to_send_media_type)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

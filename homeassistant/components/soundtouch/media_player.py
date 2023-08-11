@@ -8,32 +8,26 @@ from typing import Any
 
 from libsoundtouch.device import SoundTouchDevice
 from libsoundtouch.utils import Source
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_START,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -48,47 +42,6 @@ MAP_STATUS = {
 
 ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
 ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
-
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_PORT): cv.port,
-            vol.Optional(CONF_NAME, default=""): cv.string,
-        }
-    ),
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Bose SoundTouch platform."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2022.10.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    _LOGGER.warning(
-        "Configuration of the Bose SoundTouch integration in YAML is "
-        "deprecated and will be removed in Home Assistant 2022.10; Your "
-        "existing configuration has been imported into the UI automatically "
-        "and can be safely removed from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -123,6 +76,8 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: SoundTouchDevice) -> None:
         """Create SoundTouch media player entity."""
@@ -130,7 +85,6 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._device = device
 
         self._attr_unique_id = self._device.config.device_id
-        self._attr_name = self._device.config.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.config.device_id)},
             connections={
@@ -282,7 +236,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
@@ -295,7 +249,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             partial(self.play_media, media_type, media_id, **kwargs)
         )
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
         if re.match(r"http?://", str(media_id)):
@@ -395,7 +351,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return attributes
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(self.hass, media_content_id)

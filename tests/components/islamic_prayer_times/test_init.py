@@ -1,5 +1,4 @@
 """Tests for Islamic Prayer Times init."""
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -9,6 +8,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import islamic_prayer_times
+from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD
+from homeassistant.core import HomeAssistant
 
 from . import (
     NEW_PRAYER_TIMES,
@@ -22,12 +23,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
-def set_utc(hass):
+def set_utc(hass: HomeAssistant) -> None:
     """Set timezone to UTC."""
     hass.config.set_time_zone("UTC")
 
 
-async def test_successful_config_entry(hass):
+async def test_successful_config_entry(hass: HomeAssistant) -> None:
     """Test that Islamic Prayer Times is configured successfully."""
 
     entry = MockConfigEntry(
@@ -44,12 +45,9 @@ async def test_successful_config_entry(hass):
         await hass.async_block_till_done()
 
         assert entry.state is config_entries.ConfigEntryState.LOADED
-        assert entry.options == {
-            islamic_prayer_times.CONF_CALC_METHOD: islamic_prayer_times.DEFAULT_CALC_METHOD
-        }
 
 
-async def test_setup_failed(hass):
+async def test_setup_failed(hass: HomeAssistant) -> None:
     """Test Islamic Prayer Times failed due to an error."""
 
     entry = MockConfigEntry(
@@ -68,7 +66,7 @@ async def test_setup_failed(hass):
         assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing Islamic Prayer Times."""
     entry = MockConfigEntry(
         domain=islamic_prayer_times.DOMAIN,
@@ -88,7 +86,27 @@ async def test_unload_entry(hass):
         assert islamic_prayer_times.DOMAIN not in hass.data
 
 
-async def test_islamic_prayer_times_timestamp_format(hass):
+async def test_options_listener(hass: HomeAssistant) -> None:
+    """Ensure updating options triggers a coordinator refresh."""
+    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        return_value=PRAYER_TIMES,
+    ) as mock_fetch_prayer_times:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_fetch_prayer_times.call_count == 1
+
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_CALC_METHOD: "makkah"}
+        )
+        await hass.async_block_till_done()
+        assert mock_fetch_prayer_times.call_count == 2
+
+
+async def test_islamic_prayer_times_timestamp_format(hass: HomeAssistant) -> None:
     """Test Islamic prayer times timestamp format."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
@@ -100,13 +118,10 @@ async def test_islamic_prayer_times_timestamp_format(hass):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert (
-            hass.data[islamic_prayer_times.DOMAIN].prayer_times_info
-            == PRAYER_TIMES_TIMESTAMPS
-        )
+        assert hass.data[islamic_prayer_times.DOMAIN].data == PRAYER_TIMES_TIMESTAMPS
 
 
-async def test_update(hass):
+async def test_update(hass: HomeAssistant) -> None:
     """Test sensors are updated with new prayer times."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
@@ -116,7 +131,6 @@ async def test_update(hass):
     ) as FetchPrayerTimes, freeze_time(NOW):
         FetchPrayerTimes.side_effect = [
             PRAYER_TIMES,
-            PRAYER_TIMES,
             NEW_PRAYER_TIMES,
         ]
 
@@ -124,13 +138,10 @@ async def test_update(hass):
         await hass.async_block_till_done()
 
         pt_data = hass.data[islamic_prayer_times.DOMAIN]
-        assert pt_data.prayer_times_info == PRAYER_TIMES_TIMESTAMPS
+        assert pt_data.data == PRAYER_TIMES_TIMESTAMPS
 
-        future = pt_data.prayer_times_info["Midnight"] + timedelta(days=1, minutes=1)
+        future = pt_data.data["Midnight"] + timedelta(days=1, minutes=1)
 
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert (
-            hass.data[islamic_prayer_times.DOMAIN].prayer_times_info
-            == NEW_PRAYER_TIMES_TIMESTAMPS
-        )
+        assert pt_data.data == NEW_PRAYER_TIMES_TIMESTAMPS

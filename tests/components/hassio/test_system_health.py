@@ -5,14 +5,18 @@ from unittest.mock import patch
 
 from aiohttp import ClientError
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
 from tests.common import get_system_health_info
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_hassio_system_health(hass, aioclient_mock):
+async def test_hassio_system_health(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test hassio system health."""
     aioclient_mock.get("http://127.0.0.1/info", json={"result": "ok", "data": {}})
     aioclient_mock.get("http://127.0.0.1/host/info", json={"result": "ok", "data": {}})
@@ -69,7 +73,9 @@ async def test_hassio_system_health(hass, aioclient_mock):
     }
 
 
-async def test_hassio_system_health_with_issues(hass, aioclient_mock):
+async def test_hassio_system_health_with_issues(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test hassio system health."""
     aioclient_mock.get("http://127.0.0.1/info", json={"result": "ok", "data": {}})
     aioclient_mock.get("http://127.0.0.1/host/info", json={"result": "ok", "data": {}})

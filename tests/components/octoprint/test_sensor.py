@@ -2,12 +2,13 @@
 from datetime import datetime, timezone
 from unittest.mock import patch
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
-async def test_sensors(hass):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test the underlying sensors."""
     printer = {
         "state": {
@@ -79,7 +80,7 @@ async def test_sensors(hass):
     assert entry.unique_id == "Estimated Finish Time-uuid"
 
 
-async def test_sensors_no_target_temp(hass):
+async def test_sensors_no_target_temp(hass: HomeAssistant) -> None:
     """Test the underlying sensors."""
     printer = {
         "state": {
@@ -110,7 +111,7 @@ async def test_sensors_no_target_temp(hass):
     assert entry.unique_id == "target tool1 temp-uuid"
 
 
-async def test_sensors_paused(hass):
+async def test_sensors_paused(hass: HomeAssistant) -> None:
     """Test the underlying sensors."""
     printer = {
         "state": {
@@ -146,7 +147,7 @@ async def test_sensors_paused(hass):
     assert entry.unique_id == "Estimated Finish Time-uuid"
 
 
-async def test_sensors_printer_disconnected(hass):
+async def test_sensors_printer_disconnected(hass: HomeAssistant) -> None:
     """Test the underlying sensors."""
     job = {
         "job": {},

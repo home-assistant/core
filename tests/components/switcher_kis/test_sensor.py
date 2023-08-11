@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.switcher_kis.const import DATA_DEVICE, DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
@@ -28,7 +29,7 @@ DEVICE_SENSORS_TUPLE = (
 
 
 @pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)
-async def test_sensor_platform(hass, mock_bridge):
+async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""
     await init_integration(hass)
     assert mock_bridge
@@ -44,7 +45,7 @@ async def test_sensor_platform(hass, mock_bridge):
             assert state.state == str(getattr(device, sensor))
 
 
-async def test_sensor_disabled(hass, mock_bridge):
+async def test_sensor_disabled(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor disabled by default."""
     await init_integration(hass)
     assert mock_bridge
@@ -73,7 +74,7 @@ async def test_sensor_disabled(hass, mock_bridge):
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_sensor_update(hass, mock_bridge, monkeypatch):
+async def test_sensor_update(hass: HomeAssistant, mock_bridge, monkeypatch) -> None:
     """Test sensor update."""
     await init_integration(hass)
     assert mock_bridge

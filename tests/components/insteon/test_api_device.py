@@ -5,6 +5,7 @@ from unittest.mock import patch
 from pyinsteon.constants import DeviceAction
 from pyinsteon.topics import DEVICE_LIST_CHANGED
 from pyinsteon.utils import publish_topic
+import pytest
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.api import async_load_api
@@ -17,12 +18,14 @@ from homeassistant.components.insteon.api.device import (
     async_device_name,
 )
 from homeassistant.components.insteon.const import DOMAIN, MULTIPLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def _async_setup(hass, hass_ws_client):
@@ -50,7 +53,9 @@ async def _async_setup(hass, hass_ws_client):
     return ws_client, devices, ha_device, dev_reg
 
 
-async def test_get_device_api(hass, hass_ws_client):
+async def test_get_device_api(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting an Insteon device."""
 
     ws_client, devices, ha_device, _ = await _async_setup(hass, hass_ws_client)
@@ -65,7 +70,9 @@ async def test_get_device_api(hass, hass_ws_client):
         assert result["address"] == "11.11.11"
 
 
-async def test_no_ha_device(hass, hass_ws_client):
+async def test_no_ha_device(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test response when no HA device exists."""
 
     ws_client, devices, _, _ = await _async_setup(hass, hass_ws_client)
@@ -79,7 +86,9 @@ async def test_no_ha_device(hass, hass_ws_client):
         assert msg["error"]["message"] == HA_DEVICE_NOT_FOUND
 
 
-async def test_no_insteon_device(hass, hass_ws_client):
+async def test_no_insteon_device(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test response when no Insteon device exists."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -125,7 +134,9 @@ async def test_no_insteon_device(hass, hass_ws_client):
         assert msg["error"]["message"] == INSTEON_DEVICE_NOT_FOUND
 
 
-async def test_get_ha_device_name(hass, hass_ws_client):
+async def test_get_ha_device_name(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting the HA device name from an Insteon address."""
 
     _, devices, _, device_reg = await _async_setup(hass, hass_ws_client)
@@ -144,7 +155,11 @@ async def test_get_ha_device_name(hass, hass_ws_client):
         assert name == ""
 
 
-async def test_add_device_api(hass, hass_ws_client):
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_add_device_api(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test adding an Insteon device."""
 
     ws_client, devices, _, _ = await _async_setup(hass, hass_ws_client)
@@ -172,7 +187,9 @@ async def test_add_device_api(hass, hass_ws_client):
         assert msg["event"]["type"] == "linking_stopped"
 
 
-async def test_cancel_add_device(hass, hass_ws_client):
+async def test_cancel_add_device(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test cancelling adding of a new device."""
 
     ws_client, devices, _, _ = await _async_setup(hass, hass_ws_client)

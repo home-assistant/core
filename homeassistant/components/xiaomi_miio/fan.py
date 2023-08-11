@@ -204,7 +204,7 @@ async def async_setup_entry(
     entities: list[FanEntity] = []
     entity: FanEntity
 
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
     hass.data.setdefault(DATA_KEY, {})
@@ -275,9 +275,7 @@ async def async_setup_entry(
             if not entity_method:
                 continue
             await entity_method(**params)
-            update_tasks.append(
-                hass.async_create_task(entity.async_update_ha_state(True))
-            )
+            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
         if update_tasks:
             await asyncio.wait(update_tasks)
@@ -293,6 +291,8 @@ async def async_setup_entry(
 
 class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     """Representation of a generic Xiaomi device."""
+
+    _attr_name = None
 
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""

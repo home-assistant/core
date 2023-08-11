@@ -23,7 +23,9 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
@@ -35,7 +37,9 @@ from .common import (
 HSM200_V1_ENTITY = "light.hsm200"
 
 
-async def test_light(hass, client, bulb_6_multi_color, integration):
+async def test_light(
+    hass: HomeAssistant, client, bulb_6_multi_color, integration
+) -> None:
     """Test the light entity."""
     node = bulb_6_multi_color
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
@@ -65,6 +69,13 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         "property": "targetValue",
     }
     assert args["value"] == 255
+
+    # Due to optimistic updates, the state should be on even though the Z-Wave state
+    # hasn't been updated yet
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+
+    assert state
+    assert state.state == STATE_ON
 
     client.async_send_command.reset_mock()
 
@@ -394,8 +405,37 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     }
     assert args["value"] == 0
 
+    client.async_send_command.reset_mock()
 
-async def test_v4_dimmer_light(hass, client, eaton_rf9640_dimmer, integration):
+    # Test brightness update to None from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 39,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": None,
+                "prevValue": 99,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_COLOR_MODE not in state.attributes
+    assert ATTR_BRIGHTNESS not in state.attributes
+
+
+async def test_v4_dimmer_light(
+    hass: HomeAssistant, client, eaton_rf9640_dimmer, integration
+) -> None:
     """Test a light that supports MultiLevelSwitch CommandClass version 4."""
     state = hass.states.get(EATON_RF9640_ENTITY)
 
@@ -405,13 +445,15 @@ async def test_v4_dimmer_light(hass, client, eaton_rf9640_dimmer, integration):
     assert state.attributes[ATTR_BRIGHTNESS] == 57
 
 
-async def test_optional_light(hass, client, aeon_smart_switch_6, integration):
+async def test_optional_light(
+    hass: HomeAssistant, client, aeon_smart_switch_6, integration
+) -> None:
     """Test a device that has an additional light endpoint being identified as light."""
     state = hass.states.get(AEON_SMART_SWITCH_LIGHT_ENTITY)
     assert state.state == STATE_ON
 
 
-async def test_rgbw_light(hass, client, zen_31, integration):
+async def test_rgbw_light(hass: HomeAssistant, client, zen_31, integration) -> None:
     """Test the light entity."""
     state = hass.states.get(ZEN_31_ENTITY)
 
@@ -451,7 +493,9 @@ async def test_rgbw_light(hass, client, zen_31, integration):
     client.async_send_command.reset_mock()
 
 
-async def test_light_none_color_value(hass, light_color_null_values, integration):
+async def test_light_none_color_value(
+    hass: HomeAssistant, light_color_null_values, integration
+) -> None:
     """Test the light entity can handle None value in current color Value."""
     entity_id = "light.repeater"
     state = hass.states.get(entity_id)
@@ -462,7 +506,9 @@ async def test_light_none_color_value(hass, light_color_null_values, integration
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
 
 
-async def test_black_is_off(hass, client, express_controls_ezmultipli, integration):
+async def test_black_is_off(
+    hass: HomeAssistant, client, express_controls_ezmultipli, integration
+) -> None:
     """Test the black is off light entity."""
     node = express_controls_ezmultipli
     state = hass.states.get(HSM200_V1_ENTITY)
@@ -588,3 +634,50 @@ async def test_black_is_off(hass, client, express_controls_ezmultipli, integrati
     assert args["value"] == {"red": 0, "green": 255, "blue": 0}
 
     client.async_send_command.reset_mock()
+
+    # Force the light to turn on
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "newValue": None,
+                "prevValue": {
+                    "red": 0,
+                    "green": 255,
+                    "blue": 0,
+                },
+                "propertyName": "currentColor",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(HSM200_V1_ENTITY)
+    assert state.state == STATE_UNKNOWN
+
+    client.async_send_command.reset_mock()
+
+    # Assert that call fails if attribute is added to service call
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_RGBW_COLOR: (255, 76, 255, 0)},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "endpoint": 0,
+        "property": "targetColor",
+    }
+    assert args["value"] == {"red": 255, "green": 76, "blue": 255}

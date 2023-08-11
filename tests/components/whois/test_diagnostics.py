@@ -1,4 +1,6 @@
 """Tests for the diagnostics data provided by the Whois integration."""
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -10,15 +12,10 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test diagnostics."""
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration
-    ) == {
-        "creation_date": "2019-01-01T00:00:00",
-        "expiration_date": "2023-01-01T00:00:00",
-        "last_updated": "2022-01-01T00:00:00+01:00",
-        "status": "OK",
-        "statuses": ["OK"],
-        "dnssec": True,
-    }
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+        == snapshot
+    )

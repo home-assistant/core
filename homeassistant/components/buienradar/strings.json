@@ -25,5 +25,465 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "stationname": {
+        "name": "Station name"
+      },
+      "barometerfc": {
+        "name": "Barometer value"
+      },
+      "barometerfcname": {
+        "name": "Barometer"
+      },
+      "barometerfcnamenl": {
+        "name": "[%key:component::buienradar::entity::sensor::barometerfcname::name%]"
+      },
+      "condition": {
+        "name": "Condition",
+        "state": {
+          "clear": "Clear",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "conditioncode": {
+        "name": "Condition code"
+      },
+      "conditiondetailed": {
+        "name": "Detailed condition",
+        "state": {
+          "clear": "Clear",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "partlycloudy-fog": "Partly cloudy, fog",
+          "partlycloudy-light-rain": "Partly cloudy, light rain",
+          "partlycloudy-rain": "Partly cloudy, rain",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "light-rain": "Light rain",
+          "light-snow": "Light snow",
+          "partlycloudy-light-snow": "Partly cloudy, light snow",
+          "partlycloudy-snow": "Partly cloudy, snow",
+          "partlycloudy-lightning": "Partly cloudy, lightning",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "conditionexact": {
+        "name": "Full condition"
+      },
+      "symbol": {
+        "name": "Symbol"
+      },
+      "feeltemperature": {
+        "name": "Feel temperature"
+      },
+      "groundtemperature": {
+        "name": "Ground temperature"
+      },
+      "windforce": {
+        "name": "Wind force"
+      },
+      "winddirection": {
+        "name": "Wind direction"
+      },
+      "windazimuth": {
+        "name": "Wind direction azimuth"
+      },
+      "visibility": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
+      },
+      "windgust": {
+        "name": "Wind gust"
+      },
+      "precipitation_forecast_average": {
+        "name": "Precipitation forecast average"
+      },
+      "precipitation_forecast_total": {
+        "name": "Precipitation forecast total"
+      },
+      "rainlast24hour": {
+        "name": "Rain last 24h"
+      },
+      "rainlasthour": {
+        "name": "Rain last hour"
+      },
+      "temperature_1d": {
+        "name": "Temperature 1d"
+      },
+      "temperature_2d": {
+        "name": "Temperature 2d"
+      },
+      "temperature_3d": {
+        "name": "Temperature 3d"
+      },
+      "temperature_4d": {
+        "name": "Temperature 4d"
+      },
+      "temperature_5d": {
+        "name": "Temperature 5d"
+      },
+      "mintemp_1d": {
+        "name": "Minimum temperature 1d"
+      },
+      "mintemp_2d": {
+        "name": "Minimum temperature 2d"
+      },
+      "mintemp_3d": {
+        "name": "Minimum temperature 3d"
+      },
+      "mintemp_4d": {
+        "name": "Minimum temperature 4d"
+      },
+      "mintemp_5d": {
+        "name": "Minimum temperature 5d"
+      },
+      "rain_1d": {
+        "name": "Rain 1d"
+      },
+      "rain_2d": {
+        "name": "Rain 2d"
+      },
+      "rain_3d": {
+        "name": "Rain 3d"
+      },
+      "rain_4d": {
+        "name": "Rain 4d"
+      },
+      "rain_5d": {
+        "name": "Rain 5d"
+      },
+      "minrain_1d": {
+        "name": "Minimum rain 1d"
+      },
+      "minrain_2d": {
+        "name": "Minimum rain 2d"
+      },
+      "minrain_3d": {
+        "name": "Minimum rain 3d"
+      },
+      "minrain_4d": {
+        "name": "Minimum rain 4d"
+      },
+      "minrain_5d": {
+        "name": "Minimum rain 5d"
+      },
+      "maxrain_1d": {
+        "name": "Maximum rain 1d"
+      },
+      "maxrain_2d": {
+        "name": "Maximum rain 2d"
+      },
+      "maxrain_3d": {
+        "name": "Maximum rain 3d"
+      },
+      "maxrain_4d": {
+        "name": "Maximum rain 4d"
+      },
+      "maxrain_5d": {
+        "name": "Maximum rain 5d"
+      },
+      "rainchance_1d": {
+        "name": "Rainchance 1d"
+      },
+      "rainchance_2d": {
+        "name": "Rainchance 2d"
+      },
+      "rainchance_3d": {
+        "name": "Rainchance 3d"
+      },
+      "rainchance_4d": {
+        "name": "Rainchance 4d"
+      },
+      "rainchance_5d": {
+        "name": "Rainchance 5d"
+      },
+      "sunchance_1d": {
+        "name": "Sunchance 1d"
+      },
+      "sunchance_2d": {
+        "name": "Sunchance 2d"
+      },
+      "sunchance_3d": {
+        "name": "Sunchance 3d"
+      },
+      "sunchance_4d": {
+        "name": "Sunchance 4d"
+      },
+      "sunchance_5d": {
+        "name": "Sunchance 5d"
+      },
+      "windforce_1d": {
+        "name": "Wind force 1d"
+      },
+      "windforce_2d": {
+        "name": "Wind force 2d"
+      },
+      "windforce_3d": {
+        "name": "Wind force 3d"
+      },
+      "windforce_4d": {
+        "name": "Wind force 4d"
+      },
+      "windforce_5d": {
+        "name": "Wind force 5d"
+      },
+      "windspeed_1d": {
+        "name": "Wind speed 1d"
+      },
+      "windspeed_2d": {
+        "name": "Wind speed 2d"
+      },
+      "windspeed_3d": {
+        "name": "Wind speed 3d"
+      },
+      "windspeed_4d": {
+        "name": "Wind speed 4d"
+      },
+      "windspeed_5d": {
+        "name": "Wind speed 5d"
+      },
+      "winddirection_1d": {
+        "name": "Wind direction 1d"
+      },
+      "winddirection_2d": {
+        "name": "Wind direction 2d"
+      },
+      "winddirection_3d": {
+        "name": "Wind direction 3d"
+      },
+      "winddirection_4d": {
+        "name": "Wind direction 4d"
+      },
+      "winddirection_5d": {
+        "name": "Wind direction 5d"
+      },
+      "windazimuth_1d": {
+        "name": "Wind direction azimuth 1d"
+      },
+      "windazimuth_2d": {
+        "name": "Wind direction azimuth 2d"
+      },
+      "windazimuth_3d": {
+        "name": "Wind direction azimuth 3d"
+      },
+      "windazimuth_4d": {
+        "name": "Wind direction azimuth 4d"
+      },
+      "windazimuth_5d": {
+        "name": "Wind direction azimuth 5d"
+      },
+      "condition_1d": {
+        "name": "Condition 1d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "condition_2d": {
+        "name": "Condition 2d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "condition_3d": {
+        "name": "Condition 3d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "condition_4d": {
+        "name": "Condition 4d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "condition_5d": {
+        "name": "Condition 5d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::condition::state::clear%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "conditioncode_1d": {
+        "name": "Condition code 1d"
+      },
+      "conditioncode_2d": {
+        "name": "Condition code 2d"
+      },
+      "conditioncode_3d": {
+        "name": "Condition code 3d"
+      },
+      "conditioncode_4d": {
+        "name": "Condition code 4d"
+      },
+      "conditioncode_5d": {
+        "name": "Condition code 5d"
+      },
+      "conditiondetailed_1d": {
+        "name": "Detailed condition 1d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
+          "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
+          "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
+          "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
+          "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
+          "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
+          "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "conditiondetailed_2d": {
+        "name": "Detailed condition 2d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
+          "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
+          "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
+          "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
+          "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
+          "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
+          "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "conditiondetailed_3d": {
+        "name": "Detailed condition 3d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
+          "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
+          "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
+          "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
+          "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
+          "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
+          "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "conditiondetailed_4d": {
+        "name": "Detailed condition 4d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
+          "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
+          "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
+          "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
+          "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
+          "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
+          "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
+          "snowy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy%]",
+          "snowy-rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy-rainy%]",
+          "lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::lightning%]"
+        }
+      },
+      "conditiondetailed_5d": {
+        "name": "Detailed condition 5d",
+        "state": {
+          "clear": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::clear%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "partlycloudy-fog": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-fog%]",
+          "partlycloudy-light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-rain%]",
+          "partlycloudy-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-rain%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "light-rain": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-rain%]",
+          "light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::light-snow%]",
+          "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
+          "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
+          "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
+      },
+      "conditionexact_1d": {
+        "name": "Full condition 1d"
+      },
+      "conditionexact_2d": {
+        "name": "Full condition 2d"
+      },
+      "conditionexact_3d": {
+        "name": "Full condition 3d"
+      },
+      "conditionexact_4d": {
+        "name": "Full condition 4d"
+      },
+      "conditionexact_5d": {
+        "name": "Full condition 5d"
+      },
+      "symbol_1d": {
+        "name": "Symbol 1d"
+      },
+      "symbol_2d": {
+        "name": "Symbol 2d"
+      },
+      "symbol_3d": {
+        "name": "Symbol 3d"
+      },
+      "symbol_4d": {
+        "name": "Symbol 4d"
+      },
+      "symbol_5d": {
+        "name": "Symbol 5d"
+      }
+    }
   }
 }

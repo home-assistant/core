@@ -1,9 +1,0 @@
-{
-    "config": {
-        "step": {
-            "user": {
-                "description": "Fournissez l'URL de l'API REST de l'Open Thread Border Router"
-            }
-        }
-    }
-}

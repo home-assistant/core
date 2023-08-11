@@ -1,11 +1,11 @@
 {
   "domain": "google_mail",
   "name": "Google Mail",
+  "codeowners": ["@tkdrob"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
-  "documentation": "https://www.home-assistant.io/integrations/google_mail/",
-  "requirements": ["google-api-python-client==2.71.0"],
-  "codeowners": ["@tkdrob"],
+  "documentation": "https://www.home-assistant.io/integrations/google_mail",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "integration_type": "service"
+  "requirements": ["google-api-python-client==2.71.0"]
 }

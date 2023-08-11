@@ -56,6 +56,7 @@
       "btn_up": "{subtype} button up",
       "single_push": "{subtype} single push",
       "double_push": "{subtype} double push",
+      "triple_push": "{subtype} triple push",
       "long_push": "{subtype} long push"
     }
   },
@@ -75,10 +76,57 @@
   "selector": {
     "ble_scanner_mode": {
       "options": {
-        "disabled": "Disabled",
-        "active": "Active",
+        "disabled": "[%key:common::state::disabled%]",
+        "active": "[%key:common::state::active%]",
         "passive": "Passive"
       }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "gas": {
+        "state_attributes": {
+          "detected": {
+            "state": {
+              "unknown": "Unknown",
+              "none": "None",
+              "mild": "Mild",
+              "heavy": "Heavy",
+              "test": "Test"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "operation": {
+        "state": {
+          "unknown": "Unknown",
+          "warmup": "Warm-up",
+          "normal": "Normal",
+          "fault": "Fault"
+        },
+        "state_attributes": {
+          "self_test": {
+            "state": {
+              "not_completed": "Not completed",
+              "completed": "Completed",
+              "running": "Running",
+              "pending": "Pending"
+            }
+          }
+        }
+      }
+    }
+  },
+  "issues": {
+    "device_not_calibrated": {
+      "title": "Shelly device {device_name} is not calibrated",
+      "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'."
+    },
+    "push_update_failure": {
+      "title": "Shelly device {device_name} push update failure",
+      "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration."
     }
   }
 }

@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "Konfigur\u00e1cia Wake on Lan pomocou YAML bola presunut\u00e1 do integra\u010dn\u00e9ho k\u013e\u00fa\u010da. \n\n Va\u0161a existuj\u00faca konfigur\u00e1cia YAML bude fungova\u0165 pre \u010fal\u0161ie 2 verzie. \n\n Migrujte svoju konfigur\u00e1ciu YAML na integra\u010dn\u00fd k\u013e\u00fa\u010d pod\u013ea dokument\u00e1cie.",
-            "title": "Konfigur\u00e1cia Wake on Lan YAML bola presunut\u00e1"
-        }
-    }
-}

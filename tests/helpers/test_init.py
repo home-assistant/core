@@ -5,7 +5,7 @@ from collections import OrderedDict
 from homeassistant import helpers
 
 
-def test_extract_domain_configs():
+def test_extract_domain_configs() -> None:
     """Test the extraction of domain configuration."""
     config = {
         "zone": None,
@@ -20,7 +20,7 @@ def test_extract_domain_configs():
     )
 
 
-def test_config_per_platform():
+def test_config_per_platform() -> None:
     """Test config per platform method."""
     config = OrderedDict(
         [

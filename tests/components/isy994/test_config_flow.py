@@ -3,25 +3,17 @@ import re
 from unittest.mock import patch
 
 from pyisy import ISYConnectionError, ISYInvalidAuthError
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, ssdp
 from homeassistant.components.isy994.const import (
-    CONF_IGNORE_STRING,
-    CONF_RESTORE_LIGHT_STATE,
-    CONF_SENSOR_STRING,
     CONF_TLS_VER,
-    CONF_VAR_SENSOR_STRING,
     DOMAIN,
     ISY_URL_POSTFIX,
     UDN_UUID_PREFIX,
 )
-from homeassistant.config_entries import (
-    SOURCE_DHCP,
-    SOURCE_IGNORE,
-    SOURCE_IMPORT,
-    SOURCE_SSDP,
-)
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_IGNORE, SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -49,27 +41,6 @@ MOCK_IOX_USER_INPUT = {
     CONF_USERNAME: MOCK_USERNAME,
     CONF_PASSWORD: MOCK_PASSWORD,
     CONF_TLS_VER: MOCK_TLS_VERSION,
-}
-MOCK_IMPORT_WITH_SSL = {
-    CONF_HOST: f"https://{MOCK_HOSTNAME}",
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_TLS_VER: MOCK_TLS_VERSION,
-}
-MOCK_IMPORT_BASIC_CONFIG = {
-    CONF_HOST: f"http://{MOCK_HOSTNAME}",
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-}
-MOCK_IMPORT_FULL_CONFIG = {
-    CONF_HOST: f"http://{MOCK_HOSTNAME}",
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_IGNORE_STRING: MOCK_IGNORE_STRING,
-    CONF_RESTORE_LIGHT_STATE: MOCK_RESTORE_LIGHT_STATE,
-    CONF_SENSOR_STRING: MOCK_SENSOR_STRING,
-    CONF_TLS_VER: MOCK_TLS_VERSION,
-    CONF_VAR_SENSOR_STRING: MOCK_VARIABLE_SENSOR_STRING,
 }
 
 MOCK_DEVICE_NAME = "Name of the device"
@@ -110,7 +81,7 @@ def _get_schema_default(schema, key_name):
     raise KeyError(f"{key_name} not found in schema")
 
 
-async def test_form(hass: HomeAssistant):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -120,8 +91,6 @@ async def test_form(hass: HomeAssistant):
     assert result["errors"] == {}
 
     with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
         PATCH_ASYNC_SETUP_ENTRY,
         return_value=True,
     ) as mock_setup_entry:
@@ -134,11 +103,10 @@ async def test_form(hass: HomeAssistant):
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_host(hass: HomeAssistant):
+async def test_form_invalid_host(hass: HomeAssistant) -> None:
     """Test we handle invalid host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -158,7 +126,7 @@ async def test_form_invalid_host(hass: HomeAssistant):
     assert result2["errors"] == {"base": "invalid_host"}
 
 
-async def test_form_invalid_auth(hass: HomeAssistant):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -176,7 +144,7 @@ async def test_form_invalid_auth(hass: HomeAssistant):
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
-async def test_form_unknown_exeption(hass: HomeAssistant):
+async def test_form_unknown_exeption(hass: HomeAssistant) -> None:
     """Test we handle generic exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -194,7 +162,7 @@ async def test_form_unknown_exeption(hass: HomeAssistant):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_isy_connection_error(hass: HomeAssistant):
+async def test_form_isy_connection_error(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -212,7 +180,9 @@ async def test_form_isy_connection_error(hass: HomeAssistant):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_isy_parse_response_error(hass: HomeAssistant, caplog):
+async def test_form_isy_parse_response_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we handle poorly formatted XML response from ISY."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -230,7 +200,7 @@ async def test_form_isy_parse_response_error(hass: HomeAssistant, caplog):
     assert "ISY Could not parse response, poorly formatted XML." in caplog.text
 
 
-async def test_form_no_name_in_response(hass: HomeAssistant):
+async def test_form_no_name_in_response(hass: HomeAssistant) -> None:
     """Test we handle invalid response from ISY with name not set."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -250,7 +220,7 @@ async def test_form_no_name_in_response(hass: HomeAssistant):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_existing_config_entry(hass: HomeAssistant):
+async def test_form_existing_config_entry(hass: HomeAssistant) -> None:
     """Test if config entry already exists."""
     MockConfigEntry(domain=DOMAIN, unique_id=MOCK_UUID).add_to_hass(hass)
 
@@ -266,72 +236,6 @@ async def test_form_existing_config_entry(hass: HomeAssistant):
             MOCK_USER_INPUT,
         )
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
-
-
-async def test_import_flow_some_fields(hass: HomeAssistant) -> None:
-    """Test import config flow with just the basic fields."""
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ), patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=MOCK_IMPORT_BASIC_CONFIG,
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_HOST] == f"http://{MOCK_HOSTNAME}"
-    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
-    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-
-
-async def test_import_flow_with_https(hass: HomeAssistant) -> None:
-    """Test import config with https."""
-
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ), patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=MOCK_IMPORT_WITH_SSL,
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_HOST] == f"https://{MOCK_HOSTNAME}"
-    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
-    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-
-
-async def test_import_flow_all_fields(hass: HomeAssistant) -> None:
-    """Test import config flow with all fields."""
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ), patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=MOCK_IMPORT_FULL_CONFIG,
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_HOST] == f"http://{MOCK_HOSTNAME}"
-    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
-    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-    assert result["data"][CONF_IGNORE_STRING] == MOCK_IGNORE_STRING
-    assert result["data"][CONF_RESTORE_LIGHT_STATE] == MOCK_RESTORE_LIGHT_STATE
-    assert result["data"][CONF_SENSOR_STRING] == MOCK_SENSOR_STRING
-    assert result["data"][CONF_VAR_SENSOR_STRING] == MOCK_VARIABLE_SENSOR_STRING
-    assert result["data"][CONF_TLS_VER] == MOCK_TLS_VERSION
 
 
 async def test_form_ssdp_already_configured(hass: HomeAssistant) -> None:
@@ -359,7 +263,7 @@ async def test_form_ssdp_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_form_ssdp(hass: HomeAssistant):
+async def test_form_ssdp(hass: HomeAssistant) -> None:
     """Test we can setup from ssdp."""
 
     result = await hass.config_entries.flow.async_init(
@@ -380,8 +284,6 @@ async def test_form_ssdp(hass: HomeAssistant):
     assert result["errors"] == {}
 
     with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
         PATCH_ASYNC_SETUP_ENTRY,
         return_value=True,
     ) as mock_setup_entry:
@@ -395,11 +297,10 @@ async def test_form_ssdp(hass: HomeAssistant):
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_ssdp_existing_entry(hass: HomeAssistant):
+async def test_form_ssdp_existing_entry(hass: HomeAssistant) -> None:
     """Test we update the ip of an existing entry from ssdp."""
 
     entry = MockConfigEntry(
@@ -430,7 +331,7 @@ async def test_form_ssdp_existing_entry(hass: HomeAssistant):
     assert entry.data[CONF_HOST] == f"http://3.3.3.3:80{ISY_URL_POSTFIX}"
 
 
-async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant):
+async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant) -> None:
     """Test we update the ip of an existing entry from ssdp with no port."""
 
     entry = MockConfigEntry(
@@ -461,7 +362,9 @@ async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant):
     assert entry.data[CONF_HOST] == f"http://3.3.3.3:80/{ISY_URL_POSTFIX}"
 
 
-async def test_form_ssdp_existing_entry_with_alternate_port(hass: HomeAssistant):
+async def test_form_ssdp_existing_entry_with_alternate_port(
+    hass: HomeAssistant,
+) -> None:
     """Test we update the ip of an existing entry from ssdp with an alternate port."""
 
     entry = MockConfigEntry(
@@ -492,7 +395,7 @@ async def test_form_ssdp_existing_entry_with_alternate_port(hass: HomeAssistant)
     assert entry.data[CONF_HOST] == f"http://3.3.3.3:1443/{ISY_URL_POSTFIX}"
 
 
-async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant):
+async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant) -> None:
     """Test we update the ip of an existing entry from ssdp with no port and https."""
 
     entry = MockConfigEntry(
@@ -523,7 +426,7 @@ async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant):
     assert entry.data[CONF_HOST] == f"https://3.3.3.3:443/{ISY_URL_POSTFIX}"
 
 
-async def test_form_dhcp(hass: HomeAssistant):
+async def test_form_dhcp(hass: HomeAssistant) -> None:
     """Test we can setup from dhcp."""
 
     result = await hass.config_entries.flow.async_init(
@@ -540,8 +443,6 @@ async def test_form_dhcp(hass: HomeAssistant):
     assert result["errors"] == {}
 
     with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
         PATCH_ASYNC_SETUP_ENTRY,
         return_value=True,
     ) as mock_setup_entry:
@@ -555,11 +456,10 @@ async def test_form_dhcp(hass: HomeAssistant):
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_dhcp_with_polisy(hass: HomeAssistant):
+async def test_form_dhcp_with_polisy(hass: HomeAssistant) -> None:
     """Test we can setup from dhcp with polisy."""
 
     result = await hass.config_entries.flow.async_init(
@@ -580,8 +480,6 @@ async def test_form_dhcp_with_polisy(hass: HomeAssistant):
     )
 
     with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
         PATCH_ASYNC_SETUP_ENTRY,
         return_value=True,
     ) as mock_setup_entry:
@@ -595,11 +493,10 @@ async def test_form_dhcp_with_polisy(hass: HomeAssistant):
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_IOX_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_dhcp_with_eisy(hass: HomeAssistant):
+async def test_form_dhcp_with_eisy(hass: HomeAssistant) -> None:
     """Test we can setup from dhcp with eisy."""
 
     result = await hass.config_entries.flow.async_init(
@@ -620,8 +517,6 @@ async def test_form_dhcp_with_eisy(hass: HomeAssistant):
     )
 
     with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
         PATCH_ASYNC_SETUP_ENTRY,
         return_value=True,
     ) as mock_setup_entry:
@@ -635,11 +530,10 @@ async def test_form_dhcp_with_eisy(hass: HomeAssistant):
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_IOX_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_dhcp_existing_entry(hass: HomeAssistant):
+async def test_form_dhcp_existing_entry(hass: HomeAssistant) -> None:
     """Test we update the ip of an existing entry from dhcp."""
 
     entry = MockConfigEntry(
@@ -666,7 +560,7 @@ async def test_form_dhcp_existing_entry(hass: HomeAssistant):
     assert entry.data[CONF_HOST] == f"http://1.2.3.4{ISY_URL_POSTFIX}"
 
 
-async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
+async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant) -> None:
     """Test we update the ip of an existing entry from dhcp preserves port."""
 
     entry = MockConfigEntry(
@@ -697,7 +591,7 @@ async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
     assert entry.data[CONF_USERNAME] == "bob"
 
 
-async def test_form_dhcp_existing_ignored_entry(hass: HomeAssistant):
+async def test_form_dhcp_existing_ignored_entry(hass: HomeAssistant) -> None:
     """Test we handled an ignored entry from dhcp."""
 
     entry = MockConfigEntry(
@@ -721,7 +615,7 @@ async def test_form_dhcp_existing_ignored_entry(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth(hass):
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,

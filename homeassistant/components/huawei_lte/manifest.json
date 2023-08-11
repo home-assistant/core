@@ -1,8 +1,11 @@
 {
   "domain": "huawei_lte",
   "name": "Huawei LTE",
+  "codeowners": ["@scop", "@fphammerle"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/huawei_lte",
+  "iot_class": "local_polling",
+  "loggers": ["huawei_lte_api.Session"],
   "requirements": [
     "huawei-lte-api==1.6.11",
     "stringcase==1.2.0",
@@ -21,8 +24,5 @@
       "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
       "manufacturer": "SOYEA TECHNOLOGY CO., LTD."
     }
-  ],
-  "codeowners": ["@scop", "@fphammerle"],
-  "iot_class": "local_polling",
-  "loggers": ["huawei_lte_api.Session"]
+  ]
 }

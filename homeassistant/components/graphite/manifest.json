@@ -1,7 +1,7 @@
 {
   "domain": "graphite",
   "name": "Graphite",
-  "documentation": "https://www.home-assistant.io/integrations/graphite",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/graphite",
   "iot_class": "local_push"
 }

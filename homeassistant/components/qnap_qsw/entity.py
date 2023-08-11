@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
 from aioqsw.const import (
@@ -14,12 +15,11 @@ from aioqsw.const import (
     QSD_SYSTEM_BOARD,
 )
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER
@@ -145,7 +145,7 @@ class QswFirmwareEntity(CoordinatorEntity[QswFirmwareCoordinator]):
     def get_device_value(self, key: str, subkey: str) -> Any:
         """Return device value by key."""
         value = None
-        if key in self.coordinator.data:
+        if self.coordinator.data is not None and key in self.coordinator.data:
             data = self.coordinator.data[key]
             if subkey in data:
                 value = data[subkey]

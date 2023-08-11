@@ -15,7 +15,7 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
     assert "use unit_conversion.PressureConverter instead" in caplog.text
 
 
-def test_convert_same_unit():
+def test_convert_same_unit() -> None:
     """Test conversion from any unit to same unit."""
     assert pressure_util.convert(2, UnitOfPressure.PA, UnitOfPressure.PA) == 2
     assert pressure_util.convert(3, UnitOfPressure.HPA, UnitOfPressure.HPA) == 3
@@ -26,7 +26,7 @@ def test_convert_same_unit():
     assert pressure_util.convert(8, UnitOfPressure.MMHG, UnitOfPressure.MMHG) == 8
 
 
-def test_convert_invalid_unit():
+def test_convert_invalid_unit() -> None:
     """Test exception is thrown for invalid units."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         pressure_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
@@ -35,13 +35,13 @@ def test_convert_invalid_unit():
         pressure_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 
-def test_convert_nonnumeric_value():
+def test_convert_nonnumeric_value() -> None:
     """Test exception is thrown for nonnumeric type."""
     with pytest.raises(TypeError):
         pressure_util.convert("a", UnitOfPressure.HPA, UnitOfPressure.INHG)
 
 
-def test_convert_from_hpascals():
+def test_convert_from_hpascals() -> None:
     """Test conversion from hPA to other units."""
     hpascals = 1000
     assert pressure_util.convert(
@@ -64,7 +64,7 @@ def test_convert_from_hpascals():
     ) == pytest.approx(100)
 
 
-def test_convert_from_kpascals():
+def test_convert_from_kpascals() -> None:
     """Test conversion from hPA to other units."""
     kpascals = 100
     assert pressure_util.convert(
@@ -87,7 +87,7 @@ def test_convert_from_kpascals():
     ) == pytest.approx(100)
 
 
-def test_convert_from_inhg():
+def test_convert_from_inhg() -> None:
     """Test conversion from inHg to other units."""
     inhg = 30
     assert pressure_util.convert(
@@ -113,7 +113,7 @@ def test_convert_from_inhg():
     ) == pytest.approx(762)
 
 
-def test_convert_from_mmhg():
+def test_convert_from_mmhg() -> None:
     """Test conversion from mmHg to other units."""
     inhg = 30
     assert pressure_util.convert(

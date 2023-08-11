@@ -1,21 +1,29 @@
 """Event parser and human readable log generator."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
+import logging
 from typing import Any
 
+from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
-from sqlalchemy.orm.query import Query
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
+    bytes_to_uuid_hex_or_none,
+    extract_event_type_ids,
+    extract_metadata_ids,
     process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import (
+    execute_stmt_lambda_element,
+    session_scope,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -51,26 +59,28 @@ from .const import (
     LOGBOOK_ENTRY_SOURCE,
     LOGBOOK_ENTRY_STATE,
     LOGBOOK_ENTRY_WHEN,
-    LOGBOOK_FILTERS,
 )
 from .helpers import is_sensor_continuous
-from .models import EventAsRow, LazyEventPartialState, async_event_to_row
+from .models import EventAsRow, LazyEventPartialState, LogbookConfig, async_event_to_row
 from .queries import statement_for_request
 from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
+_LOGGER = logging.getLogger(__name__)
 
-@dataclass
+
+@dataclass(slots=True)
 class LogbookRun:
     """A logbook run which may be a long running event stream or single request."""
 
-    context_lookup: ContextLookup
+    context_lookup: dict[bytes | None, Row | EventAsRow | None]
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ]
     event_cache: EventCache
     entity_name_cache: EntityNameCache
     include_entity_name: bool
-    format_time: Callable[[Row], Any]
+    format_time: Callable[[Row | EventAsRow], Any]
+    memoize_new_contexts: bool = True
 
 
 class EventProcessor:
@@ -96,16 +106,14 @@ class EventProcessor:
         self.entity_ids = entity_ids
         self.device_ids = device_ids
         self.context_id = context_id
-        self.filters: Filters | None = hass.data[LOGBOOK_FILTERS]
+        logbook_config: LogbookConfig = hass.data[DOMAIN]
+        self.filters: Filters | None = logbook_config.sqlalchemy_filter
         format_time = (
             _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
         )
-        external_events: dict[
-            str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
-        ] = hass.data.get(DOMAIN, {})
         self.logbook_run = LogbookRun(
-            context_lookup=ContextLookup(hass),
-            external_events=external_events,
+            context_lookup={None: None},
+            external_events=logbook_config.external_events,
             event_cache=EventCache({}),
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
@@ -125,6 +133,7 @@ class EventProcessor:
         """
         self.logbook_run.event_cache.clear()
         self.logbook_run.context_lookup.clear()
+        self.logbook_run.memoize_new_contexts = False
 
     def get_events(
         self,
@@ -132,44 +141,41 @@ class EventProcessor:
         end_day: dt,
     ) -> list[dict[str, Any]]:
         """Get events for a period of time."""
-
-        def yield_rows(query: Query) -> Generator[Row, None, None]:
-            """Yield rows from the database."""
-            # end_day - start_day intentionally checks .days and not .total_seconds()
-            # since we don't want to switch over to buffered if they go
-            # over one day by a few hours since the UI makes it so easy to do that.
-            if self.limited_select or (end_day - start_day).days <= 1:
-                return query.all()  # type: ignore[no-any-return]
-            # Only buffer rows to reduce memory pressure
-            # if we expect the result set is going to be very large.
-            # What is considered very large is going to differ
-            # based on the hardware Home Assistant is running on.
-            #
-            # sqlalchemy suggests that is at least 10k, but for
-            # even and RPi3 that number seems higher in testing
-            # so we don't switch over until we request > 1 day+ of data.
-            #
-            return query.yield_per(1024)  # type: ignore[no-any-return]
-
-        stmt = statement_for_request(
-            start_day,
-            end_day,
-            self.event_types,
-            self.entity_ids,
-            self.device_ids,
-            self.filters,
-            self.context_id,
-        )
-        with session_scope(hass=self.hass) as session:
-            return self.humanify(yield_rows(session.execute(stmt)))
+        with session_scope(hass=self.hass, read_only=True) as session:
+            metadata_ids: list[int] | None = None
+            instance = get_instance(self.hass)
+            if self.entity_ids:
+                metadata_ids = extract_metadata_ids(
+                    instance.states_meta_manager.get_many(
+                        self.entity_ids, session, False
+                    )
+                )
+            event_type_ids = tuple(
+                extract_event_type_ids(
+                    instance.event_type_manager.get_many(self.event_types, session)
+                )
+            )
+            stmt = statement_for_request(
+                start_day,
+                end_day,
+                event_type_ids,
+                self.entity_ids,
+                metadata_ids,
+                self.device_ids,
+                self.filters,
+                self.context_id,
+            )
+            return self.humanify(
+                execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            )
 
     def humanify(
-        self, row_generator: Generator[Row | EventAsRow, None, None]
+        self, rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result
     ) -> list[dict[str, str]]:
         """Humanify rows."""
         return list(
             _humanify(
-                row_generator,
+                rows,
                 self.ent_reg,
                 self.logbook_run,
                 self.context_augmenter,
@@ -178,7 +184,7 @@ class EventProcessor:
 
 
 def _humanify(
-    rows: Generator[Row | EventAsRow, None, None],
+    rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
@@ -192,13 +198,18 @@ def _humanify(
     entity_name_cache = logbook_run.entity_name_cache
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
+    memoize_new_contexts = logbook_run.memoize_new_contexts
+    memoize_context = context_lookup.setdefault
 
     # Process rows
     for row in rows:
-        context_id = context_lookup.memorize(row)
+        context_id_bin: bytes = row.context_id_bin
+        if memoize_new_contexts:
+            memoize_context(context_id_bin, row)
         if row.context_only:
             continue
         event_type = row.event_type
+
         if event_type == EVENT_CALL_SERVICE:
             continue
         if event_type is PSEUDO_EVENT_STATE_CHANGED:
@@ -220,18 +231,24 @@ def _humanify(
             }
             if include_entity_name:
                 data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id)
-            if icon := row.icon or row.old_format_icon:
+            if icon := row.icon:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id_bin)
             yield data
 
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]
-            data = describe_event(event_cache.get(row))
+            try:
+                data = describe_event(event_cache.get(row))
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Error with %s describe event for %s", domain, event_type
+                )
+                continue
             data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id_bin)
             yield data
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
@@ -250,35 +267,8 @@ def _humanify(
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
                 LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
             }
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id_bin)
             yield data
-
-
-class ContextLookup:
-    """A lookup class for context origins."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Memorize context origin."""
-        self.hass = hass
-        self._memorize_new = True
-        self._lookup: dict[str | None, Row | EventAsRow | None] = {None: None}
-
-    def memorize(self, row: Row) -> str | None:
-        """Memorize a context from the database."""
-        if self._memorize_new:
-            context_id: str = row.context_id
-            self._lookup.setdefault(context_id, row)
-            return context_id
-        return None
-
-    def clear(self) -> None:
-        """Clear the context origins and stop recording new ones."""
-        self._lookup.clear()
-        self._memorize_new = False
-
-    def get(self, context_id: str) -> Row | None:
-        """Get the context origin."""
-        return self._lookup.get(context_id)
 
 
 class ContextAugmenter:
@@ -293,11 +283,13 @@ class ContextAugmenter:
         self.include_entity_name = logbook_run.include_entity_name
 
     def _get_context_row(
-        self, context_id: str | None, row: Row | EventAsRow
-    ) -> Row | EventAsRow:
+        self, context_id_bin: bytes | None, row: Row | EventAsRow
+    ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
-        if context_id:
-            return self.context_lookup.get(context_id)
+        if context_id_bin is not None and (
+            context_row := self.context_lookup.get(context_id_bin)
+        ):
+            return context_row
         if (context := getattr(row, "context", None)) is not None and (
             origin_event := context.origin_event
         ) is not None:
@@ -305,23 +297,24 @@ class ContextAugmenter:
         return None
 
     def augment(
-        self, data: dict[str, Any], row: Row | EventAsRow, context_id: str | None
+        self, data: dict[str, Any], row: Row | EventAsRow, context_id_bin: bytes | None
     ) -> None:
         """Augment data from the row and cache."""
-        if context_user_id := row.context_user_id:
-            data[CONTEXT_USER_ID] = context_user_id
+        if context_user_id_bin := row.context_user_id_bin:
+            data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(context_user_id_bin)
 
-        if not (context_row := self._get_context_row(context_id, row)):
+        if not (context_row := self._get_context_row(context_id_bin, row)):
             return
 
         if _rows_match(row, context_row):
             # This is the first event with the given ID. Was it directly caused by
             # a parent event?
+            context_parent_id_bin = row.context_parent_id_bin
             if (
-                not row.context_parent_id
+                not context_parent_id_bin
                 or (
                     context_row := self._get_context_row(
-                        row.context_parent_id, context_row
+                        context_parent_id_bin, context_row
                     )
                 )
                 is None
@@ -358,7 +351,11 @@ class ContextAugmenter:
         data[CONTEXT_EVENT_TYPE] = event_type
         data[CONTEXT_DOMAIN] = domain
         event = self.event_cache.get(context_row)
-        described = describe_event(event)
+        try:
+            described = describe_event(event)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error with %s describe event for %s", domain, event_type)
+            return
         if name := described.get(LOGBOOK_ENTRY_NAME):
             data[CONTEXT_NAME] = name
         if message := described.get(LOGBOOK_ENTRY_MESSAGE):
@@ -375,15 +372,9 @@ class ContextAugmenter:
 
 def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
-    if (
-        row is other_row
-        or (state_id := row.state_id)
-        and state_id == other_row.state_id
-        or (event_id := row.event_id)
-        and event_id == other_row.event_id
-    ):
-        return True
-    return False
+    return bool(
+        row is other_row or (row_id := row.row_id) and row_id == other_row.row_id
+    )
 
 
 def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:

@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import frontend
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -12,14 +13,14 @@ from homeassistant.setup import async_setup_component
         {"router": {"url": "not-a-url"}},
     ),
 )
-async def test_wrong_config(hass, config_to_try):
+async def test_wrong_config(hass: HomeAssistant, config_to_try) -> None:
     """Test setup with wrong configuration."""
     assert not await async_setup_component(
         hass, "panel_iframe", {"panel_iframe": config_to_try}
     )
 
 
-async def test_correct_config(hass):
+async def test_correct_config(hass: HomeAssistant) -> None:
     """Test correct config."""
     assert await async_setup_component(
         hass,
@@ -53,6 +54,7 @@ async def test_correct_config(hass):
     assert panels.get("router").to_response() == {
         "component_name": "iframe",
         "config": {"url": "http://192.168.1.1"},
+        "config_panel_domain": None,
         "icon": "mdi:network-wireless",
         "title": "Router",
         "url_path": "router",
@@ -62,6 +64,7 @@ async def test_correct_config(hass):
     assert panels.get("weather").to_response() == {
         "component_name": "iframe",
         "config": {"url": "https://www.wunderground.com/us/ca/san-diego"},
+        "config_panel_domain": None,
         "icon": "mdi:weather",
         "title": "Weather",
         "url_path": "weather",
@@ -71,6 +74,7 @@ async def test_correct_config(hass):
     assert panels.get("api").to_response() == {
         "component_name": "iframe",
         "config": {"url": "/api"},
+        "config_panel_domain": None,
         "icon": "mdi:weather",
         "title": "Api",
         "url_path": "api",
@@ -80,6 +84,7 @@ async def test_correct_config(hass):
     assert panels.get("ftp").to_response() == {
         "component_name": "iframe",
         "config": {"url": "ftp://some/ftp"},
+        "config_panel_domain": None,
         "icon": "mdi:weather",
         "title": "FTP",
         "url_path": "ftp",

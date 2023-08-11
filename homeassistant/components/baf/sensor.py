@@ -14,9 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, REVOLUTIONS_PER_MINUTE, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -42,7 +46,6 @@ class BAFSensorDescription(
 AUTO_COMFORT_SENSORS = (
     BAFSensorDescription(
         key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -53,7 +56,6 @@ AUTO_COMFORT_SENSORS = (
 DEFINED_ONLY_SENSORS = (
     BAFSensorDescription(
         key="humidity",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -64,7 +66,7 @@ DEFINED_ONLY_SENSORS = (
 FAN_SENSORS = (
     BAFSensorDescription(
         key="current_rpm",
-        name="Current RPM",
+        translation_key="current_rpm",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -72,7 +74,7 @@ FAN_SENSORS = (
     ),
     BAFSensorDescription(
         key="target_rpm",
-        name="Target RPM",
+        translation_key="target_rpm",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -80,14 +82,14 @@ FAN_SENSORS = (
     ),
     BAFSensorDescription(
         key="wifi_ssid",
-        name="WiFi SSID",
+        translation_key="wifi_ssid",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: cast(int | None, device.wifi_ssid),
     ),
     BAFSensorDescription(
         key="ip_address",
-        name="IP Address",
+        translation_key="ip_address",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: cast(str | None, device.ip_address),
@@ -124,7 +126,7 @@ class BAFSensor(BAFEntity, SensorEntity):
     def __init__(self, device: Device, description: BAFSensorDescription) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        super().__init__(device, f"{device.name} {description.name}")
+        super().__init__(device)
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback

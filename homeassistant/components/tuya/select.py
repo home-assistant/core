@@ -5,9 +5,9 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -23,7 +23,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "dgnbj": (
         SelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
-            name="Volume",
+            translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -32,23 +32,23 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "kfj": (
         SelectEntityDescription(
             key=DPCode.CUP_NUMBER,
-            name="Cups",
+            translation_key="cups",
             icon="mdi:numeric",
         ),
         SelectEntityDescription(
             key=DPCode.CONCENTRATION_SET,
-            name="Concentration",
+            translation_key="concentration",
             icon="mdi:altimeter",
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.MATERIAL,
-            name="Material",
+            translation_key="material",
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
-            name="Mode",
+            translation_key="mode",
             icon="mdi:coffee",
         ),
     ),
@@ -57,13 +57,11 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "kg": (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            name="Power on behavior",
             entity_category=EntityCategory.CONFIG,
             translation_key="relay_status",
         ),
         SelectEntityDescription(
             key=DPCode.LIGHT_MODE,
-            name="Indicator light mode",
             entity_category=EntityCategory.CONFIG,
             translation_key="light_mode",
         ),
@@ -73,7 +71,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "qn": (
         SelectEntityDescription(
             key=DPCode.LEVEL,
-            name="Temperature level",
+            translation_key="temperature_level",
             icon="mdi:thermometer-lines",
         ),
     ),
@@ -82,12 +80,12 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "sgbj": (
         SelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
-            name="Volume",
+            translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.BRIGHT_STATE,
-            name="Brightness",
+            translation_key="brightness",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -96,41 +94,35 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "sp": (
         SelectEntityDescription(
             key=DPCode.IPC_WORK_MODE,
-            name="IPC mode",
             entity_category=EntityCategory.CONFIG,
             translation_key="ipc_work_mode",
         ),
         SelectEntityDescription(
             key=DPCode.DECIBEL_SENSITIVITY,
-            name="Sound detection densitivity",
             icon="mdi:volume-vibrate",
             entity_category=EntityCategory.CONFIG,
             translation_key="decibel_sensitivity",
         ),
         SelectEntityDescription(
             key=DPCode.RECORD_MODE,
-            name="Record mode",
             icon="mdi:record-rec",
             entity_category=EntityCategory.CONFIG,
             translation_key="record_mode",
         ),
         SelectEntityDescription(
             key=DPCode.BASIC_NIGHTVISION,
-            name="Night vision",
             icon="mdi:theme-light-dark",
             entity_category=EntityCategory.CONFIG,
             translation_key="basic_nightvision",
         ),
         SelectEntityDescription(
             key=DPCode.BASIC_ANTI_FLICKER,
-            name="Anti-flicker",
             icon="mdi:image-outline",
             entity_category=EntityCategory.CONFIG,
             translation_key="basic_anti_flicker",
         ),
         SelectEntityDescription(
             key=DPCode.MOTION_SENSITIVITY,
-            name="Motion detection sensitivity",
             icon="mdi:motion-sensor",
             entity_category=EntityCategory.CONFIG,
             translation_key="motion_sensitivity",
@@ -141,13 +133,11 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "tdq": (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            name="Power on behavior",
             entity_category=EntityCategory.CONFIG,
             translation_key="relay_status",
         ),
         SelectEntityDescription(
             key=DPCode.LIGHT_MODE,
-            name="Indicator light mode",
             entity_category=EntityCategory.CONFIG,
             translation_key="light_mode",
         ),
@@ -157,33 +147,28 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "tgkg": (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            name="Power on behavior",
             entity_category=EntityCategory.CONFIG,
             translation_key="relay_status",
         ),
         SelectEntityDescription(
             key=DPCode.LIGHT_MODE,
-            name="Indicator light mode",
             entity_category=EntityCategory.CONFIG,
             translation_key="light_mode",
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
-            name="Light source type",
             entity_category=EntityCategory.CONFIG,
             translation_key="led_type",
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_2,
-            name="Light 2 source type",
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type",
+            translation_key="led_type_2",
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_3,
-            name="Light 3 source type",
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type",
+            translation_key="led_type_3",
         ),
     ),
     # Dimmer
@@ -191,22 +176,19 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "tgq": (
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
-            name="Light source type",
             entity_category=EntityCategory.CONFIG,
             translation_key="led_type",
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_2,
-            name="Light 2 source type",
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type",
+            translation_key="led_type_2",
         ),
     ),
     # Fingerbot
     "szjqr": (
         SelectEntityDescription(
             key=DPCode.MODE,
-            name="Mode",
             entity_category=EntityCategory.CONFIG,
             translation_key="fingerbot_mode",
         ),
@@ -216,21 +198,18 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "sd": (
         SelectEntityDescription(
             key=DPCode.CISTERN,
-            name="Water tank adjustment",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:water-opacity",
             translation_key="vacuum_cistern",
         ),
         SelectEntityDescription(
             key=DPCode.COLLECTION_MODE,
-            name="Dust collection mode",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:air-filter",
             translation_key="vacuum_collection",
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
-            name="Mode",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:layers-outline",
             translation_key="vacuum_mode",
@@ -241,28 +220,24 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "fs": (
         SelectEntityDescription(
             key=DPCode.FAN_VERTICAL,
-            name="Vertical swing flap angle",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:format-vertical-align-center",
-            translation_key="fan_angle",
+            translation_key="vertical_fan_angle",
         ),
         SelectEntityDescription(
             key=DPCode.FAN_HORIZONTAL,
-            name="Horizontal swing flap angle",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:format-horizontal-align-center",
-            translation_key="fan_angle",
+            translation_key="horizontal_fan_angle",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,
-            name="Countdown",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
             translation_key="countdown",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
-            name="Countdown",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
             translation_key="countdown",
@@ -273,14 +248,12 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "cl": (
         SelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
-            name="Motor mode",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:swap-horizontal",
             translation_key="curtain_motor_mode",
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
-            name="Mode",
             entity_category=EntityCategory.CONFIG,
             translation_key="curtain_mode",
         ),
@@ -290,35 +263,30 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "jsq": (
         SelectEntityDescription(
             key=DPCode.SPRAY_MODE,
-            name="Spray mode",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:spray",
             translation_key="humidifier_spray_mode",
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL,
-            name="Spraying level",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:spray",
             translation_key="humidifier_level",
         ),
         SelectEntityDescription(
             key=DPCode.MOODLIGHTING,
-            name="Moodlighting",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:lightbulb-multiple",
             translation_key="humidifier_moodlighting",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,
-            name="Countdown",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
             translation_key="countdown",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
-            name="Countdown",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
             translation_key="countdown",
@@ -329,14 +297,12 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "kj": (
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,
-            name="Countdown",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
             translation_key="countdown",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
-            name="Countdown",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
             translation_key="countdown",
@@ -347,14 +313,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "cs": (
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
-            name="Countdown",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
             translation_key="countdown",
         ),
         SelectEntityDescription(
             key=DPCode.DEHUMIDITY_SET_ENUM,
-            name="Target humidity",
+            translation_key="target_humidity",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:water-percent",
         ),

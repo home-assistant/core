@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -473,7 +473,7 @@ class AutoOffExtraStoredData(ExtraStoredData):
         }
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> AutoOffExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored binary sensor state from a dict."""
         try:
             auto_off_time = restored["auto_off_time"]

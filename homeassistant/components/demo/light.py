@@ -18,9 +18,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
@@ -34,11 +33,10 @@ SUPPORT_DEMO = {ColorMode.HS, ColorMode.COLOR_TEMP}
 SUPPORT_DEMO_HS_WHITE = {ColorMode.HS, ColorMode.WHITE}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the demo light platform."""
     async_add_entities(
@@ -47,28 +45,28 @@ async def async_setup_platform(
                 available=True,
                 effect_list=LIGHT_EFFECT_LIST,
                 effect=LIGHT_EFFECT_LIST[0],
-                name="Bed Light",
+                device_name="Bed Light",
                 state=False,
                 unique_id="light_1",
             ),
             DemoLight(
                 available=True,
                 ct=LIGHT_TEMPS[1],
-                name="Ceiling Lights",
+                device_name="Ceiling Lights",
                 state=True,
                 unique_id="light_2",
             ),
             DemoLight(
                 available=True,
                 hs_color=LIGHT_COLORS[1],
-                name="Kitchen Lights",
+                device_name="Kitchen Lights",
                 state=True,
                 unique_id="light_3",
             ),
             DemoLight(
                 available=True,
                 ct=LIGHT_TEMPS[1],
-                name="Office RGBW Lights",
+                device_name="Office RGBW Lights",
                 rgbw_color=(255, 0, 0, 255),
                 state=True,
                 supported_color_modes={ColorMode.RGBW},
@@ -76,7 +74,7 @@ async def async_setup_platform(
             ),
             DemoLight(
                 available=True,
-                name="Living Room RGBWW Lights",
+                device_name="Living Room RGBWW Lights",
                 rgbww_color=(255, 0, 0, 255, 0),
                 state=True,
                 supported_color_modes={ColorMode.RGBWW},
@@ -84,7 +82,7 @@ async def async_setup_platform(
             ),
             DemoLight(
                 available=True,
-                name="Entrance Color + White Lights",
+                device_name="Entrance Color + White Lights",
                 hs_color=LIGHT_COLORS[1],
                 state=True,
                 supported_color_modes=SUPPORT_DEMO_HS_WHITE,
@@ -94,24 +92,17 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoLight(LightEntity):
     """Representation of a demo light."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
         self,
         unique_id: str,
-        name: str,
+        device_name: str,
         state: bool,
         available: bool = False,
         brightness: int = 180,
@@ -130,7 +121,6 @@ class DemoLight(LightEntity):
         self._effect = effect
         self._effect_list = effect_list
         self._hs_color = hs_color
-        self._attr_name = name
         self._rgbw_color = rgbw_color
         self._rgbww_color = rgbww_color
         self._state = state
@@ -148,16 +138,12 @@ class DemoLight(LightEntity):
         self._color_modes = supported_color_modes
         if self._effect_list is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            name=self.name,
+            name=device_name,
         )
 
     @property

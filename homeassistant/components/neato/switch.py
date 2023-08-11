@@ -10,9 +10,9 @@ from pybotvac.robot import Robot
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
@@ -48,12 +48,14 @@ async def async_setup_entry(
 class NeatoConnectedSwitch(SwitchEntity):
     """Neato Connected Switches."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "schedule"
+
     def __init__(self, neato: NeatoHub, robot: Robot, switch_type: str) -> None:
         """Initialize the Neato Connected switches."""
         self.type = switch_type
         self.robot = robot
         self._available = False
-        self._robot_name = f"{self.robot.name} {SWITCH_TYPES[self.type][0]}"
         self._state: dict[str, Any] | None = None
         self._schedule_state: str | None = None
         self._clean_state = None
@@ -86,11 +88,6 @@ class NeatoConnectedSwitch(SwitchEntity):
             )
 
     @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self._robot_name
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
@@ -115,7 +112,10 @@ class NeatoConnectedSwitch(SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
+        return DeviceInfo(
+            identifiers={(NEATO_DOMAIN, self._robot_serial)},
+            name=self.robot.name,
+        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

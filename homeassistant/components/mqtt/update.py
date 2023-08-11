@@ -1,10 +1,9 @@
 """Configure update platform in a device through MQTT topic."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import functools
 import logging
-from typing import Any
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 
@@ -19,9 +18,9 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLAT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_RO_SCHEMA
@@ -35,7 +34,7 @@ from .const import (
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
-from .models import MqttValueTemplate, ReceiveMessage
+from .models import MessageCallbackType, MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +57,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_ENTITY_PICTURE): cv.string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_INSTALL): cv.string,
         vol.Optional(CONF_RELEASE_SUMMARY): cv.string,
         vol.Optional(CONF_RELEASE_URL): cv.string,
@@ -69,6 +68,17 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
 
 
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
+
+
+class _MqttUpdatePayloadType(TypedDict, total=False):
+    """Presentation of supported JSON payload to process state updates."""
+
+    installed_version: str
+    latest_version: str
+    title: str
+    release_summary: str
+    release_url: str
+    entity_picture: str
 
 
 async def async_setup_entry(
@@ -97,6 +107,7 @@ async def _async_setup_entity(
 class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     """Representation of the MQTT update entity."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = update.ENTITY_ID_FORMAT
 
     def __init__(
@@ -148,7 +159,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         topics: dict[str, Any] = {}
 
         def add_subscription(
-            topics: dict[str, Any], topic: str, msg_callback: Callable
+            topics: dict[str, Any], topic: str, msg_callback: MessageCallbackType
         ) -> None:
             if self._config.get(topic) is not None:
                 topics[topic] = {
@@ -172,18 +183,19 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 )
                 return
 
-            json_payload: Any | dict = {}
+            json_payload: _MqttUpdatePayloadType = {}
             try:
-                json_payload = json_loads(payload)
-                if isinstance(json_payload, dict):
+                rendered_json_payload = json_loads(payload)
+                if isinstance(rendered_json_payload, dict):
                     _LOGGER.debug(
                         (
                             "JSON payload detected after processing payload '%s' on"
                             " topic %s"
                         ),
-                        json_payload,
+                        rendered_json_payload,
                         msg.topic,
                     )
+                    json_payload = cast(_MqttUpdatePayloadType, rendered_json_payload)
                 else:
                     _LOGGER.debug(
                         (
@@ -193,7 +205,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                         payload,
                         msg.topic,
                     )
-                    json_payload = {"installed_version": payload}
+                    json_payload = {"installed_version": str(payload)}
             except JSON_DECODE_EXCEPTIONS:
                 _LOGGER.debug(
                     (
@@ -203,7 +215,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     payload,
                     msg.topic,
                 )
-                json_payload["installed_version"] = payload
+                json_payload["installed_version"] = str(payload)
 
             if "installed_version" in json_payload:
                 self._attr_installed_version = json_payload["installed_version"]
@@ -213,20 +225,20 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 self._attr_latest_version = json_payload["latest_version"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_TITLE in json_payload:
-                self._attr_title = json_payload[CONF_TITLE]
+            if "title" in json_payload:
+                self._attr_title = json_payload["title"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_RELEASE_SUMMARY in json_payload:
-                self._attr_release_summary = json_payload[CONF_RELEASE_SUMMARY]
+            if "release_summary" in json_payload:
+                self._attr_release_summary = json_payload["release_summary"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_RELEASE_URL in json_payload:
-                self._attr_release_url = json_payload[CONF_RELEASE_URL]
+            if "release_url" in json_payload:
+                self._attr_release_url = json_payload["release_url"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_ENTITY_PICTURE in json_payload:
-                self._entity_picture = json_payload[CONF_ENTITY_PICTURE]
+            if "entity_picture" in json_payload:
+                self._entity_picture = json_payload["entity_picture"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)

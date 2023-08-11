@@ -1,16 +1,16 @@
 {
   "domain": "syncthru",
   "name": "Samsung SyncThru Printer",
-  "documentation": "https://www.home-assistant.io/integrations/syncthru",
+  "codeowners": ["@nielstron"],
   "config_flow": true,
-  "requirements": ["pysyncthru==0.7.10", "url-normalize==1.4.3"],
+  "documentation": "https://www.home-assistant.io/integrations/syncthru",
+  "iot_class": "local_polling",
+  "loggers": ["pysyncthru"],
+  "requirements": ["PySyncThru==0.7.10", "url-normalize==1.4.3"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:Printer:1",
       "manufacturer": "Samsung Electronics"
     }
-  ],
-  "codeowners": ["@nielstron"],
-  "iot_class": "local_polling",
-  "loggers": ["pysyncthru"]
+  ]
 }

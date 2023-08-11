@@ -4,15 +4,19 @@ from unittest.mock import patch
 from homeassistant.components.co2signal import DOMAIN
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import VALID_PAYLOAD
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, hass_client):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test config entry diagnostics."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_API_KEY: "api_key", "location": ""}

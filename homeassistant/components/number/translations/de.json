@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "action_type": {
-            "set_value": "Wert f\u00fcr {entity_name} setzen"
-        }
-    },
-    "title": "Nummer"
-}

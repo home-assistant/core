@@ -1,10 +1,10 @@
 {
   "domain": "acmeda",
   "name": "Rollease Acmeda Automate",
+  "codeowners": ["@atmurray"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/acmeda",
-  "requirements": ["aiopulse==0.4.3"],
-  "codeowners": ["@atmurray"],
   "iot_class": "local_push",
-  "loggers": ["aiopulse"]
+  "loggers": ["aiopulse"],
+  "requirements": ["aiopulse==0.4.3"]
 }

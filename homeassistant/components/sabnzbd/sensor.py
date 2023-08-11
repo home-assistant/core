@@ -12,9 +12,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, SIGNAL_SABNZBD_UPDATED
@@ -160,7 +159,7 @@ class SabnzbdSensor(SensorEntity):
         client_name,
         description: SabnzbdSensorEntityDescription,
         entry_id,
-    ):
+    ) -> None:
         """Initialize the sensor."""
 
         self._attr_unique_id = f"{entry_id}_{description.key}"

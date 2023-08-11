@@ -1,11 +1,14 @@
 {
   "domain": "dlna_dms",
   "name": "DLNA Digital Media Server",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/dlna_dms",
-  "requirements": ["async-upnp-client==0.33.1"],
-  "dependencies": ["ssdp"],
   "after_dependencies": ["media_source"],
+  "codeowners": ["@chishm"],
+  "config_flow": true,
+  "dependencies": ["ssdp"],
+  "documentation": "https://www.home-assistant.io/integrations/dlna_dms",
+  "iot_class": "local_polling",
+  "quality_scale": "platinum",
+  "requirements": ["async-upnp-client==0.34.1"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
@@ -23,8 +26,5 @@
       "deviceType": "urn:schemas-upnp-org:device:MediaServer:4",
       "st": "urn:schemas-upnp-org:device:MediaServer:4"
     }
-  ],
-  "codeowners": ["@chishm"],
-  "iot_class": "local_polling",
-  "quality_scale": "platinum"
+  ]
 }

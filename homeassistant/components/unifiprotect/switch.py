@@ -1,4 +1,4 @@
-"""This component provides Switches for UniFi Protect."""
+"""Component providing Switches for UniFi Protect."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,9 +15,9 @@ from pyunifiprotect.data import (
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 

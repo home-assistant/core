@@ -1,9 +1,9 @@
 {
   "domain": "meteoalarm",
   "name": "MeteoAlarm",
-  "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
-  "requirements": ["meteoalertapi==0.3.0"],
   "codeowners": ["@rolfberkenbosch"],
+  "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
   "iot_class": "cloud_polling",
-  "loggers": ["meteoalertapi"]
+  "loggers": ["meteoalertapi"],
+  "requirements": ["meteoalertapi==0.3.0"]
 }

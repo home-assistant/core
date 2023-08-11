@@ -17,7 +17,7 @@ from homeassistant.components.dnsip.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import RetrieveDNS
 
@@ -37,7 +37,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         },
         options={
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
         },
         entry_id="1",
         unique_id="home-assistant.io",
@@ -71,7 +71,7 @@ async def test_sensor_no_response(hass: HomeAssistant) -> None:
         },
         options={
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
         },
         entry_id="1",
         unique_id="home-assistant.io",
@@ -97,7 +97,7 @@ async def test_sensor_no_response(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=10),
+            dt_util.utcnow() + timedelta(minutes=10),
         )
         await hass.async_block_till_done()
 

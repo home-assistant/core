@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
@@ -25,6 +24,7 @@ from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
     EVENT_END,
+    EVENT_LOCATION,
     EVENT_RRULE,
     EVENT_START,
     EVENT_SUMMARY,
@@ -246,6 +246,8 @@ async def async_setup_entry(
 class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     """Coordinator for calendar RPC calls that use an efficient sync."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -281,8 +283,8 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
                 "Unable to get events: Sync from server has not completed"
             )
         return self.data.overlapping(
-            dt_util.as_local(start_date),
-            dt_util.as_local(end_date),
+            start_date,
+            end_date,
         )
 
     @property
@@ -299,6 +301,8 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     This sends a polling RPC, not using sync, as a workaround
     for limitations in the calendar API for supporting search.
     """
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -435,7 +439,9 @@ class GoogleCalendarEntity(
             await self.coordinator.async_request_refresh()
             self._apply_coordinator_update()
 
-        asyncio.create_task(refresh())
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass, refresh(), "google.calendar-refresh"
+        )
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -504,6 +510,8 @@ class GoogleCalendarEntity(
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
             }
         )
+        if location := kwargs.get(EVENT_LOCATION):
+            event.location = location
         if rrule := kwargs.get(EVENT_RRULE):
             event.recurrence = [f"{RRULE_PREFIX}{rrule}"]
 
@@ -590,17 +598,20 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
     if start is None or end is None:
         raise ValueError("Missing required fields to set start or end date/datetime")
 
+    event = Event(
+        summary=call.data[EVENT_SUMMARY],
+        description=call.data[EVENT_DESCRIPTION],
+        start=start,
+        end=end,
+    )
+    if location := call.data.get(EVENT_LOCATION):
+        event.location = location
     try:
         await cast(
             CalendarSyncUpdateCoordinator, entity.coordinator
         ).sync.api.async_create_event(
             entity.calendar_id,
-            Event(
-                summary=call.data[EVENT_SUMMARY],
-                description=call.data[EVENT_DESCRIPTION],
-                start=start,
-                end=end,
-            ),
+            event,
         )
     except ApiException as err:
         raise HomeAssistantError(str(err)) from err

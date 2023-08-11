@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "action_type": {
-            "set_value": "Nastavit hodnotu pro {entity_name}"
-        }
-    },
-    "title": "\u010c\u00edslo"
-}

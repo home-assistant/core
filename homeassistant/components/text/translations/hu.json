@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "action_type": {
-            "set_value": "{entity_name} \u00e9rt\u00e9k\u00e9nek be\u00e1ll\u00edt\u00e1sa"
-        }
-    },
-    "title": "Sz\u00f6veg"
-}

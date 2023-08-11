@@ -36,7 +36,9 @@ from . import (
 from tests.common import mock_restore_cache
 
 
-async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch):
+async def test_block_update(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device update entity."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -82,7 +84,9 @@ async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch)
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
-async def test_block_beta_update(hass: HomeAssistant, mock_block_device, monkeypatch):
+async def test_block_beta_update(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device beta update entity."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -137,8 +141,11 @@ async def test_block_beta_update(hass: HomeAssistant, mock_block_device, monkeyp
 
 
 async def test_block_update_connection_error(
-    hass: HomeAssistant, mock_block_device, monkeypatch, caplog
-):
+    hass: HomeAssistant,
+    mock_block_device,
+    monkeypatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test block device update connection error."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -169,7 +176,7 @@ async def test_block_update_connection_error(
 
 async def test_block_update_auth_error(
     hass: HomeAssistant, mock_block_device, monkeypatch
-):
+) -> None:
     """Test block device update authentication error."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -196,6 +203,7 @@ async def test_block_update_auth_error(
         {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
 
@@ -211,7 +219,7 @@ async def test_block_update_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
+async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
     """Test RPC device update entity."""
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
@@ -255,7 +263,9 @@ async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
-async def test_rpc_sleeping_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
+async def test_rpc_sleeping_update(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC sleeping device update entity."""
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
@@ -294,8 +304,8 @@ async def test_rpc_sleeping_update(hass: HomeAssistant, mock_rpc_device, monkeyp
 
 
 async def test_rpc_restored_sleeping_update(
-    hass, mock_rpc_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_rpc_device, device_reg, monkeypatch
+) -> None:
     """Test RPC restored update entity."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
@@ -337,8 +347,8 @@ async def test_rpc_restored_sleeping_update(
 
 
 async def test_rpc_restored_sleeping_update_no_last_state(
-    hass, mock_rpc_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_rpc_device, device_reg, monkeypatch
+) -> None:
     """Test RPC restored update entity missing last state."""
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
@@ -378,7 +388,9 @@ async def test_rpc_restored_sleeping_update_no_last_state(
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
 
 
-async def test_rpc_beta_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
+async def test_rpc_beta_update(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC device beta update entity."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -446,15 +458,20 @@ async def test_rpc_beta_update(hass: HomeAssistant, mock_rpc_device, monkeypatch
 
 
 @pytest.mark.parametrize(
-    "exc, error",
+    ("exc", "error"),
     [
         (DeviceConnectionError, "Error starting OTA update"),
         (RpcCallError(-1, "error"), "OTA update request error"),
     ],
 )
 async def test_rpc_update__errors(
-    hass: HomeAssistant, exc, error, mock_rpc_device, monkeypatch, caplog
-):
+    hass: HomeAssistant,
+    exc,
+    error,
+    mock_rpc_device,
+    monkeypatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test RPC device update connection/call errors."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -489,8 +506,8 @@ async def test_rpc_update__errors(
 
 
 async def test_rpc_update_auth_error(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog
-):
+    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test RPC device update authentication error."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -525,6 +542,7 @@ async def test_rpc_update_auth_error(
         blocking=True,
     )
 
+    await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()

@@ -16,7 +16,7 @@ from .mocks import _mock_powerwall_with_fixtures
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant):
+async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) -> None:
     """Test if _update_data of PowerwallDataManager reauthenticates on AccessDeniedError."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)

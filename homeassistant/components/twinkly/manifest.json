@@ -1,11 +1,15 @@
 {
   "domain": "twinkly",
   "name": "Twinkly",
-  "documentation": "https://www.home-assistant.io/integrations/twinkly",
-  "requirements": ["ttls==1.5.1"],
   "codeowners": ["@dr1rrb", "@Robbie1221"],
   "config_flow": true,
-  "dhcp": [{ "hostname": "twinkly_*" }],
+  "dhcp": [
+    {
+      "hostname": "twinkly_*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/twinkly",
   "iot_class": "local_polling",
-  "loggers": ["ttls"]
+  "loggers": ["ttls"],
+  "requirements": ["ttls==1.5.1"]
 }

@@ -82,7 +82,8 @@ def get_location_astral_event_next(
         kwargs["observer_elevation"] = elevation
 
     mod = -1
-    while True:
+    first_err = None
+    while mod < 367:
         try:
             next_dt = (
                 cast(_AstralSunEventCallable, getattr(location, event))(
@@ -94,9 +95,13 @@ def get_location_astral_event_next(
             )
             if next_dt > utc_point_in_time:
                 return next_dt
-        except ValueError:
-            pass
+        except ValueError as err:
+            if not first_err:
+                first_err = err
         mod += 1
+    raise ValueError(
+        f"Unable to find event after one year, initial ValueError: {first_err}"
+    ) from first_err
 
 
 @callback

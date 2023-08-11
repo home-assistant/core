@@ -16,6 +16,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.COVER,
     Platform.FAN,
+    Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,

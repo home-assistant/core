@@ -3,7 +3,9 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.config import entity_registry
-from homeassistant.const import ATTR_ICON
+from homeassistant.const import ATTR_ICON, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -20,13 +22,16 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture
-def client(hass, hass_ws_client):
+async def client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
-    hass.loop.run_until_complete(entity_registry.async_setup(hass))
-    return hass.loop.run_until_complete(hass_ws_client(hass))
+    await entity_registry.async_setup(hass)
+    return await hass_ws_client(hass)
 
 
 @pytest.fixture
@@ -35,7 +40,7 @@ def device_registry(hass):
     return mock_device_registry(hass)
 
 
-async def test_list_entities(hass, client):
+async def test_list_entities(hass: HomeAssistant, client) -> None:
     """Test list entries."""
     mock_registry(
         hass,
@@ -70,6 +75,7 @@ async def test_list_entities(hass, client):
             "icon": None,
             "id": ANY,
             "name": "Hello World",
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,
@@ -87,6 +93,7 @@ async def test_list_entities(hass, client):
             "icon": None,
             "id": ANY,
             "name": None,
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,
@@ -131,6 +138,7 @@ async def test_list_entities(hass, client):
             "icon": None,
             "id": ANY,
             "name": "Hello World",
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,
@@ -139,7 +147,171 @@ async def test_list_entities(hass, client):
     ]
 
 
-async def test_get_entity(hass, client):
+async def test_list_entities_for_display(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
+    """Test list entries."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.test": RegistryEntry(
+                area_id="area52",
+                device_id="device123",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_id="test_domain.test",
+                has_entity_name=True,
+                original_name="Hello World",
+                platform="test_platform",
+                translation_key="translations_galore",
+                unique_id="1234",
+            ),
+            "test_domain.nameless": RegistryEntry(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.nameless",
+                has_entity_name=True,
+                original_name=None,
+                platform="test_platform",
+                unique_id="2345",
+            ),
+            "test_domain.renamed": RegistryEntry(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.renamed",
+                has_entity_name=True,
+                name="User name",
+                original_name="Hello World",
+                platform="test_platform",
+                unique_id="3456",
+            ),
+            "test_domain.boring": RegistryEntry(
+                entity_id="test_domain.boring",
+                platform="test_platform",
+                unique_id="4567",
+            ),
+            "test_domain.disabled": RegistryEntry(
+                disabled_by=RegistryEntryDisabler.USER,
+                entity_id="test_domain.disabled",
+                hidden_by=RegistryEntryHider.USER,
+                platform="test_platform",
+                unique_id="789A",
+            ),
+            "test_domain.hidden": RegistryEntry(
+                entity_id="test_domain.hidden",
+                hidden_by=RegistryEntryHider.USER,
+                platform="test_platform",
+                unique_id="89AB",
+            ),
+            "sensor.default_precision": RegistryEntry(
+                entity_id="sensor.default_precision",
+                options={"sensor": {"suggested_display_precision": 0}},
+                platform="test_platform",
+                unique_id="9ABC",
+            ),
+            "sensor.user_precision": RegistryEntry(
+                entity_id="sensor.user_precision",
+                options={
+                    "sensor": {"display_precision": 0, "suggested_display_precision": 1}
+                },
+                platform="test_platform",
+                unique_id="ABCD",
+            ),
+        },
+    )
+
+    await client.send_json_auto_id({"type": "config/entity_registry/list_for_display"})
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "entity_categories": {"0": "config", "1": "diagnostic"},
+        "entities": [
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ec": 1,
+                "ei": "test_domain.test",
+                "en": "Hello World",
+                "pl": "test_platform",
+                "tk": "translations_galore",
+            },
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.nameless",
+                "en": None,
+                "pl": "test_platform",
+            },
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.renamed",
+                "pl": "test_platform",
+            },
+            {
+                "ei": "test_domain.boring",
+                "pl": "test_platform",
+            },
+            {
+                "ei": "test_domain.hidden",
+                "hb": True,
+                "pl": "test_platform",
+            },
+            {
+                "dp": 0,
+                "ei": "sensor.default_precision",
+                "pl": "test_platform",
+            },
+            {
+                "dp": 0,
+                "ei": "sensor.user_precision",
+                "pl": "test_platform",
+            },
+        ],
+    }
+
+    class Unserializable:
+        """Good luck serializing me."""
+
+    mock_registry(
+        hass,
+        {
+            "test_domain.test": RegistryEntry(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.test",
+                has_entity_name=True,
+                original_name="Hello World",
+                platform="test_platform",
+                unique_id="1234",
+            ),
+            "test_domain.name_2": RegistryEntry(
+                entity_id="test_domain.name_2",
+                has_entity_name=True,
+                original_name=Unserializable(),
+                platform="test_platform",
+                unique_id="6789",
+            ),
+        },
+    )
+
+    await client.send_json_auto_id({"type": "config/entity_registry/list_for_display"})
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "entity_categories": {"0": "config", "1": "diagnostic"},
+        "entities": [
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.test",
+                "en": "Hello World",
+                "pl": "test_platform",
+            },
+        ],
+    }
+
+
+async def test_get_entity(hass: HomeAssistant, client) -> None:
     """Test get entry."""
     mock_registry(
         hass,
@@ -221,7 +393,7 @@ async def test_get_entity(hass, client):
     }
 
 
-async def test_get_entities(hass, client):
+async def test_get_entities(hass: HomeAssistant, client) -> None:
     """Test get entry."""
     mock_registry(
         hass,
@@ -304,7 +476,7 @@ async def test_get_entities(hass, client):
     }
 
 
-async def test_update_entity(hass, client):
+async def test_update_entity(hass: HomeAssistant, client) -> None:
     """Test updating entity."""
     registry = mock_registry(
         hass,
@@ -487,7 +659,7 @@ async def test_update_entity(hass, client):
     }
 
 
-async def test_update_entity_require_restart(hass, client):
+async def test_update_entity_require_restart(hass: HomeAssistant, client) -> None:
     """Test updating entity."""
     entity_id = "test_domain.test_platform_1234"
     config_entry = MockConfigEntry(domain="test_platform")
@@ -540,14 +712,16 @@ async def test_update_entity_require_restart(hass, client):
     }
 
 
-async def test_enable_entity_disabled_device(hass, client, device_registry):
+async def test_enable_entity_disabled_device(
+    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
+) -> None:
     """Test enabling entity of disabled device."""
     entity_id = "test_domain.test_platform_1234"
     config_entry = MockConfigEntry(domain="test_platform")
     config_entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=config_entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -587,7 +761,7 @@ async def test_enable_entity_disabled_device(hass, client, device_registry):
     assert not msg["success"]
 
 
-async def test_update_entity_no_changes(hass, client):
+async def test_update_entity_no_changes(hass: HomeAssistant, client) -> None:
     """Test update entity with no changes."""
     mock_registry(
         hass,
@@ -650,7 +824,7 @@ async def test_update_entity_no_changes(hass, client):
     assert state.name == "name of entity"
 
 
-async def test_get_nonexisting_entity(client):
+async def test_get_nonexisting_entity(client) -> None:
     """Test get entry with nonexisting entity."""
     await client.send_json(
         {
@@ -664,7 +838,7 @@ async def test_get_nonexisting_entity(client):
     assert not msg["success"]
 
 
-async def test_update_nonexisting_entity(client):
+async def test_update_nonexisting_entity(client) -> None:
     """Test update a nonexisting entity."""
     await client.send_json(
         {
@@ -679,7 +853,7 @@ async def test_update_nonexisting_entity(client):
     assert not msg["success"]
 
 
-async def test_update_entity_id(hass, client):
+async def test_update_entity_id(hass: HomeAssistant, client) -> None:
     """Test update entity id."""
     mock_registry(
         hass,
@@ -739,7 +913,7 @@ async def test_update_entity_id(hass, client):
     assert hass.states.get("test_domain.planet") is not None
 
 
-async def test_update_existing_entity_id(hass, client):
+async def test_update_existing_entity_id(hass: HomeAssistant, client) -> None:
     """Test update entity id to an already registered entity id."""
     mock_registry(
         hass,
@@ -776,7 +950,7 @@ async def test_update_existing_entity_id(hass, client):
     assert not msg["success"]
 
 
-async def test_update_invalid_entity_id(hass, client):
+async def test_update_invalid_entity_id(hass: HomeAssistant, client) -> None:
     """Test update entity id to an invalid entity id."""
     mock_registry(
         hass,
@@ -807,7 +981,7 @@ async def test_update_invalid_entity_id(hass, client):
     assert not msg["success"]
 
 
-async def test_remove_entity(hass, client):
+async def test_remove_entity(hass: HomeAssistant, client) -> None:
     """Test removing entity."""
     registry = mock_registry(
         hass,
@@ -836,7 +1010,7 @@ async def test_remove_entity(hass, client):
     assert len(registry.entities) == 0
 
 
-async def test_remove_non_existing_entity(hass, client):
+async def test_remove_non_existing_entity(hass: HomeAssistant, client) -> None:
     """Test removing non existing entity."""
     mock_registry(hass, {})
 

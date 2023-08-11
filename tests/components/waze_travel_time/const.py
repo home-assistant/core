@@ -11,3 +11,9 @@ MOCK_CONFIG = {
     CONF_DESTINATION: "location2",
     CONF_REGION: "US",
 }
+
+CONFIG_FLOW_USER_INPUT = {
+    CONF_ORIGIN: "location1",
+    CONF_DESTINATION: "location2",
+    CONF_REGION: "us",
+}

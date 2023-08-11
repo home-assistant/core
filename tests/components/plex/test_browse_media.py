@@ -2,6 +2,7 @@
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
+import requests_mock
 from yarl import URL
 
 from homeassistant.components.media_player import (
@@ -10,8 +11,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER, PLEX_URI_SCHEME
 from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE_RESULT
+from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_DATA
+
+from tests.typing import WebSocketGenerator
 
 
 class MockPlexShow:
@@ -110,13 +114,13 @@ class MockPlexStation:
 
 
 async def test_browse_media(
-    hass,
-    hass_ws_client,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mock_plex_server,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     hubs,
     hubs_music_library,
-):
+) -> None:
     """Test getting Plex clients from plex.tv."""
     websocket_client = await hass_ws_client(hass)
 

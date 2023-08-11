@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -118,9 +118,7 @@ class SwitcherSensorEntity(
             f"{coordinator.device_id}-{coordinator.mac_address}-{attribute}"
         )
         self._attr_device_info = {
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
-            }
+            "connections": {(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         }
 
     @property

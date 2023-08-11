@@ -23,11 +23,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -52,6 +52,7 @@ BASE_SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.GROUPING
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.MEDIA_ENQUEUE
 )
 
 PLAY_STATE_TO_STATE = {
@@ -88,14 +89,14 @@ async def async_setup_entry(
     async_add_entities(devices, True)
 
 
-def log_command_error(
-    command: str,
-) -> Callable[[Callable[_P, Awaitable[Any]]], Callable[_P, Coroutine[Any, Any, None]]]:
+_FuncType = Callable[_P, Awaitable[Any]]
+_ReturnFuncType = Callable[_P, Coroutine[Any, Any, None]]
+
+
+def log_command_error(command: str) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
     """Return decorator that logs command failure."""
 
-    def decorator(
-        func: Callable[_P, Awaitable[Any]]
-    ) -> Callable[_P, Coroutine[Any, Any, None]]:
+    def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
         @wraps(func)
         async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
@@ -113,6 +114,8 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, player):
         """Initialize."""
@@ -195,7 +198,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
     @log_command_error("play media")
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
@@ -392,11 +395,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._player.now_playing_media.song
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._player.name
-
-    @property
     def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
         return self._player.shuffle
@@ -427,7 +425,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._player.volume / 100
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

@@ -1,9 +1,9 @@
 {
   "domain": "spc",
   "name": "Vanderbilt SPC",
-  "documentation": "https://www.home-assistant.io/integrations/spc",
-  "requirements": ["pyspcwebgw==0.4.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/spc",
   "iot_class": "local_push",
-  "loggers": ["pyspcwebgw"]
+  "loggers": ["pyspcwebgw"],
+  "requirements": ["pyspcwebgw==0.4.0"]
 }

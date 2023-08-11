@@ -1,0 +1,149 @@
+# serializer version: 1
+# name: test_switches[switch.frenck_energy_saving-energy_saving-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frenck Energy saving',
+      'icon': 'mdi:leaf',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frenck_energy_saving',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[switch.frenck_energy_saving-energy_saving-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.frenck_energy_saving',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:leaf',
+    'original_name': 'Energy saving',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': 'energy_saving',
+    'unique_id': 'GW24L1A02987_energy_saving',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.frenck_energy_saving-energy_saving-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_switches[switch.frenck_studio_mode-battery_bypass-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frenck Studio mode',
+      'icon': 'mdi:battery-off-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frenck_studio_mode',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[switch.frenck_studio_mode-battery_bypass-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.frenck_studio_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:battery-off-outline',
+    'original_name': 'Studio mode',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': 'GW24L1A02987_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.frenck_studio_mode-battery_bypass-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---

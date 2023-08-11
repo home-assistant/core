@@ -1,9 +1,9 @@
 {
   "domain": "russound_rio",
   "name": "Russound RIO",
-  "documentation": "https://www.home-assistant.io/integrations/russound_rio",
-  "requirements": ["russound_rio==0.1.8"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/russound_rio",
   "iot_class": "local_push",
-  "loggers": ["russound_rio"]
+  "loggers": ["russound_rio"],
+  "requirements": ["russound-rio==1.0.0"]
 }

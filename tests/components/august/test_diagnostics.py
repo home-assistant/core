@@ -1,4 +1,5 @@
 """Test august diagnostics."""
+from homeassistant.core import HomeAssistant
 
 from .mocks import (
     _create_august_api_with_devices,
@@ -7,9 +8,12 @@ from .mocks import (
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass, hass_client):
+async def test_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test generating diagnostics for a config entry."""
     lock_one = await _mock_lock_from_fixture(
         hass, "get_lock.online_with_doorsense.json"
@@ -137,4 +141,5 @@ async def test_diagnostics(hass, hass_client):
                 "zWaveEnabled": False,
             }
         },
+        "brand": "august",
     }

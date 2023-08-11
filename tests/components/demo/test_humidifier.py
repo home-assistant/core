@@ -4,6 +4,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.humidifier import (
+    ATTR_ACTION,
+    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -21,6 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_DEHUMIDIFIER = "humidifier.dehumidifier"
@@ -29,7 +32,7 @@ ENTITY_HUMIDIFIER = "humidifier.humidifier"
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_humidifier(hass):
+async def setup_demo_humidifier(hass, disable_platforms):
     """Initialize setup demo humidifier."""
     assert await async_setup_component(
         hass, DOMAIN, {"humidifier": {"platform": "demo"}}
@@ -37,21 +40,23 @@ async def setup_demo_humidifier(hass):
     await hass.async_block_till_done()
 
 
-def test_setup_params(hass):
+def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_HUMIDITY) == 54
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 59
+    assert state.attributes.get(ATTR_ACTION) == "drying"
 
 
-def test_default_setup_params(hass):
+def test_default_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_MIN_HUMIDITY) == 0
     assert state.attributes.get(ATTR_MAX_HUMIDITY) == 100
 
 
-async def test_set_target_humidity_bad_attr(hass):
+async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:
     """Test setting the target humidity without required attribute."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDITY) == 54
@@ -69,7 +74,7 @@ async def test_set_target_humidity_bad_attr(hass):
     assert state.attributes.get(ATTR_HUMIDITY) == 54
 
 
-async def test_set_target_humidity(hass):
+async def test_set_target_humidity(hass: HomeAssistant) -> None:
     """Test the setting of the target humidity."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDITY) == 54
@@ -86,7 +91,7 @@ async def test_set_target_humidity(hass):
     assert state.attributes.get(ATTR_HUMIDITY) == 64
 
 
-async def test_set_hold_mode_away(hass):
+async def test_set_hold_mode_away(hass: HomeAssistant) -> None:
     """Test setting the hold mode away."""
     await hass.services.async_call(
         DOMAIN,
@@ -100,7 +105,7 @@ async def test_set_hold_mode_away(hass):
     assert state.attributes.get(ATTR_MODE) == MODE_AWAY
 
 
-async def test_set_hold_mode_eco(hass):
+async def test_set_hold_mode_eco(hass: HomeAssistant) -> None:
     """Test setting the hold mode eco."""
     await hass.services.async_call(
         DOMAIN,
@@ -114,37 +119,41 @@ async def test_set_hold_mode_eco(hass):
     assert state.attributes.get(ATTR_MODE) == "eco"
 
 
-async def test_turn_on(hass):
+async def test_turn_on(hass: HomeAssistant) -> None:
     """Test turn on device."""
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ACTION) == "off"
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ACTION) == "drying"
 
 
-async def test_turn_off(hass):
+async def test_turn_off(hass: HomeAssistant) -> None:
     """Test turn off device."""
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ACTION) == "drying"
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ACTION) == "off"
 
 
-async def test_toggle(hass):
+async def test_toggle(hass: HomeAssistant) -> None:
     """Test toggle device."""
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True

@@ -1,10 +1,9 @@
 """Test enum helpers."""
-from enum import Enum, IntEnum, IntFlag
+from enum import Enum, IntEnum, IntFlag, StrEnum
 from typing import Any
 
 import pytest
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.util.enum import try_parse_enum
 
 
@@ -18,10 +17,11 @@ class _AnIntEnum(IntEnum):
 
 class _AnIntFlag(IntFlag):
     VALUE = 1
+    SECOND = 2
 
 
 @pytest.mark.parametrize(
-    "enum_type,value,expected",
+    ("enum_type", "value", "expected"),
     [
         # StrEnum valid checks
         (_AStrEnum, _AStrEnum.VALUE, _AStrEnum.VALUE),

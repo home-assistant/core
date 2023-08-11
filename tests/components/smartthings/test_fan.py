@@ -17,13 +17,14 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
 
 
-async def test_entity_state(hass, device_factory):
+async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
     """Tests the state attributes properly match the fan types."""
     device = device_factory(
         "Fan 1",
@@ -39,13 +40,22 @@ async def test_entity_state(hass, device_factory):
     assert state.attributes[ATTR_PERCENTAGE] == 66
 
 
-async def test_entity_and_device_attributes(hass, device_factory):
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "on", Attribute.fan_speed: 2},
+        status={
+            Attribute.switch: "on",
+            Attribute.fan_speed: 2,
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
     )
     # Act
     await setup_platform(hass, FAN_DOMAIN, devices=[device])
@@ -56,16 +66,18 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry
     assert entry.unique_id == device.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
-async def test_turn_off(hass, device_factory):
+async def test_turn_off(hass: HomeAssistant, device_factory) -> None:
     """Test the fan turns of successfully."""
     # Arrange
     device = device_factory(
@@ -84,7 +96,7 @@ async def test_turn_off(hass, device_factory):
     assert state.state == "off"
 
 
-async def test_turn_on(hass, device_factory):
+async def test_turn_on(hass: HomeAssistant, device_factory) -> None:
     """Test the fan turns of successfully."""
     # Arrange
     device = device_factory(
@@ -103,7 +115,7 @@ async def test_turn_on(hass, device_factory):
     assert state.state == "on"
 
 
-async def test_turn_on_with_speed(hass, device_factory):
+async def test_turn_on_with_speed(hass: HomeAssistant, device_factory) -> None:
     """Test the fan turns on to the specified speed."""
     # Arrange
     device = device_factory(
@@ -126,7 +138,7 @@ async def test_turn_on_with_speed(hass, device_factory):
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
 
-async def test_set_percentage(hass, device_factory):
+async def test_set_percentage(hass: HomeAssistant, device_factory) -> None:
     """Test setting to specific fan speed."""
     # Arrange
     device = device_factory(
@@ -149,7 +161,7 @@ async def test_set_percentage(hass, device_factory):
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
 
-async def test_update_from_signal(hass, device_factory):
+async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
     """Test the fan updates when receiving a signal."""
     # Arrange
     device = device_factory(
@@ -168,7 +180,7 @@ async def test_update_from_signal(hass, device_factory):
     assert state.state == "on"
 
 
-async def test_unload_config_entry(hass, device_factory):
+async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     """Test the fan is removed when the config entry is unloaded."""
     # Arrange
     device = device_factory(

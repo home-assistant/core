@@ -1,5 +1,4 @@
 """The lock tests for the Mazda Connected Services integration."""
-
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -7,12 +6,13 @@ from homeassistant.components.lock import (
     STATE_LOCKED,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
-async def test_lock_setup(hass):
+async def test_lock_setup(hass: HomeAssistant) -> None:
     """Test locking and unlocking the vehicle."""
     await init_integration(hass)
 
@@ -28,7 +28,7 @@ async def test_lock_setup(hass):
     assert state.state == STATE_LOCKED
 
 
-async def test_locking(hass):
+async def test_locking(hass: HomeAssistant) -> None:
     """Test locking the vehicle."""
     client_mock = await init_integration(hass)
 
@@ -43,7 +43,7 @@ async def test_locking(hass):
     client_mock.lock_doors.assert_called_once()
 
 
-async def test_unlocking(hass):
+async def test_unlocking(hass: HomeAssistant) -> None:
     """Test unlocking the vehicle."""
     client_mock = await init_integration(hass)
 

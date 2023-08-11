@@ -143,25 +143,18 @@ def _build_resources(
     }
 
 
-async def async_get_component_strings(
-    hass: HomeAssistant, language: str, components: set[str]
+async def _async_get_component_strings(
+    hass: HomeAssistant,
+    language: str,
+    components: set[str],
+    integrations: dict[str, Integration],
 ) -> dict[str, Any]:
     """Load translations."""
-    domains = list({loaded.rpartition(".")[-1] for loaded in components})
-
-    integrations: dict[str, Integration] = {}
-    ints_or_excs = await async_get_integrations(hass, domains)
-    for domain, int_or_exc in ints_or_excs.items():
-        if isinstance(int_or_exc, Exception):
-            raise int_or_exc
-        integrations[domain] = int_or_exc
     translations: dict[str, Any] = {}
-
     # Determine paths of missing components/platforms
     files_to_load = {}
     for loaded in components:
-        parts = loaded.split(".")
-        domain = parts[-1]
+        domain = loaded.rpartition(".")[-1]
         integration = integrations[domain]
 
         path = component_translation_path(loaded, language, integration)
@@ -228,9 +221,18 @@ class _TranslationCache:
         )
         # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
+
+        integrations: dict[str, Integration] = {}
+        domains = list({loaded.rpartition(".")[-1] for loaded in components})
+        ints_or_excs = await async_get_integrations(self.hass, domains)
+        for domain, int_or_exc in ints_or_excs.items():
+            if isinstance(int_or_exc, Exception):
+                raise int_or_exc
+            integrations[domain] = int_or_exc
+
         for translation_strings in await asyncio.gather(
             *(
-                async_get_component_strings(self.hass, lang, components)
+                _async_get_component_strings(self.hass, lang, components, integrations)
                 for lang in languages
             )
         ):
@@ -253,13 +255,16 @@ class _TranslationCache:
             categories.update(resource)
 
         for category in categories:
-            resource_func = (
-                _merge_resources if category == "state" else _build_resources
-            )
             new_resources: Mapping[str, dict[str, Any] | str]
-            new_resources = resource_func(  # type: ignore[assignment]
-                translation_strings, components, category
-            )
+
+            if category in ("state", "entity_component"):
+                new_resources = _merge_resources(
+                    translation_strings, components, category
+                )
+            else:
+                new_resources = _build_resources(
+                    translation_strings, components, category
+                )
 
             for component, resource in new_resources.items():
                 category_cache: dict[str, Any] = cached.setdefault(
@@ -297,7 +302,7 @@ async def async_get_translations(
         components = set(integrations)
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
-    elif category == "state":
+    elif category in ("state", "entity_component", "services"):
         components = set(hass.config.components)
     else:
         # Only 'state' supports merging, so remove platforms from selection

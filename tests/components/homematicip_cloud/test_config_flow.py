@@ -9,6 +9,7 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_NAME,
     HMIPC_PIN,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +18,7 @@ DEFAULT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}
 IMPORT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"}
 
 
-async def test_flow_works(hass, simple_mock_home):
+async def test_flow_works(hass: HomeAssistant, simple_mock_home) -> None:
     """Test config flow."""
 
     with patch(
@@ -66,7 +67,7 @@ async def test_flow_works(hass, simple_mock_home):
     assert result["result"].unique_id == "ABC123"
 
 
-async def test_flow_init_connection_error(hass):
+async def test_flow_init_connection_error(hass: HomeAssistant) -> None:
     """Test config flow with accesspoint connection error."""
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
@@ -82,7 +83,7 @@ async def test_flow_init_connection_error(hass):
     assert result["step_id"] == "init"
 
 
-async def test_flow_link_connection_error(hass):
+async def test_flow_link_connection_error(hass: HomeAssistant) -> None:
     """Test config flow client registration connection error."""
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
@@ -104,7 +105,7 @@ async def test_flow_link_connection_error(hass):
     assert result["reason"] == "connection_aborted"
 
 
-async def test_flow_link_press_button(hass):
+async def test_flow_link_press_button(hass: HomeAssistant) -> None:
     """Test config flow ask for pressing the blue button."""
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
@@ -124,7 +125,7 @@ async def test_flow_link_press_button(hass):
     assert result["errors"] == {"base": "press_the_button"}
 
 
-async def test_init_flow_show_form(hass):
+async def test_init_flow_show_form(hass: HomeAssistant) -> None:
     """Test config flow shows up with a form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -134,7 +135,7 @@ async def test_init_flow_show_form(hass):
     assert result["step_id"] == "init"
 
 
-async def test_init_already_configured(hass):
+async def test_init_already_configured(hass: HomeAssistant) -> None:
     """Test accesspoint is already configured."""
     MockConfigEntry(domain=HMIPC_DOMAIN, unique_id="ABC123").add_to_hass(hass)
     with patch(
@@ -151,7 +152,7 @@ async def test_init_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_import_config(hass, simple_mock_home):
+async def test_import_config(hass: HomeAssistant, simple_mock_home) -> None:
     """Test importing a host with an existing config file."""
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
@@ -177,7 +178,7 @@ async def test_import_config(hass, simple_mock_home):
     assert result["result"].unique_id == "ABC123"
 
 
-async def test_import_existing_config(hass):
+async def test_import_existing_config(hass: HomeAssistant) -> None:
     """Test abort of an existing accesspoint from config."""
     MockConfigEntry(domain=HMIPC_DOMAIN, unique_id="ABC123").add_to_hass(hass)
     with patch(

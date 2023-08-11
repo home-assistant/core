@@ -45,7 +45,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
 
 
 @pytest.mark.parametrize(
-    "onboarded, num_entries, num_flows", ((False, 1, 0), (True, 0, 1))
+    ("onboarded", "num_entries", "num_flows"), ((False, 1, 0), (True, 0, 1))
 )
 async def test_setup_entry(
     mock_zha_config_flow_setup,
@@ -172,7 +172,7 @@ async def test_setup_zha_multipan(
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -226,7 +226,7 @@ async def test_setup_zha_multipan_other_device(
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -304,7 +304,7 @@ async def test_setup_entry_addon_info_fails(
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -333,7 +333,7 @@ async def test_setup_entry_addon_not_running(
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)

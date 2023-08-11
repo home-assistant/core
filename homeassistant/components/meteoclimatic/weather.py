@@ -5,8 +5,7 @@ from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -38,6 +37,7 @@ async def async_setup_entry(
 class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
@@ -98,8 +98,3 @@ class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     def wind_bearing(self):
         """Return the wind bearing."""
         return self.coordinator.data["weather"].wind_bearing
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

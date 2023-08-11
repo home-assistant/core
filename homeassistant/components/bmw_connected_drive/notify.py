@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
+from bimmer_connected.models import MyBMWAPIError
 from bimmer_connected.vehicle import MyBMWVehicle
 
 from homeassistant.components.notify import (
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
@@ -52,9 +54,16 @@ def get_service(
 class BMWNotificationService(BaseNotificationService):
     """Send Notifications to BMW."""
 
+    vehicle_targets: dict[str, MyBMWVehicle]
+
     def __init__(self, targets: dict[str, MyBMWVehicle]) -> None:
         """Set up the notification service."""
-        self.targets: dict[str, MyBMWVehicle] = targets
+        self.vehicle_targets = targets
+
+    @property
+    def targets(self) -> dict[str, Any] | None:
+        """Return a dictionary of registered targets."""
+        return self.vehicle_targets
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message or POI to the car."""
@@ -80,7 +89,11 @@ class BMWNotificationService(BaseNotificationService):
                         if k in ATTR_LOCATION_ATTRIBUTES
                     }
                 )
-
-                await vehicle.remote_services.trigger_send_poi(location_dict)
+                try:
+                    await vehicle.remote_services.trigger_send_poi(location_dict)
+                except TypeError as ex:
+                    raise ValueError(str(ex)) from ex
+                except MyBMWAPIError as ex:
+                    raise HomeAssistantError(ex) from ex
             else:
                 raise ValueError(f"'data.{ATTR_LOCATION}' is required.")

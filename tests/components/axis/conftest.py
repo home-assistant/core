@@ -1,8 +1,9 @@
 """Axis conftest."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from axis.rtsp import Signal, State
 import pytest
@@ -40,6 +41,16 @@ from .const import (
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.axis.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
 
 # Config entry fixtures
 

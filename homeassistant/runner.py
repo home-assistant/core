@@ -2,11 +2,16 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import events
 import dataclasses
 import logging
+import os
+import subprocess
 import threading
 import traceback
 from typing import Any
+
+import packaging.tags
 
 from . import bootstrap
 from .core import callback
@@ -30,7 +35,7 @@ TASK_CANCELATION_TIMEOUT = 5
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class RuntimeConfig:
     """Class to hold the information for running Home Assistant."""
 
@@ -49,6 +54,22 @@ class RuntimeConfig:
     open_ui: bool = False
 
 
+def can_use_pidfd() -> bool:
+    """Check if pidfd_open is available.
+
+    Back ported from cpython 3.12
+    """
+    if not hasattr(os, "pidfd_open"):
+        return False
+    try:
+        pid = os.getpid()
+        os.close(os.pidfd_open(pid, 0))
+    except OSError:
+        # blocked by security policy like SECCOMP
+        return False
+    return True
+
+
 class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
@@ -56,6 +77,23 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         """Init the event loop policy."""
         super().__init__()
         self.debug = debug
+        self._watcher: asyncio.AbstractChildWatcher | None = None
+
+    def _init_watcher(self) -> None:
+        """Initialize the watcher for child processes.
+
+        Back ported from cpython 3.12
+        """
+        with events._lock:  # type: ignore[attr-defined] # pylint: disable=protected-access
+            if self._watcher is None:  # pragma: no branch
+                if can_use_pidfd():
+                    self._watcher = asyncio.PidfdChildWatcher()
+                else:
+                    self._watcher = asyncio.ThreadedChildWatcher()
+                if threading.current_thread() is threading.main_thread():
+                    self._watcher.attach_loop(
+                        self._local._loop  # type: ignore[attr-defined] # pylint: disable=protected-access
+                    )
 
     @property
     def loop_name(self) -> str:
@@ -73,7 +111,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
-        loop.set_default_executor = warn_use(  # type: ignore[assignment]
+        loop.set_default_executor = warn_use(  # type: ignore[method-assign]
             loop.set_default_executor, "sets default executor on the event loop"
         )
         return loop
@@ -118,8 +156,23 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
     return await hass.async_run()
 
 
+def _enable_posix_spawn() -> None:
+    """Enable posix_spawn on Alpine Linux."""
+    # pylint: disable=protected-access
+    if subprocess._USE_POSIX_SPAWN:
+        return
+
+    # The subprocess module does not know about Alpine Linux/musl
+    # and will use fork() instead of posix_spawn() which significantly
+    # less efficient. This is a workaround to force posix_spawn()
+    # when using musl since cpython is not aware its supported.
+    tag = next(packaging.tags.sys_tags())
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform
+
+
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
+    _enable_posix_spawn()
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = asyncio.new_event_loop()
@@ -145,7 +198,7 @@ def _cancel_all_tasks_with_timeout(
         return
 
     for task in to_cancel:
-        task.cancel()
+        task.cancel("Final process shutdown")
 
     loop.run_until_complete(asyncio.wait(to_cancel, timeout=timeout))
 

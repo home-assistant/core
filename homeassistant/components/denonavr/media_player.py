@@ -28,7 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
@@ -217,6 +217,9 @@ def async_log_errors(
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self,
         receiver: DenonAVR,
@@ -225,7 +228,6 @@ class DenonDevice(MediaPlayerEntity):
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
-        self._attr_name = receiver.name
         self._attr_unique_id = unique_id
         assert config_entry.unique_id
         self._attr_device_info = DeviceInfo(
@@ -234,7 +236,7 @@ class DenonDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, config_entry.unique_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
             model=config_entry.data[CONF_MODEL],
-            name=config_entry.title,
+            name=receiver.name,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
 
@@ -247,12 +249,56 @@ class DenonDevice(MediaPlayerEntity):
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
 
+        self._telnet_was_healthy: bool | None = None
+
+    async def _telnet_callback(self, zone, event, parameter) -> None:
+        """Process a telnet command callback."""
+        # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
+        if zone != self._receiver.zone:
+            return
+        # Some updates trigger multiple events like one for artist and one for title for one change
+        # We skip every event except the last one
+        if event == "NSE" and not parameter.startswith("4"):
+            return
+        if event == "TA" and not parameter.startwith("ANNAME"):
+            return
+        if event == "HD" and not parameter.startswith("ALBUM"):
+            return
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register for telnet events."""
+        self._receiver.register_callback("ALL", self._telnet_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up the entity."""
+        self._receiver.unregister_callback("ALL", self._telnet_callback)
+
     @async_log_errors
     async def async_update(self) -> None:
         """Get the latest status information from device."""
-        await self._receiver.async_update()
+        receiver = self._receiver
+
+        # We can only skip the update if telnet was healthy after
+        # the last update and is still healthy now to ensure that
+        # we don't miss any state changes while telnet is down
+        # or reconnecting.
+        if (
+            telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
+        ) and self._telnet_was_healthy:
+            return
+
+        # if async_update raises an exception, we don't want to skip the next update
+        # so we set _telnet_was_healthy to None here and only set it to the value
+        # before the update if the update was successful
+        self._telnet_was_healthy = None
+
+        await receiver.async_update()
+
+        self._telnet_was_healthy = telnet_is_healthy
+
         if self._update_audyssey:
-            await self._receiver.async_update_audyssey()
+            await receiver.async_update_audyssey()
 
     @property
     def state(self) -> MediaPlayerState | None:

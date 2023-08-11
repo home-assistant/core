@@ -1,34 +1,138 @@
 """Support for Awair sensors."""
 from __future__ import annotations
 
-from typing import cast
+from dataclasses import dataclass
+from typing import Any, cast
 
 from python_awair.air_data import AirData
 from python_awair.devices import AwairBaseDevice, AwairLocalDevice
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_SW_VERSION
+from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_SW_VERSION,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
+    PERCENTAGE,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AwairDataUpdateCoordinator, AwairResult
 from .const import (
+    API_CO2,
     API_DUST,
+    API_HUMID,
+    API_LUX,
+    API_PM10,
     API_PM25,
     API_SCORE,
+    API_SPL_A,
     API_TEMP,
     API_VOC,
     ATTRIBUTION,
     DOMAIN,
-    DUST_ALIASES,
-    SENSOR_TYPE_SCORE,
-    SENSOR_TYPES,
-    SENSOR_TYPES_DUST,
-    AwairSensorEntityDescription,
+)
+
+DUST_ALIASES = [API_PM25, API_PM10]
+
+
+@dataclass
+class AwairRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    unique_id_tag: str
+
+
+@dataclass
+class AwairSensorEntityDescription(SensorEntityDescription, AwairRequiredKeysMixin):
+    """Describes Awair sensor entity."""
+
+
+SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
+    key=API_SCORE,
+    icon="mdi:blur",
+    native_unit_of_measurement=PERCENTAGE,
+    translation_key="score",
+    unique_id_tag="score",  # matches legacy format
+    state_class=SensorStateClass.MEASUREMENT,
+)
+
+SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
+    AwairSensorEntityDescription(
+        key=API_HUMID,
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        unique_id_tag="HUMID",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
+        key=API_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+        unique_id_tag="illuminance",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
+        key=API_SPL_A,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
+        translation_key="sound_level",
+        unique_id_tag="sound_level",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
+        key=API_VOC,
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        unique_id_tag="VOC",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
+        key=API_TEMP,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        unique_id_tag="TEMP",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
+        key=API_CO2,
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        unique_id_tag="CO2",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
+    AwairSensorEntityDescription(
+        key=API_PM25,
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        unique_id_tag="PM25",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
+        key=API_PM10,
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        unique_id_tag="PM10",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 
@@ -156,7 +260,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         return round(state, 2)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the Awair Index alongside state attributes.
 
         The Awair Index is a subjective score ranging from 0-4 (inclusive) that
@@ -178,7 +282,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         https://docs.developer.getawair.com/?version=latest#awair-score-and-index
         """
         sensor_type = self.entity_description.key
-        attrs: dict = {}
+        attrs: dict[str, Any] = {}
         if not self._air_data:
             return attrs
         if sensor_type in self._air_data.indices:

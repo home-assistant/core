@@ -1,10 +1,10 @@
 {
   "domain": "radio_browser",
   "name": "Radio Browser",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/radio",
-  "requirements": ["radios==0.1.1"],
   "codeowners": ["@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/radio_browser",
   "integration_type": "service",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "requirements": ["radios==0.1.1"]
 }

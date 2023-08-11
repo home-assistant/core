@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_MONITORED_CONDITIONS, CONF_SENSOR, DATA_KEY, LTEEntity
+from .const import CONF_SENSOR, DOMAIN
+from .entity import LTEEntity
 from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
 
 
@@ -21,7 +23,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    modem_data = hass.data[DATA_KEY].get_modem_data(discovery_info)
+    modem_data = hass.data[DOMAIN].get_modem_data(discovery_info)
 
     if not modem_data or not modem_data.data:
         raise PlatformNotReady

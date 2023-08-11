@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 from pyopenuv.errors import InvalidApiKeyError
+import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -13,11 +14,14 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
+from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_API_KEY, TEST_ELEVATION, TEST_LATITUDE, TEST_LONGITUDE
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_create_entry(hass, client, config, mock_pyopenuv):
+
+async def test_create_entry(hass: HomeAssistant, client, config, mock_pyopenuv) -> None:
     """Test creating an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -48,7 +52,9 @@ async def test_create_entry(hass, client, config, mock_pyopenuv):
     }
 
 
-async def test_duplicate_error(hass, config, config_entry, setup_config_entry):
+async def test_duplicate_error(
+    hass: HomeAssistant, config, config_entry, setup_config_entry
+) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -57,7 +63,9 @@ async def test_duplicate_error(hass, config, config_entry, setup_config_entry):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass, config_entry, setup_config_entry):
+async def test_options_flow(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
     """Test config flow options."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -95,7 +103,9 @@ async def test_options_flow(hass, config_entry, setup_config_entry):
     }
 
 
-async def test_step_reauth(hass, config, config_entry, setup_config_entry):
+async def test_step_reauth(
+    hass: HomeAssistant, config, config_entry, setup_config_entry
+) -> None:
     """Test that the reauth step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=config

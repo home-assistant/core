@@ -1,8 +1,10 @@
 """Test the repairs websocket API."""
+from typing import Any
+
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry
+from homeassistant.helpers import issue_registry as ir
 
 from tests.common import async_capture_events, flush_store
 
@@ -57,12 +59,10 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         },
     ]
 
-    events = async_capture_events(
-        hass, issue_registry.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED
-    )
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
 
     for issue in issues:
-        issue_registry.async_create_issue(
+        ir.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
@@ -99,9 +99,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         "issue_id": "issue_4",
     }
 
-    issue_registry.async_ignore_issue(
-        hass, issues[0]["domain"], issues[0]["issue_id"], True
-    )
+    ir.async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], True)
     await hass.async_block_till_done()
 
     assert len(events) == 5
@@ -111,30 +109,70 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         "issue_id": "issue_1",
     }
 
-    issue_registry.async_delete_issue(hass, issues[2]["domain"], issues[2]["issue_id"])
+    # Update an issue by creating it again with the same value,
+    # no update event should be fired, as nothing changed.
+    ir.async_create_issue(
+        hass,
+        issues[2]["domain"],
+        issues[2]["issue_id"],
+        breaks_in_ha_version=issues[2]["breaks_in_ha_version"],
+        is_fixable=issues[2]["is_fixable"],
+        is_persistent=issues[2]["is_persistent"],
+        learn_more_url=issues[2]["learn_more_url"],
+        severity=issues[2]["severity"],
+        translation_key=issues[2]["translation_key"],
+        translation_placeholders=issues[2]["translation_placeholders"],
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 5
+
+    # Update an issue by creating it again, url changed
+    ir.async_create_issue(
+        hass,
+        issues[2]["domain"],
+        issues[2]["issue_id"],
+        breaks_in_ha_version=issues[2]["breaks_in_ha_version"],
+        is_fixable=issues[2]["is_fixable"],
+        is_persistent=issues[2]["is_persistent"],
+        learn_more_url="https://www.example.com/something_changed",
+        severity=issues[2]["severity"],
+        translation_key=issues[2]["translation_key"],
+        translation_placeholders=issues[2]["translation_placeholders"],
+    )
     await hass.async_block_till_done()
 
     assert len(events) == 6
     assert events[5].data == {
+        "action": "update",
+        "domain": "test",
+        "issue_id": "issue_3",
+    }
+
+    ir.async_delete_issue(hass, issues[2]["domain"], issues[2]["issue_id"])
+    await hass.async_block_till_done()
+
+    assert len(events) == 7
+    assert events[6].data == {
         "action": "remove",
         "domain": "test",
         "issue_id": "issue_3",
     }
 
-    registry: issue_registry.IssueRegistry = hass.data[issue_registry.DATA_REGISTRY]
+    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 3
     issue1 = registry.async_get_issue("test", "issue_1")
     issue2 = registry.async_get_issue("test", "issue_2")
     issue4 = registry.async_get_issue("test", "issue_4")
 
-    registry2 = issue_registry.IssueRegistry(hass)
+    registry2 = ir.IssueRegistry(hass)
     await flush_store(registry._store)
     await registry2.async_load()
 
     assert list(registry.issues) == list(registry2.issues)
 
     issue1_registry2 = registry2.async_get_issue("test", "issue_1")
-    assert issue1_registry2 == issue_registry.IssueEntry(
+    assert issue1_registry2 == ir.IssueEntry(
         active=False,
         breaks_in_ha_version=None,
         created=issue1.created,
@@ -151,7 +189,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         translation_placeholders=None,
     )
     issue2_registry2 = registry2.async_get_issue("test", "issue_2")
-    assert issue2_registry2 == issue_registry.IssueEntry(
+    assert issue2_registry2 == ir.IssueEntry(
         active=False,
         breaks_in_ha_version=None,
         created=issue2.created,
@@ -172,11 +210,13 @@ async def test_load_issues(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) -> None:
+async def test_loading_issues_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored issues on start."""
-    hass_storage[issue_registry.STORAGE_KEY] = {
-        "version": issue_registry.STORAGE_VERSION_MAJOR,
-        "minor_version": issue_registry.STORAGE_VERSION_MINOR,
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
         "data": {
             "issues": [
                 {
@@ -212,16 +252,16 @@ async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) ->
         },
     }
 
-    await issue_registry.async_load(hass)
+    await ir.async_load(hass)
 
-    registry: issue_registry.IssueRegistry = hass.data[issue_registry.DATA_REGISTRY]
+    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 3
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1(hass: HomeAssistant, hass_storage) -> None:
+async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test migration from version 1.1."""
-    hass_storage[issue_registry.STORAGE_KEY] = {
+    hass_storage[ir.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
         "data": {
@@ -242,7 +282,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage) -> None:
         },
     }
 
-    await issue_registry.async_load(hass)
+    await ir.async_load(hass)
 
-    registry: issue_registry.IssueRegistry = hass.data[issue_registry.DATA_REGISTRY]
+    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 2

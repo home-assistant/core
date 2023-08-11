@@ -1,10 +1,17 @@
 """Test AirVisual Pro diagnostics."""
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisual_pro):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_airvisual_pro,
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
@@ -26,6 +33,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisua
                 "time": "16:00:44",
                 "timestamp": "1665072044",
             },
+            "history": {},
             "measurements": {
                 "co2": "472",
                 "humidity": "57",

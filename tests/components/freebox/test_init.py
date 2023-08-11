@@ -1,5 +1,7 @@
 """Tests for the Freebox config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
+
+from pytest_unordered import unordered
 
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
 from homeassistant.components.freebox.const import DOMAIN, SERVICE_REBOOT
@@ -15,7 +17,7 @@ from .const import MOCK_HOST, MOCK_PORT
 from tests.common import MockConfigEntry
 
 
-async def test_setup(hass: HomeAssistant, router: Mock):
+async def test_setup(hass: HomeAssistant, router: Mock) -> None:
     """Test setup of integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -25,7 +27,7 @@ async def test_setup(hass: HomeAssistant, router: Mock):
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries() == [entry]
+    assert hass.config_entries.async_entries() == unordered([entry, ANY])
 
     assert router.call_count == 1
     assert router().open.call_count == 1
@@ -44,7 +46,7 @@ async def test_setup(hass: HomeAssistant, router: Mock):
         mock_service.assert_called_once()
 
 
-async def test_setup_import(hass: HomeAssistant, router: Mock):
+async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
     """Test setup of integration from import."""
 
     entry = MockConfigEntry(
@@ -57,7 +59,7 @@ async def test_setup_import(hass: HomeAssistant, router: Mock):
         hass, DOMAIN, {DOMAIN: {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}}
     )
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries() == [entry]
+    assert hass.config_entries.async_entries() == unordered([entry, ANY])
 
     assert router.call_count == 1
     assert router().open.call_count == 1
@@ -65,7 +67,7 @@ async def test_setup_import(hass: HomeAssistant, router: Mock):
     assert hass.services.has_service(DOMAIN, SERVICE_REBOOT)
 
 
-async def test_unload_remove(hass: HomeAssistant, router: Mock):
+async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     """Test unload and remove of integration."""
     entity_id_dt = f"{DT_DOMAIN}.freebox_server_r2"
     entity_id_sensor = f"{SENSOR_DOMAIN}.freebox_download_speed"

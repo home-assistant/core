@@ -12,8 +12,12 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util, location
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from tests.common import MockUser
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -24,7 +28,9 @@ async def client(hass, hass_ws_client):
     return await hass_ws_client(hass)
 
 
-async def test_validate_config_ok(hass, hass_client):
+async def test_validate_config_ok(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test checking config."""
     with patch.object(config, "SECTIONS", ["core"]):
         await async_setup_component(hass, "config", {})
@@ -54,7 +60,22 @@ async def test_validate_config_ok(hass, hass_client):
     assert result["errors"] == "beer"
 
 
-async def test_websocket_core_update(hass, client):
+async def test_validate_config_requires_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test checking configuration does not work as a normal user."""
+    with patch.object(config, "SECTIONS", ["core"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_client(hass_read_only_access_token)
+    resp = await client.post("/api/config/core/check_config")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     """Test core config update websocket command."""
     assert hass.config.latitude != 60
     assert hass.config.longitude != 50
@@ -125,7 +146,9 @@ async def test_websocket_core_update(hass, client):
         mock_update_sensor_units.assert_called_once()
 
 
-async def test_websocket_core_update_not_admin(hass, hass_ws_client, hass_admin_user):
+async def test_websocket_core_update_not_admin(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
     """Test core config fails for non admin."""
     hass_admin_user.groups = []
     with patch.object(config, "SECTIONS", ["core"]):
@@ -142,7 +165,7 @@ async def test_websocket_core_update_not_admin(hass, hass_ws_client, hass_admin_
     assert msg["error"]["code"] == "unauthorized"
 
 
-async def test_websocket_bad_core_update(hass, client):
+async def test_websocket_bad_core_update(hass: HomeAssistant, client) -> None:
     """Test core config update fails with bad parameters."""
     await client.send_json({"id": 7, "type": "config/core/update", "latituude": 23})
 
@@ -154,7 +177,7 @@ async def test_websocket_bad_core_update(hass, client):
     assert msg["error"]["code"] == "invalid_format"
 
 
-async def test_detect_config(hass, client):
+async def test_detect_config(hass: HomeAssistant, client) -> None:
     """Test detect config."""
     with patch(
         "homeassistant.util.location.async_detect_location_info",
@@ -168,7 +191,7 @@ async def test_detect_config(hass, client):
     assert msg["result"] == {}
 
 
-async def test_detect_config_fail(hass, client):
+async def test_detect_config_fail(hass: HomeAssistant, client) -> None:
     """Test detect config."""
     with patch(
         "homeassistant.util.location.async_detect_location_info",

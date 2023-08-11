@@ -9,10 +9,13 @@ from homeassistant.components.toon.const import CONF_AGREEMENT, CONF_MIGRATE, DO
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def setup_component(hass):
@@ -31,7 +34,7 @@ async def setup_component(hass):
         await hass.async_block_till_done()
 
 
-async def test_abort_if_no_configuration(hass):
+async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Test abort if no app is configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -42,8 +45,11 @@ async def test_abort_if_no_configuration(hass):
 
 
 async def test_full_flow_implementation(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test registering an integration and finishing flow works."""
     await setup_component(hass)
 
@@ -105,8 +111,11 @@ async def test_full_flow_implementation(
 
 
 async def test_no_agreements(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test abort when there are no displays."""
     await setup_component(hass)
     result = await hass.config_entries.flow.async_init(
@@ -144,8 +153,11 @@ async def test_no_agreements(
 
 
 async def test_multiple_agreements(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test abort when there are no displays."""
     await setup_component(hass)
     result = await hass.config_entries.flow.async_init(
@@ -193,8 +205,11 @@ async def test_multiple_agreements(
 
 
 async def test_agreement_already_set_up(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test showing display form again if display already exists."""
     await setup_component(hass)
     MockConfigEntry(domain=DOMAIN, unique_id=123).add_to_hass(hass)
@@ -233,8 +248,11 @@ async def test_agreement_already_set_up(
 
 
 async def test_toon_abort(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test we abort on Toon error."""
     await setup_component(hass)
     result = await hass.config_entries.flow.async_init(
@@ -271,7 +289,7 @@ async def test_toon_abort(
         assert result2["reason"] == "connection_error"
 
 
-async def test_import(hass, current_request_with_host):
+async def test_import(hass: HomeAssistant, current_request_with_host: None) -> None:
     """Test if importing step works."""
     await setup_component(hass)
 
@@ -286,8 +304,11 @@ async def test_import(hass, current_request_with_host):
 
 
 async def test_import_migration(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test if importing step with migration works."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
     old_entry.add_to_hass(hass)

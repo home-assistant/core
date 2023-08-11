@@ -1,13 +1,19 @@
 {
   "domain": "homekit_controller",
-  "name": "HomeKit Controller",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
-  "requirements": ["aiohomekit==2.4.5"],
-  "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."],
-  "bluetooth": [{ "manufacturer_id": 76, "manufacturer_data_start": [6] }],
-  "dependencies": ["bluetooth_adapters", "zeroconf"],
+  "name": "HomeKit Device",
+  "after_dependencies": ["thread"],
+  "bluetooth": [
+    {
+      "manufacturer_id": 76,
+      "manufacturer_data_start": [6]
+    }
+  ],
   "codeowners": ["@Jc2k", "@bdraco"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters", "zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
   "iot_class": "local_push",
-  "loggers": ["aiohomekit", "commentjson"]
+  "loggers": ["aiohomekit", "commentjson"],
+  "requirements": ["aiohomekit==2.6.15"],
+  "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."]
 }

@@ -1,11 +1,11 @@
 {
   "domain": "blebox",
   "name": "BleBox devices",
+  "codeowners": ["@bbx-a", "@riokuu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/blebox",
-  "requirements": ["blebox_uniapi==2.1.4"],
-  "codeowners": ["@bbx-a", "@riokuu"],
   "iot_class": "local_polling",
   "loggers": ["blebox_uniapi"],
+  "requirements": ["blebox-uniapi==2.1.4"],
   "zeroconf": ["_bbxsrv._tcp.local."]
 }

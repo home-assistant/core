@@ -1,12 +1,16 @@
 {
   "domain": "webostv",
   "name": "LG webOS Smart TV",
+  "codeowners": ["@thecode"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/webostv",
-  "requirements": ["aiowebostv==0.3.2"],
-  "codeowners": ["@thecode"],
-  "ssdp": [{ "st": "urn:lge-com:service:webos-second-screen:1" }],
-  "quality_scale": "platinum",
   "iot_class": "local_push",
-  "loggers": ["aiowebostv"]
+  "loggers": ["aiowebostv"],
+  "quality_scale": "platinum",
+  "requirements": ["aiowebostv==0.3.3"],
+  "ssdp": [
+    {
+      "st": "urn:lge-com:service:webos-second-screen:1"
+    }
+  ]
 }

@@ -2,20 +2,14 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
 
 import homeassistant.components.influxdb as influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
-from homeassistant.const import (
-    EVENT_STATE_CHANGED,
-    PERCENTAGE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_STANDBY,
-)
-from homeassistant.core import split_entity_id
+from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 
 INFLUX_PATH = "homeassistant.components.influxdb"
@@ -39,7 +33,6 @@ class FilterTest:
 @pytest.fixture(autouse=True)
 def mock_batch_timeout(hass, monkeypatch):
     """Mock the event bus listener and the batch timeout for tests."""
-    hass.bus.listen = MagicMock()
     monkeypatch.setattr(
         f"{INFLUX_PATH}.InfluxThread.batch_timeout",
         Mock(return_value=0),
@@ -87,7 +80,7 @@ def _get_write_api_mock_v2(mock_influx_client):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api",
+    ("mock_client", "config_ext", "get_write_api"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -112,7 +105,9 @@ def _get_write_api_mock_v2(mock_influx_client):
     ],
     indirect=["mock_client"],
 )
-async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
+async def test_setup_config_full(
+    hass: HomeAssistant, mock_client, config_ext, get_write_api
+) -> None:
     """Test the setup with full configuration."""
     config = {
         "influxdb": {
@@ -127,13 +122,11 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
 
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert get_write_api(mock_client).call_count == 1
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_base, config_ext, expected_client_args",
+    ("mock_client", "config_base", "config_ext", "expected_client_args"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -249,8 +242,8 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
     indirect=["mock_client"],
 )
 async def test_setup_config_ssl(
-    hass, mock_client, config_base, config_ext, expected_client_args
-):
+    hass: HomeAssistant, mock_client, config_base, config_ext, expected_client_args
+) -> None:
     """Test the setup with various verify_ssl values."""
     config = {"influxdb": config_base.copy()}
     config["influxdb"].update(config_ext)
@@ -261,33 +254,31 @@ async def test_setup_config_ssl(
         assert await async_setup_component(hass, influxdb.DOMAIN, config)
         await hass.async_block_till_done()
 
-        assert hass.bus.listen.called
-        assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
         assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api",
+    ("mock_client", "config_ext", "get_write_api"),
     [
         (influxdb.DEFAULT_API_VERSION, BASE_V1_CONFIG, _get_write_api_mock_v1),
         (influxdb.API_VERSION_2, BASE_V2_CONFIG, _get_write_api_mock_v2),
     ],
     indirect=["mock_client"],
 )
-async def test_setup_minimal_config(hass, mock_client, config_ext, get_write_api):
+async def test_setup_minimal_config(
+    hass: HomeAssistant, mock_client, config_ext, get_write_api
+) -> None:
     """Test the setup with minimal configuration and defaults."""
     config = {"influxdb": {}}
     config["influxdb"].update(config_ext)
 
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert get_write_api(mock_client).call_count == 1
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api",
+    ("mock_client", "config_ext", "get_write_api"),
     [
         (influxdb.DEFAULT_API_VERSION, {"username": "user"}, _get_write_api_mock_v1),
         (
@@ -319,7 +310,9 @@ async def test_setup_minimal_config(hass, mock_client, config_ext, get_write_api
     ],
     indirect=["mock_client"],
 )
-async def test_invalid_config(hass, mock_client, config_ext, get_write_api):
+async def test_invalid_config(
+    hass: HomeAssistant, mock_client, config_ext, get_write_api
+) -> None:
     """Test the setup with invalid config or config options specified for wrong version."""
     config = {"influxdb": {}}
     config["influxdb"].update(config_ext)
@@ -341,11 +334,10 @@ async def _setup(hass, mock_influx_client, config_ext, get_write_api):
     # A call is made to the write API during setup to test the connection.
     # Therefore we reset the write API mock here before the test begins.
     get_write_api(mock_influx_client).reset_mock()
-    return hass.bus.listen.call_args_list[0][0][1]
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -363,10 +355,10 @@ async def _setup(hass, mock_influx_client, config_ext, get_write_api):
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+    await _setup(hass, mock_client, config_ext, get_write_api)
 
     # map of HA State to valid influxdb [state, value] fields
     valid = {
@@ -388,19 +380,11 @@ async def test_event_listener(
             "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
             "multi_periods": "0.120.240.2023873",
         }
-        state = MagicMock(
-            state=in_,
-            domain="fake",
-            entity_id="fake.entity-id",
-            object_id="entity",
-            attributes=attrs,
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": "foobars",
-                "tags": {"domain": "fake", "entity_id": "entity"},
-                "time": 12345,
+                "tags": {"domain": "fake", "entity_id": "entity_id"},
+                "time": ANY,
                 "fields": {
                     "longitude": 1.1,
                     "latitude": 2.2,
@@ -421,7 +405,8 @@ async def test_event_listener(
         if out[1] is not None:
             body[0]["fields"]["value"] = out[1]
 
-        handler_method(event)
+        hass.states.async_set("fake.entity_id", in_, attrs)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api = get_write_api(mock_client)
@@ -431,7 +416,7 @@ async def test_event_listener(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -449,33 +434,26 @@ async def test_event_listener(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_no_units(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener for missing units."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+    await _setup(hass, mock_client, config_ext, get_write_api)
 
-    for unit in (None, ""):
+    for unit in ("",):
         if unit:
             attrs = {"unit_of_measurement": unit}
         else:
             attrs = {}
-        state = MagicMock(
-            state=1,
-            domain="fake",
-            entity_id="fake.entity-id",
-            object_id="entity",
-            attributes=attrs,
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
-                "measurement": "fake.entity-id",
-                "tags": {"domain": "fake", "entity_id": "entity"},
-                "time": 12345,
+                "measurement": "fake.entity_id",
+                "tags": {"domain": "fake", "entity_id": "entity_id"},
+                "time": ANY,
                 "fields": {"value": 1},
             }
         ]
-        handler_method(event)
+        hass.states.async_set("fake.entity_id", 1, attrs)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api = get_write_api(mock_client)
@@ -485,7 +463,7 @@ async def test_event_listener_no_units(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -503,29 +481,22 @@ async def test_event_listener_no_units(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_inf(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener with large or invalid numbers."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+    await _setup(hass, mock_client, config_ext, get_write_api)
 
     attrs = {"bignumstring": "9" * 999, "nonumstring": "nan"}
-    state = MagicMock(
-        state=8,
-        domain="fake",
-        entity_id="fake.entity-id",
-        object_id="entity",
-        attributes=attrs,
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
-            "measurement": "fake.entity-id",
-            "tags": {"domain": "fake", "entity_id": "entity"},
-            "time": 12345,
+            "measurement": "fake.entity_id",
+            "tags": {"domain": "fake", "entity_id": "entity_id"},
+            "time": ANY,
             "fields": {"value": 8},
         }
     ]
-    handler_method(event)
+    hass.states.async_set("fake.entity_id", 8, attrs)
+    await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
     write_api = get_write_api(mock_client)
@@ -534,7 +505,7 @@ async def test_event_listener_inf(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -552,29 +523,22 @@ async def test_event_listener_inf(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_states(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against ignored states."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+    await _setup(hass, mock_client, config_ext, get_write_api)
 
-    for state_state in (1, "unknown", "", "unavailable", None):
-        state = MagicMock(
-            state=state_state,
-            domain="fake",
-            entity_id="fake.entity-id",
-            object_id="entity",
-            attributes={},
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
+    for state_state in (1, "unknown", "", "unavailable"):
         body = [
             {
-                "measurement": "fake.entity-id",
-                "tags": {"domain": "fake", "entity_id": "entity"},
-                "time": 12345,
+                "measurement": "fake.entity_id",
+                "tags": {"domain": "fake", "entity_id": "entity_id"},
+                "time": ANY,
                 "fields": {"value": 1},
             }
         ]
-        handler_method(event)
+        hass.states.async_set("fake.entity_id", state_state)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api = get_write_api(mock_client)
@@ -586,27 +550,20 @@ async def test_event_listener_states(
         write_api.reset_mock()
 
 
-def execute_filter_test(hass, tests, handler_method, write_api, get_mock_call):
+async def execute_filter_test(hass: HomeAssistant, tests, write_api, get_mock_call):
     """Execute all tests for a given filtering test."""
     for test in tests:
         domain, entity_id = split_entity_id(test.id)
-        state = MagicMock(
-            state=1,
-            domain=domain,
-            entity_id=test.id,
-            object_id=entity_id,
-            attributes={},
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": test.id,
                 "tags": {"domain": domain, "entity_id": entity_id},
-                "time": 12345,
+                "time": ANY,
                 "fields": {"value": 1},
             }
         ]
-        handler_method(event)
+        hass.states.async_set(test.id, 1)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         if test.should_pass:
@@ -618,7 +575,7 @@ def execute_filter_test(hass, tests, handler_method, write_api, get_mock_call):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -636,23 +593,23 @@ def execute_filter_test(hass, tests, handler_method, write_api, get_mock_call):
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_denylist(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against a denylist."""
     config = {"exclude": {"entities": ["fake.denylisted"]}, "include": {}}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
 
     tests = [
         FilterTest("fake.ok", True),
         FilterTest("fake.denylisted", False),
     ]
-    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+    await execute_filter_test(hass, tests, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -670,23 +627,23 @@ async def test_event_listener_denylist(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_denylist_domain(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against a domain denylist."""
     config = {"exclude": {"domains": ["another_fake"]}, "include": {}}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
 
     tests = [
         FilterTest("fake.ok", True),
         FilterTest("another_fake.denylisted", False),
     ]
-    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+    await execute_filter_test(hass, tests, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -704,23 +661,23 @@ async def test_event_listener_denylist_domain(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_denylist_glob(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against a glob denylist."""
     config = {"exclude": {"entity_globs": ["*.excluded_*"]}, "include": {}}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
 
     tests = [
         FilterTest("fake.ok", True),
         FilterTest("fake.excluded_entity", False),
     ]
-    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+    await execute_filter_test(hass, tests, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -738,23 +695,23 @@ async def test_event_listener_denylist_glob(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_allowlist(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against an allowlist."""
     config = {"include": {"entities": ["fake.included"]}, "exclude": {}}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
 
     tests = [
         FilterTest("fake.included", True),
         FilterTest("fake.excluded", False),
     ]
-    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+    await execute_filter_test(hass, tests, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -772,23 +729,23 @@ async def test_event_listener_allowlist(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_allowlist_domain(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against a domain allowlist."""
     config = {"include": {"domains": ["fake"]}, "exclude": {}}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
 
     tests = [
         FilterTest("fake.ok", True),
         FilterTest("another_fake.excluded", False),
     ]
-    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+    await execute_filter_test(hass, tests, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -806,23 +763,23 @@ async def test_event_listener_allowlist_domain(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_allowlist_glob(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against a glob allowlist."""
     config = {"include": {"entity_globs": ["*.included_*"]}, "exclude": {}}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
 
     tests = [
         FilterTest("fake.included_entity", True),
         FilterTest("fake.denied", False),
     ]
-    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+    await execute_filter_test(hass, tests, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -840,8 +797,8 @@ async def test_event_listener_allowlist_glob(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_filtered_allowlist(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against an allowlist filtered by denylist."""
     config = {
         "include": {
@@ -856,7 +813,7 @@ async def test_event_listener_filtered_allowlist(
         },
     }
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
 
     tests = [
@@ -868,11 +825,11 @@ async def test_event_listener_filtered_allowlist(
         FilterTest("fake.excluded_entity", False),
         FilterTest("another_fake.included_entity", True),
     ]
-    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+    await execute_filter_test(hass, tests, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -890,15 +847,15 @@ async def test_event_listener_filtered_allowlist(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_filtered_denylist(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener against a domain/glob denylist with an entity id allowlist."""
     config = {
         "include": {"entities": ["another_fake.included", "fake.excluded_pass"]},
         "exclude": {"domains": ["another_fake"], "entity_globs": "*.excluded_*"},
     }
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
 
     tests = [
@@ -908,11 +865,11 @@ async def test_event_listener_filtered_denylist(
         FilterTest("another_fake.denied", False),
         FilterTest("fake.excluded_entity", False),
     ]
-    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+    await execute_filter_test(hass, tests, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -930,10 +887,10 @@ async def test_event_listener_filtered_denylist(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_invalid_type(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener when an attribute has an invalid type."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+    await _setup(hass, mock_client, config_ext, get_write_api)
 
     # map of HA State to valid influxdb [state, value] fields
     valid = {
@@ -951,19 +908,11 @@ async def test_event_listener_invalid_type(
             "latitude": "2.2",
             "invalid_attribute": ["value1", "value2"],
         }
-        state = MagicMock(
-            state=in_,
-            domain="fake",
-            entity_id="fake.entity-id",
-            object_id="entity",
-            attributes=attrs,
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": "foobars",
-                "tags": {"domain": "fake", "entity_id": "entity"},
-                "time": 12345,
+                "tags": {"domain": "fake", "entity_id": "entity_id"},
+                "time": ANY,
                 "fields": {
                     "longitude": 1.1,
                     "latitude": 2.2,
@@ -976,7 +925,8 @@ async def test_event_listener_invalid_type(
         if out[1] is not None:
             body[0]["fields"]["value"] = out[1]
 
-        handler_method(event)
+        hass.states.async_set("fake.entity_id", in_, attrs)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api = get_write_api(mock_client)
@@ -986,7 +936,7 @@ async def test_event_listener_invalid_type(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1004,30 +954,22 @@ async def test_event_listener_invalid_type(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_default_measurement(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener with a default measurement."""
     config = {"default_measurement": "state"}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
-
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="fake.ok",
-        object_id="ok",
-        attributes={},
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    await _setup(hass, mock_client, config, get_write_api)
     body = [
         {
             "measurement": "state",
             "tags": {"domain": "fake", "entity_id": "ok"},
-            "time": 12345,
+            "time": ANY,
             "fields": {"value": 1},
         }
     ]
-    handler_method(event)
+    hass.states.async_set("fake.ok", 1)
+    await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
     write_api = get_write_api(mock_client)
@@ -1036,7 +978,7 @@ async def test_event_listener_default_measurement(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1054,31 +996,24 @@ async def test_event_listener_default_measurement(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_unit_of_measurement_field(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener for unit of measurement field."""
     config = {"override_measurement": "state"}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
 
     attrs = {"unit_of_measurement": "foobars"}
-    state = MagicMock(
-        state="foo",
-        domain="fake",
-        entity_id="fake.entity-id",
-        object_id="entity",
-        attributes=attrs,
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "state",
-            "tags": {"domain": "fake", "entity_id": "entity"},
-            "time": 12345,
+            "tags": {"domain": "fake", "entity_id": "entity_id"},
+            "time": ANY,
             "fields": {"state": "foo", "unit_of_measurement_str": "foobars"},
         }
     ]
-    handler_method(event)
+    hass.states.async_set("fake.entity_id", "foo", attrs)
+    await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
     write_api = get_write_api(mock_client)
@@ -1087,7 +1022,7 @@ async def test_event_listener_unit_of_measurement_field(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1105,22 +1040,14 @@ async def test_event_listener_unit_of_measurement_field(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_tags_attributes(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener when some attributes should be tags."""
     config = {"tags_attributes": ["friendly_fake"]}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
 
     attrs = {"friendly_fake": "tag_str", "field_fake": "field_str"}
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="fake.something",
-        object_id="something",
-        attributes=attrs,
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "fake.something",
@@ -1129,11 +1056,12 @@ async def test_event_listener_tags_attributes(
                 "entity_id": "something",
                 "friendly_fake": "tag_str",
             },
-            "time": 12345,
+            "time": ANY,
             "fields": {"value": 1, "field_fake_str": "field_str"},
         }
     ]
-    handler_method(event)
+    hass.states.async_set("fake.something", 1, attrs)
+    await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
     write_api = get_write_api(mock_client)
@@ -1142,7 +1070,7 @@ async def test_event_listener_tags_attributes(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1160,8 +1088,8 @@ async def test_event_listener_tags_attributes(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_component_override_measurement(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener with overridden measurements."""
     config = {
         "component_config": {
@@ -1173,7 +1101,7 @@ async def test_event_listener_component_override_measurement(
         "component_config_domain": {"climate": {"override_measurement": "hvac"}},
     }
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
 
     test_components = [
         {"domain": "sensor", "id": "fake_humidity", "res": "humidity"},
@@ -1182,23 +1110,16 @@ async def test_event_listener_component_override_measurement(
         {"domain": "other", "id": "just_fake", "res": "other.just_fake"},
     ]
     for comp in test_components:
-        state = MagicMock(
-            state=1,
-            domain=comp["domain"],
-            entity_id=f"{comp['domain']}.{comp['id']}",
-            object_id=comp["id"],
-            attributes={},
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": comp["res"],
                 "tags": {"domain": comp["domain"], "entity_id": comp["id"]},
-                "time": 12345,
+                "time": ANY,
                 "fields": {"value": 1},
             }
         ]
-        handler_method(event)
+        hass.states.async_set(f"{comp['domain']}.{comp['id']}", 1)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api = get_write_api(mock_client)
@@ -1208,7 +1129,7 @@ async def test_event_listener_component_override_measurement(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1226,8 +1147,8 @@ async def test_event_listener_component_override_measurement(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_component_measurement_attr(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener with a different measurement_attr."""
     config = {
         "measurement_attr": "domain__device_class",
@@ -1240,7 +1161,7 @@ async def test_event_listener_component_measurement_attr(
         "component_config_domain": {"climate": {"override_measurement": "hvac"}},
     }
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
 
     test_components = [
         {
@@ -1255,23 +1176,16 @@ async def test_event_listener_component_measurement_attr(
         {"domain": "other", "id": "just_fake", "attrs": {}, "res": "other"},
     ]
     for comp in test_components:
-        state = MagicMock(
-            state=1,
-            domain=comp["domain"],
-            entity_id=f"{comp['domain']}.{comp['id']}",
-            object_id=comp["id"],
-            attributes=comp["attrs"],
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": comp["res"],
                 "tags": {"domain": comp["domain"], "entity_id": comp["id"]},
-                "time": 12345,
+                "time": ANY,
                 "fields": {"value": 1},
             }
         ]
-        handler_method(event)
+        hass.states.async_set(f"{comp['domain']}.{comp['id']}", 1, comp["attrs"])
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api = get_write_api(mock_client)
@@ -1281,7 +1195,7 @@ async def test_event_listener_component_measurement_attr(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1299,8 +1213,8 @@ async def test_event_listener_component_measurement_attr(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_ignore_attributes(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener with overridden measurements."""
     config = {
         "ignore_attributes": ["ignore"],
@@ -1315,7 +1229,7 @@ async def test_event_listener_ignore_attributes(
         },
     }
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
 
     test_components = [
         {
@@ -1336,30 +1250,27 @@ async def test_event_listener_ignore_attributes(
     ]
     for comp in test_components:
         entity_id = f"{comp['domain']}.{comp['id']}"
-        state = MagicMock(
-            state=1,
-            domain=comp["domain"],
-            entity_id=entity_id,
-            object_id=comp["id"],
-            attributes={
-                "ignore": 1,
-                "id_ignore": 1,
-                "glob_ignore": 1,
-                "domain_ignore": 1,
-            },
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
         fields = {"value": 1}
         fields.update(comp["attrs"])
         body = [
             {
                 "measurement": entity_id,
                 "tags": {"domain": comp["domain"], "entity_id": comp["id"]},
-                "time": 12345,
+                "time": ANY,
                 "fields": fields,
             }
         ]
-        handler_method(event)
+        hass.states.async_set(
+            entity_id,
+            1,
+            {
+                "ignore": 1,
+                "id_ignore": 1,
+                "glob_ignore": 1,
+                "domain_ignore": 1,
+            },
+        )
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api = get_write_api(mock_client)
@@ -1369,7 +1280,7 @@ async def test_event_listener_ignore_attributes(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1387,33 +1298,25 @@ async def test_event_listener_ignore_attributes(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_ignore_attributes_overlapping_entities(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener with overridden measurements."""
     config = {
         "component_config": {"sensor.fake": {"override_measurement": "units"}},
         "component_config_domain": {"sensor": {"ignore_attributes": ["ignore"]}},
     }
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
-
-    state = MagicMock(
-        state=1,
-        domain="sensor",
-        entity_id="sensor.fake",
-        object_id="fake",
-        attributes={"ignore": 1},
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    await _setup(hass, mock_client, config, get_write_api)
     body = [
         {
             "measurement": "units",
             "tags": {"domain": "sensor", "entity_id": "fake"},
-            "time": 12345,
+            "time": ANY,
             "fields": {"value": 1},
         }
     ]
-    handler_method(event)
+    hass.states.async_set("sensor.fake", 1, {"ignore": 1})
+    await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
     write_api = get_write_api(mock_client)
@@ -1423,7 +1326,7 @@ async def test_event_listener_ignore_attributes_overlapping_entities(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1441,27 +1344,19 @@ async def test_event_listener_ignore_attributes_overlapping_entities(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_scheduled_write(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener retries after a write failure."""
     config = {"max_retries": 1}
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
-
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="entity.id",
-        object_id="entity",
-        attributes={},
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    await _setup(hass, mock_client, config, get_write_api)
     write_api = get_write_api(mock_client)
     write_api.side_effect = OSError("foo")
 
     # Write fails
     with patch.object(influxdb.time, "sleep") as mock_sleep:
-        handler_method(event)
+        hass.states.async_set("entity.entity_id", 1)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
         assert mock_sleep.called
     assert write_api.call_count == 2
@@ -1469,14 +1364,15 @@ async def test_event_listener_scheduled_write(
     # Write works again
     write_api.side_effect = None
     with patch.object(influxdb.time, "sleep") as mock_sleep:
-        handler_method(event)
+        hass.states.async_set("entity.entity_id", "2")
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
         assert not mock_sleep.called
     assert write_api.call_count == 3
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1494,19 +1390,10 @@ async def test_event_listener_scheduled_write(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_backlog_full(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener drops old events when backlog gets full."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
-
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="entity.id",
-        object_id="entity",
-        attributes={},
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    await _setup(hass, mock_client, config_ext, get_write_api)
 
     monotonic_time = 0
 
@@ -1517,14 +1404,15 @@ async def test_event_listener_backlog_full(
         return monotonic_time
 
     with patch("homeassistant.components.influxdb.time.monotonic", new=fast_monotonic):
-        handler_method(event)
+        hass.states.async_set("entity.id", 1)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         assert get_write_api(mock_client).call_count == 0
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1542,29 +1430,20 @@ async def test_event_listener_backlog_full(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_event_listener_attribute_name_conflict(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
     """Test the event listener when an attribute conflicts with another field."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
-
-    attrs = {"value": "value_str"}
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="fake.something",
-        object_id="something",
-        attributes=attrs,
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    await _setup(hass, mock_client, config_ext, get_write_api)
     body = [
         {
             "measurement": "fake.something",
             "tags": {"domain": "fake", "entity_id": "something"},
-            "time": 12345,
+            "time": ANY,
             "fields": {"value": 1, "value__str": "value_str"},
         }
     ]
-    handler_method(event)
+    hass.states.async_set("fake.something", 1, {"value": "value_str"})
+    await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
     write_api = get_write_api(mock_client)
@@ -1573,7 +1452,7 @@ async def test_event_listener_attribute_name_conflict(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call, test_exception",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call", "test_exception"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1614,8 +1493,14 @@ async def test_event_listener_attribute_name_conflict(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_connection_failure_on_startup(
-    hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    config_ext,
+    get_write_api,
+    get_mock_call,
+    test_exception,
+) -> None:
     """Test the event listener when it fails to connect to Influx on startup."""
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
@@ -1630,11 +1515,10 @@ async def test_connection_failure_on_startup(
             == 1
         )
         event_helper.call_later.assert_called_once()
-        hass.bus.listen.assert_not_called()
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call, test_exception",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call", "test_exception"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1656,8 +1540,14 @@ async def test_connection_failure_on_startup(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_invalid_inputs_error(
-    hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    config_ext,
+    get_write_api,
+    get_mock_call,
+    test_exception,
+) -> None:
     """Test the event listener when influx returns invalid inputs on write.
 
     The difference in error handling in this case is that we do not sleep
@@ -1668,21 +1558,14 @@ async def test_invalid_inputs_error(
     But Influx is an external service so there may be edge cases that
     haven't been encountered yet.
     """
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+    await _setup(hass, mock_client, config_ext, get_write_api)
 
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="fake.something",
-        object_id="something",
-        attributes={},
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
 
     with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
-        handler_method(event)
+        hass.states.async_set("fake.something", 1)
+        await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api.assert_called_once()
@@ -1694,7 +1577,7 @@ async def test_invalid_inputs_error(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call, precision",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call", "precision"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1756,36 +1639,37 @@ async def test_invalid_inputs_error(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_precision(
-    hass, mock_client, config_ext, get_write_api, get_mock_call, precision
-):
+    hass: HomeAssistant,
+    mock_client,
+    config_ext,
+    get_write_api,
+    get_mock_call,
+    precision,
+) -> None:
     """Test the precision setup."""
     config = {
         "precision": precision,
     }
     config.update(config_ext)
-    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    await _setup(hass, mock_client, config, get_write_api)
 
     value = "1.9"
-    attrs = {
-        "unit_of_measurement": "foobars",
-    }
-    state = MagicMock(
-        state=value,
-        domain="fake",
-        entity_id="fake.entity-id",
-        object_id="entity",
-        attributes=attrs,
-    )
-    event = MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "foobars",
-            "tags": {"domain": "fake", "entity_id": "entity"},
-            "time": 12345,
+            "tags": {"domain": "fake", "entity_id": "entity_id"},
+            "time": ANY,
             "fields": {"value": float(value)},
         }
     ]
-    handler_method(event)
+    hass.states.async_set(
+        "fake.entity_id",
+        value,
+        {
+            "unit_of_measurement": "foobars",
+        },
+    )
+    await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
     write_api = get_write_api(mock_client)

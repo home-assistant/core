@@ -5,16 +5,16 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from functools import cached_property
 from typing import Any, Generic, TypeVar
 
-from nibe.coil import Coil
+from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW, ProductInfo
-from nibe.exceptions import CoilNotFoundException, CoilReadException
+from nibe.exceptions import CoilNotFoundException, ReadException
 from nibe.heatpump import HeatPump, Model, Series
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -25,7 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -54,6 +55,7 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.WATER_HEATER,
 ]
 COIL_READ_RETRIES = 5
 
@@ -62,13 +64,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nibe Heat Pump from a config entry."""
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
+    heatpump.word_swap = entry.data.get(CONF_WORD_SWAP, True)
     await heatpump.initialize()
 
     connection: Connection
     connection_type = entry.data[CONF_CONNECTION_TYPE]
 
     if connection_type == CONF_CONNECTION_TYPE_NIBEGW:
-        heatpump.word_swap = entry.data[CONF_WORD_SWAP]
         connection = NibeGW(
             heatpump,
             entry.data[CONF_IP_ADDRESS],
@@ -182,7 +184,7 @@ class ContextCoordinator(
         return release_update
 
 
-class Coordinator(ContextCoordinator[dict[int, Coil], int]):
+class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
     """Update coordinator for nibe heat pumps."""
 
     config_entry: ConfigEntry
@@ -199,17 +201,18 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
         )
 
         self.data = {}
-        self.seed: dict[int, Coil] = {}
+        self.seed: dict[int, CoilData] = {}
         self.connection = connection
         self.heatpump = heatpump
         self.task: asyncio.Task | None = None
 
         heatpump.subscribe(heatpump.COIL_UPDATE_EVENT, self._on_coil_update)
 
-    def _on_coil_update(self, coil: Coil):
+    def _on_coil_update(self, data: CoilData):
         """Handle callback on coil updates."""
-        self.data[coil.address] = coil
-        self.seed[coil.address] = coil
+        coil = data.coil
+        self.data[coil.address] = data
+        self.seed[coil.address] = data
         self.async_update_context_listeners([coil.address])
 
     @property
@@ -246,26 +249,26 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
 
     async def async_write_coil(self, coil: Coil, value: int | float | str) -> None:
         """Write coil and update state."""
-        coil.value = value
-        coil = await self.connection.write_coil(coil)
+        data = CoilData(coil, value)
+        await self.connection.write_coil(data)
 
-        self.data[coil.address] = coil
+        self.data[coil.address] = data
 
         self.async_update_context_listeners([coil.address])
 
-    async def async_read_coil(self, coil: Coil) -> Coil:
+    async def async_read_coil(self, coil: Coil) -> CoilData:
         """Read coil and update state using callbacks."""
         return await self.connection.read_coil(coil)
 
-    async def _async_update_data(self) -> dict[int, Coil]:
+    async def _async_update_data(self) -> dict[int, CoilData]:
         self.task = asyncio.current_task()
         try:
             return await self._async_update_data_internal()
         finally:
             self.task = None
 
-    async def _async_update_data_internal(self) -> dict[int, Coil]:
-        result: dict[int, Coil] = {}
+    async def _async_update_data_internal(self) -> dict[int, CoilData]:
+        result: dict[int, CoilData] = {}
 
         def _get_coils() -> Iterable[Coil]:
             for address in sorted(self.context_callbacks.keys()):
@@ -282,10 +285,10 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
                 yield coil
 
         try:
-            async for coil in self.connection.read_coils(_get_coils()):
-                result[coil.address] = coil
-                self.seed.pop(coil.address, None)
-        except CoilReadException as exception:
+            async for data in self.connection.read_coils(_get_coils()):
+                result[data.coil.address] = data
+                self.seed.pop(data.coil.address, None)
+        except ReadException as exception:
             if not result:
                 raise UpdateFailed(f"Failed to update: {exception}") from exception
             self.logger.debug(
@@ -329,7 +332,7 @@ class CoilEntity(CoordinatorEntity[Coordinator]):
             self.coordinator.data or {}
         )
 
-    def _async_read_coil(self, coil: Coil):
+    def _async_read_coil(self, data: CoilData):
         """Update state of entity based on coil data."""
 
     async def _async_write_coil(self, value: int | float | str):
@@ -337,10 +340,9 @@ class CoilEntity(CoordinatorEntity[Coordinator]):
         await self.coordinator.async_write_coil(self._coil, value)
 
     def _handle_coordinator_update(self) -> None:
-        coil = self.coordinator.data.get(self._coil.address)
-        if coil is None:
+        data = self.coordinator.data.get(self._coil.address)
+        if data is None:
             return
 
-        self._coil = coil
-        self._async_read_coil(coil)
+        self._async_read_coil(data)
         self.async_write_ha_state()

@@ -1,13 +1,13 @@
 {
   "domain": "ssdp",
   "name": "Simple Service Discovery Protocol (SSDP)",
-  "documentation": "https://www.home-assistant.io/integrations/ssdp",
-  "requirements": ["async-upnp-client==0.33.1"],
-  "dependencies": ["network"],
   "after_dependencies": ["zeroconf"],
   "codeowners": [],
-  "quality_scale": "internal",
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/ssdp",
+  "integration_type": "system",
   "iot_class": "local_push",
   "loggers": ["async_upnp_client"],
-  "integration_type": "system"
+  "quality_scale": "internal",
+  "requirements": ["async-upnp-client==0.34.1"]
 }

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, cast
+from typing import Any
 
 import attr
 import voluptuous as vol
@@ -21,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -35,7 +34,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
-from .discovery import MQTT_DISCOVERY_DONE, MQTTDiscoveryPayload
+from .discovery import MQTTDiscoveryPayload
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
@@ -135,7 +134,7 @@ class Trigger:
 
     async def add_trigger(
         self, action: TriggerActionType, trigger_info: TriggerInfo
-    ) -> Callable:
+    ) -> Callable[[], None]:
         """Add MQTT trigger."""
         instance = TriggerInstance(action, trigger_info, self)
         self.trigger_instances.append(instance)
@@ -268,12 +267,9 @@ async def async_setup_trigger(
 ) -> None:
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
-    discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+    device_id = update_device(hass, config_entry, config)
 
-    if (device_id := update_device(hass, config_entry, config)) is None:
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
-        return
-
+    assert isinstance(device_id, str)
     mqtt_device_trigger = MqttDeviceTrigger(
         hass, config, device_id, discovery_data, config_entry
     )
@@ -289,7 +285,8 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
         device_trigger: Trigger = mqtt_data.device_triggers.pop(trig[CONF_DISCOVERY_ID])
         if device_trigger:
             device_trigger.detach_trigger()
-            discovery_data = cast(dict, device_trigger.discovery_data)
+            discovery_data = device_trigger.discovery_data
+            assert discovery_data is not None
             discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
             debug_info.remove_trigger_discovery_data(hass, discovery_hash)
 

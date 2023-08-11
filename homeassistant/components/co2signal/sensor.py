@@ -13,8 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,13 +34,13 @@ class CO2SensorEntityDescription(SensorEntityDescription):
 SENSORS = (
     CO2SensorEntityDescription(
         key="carbonIntensity",
-        name="CO2 intensity",
+        translation_key="carbon_intensity",
         unique_id="co2intensity",
         # No unit, it's extracted from response.
     ),
     CO2SensorEntityDescription(
         key="fossilFuelPercentage",
-        name="Grid fossil fuel percentage",
+        translation_key="fossil_fuel_percentage",
         native_unit_of_measurement=PERCENTAGE,
     ),
 )
@@ -75,11 +74,11 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
             "country_code": coordinator.data["countryCode"],
         }
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.electricitymap.org/",
+            configuration_url="https://www.electricitymaps.com/",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
-            manufacturer="Tmrow.com",
-            name="CO2 signal",
+            manufacturer="Electricity Maps",
+            name="Electricity Maps",
         )
         self._attr_unique_id = (
             f"{coordinator.entry_id}_{description.unique_id or description.key}"

@@ -1,10 +1,10 @@
 {
   "domain": "airnow",
   "name": "AirNow",
+  "codeowners": ["@asymworks"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airnow",
-  "requirements": ["pyairnow==1.1.0"],
-  "codeowners": ["@asymworks"],
   "iot_class": "cloud_polling",
-  "loggers": ["pyairnow"]
+  "loggers": ["pyairnow"],
+  "requirements": ["pyairnow==1.2.1"]
 }

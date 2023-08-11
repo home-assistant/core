@@ -3,16 +3,23 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.xbox.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_abort_if_existing_entry(hass):
+async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check flow abort when an entry already exist."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -24,16 +31,15 @@ async def test_abort_if_existing_entry(hass):
 
 
 async def test_full_flow(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check full flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "xbox",
-        {
-            "xbox": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
+    assert await setup.async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
     )
 
     result = await hass.config_entries.flow.async_init(

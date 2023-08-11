@@ -8,13 +8,14 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
 
-async def test_sensors(hass, nzbget_api) -> None:
+async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
     """Test the creation and values of the sensors."""
     now = dt_util.utcnow().replace(microsecond=0)
     with patch("homeassistant.components.nzbget.sensor.utcnow", return_value=now):

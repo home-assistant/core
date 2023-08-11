@@ -8,16 +8,23 @@ import pytest
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock):
+async def test_device(
+    hass: HomeAssistant,
+    config_entry,
+    aioclient_mock_fixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test Flo by Moen devices."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
@@ -76,7 +83,7 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
 
     call_count = aioclient_mock.call_count
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=90))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == call_count + 6

@@ -1,6 +1,8 @@
 """Tests for common SonosSpeaker behavior."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -9,12 +11,13 @@ from tests.common import async_fire_time_changed
 
 
 async def test_fallback_to_polling(
-    hass: HomeAssistant, async_autosetup_sonos, soco, caplog
-):
+    hass: HomeAssistant, async_autosetup_sonos, soco, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that polling fallback works."""
     speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
     assert speaker.soco is soco
     assert speaker._subscriptions
+    assert not speaker.subscriptions_failed
 
     caplog.clear()
 
@@ -27,11 +30,12 @@ async def test_fallback_to_polling(
 
     assert not speaker._subscriptions
     assert speaker.subscriptions_failed
-    assert "falling back to polling" in caplog.text
     assert "Activity on Zone A from SonosSpeaker.update_volume" in caplog.text
 
 
-async def test_subscription_creation_fails(hass: HomeAssistant, async_setup_sonos):
+async def test_subscription_creation_fails(
+    hass: HomeAssistant, async_setup_sonos
+) -> None:
     """Test that subscription creation failures are handled."""
     with patch(
         "homeassistant.components.sonos.speaker.SonosSpeaker._subscribe",

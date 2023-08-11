@@ -1,7 +1,7 @@
 {
   "domain": "london_air",
   "name": "London Air",
-  "documentation": "https://www.home-assistant.io/integrations/london_air",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/london_air",
   "iot_class": "cloud_polling"
 }
