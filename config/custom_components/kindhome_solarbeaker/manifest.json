@@ -1,0 +1,18 @@
+{
+  "domain": "kindhome_solarbreaker",
+  "name": "Kindhome solarbreaker",
+  "codeowners": [],
+  "dependencies": ["bluetooth"],
+  "documentation": "https://kindhome.com",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "config_flow": true,
+  "bluetooth": [
+    {
+      "connectable": true,
+      "service_uuid": "75c276c3-8f97-20bc-a143-b354244886d4"
+    }
+  ],
+  "__todo__iot_class": "local_push"
+}
