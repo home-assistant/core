@@ -75,6 +75,7 @@ FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 MIN_TEMP = 10
 MAX_TEMP = 32
+MIN_TEMP_RANGE = 1.66667
 
 
 async def async_setup_entry(
@@ -313,6 +314,13 @@ class ThermostatEntity(ClimateEntity):
         try:
             if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:
                 if low_temp and high_temp:
+                    if high_temp - low_temp < MIN_TEMP_RANGE:
+                        # Ensure there is a minimum gap from the new temp. Pick
+                        # the temp that is not changing as the one to move.
+                        if abs(high_temp - self.target_temperature_high) < 0.01:
+                            high_temp = low_temp + MIN_TEMP_RANGE
+                        else:
+                            low_temp = high_temp - MIN_TEMP_RANGE
                     await trait.set_range(low_temp, high_temp)
             elif hvac_mode == HVACMode.COOL and temp:
                 await trait.set_cool(temp)
