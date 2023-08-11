@@ -1138,7 +1138,7 @@ class MockEntity(entity.Entity):
         return self._handle("device_class")
 
     @property
-    def device_info(self) -> entity.DeviceInfo | None:
+    def device_info(self) -> dr.DeviceInfo | None:
         """Info how it links to a device."""
         return self._handle("device_info")
 

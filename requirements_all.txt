@@ -360,10 +360,13 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==51
+aiounifi==52
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
+
+# homeassistant.components.waqi
+aiowaqi==0.2.1
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -540,7 +543,7 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.7.0
+bluetooth-data-tools==1.8.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1872,7 +1875,7 @@ pynuki==1.6.2
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==1.5.0
+pynws==1.5.1
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -2654,9 +2657,6 @@ wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
 wallbox==0.4.12
-
-# homeassistant.components.waqi
-waqiasync==1.1.0
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
