@@ -121,7 +121,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None=None) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
