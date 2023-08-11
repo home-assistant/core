@@ -40,5 +40,17 @@
         "elsewhere": "Everywhere Else"
       }
     }
+  },
+  "services": {
+    "clean_room": {
+      "name": "Clean Room",
+      "description": "Cleans a specific user-defined room or set of rooms.",
+      "fields": {
+        "rooms": {
+          "name": "Rooms",
+          "description": "List of rooms to clean"
+        }
+      }
+    }
   }
 }

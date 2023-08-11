@@ -107,20 +107,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Clean a spot. Not yet implemented."""
-        raise NotImplementedError(
-            "Service `clean_spot` is currently not compatible with SharkIQ."
-        )
-
-    def send_command(
-        self,
-        command: str,
-        params: dict[str, Any] | list[Any] | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Send a command to the vacuum. Not yet implemented."""
-        raise NotImplementedError(
-            "Service `send_command` is currently not compatible with SharkIQ."
-        )
+        raise NotImplementedError()
 
     @property
     def is_online(self) -> bool:
@@ -218,32 +205,25 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         await self.sharkiq.async_find_device()
 
     async def async_clean_room(self, rooms: list[str], **kwargs: Any) -> None:
-        """Clean a specific room."""
+        """Clean specific rooms."""
         if len(rooms) == 0:
             raise exceptions.HomeAssistantError("No rooms to clean were provided.")
         rooms_to_clean = []
         valid_rooms = []
         if self.available_rooms is not None:
             valid_rooms = self.available_rooms
-        all_rooms_reachable = True
         for room in rooms:
             if room in valid_rooms:
                 rooms_to_clean.append(room)
-            elif room.capitalize() in valid_rooms:
-                rooms_to_clean.append(room.capitalize())
             else:
-                all_rooms_reachable = False
-                LOGGER.error("Room not reachable: %s", room)
+                LOGGER.error("Invalid room %s", room)
+                raise exceptions.HomeAssistantError(
+                    "One or more of the rooms listed are unavailable to your vacuum. "
+                    "Make sure all rooms match the Shark App, including capitalization."
+                )
 
-        if all_rooms_reachable:
-            LOGGER.info("Cleaning room(s): %s", rooms_to_clean)
-            await self.sharkiq.async_clean_rooms(rooms_to_clean)
-        else:
-            LOGGER.error("Invalid room selection - service not run")
-            raise exceptions.HomeAssistantError(
-                "One or more of the rooms listed is not available to your vacuum. "
-                "Make sure all rooms match the Shark App including capitalization."
-            )
+        LOGGER.info("Cleaning room(s): %s", rooms_to_clean)
+        await self.sharkiq.async_clean_rooms(rooms_to_clean)
         await self.coordinator.async_refresh()
 
     @property

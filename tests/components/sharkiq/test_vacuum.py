@@ -234,7 +234,8 @@ async def test_device_properties(
 @pytest.mark.parametrize(
     ("room_list", "exception"),
     [
-        (["KITCHEN"], None),
+        (["KITCHEN"], exceptions.HomeAssistantError),
+        (["Kitchen"], None),
         (["Office"], exceptions.HomeAssistantError),
         ([], exceptions.HomeAssistantError),
     ],
@@ -274,7 +275,7 @@ async def test_locate(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("room_list"),
-    [(ROOM_LIST), (["kitchen"])],
+    [(ROOM_LIST), (["Kitchen"])],
 )
 async def test_clean_room(hass: HomeAssistant, room_list: list) -> None:
     """Test that the clean_room command works."""

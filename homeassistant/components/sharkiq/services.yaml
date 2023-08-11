@@ -1,6 +1,4 @@
 clean_room:
-  name: Clean Room
-  description: Cleans a specific user-defined room or set of rooms.
   target:
     entity:
       integration: "sharkiq"
@@ -8,8 +6,6 @@ clean_room:
 
   fields:
     rooms:
-      name: Rooms
-      description: List of rooms to clean
       required: true
       advanced: true
       example: "Kitchen"
