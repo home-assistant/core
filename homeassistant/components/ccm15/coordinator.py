@@ -1,12 +1,10 @@
 """Climate device for CCM15 coordinator."""
-import asyncio
 import datetime
 import logging
 from typing import Any, Optional
 
-import aiohttp
+from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice
 import httpx
-import xmltodict
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -19,10 +17,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -32,9 +27,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    BASE_URL,
-    CONF_URL_CTRL,
-    CONF_URL_STATUS,
     CONST_CMD_FAN_MAP,
     CONST_CMD_STATE_MAP,
     CONST_FAN_CMD_MAP,
@@ -42,7 +34,6 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from .data_model import CCM15DeviceState, CCM15SlaveDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,8 +52,8 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             update_method=self._async_update_data,
             update_interval=datetime.timedelta(seconds=interval),
         )
+        self._ccm15 = CCM15Device(host, port, DEFAULT_TIMEOUT)
         self._host = host
-        self._port = port
         self._ac_devices: dict[int, CCM15Climate] = {}
 
     def get_devices(self):
@@ -76,31 +67,9 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         except httpx.RequestError as err:  # pragma: no cover
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
 
-    async def _fetch_xml_data(self) -> str:  # pragma: no cover
-        url = BASE_URL.format(self._host, self._port, CONF_URL_STATUS)
-        _LOGGER.debug("Querying url:'%s'", url)
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, timeout=DEFAULT_TIMEOUT)
-        return response.text
-
     async def _fetch_data(self) -> CCM15DeviceState:
         """Get the current status of all AC devices."""
-        str_data = await self._fetch_xml_data()
-        doc = xmltodict.parse(str_data)
-        data = doc["response"]
-        _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
-        ac_data = CCM15DeviceState(devices={})
-        ac_index = 0
-        for ac_name, ac_binary in data.items():
-            _LOGGER.debug("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
-            if ac_binary == "-":
-                break
-            bytesarr = bytes.fromhex(ac_binary.strip(","))
-            ac_slave = CCM15SlaveDevice(bytesarr)
-            _LOGGER.debug("Index: %s, state:'%s'", ac_index, ac_slave)
-            ac_data.devices[ac_index] = ac_slave
-            ac_index += 1
-        _LOGGER.debug("Found data '%s'", ac_data.devices)
+        ac_data = await self._ccm15.get_status_async()
         if len(self._ac_devices) == 0:
             for ac_index in ac_data.devices:
                 _LOGGER.debug("Creating new ac device at index '%s'", ac_index)
@@ -109,45 +78,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     async def async_test_connection(self):  # pragma: no cover
         """Test the connection to the CCM15 device."""
-        url = f"http://{self._host}:{self._port}/{CONF_URL_STATUS}"
-        try:
-            async with aiohttp.ClientSession() as session, session.get(
-                url, timeout=10
-            ) as response:
-                if response.status == 200:
-                    return True
-                _LOGGER.debug("Test connection: Cannot connect : %s", response.status)
-                return False
-        except (aiohttp.ClientError, asyncio.TimeoutError):
-            _LOGGER.debug("Test connection: Timeout")
-            return False
-
-    async def async_send_state(self, url: str) -> bool:  # pragma: no cover
-        """Send the url to set state to the ccm15 slave."""
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, timeout=DEFAULT_TIMEOUT)
-            _LOGGER.debug("API response status code:%d", response.status_code)
-            return response.status_code in (httpx.codes.OK, httpx.codes.FOUND)
+        return await self._ccm15.async_test_connection()
 
     async def async_set_state(self, ac_index: int, state: str, value: int) -> None:
         """Set new target states."""
-        _LOGGER.debug("Calling async_set_states for ac index '%s'", ac_index)
-        ac_id: int = 2**ac_index
-        url = BASE_URL.format(
-            self._host,
-            self._port,
-            CONF_URL_CTRL
-            + "?ac0="
-            + str(ac_id)
-            + "&ac1=0"
-            + "&"
-            + state
-            + "="
-            + str(value),
-        )
-        _LOGGER.debug("Url:'%s'", url)
-
-        if await self.async_send_state(url):
+        if await self._ccm15.async_set_state(ac_index, state, value):
             await self.async_request_refresh()
 
     def get_ac_data(self, ac_index: int) -> Optional[CCM15SlaveDevice]:

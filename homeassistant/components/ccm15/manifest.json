@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/ccm15",
   "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["xmltodict==0.13.0"],
+  "requirements": ["py-ccm15==0.0.5"],
   "ssdp": [],
   "zeroconf": []
 }
