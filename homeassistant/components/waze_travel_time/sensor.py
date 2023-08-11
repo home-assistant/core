@@ -179,6 +179,8 @@ class WazeTravelTimeData:
 
             routes = {}
             try:
+                _LOGGER.error(self.client)
+                _LOGGER.error(self.client.calc_all_routes_info)
                 routes = await self.client.calc_all_routes_info(
                     self.origin,
                     self.destination,
@@ -204,6 +206,7 @@ class WazeTravelTimeData:
                     }
 
                 if routes:
+                    _LOGGER.error(routes)
                     route = list(routes)[0]
                 else:
                     _LOGGER.warning("No routes found")
