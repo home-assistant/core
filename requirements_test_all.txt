@@ -1117,7 +1117,7 @@ pvo==1.0.0
 py-canary==0.5.3
 
 # homeassistant.components.ccm15
-py-ccm15==0.0.6
+py-ccm15==0.0.7
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==8.0.0
