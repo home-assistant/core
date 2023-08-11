@@ -11,7 +11,7 @@ astroid==2.15.4
 coverage==7.2.7
 freezegun==1.2.2
 mock-open==1.4.0
-mypy==1.4.1
+mypy==1.5.0
 pre-commit==3.3.3
 pydantic==1.10.12
 pylint==2.17.4

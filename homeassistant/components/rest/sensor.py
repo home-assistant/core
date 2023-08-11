@@ -5,7 +5,6 @@ import logging
 import ssl
 from typing import Any
 
-from jsonpath import jsonpath
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -39,13 +38,13 @@ from homeassistant.helpers.template_entity import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util.json import json_loads
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
 from .data import RestData
 from .entity import RestEntity
 from .schema import RESOURCE_SCHEMA, SENSOR_SCHEMA
+from .util import parse_json_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -163,32 +162,9 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity, SensorEntity):
         value = self.rest.data_without_xml()
 
         if self._json_attrs:
-            if value:
-                try:
-                    json_dict = json_loads(value)
-                    if self._json_attrs_path is not None:
-                        json_dict = jsonpath(json_dict, self._json_attrs_path)
-                    # jsonpath will always store the result in json_dict[0]
-                    # so the next line happens to work exactly as needed to
-                    # find the result
-                    if isinstance(json_dict, list):
-                        json_dict = json_dict[0]
-                    if isinstance(json_dict, dict):
-                        attrs = {
-                            k: json_dict[k] for k in self._json_attrs if k in json_dict
-                        }
-                        self._attr_extra_state_attributes = attrs
-                    else:
-                        _LOGGER.warning(
-                            "JSON result was not a dictionary"
-                            " or list with 0th element a dictionary"
-                        )
-                except ValueError:
-                    _LOGGER.warning("REST result could not be parsed as JSON")
-                    _LOGGER.debug("Erroneous JSON: %s", value)
-
-            else:
-                _LOGGER.warning("Empty reply found when expecting JSON data")
+            self._attr_extra_state_attributes = parse_json_attributes(
+                value, self._json_attrs, self._json_attrs_path
+            )
 
         raw_value = value
 
