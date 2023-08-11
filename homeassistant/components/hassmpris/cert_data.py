@@ -4,7 +4,7 @@ import os.path
 
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.types import PRIVATE_KEY_TYPES
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.x509 import Certificate
 
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ class CertStore(Store):
 
     async def load_cert_data(
         self,
-    ) -> tuple[Certificate, PRIVATE_KEY_TYPES, list[Certificate]]:
+    ) -> tuple[Certificate, PrivateKeyTypes, list[Certificate]]:
         """Retrieve client cert, key, and trust chain for an entry.
 
         Raises KeyError if the data could not be loaded because
@@ -57,7 +57,7 @@ class CertStore(Store):
     async def save_cert_data(
         self,
         client_cert: Certificate,
-        client_key: PRIVATE_KEY_TYPES,
+        client_key: PrivateKeyTypes,
         trust_chain: list[Certificate],
     ) -> None:
         """Persist client cert, key, and trust chain for an entry."""

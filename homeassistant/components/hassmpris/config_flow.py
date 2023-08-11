@@ -14,7 +14,7 @@ from homeassistant.components import zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .cert_data import PRIVATE_KEY_TYPES, Certificate, CertStore
+from .cert_data import Certificate, CertStore, PrivateKeyTypes
 from .const import (
     CONF_CAKES_PORT,
     CONF_HOST,
@@ -103,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._cakes_port: int = DEF_CAKES_PORT
         self._mpris_port: int = DEF_MPRIS_PORT
         self._client_cert: Certificate | None = None
-        self._client_key: PRIVATE_KEY_TYPES | None = None
+        self._client_key: PrivateKeyTypes | None = None
         self._trust_chain: list[Certificate] | None = None
         self._cakes_client: hassmpris_client.AsyncCAKESClient | None = None
 
@@ -120,7 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _get_cert_data(
         self,
-    ) -> tuple[Certificate, PRIVATE_KEY_TYPES, list[Certificate]]:
+    ) -> tuple[Certificate, PrivateKeyTypes, list[Certificate]]:
         assert self._client_cert is not None
         assert self._client_key is not None
         assert self._trust_chain is not None
