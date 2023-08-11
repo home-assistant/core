@@ -1853,23 +1853,27 @@ async def test_device_name_defaulting_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("device_info"),
+    ("device_info", "number_of_entities"),
     [
         # No identifiers
-        {},
-        {"name": "bla"},
-        {"default_name": "bla"},
+        ({}, 1),  # Empty device info does not prevent the entity from being created
+        ({"name": "bla"}, 0),
+        ({"default_name": "bla"}, 0),
         # Match multiple types
-        {
-            "identifiers": {("hue", "1234")},
-            "name": "bla",
-            "default_name": "yo",
-        },
+        (
+            {
+                "identifiers": {("hue", "1234")},
+                "name": "bla",
+                "default_name": "yo",
+            },
+            0,
+        ),
     ],
 )
 async def test_device_type_error_checking(
     hass: HomeAssistant,
     device_info: dict,
+    number_of_entities: int,
 ) -> None:
     """Test catching invalid device info."""
 
@@ -1895,6 +1899,6 @@ async def test_device_type_error_checking(
 
     dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 0
-    # Entity should still be registered
     ent_reg = er.async_get(hass)
-    assert ent_reg.async_get("test_domain.test_qwer") is not None
+    assert len(ent_reg.entities) == number_of_entities
+    assert len(hass.states.async_all()) == number_of_entities
