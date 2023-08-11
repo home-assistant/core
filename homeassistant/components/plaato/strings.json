@@ -11,7 +11,7 @@
       },
       "api_method": {
         "title": "Select API method",
-        "description": "To be able to query the API an `auth_token` is required which can be obtained by following [these](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) instructions\n\n Selected device: **{device_type}** \n\nIf you rather use the built in webhook method (Airlock only) please check the box below and leave Auth Token blank",
+        "description": "To be able to query the API an `auth_token` is required which can be obtained by following [these](https://intercom.help/plaato/articles/5004720-auth_token) instructions\n\n Selected device: **{device_type}** \n\nIf you rather use the built in webhook method (Airlock only) please check the box below and leave Auth Token blank",
         "data": {
           "use_webhook": "Use webhook",
           "token": "Paste Auth Token here"
