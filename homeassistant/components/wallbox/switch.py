@@ -54,7 +54,7 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return the availability of the switch."""
-        return self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY] not in {
+        return super().available and self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY] not in {
             ChargerStatus.UNKNOWN,
             ChargerStatus.UPDATING,
             ChargerStatus.ERROR,
