@@ -13,7 +13,6 @@ from pyweatherflowudp.device import (
     EVENT_STATUS_UPDATE,
     WeatherFlowDevice,
 )
-from pyweatherflowudp.enums import PrecipitationType
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -157,14 +156,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="precipitation_type",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "NONE",
-            PrecipitationType.NONE,
-            PrecipitationType.RAIN,
-            PrecipitationType.HAIL,
-            PrecipitationType.RAIN_HAIL,
-            PrecipitationType.UNKNOWN,
-        ],
+        options=["NONE", "RAIN", "HAIL", "RAIN_HAIL", "UNKNOWN"],
         icon="mdi:weather-rainy",
     ),
     WeatherFlowSensorEntityDescription(
