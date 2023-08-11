@@ -36,6 +36,7 @@ tqdm==4.65.0
 types-atomicwrites==1.4.5.1
 types-croniter==1.0.6
 types-backports==0.1.3
+types-caldav==1.2.0.2
 types-chardet==0.1.5
 types-decorator==5.1.8.3
 types-enum34==1.1.8
