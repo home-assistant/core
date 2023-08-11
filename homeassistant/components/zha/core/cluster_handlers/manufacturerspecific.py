@@ -416,16 +416,24 @@ class DanfossTRVChannel(ClusterHandler):
     }
 
 
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER)
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(registries.DANFOSS_TRV_INTERFACE_CLUSTER)
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
+    registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER
+)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    registries.DANFOSS_TRV_INTERFACE_CLUSTER
+)
 class DanfossTRVInterfaceChannel(ClusterHandler):
     """Interface Channel class for the Danfoss TRV and derivatives."""
 
     ZCL_INIT_ATTRS = {"viewing_direction": True}
 
 
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER)
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER)
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(
+    registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER
+)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER
+)
 class DanfossTRVDiagnosticChannel(ClusterHandler):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""
 

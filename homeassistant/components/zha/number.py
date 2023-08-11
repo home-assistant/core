@@ -997,7 +997,7 @@ class MaxHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="max_heat_setpoint_li
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        min_present_value = self._channel.cluster.get("min_heat_setpoint_limit")
+        min_present_value = self._cluster_handler.cluster.get("min_heat_setpoint_limit")
         if min_present_value is not None:
             return min_present_value / ZCL_TEMP
         # This is a 16bit signed integer, which has to be converted to a python integer
@@ -1006,7 +1006,9 @@ class MaxHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="max_heat_setpoint_li
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
-        max_present_value = self._channel.cluster.get("abs_max_heat_setpoint_limit")
+        max_present_value = self._cluster_handler.cluster.get(
+            "abs_max_heat_setpoint_limit"
+        )
         if max_present_value is not None:
             return max_present_value / ZCL_TEMP
         return 0x7FFF / ZCL_TEMP  # according to spec
@@ -1026,7 +1028,9 @@ class MinHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="min_heat_setpoint_li
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        min_present_value = self._channel.cluster.get("abs_min_heat_setpoint_limit")
+        min_present_value = self._cluster_handler.cluster.get(
+            "abs_min_heat_setpoint_limit"
+        )
         if min_present_value is not None:
             return min_present_value / ZCL_TEMP
         # This is a 16bit signed integer, which has to be converted to a python integer
@@ -1035,7 +1039,7 @@ class MinHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="min_heat_setpoint_li
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
-        max_present_value = self._channel.cluster.get("max_heat_setpoint_limit")
+        max_present_value = self._cluster_handler.cluster.get("max_heat_setpoint_limit")
         if max_present_value is not None:
             return max_present_value / ZCL_TEMP
         return 0x7FFF / ZCL_TEMP  # according to spec
@@ -1062,7 +1066,7 @@ class DanfossHeatingSetpointScheduled(
     ) -> None:
         """Init this number configuration entity."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._thermostat = self._channel.cluster.endpoint.thermostat
+        self._thermostat = self._cluster_handler.cluster.endpoint.thermostat
 
     @property
     def native_min_value(self) -> float:

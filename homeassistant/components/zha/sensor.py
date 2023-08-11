@@ -1151,7 +1151,7 @@ class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Bitmap."""
-        value = self._channel.cluster.get("adaptation_run_status")
+        value = self._cluster_handler.cluster.get("adaptation_run_status")
         return {
             "In Progress": bool(value & 0x0001),
             "Run Successful": bool(value & 0x0002),
@@ -1188,7 +1188,7 @@ class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Bitmap."""
-        value = self._channel.cluster.get("sw_error_code")
+        value = self._cluster_handler.cluster.get("sw_error_code")
         return {
             "Top PCB sensor error": bool(value & 0x0001),
             "Side PCB sensor error": bool(value & 0x0002),
