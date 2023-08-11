@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    async_rounded_state,
     async_update_suggested_units,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -557,6 +558,22 @@ async def test_restore_sensor_restore_state(
             100,
             "38",
         ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
+            -0.00,
+            "0.0",
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
+            -0.00001,
+            "0",
+        ),
     ],
 )
 async def test_custom_unit(
@@ -592,9 +609,14 @@ async def test_custom_unit(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity0.entity_id)
+    entity_id = entity0.entity_id
+    state = hass.states.get(entity_id)
     assert state.state == custom_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+
+    assert (
+        async_rounded_state(hass, entity_id, hass.states.get(entity_id)) == custom_state
+    )
 
 
 @pytest.mark.parametrize(
@@ -902,7 +924,7 @@ async def test_custom_unit_change(
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
-        ),
+        )
     ],
 )
 async def test_unit_conversion_priority(
@@ -1130,6 +1152,9 @@ async def test_unit_conversion_priority_precision(
         "sensor": {"suggested_display_precision": 2},
         "sensor.private": {"suggested_unit_of_measurement": automatic_unit},
     }
+    assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
+        round(automatic_state, 2)
+    )
 
     # Unregistered entity -> Follow native unit
     state = hass.states.get(entity1.entity_id)
@@ -1171,6 +1196,20 @@ async def test_unit_conversion_priority_precision(
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == pytest.approx(custom_state)
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    # Set a display_precision, this should have priority over suggested_display_precision
+    entity_registry.async_update_entity_options(
+        entity0.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2, "display_precision": 4},
+    )
+    entry0 = entity_registry.async_get(entity0.entity_id)
+    assert entry0.options["sensor"]["suggested_display_precision"] == 2
+    assert entry0.options["sensor"]["display_precision"] == 4
+    await hass.async_block_till_done()
+    assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
+        round(custom_state, 4)
+    )
 
 
 @pytest.mark.parametrize(
@@ -1760,6 +1799,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.NITROGEN_MONOXIDE,
         SensorDeviceClass.NITROUS_OXIDE,
         SensorDeviceClass.OZONE,
+        SensorDeviceClass.PH,
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
@@ -2362,3 +2402,39 @@ async def test_name(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity4.entity_id)
     assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+
+
+def test_async_rounded_state_unregistered_entity_is_passthrough(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_rounded_state on unregistered entity is passthrough."""
+    hass.states.async_set("sensor.test", "1.004")
+    state = hass.states.get("sensor.test")
+    assert async_rounded_state(hass, "sensor.test", state) == "1.004"
+    hass.states.async_set("sensor.test", "-0.0")
+    state = hass.states.get("sensor.test")
+    assert async_rounded_state(hass, "sensor.test", state) == "-0.0"
+
+
+def test_async_rounded_state_registered_entity_with_display_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_rounded_state on registered with display precision.
+
+    The -0 should be dropped.
+    """
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2, "display_precision": 4},
+    )
+    entity_id = entry.entity_id
+    hass.states.async_set(entity_id, "1.004")
+    state = hass.states.get(entity_id)
+    assert async_rounded_state(hass, entity_id, state) == "1.0040"
+    hass.states.async_set(entity_id, "-0.0")
+    state = hass.states.get(entity_id)
+    assert async_rounded_state(hass, entity_id, state) == "0.0000"

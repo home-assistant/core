@@ -28,7 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
@@ -256,7 +256,7 @@ class DenonDevice(MediaPlayerEntity):
             return
         # Some updates trigger multiple events like one for artist and one for title for one change
         # We skip every event except the last one
-        if event == "NS" and not parameter.startswith("E4"):
+        if event == "NSE" and not parameter.startswith("4"):
             return
         if event == "TA" and not parameter.startwith("ANNAME"):
             return

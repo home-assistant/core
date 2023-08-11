@@ -18,6 +18,13 @@
             "uninstall_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
           }
         },
+        "change_channel": {
+          "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
+          "data": {
+            "channel": "Channel"
+          },
+          "description": "Start a channel change for your Zigbee and Thread networks.\n\nNote: this is an advanced operation and can leave your Thread and Zigbee networks inoperable if the new channel is congested. Depending on existing network conditions, many of your devices may not migrate to the new channel and will require re-joining before they start working again. Use with caution.\n\nOnce you have selected **Submit**, the channel change starts quietly in the background and will finish after a few minutes."
+        },
         "install_addon": {
           "title": "The Silicon Labs Multiprotocol add-on installation has started"
         },
@@ -25,11 +32,12 @@
           "title": "Channel change initiated",
           "description": "A Zigbee and Thread channel change has been initiated and will finish in {delay_minutes} minutes."
         },
+        "notify_unknown_multipan_user": {
+          "title": "Manual configuration may be needed",
+          "description": "Home Assistant can automatically change the channels for otbr and zha. If you have configured another integration to use the radio, for example Zigbee2MQTT, you will have to reconfigure the channel in that integration after completing this guide."
+        },
         "reconfigure_addon": {
-          "title": "Reconfigure IEEE 802.15.4 radio multiprotocol support",
-          "data": {
-            "channel": "Channel"
-          }
+          "title": "Reconfigure IEEE 802.15.4 radio multiprotocol support"
         },
         "show_revert_guide": {
           "title": "Multiprotocol support is enabled for this device",

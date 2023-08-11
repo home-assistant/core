@@ -215,6 +215,20 @@ def test_custom_encoder(tmp_path: Path) -> None:
     assert data == "9"
 
 
+def test_saving_subclassed_datetime(tmp_path: Path) -> None:
+    """Test saving subclassed datetime objects."""
+
+    class SubClassDateTime(datetime.datetime):
+        """Subclass datetime."""
+
+    time = SubClassDateTime.fromtimestamp(0)
+
+    fname = tmp_path / "test6.json"
+    save_json(fname, {"time": time})
+    data = load_json(fname)
+    assert data == {"time": time.isoformat()}
+
+
 def test_default_encoder_is_passed(tmp_path: Path) -> None:
     """Test we use orjson if they pass in the default encoder."""
     fname = tmp_path / "test6.json"

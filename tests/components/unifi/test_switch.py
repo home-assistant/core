@@ -580,6 +580,43 @@ OUTLET_UP1 = {
 }
 
 
+WLAN = {
+    "_id": "012345678910111213141516",
+    "bc_filter_enabled": False,
+    "bc_filter_list": [],
+    "dtim_mode": "default",
+    "dtim_na": 1,
+    "dtim_ng": 1,
+    "enabled": True,
+    "group_rekey": 3600,
+    "mac_filter_enabled": False,
+    "mac_filter_list": [],
+    "mac_filter_policy": "allow",
+    "minrate_na_advertising_rates": False,
+    "minrate_na_beacon_rate_kbps": 6000,
+    "minrate_na_data_rate_kbps": 6000,
+    "minrate_na_enabled": False,
+    "minrate_na_mgmt_rate_kbps": 6000,
+    "minrate_ng_advertising_rates": False,
+    "minrate_ng_beacon_rate_kbps": 1000,
+    "minrate_ng_data_rate_kbps": 1000,
+    "minrate_ng_enabled": False,
+    "minrate_ng_mgmt_rate_kbps": 1000,
+    "name": "SSID 1",
+    "no2ghz_oui": False,
+    "schedule": [],
+    "security": "wpapsk",
+    "site_id": "5a32aa4ee4b0412345678910",
+    "usergroup_id": "012345678910111213141518",
+    "wep_idx": 1,
+    "wlangroup_id": "012345678910111213141519",
+    "wpa_enc": "ccmp",
+    "wpa_mode": "wpa2",
+    "x_iapp_key": "01234567891011121314151617181920",
+    "x_passphrase": "password",
+}
+
+
 async def test_no_clients(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -1230,3 +1267,71 @@ async def test_remove_poe_client_switches(
         for entry in ent_reg.entities.values()
         if entry.config_entry_id == config_entry.entry_id
     ]
+
+
+async def test_wlan_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
+    """Test control of UniFi WLAN availability."""
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, wlans_response=[WLAN]
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    ent_reg = er.async_get(hass)
+    ent_reg_entry = ent_reg.async_get("switch.ssid_1")
+    assert ent_reg_entry.unique_id == "wlan-012345678910111213141516"
+    assert ent_reg_entry.entity_category is EntityCategory.CONFIG
+
+    # Validate state object
+    switch_1 = hass.states.get("switch.ssid_1")
+    assert switch_1 is not None
+    assert switch_1.state == STATE_ON
+    assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
+
+    # Update state object
+    wlan = deepcopy(WLAN)
+    wlan["enabled"] = False
+    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.ssid_1").state == STATE_OFF
+
+    # Disable WLAN
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/api/s/{controller.site}"
+        + f"/rest/wlanconf/{WLAN['_id']}",
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.ssid_1"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[0][2] == {"enabled": False}
+
+    # Enable WLAN
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.ssid_1"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.mock_calls[1][2] == {"enabled": True}
+
+    # Availability signalling
+
+    # Controller disconnects
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.ssid_1").state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.ssid_1").state == STATE_OFF

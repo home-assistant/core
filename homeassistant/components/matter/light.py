@@ -128,7 +128,7 @@ class MatterLight(MatterEntity, LightEntity):
             renormalize(
                 brightness,
                 (0, 255),
-                (level_control.minLevel, level_control.maxLevel),
+                (level_control.minLevel or 1, level_control.maxLevel or 254),
             )
         )
 
@@ -220,7 +220,7 @@ class MatterLight(MatterEntity, LightEntity):
         return round(
             renormalize(
                 level_control.currentLevel,
-                (level_control.minLevel or 0, level_control.maxLevel or 254),
+                (level_control.minLevel or 1, level_control.maxLevel or 254),
                 (0, 255),
             )
         )
@@ -337,10 +337,16 @@ class MatterLight(MatterEntity, LightEntity):
         # set current values
 
         if self.supports_color:
-            self._attr_color_mode = self._get_color_mode()
-            if self._attr_color_mode == ColorMode.HS:
+            self._attr_color_mode = color_mode = self._get_color_mode()
+            if (
+                ColorMode.HS in self._attr_supported_color_modes
+                and color_mode == ColorMode.HS
+            ):
                 self._attr_hs_color = self._get_hs_color()
-            else:
+            elif (
+                ColorMode.XY in self._attr_supported_color_modes
+                and color_mode == ColorMode.XY
+            ):
                 self._attr_xy_color = self._get_xy_color()
 
         if self.supports_color_temperature:

@@ -29,14 +29,11 @@ async def async_setup_entry(
 class JuiceNetChargeNowSwitch(JuiceNetDevice, SwitchEntity):
     """Implementation of a JuiceNet switch."""
 
+    _attr_translation_key = "charge_now"
+
     def __init__(self, device, coordinator):
         """Initialise the switch."""
         super().__init__(device, "charge_now", coordinator)
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"{self.device.name} Charge Now"
 
     @property
     def is_on(self):

@@ -20,5 +20,5 @@
   "documentation": "https://www.home-assistant.io/integrations/frontend",
   "integration_type": "system",
   "quality_scale": "internal",
-  "requirements": ["home-assistant-frontend==20230629.0"]
+  "requirements": ["home-assistant-frontend==20230802.0"]
 }

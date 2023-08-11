@@ -22,6 +22,7 @@ from homeassistant.components.number.const import (
 )
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
+    NON_NUMERIC_DEVICE_CLASSES,
     SensorDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -769,22 +770,15 @@ async def test_custom_unit_change(
 def test_device_classes_aligned() -> None:
     """Make sure all sensor device classes are also available in NumberDeviceClass."""
 
-    non_numeric_device_classes = {
-        SensorDeviceClass.DATE,
-        SensorDeviceClass.DURATION,
-        SensorDeviceClass.ENUM,
-        SensorDeviceClass.TIMESTAMP,
-    }
-
     for device_class in SensorDeviceClass:
-        if device_class in non_numeric_device_classes:
+        if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
 
         assert hasattr(NumberDeviceClass, device_class.name)
         assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
 
     for device_class in SENSOR_DEVICE_CLASS_UNITS:
-        if device_class in non_numeric_device_classes:
+        if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
         assert (
             SENSOR_DEVICE_CLASS_UNITS[device_class]
