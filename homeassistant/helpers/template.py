@@ -1934,7 +1934,7 @@ def is_number(value):
         fvalue = float(value)
     except (ValueError, TypeError):
         return False
-    if math.isnan(fvalue) or math.isinf(fvalue):
+    if not math.isfinite(fvalue):
         return False
     return True
 

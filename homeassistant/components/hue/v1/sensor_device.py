@@ -1,5 +1,6 @@
 """Support for the Philips Hue sensor devices."""
 from homeassistant.helpers import entity
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from ..const import (
     CONF_ALLOW_UNREACHABLE,
@@ -47,12 +48,12 @@ class GenericHueDevice(entity.Entity):
         return self.primary_sensor.raw.get("swupdate", {}).get("state")
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return the device info.
 
         Links individual entities together in the hass device registry.
         """
-        return entity.DeviceInfo(
+        return DeviceInfo(
             identifiers={(HUE_DOMAIN, self.device_id)},
             manufacturer=self.primary_sensor.manufacturername,
             model=(self.primary_sensor.productname or self.primary_sensor.modelid),
