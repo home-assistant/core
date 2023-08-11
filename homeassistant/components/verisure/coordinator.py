@@ -47,7 +47,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.hass.async_add_executor_job(self.verisure.login_cookie)
         except VerisureLoginError as ex:
-            LOGGER.error("Could not log in to verisure, %s", ex)
+            LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except VerisureError as ex:
             LOGGER.error("Could not log in to verisure, %s", ex)
