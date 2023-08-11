@@ -39,7 +39,7 @@ async def test_form_exceptions(hass: HomeAssistant, exception: Exception, error:
 
     with patch(
         "homeassistant.components.tado.config_flow.Tado",
-        side_effect=exc,
+        side_effect=exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
