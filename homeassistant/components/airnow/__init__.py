@@ -48,15 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
-    # Initialize the options parameter if the integration was first set up
-    # before OptionsFlow was added
-    if not entry.options:
-        new_data = entry.data.copy()
-        del new_data[CONF_RADIUS]
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, options={CONF_RADIUS: entry.data[CONF_RADIUS]}
-        )
-
     # Station Radius is a user-configurable option
     distance = entry.options[CONF_RADIUS]
 
