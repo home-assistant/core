@@ -64,6 +64,11 @@
       "lifetime_consumption": {
         "name": "Lifetime energy consumption"
       }
+    },
+    "switch": {
+      "grid_enabled": {
+        "name": "Grid enabled"
+      }
     }
   }
 }
