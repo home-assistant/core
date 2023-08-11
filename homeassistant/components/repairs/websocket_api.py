@@ -127,13 +127,11 @@ class RepairsFlowResourceView(FlowManagerResourceView):
     name = "api:repairs:issues:fix:resource"
 
     @require_admin(error=Unauthorized(permission=POLICY_EDIT))
-    async def get(self, request: web.Request, flow_id: str) -> web.Response:
+    async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
-    # pylint: disable=arguments-differ
     @require_admin(error=Unauthorized(permission=POLICY_EDIT))
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
-        # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
