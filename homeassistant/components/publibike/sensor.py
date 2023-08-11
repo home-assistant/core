@@ -1,8 +1,13 @@
 """Support for PubliBike Public API for bike sharing in Switzerland."""
 
+from collections.abc import Mapping
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,12 +31,11 @@ class PubliBikeSensor(CoordinatorEntity[PubliBikeDataUpdateCoordinator], SensorE
     def __init__(self, coordinator):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.attributes = {}
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self.attributes
+        self._attr_device_info = DeviceInfo(
+            name=coordinator.station.name,
+            identifiers={(DOMAIN, coordinator.station.stationId)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
 
 class EBikeSensor(PubliBikeSensor):
@@ -48,10 +52,9 @@ class EBikeSensor(PubliBikeSensor):
         return self.coordinator.available_ebikes
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
-        self.attributes.update({"All E-bikes": len(self.coordinator.station.ebikes)})
-        return self.attributes
+        return {"All E-bikes": len(self.coordinator.station.ebikes)}
 
 
 class BikeSensor(PubliBikeSensor):

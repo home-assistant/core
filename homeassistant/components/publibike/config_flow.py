@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
-from pypublibike.publibike import PubliBike
+from pypublibike.publibike import PubliBike, Station
 from requests import RequestException
 import voluptuous as vol
 
@@ -44,13 +45,18 @@ class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return PubliBikeOptionsFlowHandler(config_entry)
 
-    async def _is_valid_station_id(self, _id) -> bool:
+    async def _is_valid_station_id(self, station_id: int) -> bool:
         publi_bike = PubliBike()
         all_station_ids = [
             s.stationId
             for s in await self.hass.async_add_executor_job(publi_bike.getStations)
         ]
-        return bool(_id in all_station_ids)
+        return station_id in all_station_ids
+
+    async def _get_station_name(self, station_id: Optional[int]) -> str:
+        station = Station(stationId=station_id)
+        await self.hass.async_add_executor_job(station.refresh)
+        return station.name
 
     async def async_step_user(
         self, user_input: dict[str, int] | None = None
@@ -62,21 +68,21 @@ class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if (station_id := user_input.get(STATION_ID)) is not None:
                 try:
-                    id_valid = await self._is_valid_station_id(station_id)
-                    if not id_valid:
+                    if not await self._is_valid_station_id(station_id):
                         errors["base"] = "invalid_id"
-                except RequestException as req_err:
+                except RequestException:
                     errors["base"] = "connection_error"
-                    _LOGGER.error(
-                        "Unable to connect to the PubliBike API: %s", str(req_err)
-                    )
-                except Exception as exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unable to connect to the PubliBike API")
+                except Exception:  # pylint: disable=broad-except
                     errors["base"] = "unknown"
-                    _LOGGER.exception(exception)
+                    _LOGGER.exception(
+                        "Unknown exception occurred while validating the station id"
+                    )
 
             if not errors:
+                station_name = await self._get_station_name(station_id)
                 return self.async_create_entry(
-                    title="PubliBike",
+                    title=f"PubliBike - {station_name}",
                     data=user_input,
                 )
 
