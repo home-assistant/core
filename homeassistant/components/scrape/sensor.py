@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
@@ -164,6 +165,15 @@ class ScrapeSensor(
         self._index = index
         self._value_template = value_template
         self._attr_native_value = None
+        if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
+            self._attr_name = None
+            self._attr_has_entity_name = True
+            self._attr_device_info = DeviceInfo(
+                entry_type=DeviceEntryType.SERVICE,
+                identifiers={(DOMAIN, unique_id)},
+                manufacturer="Scrape",
+                name=self.name,
+            )
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""

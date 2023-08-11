@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -46,6 +47,7 @@ from .const import (
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
+    CONF_NAN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STATE_OFF,
@@ -101,6 +103,7 @@ class BasePlatform(Entity):
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._nan_value = entry.get(CONF_NAN_VALUE, None)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
@@ -173,8 +176,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | int) -> float | int:
-        """Process value from sensor with scaling, offset, min/max etc."""
+    def __process_raw_value(self, entry: float | int | str) -> float | int | str:
+        """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
+        if self._nan_value and entry in (self._nan_value, -self._nan_value):
+            return STATE_UNAVAILABLE
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
             return self._min_value
@@ -213,6 +218,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 # the conversion only when it's absolutely necessary.
                 if isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
+                elif v_temp != v_temp:  # noqa: PLR0124
+                    # NaN float detection replace with None
+                    v_result.append("nan")  # pragma: no cover
                 else:
                     v_result.append(f"{float(v_temp):.{self._precision}f}")
             return ",".join(map(str, v_result))
@@ -223,8 +231,16 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # We could convert int to float, and the code would still work; however
         # we lose some precision, and unit tests will fail. Therefore, we do
         # the conversion only when it's absolutely necessary.
+
+        # NaN float detection replace with None
+        if val_result != val_result:  # noqa: PLR0124
+            return None  # pragma: no cover
         if isinstance(val_result, int) and self._precision == 0:
             return str(val_result)
+        if isinstance(val_result, str):
+            if val_result == "nan":
+                val_result = STATE_UNAVAILABLE  # pragma: no cover
+            return val_result
         return f"{float(val_result):.{self._precision}f}"
 
 

@@ -1138,7 +1138,7 @@ class MockEntity(entity.Entity):
         return self._handle("device_class")
 
     @property
-    def device_info(self) -> entity.DeviceInfo | None:
+    def device_info(self) -> dr.DeviceInfo | None:
         """Info how it links to a device."""
         return self._handle("device_info")
 
@@ -1336,8 +1336,17 @@ def mock_integration(
     integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
-    hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
-    hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
+    if integration_cache is None:
+        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
+        loader._async_mount_config_dir(hass)
+    integration_cache[module.DOMAIN] = integration
+
+    module_cache = hass.data.get(loader.DATA_COMPONENTS)
+    if module_cache is None:
+        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
+        loader._async_mount_config_dir(hass)
+    module_cache[module.DOMAIN] = module
 
     return integration
 
@@ -1361,9 +1370,16 @@ def mock_platform(
 
     platform_path is in form hue.config_flow.
     """
-    domain, platform_name = platform_path.split(".")
-    integration_cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
-    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    domain = platform_path.split(".")[0]
+    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
+    if integration_cache is None:
+        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
+        loader._async_mount_config_dir(hass)
+
+    module_cache = hass.data.get(loader.DATA_COMPONENTS)
+    if module_cache is None:
+        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
+        loader._async_mount_config_dir(hass)
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))
