@@ -34,7 +34,7 @@ class EnvoyEnpowerRequiredKeysMixin:
 class EnvoyEnpowerSwitchEntityDescription(
     SwitchEntityDescription, EnvoyEnpowerRequiredKeysMixin
 ):
-    """Describes an Envoy Enpower binary sensor entity."""
+    """Describes an Envoy Enpower switch entity."""
 
 
 ENPOWER_GRID_SWITCH = EnvoyEnpowerSwitchEntityDescription(
@@ -51,7 +51,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up envoy binary sensor platform."""
+    """Set up Enphase Envoy switch platform."""
     coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
