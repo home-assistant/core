@@ -35,7 +35,7 @@
     'entity_id': 'sensor.mock_title_valve_closing',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_setup[98bd2a19-0b0e-421a-84e5-ddbf75dc6de4-raw0-sensor.mock_title_battery]
