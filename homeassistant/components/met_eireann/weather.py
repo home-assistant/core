@@ -22,9 +22,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import dt as dt_util
 
+from . import MetEireannWeatherData
 from .const import CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +58,9 @@ async def async_setup_entry(
     )
 
 
-class MetEireannWeather(CoordinatorEntity, WeatherEntity):
+class MetEireannWeather(
+    CoordinatorEntity[DataUpdateCoordinator[MetEireannWeatherData]], WeatherEntity
+):
     """Implementation of a Met Éireann weather condition."""
 
     _attr_attribution = "Data provided by Met Éireann"
