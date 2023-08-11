@@ -24,7 +24,7 @@ def _get_mock_tado_api(getMe=None):
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("exception", "error"),
     [
         (KeyError, "invalid_auth"),
         (RuntimeError, "cannot_connect"),
