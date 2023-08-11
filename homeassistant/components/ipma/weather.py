@@ -21,7 +21,6 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
-    CONF_NAME,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -75,7 +74,7 @@ async def async_setup_entry(
 
     await er.async_migrate_entries(hass, config_entry.entry_id, _async_migrator)
 
-    async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
+    async_add_entities([IPMAWeather(location, api, config_entry)], True)
 
 
 class IPMAWeather(WeatherEntity, IPMADevice):
@@ -84,16 +83,15 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
-
     _attr_attribution = ATTRIBUTION
+    _attr_name = None
 
-    def __init__(self, location: Location, api: IPMA_API, config) -> None:
+    def __init__(self, api: IPMA_API, location: Location, entry: ConfigEntry) -> None:
         """Initialise the platform with a data instance and station name."""
-        IPMADevice.__init__(self, location)
+        IPMADevice.__init__(self, api, location, entry)
         self._api = api
-        self._attr_name = config.get(CONF_NAME, location.name)
-        self._mode = config.get(CONF_MODE)
-        self._period = 1 if config.get(CONF_MODE) == "hourly" else 24
+        self._mode = entry.data.get(CONF_MODE)
+        self._period = 1 if entry.data.get(CONF_MODE) == "hourly" else 24
         self._observation = None
         self._forecast: list[Forecast] = []
         self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
