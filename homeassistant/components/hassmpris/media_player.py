@@ -21,7 +21,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -106,6 +106,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
     _attr_supported_features = SUPPORTED_MINIMAL
     _attr_playback_rate: float = 1.0
     _attr_should_poll: bool = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
