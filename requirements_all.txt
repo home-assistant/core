@@ -2601,6 +2601,9 @@ unifi-discovery==1.1.7
 # homeassistant.components.unifiled
 unifiled==0.11
 
+# homeassistant.components.zha
+universal-silabs-flasher==0.0.13
+
 # homeassistant.components.upb
 upb-lib==0.5.4
 
