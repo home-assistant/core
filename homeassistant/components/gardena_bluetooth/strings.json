@@ -48,6 +48,9 @@
       },
       "seasonal_adjust": {
         "name": "Seasonal adjust"
+      },
+      "sensor_threshold": {
+        "name": "Sensor threshold"
       }
     },
     "sensor": {

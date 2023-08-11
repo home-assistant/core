@@ -85,6 +85,7 @@ DESCRIPTIONS = (
     ),
     GardenaBluetoothNumberEntityDescription(
         key=Sensor.threshold.uuid,
+        translation_key="sensor_threshold",
         native_unit_of_measurement=PERCENTAGE,
         mode=NumberMode.BOX,
         native_min_value=0.0,
