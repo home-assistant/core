@@ -37,7 +37,6 @@ async def test_form_exceptions(hass: HomeAssistant, exception: Exception, error:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    exc, base_error = error
     with patch(
         "homeassistant.components.tado.config_flow.Tado",
         side_effect=exc,
