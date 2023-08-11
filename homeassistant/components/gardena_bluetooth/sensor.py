@@ -83,7 +83,6 @@ DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=None,
         char=Sensor.measurement_timestamp,
         connected_state=Sensor.connected_state,
     ),
