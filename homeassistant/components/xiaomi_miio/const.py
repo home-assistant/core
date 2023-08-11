@@ -1,4 +1,5 @@
 """Constants for the Xiaomi Miio component."""
+from miio.integrations.vacuum.dreame.dreamevacuum_miot import DREAME_MOP_2_ULTRA
 from miio.integrations.vacuum.roborock.vacuum import (
     ROCKROBO_E2,
     ROCKROBO_S4,
@@ -12,7 +13,6 @@ from miio.integrations.vacuum.roborock.vacuum import (
     ROCKROBO_S7_MAXV,
     ROCKROBO_V1,
 )
-from miio.integrations.vacuum.dreame.dreamevacuum_miot import DREAME_MOP_2_ULTRA
 
 DOMAIN = "xiaomi_miio"
 
