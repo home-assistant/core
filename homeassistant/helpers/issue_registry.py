@@ -154,7 +154,7 @@ class IssueRegistry:
                 {"action": "create", "domain": domain, "issue_id": issue_id},
             )
         else:
-            issue = self.issues[(domain, issue_id)] = dataclasses.replace(
+            replacement = dataclasses.replace(
                 issue,
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
@@ -167,10 +167,14 @@ class IssueRegistry:
                 translation_key=translation_key,
                 translation_placeholders=translation_placeholders,
             )
-            self.hass.bus.async_fire(
-                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-                {"action": "update", "domain": domain, "issue_id": issue_id},
-            )
+            # Only fire is something changed
+            if replacement != issue:
+                issue = self.issues[(domain, issue_id)] = replacement
+                self.async_schedule_save()
+                self.hass.bus.async_fire(
+                    EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                    {"action": "update", "domain": domain, "issue_id": issue_id},
+                )
 
         return issue
 
