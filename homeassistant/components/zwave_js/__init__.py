@@ -249,6 +249,21 @@ class DriverEvents:
         elif opted_in is False:
             await driver.async_disable_statistics()
 
+        # Check for nodes that no longer exist and remove them
+        stored_devices = dr.async_entries_for_config_entry(
+            self.dev_reg, self.config_entry.entry_id
+        )
+        known_devices = [
+            self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+            for node in controller.nodes.values()
+        ]
+
+        # Devices that are in the device registry that are not known by the controller
+        # can be removed
+        for device in stored_devices:
+            if device not in known_devices:
+                self.controller_events.remove_device(device)
+
         # run discovery on controller node
         if controller.own_node:
             await self.controller_events.async_on_node_added(controller.own_node)
@@ -401,6 +416,8 @@ class ControllerEvents:
                     "remove_entity"
                 ),
             )
+        else:
+            self.remove_device(device)
 
     @callback
     def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
