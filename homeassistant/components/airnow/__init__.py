@@ -84,6 +84,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        new_options = {CONF_RADIUS: entry.data[CONF_RADIUS]}
+        new_data = entry.data.copy()
+        del new_data[CONF_RADIUS]
+
+        entry.version = 2
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options
+        )
+
+    _LOGGER.info("Migration to version %s successful", entry.version)
+
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

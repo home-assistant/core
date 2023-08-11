@@ -16,6 +16,7 @@ def config_entry_fixture(hass, config, options):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        version=2,
         unique_id=f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}",
         data=config,
         options=options,

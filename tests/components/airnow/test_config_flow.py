@@ -90,10 +90,36 @@ async def test_entry_already_exists(hass: HomeAssistant, config, config_entry) -
     assert result2["reason"] == "already_configured"
 
 
+async def test_config_migration_v2(hass: HomeAssistant, setup_airnow) -> None:
+    """Test that the config migration from Version 1 to Version 2 works."""
+    config_entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="AirNow",
+        data={
+            CONF_API_KEY: "1234",
+            CONF_LATITUDE: 33.6,
+            CONF_LONGITUDE: -118.1,
+            CONF_RADIUS: 25,
+        },
+        source=config_entries.SOURCE_USER,
+        options={CONF_RADIUS: 10},
+        unique_id="1234",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 2
+    assert not config_entry.data.get(CONF_RADIUS)
+    assert config_entry.options.get(CONF_RADIUS) == 25
+
+
 async def test_options_flow(hass: HomeAssistant, config, setup_airnow) -> None:
     """Test that the options flow works."""
     config_entry = MockConfigEntry(
-        version=1,
+        version=2,
         domain=DOMAIN,
         title="AirNow",
         data={

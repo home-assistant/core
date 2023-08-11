@@ -13,7 +13,7 @@ async def test_entry_diagnostics(
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "entry_id": config_entry.entry_id,
-            "version": 1,
+            "version": 2,
             "domain": "airnow",
             "title": REDACTED,
             "data": {
