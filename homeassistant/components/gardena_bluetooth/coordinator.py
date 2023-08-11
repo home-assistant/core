@@ -117,8 +117,12 @@ class GardenaBluetoothEntity(CoordinatorEntity[Coordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and bluetooth.async_address_present(
-            self.hass, self.coordinator.address, True
+        return (
+            self.coordinator.last_update_success
+            and bluetooth.async_address_present(
+                self.hass, self.coordinator.address, True
+            )
+            and self._attr_available
         )
 
 

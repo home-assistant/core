@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from gardena_bluetooth.const import Valve
+from gardena_bluetooth.const import Sensor, Valve
 from gardena_bluetooth.parse import CharacteristicBool
 
 from homeassistant.components.binary_sensor import (
@@ -34,6 +34,13 @@ DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Valve.connected_state,
+    ),
+    GardenaBluetoothBinarySensorEntityDescription(
+        key=Sensor.connected_state.uuid,
+        translation_key="sensor_connected_state",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        char=Sensor.connected_state,
     ),
 )
 

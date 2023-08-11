@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from gardena_bluetooth.const import DeviceConfiguration, Valve
+from gardena_bluetooth.const import DeviceConfiguration, Sensor, Valve
 from gardena_bluetooth.parse import (
+    Characteristic,
     CharacteristicInt,
     CharacteristicLong,
     CharacteristicUInt16,
@@ -16,7 +17,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -35,6 +36,7 @@ class GardenaBluetoothNumberEntityDescription(NumberEntityDescription):
     char: CharacteristicInt | CharacteristicUInt16 | CharacteristicLong = field(
         default_factory=lambda: CharacteristicInt("")
     )
+    connected_state: Characteristic | None = None
 
 
 DESCRIPTIONS = (
@@ -81,6 +83,17 @@ DESCRIPTIONS = (
         entity_category=EntityCategory.CONFIG,
         char=DeviceConfiguration.seasonal_adjust,
     ),
+    GardenaBluetoothNumberEntityDescription(
+        key=Sensor.threshold.uuid,
+        native_unit_of_measurement=PERCENTAGE,
+        mode=NumberMode.BOX,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=1.0,
+        entity_category=EntityCategory.CONFIG,
+        char=Sensor.threshold,
+        connected_state=Sensor.connected_state,
+    ),
 )
 
 
@@ -110,6 +123,12 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
             self._attr_native_value = None
         else:
             self._attr_native_value = float(data)
+
+        if char := self.entity_description.connected_state:
+            self._attr_available = bool(self.coordinator.get_cached(char))
+        else:
+            self._attr_available = True
+
         super()._handle_coordinator_update()
 
     async def async_set_native_value(self, value: float) -> None:
