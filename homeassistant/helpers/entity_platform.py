@@ -621,7 +621,7 @@ class EntityPlatform:
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
-                    self.logger.exception(
+                    self.logger.error(
                         "%s: Not adding entity with invalid device info: %s",
                         self.platform_name,
                         str(exc),
