@@ -73,11 +73,7 @@ def _conf_schema_factory(defaults: dict[str, Any]) -> vol.Schema:
 
 
 def _genuid(host, cakes_port, mpris_port):
-    return "{}:{}:{}".format(
-        host,
-        cakes_port,
-        mpris_port,
-    )
+    return f"{host}:{cakes_port}:{mpris_port}"
 
 
 def _preconfigured_schema(host: str, cakes_port: int, mpris_port: int) -> vol.Schema:
