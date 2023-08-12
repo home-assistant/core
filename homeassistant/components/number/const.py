@@ -1,11 +1,11 @@
 """Provides the constants needed for the component."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -217,7 +217,7 @@ class NumberDeviceClass(StrEnum):
     """
 
     PH = "ph"
-    """Potential hidrogen (acidity/alkalinity).
+    """Potential hydrogen (acidity/alkalinity).
 
     Unit of measurement: Unitless
     """

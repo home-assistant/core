@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Last.fm',
-      'entity_picture': '',
+      'entity_picture': 'image',
       'friendly_name': 'testaccount1',
       'icon': 'mdi:radio-fm',
       'last_played': 'artist - title',
@@ -21,7 +21,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Last.fm',
-      'entity_picture': '',
+      'entity_picture': 'image',
       'friendly_name': 'testaccount1',
       'icon': 'mdi:radio-fm',
       'last_played': None,
@@ -36,16 +36,5 @@
   })
 # ---
 # name: test_sensors[not_found_user]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Last.fm',
-      'friendly_name': 'testaccount1',
-      'icon': 'mdi:radio-fm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.testaccount1',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
+  None
 # ---

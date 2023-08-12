@@ -12,7 +12,9 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,7 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -59,6 +61,7 @@ class EcobeeWeather(WeatherEntity):
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     def __init__(self, data, name, index):
         """Initialize the Ecobee weather platform."""
@@ -161,13 +164,12 @@ class EcobeeWeather(WeatherEntity):
         time = self.weather.get("timestamp", "UNKNOWN")
         return f"Ecobee weather provided by {station} at {time} UTC"
 
-    @property
-    def forecast(self):
+    def _forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if "forecasts" not in self.weather:
             return None
 
-        forecasts = []
+        forecasts: list[Forecast] = []
         date = dt_util.utcnow()
         for day in range(0, 5):
             forecast = _process_forecast(self.weather["forecasts"][day])
@@ -180,6 +182,15 @@ class EcobeeWeather(WeatherEntity):
         if forecasts:
             return forecasts
         return None
+
+    @property
+    def forecast(self) -> list[Forecast] | None:
+        """Return the forecast array."""
+        return self._forecast()
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._forecast()
 
     async def async_update(self) -> None:
         """Get the latest weather data."""

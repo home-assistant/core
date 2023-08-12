@@ -16,7 +16,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import APP_NAME, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,10 +82,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await pydiscovergy.Discovergy(
                     email=user_input[CONF_EMAIL],
                     password=user_input[CONF_PASSWORD],
-                    app_name=APP_NAME,
                     httpx_client=get_async_client(self.hass),
                     authentication=BasicAuth(),
-                ).get_meters()
+                ).meters()
             except discovergyError.HTTPError:
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:

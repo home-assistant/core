@@ -59,6 +59,7 @@ def mock_device_registry(hass):
     """Mock device registry."""
     dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
+    config_entry.add_to_hass(hass)
 
     for idx, device in enumerate(
         (

@@ -163,6 +163,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
 
     if device.get_id() == "aidoo1":
         return {
+            API_ACTIVE: False,
             API_ERRORS: [],
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,

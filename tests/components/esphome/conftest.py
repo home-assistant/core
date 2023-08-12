@@ -19,9 +19,7 @@ import async_timeout
 import pytest
 from zeroconf import Zeroconf
 
-from homeassistant.components.esphome import (
-    dashboard,
-)
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
