@@ -52,14 +52,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     network_info = {}
     for device, result in zip(device_map.values(), network_results):
-        if result is not None and not isinstance(result, RoborockException):
-            network_info[device.duid] = result
-        else:
+        if result is None:
+            _LOGGER.warning(
+                "Failed to connect to get networking information about %s because the result was None",
+                device.duid,
+            )
+        elif isinstance(result, RoborockException):
             _LOGGER.warning(
                 "Failed to connect to get networking information about %s", device.duid
             )
-            if isinstance(result, RoborockException):
-                _LOGGER.exception(result)
+            _LOGGER.exception(result)
+        else:
+            network_info[device.duid] = result
     if not network_info:
         raise ConfigEntryNotReady(
             "Could not get network information about your devices"
