@@ -306,6 +306,7 @@ omit =
     homeassistant/components/enphase_envoy/coordinator.py
     homeassistant/components/enphase_envoy/entity.py
     homeassistant/components/enphase_envoy/sensor.py
+    homeassistant/components/enphase_envoy/switch.py
     homeassistant/components/entur_public_transport/*
     homeassistant/components/environment_canada/__init__.py
     homeassistant/components/environment_canada/camera.py
@@ -421,6 +422,7 @@ omit =
     homeassistant/components/garadget/cover.py
     homeassistant/components/garages_amsterdam/__init__.py
     homeassistant/components/garages_amsterdam/binary_sensor.py
+    homeassistant/components/garages_amsterdam/entity.py
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*

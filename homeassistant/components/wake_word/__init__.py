@@ -43,7 +43,7 @@ def async_get_wake_word_detection_entity(
     hass: HomeAssistant, entity_id: str
 ) -> WakeWordDetectionEntity | None:
     """Return wake word entity."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WakeWordDetectionEntity] = hass.data[DOMAIN]
 
     return component.get_entity(entity_id)
 

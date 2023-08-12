@@ -9,7 +9,7 @@ from intellifire4py import IntellifirePollData
 from intellifire4py.intellifire import IntellifireAPILocal
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER

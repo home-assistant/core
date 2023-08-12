@@ -8,6 +8,7 @@ import logging
 
 from pyenphase import (
     EnvoyEncharge,
+    EnvoyEnchargeAggregate,
     EnvoyEnchargePower,
     EnvoyEnpower,
     EnvoyInverter,
@@ -30,7 +31,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -287,6 +289,58 @@ ENPOWER_SENSORS = (
 )
 
 
+@dataclass
+class EnvoyEnchargeAggregateRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[EnvoyEnchargeAggregate], int]
+
+
+@dataclass
+class EnvoyEnchargeAggregateSensorEntityDescription(
+    SensorEntityDescription, EnvoyEnchargeAggregateRequiredKeysMixin
+):
+    """Describes an Envoy Encharge sensor entity."""
+
+
+ENCHARGE_AGGREGATE_SENSORS = (
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="battery_level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=lambda encharge: encharge.state_of_charge,
+    ),
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="reserve_soc",
+        translation_key="reserve_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=lambda encharge: encharge.reserve_state_of_charge,
+    ),
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="available_energy",
+        translation_key="available_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda encharge: encharge.available_energy,
+    ),
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="reserve_energy",
+        translation_key="reserve_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda encharge: encharge.backup_reserve,
+    ),
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="max_capacity",
+        translation_key="max_capacity",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda encharge: encharge.max_available_capacity,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -327,6 +381,11 @@ async def async_setup_entry(
             EnvoyEnchargePowerEntity(coordinator, description, encharge)
             for description in ENCHARGE_POWER_SENSORS
             for encharge in envoy_data.encharge_power
+        )
+    if envoy_data.encharge_aggregate:
+        entities.extend(
+            EnvoyEnchargeAggregateEntity(coordinator, description)
+            for description in ENCHARGE_AGGREGATE_SENSORS
         )
     if envoy_data.enpower:
         entities.extend(
@@ -479,6 +538,19 @@ class EnvoyEnchargePowerEntity(EnvoyEnchargeEntity):
         encharge_power = self.data.encharge_power
         assert encharge_power is not None
         return self.entity_description.value_fn(encharge_power[self._serial_number])
+
+
+class EnvoyEnchargeAggregateEntity(EnvoySystemSensorEntity):
+    """Envoy Encharge Aggregate sensor entity."""
+
+    entity_description: EnvoyEnchargeAggregateSensorEntityDescription
+
+    @property
+    def native_value(self) -> int:
+        """Return the state of the aggregate sensors."""
+        encharge_aggregate = self.data.encharge_aggregate
+        assert encharge_aggregate is not None
+        return self.entity_description.value_fn(encharge_aggregate)
 
 
 class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
