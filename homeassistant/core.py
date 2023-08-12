@@ -26,16 +26,7 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    ParamSpec,
-    Self,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
 from urllib.parse import urlparse
 
 import async_timeout

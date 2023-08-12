@@ -49,6 +49,4 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_CLEAR_NIGHT: [-1],
 }
 
-FORECAST_MODE = ["hourly", "daily"]
-
 ATTRIBUTION = "Instituto Português do Mar e Atmosfera"

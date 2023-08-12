@@ -62,7 +62,7 @@
       },
       "maybe_confirm_ezsp_restore": {
         "title": "Overwrite Radio IEEE Address",
-        "description": "Your backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
+        "description": "Your backup has a different IEEE address than your radio. For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
         "data": {
           "overwrite_coordinator_ieee": "Permanently replace the radio IEEE address"
         }
@@ -83,7 +83,7 @@
     "step": {
       "init": {
         "title": "Reconfigure ZHA",
-        "description": "ZHA will be stopped.  Do you wish to continue?"
+        "description": "ZHA will be stopped. Do you wish to continue?"
       },
       "prompt_migrate_or_reconfigure": {
         "title": "Migrate or re-configure",
@@ -95,11 +95,11 @@
       },
       "intent_migrate": {
         "title": "[%key:component::zha::options::step::prompt_migrate_or_reconfigure::menu_options::intent_migrate%]",
-        "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
+        "description": "Before plugging in your new radio, your old radio needs to be reset. An automatic backup will be performed. If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
         "title": "Unplug your old radio",
-        "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
+        "description": "Your old radio has been reset. If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
       },
       "choose_serial_port": {
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]",

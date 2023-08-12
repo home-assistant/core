@@ -5,13 +5,15 @@ from typing import Any
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
+    EVENT_CHARACTERISTICS,
     Characteristic,
     CharacteristicPermissions,
     CharacteristicsTypes,
 )
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .connection import HKDevice, valid_serial_number
@@ -111,7 +113,10 @@ class HomeKitEntity(Entity):
     def _setup_characteristic(self, char: Characteristic) -> None:
         """Configure an entity based on a HomeKit characteristics metadata."""
         # Build up a list of (aid, iid) tuples to poll on update()
-        if CharacteristicPermissions.paired_read in char.perms:
+        if (
+            CharacteristicPermissions.paired_read in char.perms
+            and char.type not in EVENT_CHARACTERISTICS
+        ):
             self.pollable_characteristics.append((self._aid, char.iid))
 
         # Build up a list of (aid, iid) tuples to subscribe to
