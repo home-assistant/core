@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/todoist",
   "iot_class": "cloud_polling",
   "loggers": ["todoist"],
-  "requirements": ["todoist-api-python==2.0.2"]
+  "requirements": ["todoist-api-python==2.1.1"]
 }
