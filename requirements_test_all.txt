@@ -1453,7 +1453,7 @@ pyps4-2ndscreen==1.3.1
 pyqwikswitch==0.93
 
 # homeassistant.components.rainbird
-pyrainbird==3.0.0
+pyrainbird==4.0.0
 
 # homeassistant.components.risco
 pyrisco==0.5.7
