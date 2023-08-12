@@ -10,7 +10,13 @@ from homeassistant.components.rainbird import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import CONFIG_ENTRY_DATA, ComponentSetup, mock_response_error
+from .conftest import (
+    CONFIG_ENTRY_DATA,
+    MODEL_AND_VERSION_RESPONSE,
+    ComponentSetup,
+    mock_response,
+    mock_response_error,
+)
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
@@ -52,21 +58,37 @@ async def test_init_success(
             [mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE)],
             [ConfigEntryState.SETUP_RETRY],
         ),
-        # Note: This should be improved to support reauth when the password is incorrect
-        (
-            {},
-            CONFIG_ENTRY_DATA,
-            [mock_response_error(HTTPStatus.FORBIDDEN)],
-            [ConfigEntryState.SETUP_RETRY],
-        ),
         (
             {},
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR)],
             [ConfigEntryState.SETUP_RETRY],
         ),
+        (
+            {},
+            CONFIG_ENTRY_DATA,
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
+            ],
+            [ConfigEntryState.SETUP_RETRY],
+        ),
+        (
+            {},
+            CONFIG_ENTRY_DATA,
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR),
+            ],
+            [ConfigEntryState.SETUP_RETRY],
+        ),
     ],
-    ids=["unavailable", "forbidden", "server_error"],
+    ids=[
+        "unavailable",
+        "server-error",
+        "coordinator-unavailable",
+        "coordinator-server-error",
+    ],
 )
 async def test_communication_failure(
     hass: HomeAssistant,
