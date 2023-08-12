@@ -1,4 +1,4 @@
-"""Demo platform that has two fake binary sensors."""
+"""Demo platform that has two fake calendars."""
 from __future__ import annotations
 
 import datetime
