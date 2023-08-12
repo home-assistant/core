@@ -69,8 +69,8 @@ class MinecraftServerData:
 
     latency: float | None = None
     motd: str | None = None
-    players_online: int | None = None
     players_max: int | None = None
+    players_online: int | None = None
     players_list: list[str] | None = None
     protocol_version: int | None = None
     version: str | None = None
