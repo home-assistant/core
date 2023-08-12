@@ -1,8 +1,8 @@
 """Base Entity for IPMA."""
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
