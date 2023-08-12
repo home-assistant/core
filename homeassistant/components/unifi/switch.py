@@ -77,7 +77,9 @@ def async_dpi_group_is_on_fn(
 
 
 @callback
-def async_dpi_group_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_dpi_group_device_info_fn(
+    controller: UniFiController, obj_id: str
+) -> DeviceInfo:
     """Create device registry entry for DPI group."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
@@ -90,12 +92,14 @@ def async_dpi_group_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Dev
 
 @callback
 def async_port_forward_device_info_fn(
-    api: aiounifi.Controller, obj_id: str
+    controller: UniFiController, obj_id: str
 ) -> DeviceInfo:
     """Create device registry entry for port forward."""
+    unique_id = controller.config_entry.unique_id
+    assert unique_id is not None
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, f"unifi_controller_{obj_id}")},
+        identifiers={(DOMAIN, unique_id)},
         manufacturer=ATTR_MANUFACTURER,
         model="UniFi Network",
         name="UniFi Network",
