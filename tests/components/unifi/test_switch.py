@@ -1545,7 +1545,7 @@ async def test_port_forwarding_switches(
 
     ent_reg = er.async_get(hass)
     ent_reg_entry = ent_reg.async_get("switch.unifi_network_plex")
-    assert ent_reg_entry.unique_id == "5a32aa4ee4b0412345678911"
+    assert ent_reg_entry.unique_id == "port_forward-5a32aa4ee4b0412345678911"
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
     # Validate state object

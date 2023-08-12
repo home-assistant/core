@@ -268,7 +268,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.port_forwarding[obj_id],
         should_poll=False,
         supported_fn=lambda controller, obj_id: True,
-        unique_id_fn=lambda controller, obj_id: obj_id,
+        unique_id_fn=lambda controller, obj_id: f"port_forward-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",
