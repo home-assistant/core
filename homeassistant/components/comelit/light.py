@@ -26,8 +26,9 @@ async def async_setup_entry(
 
     coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
 
+    # Last resort: config_entry.entry_id as unique_id as no serial number or mac are available
     async_add_entities(
-        ComelitLightEntity(coordinator, device, config_entry.unique_id)
+        ComelitLightEntity(coordinator, device, config_entry.entry_id)
         for device in coordinator.data[LIGHT].values()
     )
 
