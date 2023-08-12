@@ -58,19 +58,48 @@ SWING_STATE = {
     Protocol.HLRR_WIFI: OverkizState.HLRRWIFI_SWING,
 }
 
-OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
-    OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,
-    OverkizCommandParam.AUTOCOOLING: HVACMode.AUTO,
-    OverkizCommandParam.ON: HVACMode.HEAT,
-    OverkizCommandParam.OFF: HVACMode.OFF,
-    OverkizCommandParam.HEATING: HVACMode.HEAT,
-    OverkizCommandParam.FAN: HVACMode.FAN_ONLY,
-    OverkizCommandParam.DEHUMIDIFY: HVACMode.DRY,
-    OverkizCommandParam.COOLING: HVACMode.COOL,
-    OverkizCommandParam.AUTO: HVACMode.AUTO,
+OVERKIZ_TO_HVAC_MODES: dict[Protocol, dict[str, HVACMode]] = {
+    Protocol.OVP: {
+        OverkizCommandParam.AUTO_HEATING: HVACMode.AUTO,
+        OverkizCommandParam.AUTO_COOLING: HVACMode.AUTO,
+        OverkizCommandParam.ON: HVACMode.HEAT,
+        OverkizCommandParam.OFF: HVACMode.OFF,
+        OverkizCommandParam.HEATING: HVACMode.HEAT,
+        OverkizCommandParam.FAN: HVACMode.FAN_ONLY,
+        OverkizCommandParam.DEHUMIDIFY: HVACMode.DRY,
+        OverkizCommandParam.COOLING: HVACMode.COOL,
+    },
+    Protocol.HLRR_WIFI: {
+        OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,
+        OverkizCommandParam.AUTOCOOLING: HVACMode.AUTO,
+        OverkizCommandParam.ON: HVACMode.HEAT,
+        OverkizCommandParam.OFF: HVACMode.OFF,
+        OverkizCommandParam.HEATING: HVACMode.HEAT,
+        OverkizCommandParam.FAN: HVACMode.FAN_ONLY,
+        OverkizCommandParam.DEHUMIDIFY: HVACMode.DRY,
+        OverkizCommandParam.COOLING: HVACMode.COOL,
+        OverkizCommandParam.AUTO: HVACMode.AUTO,
+    },
 }
 
-HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
+HVAC_MODES_TO_OVERKIZ: dict[Protocol, dict[HVACMode, str]] = {
+    Protocol.OVP: {
+        HVACMode.AUTO: OverkizCommandParam.AUTO_COOLING,
+        HVACMode.HEAT: OverkizCommandParam.HEATING,
+        HVACMode.OFF: OverkizCommandParam.HEATING,
+        HVACMode.FAN_ONLY: OverkizCommandParam.FAN,
+        HVACMode.DRY: OverkizCommandParam.DEHUMIDIFY,
+        HVACMode.COOL: OverkizCommandParam.COOLING,
+    },
+    Protocol.HLRR_WIFI: {
+        HVACMode.AUTO: OverkizCommandParam.AUTO,
+        HVACMode.HEAT: OverkizCommandParam.HEATING,
+        HVACMode.OFF: OverkizCommandParam.AUTO,
+        HVACMode.FAN_ONLY: OverkizCommandParam.FAN,
+        HVACMode.DRY: OverkizCommandParam.DEHUMIDIFY,
+        HVACMode.COOL: OverkizCommandParam.COOLING,
+    },
+}
 
 OVERKIZ_TO_SWING_MODES: dict[str, str] = {
     OverkizCommandParam.BOTH: SWING_BOTH,
@@ -126,7 +155,7 @@ FAN_MODES_TO_OVERKIZ: dict[Protocol, dict[str, str]] = {
 class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     """Representation of Hitachi Air To Air HeatPump."""
 
-    _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
+    _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ[Protocol.OVP]]
     _attr_preset_modes = [PRESET_NONE, PRESET_HOLIDAY_MODE]
     _attr_swing_modes = [*SWING_MODES_TO_OVERKIZ]
     _attr_target_temperature_step = 1.0
@@ -165,7 +194,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if (
             mode_change_state := self.device.states[MODE_CHANGE_STATE[self.protocol]]
         ) and mode_change_state.value_as_str:
-            return OVERKIZ_TO_HVAC_MODES[mode_change_state.value_as_str.lower()]
+            return OVERKIZ_TO_HVAC_MODES[self.protocol][mode_change_state.value_as_str]
 
         return HVACMode.OFF
 
@@ -176,7 +205,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         else:
             await self._global_control(
                 main_operation=OverkizCommandParam.ON,
-                hvac_mode=HVAC_MODES_TO_OVERKIZ[hvac_mode],
+                hvac_mode=HVAC_MODES_TO_OVERKIZ[self.protocol][hvac_mode],
             )
 
     @property
@@ -296,7 +325,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             return value
         state = self.device.states[state_name]
         if state and state.value_as_str:
-            return state.value_as_str.lower()
+            return state.value_as_str
         return fallback_value
 
     async def _global_control(
@@ -320,7 +349,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         hvac_mode = self._control_backfill(
             hvac_mode,
             MODE_CHANGE_STATE[self.protocol],
-            OverkizCommandParam.AUTO_MODE,
+            OverkizCommandParam.AUTO,
         )
         swing_mode = self._control_backfill(
             swing_mode,
@@ -336,6 +365,12 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
                 fan_mode = OverkizCommandParam.HI
             elif fan_mode == OverkizCommandParam.LOW:
                 fan_mode = OverkizCommandParam.LO
+        elif hvac_mode in [
+            OverkizCommandParam.AUTOCOOLING,
+            OverkizCommandParam.AUTOHEATING,
+        ]:
+            # HLLRWIFI protocol has `autoCooling` and `autoHeating` as valid states, but they cannot be used as commands and need to be converted into `auto`
+            hvac_mode = OverkizCommandParam.AUTO
 
         command_data = [
             main_operation,  # Main Operation
