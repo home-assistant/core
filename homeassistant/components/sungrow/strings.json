@@ -16,5 +16,186 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "protocol_number": { "name": "Protocol number" },
+      "rotocol_version": { "name": "Protocol version" },
+      "arm_software_version": { "name": "ARM software version" },
+      "dsp_software_version": { "name": "DRM software version" },
+      "serial_number": { "name": "Serial number" },
+      "device_type": { "name": "Device type" },
+      "nominal_output_power": {
+        "name": "Nominal output power"
+      },
+      "output_type": { "name": "Output type" },
+      "daily_output_energy": {
+        "name": "Daily output energy"
+      },
+      "total_output_energy": {
+        "name": "Total output energy"
+      },
+      "total_running_time": { "name": "Total runtime" },
+      "internal_temperature": { "name": "Internal termperature" },
+      "mppt_voltage": {
+        "name": "MPPT voltage"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
+      },
+      "mppt_current": {
+        "name": "MPPT current"
+      },
+      "dc_current": {
+        "name": "DC current"
+      },
+      "total_dc_power": {
+        "name": "Total DC power"
+      },
+      "phase_a_voltage": {
+        "name": "Phase A voltage"
+      },
+      "phase_b_voltage": {
+        "name": "Phase B voltage"
+      },
+      "phase_c_voltage": {
+        "name": "Phase C voltage"
+      },
+      "line_ab_voltage": {
+        "name": "Line AB voltage"
+      },
+      "line_bc_voltage": {
+        "name": "Line BC voltage"
+      },
+      "line_ca_voltage": {
+        "name": "Line CA voltage"
+      },
+      "phase_a_current": {
+        "name": "Phase A current"
+      },
+      "phase_b_current": {
+        "name": "Phase B current"
+      },
+      "phase_c_current": {
+        "name": "Phase C current"
+      },
+      "total_active_power": {
+        "name": "Total active power"
+      },
+      "reactive_power": {
+        "name": "Reactive power"
+      },
+      "grid_frequency": { "name": "Grid frequency" },
+      "power_factor": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
+      },
+      "total_pv_generation": { "name": "Total PV generation" },
+      "daily_export_from_pv": { "name": "Daily export from PV" },
+      "total_export_from_pv": { "name": "Total export from PV" },
+      "load_power": { "name": "Load power" },
+      "export_power": { "name": "Export power" },
+      "daily_battery_charge_energy_from_pv": {
+        "name": "Daily battery charge energy from PV"
+      },
+      "total_battery_charge_energy_from_pv": {
+        "name": "Total battery charge energy from PV"
+      },
+      "co2_reduction": {
+        "name": "CO² reduction"
+      },
+      "daily_direct_energy_consumption": {
+        "name": "Daily direct energy consumption"
+      },
+      "total_direct_energy_consumption": {
+        "name": "Total direct energy consumption"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_level": { "name": "Battery level" },
+      "battery_health": { "name": "Battery health" },
+      "battery_temperature": { "name": "Battery temperature" },
+      "daily_battery_discharge_energy": {
+        "name": "Daily battery discharge energy"
+      },
+      "total_battery_discharge_energy": {
+        "name": "Total battery discharge energy"
+      },
+      "daily_self_consumption": { "name": "Daily self consumption" },
+      "daily_import_energy": {
+        "name": "Daily import energy"
+      },
+      "total_import_energy": {
+        "name": "Total import energy"
+      },
+      "daily_charge_energy": {
+        "name": "Daily charge energy"
+      },
+      "total_charge_energy": {
+        "name": "Total charge energy"
+      },
+      "drm_state": { "name": "DRM state" },
+      "daily_export_energy": {
+        "name": "Daily export energy"
+      },
+      "total_export_energy": {
+        "name": "Total export energy"
+      },
+      "battery_maintenance": { "name": "Battery meintenance" },
+      "battery_type": { "name": "Battery type" },
+      "battery_nominal_voltage": {
+        "name": "Battery nominal voltage"
+      },
+      "battery_capacity": { "name": "Battery capacity" },
+      "battery_over_voltage_threshold": {
+        "name": "Battery over voltage threshold"
+      },
+      "battery_under_voltage_threshold": {
+        "name": "Battery under voltage threshold"
+      },
+      "battery_over_temperature_threshold": {
+        "name": "Battery over temperature threshold"
+      },
+      "battery_under_temperature_threshold": {
+        "name": "Battery under temperature threshold"
+      },
+      "grid_frequency_fine": { "name": "Grid frequency fine" },
+      "work_state": { "name": "Work state" },
+      "fault_date": { "name": "Fault date" },
+      "fault_code": { "name": "Fault code" },
+      "nominal_reactive_output_power": {
+        "name": "Nominal reactive output power"
+      },
+      "impedance_to_ground": { "name": "Impedance to ground" },
+      "daily_running_time": { "name": "Daily running time" },
+      "country": { "name": "Country" },
+      "monthly_power_yield": {
+        "name": "Monthly power yield"
+      },
+      "negative_voltage_to_ground": {
+        "name": "Negative voltage to ground"
+      },
+      "bus_voltage": {
+        "name": "Bus voltage"
+      },
+      "power_factor_setting": {
+        "name": "Power factor setting"
+      },
+      "reactive_power_adjustment": {
+        "name": "Reactive power adjustment"
+      },
+      "reactive_power_adjustment_switch": {
+        "name": "Reactive power adjustment switch"
+      },
+      "reactive_power_percentage": {
+        "name": "Reactive power percentage"
+      }
+    }
   }
 }
