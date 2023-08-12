@@ -7,7 +7,11 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.tado.const import DOMAIN
+from homeassistant.components.tado.const import (
+    CONF_FALLBACK,
+    CONST_OVERLAY_TADO_DEFAULT,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -76,15 +80,17 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["step_id"] == "init"
 
+    # Add the the constants from const.py, such as CONF_FALLBACK and TADO_DEFAULT
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"fallback": "TADO_DEFAULT"},
+        # here it should contain the constants from const.py
+        {CONF_FALLBACK: CONST_OVERLAY_TADO_DEFAULT},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == ""
-    assert result2["data"] == {"fallback": "TADO_DEFAULT"}
+    assert result2["data"] == {CONF_FALLBACK: CONST_OVERLAY_TADO_DEFAULT}
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
