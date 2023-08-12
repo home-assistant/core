@@ -1,11 +1,7 @@
 """Comelit integration."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PIN,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN

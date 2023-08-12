@@ -1,10 +1,6 @@
 """Common stuff for Comelit SimpleHome tests."""
 from homeassistant.components.comelit.const import DOMAIN
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_HOST,
-    CONF_PIN,
-)
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PIN
 
 MOCK_CONFIG = {
     DOMAIN: {
