@@ -22,6 +22,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "communicating": {
+        "name": "Communicating"
+      },
+      "dc_switch": {
+        "name": "DC switch"
+      },
+      "operating": {
+        "name": "Operating"
+      },
+      "grid_status": {
+        "name": "Grid status"
+      }
+    },
     "sensor": {
       "last_reported": {
         "name": "Last reported"
@@ -49,6 +63,11 @@
       },
       "lifetime_consumption": {
         "name": "Lifetime energy consumption"
+      }
+    },
+    "switch": {
+      "grid_enabled": {
+        "name": "Grid enabled"
       }
     }
   }

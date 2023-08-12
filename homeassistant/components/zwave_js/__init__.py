@@ -9,7 +9,7 @@ from typing import Any
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -398,13 +398,13 @@ class ControllerEvents:
     def async_on_node_removed(self, event: dict) -> None:
         """Handle node removed event."""
         node: ZwaveNode = event["node"]
-        replaced: bool = event.get("replaced", False)
+        reason: RemoveNodeReason = event["reason"]
         # grab device in device registry attached to this node
         dev_id = get_device_id(self.driver_events.driver, node)
         device = self.dev_reg.async_get_device(identifiers={dev_id})
         # We assert because we know the device exists
         assert device
-        if replaced:
+        if reason in (RemoveNodeReason.REPLACED, RemoveNodeReason.PROXY_REPLACED):
             self.discovered_value_ids.pop(device.id, None)
 
             async_dispatcher_send(
