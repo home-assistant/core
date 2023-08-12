@@ -198,7 +198,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        speed_range = [self.service[CharacteristicsTypes.ROTATION_SPEED].minStep,
+        speed_range = [self.service[CharacteristicsTypes.ROTATION_SPEED].minValue,
                        self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue]
         speed_percentage = ranged_value_to_percentage(
             speed_range, self.service.value(
@@ -226,7 +226,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         elif fan_mode == FAN_HIGH:
             rotation = ROTATION_SPEED_HIGH
 
-        speed_range = [self.service[CharacteristicsTypes.ROTATION_SPEED].minStep,
+        speed_range = [self.service[CharacteristicsTypes.ROTATION_SPEED].minValue,
                        self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue]
         speed = round(
             percentage_to_ranged_value(speed_range, rotation)
