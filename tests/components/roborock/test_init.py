@@ -77,6 +77,10 @@ async def test_get_networking_fails_once(
     ), patch(
         "homeassistant.components.roborock.RoborockMqttClient.get_networking",
         side_effect=[RoborockException(), NETWORK_INFO],
+    ), patch(
+        "homeassistant.components.roborock.RoborockMqttClient._wait_response"
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.LOADED
