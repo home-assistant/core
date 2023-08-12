@@ -27,6 +27,7 @@ from .const import (
     CONF_TARIFFS,
     DAILY,
     DOMAIN,
+    EVERY_MINUTE,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -37,6 +38,7 @@ from .const import (
 
 METER_TYPES = [
     "none",
+    EVERY_MINUTE,
     QUARTER_HOURLY,
     HOURLY,
     DAILY,

@@ -3,6 +3,7 @@ DOMAIN = "utility_meter"
 
 TARIFF_ICON = "mdi:clock-outline"
 
+EVERY_MINUTE = "every-minute"
 QUARTER_HOURLY = "quarter-hourly"
 HOURLY = "hourly"
 DAILY = "daily"
@@ -13,6 +14,7 @@ QUARTERLY = "quarterly"
 YEARLY = "yearly"
 
 METER_TYPES = [
+    EVERY_MINUTE,
     QUARTER_HOURLY,
     HOURLY,
     DAILY,
