@@ -8,6 +8,7 @@ import logging
 import os
 import subprocess
 import threading
+import time
 import traceback
 from typing import Any
 
@@ -176,6 +177,10 @@ def run(runtime_config: RuntimeConfig) -> int:
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = asyncio.new_event_loop()
+    # bind the built-in time.monotonic directly as loop.time to avoid the
+    # overhead of the additional method call since its the most called loop
+    # method and its roughly 10%+ of all the call time in base_events.py
+    loop.time = time.monotonic  # type: ignore[method-assign]
     try:
         asyncio.set_event_loop(loop)
         return loop.run_until_complete(setup_and_run_hass(runtime_config))
