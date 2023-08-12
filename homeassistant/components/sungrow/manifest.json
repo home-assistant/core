@@ -1,9 +1,9 @@
 {
   "domain": "sungrow",
   "name": "Sungrow",
+  "codeowners": ["@DasBasti", "@02JanDal"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sungrow",
-  "requirements": ["pysungrow==1.1.0"],
-  "codeowners": ["@DasBasti", "@02JanDal"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "requirements": ["pysungrow==1.1.0"]
 }
