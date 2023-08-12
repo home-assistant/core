@@ -13,6 +13,7 @@ from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PORT,
     CONF_MAC,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
@@ -48,6 +49,7 @@ def async_trigger_discovery(
             data={
                 CONF_NAME: device.alias,
                 CONF_HOST: device.host,
+                CONF_PORT: device.port,
                 CONF_MAC: formatted_mac,
             },
         )
@@ -86,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     try:
-        device: SmartDevice = await Discover.discover_single(entry.data[CONF_HOST])
+        device: SmartDevice = await Discover.discover_single(entry.data[CONF_HOST], port=entry.data[CONF_PORT])
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 

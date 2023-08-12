@@ -1,7 +1,7 @@
 """Config flow for TP-Link."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 from kasa import SmartDevice, SmartDeviceException
 from kasa.discover import Discover
@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -45,17 +45,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(self, host: str, mac: str) -> FlowResult:
         """Handle any discovery."""
+        hSplit = host.split(":")
+        if len(hSplit) == 2:  # If exactly one semicolon
+            host = hSplit[0]
+            port = hSplit[1]
+        else:
+            port = None
+
         await self.async_set_unique_id(dr.format_mac(mac))
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        self._async_abort_entries_match({CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_PORT: port})
+        self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
         self.context[CONF_HOST] = host
+        self.context[CONF_PORT] = port
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
 
         try:
             self._discovered_device = await self._async_try_connect(
-                host, raise_on_progress=True
+                host, port=port, raise_on_progress=True
             )
         except SmartDeviceException:
             return self.async_abort(reason="cannot_connect")
@@ -89,7 +97,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             try:
-                device = await self._async_try_connect(host, raise_on_progress=False)
+                hSplit = host.split(":")
+                if len(hSplit) == 2:  # If exactly one semicolon
+                    host = hSplit[0]
+                    port = hSplit[1]
+                else:
+                    port = None
+
+                device = await self._async_try_connect(
+                    host, port=port, raise_on_progress=False
+                )
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:
@@ -132,20 +149,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_device(self, device: SmartDevice) -> FlowResult:
         """Create a config entry from a smart device."""
-        self._abort_if_unique_id_configured(updates={CONF_HOST: device.host})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: device.host, CONF_PORT: device.port}
+        )
         return self.async_create_entry(
             title=f"{device.alias} {device.model}",
-            data={
-                CONF_HOST: device.host,
-            },
+            data={CONF_HOST: device.host, CONF_PORT: device.port},
         )
 
     async def _async_try_connect(
-        self, host: str, raise_on_progress: bool = True
+        self, host: str, port: Optional[int] = None, raise_on_progress: bool = True
     ) -> SmartDevice:
         """Try to connect."""
-        self._async_abort_entries_match({CONF_HOST: host})
-        device: SmartDevice = await Discover.discover_single(host)
+        self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
+        device: SmartDevice = await Discover.discover_single(host, port=port)
         await self.async_set_unique_id(
             dr.format_mac(device.mac), raise_on_progress=raise_on_progress
         )
