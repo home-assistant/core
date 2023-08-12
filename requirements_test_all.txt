@@ -340,6 +340,9 @@ aiounifi==58
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
 
+# homeassistant.components.vodafone_station
+aiovodafone==0.0.5
+
 # homeassistant.components.watttime
 aiowatttime==0.1.1
 
