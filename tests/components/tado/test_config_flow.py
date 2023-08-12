@@ -14,6 +14,7 @@ from homeassistant.components.tado.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -38,7 +39,7 @@ def _get_mock_tado_api(getMe=None):
 async def test_form_exceptions(
     hass: HomeAssistant, exception: Exception, error: str
 ) -> None:
-    """Test we handle Exception."""
+    """Test we handle Form Exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -47,13 +48,37 @@ async def test_form_exceptions(
         "homeassistant.components.tado.config_flow.Tado",
         side_effect=exception,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": "test-username", "password": "test-password"},
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": error}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Test a retry to recover, upon failure
+    mock_tado_api = _get_mock_tado_api(getMe={"homes": [{"id": 1, "name": "myhome"}]})
+
+    with patch(
+        "homeassistant.components.tado.config_flow.Tado",
+        return_value=mock_tado_api,
+    ), patch(
+        "homeassistant.components.tado.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-username", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "myhome"
+    assert result2["data"] == {
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -64,7 +89,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -77,7 +102,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     # Add the the constants from const.py, such as CONF_FALLBACK and TADO_DEFAULT
@@ -88,7 +113,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == ""
     assert result2["data"] == {CONF_FALLBACK: CONST_OVERLAY_TADO_DEFAULT}
 
@@ -99,7 +124,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_tado_api = _get_mock_tado_api(getMe={"homes": [{"id": 1, "name": "myhome"}]})
@@ -117,7 +142,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "myhome"
     assert result2["data"] == {
         "username": "test-username",
