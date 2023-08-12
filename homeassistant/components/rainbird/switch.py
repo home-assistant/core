@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from pyrainbird.exceptions import RainbirdApiException
+from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
@@ -93,8 +93,12 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
                 int(self._zone),
                 int(kwargs.get(ATTR_DURATION, self._duration_minutes)),
             )
+        except RainbirdDeviceBusyException as err:
+            raise HomeAssistantError(
+                "Rain Bird device is busy; Wait and try again"
+            ) from err
         except RainbirdApiException as err:
-            raise HomeAssistantError() from err
+            raise HomeAssistantError("Rain Bird device failure") from err
 
         await self.coordinator.async_request_refresh()
 
@@ -102,8 +106,12 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         """Turn the switch off."""
         try:
             await self.coordinator.controller.stop_irrigation()
+        except RainbirdDeviceBusyException as err:
+            raise HomeAssistantError(
+                "Rain Bird device is busy; Wait and try again"
+            ) from err
         except RainbirdApiException as err:
-            raise HomeAssistantError() from err
+            raise HomeAssistantError("Rain Bird device failure") from err
         await self.coordinator.async_request_refresh()
 
     @property

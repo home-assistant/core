@@ -72,11 +72,6 @@ CONFIG_ENTRY_DATA = {
 }
 
 
-UNAVAILABLE_RESPONSE = AiohttpClientMockResponse(
-    "POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE
-)
-
-
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
@@ -150,9 +145,11 @@ def mock_response(data: str) -> AiohttpClientMockResponse:
     return AiohttpClientMockResponse("POST", URL, response=rainbird_response(data))
 
 
-def mock_response_error() -> AiohttpClientMockResponse:
+def mock_response_error(
+    status: HTTPStatus = HTTPStatus.SERVICE_UNAVAILABLE,
+) -> AiohttpClientMockResponse:
     """Create a fake AiohttpClientMockResponse."""
-    return AiohttpClientMockResponse("POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE)
+    return AiohttpClientMockResponse("POST", URL, status=status)
 
 
 @pytest.fixture(name="stations_response")

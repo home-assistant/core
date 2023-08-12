@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from pyrainbird.exceptions import RainbirdApiException
+from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -63,5 +63,9 @@ class RainDelayNumber(CoordinatorEntity[RainbirdUpdateCoordinator], NumberEntity
         """Update the current value."""
         try:
             await self.coordinator.controller.set_rain_delay(value)
+        except RainbirdDeviceBusyException as err:
+            raise HomeAssistantError(
+                "Rain Bird device is busy; Wait and try again"
+            ) from err
         except RainbirdApiException as err:
-            raise HomeAssistantError() from err
+            raise HomeAssistantError("Rain Bird device failure") from err

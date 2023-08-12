@@ -1,5 +1,6 @@
 """Tests for rainbird number platform."""
 
+from http import HTTPStatus
 
 import pytest
 
@@ -91,21 +92,30 @@ async def test_set_value(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("status", "expected_msg"),
+    [
+        (HTTPStatus.SERVICE_UNAVAILABLE, "Rain Bird device is busy"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "Rain Bird device failure"),
+    ],
+)
 async def test_set_value_error(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
     config_entry: ConfigEntry,
+    status: HTTPStatus,
+    expected_msg: str,
 ) -> None:
     """Test an error while talking to the device."""
 
     assert await setup_integration()
 
     aioclient_mock.mock_calls.clear()
-    responses.append(mock_response_error())
+    responses.append(mock_response_error(status=status))
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=expected_msg):
         await hass.services.async_call(
             number.DOMAIN,
             number.SERVICE_SET_VALUE,
