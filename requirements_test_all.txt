@@ -427,7 +427,7 @@ beautifulsoup4==4.12.2
 bellows==0.35.9
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.13.9
+bimmer-connected==0.13.10
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.1.1
