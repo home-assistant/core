@@ -1,7 +1,19 @@
 {
-    "config": {
-      "abort": {
-        "already_configured": "Device is already configured"
+  "config": {
+    "flow_title": "Lutron Setup",
+    "step": {
+      "user": {
+        "title": "Lutron Setup",
+        "description": "Please enter the details",
+        "data": {
+          "ip_address": "IP Address",
+          "username": "Username",
+          "password": "Secret Key"
+        }
       }
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
     }
   }
+}
