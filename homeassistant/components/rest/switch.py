@@ -190,7 +190,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             req: httpx.Response = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
-                data=bytes(body, "utf-8"),
+                content=bytes(body, "utf-8"),
                 headers=rendered_headers,
                 params=rendered_params,
             )

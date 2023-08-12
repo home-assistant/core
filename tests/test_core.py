@@ -1247,7 +1247,7 @@ async def test_serviceregistry_async_service_raise_exception(
         await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
 
     # Non-blocking service call never throw exception
-    hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
     await hass.async_block_till_done()
 
 
@@ -1267,7 +1267,7 @@ async def test_serviceregistry_callback_service_raise_exception(
         await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
 
     # Non-blocking service call never throw exception
-    hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
     await hass.async_block_till_done()
 
 

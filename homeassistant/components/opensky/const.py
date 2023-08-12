@@ -1,11 +1,14 @@
 """OpenSky constants."""
+import logging
+
 from homeassistant.const import Platform
+
+LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.SENSOR]
 DEFAULT_NAME = "OpenSky"
 DOMAIN = "opensky"
-CLIENT = "client"
-
+MANUFACTURER = "OpenSky Network"
 CONF_ALTITUDE = "altitude"
 ATTR_ICAO24 = "icao24"
 ATTR_CALLSIGN = "callsign"

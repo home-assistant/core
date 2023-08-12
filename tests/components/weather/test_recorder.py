@@ -5,10 +5,7 @@ from datetime import timedelta
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.weather import (
-    ATTR_CONDITION_SUNNY,
-    ATTR_FORECAST,
-)
+from homeassistant.components.weather import ATTR_CONDITION_SUNNY, ATTR_FORECAST
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
