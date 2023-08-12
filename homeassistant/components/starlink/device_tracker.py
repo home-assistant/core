@@ -41,6 +41,17 @@ class StarlinkDeviceTrackerEntityDescription(
     """Describes a Starlink button entity."""
 
 
+DEVICE_TRACKERS = [
+    StarlinkDeviceTrackerEntityDescription(
+        key="device_location",
+        translation_key="device_location",
+        entity_registry_enabled_default=False,
+        latitude_fn=lambda data: data.location["latitude"],
+        longitude_fn=lambda data: data.location["longitude"],
+    ),
+]
+
+
 class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     """A TrackerEntity for Starlink devices. Handles creating unique IDs."""
 
@@ -60,14 +71,3 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return self.entity_description.longitude_fn(self.coordinator.data)
-
-
-DEVICE_TRACKERS = [
-    StarlinkDeviceTrackerEntityDescription(
-        key="device_location",
-        translation_key="device_location",
-        entity_registry_enabled_default=False,
-        latitude_fn=lambda data: data.location["latitude"],
-        longitude_fn=lambda data: data.location["longitude"],
-    ),
-]
