@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -62,6 +63,19 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
+@dataclass
+class MinecraftServerData:
+    """Representation of Minecraft server data."""
+
+    latency: float | None = None
+    motd: str | None = None
+    players_online: int | None = None
+    players_max: int | None = None
+    players_list: list[str] | None = None
+    protocol_version: int | None = None
+    version: str | None = None
+
+
 class MinecraftServer:
     """Representation of a Minecraft server."""
 
@@ -84,13 +98,7 @@ class MinecraftServer:
         self._server = JavaServer(self.host, self.port)
 
         # Data provided by 3rd party library
-        self.version: str | None = None
-        self.protocol_version: int | None = None
-        self.latency: float | None = None
-        self.players_online: int | None = None
-        self.players_max: int | None = None
-        self.players_list: list[str] | None = None
-        self.motd: str | None = None
+        self.data: MinecraftServerData = MinecraftServerData()
 
         # Dispatcher signal name
         self.signal_name = f"{SIGNAL_NAME_PREFIX}_{self.unique_id}"
@@ -170,18 +178,18 @@ class MinecraftServer:
             status_response = await self._server.async_status()
 
             # Got answer to request, update properties.
-            self.version = status_response.version.name
-            self.protocol_version = status_response.version.protocol
-            self.players_online = status_response.players.online
-            self.players_max = status_response.players.max
-            self.latency = status_response.latency
-            self.motd = status_response.motd.to_plain()
+            self.data.version = status_response.version.name
+            self.data.protocol_version = status_response.version.protocol
+            self.data.players_online = status_response.players.online
+            self.data.players_max = status_response.players.max
+            self.data.latency = status_response.latency
+            self.data.motd = status_response.motd.to_plain()
 
-            self.players_list = []
+            self.data.players_list = []
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
-                    self.players_list.append(player.name)
-                self.players_list.sort()
+                    self.data.players_list.append(player.name)
+                self.data.players_list.sort()
 
             # Inform user once about successful update if necessary.
             if self._last_status_request_failed:
@@ -193,13 +201,13 @@ class MinecraftServer:
             self._last_status_request_failed = False
         except OSError as error:
             # No answer to request, set all properties to unknown.
-            self.version = None
-            self.protocol_version = None
-            self.players_online = None
-            self.players_max = None
-            self.latency = None
-            self.players_list = None
-            self.motd = None
+            self.data.version = None
+            self.data.protocol_version = None
+            self.data.players_online = None
+            self.data.players_max = None
+            self.data.latency = None
+            self.data.players_list = None
+            self.data.motd = None
 
             # Inform user once about failed update if necessary.
             if not self._last_status_request_failed:
