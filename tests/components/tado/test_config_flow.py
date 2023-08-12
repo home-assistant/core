@@ -78,9 +78,13 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={},
+        {"fallback": "TADO_DEFAULT"},
     )
+    await hass.async_block_till_done()
+
     assert result2["type"] == "create_entry"
+    assert result2["title"] == ""
+    assert result2["data"] == {"fallback": "TADO_DEFAULT"}
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
