@@ -1704,7 +1704,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.8
+pyfritzhome==0.6.9
 
 # homeassistant.components.ifttt
 pyfttt==0.3
