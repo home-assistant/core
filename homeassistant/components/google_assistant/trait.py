@@ -31,6 +31,8 @@ from homeassistant.components import (
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.humidifier import HumidifierEntityFeature
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
@@ -716,7 +718,7 @@ class StartStopTrait(_Trait):
         if domain == vacuum.DOMAIN:
             return True
 
-        if domain == cover.DOMAIN and features & cover.CoverEntityFeature.STOP:
+        if domain == cover.DOMAIN and features & CoverEntityFeature.STOP:
             return True
 
         return False
@@ -1460,7 +1462,7 @@ class FanSpeedTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == fan.DOMAIN:
-            return features & fan.FanEntityFeature.SET_SPEED
+            return features & FanEntityFeature.SET_SPEED
         if domain == climate.DOMAIN:
             return features & ClimateEntityFeature.FAN_MODE
         return False
@@ -1474,7 +1476,7 @@ class FanSpeedTrait(_Trait):
         if domain == fan.DOMAIN:
             reversible = bool(
                 self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-                & fan.FanEntityFeature.DIRECTION
+                & FanEntityFeature.DIRECTION
             )
 
             result.update(
@@ -1610,7 +1612,7 @@ class ModesTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == fan.DOMAIN and features & fan.FanEntityFeature.PRESET_MODE:
+        if domain == fan.DOMAIN and features & FanEntityFeature.PRESET_MODE:
             return True
 
         if domain == input_select.DOMAIN:
@@ -1916,13 +1918,13 @@ class OpenCloseTrait(_Trait):
             response["discreteOnlyOpenClose"] = True
         elif (
             self.state.domain == cover.DOMAIN
-            and features & cover.CoverEntityFeature.SET_POSITION == 0
+            and features & CoverEntityFeature.SET_POSITION == 0
         ):
             response["discreteOnlyOpenClose"] = True
 
             if (
-                features & cover.CoverEntityFeature.OPEN == 0
-                and features & cover.CoverEntityFeature.CLOSE == 0
+                features & CoverEntityFeature.OPEN == 0
+                and features & CoverEntityFeature.CLOSE == 0
             ):
                 response["queryOnlyOpenClose"] = True
 
@@ -1991,7 +1993,7 @@ class OpenCloseTrait(_Trait):
             elif position == 100:
                 service = cover.SERVICE_OPEN_COVER
                 should_verify = True
-            elif features & cover.CoverEntityFeature.SET_POSITION:
+            elif features & CoverEntityFeature.SET_POSITION:
                 service = cover.SERVICE_SET_COVER_POSITION
                 if position > 0:
                     should_verify = True
