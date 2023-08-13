@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
+from bthome_ble.const import (
+    ExtendedSensorDeviceClass as BTHomeExtendedSensorDeviceClass,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -259,6 +262,10 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Text (-)
+    (BTHomeExtendedSensorDeviceClass.TEXT, None): SensorEntityDescription(
+        key=f"{BTHomeExtendedSensorDeviceClass.TEXT}",
     ),
     # Timestamp (datetime object)
     (
