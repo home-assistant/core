@@ -43,12 +43,10 @@ FLAG_SENSORS = [
     ),
     BinarySensorEntityDescription(
         key="LowBattery",
-        translation_key="lowbattery",
         device_class=BinarySensorDeviceClass.BATTERY,
     ),
     BinarySensorEntityDescription(
         key="BatteryCharging",
-        translation_key="batterycharging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     ),
 ]
@@ -69,6 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class EyeOnWaterBinarySensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
     """Representation of an EyeOnWater binary flag sensor."""
+    _attr_has_entity_name = True
 
     def __init__(
         self,
