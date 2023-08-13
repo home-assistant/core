@@ -785,7 +785,7 @@ async def test_outlet_power_readings(
     """Test the outlet power reporting on PDU devices."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[PDU_DEVICE_1])
 
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 9
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
     ent_reg = er.async_get(hass)
