@@ -57,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{error_type}",
-            breaks_in_ha_version="2024.2.0",
+            breaks_in_ha_version="2024.3.0",
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key="deprecated_yaml_import_issue",
@@ -70,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial setup."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=vol.Schema({vol.Required(CONF_API_KEY): str})
             )
         api_key = user_input[CONF_API_KEY]
         return await self._create_entry(api_key)
