@@ -1860,7 +1860,7 @@ thermopro-ble==0.4.5
 tilt-ble==0.2.3
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.1
+todoist-api-python==2.0.2
 
 # homeassistant.components.tolo
 tololib==0.1.0b4

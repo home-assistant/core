@@ -2554,7 +2554,7 @@ tilt-ble==0.2.3
 tmb==0.0.4
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.1
+todoist-api-python==2.0.2
 
 # homeassistant.components.tolo
 tololib==0.1.0b4
