@@ -876,15 +876,13 @@ async def async_remove_config_entry_device(
     client: ZwaveClient = entry_hass_data[DATA_CLIENT]
     assert client.driver
     driver: Driver = client.driver
-    dev_reg = dr.async_get(hass)
 
-    known_devices = [
-        dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+    node = next(
+        node
         for node in driver.controller.nodes.values()
-    ]
-
-    # If device is known to the controller, do not let it be removed
-    if device_entry in known_devices:
+        if get_device_id(driver, node) in device_entry.identifiers
+    )
+    if get_device_id_ext(driver, node) in device_entry.identifiers:
         return False
 
     controller_events: ControllerEvents = entry_hass_data[
