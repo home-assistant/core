@@ -1186,7 +1186,9 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
         {"external_url": "https://example.com"},
     )
     hass.states.async_set(
-        "camera.office", "idle", {"supported_features": camera.SUPPORT_STREAM}
+        "camera.office",
+        "idle",
+        {"supported_features": camera.CameraEntityFeature.STREAM},
     )
 
     with patch(
