@@ -1,7 +1,7 @@
 {
   "domain": "venstar",
   "name": "Venstar",
-  "codeowners": ["@garbled1"],
+  "codeowners": ["@garbled1", "@jhollowe"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/venstar",
   "iot_class": "local_polling",
