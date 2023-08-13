@@ -89,8 +89,8 @@ class EyeOnWaterBinarySensor(CoordinatorEntity, RestoreEntity, BinarySensorEntit
         self._attr_unique_id = f"{description.key}_{self.meter.meter_uuid}"
         self._attr_is_on = self._state
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, meter.meter_uuid)},
-            name=f"Water Meter {meter.meter_info['meter_id']}",
+            identifiers={(DOMAIN, self.meter.meter_uuid)},
+            name=f"Water Meter {self.meter.meter_info['meter_id']}",
         )
 
     @callback
