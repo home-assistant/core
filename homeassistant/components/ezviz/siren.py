@@ -21,7 +21,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import EzvizDataUpdateCoordinator
-from .entity import EzvizEntity
+from .entity import EzvizBaseEntity
 
 PARALLEL_UPDATES = 1
 OFF_DELAY = timedelta(seconds=60)  # Camera firmware has hard coded turn off.
@@ -49,11 +49,11 @@ async def async_setup_entry(
     )
 
 
-class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
+class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
     """Representation of a EZVIZ Siren entity."""
 
-    _attr_has_entity_name = True
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
+    _attr_should_poll = False
 
     def __init__(
         self,
