@@ -59,7 +59,12 @@ async def test_hmip_heating_group_heat(
     assert ha_state.attributes["temperature"] == 5.0
     assert ha_state.attributes["current_humidity"] == 47
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
-    assert ha_state.attributes[ATTR_PRESET_MODES] == [PRESET_BOOST, "STD", "Winter"]
+    assert ha_state.attributes[ATTR_PRESET_MODES] == [
+        PRESET_BOOST,
+        PRESET_ECO,
+        "STD",
+        "Winter",
+    ]
 
     service_call_counter = len(hmip_device.mock_calls)
 
@@ -376,7 +381,12 @@ async def test_hmip_heating_group_heat_with_switch(
     assert ha_state.attributes["temperature"] == 5.0
     assert ha_state.attributes["current_humidity"] == 43
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
-    assert ha_state.attributes[ATTR_PRESET_MODES] == [PRESET_BOOST, "STD", "P2"]
+    assert ha_state.attributes[ATTR_PRESET_MODES] == [
+        PRESET_BOOST,
+        PRESET_ECO,
+        "STD",
+        "P2",
+    ]
 
 
 async def test_hmip_heating_group_heat_with_radiator(
@@ -401,7 +411,11 @@ async def test_hmip_heating_group_heat_with_radiator(
     assert ha_state.attributes["max_temp"] == 30.0
     assert ha_state.attributes["temperature"] == 5.0
     assert ha_state.attributes[ATTR_PRESET_MODE] is None
-    assert ha_state.attributes[ATTR_PRESET_MODES] == [PRESET_NONE, PRESET_BOOST]
+    assert ha_state.attributes[ATTR_PRESET_MODES] == [
+        PRESET_NONE,
+        PRESET_BOOST,
+        PRESET_ECO,
+    ]
 
 
 async def test_hmip_climate_services(
