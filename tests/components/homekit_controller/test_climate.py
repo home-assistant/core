@@ -694,6 +694,7 @@ def create_heater_cooler_service(accessory):
     char = service.add_char(CharacteristicsTypes.ROTATION_SPEED)
     char.value = 100
 
+
 # Test heater-cooler devices
 def create_heater_cooler_service_min_max(accessory):
     """Define thermostat characteristics."""
@@ -869,10 +870,8 @@ async def test_heater_cooler_change_thermostat_temperature(
     )
 
 
-async def test_heater_cooler_change_fan_speed(
-    hass: HomeAssistant, utcnow
-) -> None:
-    """Test that we can change the target fan speed"""
+async def test_heater_cooler_change_fan_speed(hass: HomeAssistant, utcnow) -> None:
+    """Test that we can change the target fan speed."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
     await hass.services.async_call(
@@ -934,7 +933,7 @@ async def test_heater_cooler_read_fan_speed(hass: HomeAssistant, utcnow) -> None
     state = await helper.poll_and_get_state()
     assert state.attributes["fan_mode"] == "low"
 
-   # Simulate that fan speed is medium
+    # Simulate that fan speed is medium
     await helper.async_update(
         ServicesTypes.HEATER_COOLER,
         {
@@ -945,7 +944,7 @@ async def test_heater_cooler_read_fan_speed(hass: HomeAssistant, utcnow) -> None
     state = await helper.poll_and_get_state()
     assert state.attributes["fan_mode"] == "medium"
 
-       # Simulate that fan speed is high
+    # Simulate that fan speed is high
     await helper.async_update(
         ServicesTypes.HEATER_COOLER,
         {
