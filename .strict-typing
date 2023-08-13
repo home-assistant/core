@@ -125,6 +125,7 @@ homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
 homeassistant.components.filter.*
 homeassistant.components.fitbit.*
+homeassistant.components.flexit_bacnet.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritz.*

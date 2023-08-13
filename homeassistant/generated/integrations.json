@@ -1744,6 +1744,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "flexit_bacnet": {
+      "name": "Flexit Nordic (BACnet)",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "flexom": {
       "name": "Bouygues Flexom",
       "integration_type": "virtual",

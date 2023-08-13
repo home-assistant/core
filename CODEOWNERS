@@ -392,6 +392,8 @@ build.json @home-assistant/supervisor
 /tests/components/fivem/ @Sander0542
 /homeassistant/components/fjaraskupan/ @elupus
 /tests/components/fjaraskupan/ @elupus
+/homeassistant/components/flexit_bacnet/ @kazhuu
+/tests/components/flexit_bacnet/ @kazhuu
 /homeassistant/components/flick_electric/ @ZephireNZ
 /tests/components/flick_electric/ @ZephireNZ
 /homeassistant/components/flipr/ @cnico
