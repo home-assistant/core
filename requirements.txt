@@ -4,7 +4,7 @@
 aiohttp==3.8.5
 astral==2.2
 async-timeout==4.0.2
-attrs==22.2.0
+attrs==23.1.0
 atomicwrites-homeassistant==1.4.1
 awesomeversion==22.9.0
 bcrypt==4.0.1
@@ -18,7 +18,7 @@ lru-dict==1.2.0
 PyJWT==2.8.0
 cryptography==41.0.3
 pyOpenSSL==23.2.0
-orjson==3.9.3
+orjson==3.9.4
 packaging>=23.1
 pip>=21.3.1
 python-slugify==4.0.1

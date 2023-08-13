@@ -8,10 +8,10 @@
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
 astroid==2.15.4
-coverage==7.2.7
+coverage==7.3.0
 freezegun==1.2.2
 mock-open==1.4.0
-mypy==1.4.1
+mypy==1.5.0
 pre-commit==3.3.3
 pydantic==1.10.12
 pylint==2.17.4
@@ -36,14 +36,18 @@ tqdm==4.65.0
 types-atomicwrites==1.4.5.1
 types-croniter==1.0.6
 types-backports==0.1.3
+types-caldav==1.2.0.2
 types-chardet==0.1.5
 types-decorator==5.1.8.3
 types-enum34==1.1.8
 types-ipaddress==1.0.8
 types-paho-mqtt==1.6.0.6
+types-Pillow==10.0.0.2
 types-pkg-resources==0.1.3
+types-psutil==5.9.5
 types-python-dateutil==2.8.19.13
 types-python-slugify==0.1.2
 types-pytz==2023.3.0.0
 types-PyYAML==6.0.12.2
 types-requests==2.31.0.1
+types-xmltodict==0.13.0.3
