@@ -80,16 +80,17 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off camera siren."""
         try:
-            if await self.hass.async_add_executor_job(
+            result = await self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.sound_alarm, self._serial, 1
-            ):
-                self._attr_is_on = False
-                self.async_write_ha_state()
-
+            )
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
                 f"Failed to turn siren off for {self.name}"
             ) from err
+            
+        if result:
+            self._attr_is_on = False
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on camera siren."""
