@@ -49,7 +49,7 @@ async def test_async_create_certificate_temp_files(
 
     # Make sure certificate temp files are recovered
     if file_path:
-        # Over write content file (except for auto option)
+        # Overwrite content of file (except for auto option)
         file = open(file_path, "wb")
         file.write(b"invalid")
         file.close()
