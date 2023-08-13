@@ -6,7 +6,7 @@ from unittest.mock import ANY, patch
 import pytest
 from pytest_unordered import unordered
 
-from homeassistant.components import camera
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
@@ -1188,7 +1188,7 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "camera.office",
         "idle",
-        {"supported_features": camera.CameraEntityFeature.STREAM},
+        {"supported_features": CameraEntityFeature.STREAM},
     )
 
     with patch(

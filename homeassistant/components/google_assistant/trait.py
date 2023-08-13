@@ -28,8 +28,12 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.camera import CameraEntityFeature
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
-from homeassistant.components.media_player import MediaType
+from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
+from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -302,7 +306,7 @@ class CameraStreamTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == camera.DOMAIN:
-            return features & camera.CameraEntityFeature.STREAM
+            return features & CameraEntityFeature.STREAM
 
         return False
 
@@ -612,7 +616,7 @@ class LocatorTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN and features & vacuum.VacuumEntityFeature.LOCATE
+        return domain == vacuum.DOMAIN and features & VacuumEntityFeature.LOCATE
 
     def sync_attributes(self):
         """Return locator attributes for a sync request."""
@@ -652,7 +656,7 @@ class EnergyStorageTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN and features & vacuum.VacuumEntityFeature.BATTERY
+        return domain == vacuum.DOMAIN and features & VacuumEntityFeature.BATTERY
 
     def sync_attributes(self):
         """Return EnergyStorage attributes for a sync request."""
@@ -721,7 +725,7 @@ class StartStopTrait(_Trait):
         if domain == vacuum.DOMAIN:
             return {
                 "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-                & vacuum.VacuumEntityFeature.PAUSE
+                & VacuumEntityFeature.PAUSE
                 != 0
             }
         if domain == cover.DOMAIN:
@@ -991,7 +995,7 @@ class TemperatureSettingTrait(_Trait):
             response["thermostatHumidityAmbient"] = current_humidity
 
         if operation in (climate.HVACMode.AUTO, climate.HVACMode.HEAT_COOL):
-            if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+            if supported & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
                 response["thermostatTemperatureSetpointHigh"] = round(
                     TemperatureConverter.convert(
                         attrs[climate.ATTR_TARGET_TEMP_HIGH],
@@ -1093,7 +1097,7 @@ class TemperatureSettingTrait(_Trait):
             supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
             svc_data = {ATTR_ENTITY_ID: self.state.entity_id}
 
-            if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+            if supported & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
                 svc_data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
                 svc_data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
             else:
@@ -1311,11 +1315,11 @@ class ArmDisArmTrait(_Trait):
     }
 
     state_to_support = {
-        STATE_ALARM_ARMED_HOME: alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME,
-        STATE_ALARM_ARMED_AWAY: alarm_control_panel.AlarmControlPanelEntityFeature.ARM_AWAY,
-        STATE_ALARM_ARMED_NIGHT: alarm_control_panel.AlarmControlPanelEntityFeature.ARM_NIGHT,
-        STATE_ALARM_ARMED_CUSTOM_BYPASS: alarm_control_panel.AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-        STATE_ALARM_TRIGGERED: alarm_control_panel.AlarmControlPanelEntityFeature.TRIGGER,
+        STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+        STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+        STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+        STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+        STATE_ALARM_TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
 
     @staticmethod
@@ -1456,7 +1460,7 @@ class FanSpeedTrait(_Trait):
         if domain == fan.DOMAIN:
             return features & fan.FanEntityFeature.SET_SPEED
         if domain == climate.DOMAIN:
-            return features & climate.ClimateEntityFeature.FAN_MODE
+            return features & ClimateEntityFeature.FAN_MODE
         return False
 
     def sync_attributes(self):
@@ -1625,7 +1629,7 @@ class ModesTrait(_Trait):
         if domain != media_player.DOMAIN:
             return False
 
-        return features & media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        return features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
     def _generate(self, name, settings):
         """Generate a list of modes."""
@@ -1815,7 +1819,7 @@ class InputSelectorTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == media_player.DOMAIN and (
-            features & media_player.MediaPlayerEntityFeature.SELECT_SOURCE
+            features & MediaPlayerEntityFeature.SELECT_SOURCE
         ):
             return True
 
@@ -2029,8 +2033,8 @@ class VolumeTrait(_Trait):
         """Test if trait is supported."""
         if domain == media_player.DOMAIN:
             return features & (
-                media_player.MediaPlayerEntityFeature.VOLUME_SET
-                | media_player.MediaPlayerEntityFeature.VOLUME_STEP
+                MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
             )
 
         return False
@@ -2040,7 +2044,7 @@ class VolumeTrait(_Trait):
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         return {
             "volumeCanMuteAndUnmute": bool(
-                features & media_player.MediaPlayerEntityFeature.VOLUME_MUTE
+                features & MediaPlayerEntityFeature.VOLUME_MUTE
             ),
             "commandOnlyVolume": self.state.attributes.get(ATTR_ASSUMED_STATE, False),
             # Volume amounts in SET_VOLUME and VOLUME_RELATIVE are on a scale
@@ -2084,7 +2088,7 @@ class VolumeTrait(_Trait):
 
         if not (
             self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            & media_player.MediaPlayerEntityFeature.VOLUME_SET
+            & MediaPlayerEntityFeature.VOLUME_SET
         ):
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 
@@ -2094,13 +2098,13 @@ class VolumeTrait(_Trait):
         relative = params["relativeSteps"]
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if features & media_player.MediaPlayerEntityFeature.VOLUME_SET:
+        if features & MediaPlayerEntityFeature.VOLUME_SET:
             current = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
             target = max(0.0, min(1.0, current + relative / 100))
 
             await self._set_volume_absolute(data, target)
 
-        elif features & media_player.MediaPlayerEntityFeature.VOLUME_STEP:
+        elif features & MediaPlayerEntityFeature.VOLUME_STEP:
             svc = media_player.SERVICE_VOLUME_UP
             if relative < 0:
                 svc = media_player.SERVICE_VOLUME_DOWN
@@ -2122,7 +2126,7 @@ class VolumeTrait(_Trait):
 
         if not (
             self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            & media_player.MediaPlayerEntityFeature.VOLUME_MUTE
+            & MediaPlayerEntityFeature.VOLUME_MUTE
         ):
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 
@@ -2164,14 +2168,14 @@ def _verify_pin_challenge(data, state, challenge):
 
 
 MEDIA_COMMAND_SUPPORT_MAPPING = {
-    COMMAND_MEDIA_NEXT: media_player.MediaPlayerEntityFeature.NEXT_TRACK,
-    COMMAND_MEDIA_PAUSE: media_player.MediaPlayerEntityFeature.PAUSE,
-    COMMAND_MEDIA_PREVIOUS: media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK,
-    COMMAND_MEDIA_RESUME: media_player.MediaPlayerEntityFeature.PLAY,
-    COMMAND_MEDIA_SEEK_RELATIVE: media_player.MediaPlayerEntityFeature.SEEK,
-    COMMAND_MEDIA_SEEK_TO_POSITION: media_player.MediaPlayerEntityFeature.SEEK,
-    COMMAND_MEDIA_SHUFFLE: media_player.MediaPlayerEntityFeature.SHUFFLE_SET,
-    COMMAND_MEDIA_STOP: media_player.MediaPlayerEntityFeature.STOP,
+    COMMAND_MEDIA_NEXT: MediaPlayerEntityFeature.NEXT_TRACK,
+    COMMAND_MEDIA_PAUSE: MediaPlayerEntityFeature.PAUSE,
+    COMMAND_MEDIA_PREVIOUS: MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    COMMAND_MEDIA_RESUME: MediaPlayerEntityFeature.PLAY,
+    COMMAND_MEDIA_SEEK_RELATIVE: MediaPlayerEntityFeature.SEEK,
+    COMMAND_MEDIA_SEEK_TO_POSITION: MediaPlayerEntityFeature.SEEK,
+    COMMAND_MEDIA_SHUFFLE: MediaPlayerEntityFeature.SHUFFLE_SET,
+    COMMAND_MEDIA_STOP: MediaPlayerEntityFeature.STOP,
 }
 
 MEDIA_COMMAND_ATTRIBUTES = {
@@ -2356,7 +2360,7 @@ class ChannelTrait(_Trait):
         """Test if state is supported."""
         if (
             domain == media_player.DOMAIN
-            and (features & media_player.MediaPlayerEntityFeature.PLAY_MEDIA)
+            and (features & MediaPlayerEntityFeature.PLAY_MEDIA)
             and device_class == media_player.MediaPlayerDeviceClass.TV
         ):
             return True
