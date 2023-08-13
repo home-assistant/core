@@ -67,6 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class EyeOnWaterBinarySensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
     """Representation of an EyeOnWater binary flag sensor."""
+
     _attr_has_entity_name = True
 
     def __init__(
