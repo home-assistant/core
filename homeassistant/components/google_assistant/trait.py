@@ -31,6 +31,8 @@ from homeassistant.components import (
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.humidifier import HumidifierEntityFeature
+from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 from homeassistant.components.vacuum import VacuumEntityFeature
@@ -1617,13 +1619,10 @@ class ModesTrait(_Trait):
         if domain == select.DOMAIN:
             return True
 
-        if (
-            domain == humidifier.DOMAIN
-            and features & humidifier.HumidifierEntityFeature.MODES
-        ):
+        if domain == humidifier.DOMAIN and features & HumidifierEntityFeature.MODES:
             return True
 
-        if domain == light.DOMAIN and features & light.LightEntityFeature.EFFECT:
+        if domain == light.DOMAIN and features & LightEntityFeature.EFFECT:
             return True
 
         if domain != media_player.DOMAIN:

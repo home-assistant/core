@@ -2313,7 +2313,7 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
                     humidifier.MODE_AUTO,
                     humidifier.MODE_AWAY,
                 ],
-                ATTR_SUPPORTED_FEATURES: humidifier.HumidifierEntityFeature.MODES,
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES,
                 humidifier.ATTR_MIN_HUMIDITY: 30,
                 humidifier.ATTR_MAX_HUMIDITY: 99,
                 humidifier.ATTR_HUMIDITY: 50,
