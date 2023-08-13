@@ -64,6 +64,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.hass.async_add_executor_job(self.verisure.update_cookie)
         except VerisureLoginError:
+            LOGGER.debug("Cookie expired, acquiring new cookies")
             try:
                 await self.hass.async_add_executor_job(self.verisure.login_cookie)
             except VerisureLoginError as ex:
