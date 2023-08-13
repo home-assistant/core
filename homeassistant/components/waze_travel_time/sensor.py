@@ -154,9 +154,7 @@ class WazeTravelTimeData:
     ) -> None:
         """Set up WazeRouteCalculator."""
         self.config_entry = config_entry
-        self.client: WazeRouteCalculator = WazeRouteCalculator(
-            region=region, client=client
-        )
+        self.client = WazeRouteCalculator(region=region, client=client)
         self.origin: str | None = None
         self.destination: str | None = None
         self.duration = None
