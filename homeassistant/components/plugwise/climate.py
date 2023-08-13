@@ -171,8 +171,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             ):
                 raise ValueError("Invalid temperature change requested")
 
-        if ATTR_HVAC_MODE in kwargs:
-            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(mode)
 
         await self.coordinator.api.set_temperature(self.device["location"], data)
 
