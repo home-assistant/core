@@ -54,6 +54,7 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
 
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
     _attr_should_poll = False
+    _attr_assumed_state = True
 
     def __init__(
         self,
