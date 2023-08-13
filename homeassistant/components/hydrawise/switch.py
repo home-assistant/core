@@ -64,7 +64,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    # Setup is a noop because we automatically trigger YAML import to config flow.
+    # We don't need to trigger import flow from here as it's triggered from `__init__.py`
     return
 
 
