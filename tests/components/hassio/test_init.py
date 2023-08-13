@@ -265,6 +265,7 @@ async def test_setup_api_panel(
         "title": None,
         "url_path": "hassio",
         "require_admin": True,
+        "config_panel_domain": None,
         "config": {
             "_panel_custom": {
                 "embed_iframe": True,

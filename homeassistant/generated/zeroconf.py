@@ -251,6 +251,21 @@ ZEROCONF = {
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
+            "properties": {
+                "model": "appletv*",
+            },
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "model": "audioaccessory*",
+            },
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "airport*",
+            },
         },
         {
             "domain": "samsungtv",

@@ -608,7 +608,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             variables=service.data, context=service.context, wait=True
         )
         if service.return_response:
-            return response
+            return response or {}
         return None
 
     async def async_added_to_hass(self) -> None:

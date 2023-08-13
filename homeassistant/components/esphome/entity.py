@@ -4,12 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 import math
-from typing import (  # pylint: disable=unused-import
-    Any,
-    Generic,
-    TypeVar,
-    cast,
-)
+from typing import Any, Generic, TypeVar, cast  # pylint: disable=unused-import
 
 from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,
@@ -19,16 +14,14 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    EntityCategory,
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-)
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .domain_data import DomainData
@@ -60,6 +53,7 @@ async def platform_async_setup_entry(
     entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
     entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
+    platform = entity_platform.async_get_current_platform()
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
@@ -71,7 +65,7 @@ async def platform_async_setup_entry(
         for info in infos:
             if not current_infos.pop(info.key, None):
                 # Create new entity
-                entity = entity_type(entry_data, info, state_type)
+                entity = entity_type(entry_data, platform.domain, info, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
@@ -111,8 +105,8 @@ def esphome_state_property(
         if not self._has_state:
             return None
         val = func(self)
-        if isinstance(val, float) and math.isnan(val):
-            # Home Assistant doesn't use NAN values in state machine
+        if isinstance(val, float) and not math.isfinite(val):
+            # Home Assistant doesn't use NaN or inf values in state machine
             # (not JSON serializable)
             return None
         return val
@@ -145,10 +139,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def __init__(
         self,
         entry_data: RuntimeEntryData,
+        domain: str,
         entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
+
         self._entry_data = entry_data
         self._on_entry_data_changed()
         self._key = entity_info.key
@@ -157,11 +153,29 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
-        self._attr_has_entity_name = bool(device_info.friendly_name)
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
         self._entry_id = entry_data.entry_id
+        #
+        # If `friendly_name` is set, we use the Friendly naming rules, if
+        # `friendly_name` is not set we make an exception to the naming rules for
+        # backwards compatibility and use the Legacy naming rules.
+        #
+        # Friendly naming
+        # - Friendly name is prepended to entity names
+        # - Device Name is prepended to entity ids
+        # - Entity id is constructed from device name and object id
+        #
+        # Legacy naming
+        # - Device name is not prepended to entity names
+        # - Device name is not prepended to entity ids
+        # - Entity id is constructed from entity name
+        #
+        if not device_info.friendly_name:
+            return
+        self._attr_has_entity_name = True
+        self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

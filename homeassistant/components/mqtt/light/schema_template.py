@@ -100,7 +100,7 @@ PLATFORM_SCHEMA_MODERN_TEMPLATE = (
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
         }
@@ -128,6 +128,7 @@ async def async_setup_entity_template(
 class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT Template light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _optimistic: bool

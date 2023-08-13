@@ -44,7 +44,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
-    EVENT_STATE_CHANGED,
     PERCENTAGE,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -59,7 +58,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1568,23 +1567,13 @@ def mock_client_fixture():
         yield counter_client
 
 
-@pytest.fixture
-def mock_bus(hass):
-    """Mock the event bus listener."""
-    hass.bus.listen = mock.MagicMock()
-
-
-@pytest.mark.usefixtures("mock_bus")
 async def test_minimal_config(hass: HomeAssistant, mock_client) -> None:
     """Test the minimal config and defaults of component."""
     config = {prometheus.DOMAIN: {}}
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
-@pytest.mark.usefixtures("mock_bus")
 async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     """Test the full config of component."""
     config = {
@@ -1592,6 +1581,7 @@ async def test_full_config(hass: HomeAssistant, mock_client) -> None:
             "namespace": "ns",
             "default_metric": "m",
             "override_metric": "m",
+            "requires_auth": False,
             "component_config": {"fake.test": {"override_metric": "km"}},
             "component_config_glob": {"fake.time_*": {"override_metric": "h"}},
             "component_config_domain": {"climate": {"override_metric": "°C"}},
@@ -1607,21 +1597,6 @@ async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     }
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
-
-
-def make_event(entity_id):
-    """Make a mock event for test."""
-    domain = split_entity_id(entity_id)[0]
-    state = mock.MagicMock(
-        state="not blank",
-        domain=domain,
-        entity_id=entity_id,
-        object_id="entity",
-        attributes={},
-    )
-    return mock.MagicMock(data={"new_state": state}, time_fired=12345)
 
 
 async def _setup(hass, filter_config):
@@ -1629,13 +1604,11 @@ async def _setup(hass, filter_config):
     config = {prometheus.DOMAIN: {"filter": filter_config}}
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
-    return hass.bus.listen.call_args_list[0][0][1]
 
 
-@pytest.mark.usefixtures("mock_bus")
 async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist only config."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_domains": ["fake"],
@@ -1654,18 +1627,17 @@ async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called
         mock_client.labels.reset_mock()
 
 
-@pytest.mark.usefixtures("mock_bus")
 async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist only config."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "exclude_domains": ["fake"],
@@ -1684,18 +1656,17 @@ async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called
         mock_client.labels.reset_mock()
 
 
-@pytest.mark.usefixtures("mock_bus")
 async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist config with a filtering allowlist."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_entities": ["fake.included", "test.excluded_test"],
@@ -1715,8 +1686,8 @@ async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called

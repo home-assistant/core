@@ -22,8 +22,11 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -73,6 +76,8 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: SoundTouchDevice) -> None:
         """Create SoundTouch media player entity."""
@@ -80,7 +85,6 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._device = device
 
         self._attr_unique_id = self._device.config.device_id
-        self._attr_name = self._device.config.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.config.device_id)},
             connections={

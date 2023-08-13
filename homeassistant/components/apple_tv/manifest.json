@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/apple_tv",
   "iot_class": "local_push",
   "loggers": ["pyatv", "srptools"],
-  "requirements": ["pyatv==0.13.2"],
+  "requirements": ["pyatv==0.13.4"],
   "zeroconf": [
     "_mediaremotetv._tcp.local.",
     "_companion-link._tcp.local.",
@@ -16,7 +16,24 @@
     "_touch-able._tcp.local.",
     "_appletv-v2._tcp.local.",
     "_hscp._tcp.local.",
-    "_airplay._tcp.local.",
+    {
+      "type": "_airplay._tcp.local.",
+      "properties": {
+        "model": "appletv*"
+      }
+    },
+    {
+      "type": "_airplay._tcp.local.",
+      "properties": {
+        "model": "audioaccessory*"
+      }
+    },
+    {
+      "type": "_airplay._tcp.local.",
+      "properties": {
+        "am": "airport*"
+      }
+    },
     {
       "type": "_raop._tcp.local.",
       "properties": {

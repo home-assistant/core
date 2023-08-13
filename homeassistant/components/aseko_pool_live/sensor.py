@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AsekoDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
 
 
@@ -36,7 +36,7 @@ async def async_setup_entry(
 class VariableSensorEntity(AsekoEntity, SensorEntity):
     """Representation of a unit variable sensor entity."""
 
-    attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, unit: Unit, variable: Variable, coordinator: AsekoDataUpdateCoordinator

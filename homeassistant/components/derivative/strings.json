@@ -6,7 +6,7 @@
         "title": "Add Derivative sensor",
         "description": "Create a sensor that estimates the derivative of a sensor.",
         "data": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "round": "Precision",
           "source": "Input sensor",
           "time_window": "Time window",

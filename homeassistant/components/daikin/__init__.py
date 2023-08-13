@@ -15,12 +15,12 @@ from homeassistant.const import (
     CONF_UUID,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, KEY_MAC, TIMEOUT
@@ -52,6 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not daikin_api:
         return False
 
+    await async_migrate_unique_id(hass, entry, daikin_api)
+
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -67,7 +69,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def daikin_api_setup(hass, host, key, uuid, password):
+async def daikin_api_setup(hass: HomeAssistant, host, key, uuid, password):
     """Create a Daikin instance only once."""
 
     session = async_get_clientsession(hass)
@@ -127,3 +129,82 @@ class DaikinApi:
             name=info.get("name"),
             sw_version=info.get("ver", "").replace("_", "."),
         )
+
+
+async def async_migrate_unique_id(
+    hass: HomeAssistant, config_entry: ConfigEntry, api: DaikinApi
+) -> None:
+    """Migrate old entry."""
+    dev_reg = dr.async_get(hass)
+    old_unique_id = config_entry.unique_id
+    new_unique_id = api.device.mac
+    new_name = api.device.values.get("name")
+
+    @callback
+    def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        return update_unique_id(entity_entry, new_unique_id)
+
+    if new_unique_id == old_unique_id:
+        return
+
+    # Migrate devices
+    for device_entry in dr.async_entries_for_config_entry(
+        dev_reg, config_entry.entry_id
+    ):
+        for connection in device_entry.connections:
+            if connection[1] == old_unique_id:
+                new_connections = {
+                    (CONNECTION_NETWORK_MAC, dr.format_mac(new_unique_id))
+                }
+
+                _LOGGER.debug(
+                    "Migrating device %s connections to %s",
+                    device_entry.name,
+                    new_connections,
+                )
+                dev_reg.async_update_device(
+                    device_entry.id,
+                    merge_connections=new_connections,
+                )
+
+        if device_entry.name is None:
+            _LOGGER.debug(
+                "Migrating device name to %s",
+                new_name,
+            )
+            dev_reg.async_update_device(
+                device_entry.id,
+                name=new_name,
+            )
+
+        # Migrate entities
+        await er.async_migrate_entries(hass, config_entry.entry_id, _update_unique_id)
+
+        new_data = {**config_entry.data, KEY_MAC: dr.format_mac(new_unique_id)}
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, data=new_data
+        )
+
+
+@callback
+def update_unique_id(
+    entity_entry: er.RegistryEntry, unique_id: str
+) -> dict[str, str] | None:
+    """Update unique ID of entity entry."""
+    if entity_entry.unique_id.startswith(unique_id):
+        # Already correct, nothing to do
+        return None
+
+    unique_id_parts = entity_entry.unique_id.split("-")
+    unique_id_parts[0] = unique_id
+    entity_new_unique_id = "-".join(unique_id_parts)
+
+    _LOGGER.debug(
+        "Migrating entity %s from %s to new id %s",
+        entity_entry.entity_id,
+        entity_entry.unique_id,
+        entity_new_unique_id,
+    )
+    return {"new_unique_id": entity_new_unique_id}

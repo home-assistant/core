@@ -102,6 +102,28 @@ def _dispatch_bleak_callback(
 class BluetoothManager:
     """Manage Bluetooth."""
 
+    __slots__ = (
+        "hass",
+        "_integration_matcher",
+        "_cancel_unavailable_tracking",
+        "_cancel_logging_listener",
+        "_advertisement_tracker",
+        "_unavailable_callbacks",
+        "_connectable_unavailable_callbacks",
+        "_callback_index",
+        "_bleak_callbacks",
+        "_all_history",
+        "_connectable_history",
+        "_non_connectable_scanners",
+        "_connectable_scanners",
+        "_adapters",
+        "_sources",
+        "_bluetooth_adapters",
+        "storage",
+        "slot_manager",
+        "_debug",
+    )
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -615,7 +637,7 @@ class BluetoothManager:
         else:
             # We could write out every item in the typed dict here
             # but that would be a bit inefficient and verbose.
-            callback_matcher.update(matcher)  # type: ignore[typeddict-item]
+            callback_matcher.update(matcher)
             callback_matcher[CONNECTABLE] = matcher.get(CONNECTABLE, True)
 
         connectable = callback_matcher[CONNECTABLE]

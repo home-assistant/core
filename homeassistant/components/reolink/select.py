@@ -49,7 +49,7 @@ SELECT_ENTITIES = (
         icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
         translation_key="floodlight_mode",
-        get_options=[mode.name for mode in SpotlightModeEnum],
+        get_options=lambda api, ch: api.whiteled_mode_list(ch),
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: SpotlightModeEnum(api.whiteled_mode(ch)).name,
         method=lambda api, ch, name: api.set_whiteled(ch, mode=name),

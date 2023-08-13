@@ -6,9 +6,9 @@
         "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
         "data": {
           "host": "Hostname",
-          "username": "Username",
-          "password": "Password",
-          "port": "Port",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "ssl": "Enable SSL",
           "verify_ssl": "Verify SSL"
         }

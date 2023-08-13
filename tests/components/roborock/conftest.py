@@ -67,6 +67,10 @@ async def setup_entry(
         return_value=PROP,
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
+    ), patch(
+        "homeassistant.components.roborock.RoborockMqttClient._wait_response"
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
     ):
         assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()

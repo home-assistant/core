@@ -8,7 +8,7 @@ from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import logging
-from ssl import SSLContext
+import ssl
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
@@ -32,8 +32,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
@@ -476,13 +476,14 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         content = None
         ssl_context = None
         if url.startswith("https"):
-            ssl_context = SSLContext()
+            ssl_context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
 
         websession = async_get_clientsession(self.hass)
-        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-            response = await websession.get(url, ssl=ssl_context)
-            if response.status == HTTPStatus.OK:
-                content = await response.read()
+        with suppress(asyncio.TimeoutError):
+            async with async_timeout.timeout(10):
+                response = await websession.get(url, ssl=ssl_context)
+                if response.status == HTTPStatus.OK:
+                    content = await response.read()
 
         if content is None:
             _LOGGER.warning("Error retrieving proxied image from %s", url)

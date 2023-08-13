@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from datetime import datetime
+from enum import StrEnum
 import logging
 from typing import Any, Final, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, singleton

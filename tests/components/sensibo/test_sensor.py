@@ -44,12 +44,12 @@ async def test_sensor(
         "state_class": "measurement",
         "unit_of_measurement": "°C",
         "on": True,
-        "targetTemperature": 21,
-        "temperatureUnit": "C",
+        "targettemperature": 21,
+        "temperatureunit": "c",
         "mode": "heat",
-        "fanLevel": "low",
+        "fanlevel": "low",
         "swing": "stopped",
-        "horizontalSwing": "stopped",
+        "horizontalswing": "stopped",
         "light": "on",
     }
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.8.0.dev0"
+version     = "2023.9.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -18,13 +18,12 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.10.0"
+requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.8.4",
+    "aiohttp==3.8.5",
     "astral==2.2",
     "async-timeout==4.0.2",
     "attrs==22.2.0",
@@ -36,22 +35,23 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.24.1",
-    "home-assistant-bluetooth==1.10.0",
+    "home-assistant-bluetooth==1.10.2",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
-    "PyJWT==2.7.0",
+    "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==41.0.1",
+    "cryptography==41.0.3",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
-    "orjson==3.9.1",
-    "pip>=21.3.1,<23.2",
+    "orjson==3.9.4",
+    "packaging>=23.1",
+    "pip>=21.3.1",
     "python-slugify==4.0.1",
-    "PyYAML==6.0",
+    "PyYAML==6.0.1",
     "requests==2.31.0",
     "typing-extensions>=4.7.0,<5.0",
-    "ulid-transform==0.7.2",
+    "ulid-transform==0.8.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.9.2",
@@ -80,7 +80,7 @@ include = ["homeassistant*"]
 extend-exclude = "/generated/"
 
 [tool.pylint.MAIN]
-py-version = "3.10"
+py-version = "3.11"
 ignore = [
     "tests",
 ]
@@ -537,6 +537,7 @@ known-first-party = [
     "homeassistant",
 ]
 combine-as-imports = true
+split-on-trailing-comma = false
 
 [tool.ruff.per-file-ignores]
 

@@ -17,6 +17,17 @@ from .typing import TemplateVarsType
 class TraceElement:
     """Container for trace data."""
 
+    __slots__ = (
+        "_child_key",
+        "_child_run_id",
+        "_error",
+        "path",
+        "_result",
+        "reuse_by_child",
+        "_timestamp",
+        "_variables",
+    )
+
     def __init__(self, variables: TemplateVarsType, path: str) -> None:
         """Container for trace data."""
         self._child_key: str | None = None

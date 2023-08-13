@@ -64,7 +64,6 @@ DEFAULT_SERVICES = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.STATUS
     | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
@@ -127,7 +126,7 @@ PLATFORM_SCHEMA_STATE_MODERN = (
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
             ),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(
                 CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
             ): cv.string,
@@ -171,6 +170,7 @@ async def async_setup_entity_state(
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     """Representation of a MQTT-controlled state vacuum."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
@@ -199,7 +199,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
-        self._attr_supported_features = strings_to_services(
+        self._attr_supported_features = VacuumEntityFeature.STATE | strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
@@ -260,8 +260,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
-        """Check for a missing feature or command topic."""
-        if self._command_topic is None or self.supported_features & feature == 0:
+        """Publish a command."""
+        if self._command_topic is None:
             return
 
         await self.async_publish(
