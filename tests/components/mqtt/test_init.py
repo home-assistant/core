@@ -433,8 +433,19 @@ async def test_value_template_fails(
     await hass.async_block_till_done()
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
-        "when rendering template for entity 'sensor.test', "
+        "rendering template for entity 'sensor.test', "
         "template: '{{ value_json.some_var * 2 }}' with payload: "
+        '{"some_var": null }'
+    ) in caplog.text
+    caplog.clear()
+    with pytest.raises(TypeError):
+        val_tpl.async_render_with_possible_json_value(
+            '{"some_var": null }', default=100
+        )
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
+        "rendering template for entity 'sensor.test', "
+        "template: '{{ value_json.some_var * 2 }}', default value: 100 and payload: "
         '{"some_var": null }'
     ) in caplog.text
 

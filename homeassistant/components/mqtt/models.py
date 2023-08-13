@@ -239,7 +239,7 @@ class MqttValueTemplate:
                 )
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.error(
-                    "%s: %s when rendering template for entity '%s', template: "
+                    "%s: %s rendering template for entity '%s', template: "
                     "'%s' with payload: %s",
                     type(ex).__name__,
                     ex,
@@ -260,9 +260,24 @@ class MqttValueTemplate:
             default,
             self._value_template,
         )
-        rendered_payload = self._value_template.async_render_with_possible_json_value(
-            payload, default, variables=values
-        )
+        try:
+            rendered_payload = (
+                self._value_template.async_render_with_possible_json_value(
+                    payload, default, variables=values
+                )
+            )
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.error(
+                "%s: %s rendering template for entity '%s', template: "
+                "'%s', default value: %s and payload: %s",
+                type(ex).__name__,
+                ex,
+                self._entity.entity_id if self._entity else "n/a",
+                self._value_template.template,
+                default,
+                payload,
+            )
+            raise ex
         return rendered_payload
 
 
