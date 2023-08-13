@@ -18,7 +18,7 @@
     }
   },
   "entity": {
-    "sensor": {
+    "binary_sensor": {
       "leak": {
         "name": "Leak Sensor"
       },
@@ -33,12 +33,6 @@
       },
       "reverseflow": {
         "name": "Reverse Waterflow"
-      },
-      "lowbattery": {
-        "name": "Low Battery"
-      },
-      "batterycharging": {
-        "name": "Battery Charging"
       }
     }
   }
