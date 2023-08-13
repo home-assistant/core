@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+import httpx
 from pywaze.route_calculator import WazeRouteCalculator, WRCError
 
 from homeassistant.components.sensor import (
@@ -23,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util.unit_conversion import DistanceConverter
 
@@ -60,6 +62,7 @@ async def async_setup_entry(
 
     data = WazeTravelTimeData(
         region,
+        get_async_client(hass),
         config_entry,
     )
 
@@ -146,10 +149,14 @@ class WazeTravelTime(SensorEntity):
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
 
-    def __init__(self, region: str, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, region: str, client: httpx.AsyncClient, config_entry: ConfigEntry
+    ) -> None:
         """Set up WazeRouteCalculator."""
         self.config_entry = config_entry
-        self.client: WazeRouteCalculator = WazeRouteCalculator(region)
+        self.client: WazeRouteCalculator = WazeRouteCalculator(
+            region=region, client=client
+        )
         self.origin: str | None = None
         self.destination: str | None = None
         self.duration = None
