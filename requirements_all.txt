@@ -360,7 +360,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==52
+aiounifi==53
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -800,7 +800,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux-led==1.0.1
+flux-led==1.0.2
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -1665,7 +1665,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.4.0
+pyenphase==1.5.2
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1955,7 +1955,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==3.0.0
+pyrainbird==4.0.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2156,7 +2156,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.32.2
+python-roborock==0.32.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2554,7 +2554,7 @@ tilt-ble==0.2.3
 tmb==0.0.4
 
 # homeassistant.components.todoist
-todoist-api-python==2.0.2
+todoist-api-python==2.1.1
 
 # homeassistant.components.tolo
 tololib==0.1.0b4
