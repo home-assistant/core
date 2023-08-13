@@ -5,18 +5,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import (
-    DATA_COORDINATOR,
-    DATA_SMART_METER,
-    DOMAIN,
-)
+from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN
 from .eow import Meter
 
 FLAG_SENSORS = [
