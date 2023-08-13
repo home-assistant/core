@@ -1347,8 +1347,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342
-/homeassistant/components/venstar/ @garbled1
-/tests/components/venstar/ @garbled1
+/homeassistant/components/venstar/ @garbled1 @jhollowe
+/tests/components/venstar/ @garbled1 @jhollowe
 /homeassistant/components/verisure/ @frenck @niro1987
 /tests/components/verisure/ @frenck @niro1987
 /homeassistant/components/versasense/ @flamm3blemuff1n
