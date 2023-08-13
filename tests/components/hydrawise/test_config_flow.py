@@ -8,8 +8,9 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from homeassistant import config_entries
 from homeassistant.components.hydrawise.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+import homeassistant.helpers.issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +27,7 @@ async def test_form(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"api_key": "abc123"}
@@ -51,8 +52,8 @@ async def test_form_api_error(mock_api: MagicMock, hass: HomeAssistant) -> None:
         result["flow_id"], {"api_key": "abc123"}
     )
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 @patch("pydrawise.legacy.LegacyHydrawise", side_effect=ConnectTimeout)
@@ -65,13 +66,13 @@ async def test_form_connect_timeout(mock_api: MagicMock, hass: HomeAssistant) ->
         result["flow_id"], {"api_key": "abc123"}
     )
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "timeout_connect"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "timeout_connect"}
 
 
 @patch("pydrawise.legacy.LegacyHydrawise")
 async def test_form_no_status(mock_api: MagicMock, hass: HomeAssistant) -> None:
-    """Test we handle API errors."""
+    """Test we handle a lack of API status."""
     mock_api.return_value.status = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -80,8 +81,8 @@ async def test_form_no_status(mock_api: MagicMock, hass: HomeAssistant) -> None:
         result["flow_id"], {"api_key": "abc123"}
     )
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "unknown"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 @patch("pydrawise.legacy.LegacyHydrawise")
@@ -103,6 +104,81 @@ async def test_flow_import_success(mock_api: MagicMock, hass: HomeAssistant) -> 
     assert result["data"] == {
         CONF_API_KEY: "__api_key__",
     }
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_hydrawise"
+    )
+    assert issue.translation_key == "deprecated_yaml"
+
+
+@patch("pydrawise.legacy.LegacyHydrawise", side_effect=HTTPError)
+async def test_flow_import_api_error(mock_api: MagicMock, hass: HomeAssistant) -> None:
+    """Test that we handle API errors on YAML import."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: "__api_key__",
+            CONF_SCAN_INTERVAL: 120,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue.translation_key == "deprecated_yaml_import_issue"
+
+
+@patch("pydrawise.legacy.LegacyHydrawise", side_effect=ConnectTimeout)
+async def test_flow_import_connect_timeout(
+    mock_api: MagicMock, hass: HomeAssistant
+) -> None:
+    """Test that we handle connection timeouts on YAML import."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: "__api_key__",
+            CONF_SCAN_INTERVAL: 120,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "timeout_connect"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_timeout_connect"
+    )
+    assert issue.translation_key == "deprecated_yaml_import_issue"
+
+
+@patch("pydrawise.legacy.LegacyHydrawise")
+async def test_flow_import_no_status(mock_api: MagicMock, hass: HomeAssistant) -> None:
+    """Test we handle a lack of API status on YAML import."""
+    mock_api.return_value.status = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: "__api_key__",
+            CONF_SCAN_INTERVAL: 120,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_unknown"
+    )
+    assert issue.translation_key == "deprecated_yaml_import_issue"
 
 
 @patch("pydrawise.legacy.LegacyHydrawise")
@@ -134,3 +210,9 @@ async def test_flow_import_already_imported(
 
     assert result["type"] == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_hydrawise"
+    )
+    assert issue.translation_key == "deprecated_yaml"
