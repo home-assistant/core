@@ -16,7 +16,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
