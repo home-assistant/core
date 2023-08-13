@@ -17,9 +17,9 @@ async def is_valid_config_entry(
     resolved_origin = find_coordinates(hass, origin)
     resolved_destination = find_coordinates(hass, destination)
     httpx_client = get_async_client(hass)
+    client = WazeRouteCalculator(region=region, client=httpx_client)
     try:
-        async with WazeRouteCalculator(region=region, client=httpx_client) as client:
-            await client.calc_all_routes_info(resolved_origin, resolved_destination)
+        await client.calc_all_routes_info(resolved_origin, resolved_destination)
     except WRCError as error:
         _LOGGER.error("Error trying to validate entry: %s", error)
         return False
