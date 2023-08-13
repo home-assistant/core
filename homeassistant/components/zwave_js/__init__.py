@@ -260,8 +260,9 @@ class DriverEvents:
 
         # Devices that are in the device registry that are not known by the controller
         # can be removed
-        for device in set(stored_devices) - set(known_devices):
-            self.controller_events.remove_device(device)
+        for device in stored_devices:
+            if device not in known_devices:
+                self.dev_reg.async_remove_device(device.id)
 
         # run discovery on controller node
         if controller.own_node:
