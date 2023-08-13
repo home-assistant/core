@@ -14,7 +14,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FoscamCoordinator
 from .const import (
     CONF_RTSP_PORT,
     CONF_STREAM,
@@ -23,6 +22,7 @@ from .const import (
     SERVICE_PTZ,
     SERVICE_PTZ_PRESET,
 )
+from .coordinator import FoscamCoordinator
 
 DIR_UP = "up"
 DIR_DOWN = "down"
@@ -89,9 +89,7 @@ async def async_setup_entry(
         "async_perform_ptz_preset",
     )
 
-    coordinator: FoscamCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        "coordinator"
-    ]
+    coordinator: FoscamCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities([HassFoscamCamera(coordinator, config_entry)])
 
@@ -123,8 +121,6 @@ class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera):
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Foscam",
         )
-
-        self._name = config_entry.title
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""

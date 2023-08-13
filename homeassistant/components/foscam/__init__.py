@@ -1,8 +1,5 @@
 """The foscam component."""
 
-from datetime import timedelta
-
-import async_timeout
 from libpyfoscam import FoscamCamera
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,10 +12,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import async_migrate_entries
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .coordinator import FoscamCoordinator
 
 PLATFORMS = [Platform.CAMERA]
 
@@ -37,9 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "coordinator": coordinator,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -99,45 +94,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.info("Migration to version %s successful", entry.version)
 
     return True
-
-
-class FoscamCoordinator(DataUpdateCoordinator):
-    """My custom coordinator."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        session: FoscamCamera,
-        update_interval=timedelta(seconds=30),
-    ) -> None:
-        """Initialize my coordinator."""
-        super().__init__(
-            hass,
-            LOGGER,
-            # Name of the data. For logging purposes.
-            name=DOMAIN,
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=update_interval,
-        )
-        self._session = session
-
-    def get_session(self) -> FoscamCamera:
-        """Return the foscam camera session."""
-        return self._session
-
-    async def _async_update_data(self) -> dict:
-        """Fetch data from API endpoint."""
-
-        async with async_timeout.timeout(30):
-            data = {}
-            ret, dev_info = await self.hass.async_add_executor_job(
-                self._session.get_dev_info
-            )
-            if ret == 0:
-                data["dev_info"] = dev_info
-            data["product_info"] = (
-                await self.hass.async_add_executor_job(
-                    self._session.get_product_all_info
-                )
-            )[1]
-            return data
