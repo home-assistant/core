@@ -1874,6 +1874,24 @@ async def test_temperature_unit(
                 DEFAULT_CONFIG,
                 (
                     {
+                        "initial": 68.9,  # 20.5 °C
+                        "temperature_unit": "F",
+                        "current_temperature_topic": "current_temperature",
+                    },
+                ),
+            ),
+            UnitOfTemperature.CELSIUS,
+            20.5,
+            DEFAULT_MIN_TEMP,
+            DEFAULT_MAX_TEMP,
+            25,
+        ),
+        (
+            help_custom_config(
+                climate.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
                         "temperature_unit": "F",
                         "current_temperature_topic": "current_temperature",
                     },
@@ -2484,7 +2502,11 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

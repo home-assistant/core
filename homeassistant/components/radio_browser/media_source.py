@@ -28,7 +28,7 @@ CODEC_TO_MIMETYPE = {
 
 async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
     """Set up Radio Browser media source."""
-    # Radio browser support only a single config entry
+    # Radio browser supports only a single config entry
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     return RadioMediaSource(hass, entry)
@@ -40,7 +40,7 @@ class RadioMediaSource(MediaSource):
     name = "Radio Browser"
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize CameraMediaSource."""
+        """Initialize RadioMediaSource."""
         super().__init__(DOMAIN)
         self.hass = hass
         self.entry = entry

@@ -1,12 +1,14 @@
 """Tests for WebSocket API commands."""
 from copy import deepcopy
 import datetime
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
+from homeassistant import config_entries, loader
+from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -17,17 +19,21 @@ from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAG
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity
+from homeassistant.helpers import device_registry as dr, entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 from homeassistant.util.json import json_loads
 
-from tests.common import MockEntity, MockEntityPlatform, MockUser, async_mock_service
-from tests.typing import (
-    ClientSessionGenerator,
-    WebSocketGenerator,
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockUser,
+    async_mock_service,
+    mock_platform,
 )
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -38,6 +44,25 @@ STATE_KEY_SHORT_NAMES = {
     "attributes": "a",
 }
 STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
+
+
+@pytest.fixture
+def fake_integration(hass: HomeAssistant):
+    """Set up a mock integration with device automation support."""
+    DOMAIN = "fake_integration"
+
+    hass.config.components.add(DOMAIN)
+
+    mock_platform(
+        hass,
+        f"{DOMAIN}.device_action",
+        Mock(
+            ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
+                {vol.Required("domain"): DOMAIN}
+            ),
+            spec=["ACTION_SCHEMA"],
+        ),
+    )
 
 
 def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
@@ -1739,6 +1764,7 @@ async def test_execute_script_complex_response(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test testing a condition."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
     ws_client = await hass_ws_client(hass)
@@ -1769,12 +1795,55 @@ async def test_execute_script_complex_response(
                 "summary": "Future Event",
                 "description": "Future Description",
                 "location": "Future Location",
-                "uid": None,
-                "recurrence_id": None,
-                "rrule": None,
             }
         ]
     }
+
+
+async def test_execute_script_with_dynamically_validated_action(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    fake_integration,
+) -> None:
+    """Test executing a script with an action which is dynamically validated."""
+
+    ws_client = await hass_ws_client(hass)
+
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module = module_cache["fake_integration.device_action"]
+    module.async_call_action_from_config = AsyncMock()
+    module.async_validate_action_config = AsyncMock(
+        side_effect=lambda hass, config: config
+    )
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "execute_script",
+            "sequence": [
+                {
+                    "device_id": device_entry.id,
+                    "domain": "fake_integration",
+                },
+            ],
+        }
+    )
+
+    msg_no_var = await ws_client.receive_json()
+    assert msg_no_var["type"] == const.TYPE_RESULT
+    assert msg_no_var["success"]
+    assert msg_no_var["result"]["response"] is None
+
+    module.async_validate_action_config.assert_awaited_once()
+    module.async_call_action_from_config.assert_awaited_once()
 
 
 async def test_subscribe_unsubscribe_bootstrap_integrations(

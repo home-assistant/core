@@ -151,7 +151,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
+                ATTR_ENTITY_ID: "sensor.reg_number_battery",
                 ATTR_STATE: "60",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_battery_level",
@@ -386,7 +386,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
+                ATTR_ENTITY_ID: "sensor.reg_number_battery",
                 ATTR_STATE: "50",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_battery_level",
@@ -621,7 +621,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
+                ATTR_ENTITY_ID: "sensor.reg_number_battery",
                 ATTR_STATE: "60",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_battery_level",

@@ -10,6 +10,7 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -106,6 +107,7 @@ async def test_no_repair_issue(
     assert (const.DOMAIN, "webhook_url") not in issue_registry.issues
     assert (const.DOMAIN, "enable_port") not in issue_registry.issues
     assert (const.DOMAIN, "firmware_update") not in issue_registry.issues
+    assert (const.DOMAIN, "ssl") not in issue_registry.issues
 
 
 async def test_https_repair_issue(
@@ -116,11 +118,43 @@ async def test_https_repair_issue(
         hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
     )
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
+    ), patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+    ), patch(
+        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "https_webhook") in issue_registry.issues
+
+
+async def test_ssl_repair_issue(
+    hass: HomeAssistant, config_entry: MockConfigEntry, reolink_ONVIF_wait: MagicMock
+) -> None:
+    """Test repairs issue is raised when global ssl certificate is used."""
+    assert await async_setup_component(hass, "webhook", {})
+    hass.config.api.use_ssl = True
+
+    await async_process_ha_core_config(
+        hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
+    )
+
+    with patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
+    ), patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+    ), patch(
+        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert (const.DOMAIN, "ssl") in issue_registry.issues
 
 
 @pytest.mark.parametrize("protocol", ["rtsp", "rtmp"])
@@ -150,6 +184,8 @@ async def test_webhook_repair_issue(
     """Test repairs issue is raised when the webhook url is unreachable."""
     with patch(
         "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
+    ), patch(
+        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
     ), patch(
         "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
     ):

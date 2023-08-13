@@ -6,7 +6,8 @@ from yalexs.lock import Lock
 from yalexs.util import get_configuration_url
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, AugustData
 from .const import MANUFACTURER

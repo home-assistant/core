@@ -2,16 +2,10 @@
 
 import logging
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTRIBUTION,
-    DOMAIN,
-)
+from .const import ATTRIBUTION, DOMAIN
 from .coordinator import AuroraDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)

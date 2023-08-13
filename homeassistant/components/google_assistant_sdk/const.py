@@ -5,7 +5,6 @@ DOMAIN: Final = "google_assistant_sdk"
 
 DEFAULT_NAME: Final = "Google Assistant SDK"
 
-CONF_ENABLE_CONVERSATION_AGENT: Final = "enable_conversation_agent"
 CONF_LANGUAGE_CODE: Final = "language_code"
 
 DATA_CREDENTIALS: Final = "credentials"

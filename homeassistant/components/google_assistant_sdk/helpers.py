@@ -1,6 +1,7 @@
 """Helper classes for Google Assistant SDK integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from http import HTTPStatus
 import json
 import logging
@@ -51,6 +52,13 @@ DEFAULT_LANGUAGE_CODES = {
 }
 
 
+@dataclass
+class CommandResponse:
+    """Response from a single command to Google Assistant Service."""
+
+    text: str
+
+
 async def create_credentials(hass: HomeAssistant, entry: ConfigEntry) -> Credentials:
     """Create credentials to pass to TextAssistant."""
     # Credentials already exist in memory, return that.
@@ -94,6 +102,7 @@ async def async_send_text_commands(
     with TextAssistant(
         credentials, language_code, audio_out=bool(media_players)
     ) as assistant:
+        command_response_list = []
         for command in commands:
             resp = assistant.assist(command)
             text_response = resp[0]
@@ -117,6 +126,8 @@ async def async_send_text_commands(
                     },
                     blocking=True,
                 )
+            command_response_list.append(CommandResponse(text_response))
+        return command_response_list
 
 
 def default_language_code(hass: HomeAssistant):

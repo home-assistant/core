@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
             [
                 DaikinZoneSwitch(daikin_api, zone_id)
                 for zone_id, zone in enumerate(zones)
-                if zone != ("-", "0")
+                if zone[0] != "-"
             ]
         )
     if daikin_api.device.support_advanced_modes:

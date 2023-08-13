@@ -1,8 +1,7 @@
 """Base entity for the LOQED integration."""
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -23,7 +22,7 @@ class LoqedEntity(CoordinatorEntity[LoqedDataCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, lock_id)},
             manufacturer="LOQED",
-            name="LOQED Lock",
+            name=coordinator.device_name,
             model="Touch Smart Lock",
             connections={(CONNECTION_NETWORK_MAC, lock_id)},
         )

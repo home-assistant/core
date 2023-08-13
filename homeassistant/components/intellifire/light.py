@@ -40,7 +40,7 @@ class IntellifireLightEntityDescription(
 INTELLIFIRE_LIGHTS: tuple[IntellifireLightEntityDescription, ...] = (
     IntellifireLightEntityDescription(
         key="lights",
-        name="Lights",
+        translation_key="lights",
         set_fn=lambda control_api, level: control_api.set_lights(level=level),
         value_fn=lambda data: data.light_level,
     ),

@@ -35,7 +35,7 @@
       },
       "reauth_confirm": {
         "data": {
-          "noise_psk": "Encryption key"
+          "noise_psk": "[%key:component::esphome::config::step::encryption_key::data::noise_psk%]"
         },
         "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your device configuration."
       },
@@ -74,6 +74,17 @@
           "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
           "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
           "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          }
         }
       }
     }

@@ -72,7 +72,7 @@ async def test_cover_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
     assert state.state == STATE_OPENING
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
@@ -81,7 +81,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=0.0)])
@@ -90,7 +90,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=1.0)])
@@ -99,7 +99,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_my_cover", ATTR_POSITION: 50},
+        {ATTR_ENTITY_ID: "cover.test_mycover", ATTR_POSITION: 50},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=0.5)])
@@ -108,7 +108,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, stop=True)])
@@ -117,7 +117,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=1.0)])
@@ -126,7 +126,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.0)])
@@ -135,7 +135,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_my_cover", ATTR_TILT_POSITION: 50},
+        {ATTR_ENTITY_ID: "cover.test_mycover", ATTR_TILT_POSITION: 50},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.5)])
@@ -145,7 +145,7 @@ async def test_cover_entity(
         CoverState(key=1, position=0.0, current_operation=CoverOperation.IDLE)
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
     assert state.state == STATE_CLOSED
 
@@ -153,7 +153,7 @@ async def test_cover_entity(
         CoverState(key=1, position=0.5, current_operation=CoverOperation.IS_CLOSING)
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
     assert state.state == STATE_CLOSING
 
@@ -161,7 +161,7 @@ async def test_cover_entity(
         CoverState(key=1, position=1.0, current_operation=CoverOperation.IDLE)
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
     assert state.state == STATE_OPEN
 
@@ -201,7 +201,7 @@ async def test_cover_entity_without_position(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
     assert state.state == STATE_OPENING
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
