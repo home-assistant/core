@@ -5,17 +5,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import (
-    DATA_COORDINATOR,
-    DATA_SMART_METER,
-    DOMAIN,
-)
+from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN
 from .eow import Meter
 
 
