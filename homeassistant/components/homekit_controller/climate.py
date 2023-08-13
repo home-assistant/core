@@ -23,10 +23,9 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     FAN_AUTO,
+    FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    FAN_MIDDLE,
-    FAN_HIGH,
     FAN_OFF,
     FAN_ON,
     SWING_OFF,
@@ -40,12 +39,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
-    ranged_value_to_percentage
+    ranged_value_to_percentage,
 )
-
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
