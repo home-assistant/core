@@ -336,7 +336,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                self.context["title_placeholders"] = {ATTR_SERIAL: item.title}
+                self.context["title_placeholders"] = {ATTR_SERIAL: item.unique_id}
                 entry = await self.async_set_unique_id(item.unique_id)
 
         if not entry:
@@ -366,6 +366,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self.hass.config_entries.async_update_entry(
                     entry,
+                    unique_id=user_input[CONF_USERNAME],
                     data=auth_data,
                 )
 
