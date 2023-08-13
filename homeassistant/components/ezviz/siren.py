@@ -1,6 +1,7 @@
 """Support for EZVIZ sirens."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -67,6 +68,7 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
         self._attr_unique_id = f"{serial}_{description.key}"
         self.entity_description = description
         self._attr_is_on = False
+        self._delay_listener: Callable | None = None
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -83,29 +85,42 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
             result = await self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.sound_alarm, self._serial, 1
             )
+
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
                 f"Failed to turn siren off for {self.name}"
             ) from err
-            
+
         if result:
+            if self._delay_listener is not None:
+                self._delay_listener()
+                self._delay_listener = None
+
             self._attr_is_on = False
             self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on camera siren."""
         try:
-            if await self.hass.async_add_executor_job(
+            result = self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.sound_alarm, self._serial, 2
-            ):
-                self._attr_is_on = True
-                evt.async_call_later(self.hass, OFF_DELAY, self.off_delay_listener)
-                self.async_write_ha_state()
+            )
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
                 f"Failed to turn siren on for {self.name}"
             ) from err
+
+        if result:
+            if self._delay_listener is not None:
+                self._delay_listener()
+                self._delay_listener = None
+
+            self._attr_is_on = True
+            self._delay_listener = evt.async_call_later(
+                self.hass, OFF_DELAY, self.off_delay_listener
+            )
+            self.async_write_ha_state()
 
     @callback
     def off_delay_listener(self, now: datetime) -> None:
@@ -114,4 +129,5 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
         Camera firmware has hard coded turn off after 60 seconds.
         """
         self._attr_is_on = False
+        self._delay_listener = None
         self.async_write_ha_state()
