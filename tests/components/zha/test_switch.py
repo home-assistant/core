@@ -39,6 +39,8 @@ from .common import (
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
+from tests.common import mock_coro
+
 ON = 1
 OFF = 0
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -611,6 +613,7 @@ async def zigpy_device_tuya_trv(hass, zigpy_device_mock, zha_device_joined):
         },
         manufacturer="_TZE200_hue3yfsn",
         quirk=TRVBoostQuirk,
+        quirk_class="zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG",
     )
 
     zha_device = await zha_device_joined(zigpy_device)
@@ -626,7 +629,7 @@ async def test_switch_tuya_trv_boost(
 
     zha_device = await zha_device_joined_restored(zigpy_device_tuya_trv)
     cluster = zigpy_device_tuya_trv.endpoints.get(1).tuya_manufacturer
-    entity_id = await find_entity_id(Platform.SWITCH, zha_device, hass)
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF

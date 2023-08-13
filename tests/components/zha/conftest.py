@@ -286,6 +286,7 @@ def zigpy_device_mock(zigpy_app_controller):
         patch_cluster=True,
         quirk=None,
         attributes=None,
+        quirk_class=None,
     ):
         """Make a fake device using the specified cluster classes."""
         device = zigpy.device.Device(
@@ -332,6 +333,11 @@ def zigpy_device_mock(zigpy_app_controller):
                     for name, value in attrs.items():
                         attr_id = cluster.find_attribute(name).id
                         cluster._attr_cache[attr_id] = value
+
+        if quirk_class is not None:
+            quirk_class_split = quirk_class.split(".")
+            device.__class__.__module__ = ".".join(quirk_class_split[:-1])
+            device.__class__.__name__ = quirk_class_split[-1]
 
         return device
 
