@@ -1,7 +1,12 @@
 """Platform for binarysensor integration."""
 from __future__ import annotations
 
-from boschshcpy import SHCBatteryDevice, SHCSession, SHCShutterContact
+from boschshcpy import (
+    SHCBatteryDevice,
+    SHCSession,
+    SHCShutterContact,
+    SHCShutterContact2,
+)
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.binary_sensor import (
@@ -34,9 +39,19 @@ async def async_setup_entry(
             )
         )
 
+    for binary_sensor in session.device_helper.shutter_contacts2:
+        entities.append(
+            ShutterContactSensor2(
+                device=binary_sensor,
+                parent_id=session.information.unique_id,
+                entry_id=config_entry.entry_id,
+            )
+        )
+
     for binary_sensor in (
         session.device_helper.motion_detectors
         + session.device_helper.shutter_contacts
+        + session.device_helper.shutter_contacts2
         + session.device_helper.smoke_detectors
         + session.device_helper.thermostats
         + session.device_helper.twinguards
@@ -76,6 +91,28 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
     def is_on(self):
         """Return the state of the sensor."""
         return self._device.state == SHCShutterContact.ShutterContactService.State.OPEN
+
+
+class ShutterContactSensor2(SHCEntity, BinarySensorEntity):
+    """Representation of an SHC shutter contact 2 sensor."""
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC shutter contact 2 sensor.."""
+        super().__init__(device, parent_id, entry_id)
+        switcher = {
+            "ENTRANCE_DOOR": BinarySensorDeviceClass.DOOR,
+            "REGULAR_WINDOW": BinarySensorDeviceClass.WINDOW,
+            "FRENCH_WINDOW": BinarySensorDeviceClass.DOOR,
+            "GENERIC": BinarySensorDeviceClass.WINDOW,
+        }
+        self._attr_device_class = switcher.get(
+            self._device.device_class, BinarySensorDeviceClass.WINDOW
+        )
+
+    @property
+    def is_on(self):
+        """Return the state of the sensor."""
+        return self._device.state == SHCShutterContact2.ShutterContactService.State.OPEN
 
 
 class BatterySensor(SHCEntity, BinarySensorEntity):
