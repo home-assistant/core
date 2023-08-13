@@ -35,6 +35,7 @@ class EyeOnWaterSensor(CoordinatorEntity, SensorEntity):
     """Representation of an EyeOnWater sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_device_class = SensorDeviceClass.WATER
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
@@ -47,8 +48,8 @@ class EyeOnWaterSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = meter.meter_uuid
         self._attr_native_unit_of_measurement = meter.native_unit_of_measurement
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, meter.meter_uuid)},
-            name=f"Water Meter {meter.meter_info['meter_id']}",
+            identifiers={(DOMAIN, self.meter.meter_uuid)},
+            name=f"Water Meter {self.meter.meter_info['meter_id']}",
         )
 
     @property
