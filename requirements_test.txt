@@ -8,7 +8,7 @@
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
 astroid==2.15.4
-coverage==7.2.7
+coverage==7.3.0
 freezegun==1.2.2
 mock-open==1.4.0
 mypy==1.5.0
