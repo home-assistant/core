@@ -143,6 +143,16 @@
         "name": "Encryption"
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "number": {
+      "detection_sensibility": {
+        "name": "Detection sensitivity"
+      }
+    },
     "sensor": {
       "alarm_sound_mod": {
         "name": "Alarm sound level"
@@ -211,6 +221,11 @@
       },
       "follow_movement": {
         "name": "Follow movement"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "[%key:component::update::entity_component::firmware::name%]"
       }
     },
     "siren": {

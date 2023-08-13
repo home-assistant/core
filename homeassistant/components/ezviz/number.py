@@ -47,7 +47,7 @@ class EzvizNumberEntityDescription(
 
 NUMBER_TYPE = EzvizNumberEntityDescription(
     key="detection_sensibility",
-    name="Detection sensitivity",
+    translation_key="detection_sensibility",
     icon="mdi:eye",
     entity_category=EntityCategory.CONFIG,
     native_min_value=0,

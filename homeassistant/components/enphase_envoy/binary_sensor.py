@@ -3,13 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
-from pyenphase import (
-    EnvoyData,
-    EnvoyEncharge,
-    EnvoyEnpower,
-)
+from pyenphase import EnvoyEncharge, EnvoyEnpower
 from pyenphase.models.dry_contacts import DryContactStatus
 
 from homeassistant.components.binary_sensor import (
@@ -20,16 +15,12 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
 
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .entity import EnvoyBaseEntity
 
 
 @dataclass
@@ -143,31 +134,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class EnvoyBaseBinarySensorEntity(
-    CoordinatorEntity[EnphaseUpdateCoordinator], BinarySensorEntity
-):
+class EnvoyBaseBinarySensorEntity(EnvoyBaseEntity, BinarySensorEntity):
     """Defines a base envoy binary_sensor entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: BinarySensorEntityDescription,
-    ) -> None:
-        """Init the Enphase base binary_sensor entity."""
-        self.entity_description = description
-        serial_number = coordinator.envoy.serial_number
-        assert serial_number is not None
-        self.envoy_serial_num = serial_number
-        super().__init__(coordinator)
-
-    @property
-    def data(self) -> EnvoyData:
-        """Return envoy data."""
-        data = self.coordinator.envoy.data
-        assert data is not None
-        return data
 
 
 class EnvoyEnchargeBinarySensorEntity(EnvoyBaseBinarySensorEntity):
@@ -244,15 +212,15 @@ class EnvoyRelayBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         self,
         coordinator: EnphaseUpdateCoordinator,
         description: BinarySensorEntityDescription,
-        relay: str,
+        relay_id: str,
     ) -> None:
         """Init the Enpower base entity."""
         super().__init__(coordinator, description)
         enpower = self.data.enpower
         assert enpower is not None
-        self.relay = self.data.dry_contact_status[relay]
+        self.relay_id = relay_id
         self._serial_number = enpower.serial_number
-        self._attr_unique_id = f"{self._serial_number}_relay_{self.relay.id}"
+        self._attr_unique_id = f"{self._serial_number}_relay_{relay_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._serial_number)},
             manufacturer="Enphase",
@@ -261,11 +229,10 @@ class EnvoyRelayBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
         )
-        self._attr_name = (
-            f"{self.data.dry_contact_settings[self.relay.id].load_name} Relay"
-        )
+        self._attr_name = f"{self.data.dry_contact_settings[relay_id].load_name} Relay"
 
     @property
     def is_on(self) -> bool:
         """Return the state of the Enpower binary_sensor."""
-        return self.relay.status == DryContactStatus.CLOSED
+        relay = self.data.dry_contact_status[self.relay_id]
+        return relay.status == DryContactStatus.CLOSED
