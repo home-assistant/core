@@ -45,6 +45,8 @@ class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
 class EzvizBaseEntity(Entity):
     """Generic entity for EZVIZ individual poll entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: EzvizDataUpdateCoordinator,
