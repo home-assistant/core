@@ -10,7 +10,7 @@ from homeassistant.components.thread import async_add_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -44,6 +44,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         asyncio.TimeoutError,
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
+    if border_agent_id is None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"get_get_border_agent_id_unsupported_{otbrdata.entry_id}",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="get_get_border_agent_id_unsupported",
+        )
+        return False
     if dataset_tlvs:
         await update_issues(hass, otbrdata, dataset_tlvs)
         await async_add_dataset(
