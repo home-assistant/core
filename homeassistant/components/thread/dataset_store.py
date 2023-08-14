@@ -33,6 +33,7 @@ class DatasetPreferredError(HomeAssistantError):
 class DatasetEntry:
     """Dataset store entry."""
 
+    preferred_border_agent_id: str | None
     source: str
     tlv: str
 
@@ -73,6 +74,7 @@ class DatasetEntry:
         return {
             "created": self.created.isoformat(),
             "id": self.id,
+            "preferred_border_agent_id": self.preferred_border_agent_id,
             "source": self.source,
             "tlv": self.tlv,
         }
@@ -97,6 +99,7 @@ class DatasetStoreStore(Store):
                     entry = DatasetEntry(
                         created=created,
                         id=dataset["id"],
+                        preferred_border_agent_id=None,
                         source=dataset["source"],
                         tlv=dataset["tlv"],
                     )
@@ -160,7 +163,8 @@ class DatasetStoreStore(Store):
                 }
             if old_minor_version < 3:
                 # Add border agent ID
-                data.setdefault("preferred_border_agent_id", None)
+                for dataset in data["datasets"]:
+                    dataset.setdefault("preferred_border_agent_id", None)
 
         return data
 
@@ -172,7 +176,6 @@ class DatasetStore:
         """Initialize the dataset store."""
         self.hass = hass
         self.datasets: dict[str, DatasetEntry] = {}
-        self._preferred_border_agent_id: str | None = None
         self._preferred_dataset: str | None = None
         self._store: Store[dict[str, Any]] = DatasetStoreStore(
             hass,
@@ -245,7 +248,7 @@ class DatasetStore:
             self.async_schedule_save()
             return
 
-        entry = DatasetEntry(source=source, tlv=tlv)
+        entry = DatasetEntry(preferred_border_agent_id=None, source=source, tlv=tlv)
         self.datasets[entry.id] = entry
         # Set to preferred if there is no preferred dataset
         if self._preferred_dataset is None:
@@ -266,14 +269,13 @@ class DatasetStore:
         return self.datasets.get(dataset_id)
 
     @callback
-    def async_get_preferred_border_agent_id(self) -> str | None:
-        """Get preferred border agent id."""
-        return self._preferred_border_agent_id
-
-    @callback
-    def async_set_preferred_border_agent_id(self, border_agent_id: str) -> None:
-        """Set preferred border agent id."""
-        self._preferred_border_agent_id = border_agent_id
+    def async_set_preferred_border_agent_id(
+        self, dataset_id: str, border_agent_id: str
+    ) -> None:
+        """Set preferred border agent id of a dataset."""
+        self.datasets[dataset_id] = dataclasses.replace(
+            self.datasets[dataset_id], preferred_border_agent_id=border_agent_id
+        )
         self.async_schedule_save()
 
     @property
@@ -296,7 +298,6 @@ class DatasetStore:
         data = await self._store.async_load()
 
         datasets: dict[str, DatasetEntry] = {}
-        preferred_border_agent_id: str | None = None
         preferred_dataset: str | None = None
 
         if data is not None:
@@ -305,14 +306,13 @@ class DatasetStore:
                 datasets[dataset["id"]] = DatasetEntry(
                     created=created,
                     id=dataset["id"],
+                    preferred_border_agent_id=dataset["preferred_border_agent_id"],
                     source=dataset["source"],
                     tlv=dataset["tlv"],
                 )
-            preferred_border_agent_id = data["preferred_border_agent_id"]
             preferred_dataset = data["preferred_dataset"]
 
         self.datasets = datasets
-        self._preferred_border_agent_id = preferred_border_agent_id
         self._preferred_dataset = preferred_dataset
 
     @callback
@@ -325,7 +325,6 @@ class DatasetStore:
         """Return data of datasets to store in a file."""
         data: dict[str, Any] = {}
         data["datasets"] = [dataset.to_json() for dataset in self.datasets.values()]
-        data["preferred_border_agent_id"] = self._preferred_border_agent_id
         data["preferred_dataset"] = self._preferred_dataset
         return data
 
@@ -352,20 +351,6 @@ async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:
     return entry.tlv
 
 
-async def async_get_preferred_border_agent_id(hass: HomeAssistant) -> str | None:
-    """Get the preferred border agent ID."""
-    store = await async_get_store(hass)
-    return store.async_get_preferred_border_agent_id()
-
-
-async def async_set_preferred_border_agent_id(
-    hass: HomeAssistant, border_agent_id: str
-) -> None:
-    """Get the preferred border agent ID."""
-    store = await async_get_store(hass)
-    store.async_set_preferred_border_agent_id(border_agent_id)
-
-
 async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
     """Get the preferred dataset."""
     store = await async_get_store(hass)
@@ -374,3 +359,15 @@ async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
     ) is None:
         return None
     return entry.tlv
+
+
+async def async_set_preferred_dataset_preferred_border_agent_id(
+    hass: HomeAssistant, border_agent_id: str
+) -> None:
+    """Set the preferred border agent ID of the preferred dataset."""
+    store = await async_get_store(hass)
+    if (preferred_dataset_id := store.preferred_dataset) is None or (
+        store.async_get(preferred_dataset_id)
+    ) is None:
+        raise HomeAssistantError("UnknownDataset")
+    store.async_set_preferred_border_agent_id(preferred_dataset_id, border_agent_id)
