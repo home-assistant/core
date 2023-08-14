@@ -68,7 +68,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=user_form_schema(user_input)
             )
 
-        self._async_abort_entries_match({CONF_PIN: user_input[CONF_PIN]})
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
         errors = {}
 

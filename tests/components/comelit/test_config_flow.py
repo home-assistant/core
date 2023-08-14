@@ -86,7 +86,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         "aiocomelit.api.ComeliteSerialBridgeAPi.login",
     ), patch(
         "aiocomelit.api.ComeliteSerialBridgeAPi.logout",
-    ), patch("homeassistant.components.fritz.async_setup_entry"), patch(
+    ), patch("homeassistant.components.comelit.async_setup_entry"), patch(
         "requests.get"
     ) as mock_request_get:
         mock_request_get.return_value.status_code = 200
