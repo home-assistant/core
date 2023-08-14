@@ -109,7 +109,7 @@ async def test_create_network(
     assert set_enabled_mock.mock_calls[0][1][0] is False
     assert set_enabled_mock.mock_calls[1][1][0] is True
     get_active_dataset_tlvs_mock.assert_called_once()
-    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex())
+    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex(), None)
 
 
 async def test_create_network_no_entry(

@@ -37,7 +37,6 @@ DATASET_NO_CHANNEL = bytes.fromhex(
 async def test_import_dataset(hass: HomeAssistant) -> None:
     """Test the active dataset is imported at setup."""
     issue_registry = ir.async_get(hass)
-    assert await thread.async_get_preferred_border_agent_id(hass) is None
     assert await thread.async_get_preferred_dataset(hass) is None
 
     config_entry = MockConfigEntry(
@@ -54,8 +53,9 @@ async def test_import_dataset(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
+    dataset_store = await thread.dataset_store.async_get_store(hass)
     assert (
-        await thread.async_get_preferred_border_agent_id(hass)
+        list(dataset_store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
     )
     assert await thread.async_get_preferred_dataset(hass) == DATASET_CH16.hex()
@@ -94,7 +94,7 @@ async def test_import_share_radio_channel_collision(
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex())
+    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex(), None)
     assert issue_registry.async_get_issue(
         domain=otbr.DOMAIN,
         issue_id=f"otbr_zha_channel_collision_{config_entry.entry_id}",
@@ -127,7 +127,7 @@ async def test_import_share_radio_no_channel_collision(
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(otbr.DOMAIN, dataset.hex())
+    mock_add.assert_called_once_with(otbr.DOMAIN, dataset.hex(), None)
     assert not issue_registry.async_get_issue(
         domain=otbr.DOMAIN,
         issue_id=f"otbr_zha_channel_collision_{config_entry.entry_id}",
@@ -158,7 +158,7 @@ async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> N
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(otbr.DOMAIN, dataset.hex())
+    mock_add.assert_called_once_with(otbr.DOMAIN, dataset.hex(), None)
     assert issue_registry.async_get_issue(
         domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
     )
