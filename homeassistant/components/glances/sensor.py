@@ -295,11 +295,6 @@ async def async_setup_entry(
                         )
         elif sensor_type == "uptime":
             if sensor_description := SENSOR_TYPES.get((sensor_type, sensor_type)):
-                _migrate_old_unique_ids(
-                    hass,
-                    f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
-                    f"-{sensor_description.key}",
-                )
                 entities.append(
                     GlancesTimestampSensor(
                         coordinator,
