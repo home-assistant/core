@@ -7,7 +7,7 @@ import aiohttp
 import pytest
 import python_otbr_api
 
-from homeassistant.components import otbr
+from homeassistant.components import otbr, thread
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -21,6 +21,7 @@ from . import (
     DATASET_CH16,
     DATASET_INSECURE_NW_KEY,
     DATASET_INSECURE_PASSPHRASE,
+    TEST_BORDER_AGENT_ID,
 )
 
 from tests.common import MockConfigEntry
@@ -36,6 +37,8 @@ DATASET_NO_CHANNEL = bytes.fromhex(
 async def test_import_dataset(hass: HomeAssistant) -> None:
     """Test the active dataset is imported at setup."""
     issue_registry = ir.async_get(hass)
+    assert await thread.async_get_preferred_border_agent_id(hass) is None
+    assert await thread.async_get_preferred_dataset(hass) is None
 
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
@@ -47,11 +50,15 @@ async def test_import_dataset(hass: HomeAssistant) -> None:
     with patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
     ), patch(
-        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
-    ) as mock_add:
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex())
+    assert (
+        await thread.async_get_preferred_border_agent_id(hass)
+        == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert await thread.async_get_preferred_dataset(hass) == DATASET_CH16.hex()
     assert not issue_registry.async_get_issue(
         domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
     )
