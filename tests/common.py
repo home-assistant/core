@@ -420,6 +420,9 @@ def async_fire_time_changed(
     _async_fire_time_changed(hass, utc_datetime, fire_all)
 
 
+_MONOTONIC_RESOLUTION = time.get_clock_info("monotonic").resolution
+
+
 @callback
 def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
@@ -432,7 +435,7 @@ def _async_fire_time_changed(
             continue
 
         mock_seconds_into_future = timestamp - time.time()
-        future_seconds = task.when() - hass.loop.time()
+        future_seconds = task.when() - (hass.loop.time() + _MONOTONIC_RESOLUTION)
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
