@@ -20,6 +20,8 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_discover_routers)
     websocket_api.async_register_command(hass, ws_get_dataset)
     websocket_api.async_register_command(hass, ws_list_datasets)
+    websocket_api.async_register_command(hass, ws_get_preferred_border_agent_id)
+    websocket_api.async_register_command(hass, ws_set_preferred_border_agent_id)
     websocket_api.async_register_command(hass, ws_set_preferred_dataset)
 
 
@@ -47,6 +49,38 @@ async def ws_add_dataset(
         )
         return
 
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "thread/get_preferred_border_agent_id",
+    }
+)
+@websocket_api.async_response
+async def ws_get_preferred_border_agent_id(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get the preferred border agent ID."""
+    border_agent_id = await dataset_store.async_get_preferred_border_agent_id(hass)
+    connection.send_result(msg["id"], {"border_agent_id": border_agent_id})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "thread/set_preferred_border_agent_id",
+        vol.Required("border_agent_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_set_preferred_border_agent_id(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Set the preferred border agent ID."""
+    border_agent_id = msg["border_agent_id"]
+    await dataset_store.async_set_preferred_border_agent_id(hass, border_agent_id)
     connection.send_result(msg["id"])
 
 

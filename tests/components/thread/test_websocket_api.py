@@ -200,6 +200,35 @@ async def test_list_get_dataset(
     assert msg["error"] == {"code": "not_found", "message": "unknown dataset"}
 
 
+async def test_preferred_border_agent_id(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test setting and getting the preferred border agent ID."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "thread/get_preferred_border_agent_id"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"border_agent_id": None}
+
+    await client.send_json_auto_id(
+        {"type": "thread/set_preferred_border_agent_id", "border_agent_id": "blah"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    await client.send_json_auto_id({"type": "thread/get_preferred_border_agent_id"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"border_agent_id": "blah"}
+
+    assert await dataset_store.async_get_preferred_border_agent_id(hass) == "blah"
+
+
 async def test_set_preferred_dataset(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
