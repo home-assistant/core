@@ -17,10 +17,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_NVR_NAME
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
 
