@@ -83,6 +83,11 @@ class OTBRData:
             await self.delete_active_dataset()
 
     @_handle_otbr_error
+    async def get_border_agent_id(self) -> bytes:
+        """Get the border agent ID."""
+        return await self.api.get_border_agent_id()
+
+    @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
         """Enable or disable the router."""
         return await self.api.set_enabled(enabled)
