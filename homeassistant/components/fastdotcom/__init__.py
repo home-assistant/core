@@ -1,13 +1,14 @@
 """Support for testing internet speed via Fast.com."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Any
 
 from fastdotcom import fast_com
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -16,14 +17,19 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "fastdotcom"
-DATA_UPDATED = f"{DOMAIN}_data_updated"
+from .const import DATA_UPDATED, DOMAIN
+
+# DOMAIN = "fastdotcom"
+# DATA_UPDATED = f"{DOMAIN}_data_updated"
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MANUAL = "manual"
 
-DEFAULT_INTERVAL = timedelta(hours=1)
+PLATFORMS = [Platform.SENSOR]
+
+# DEFAULT_INTERVAL = timedelta(hours=1)
+DEFAULT_INTERVAL = 0
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -40,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_platform(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Fast.com component."""
     conf = config[DOMAIN]
     data = hass.data[DOMAIN] = SpeedtestData(hass)
@@ -58,6 +64,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
     )
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Fast.com from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
+    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
     return True
 
 
