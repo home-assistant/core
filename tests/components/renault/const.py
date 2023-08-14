@@ -198,6 +198,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DURATION,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_remaining_time",
                 ATTR_ICON: "mdi:timer",
                 ATTR_STATE: "145",
