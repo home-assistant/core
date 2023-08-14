@@ -319,12 +319,17 @@ async def test_loading_datasets_from_storage(
                     "tlv": DATASET_3,
                 },
             ],
+            "preferred_border_agent_id": "230C6A1AC57F6F4BE262ACF32E5EF52C",
             "preferred_dataset": "id1",
         },
     }
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 3
+    assert (
+        store.async_get_preferred_border_agent_id()
+        == "230C6A1AC57F6F4BE262ACF32E5EF52C"
+    )
     assert store.preferred_dataset == "id1"
 
 
@@ -512,3 +517,34 @@ async def test_migrate_drop_duplicate_datasets_preferred(
         f"Dropped duplicated Thread dataset '{DATASET_1_LARGER_TIMESTAMP}' "
         f"(duplicate of preferred dataset '{DATASET_1}')"
     ) in caplog.text
+
+
+async def test_migrate_set_default_border_agent_id(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog
+) -> None:
+    """Test migrating the dataset store adds default border agent."""
+    hass_storage[dataset_store.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 2,
+        "data": {
+            "datasets": [
+                {
+                    "created": "2023-02-02T09:41:13.746514+00:00",
+                    "id": "id1",
+                    "source": "source_1",
+                    "tlv": DATASET_1,
+                },
+            ],
+            "preferred_dataset": "id1",
+        },
+    }
+
+    store = await dataset_store.async_get_store(hass)
+    assert store.async_get_preferred_border_agent_id() is None
+
+
+async def test_preferred_border_agent_id(hass: HomeAssistant) -> None:
+    """Test get and set the preferred border agent ID."""
+    assert await dataset_store.async_get_preferred_border_agent_id(hass) is None
+    await dataset_store.async_set_preferred_border_agent_id(hass, "blah")
+    assert await dataset_store.async_get_preferred_border_agent_id(hass) == "blah"
