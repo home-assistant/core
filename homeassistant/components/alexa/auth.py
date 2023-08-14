@@ -1,5 +1,6 @@
 """Support for Alexa skill auth."""
 import asyncio
+from asyncio import timeout
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
@@ -7,7 +8,6 @@ import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
@@ -113,7 +113,7 @@ class Auth:
     async def _async_request_new_token(self, lwa_params: dict[str, str]) -> str | None:
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
-            async with async_timeout.timeout(10):
+            async with timeout(10):
                 response = await session.post(
                     LWA_TOKEN_URI,
                     headers=LWA_HEADERS,

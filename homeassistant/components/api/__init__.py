@@ -1,12 +1,12 @@
 """Rest API for Home Assistant."""
 import asyncio
+from asyncio import timeout
 from functools import lru_cache
 from http import HTTPStatus
 import logging
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
@@ -148,7 +148,7 @@ class APIEventStream(HomeAssistantView):
 
             while True:
                 try:
-                    async with async_timeout.timeout(STREAM_PING_INTERVAL):
+                    async with timeout(STREAM_PING_INTERVAL):
                         payload = await to_write.get()
 
                     if payload is stop_obj:

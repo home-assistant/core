@@ -7,7 +7,6 @@ from collections.abc import AsyncGenerator, Callable
 import logging
 from typing import Any
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, websocket_api
@@ -207,7 +206,7 @@ async def websocket_run(
 
     try:
         # Task contains a timeout
-        async with async_timeout.timeout(timeout):
+        async with timeout(timeout):
             await run_task
     except asyncio.TimeoutError:
         pipeline_input.run.process_event(
