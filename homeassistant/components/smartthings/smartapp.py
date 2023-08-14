@@ -197,7 +197,7 @@ def setup_smartapp(hass, app):
     return smartapp
 
 
-async def setup_smartapp_endpoint(hass: HomeAssistant):
+async def setup_smartapp_endpoint(hass: HomeAssistant, clean: bool):
     """Configure the SmartApp webhook in hass.
 
     SmartApps are an extension point within the SmartThings ecosystem and
@@ -209,7 +209,8 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
 
     # Get/create config to store a unique id for this hass instance.
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
-    if not (config := await store.async_load()):
+
+    if clean or not (config := await store.async_load()):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
