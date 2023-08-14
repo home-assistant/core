@@ -2141,7 +2141,7 @@ python-opensky==0.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.3.0
+python-otbr-api==2.4.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
