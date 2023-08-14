@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 import pytest
 from screenlogicpy import ScreenLogicGateway
+from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.screenlogic import DOMAIN
@@ -15,7 +16,7 @@ MOCK_ADAPTER_NAME = "Pentair DD-EE-FF"
 MOCK_ADAPTER_MAC = "aa:bb:cc:dd:ee:ff"
 MOCK_ADAPTER_IP = "127.0.0.1"
 MOCK_ADAPTER_PORT = 80
-MOCK_DATA = {
+MOCK_MIGRATION_TEST_DATA = {
     "adapter": {
         "firmware": {
             "name": "Protocol Adapter Firmware",
@@ -62,12 +63,6 @@ MOCK_DATA = {
                 "name": "Pool Low Pump RPM Now",
                 "value": 0,
                 "unit": "rpm",
-                "state_type": "measurement",
-            },
-            "gpm_now": {
-                "name": "Pool Low Pump GPM Now",
-                "value": 0,
-                "unit": "gpm",
                 "state_type": "measurement",
             },
         },
@@ -141,25 +136,47 @@ MOCK_DATA = {
     },
 }
 
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a mocked config entry."""
-    return MockConfigEntry(
-        title=MOCK_ADAPTER_NAME,
-        domain=DOMAIN,
-        data={
-            CONF_IP_ADDRESS: MOCK_ADAPTER_IP,
-            CONF_PORT: MOCK_ADAPTER_PORT,
+MOCK_CLEANUP_TEST_DATA = {
+    "adapter": {
+        "firmware": {
+            "name": "Protocol Adapter Firmware",
+            "value": "POOL: 5.2 Build 736.0 Rel",
+        }
+    },
+    "controller": {
+        "controller_id": 100,
+        "configuration": {
+            "body_type": {
+                "0": {"min_setpoint": 40, "max_setpoint": 104},
+                "1": {"min_setpoint": 40, "max_setpoint": 104},
+            },
+            "is_celsius": {"name": "Is Celsius", "value": 0},
+            "controller_type": 13,
+            "hardware_type": 0,
         },
-        options={
-            CONF_SCAN_INTERVAL: 30,
+        "model": {"name": "Model", "value": "EasyTouch2 8"},
+        "equipment": {
+            "flags": 24,
         },
-        unique_id=MOCK_ADAPTER_MAC,
-    )
+    },
+    "circuit": {},
+    "pump": {
+        0: {"data": 0},
+        1: {"data": 0},
+        2: {"data": 0},
+        3: {"data": 0},
+        4: {"data": 0},
+        5: {"data": 0},
+        6: {"data": 0},
+        7: {"data": 0},
+    },
+    "body": {},
+    "intellichem": {},
+    "scg": {},
+}
 
 
-def create_mock_gateway():
+def create_mock_gateway(mock_data):
     """Create a mock connected ScreenLogicGateway."""
 
     async def mock_async_connect(
@@ -179,15 +196,15 @@ def create_mock_gateway():
         self._name = name
         self._custom_connection_closed_callback = connection_closed_callback
         self._mac = MOCK_ADAPTER_MAC
-        self._data = MOCK_DATA
+        self._data = mock_data
 
         return True
 
-    def mock_get_data(self, *keypath, strict: bool = False):
+    def mock_get_data(*keypath, strict: bool = False):
         if not keypath:
-            return self._data
+            return mock_data
 
-        next_key = self._data
+        next_key = mock_data
 
         def get_next(key):
             if current is None:
@@ -209,17 +226,48 @@ def create_mock_gateway():
 
     gateway = Mock(spec=ScreenLogicGateway)
     type(gateway).async_connect = AsyncMock(return_value=mock_async_connect)
-    type(gateway).get_data = Mock(return_value=mock_get_data)
+    type(gateway).get_data = Mock(side_effect=mock_get_data)
     type(gateway).is_connected = PropertyMock(return_value=True)
     type(gateway).is_client = PropertyMock(return_value=False)
-    type(gateway).equipment_flags = PropertyMock(return_value=EQUIPMENT_FLAG(32796))
+    type(gateway).equipment_flags = PropertyMock(
+        return_value=EQUIPMENT_FLAG(
+            mock_data[DEVICE.CONTROLLER][GROUP.EQUIPMENT][VALUE.FLAGS]
+        )
+    )
     type(gateway).name = PropertyMock(return_value=MOCK_ADAPTER_NAME)
-    type(gateway).version = PropertyMock(return_value="POOL: 5.2 Build 736.0 Rel")
-    type(gateway).controller_model = PropertyMock(return_value="EasyTouch2 8")
+    type(gateway).version = PropertyMock(
+        return_value=mock_data[DEVICE.ADAPTER][VALUE.FIRMWARE][ATTR.VALUE]
+    )
+    type(gateway).controller_model = PropertyMock(
+        return_value=mock_data[DEVICE.CONTROLLER][VALUE.MODEL][ATTR.VALUE]
+    )
     return gateway
 
 
 @pytest.fixture
-def mock_gateway():
-    """Return a mocked connected ScreenLogicGateway."""
-    return create_mock_gateway()
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mocked config entry."""
+    return MockConfigEntry(
+        title=MOCK_ADAPTER_NAME,
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: MOCK_ADAPTER_IP,
+            CONF_PORT: MOCK_ADAPTER_PORT,
+        },
+        options={
+            CONF_SCAN_INTERVAL: 30,
+        },
+        unique_id=MOCK_ADAPTER_MAC,
+    )
+
+
+@pytest.fixture
+def mock_migration_gateway():
+    """Return a mocked connected ScreenLogicGateway with data for testing entity migration."""
+    return create_mock_gateway(MOCK_MIGRATION_TEST_DATA)
+
+
+@pytest.fixture
+def mock_cleanup_gateway():
+    """Return a mocked connected ScreenLogicGateway with data for testing excluded entity cleanup."""
+    return create_mock_gateway(MOCK_CLEANUP_TEST_DATA)

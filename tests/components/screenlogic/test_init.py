@@ -11,10 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 
-from .conftest import (
-    MOCK_ADAPTER_MAC,
-    MOCK_ADAPTER_NAME,
-)
+from .conftest import MOCK_ADAPTER_MAC, MOCK_ADAPTER_NAME
 
 from tests.common import MockConfigEntry
 
@@ -39,9 +36,9 @@ TEST_MIGRATING_ENTITIES = [
         BINARY_SENSOR_DOMAIN,
     ),
     EntityMigrationData(
-        "Pool Pump Current Watts",
+        "Pool Low Pump Current Watts",
         "currentWatts_0",
-        "Pool Pump Watts Now",
+        "Pool Low Pump Watts Now",
         "pump_0_watts_now",
         SENSOR_DOMAIN,
     ),
@@ -75,16 +72,6 @@ TEST_MIGRATING_ENTITIES = [
     ),
 ]
 
-TEST_EXISTING_ENTRY = {
-    "domain": SENSOR_DOMAIN,
-    "platform": DOMAIN,
-    "unique_id": f"{MOCK_ADAPTER_MAC}_existing",
-    "suggested_object_id": f"{MOCK_ADAPTER_NAME} Existing Sensor",
-    "disabled_by": None,
-    "has_entity_name": True,
-    "original_name": "Existing Sensor",
-}
-
 
 @pytest.mark.parametrize(
     ("entity_def", "ent_data"),
@@ -107,7 +94,7 @@ TEST_EXISTING_ENTRY = {
 async def test_async_migrate_entries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_gateway,
+    mock_migration_gateway,
     entity_def: dict,
     ent_data: EntityMigrationData,
 ) -> None:
@@ -122,6 +109,16 @@ async def test_async_migrate_entries(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, MOCK_ADAPTER_MAC)},
     )
+
+    TEST_EXISTING_ENTRY = {
+        "domain": SENSOR_DOMAIN,
+        "platform": DOMAIN,
+        "unique_id": f"{MOCK_ADAPTER_MAC}_existing",
+        "suggested_object_id": f"{MOCK_ADAPTER_NAME} Existing Sensor",
+        "disabled_by": None,
+        "has_entity_name": True,
+        "original_name": "Existing Sensor",
+    }
 
     entity_registry.async_get_or_create(
         **TEST_EXISTING_ENTRY, device_id=device.id, config_entry=mock_config_entry
@@ -153,11 +150,11 @@ async def test_async_migrate_entries(
             },
         },
     ), patch(
-        "homeassistant.components.screenlogic.async_discover_gateways_by_unique_id",
+        "homeassistant.components.screenlogic.coordinator.async_discover_gateways_by_unique_id",
         return_value={},
     ), patch(
         "homeassistant.components.screenlogic.ScreenLogicGateway",
-        return_value=mock_gateway,
+        return_value=mock_migration_gateway,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

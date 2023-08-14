@@ -1062,7 +1062,6 @@ omit =
     homeassistant/components/screenlogic/climate.py
     homeassistant/components/screenlogic/coordinator.py
     homeassistant/components/screenlogic/const.py
-    homeassistant/components/screenlogic/data.py
     homeassistant/components/screenlogic/entity.py
     homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/number.py
