@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 
 import aiohttp
 import python_otbr_api
@@ -24,6 +25,9 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""
     websocket_api.async_setup(hass)
+    if len(config_entries := hass.config_entries.async_entries(DOMAIN)):
+        for config_entry in config_entries[1:]:
+            await hass.config_entries.async_remove(config_entry.entry_id)
     return True
 
 
@@ -41,8 +45,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
     if dataset_tlvs:
+        border_agent_id: str | None = None
+        with contextlib.suppress(
+            HomeAssistantError, aiohttp.ClientError, asyncio.TimeoutError
+        ):
+            border_agent_bytes = await otbrdata.get_border_agent_id()
+            if border_agent_bytes:
+                border_agent_id = border_agent_bytes.hex()
         await update_issues(hass, otbrdata, dataset_tlvs)
-        await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
+        await async_add_dataset(
+            hass,
+            DOMAIN,
+            dataset_tlvs.hex(),
+            preferred_border_agent_id=border_agent_id,
+        )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 

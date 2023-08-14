@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from homeassistant.components.datetime import DateTimeEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -35,6 +35,7 @@ class DemoDateTime(DateTimeEntity):
     """Representation of a Demo date/time entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(

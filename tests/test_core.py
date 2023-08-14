@@ -9,10 +9,12 @@ import gc
 import logging
 import os
 from tempfile import TemporaryDirectory
+import threading
 import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+import async_timeout
 import pytest
 import voluptuous as vol
 
@@ -33,7 +35,15 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.core import HassJob, HomeAssistant, ServiceCall, ServiceResult, State
+from homeassistant.core import (
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    State,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
@@ -193,6 +203,184 @@ def test_async_run_hass_job_delegates_non_async() -> None:
     ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job))
     assert len(calls) == 0
     assert len(hass.async_add_hass_job.mock_calls) == 1
+
+
+async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
+    """Test calling async_get_hass via different paths.
+
+    The test asserts async_get_hass can be called from:
+    - Coroutines and callbacks
+    - Callbacks scheduled from callbacks, coroutines and threads
+    - Coroutines scheduled from callbacks, coroutines and threads
+
+    The test also asserts async_get_hass can not be called from threads
+    other than the event loop.
+    """
+    task_finished = asyncio.Event()
+
+    def can_call_async_get_hass() -> bool:
+        """Test if it's possible to call async_get_hass."""
+        try:
+            if ha.async_get_hass() is hass:
+                return True
+            raise Exception
+        except HomeAssistantError:
+            return False
+
+        raise Exception
+
+    # Test scheduling a coroutine which calls async_get_hass via hass.async_create_task
+    async def _async_create_task() -> None:
+        task_finished.set()
+        assert can_call_async_get_hass()
+
+    hass.async_create_task(_async_create_task(), "create_task")
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+
+    # Test scheduling a callback which calls async_get_hass via hass.async_add_job
+    @callback
+    def _add_job() -> None:
+        assert can_call_async_get_hass()
+        task_finished.set()
+
+    hass.async_add_job(_add_job)
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+
+    # Test scheduling a callback which calls async_get_hass from a callback
+    @callback
+    def _schedule_callback_from_callback() -> None:
+        @callback
+        def _callback():
+            assert can_call_async_get_hass()
+            task_finished.set()
+
+        # Test the scheduled callback itself can call async_get_hass
+        assert can_call_async_get_hass()
+        hass.async_add_job(_callback)
+
+    _schedule_callback_from_callback()
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+
+    # Test scheduling a coroutine which calls async_get_hass from a callback
+    @callback
+    def _schedule_coroutine_from_callback() -> None:
+        async def _coroutine():
+            assert can_call_async_get_hass()
+            task_finished.set()
+
+        # Test the scheduled callback itself can call async_get_hass
+        assert can_call_async_get_hass()
+        hass.async_add_job(_coroutine())
+
+    _schedule_coroutine_from_callback()
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+
+    # Test scheduling a callback which calls async_get_hass from a coroutine
+    async def _schedule_callback_from_coroutine() -> None:
+        @callback
+        def _callback():
+            assert can_call_async_get_hass()
+            task_finished.set()
+
+        # Test the coroutine itself can call async_get_hass
+        assert can_call_async_get_hass()
+        hass.async_add_job(_callback)
+
+    await _schedule_callback_from_coroutine()
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+
+    # Test scheduling a coroutine which calls async_get_hass from a coroutine
+    async def _schedule_callback_from_coroutine() -> None:
+        async def _coroutine():
+            assert can_call_async_get_hass()
+            task_finished.set()
+
+        # Test the coroutine itself can call async_get_hass
+        assert can_call_async_get_hass()
+        await hass.async_create_task(_coroutine())
+
+    await _schedule_callback_from_coroutine()
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+
+    # Test scheduling a callback which calls async_get_hass from an executor
+    def _async_add_executor_job_add_job() -> None:
+        @callback
+        def _async_add_job():
+            assert can_call_async_get_hass()
+            task_finished.set()
+
+        # Test the executor itself can not call async_get_hass
+        assert not can_call_async_get_hass()
+        hass.add_job(_async_add_job)
+
+    await hass.async_add_executor_job(_async_add_executor_job_add_job)
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+
+    # Test scheduling a coroutine which calls async_get_hass from an executor
+    def _async_add_executor_job_create_task() -> None:
+        async def _async_create_task() -> None:
+            assert can_call_async_get_hass()
+            task_finished.set()
+
+        # Test the executor itself can not call async_get_hass
+        assert not can_call_async_get_hass()
+        hass.create_task(_async_create_task())
+
+    await hass.async_add_executor_job(_async_add_executor_job_create_task)
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+
+    # Test scheduling a callback which calls async_get_hass from a worker thread
+    class MyJobAddJob(threading.Thread):
+        @callback
+        def _my_threaded_job_add_job(self) -> None:
+            assert can_call_async_get_hass()
+            task_finished.set()
+
+        def run(self) -> None:
+            # Test the worker thread itself can not call async_get_hass
+            assert not can_call_async_get_hass()
+            hass.add_job(self._my_threaded_job_add_job)
+
+    my_job_add_job = MyJobAddJob()
+    my_job_add_job.start()
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+    my_job_add_job.join()
+
+    # Test scheduling a coroutine which calls async_get_hass from a worker thread
+    class MyJobCreateTask(threading.Thread):
+        async def _my_threaded_job_create_task(self) -> None:
+            assert can_call_async_get_hass()
+            task_finished.set()
+
+        def run(self) -> None:
+            # Test the worker thread itself can not call async_get_hass
+            assert not can_call_async_get_hass()
+            hass.create_task(self._my_threaded_job_create_task())
+
+    my_job_create_task = MyJobCreateTask()
+    my_job_create_task.start()
+    async with async_timeout.timeout(1):
+        await task_finished.wait()
+    task_finished.clear()
+    my_job_create_task.join()
 
 
 async def test_stage_shutdown(hass: HomeAssistant) -> None:
@@ -1059,7 +1247,7 @@ async def test_serviceregistry_async_service_raise_exception(
         await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
 
     # Non-blocking service call never throw exception
-    hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
     await hass.async_block_till_done()
 
 
@@ -1079,62 +1267,48 @@ async def test_serviceregistry_callback_service_raise_exception(
         await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
 
     # Non-blocking service call never throw exception
-    hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
     await hass.async_block_till_done()
 
 
-async def test_serviceregistry_return_values(hass: HomeAssistant) -> None:
-    """Test service call for a service that has return values."""
+@pytest.mark.parametrize(
+    "supports_response",
+    [
+        SupportsResponse.ONLY,
+        SupportsResponse.OPTIONAL,
+    ],
+)
+async def test_serviceregistry_async_return_response(
+    hass: HomeAssistant, supports_response: SupportsResponse
+) -> None:
+    """Test service call for a service that returns response data."""
 
-    def service_handler(call: ServiceCall) -> ServiceResult:
+    async def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
-        assert call.return_values
+        assert call.return_response
         return {"test-reply": "test-value1"}
 
     hass.services.async_register(
         "test_domain",
         "test_service",
         service_handler,
+        supports_response=supports_response,
     )
     result = await hass.services.async_call(
         "test_domain",
         "test_service",
         service_data={},
         blocking=True,
-        return_values=True,
+        return_response=True,
     )
     await hass.async_block_till_done()
     assert result == {"test-reply": "test-value1"}
 
 
-async def test_serviceregistry_async_return_values(hass: HomeAssistant) -> None:
-    """Test service call for an async service that has return values."""
-
-    async def service_handler(call: ServiceCall) -> ServiceResult:
-        """Service handler coroutine."""
-        assert call.return_values
-        return {"test-reply": "test-value1"}
-
-    hass.services.async_register(
-        "test_domain",
-        "test_service",
-        service_handler,
-    )
-    result = await hass.services.async_call(
-        "test_domain",
-        "test_service",
-        service_data={},
-        blocking=True,
-        return_values=True,
-    )
-    await hass.async_block_till_done()
-    assert result == {"test-reply": "test-value1"}
-
-
-async def test_services_call_return_values_requires_blocking(
+async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
-    """Test that non-blocking service calls cannot return values."""
+    """Test that non-blocking service calls cannot ask for response data."""
     async_mock_service(hass, "test_domain", "test_service")
     with pytest.raises(ValueError, match="when blocking=False"):
         await hass.services.async_call(
@@ -1142,12 +1316,12 @@ async def test_services_call_return_values_requires_blocking(
             "test_service",
             service_data={},
             blocking=False,
-            return_values=True,
+            return_response=True,
         )
 
 
 @pytest.mark.parametrize(
-    ("return_value", "expected_error"),
+    ("response_data", "expected_error"),
     [
         (True, "expected a dictionary"),
         (False, "expected a dictionary"),
@@ -1156,20 +1330,21 @@ async def test_services_call_return_values_requires_blocking(
         (["some-list"], "expected a dictionary"),
     ],
 )
-async def test_serviceregistry_return_values_invalid(
-    hass: HomeAssistant, return_value: Any, expected_error: str
+async def test_serviceregistry_return_response_invalid(
+    hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
-    """Test service call return values are not returned when there is no result schema."""
+    """Test service call response data must be json serializable objects."""
 
-    def service_handler(call: ServiceCall) -> ServiceResult:
+    def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
-        assert call.return_values
-        return return_value
+        assert call.return_response
+        return response_data
 
     hass.services.async_register(
         "test_domain",
         "test_service",
         service_handler,
+        supports_response=SupportsResponse.ONLY,
     )
     with pytest.raises(HomeAssistantError, match=expected_error):
         await hass.services.async_call(
@@ -1177,32 +1352,78 @@ async def test_serviceregistry_return_values_invalid(
             "test_service",
             service_data={},
             blocking=True,
-            return_values=True,
+            return_response=True,
         )
         await hass.async_block_till_done()
 
 
-async def test_serviceregistry_no_return_values(hass: HomeAssistant) -> None:
-    """Test service call data when not asked for return values."""
+@pytest.mark.parametrize(
+    ("supports_response", "return_response", "expected_error"),
+    [
+        (SupportsResponse.NONE, True, "not support responses"),
+        (SupportsResponse.ONLY, False, "caller did not ask for responses"),
+    ],
+)
+async def test_serviceregistry_return_response_arguments(
+    hass: HomeAssistant,
+    supports_response: SupportsResponse,
+    return_response: bool,
+    expected_error: str,
+) -> None:
+    """Test service call response data invalid arguments."""
 
-    def service_handler(call: ServiceCall) -> None:
+    hass.services.async_register(
+        "test_domain",
+        "test_service",
+        "service_handler",
+        supports_response=supports_response,
+    )
+
+    with pytest.raises(ValueError, match=expected_error):
+        await hass.services.async_call(
+            "test_domain",
+            "test_service",
+            service_data={},
+            blocking=True,
+            return_response=return_response,
+        )
+
+
+@pytest.mark.parametrize(
+    ("return_response", "expected_response_data"),
+    [
+        (True, {"key": "value"}),
+        (False, None),
+    ],
+)
+async def test_serviceregistry_return_response_optional(
+    hass: HomeAssistant,
+    return_response: bool,
+    expected_response_data: Any,
+) -> None:
+    """Test optional service call response data."""
+
+    def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
-        assert not call.return_values
-        return
+        if call.return_response:
+            return {"key": "value"}
+        return None
 
     hass.services.async_register(
         "test_domain",
         "test_service",
         service_handler,
+        supports_response=SupportsResponse.OPTIONAL,
     )
-    result = await hass.services.async_call(
+    response_data = await hass.services.async_call(
         "test_domain",
         "test_service",
         service_data={},
         blocking=True,
+        return_response=return_response,
     )
     await hass.async_block_till_done()
-    assert not result
+    assert response_data == expected_response_data
 
 
 async def test_config_defaults() -> None:

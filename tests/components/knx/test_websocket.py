@@ -183,22 +183,22 @@ async def test_knx_subscribe_telegrams_command_recent_telegrams(
 
     recent_tgs = res["result"]["recent_telegrams"]
     assert len(recent_tgs) == 2
-    # telegrams are sorted from newest to oldest
-    assert recent_tgs[0]["destination_address"] == "1/2/4"
-    assert recent_tgs[0]["payload"] == "1"
-    assert recent_tgs[0]["type"] == "GroupValueWrite"
-    assert (
-        recent_tgs[0]["source_address"] == "0.0.0"
-    )  # needs to be the IA currently connected to
-    assert recent_tgs[0]["direction"] == "group_monitor_outgoing"
-    assert recent_tgs[0]["timestamp"] is not None
+    # telegrams are sorted from oldest to newest
+    assert recent_tgs[0]["destination"] == "1/3/4"
+    assert recent_tgs[0]["payload"] == 1
+    assert recent_tgs[0]["telegramtype"] == "GroupValueWrite"
+    assert recent_tgs[0]["source"] == "1.2.3"
+    assert recent_tgs[0]["direction"] == "Incoming"
+    assert isinstance(recent_tgs[0]["timestamp"], str)
 
-    assert recent_tgs[1]["destination_address"] == "1/3/4"
-    assert recent_tgs[1]["payload"] == "1"
-    assert recent_tgs[1]["type"] == "GroupValueWrite"
-    assert recent_tgs[1]["source_address"] == "1.2.3"
-    assert recent_tgs[1]["direction"] == "group_monitor_incoming"
-    assert recent_tgs[1]["timestamp"] is not None
+    assert recent_tgs[1]["destination"] == "1/2/4"
+    assert recent_tgs[1]["payload"] == 1
+    assert recent_tgs[1]["telegramtype"] == "GroupValueWrite"
+    assert (
+        recent_tgs[1]["source"] == "0.0.0"
+    )  # needs to be the IA currently connected to
+    assert recent_tgs[1]["direction"] == "Outgoing"
+    assert isinstance(recent_tgs[1]["timestamp"], str)
 
 
 async def test_knx_subscribe_telegrams_command_no_project(
@@ -231,45 +231,45 @@ async def test_knx_subscribe_telegrams_command_no_project(
 
     # receive events
     res = await client.receive_json()
-    assert res["event"]["destination_address"] == "1/2/3"
-    assert res["event"]["payload"] == ""
-    assert res["event"]["type"] == "GroupValueRead"
-    assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["destination"] == "1/2/3"
+    assert res["event"]["payload"] is None
+    assert res["event"]["telegramtype"] == "GroupValueRead"
+    assert res["event"]["source"] == "1.2.3"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
-    assert res["event"]["destination_address"] == "1/3/4"
-    assert res["event"]["payload"] == "1"
-    assert res["event"]["type"] == "GroupValueWrite"
-    assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["destination"] == "1/3/4"
+    assert res["event"]["payload"] == 1
+    assert res["event"]["telegramtype"] == "GroupValueWrite"
+    assert res["event"]["source"] == "1.2.3"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
-    assert res["event"]["destination_address"] == "1/3/4"
-    assert res["event"]["payload"] == "0"
-    assert res["event"]["type"] == "GroupValueWrite"
-    assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["destination"] == "1/3/4"
+    assert res["event"]["payload"] == 0
+    assert res["event"]["telegramtype"] == "GroupValueWrite"
+    assert res["event"]["source"] == "1.2.3"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
-    assert res["event"]["destination_address"] == "1/3/8"
-    assert res["event"]["payload"] == "0x3445"
-    assert res["event"]["type"] == "GroupValueWrite"
-    assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["destination"] == "1/3/8"
+    assert res["event"]["payload"] == [52, 69]
+    assert res["event"]["telegramtype"] == "GroupValueWrite"
+    assert res["event"]["source"] == "1.2.3"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
-    assert res["event"]["destination_address"] == "1/2/4"
-    assert res["event"]["payload"] == "1"
-    assert res["event"]["type"] == "GroupValueWrite"
+    assert res["event"]["destination"] == "1/2/4"
+    assert res["event"]["payload"] == 1
+    assert res["event"]["telegramtype"] == "GroupValueWrite"
     assert (
-        res["event"]["source_address"] == "0.0.0"
+        res["event"]["source"] == "0.0.0"
     )  # needs to be the IA currently connected to
-    assert res["event"]["direction"] == "group_monitor_outgoing"
+    assert res["event"]["direction"] == "Outgoing"
     assert res["event"]["timestamp"] is not None
 
 
@@ -289,42 +289,45 @@ async def test_knx_subscribe_telegrams_command_project(
     # incoming DPT 1 telegram
     await knx.receive_write("0/0/1", True)
     res = await client.receive_json()
-    assert res["event"]["destination_address"] == "0/0/1"
-    assert res["event"]["destination_text"] == "Binary"
-    assert res["event"]["payload"] == "1"
-    assert res["event"]["type"] == "GroupValueWrite"
-    assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["destination"] == "0/0/1"
+    assert res["event"]["destination_name"] == "Binary"
+    assert res["event"]["payload"] == 1
+    assert res["event"]["telegramtype"] == "GroupValueWrite"
+    assert res["event"]["source"] == "1.2.3"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
     # incoming DPT 5 telegram
     await knx.receive_write("0/1/1", (0x50,), source="1.1.6")
     res = await client.receive_json()
-    assert res["event"]["destination_address"] == "0/1/1"
-    assert res["event"]["destination_text"] == "percent"
-    assert res["event"]["payload"] == "0x50"
-    assert res["event"]["value"] == "31 %"
-    assert res["event"]["type"] == "GroupValueWrite"
-    assert res["event"]["source_address"] == "1.1.6"
+    assert res["event"]["destination"] == "0/1/1"
+    assert res["event"]["destination_name"] == "percent"
+    assert res["event"]["payload"] == [
+        80,
+    ]
+    assert res["event"]["value"] == 31
+    assert res["event"]["unit"] == "%"
+    assert res["event"]["telegramtype"] == "GroupValueWrite"
+    assert res["event"]["source"] == "1.1.6"
     assert (
-        res["event"]["source_text"]
+        res["event"]["source_name"]
         == "Enertex Bayern GmbH Enertex KNX LED Dimmsequenzer 20A/5x REG"
     )
-    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
     # incoming undecodable telegram (wrong payload type)
     await knx.receive_write("0/1/1", True, source="1.1.6")
     res = await client.receive_json()
-    assert res["event"]["destination_address"] == "0/1/1"
-    assert res["event"]["destination_text"] == "percent"
-    assert res["event"]["payload"] == "1"
+    assert res["event"]["destination"] == "0/1/1"
+    assert res["event"]["destination_name"] == "percent"
+    assert res["event"]["payload"] == 1
     assert res["event"]["value"] == "Error decoding value"
-    assert res["event"]["type"] == "GroupValueWrite"
-    assert res["event"]["source_address"] == "1.1.6"
+    assert res["event"]["telegramtype"] == "GroupValueWrite"
+    assert res["event"]["source"] == "1.1.6"
     assert (
-        res["event"]["source_text"]
+        res["event"]["source_name"]
         == "Enertex Bayern GmbH Enertex KNX LED Dimmsequenzer 20A/5x REG"
     )
-    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None

@@ -30,6 +30,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -368,13 +369,13 @@ class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
         self._nuki_device = nuki_device
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for Nuki entities."""
-        return {
-            "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
-            "name": self._nuki_device.name,
-            "manufacturer": "Nuki Home Solutions GmbH",
-            "model": self._nuki_device.device_model_str.capitalize(),
-            "sw_version": self._nuki_device.firmware_version,
-            "via_device": (DOMAIN, self.coordinator.bridge_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, parse_id(self._nuki_device.nuki_id))},
+            name=self._nuki_device.name,
+            manufacturer="Nuki Home Solutions GmbH",
+            model=self._nuki_device.device_model_str.capitalize(),
+            sw_version=self._nuki_device.firmware_version,
+            via_device=(DOMAIN, self.coordinator.bridge_id),
+        )

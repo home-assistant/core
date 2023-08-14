@@ -97,7 +97,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         if self._call_active:
             return
         self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
         self._call_active = False

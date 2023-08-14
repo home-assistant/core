@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util.unit_conversion import MassConverter
@@ -86,7 +86,7 @@ class EufyLifeSensorEntity(SensorEntity):
 class EufyLifeRealTimeWeightSensorEntity(EufyLifeSensorEntity):
     """Representation of an EufyLife real-time weight sensor."""
 
-    _attr_name = "Real-time weight"
+    _attr_translation_key = "real_time_weight"
     _attr_native_unit_of_measurement = UnitOfMass.KILOGRAMS
     _attr_device_class = SensorDeviceClass.WEIGHT
 
@@ -115,7 +115,7 @@ class EufyLifeRealTimeWeightSensorEntity(EufyLifeSensorEntity):
 class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
     """Representation of an EufyLife weight sensor."""
 
-    _attr_name = "Weight"
+    _attr_translation_key = "weight"
     _attr_native_unit_of_measurement = UnitOfMass.KILOGRAMS
     _attr_device_class = SensorDeviceClass.WEIGHT
 
@@ -176,7 +176,7 @@ class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
 class EufyLifeHeartRateSensorEntity(RestoreEntity, EufyLifeSensorEntity):
     """Representation of an EufyLife heart rate sensor."""
 
-    _attr_name = "Heart rate"
+    _attr_translation_key = "heart_rate"
     _attr_icon = "mdi:heart-pulse"
     _attr_native_unit_of_measurement = "bpm"
 

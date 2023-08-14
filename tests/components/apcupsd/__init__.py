@@ -20,6 +20,7 @@ MOCK_STATUS: Final = OrderedDict(
         ("CABLE", "USB Cable"),
         ("DRIVER", "USB UPS Driver"),
         ("UPSMODE", "Stand Alone"),
+        ("UPSNAME", "MyUPS"),
         ("MODEL", "Back-UPS ES 600"),
         ("STATUS", "ONLINE"),
         ("LINEV", "124.0 Volts"),

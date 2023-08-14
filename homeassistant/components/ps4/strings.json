@@ -38,5 +38,21 @@
       "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
       "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info."
     }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send command",
+      "description": "Emulates button press for PlayStation 4.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity to send command."
+        },
+        "command": {
+          "name": "Command",
+          "description": "Button to press."
+        }
+      }
+    }
   }
 }

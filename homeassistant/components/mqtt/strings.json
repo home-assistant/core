@@ -1,4 +1,30 @@
 {
+  "issues": {
+    "deprecation_mqtt_legacy_vacuum_yaml": {
+      "title": "MQTT vacuum entities with legacy schema found in your configuration.yaml",
+      "description": "MQTT vacuum entities that use the legacy schema are deprecated, please adjust your configuration.yaml and restart Home Assistant to fix this issue."
+    },
+    "deprecation_mqtt_legacy_vacuum_discovery": {
+      "title": "MQTT vacuum entities with legacy schema added through MQTT discovery",
+      "description": "MQTT vacuum entities that use the legacy schema are deprecated, please adjust your devices to use the correct schema and restart Home Assistant to fix this issue."
+    },
+    "entity_name_is_device_name_yaml": {
+      "title": "Manual configured MQTT entities with a name that is equal to the device name",
+      "description": "Some MQTT entities have an entity name equal to the device name. This is not expected. The entity name is set to `null` as a work-a-round to avoid a duplicate name. Please update your configuration and restart Home Assistant to fix this issue.\n\nList of affected entities:\n\n{config}"
+    },
+    "entity_name_startswith_device_name_yaml": {
+      "title": "Manual configured MQTT entities with a name that starts with the device name",
+      "description": "Some MQTT entities have an entity name that starts with the device name. This is not expected. To avoid a duplicate name the device name prefix is stripped off the entity name as a work-a-round. Please update your configuration and restart Home Assistant to fix this issue. \n\nList of affected entities:\n\n{config}"
+    },
+    "entity_name_is_device_name_discovery": {
+      "title": "Discovered MQTT entities with a name that is equal to the device name",
+      "description": "Some MQTT entities have an entity name equal to the device name. This is not expected. The entity name is set to `null` as a work-a-round to avoid a duplicate name. Please inform the maintainer of the software application that supplies the affected entities to fix this issue.\n\nList of affected entities:\n\n{config}"
+    },
+    "entity_name_startswith_device_name_discovery": {
+      "title": "Discovered entities with a name that starts with the device name",
+      "description": "Some MQTT entities have an entity name that starts with the device name. This is not expected. To avoid a duplicate name the device name prefix is stripped off the entity name as a work-a-round. Please inform the maintainer of the software application that supplies the affected entities to fix this issue. \n\nList of affected entities:\n\n{config}"
+    }
+  },
   "config": {
     "step": {
       "broker": {
@@ -60,8 +86,8 @@
       "button_quintuple_press": "\"{subtype}\" quintuple clicked"
     },
     "trigger_subtype": {
-      "turn_on": "Turn on",
-      "turn_off": "Turn off",
+      "turn_on": "[%key:common::action::turn_on%]",
+      "turn_off": "[%key:common::action::turn_off%]",
       "button_1": "First button",
       "button_2": "Second button",
       "button_3": "Third button",
@@ -130,10 +156,56 @@
   "selector": {
     "set_ca_cert": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "auto": "Auto",
         "custom": "Custom"
       }
+    }
+  },
+  "services": {
+    "publish": {
+      "name": "Publish",
+      "description": "Publishes a message to an MQTT topic.",
+      "fields": {
+        "topic": {
+          "name": "Topic",
+          "description": "Topic to publish to."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "The payload to publish."
+        },
+        "payload_template": {
+          "name": "Payload template",
+          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
+        },
+        "qos": {
+          "name": "QoS",
+          "description": "Quality of Service to use. O. At most once. 1: At least once. 2: Exactly once."
+        },
+        "retain": {
+          "name": "Retain",
+          "description": "If the message should have the retain flag set. If set, the broker stores the most recent message on a topic."
+        }
+      }
+    },
+    "dump": {
+      "name": "Export",
+      "description": "Writes all messages on a specific topic into the `mqtt_dump.txt` file in your configuration folder.",
+      "fields": {
+        "topic": {
+          "name": "[%key:component::mqtt::services::publish::fields::topic::name%]",
+          "description": "Topic to listen to."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "How long we should listen for messages in seconds."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads MQTT entities from the YAML-configuration."
     }
   }
 }

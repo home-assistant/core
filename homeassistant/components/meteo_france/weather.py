@@ -6,6 +6,7 @@ from meteofrance_api.model.forecast import Forecast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
@@ -23,8 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -171,6 +171,7 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_CONDITION: format_condition(
                             forecast["weather"]["desc"]
                         ),
+                        ATTR_FORECAST_HUMIDITY: forecast["humidity"],
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
@@ -192,6 +193,7 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_CONDITION: format_condition(
                             forecast["weather12H"]["desc"]
                         ),
+                        ATTR_FORECAST_HUMIDITY: forecast["humidity"]["max"],
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["max"],
                         ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["T"]["min"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["precipitation"][

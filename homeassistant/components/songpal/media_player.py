@@ -30,7 +30,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -100,6 +100,8 @@ class SongpalEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, name, device):
         """Init."""
@@ -198,11 +200,6 @@ class SongpalEntity(MediaPlayerEntity):
         self.hass.loop.create_task(self._dev.listen_notifications())
 
     @property
-    def name(self):
-        """Return name of the device."""
-        return self._name
-
-    @property
     def unique_id(self):
         """Return a unique ID."""
         return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
@@ -220,7 +217,7 @@ class SongpalEntity(MediaPlayerEntity):
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Sony Corporation",
             model=self._model,
-            name=self.name,
+            name=self._name,
             sw_version=self._sysinfo.version,
         )
 

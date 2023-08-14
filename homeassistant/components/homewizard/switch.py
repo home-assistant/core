@@ -45,6 +45,7 @@ class HomeWizardSwitchEntityDescription(
 SWITCHES = [
     HomeWizardSwitchEntityDescription(
         key="power_on",
+        name=None,
         device_class=SwitchDeviceClass.OUTLET,
         create_fn=lambda coordinator: coordinator.supports_state(),
         available_fn=lambda data: data.state is not None and not data.state.switch_lock,
@@ -53,7 +54,7 @@ SWITCHES = [
     ),
     HomeWizardSwitchEntityDescription(
         key="switch_lock",
-        name="Switch lock",
+        translation_key="switch_lock",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:lock",
         icon_off="mdi:lock-open",
@@ -64,7 +65,7 @@ SWITCHES = [
     ),
     HomeWizardSwitchEntityDescription(
         key="cloud_connection",
-        name="Cloud connection",
+        translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:cloud",
         icon_off="mdi:cloud-off-outline",

@@ -110,6 +110,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Proximity(Entity):
     """Representation of a Proximity."""
 
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
+
     def __init__(
         self,
         hass: HomeAssistant,

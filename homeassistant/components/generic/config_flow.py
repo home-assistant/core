@@ -12,7 +12,7 @@ from typing import Any
 from aiohttp import web
 from async_timeout import timeout
 from httpx import HTTPStatusError, RequestError, TimeoutException
-import PIL
+import PIL.Image
 import voluptuous as vol
 import yarl
 
@@ -40,11 +40,12 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, UnknownFlow
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import slugify
 
 from .camera import GenericCamera, generate_auth
@@ -136,7 +137,7 @@ def get_image_type(image: bytes) -> str | None:
     imagefile = io.BytesIO(image)
     with contextlib.suppress(PIL.UnidentifiedImageError):
         img = PIL.Image.open(imagefile)
-        fmt = img.format.lower()
+        fmt = img.format.lower() if img.format else None
 
     if fmt is None:
         # if PIL can't figure it out, could be svg.
@@ -380,6 +381,28 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle config import from yaml."""
+
+        _LOGGER.warning(
+            "Loading generic IP camera via configuration.yaml is deprecated, "
+            "it will be automatically imported.  Once you have confirmed correct "
+            "operation, please remove 'generic' (IP camera) section(s) from "
+            "configuration.yaml"
+        )
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Generic IP Camera",
+            },
+        )
         # abort if we've already got this one.
         if self.check_for_existing(import_config):
             return self.async_abort(reason="already_exists")
@@ -426,24 +449,12 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     # is always jpeg
                     still_format = "image/jpeg"
                 data = {
-                    CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
-                    CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
-                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                    CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: self.config_entry.options.get(
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                    ),
+                    **user_input,
                     CONF_CONTENT_TYPE: still_format
                     or self.config_entry.options.get(CONF_CONTENT_TYPE),
-                    CONF_USERNAME: user_input.get(CONF_USERNAME),
-                    CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
-                        CONF_LIMIT_REFETCH_TO_URL_CHANGE
-                    ],
-                    CONF_FRAMERATE: user_input[CONF_FRAMERATE],
-                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                        self.config_entry.options.get(
-                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                        ),
-                    ),
                 }
                 self.user_input = data
                 # temporary preview for user to check the image

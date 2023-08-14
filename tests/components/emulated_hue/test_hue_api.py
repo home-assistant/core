@@ -120,7 +120,7 @@ async def _async_setup_emulated_hue(hass: HomeAssistant, conf: ConfigType) -> No
             hass,
             emulated_hue.DOMAIN,
             {emulated_hue.DOMAIN: conf},
-        ),
+        )
         await hass.async_block_till_done()
 
 

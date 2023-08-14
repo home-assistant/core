@@ -26,11 +26,12 @@ from .pipeline import (
     PipelineInput,
     PipelineRun,
     PipelineStage,
+    WakeWordSettings,
     async_get_pipeline,
 )
-from .vad import VoiceCommandSegmenter
 
 DEFAULT_TIMEOUT = 30
+DEFAULT_WAKE_WORD_TIMEOUT = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,12 +57,25 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                 vol.Optional("input"): dict,
                 vol.Optional("pipeline"): str,
                 vol.Optional("conversation_id"): vol.Any(str, None),
+                vol.Optional("device_id"): vol.Any(str, None),
                 vol.Optional("timeout"): vol.Any(float, int),
             },
         ),
         cv.key_value_schemas(
             "start_stage",
             {
+                PipelineStage.WAKE_WORD: vol.Schema(
+                    {
+                        vol.Required("input"): {
+                            vol.Required("sample_rate"): int,
+                            vol.Optional("timeout"): vol.Any(float, int),
+                            vol.Optional("audio_seconds_to_buffer"): vol.Any(
+                                float, int
+                            ),
+                        }
+                    },
+                    extra=vol.ALLOW_EXTRA,
+                ),
                 PipelineStage.STT: vol.Schema(
                     {vol.Required("input"): {vol.Required("sample_rate"): int}},
                     extra=vol.ALLOW_EXTRA,
@@ -101,30 +115,34 @@ async def websocket_run(
     end_stage = PipelineStage(msg["end_stage"])
     handler_id: int | None = None
     unregister_handler: Callable[[], None] | None = None
+    wake_word_settings: WakeWordSettings | None = None
 
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
         "conversation_id": msg.get("conversation_id"),
+        "device_id": msg.get("device_id"),
     }
 
-    if start_stage == PipelineStage.STT:
+    if start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
         # Audio pipeline that will receive audio as binary websocket messages
-        audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
+        audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
+
+        if start_stage == PipelineStage.WAKE_WORD:
+            wake_word_settings = WakeWordSettings(
+                timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
+                audio_seconds_to_buffer=msg["input"].get("audio_seconds_to_buffer", 0),
+            )
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
-            segmenter = VoiceCommandSegmenter()
 
             # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
-                chunk, state = audioop.ratecv(
-                    chunk, 2, 1, incoming_sample_rate, 16000, state
-                )
-                if not segmenter.process(chunk):
-                    # Voice command is finished
-                    break
-
+                if incoming_sample_rate != 16000:
+                    chunk, state = audioop.ratecv(
+                        chunk, 2, 1, incoming_sample_rate, 16000, state
+                    )
                 yield chunk
 
         def handle_binary(
@@ -167,6 +185,7 @@ async def websocket_run(
             "stt_binary_handler_id": handler_id,
             "timeout": timeout,
         },
+        wake_word_settings=wake_word_settings,
     )
 
     pipeline_input = PipelineInput(**input_args)

@@ -71,9 +71,9 @@ def fixture_knx_setup():
 def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
     """Patch file upload. Yields the Keyring instance (return_value)."""
     with patch(
-        "homeassistant.components.knx.config_flow.process_uploaded_file"
+        "homeassistant.components.knx.helpers.keyring.process_uploaded_file"
     ) as file_upload_mock, patch(
-        "homeassistant.components.knx.config_flow.sync_load_keyring",
+        "homeassistant.components.knx.helpers.keyring.sync_load_keyring",
         return_value=return_value,
         side_effect=side_effect,
     ), patch(
@@ -910,7 +910,7 @@ async def test_form_with_automatic_connection_handling(
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
         CONF_KNX_STATE_UPDATER: True,
-        CONF_KNX_TELEGRAM_LOG_SIZE: 50,
+        CONF_KNX_TELEGRAM_LOG_SIZE: 200,
     }
     knx_setup.assert_called_once()
 
@@ -1210,7 +1210,7 @@ async def test_options_flow_connection_type(
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
             CONF_KNX_SECURE_USER_ID: None,
             CONF_KNX_SECURE_USER_PASSWORD: None,
-            CONF_KNX_TELEGRAM_LOG_SIZE: 50,
+            CONF_KNX_TELEGRAM_LOG_SIZE: 200,
         }
 
 

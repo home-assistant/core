@@ -193,6 +193,8 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
+        slave_raise = False
+
         params = {}
         if hvac_mode == HVACMode.OFF:
             params[API_ON] = 0
@@ -202,11 +204,12 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
                 if self.get_airzone_value(AZD_MASTER):
                     params[API_MODE] = mode
                 else:
-                    raise HomeAssistantError(
-                        f"Mode can't be changed on slave zone {self.name}"
-                    )
+                    slave_raise = True
             params[API_ON] = 1
         await self._async_update_hvac_params(params)
+
+        if slave_raise:
+            raise HomeAssistantError(f"Mode can't be changed on slave zone {self.name}")
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

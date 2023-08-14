@@ -125,6 +125,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _set_humidity: IntegerTypeData | None = None
     _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
+    _attr_name = None
 
     def __init__(
         self,

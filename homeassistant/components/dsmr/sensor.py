@@ -33,9 +33,9 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import EventType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -457,11 +457,11 @@ async def async_setup_entry(
                 if transport:
                     # Register listener to close transport on HA shutdown
                     @callback
-                    def close_transport(_event: EventType) -> None:
+                    def close_transport(_event: Event) -> None:
                         """Close the transport on HA shutdown."""
-                        if not transport:
+                        if not transport:  # noqa: B023
                             return
-                        transport.close()
+                        transport.close()  # noqa: B023
 
                     stop_listener = hass.bus.async_listen_once(
                         EVENT_HOMEASSISTANT_STOP, close_transport

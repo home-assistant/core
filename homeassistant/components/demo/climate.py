@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -63,7 +64,7 @@ async def async_setup_entry(
                 aux=False,
                 target_temp_high=None,
                 target_temp_low=None,
-                hvac_modes=[cls.value for cls in HVACMode if cls != HVACMode.HEAT_COOL],
+                hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT_COOL],
             ),
             DemoClimate(
                 unique_id="climate_3",
@@ -82,7 +83,7 @@ async def async_setup_entry(
                 aux=None,
                 target_temp_high=24,
                 target_temp_low=21,
-                hvac_modes=[cls.value for cls in HVACMode if cls != HVACMode.HEAT],
+                hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT],
             ),
         ]
     )
@@ -92,6 +93,7 @@ class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
     _attr_translation_key = "ubercool"
 
@@ -151,10 +153,10 @@ class DemoClimate(ClimateEntity):
         self._swing_modes = ["auto", "1", "2", "3", "off"]
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, unique_id)},
-            "name": device_name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=device_name,
+        )
 
     @property
     def unique_id(self) -> str:

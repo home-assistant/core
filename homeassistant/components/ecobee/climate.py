@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -310,6 +310,8 @@ class Thermostat(ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_name = None
+    _attr_has_entity_name = True
 
     def __init__(
         self, data: EcobeeData, thermostat_index: int, thermostat: dict
@@ -318,7 +320,7 @@ class Thermostat(ClimateEntity):
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = thermostat
-        self._name = self.thermostat["name"]
+        self._attr_unique_id = self.thermostat["identifier"]
         self.vacation = None
         self._last_active_hvac_mode = HVACMode.HEAT_COOL
 
@@ -365,16 +367,6 @@ class Thermostat(ClimateEntity):
         return supported
 
     @property
-    def name(self):
-        """Return the name of the Ecobee Thermostat."""
-        return self.thermostat["name"]
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this ecobee thermostat."""
-        return self.thermostat["identifier"]
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information for this ecobee thermostat."""
         model: str | None
@@ -388,7 +380,7 @@ class Thermostat(ClimateEntity):
             identifiers={(DOMAIN, self.thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=model,
-            name=self.name,
+            name=self.thermostat["name"],
         )
 
     @property

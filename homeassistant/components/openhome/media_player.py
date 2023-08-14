@@ -9,7 +9,6 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import aiohttp
 from async_upnp_client.client import UpnpError
-from openhomedevice.device import Device
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -21,12 +20,13 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_PIN_INDEX, DATA_OPENHOME, SERVICE_INVOKE_PIN
+from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
 
 _OpenhomeDeviceT = TypeVar("_OpenhomeDeviceT", bound="OpenhomeDevice")
 _R = TypeVar("_R")
@@ -41,34 +41,20 @@ SUPPORT_OPENHOME = (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Openhome platform."""
+    """Set up the Openhome config entry."""
 
-    if not discovery_info:
-        return
+    _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    openhome_data = hass.data.setdefault(DATA_OPENHOME, set())
-
-    name = discovery_info.get("name")
-    description = discovery_info.get("ssdp_description")
-
-    _LOGGER.info("Openhome device found: %s", name)
-    device = await hass.async_add_executor_job(Device, description)
-    await device.init()
-
-    # if device has already been discovered
-    if device.uuid() in openhome_data:
-        return
+    device = hass.data[DOMAIN][config_entry.entry_id]
 
     entity = OpenhomeDevice(hass, device)
 
     async_add_entities([entity])
-    openhome_data.add(device.uuid())
 
     platform = entity_platform.async_get_current_platform()
 
@@ -132,6 +118,18 @@ class OpenhomeDevice(MediaPlayerEntity):
         self._name = None
         self._attr_state = MediaPlayerState.PLAYING
         self._available = True
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self._device.uuid()),
+            },
+            manufacturer=self._device.manufacturer(),
+            model=self._device.model_name(),
+            name=self._device.friendly_name(),
+        )
 
     @property
     def available(self):
