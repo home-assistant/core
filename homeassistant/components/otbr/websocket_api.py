@@ -54,6 +54,9 @@ async def websocket_info(
         connection.send_error(msg["id"], "get_dataset_failed", str(exc))
         return
 
+    # The border agent ID is checked when the OTBR config entry is setup,
+    # we can assert it's not None
+    assert border_agent_id is not None
     connection.send_result(
         msg["id"],
         {
