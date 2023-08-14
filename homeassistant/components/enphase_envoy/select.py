@@ -61,7 +61,6 @@ REVERSE_RELAY_ACTION_MAP = {
 RELAY_ENTITIES = (
     EnvoyRelaySelectEntityDescription(
         key="mode",
-        name="Mode",
         translation_key="relay_mode",
         options=list(RELAY_MODE_MAP.values()),
         value_fn=lambda relay: RELAY_MODE_MAP[relay.mode],
@@ -74,7 +73,6 @@ RELAY_ENTITIES = (
     ),
     EnvoyRelaySelectEntityDescription(
         key="grid_action",
-        name="Grid action",
         translation_key="relay_grid_action",
         options=list(RELAY_ACTION_MAP.values()),
         value_fn=lambda relay: RELAY_ACTION_MAP[relay.grid_action],
@@ -87,7 +85,6 @@ RELAY_ENTITIES = (
     ),
     EnvoyRelaySelectEntityDescription(
         key="microgrid_action",
-        name="Microgrid action",
         translation_key="relay_microgrid_action",
         options=list(RELAY_ACTION_MAP.values()),
         value_fn=lambda relay: RELAY_ACTION_MAP[relay.micro_grid_action],
@@ -100,7 +97,6 @@ RELAY_ENTITIES = (
     ),
     EnvoyRelaySelectEntityDescription(
         key="generator_action",
-        name="Generator action",
         translation_key="relay_generator_action",
         options=list(RELAY_ACTION_MAP.values()),
         value_fn=lambda relay: RELAY_ACTION_MAP[relay.generator_action],
@@ -164,7 +160,7 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, relay)},
             manufacturer="Enphase",
-            model="Dry Contact Relay",
+            model="Dry contact relay",
             name=self.relay.load_name,
             sw_version=str(self.enpower.firmware_version),
             via_device=(DOMAIN, self._serial_number),
