@@ -41,28 +41,22 @@ RELAY_MODE_MAP = {
     DryContactMode.MANUAL: "standard",
     DryContactMode.STATE_OF_CHARGE: "battery",
 }
-REVERSE_RELAY_MODE_MAP = {
-    "standard": DryContactMode.MANUAL,
-    "battery": DryContactMode.STATE_OF_CHARGE,
-}
+REVERSE_RELAY_MODE_MAP = {v: k for k, v in RELAY_MODE_MAP.items()}
 RELAY_ACTION_MAP = {
     DryContactAction.APPLY: "powered",
     DryContactAction.SHED: "not_powered",
     DryContactAction.SCHEDULE: "schedule",
     DryContactAction.NONE: "none",
 }
-REVERSE_RELAY_ACTION_MAP = {
-    "powered": DryContactAction.APPLY,
-    "not_powered": DryContactAction.SHED,
-    "schedule": DryContactAction.SCHEDULE,
-    "none": DryContactAction.NONE,
-}
+REVERSE_RELAY_ACTION_MAP = {v: k for k, v in RELAY_ACTION_MAP.items()}
+MODE_OPTIONS = list(REVERSE_RELAY_MODE_MAP)
+ACTION_OPTIONS = list(REVERSE_RELAY_ACTION_MAP)
 
 RELAY_ENTITIES = (
     EnvoyRelaySelectEntityDescription(
         key="mode",
         translation_key="relay_mode",
-        options=list(RELAY_MODE_MAP.values()),
+        options=MODE_OPTIONS,
         value_fn=lambda relay: RELAY_MODE_MAP[relay.mode],
         update_fn=lambda envoy, relay, value: envoy.update_dry_contact(
             {
@@ -74,7 +68,7 @@ RELAY_ENTITIES = (
     EnvoyRelaySelectEntityDescription(
         key="grid_action",
         translation_key="relay_grid_action",
-        options=list(RELAY_ACTION_MAP.values()),
+        options=ACTION_OPTIONS,
         value_fn=lambda relay: RELAY_ACTION_MAP[relay.grid_action],
         update_fn=lambda envoy, relay, value: envoy.update_dry_contact(
             {
@@ -86,7 +80,7 @@ RELAY_ENTITIES = (
     EnvoyRelaySelectEntityDescription(
         key="microgrid_action",
         translation_key="relay_microgrid_action",
-        options=list(RELAY_ACTION_MAP.values()),
+        options=ACTION_OPTIONS,
         value_fn=lambda relay: RELAY_ACTION_MAP[relay.micro_grid_action],
         update_fn=lambda envoy, relay, value: envoy.update_dry_contact(
             {
@@ -98,7 +92,7 @@ RELAY_ENTITIES = (
     EnvoyRelaySelectEntityDescription(
         key="generator_action",
         translation_key="relay_generator_action",
-        options=list(RELAY_ACTION_MAP.values()),
+        options=ACTION_OPTIONS,
         value_fn=lambda relay: RELAY_ACTION_MAP[relay.generator_action],
         update_fn=lambda envoy, relay, value: envoy.update_dry_contact(
             {
@@ -124,11 +118,9 @@ async def async_setup_entry(
     entities: list[SelectEntity] = []
     if envoy_data.dry_contact_settings:
         entities.extend(
-            [
-                EnvoyRelaySelectEntity(coordinator, entity, relay)
-                for entity in RELAY_ENTITIES
-                for relay in envoy_data.dry_contact_settings
-            ]
+            EnvoyRelaySelectEntity(coordinator, entity, relay)
+            for entity in RELAY_ENTITIES
+            for relay in envoy_data.dry_contact_settings
         )
     async_add_entities(entities)
 
