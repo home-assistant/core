@@ -261,7 +261,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.coordinator.YaleSmartAlarmClient",
+        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.yale_smart_alarm.async_setup_entry",
+        return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
