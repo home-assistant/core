@@ -36,6 +36,7 @@ tqdm==4.66.1
 types-atomicwrites==1.4.5.1
 types-croniter==1.0.6
 types-backports==0.1.3
+types-beautifulsoup4==4.12.0.6
 types-caldav==1.3.0.0
 types-chardet==0.1.5
 types-decorator==5.1.8.3
