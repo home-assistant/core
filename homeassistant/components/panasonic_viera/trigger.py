@@ -1,4 +1,4 @@
-"""webOS Smart TV trigger dispatcher."""
+"""Panasonic Viera trigger dispatcher."""
 from __future__ import annotations
 
 from typing import cast
