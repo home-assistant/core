@@ -31,7 +31,7 @@ async def load_homeassistant(hass) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
 
 
-async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
+async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
     """Make sure that we can load/save data correctly."""
 
     pipelines = [
@@ -92,10 +92,10 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
     assert store1.async_get_preferred_item() == store2.async_get_preferred_item()
 
 
-async def test_loading_pipelines_from_storage(
+async def test_loading_datasets_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test loading stored pipelines on start."""
+    """Test loading stored datasets on start."""
     hass_storage[STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
