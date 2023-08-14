@@ -93,6 +93,7 @@ ROUTER_DISCOVERY_HASS = {
     "server": "core-silabs-multiprotocol.local.",
     "properties": {
         b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
         b"vn": b"HomeAssistant",
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
@@ -105,6 +106,7 @@ ROUTER_DISCOVERY_HASS = {
         b"sq": b"3",
         b"bb": b"\xf0\xbf",
         b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
     },
     "interface_index": None,
 }
@@ -119,6 +121,7 @@ ROUTER_DISCOVERY_HASS_BAD_DATA = {
     "server": "core-silabs-multiprotocol.local.",
     "properties": {
         b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
         b"vn": b"HomeAssistant\xff",  # Invalid UTF-8
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
@@ -131,6 +134,7 @@ ROUTER_DISCOVERY_HASS_BAD_DATA = {
         b"sq": b"3",
         b"bb": b"\xf0\xbf",
         b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
     },
     "interface_index": None,
 }
@@ -145,6 +149,7 @@ ROUTER_DISCOVERY_HASS_MISSING_DATA = {
     "server": "core-silabs-multiprotocol.local.",
     "properties": {
         b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
         b"xp": b"\xe6\x0f\xc7\xc1\x86!,\xe5",
@@ -156,6 +161,7 @@ ROUTER_DISCOVERY_HASS_MISSING_DATA = {
         b"sq": b"3",
         b"bb": b"\xf0\xbf",
         b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
     },
     "interface_index": None,
 }
@@ -171,6 +177,7 @@ ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA = {
     "server": "core-silabs-multiprotocol.local.",
     "properties": {
         b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
         b"vn": b"HomeAssistant",
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
@@ -182,6 +189,7 @@ ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA = {
         b"sq": b"3",
         b"bb": b"\xf0\xbf",
         b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
     },
     "interface_index": None,
 }
@@ -197,6 +205,7 @@ ROUTER_DISCOVERY_HASS_NO_ACTIVE_TIMESTAMP = {
     "server": "core-silabs-multiprotocol.local.",
     "properties": {
         b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
         b"vn": b"HomeAssistant",
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
@@ -208,6 +217,7 @@ ROUTER_DISCOVERY_HASS_NO_ACTIVE_TIMESTAMP = {
         b"sq": b"3",
         b"bb": b"\xf0\xbf",
         b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
     },
     "interface_index": None,
 }
@@ -223,6 +233,7 @@ ROUTER_DISCOVERY_HASS_NO_STATE_BITMAP = {
     "server": "core-silabs-multiprotocol.local.",
     "properties": {
         b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
         b"vn": b"HomeAssistant",
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
@@ -234,6 +245,7 @@ ROUTER_DISCOVERY_HASS_NO_STATE_BITMAP = {
         b"sq": b"3",
         b"bb": b"\xf0\xbf",
         b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
     },
     "interface_index": None,
 }
@@ -249,6 +261,7 @@ ROUTER_DISCOVERY_HASS_BAD_STATE_BITMAP = {
     "server": "core-silabs-multiprotocol.local.",
     "properties": {
         b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
         b"vn": b"HomeAssistant",
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
@@ -261,6 +274,7 @@ ROUTER_DISCOVERY_HASS_BAD_STATE_BITMAP = {
         b"sq": b"3",
         b"bb": b"\xf0\xbf",
         b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
     },
     "interface_index": None,
 }
@@ -276,6 +290,7 @@ ROUTER_DISCOVERY_HASS_STATE_BITMAP_NOT_ACTIVE = {
     "server": "core-silabs-multiprotocol.local.",
     "properties": {
         b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
         b"vn": b"HomeAssistant",
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
@@ -288,6 +303,7 @@ ROUTER_DISCOVERY_HASS_STATE_BITMAP_NOT_ACTIVE = {
         b"sq": b"3",
         b"bb": b"\xf0\xbf",
         b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
     },
     "interface_index": None,
 }

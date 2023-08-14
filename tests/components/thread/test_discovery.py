@@ -72,6 +72,7 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) 
         "aeeb2f594b570bbf",
         discovery.ThreadRouterDiscoveryData(
             addresses=["192.168.0.115"],
+            border_agent_id="230c6a1ac57f6f4be262acf32e5ef52c",
             brand="homeassistant",
             extended_address="aeeb2f594b570bbf",
             extended_pan_id="e60fc7c186212ce5",
@@ -98,6 +99,7 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) 
         "f6a99b425a67abed",
         discovery.ThreadRouterDiscoveryData(
             addresses=["192.168.0.124"],
+            border_agent_id="bc3740c3e963aa8735bebecd7cc503c7",
             brand="google",
             extended_address="f6a99b425a67abed",
             extended_pan_id="9e75e256f61409a3",
@@ -176,6 +178,7 @@ async def test_discover_routers_unconfigured(
         "aeeb2f594b570bbf",
         discovery.ThreadRouterDiscoveryData(
             addresses=["192.168.0.115"],
+            border_agent_id="230c6a1ac57f6f4be262acf32e5ef52c",
             brand="homeassistant",
             extended_address="aeeb2f594b570bbf",
             extended_pan_id="e60fc7c186212ce5",
@@ -221,6 +224,7 @@ async def test_discover_routers_bad_data(
         "aeeb2f594b570bbf",
         discovery.ThreadRouterDiscoveryData(
             addresses=["192.168.0.115"],
+            border_agent_id="230c6a1ac57f6f4be262acf32e5ef52c",
             brand=None,
             extended_address="aeeb2f594b570bbf",
             extended_pan_id="e60fc7c186212ce5",
