@@ -120,9 +120,6 @@ SQLAlchemy==2.0.15
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
-# homeassistant.components.waze_travel_time
-WazeRouteCalculator==0.14
-
 # homeassistant.components.accuweather
 accuweather==1.0.0
 
@@ -1633,6 +1630,9 @@ pyvizio==0.1.61
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
+
+# homeassistant.components.waze_travel_time
+pywaze==0.3.0
 
 # homeassistant.components.html5
 pywebpush==1.9.2
