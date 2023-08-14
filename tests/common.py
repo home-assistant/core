@@ -420,6 +420,9 @@ def async_fire_time_changed(
     _async_fire_time_changed(hass, utc_datetime, fire_all)
 
 
+_MONOTONIC_RESOLUTION = time.get_clock_info("monotonic").resolution
+
+
 @callback
 def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
@@ -432,7 +435,7 @@ def _async_fire_time_changed(
             continue
 
         mock_seconds_into_future = timestamp - time.time()
-        future_seconds = task.when() - hass.loop.time()
+        future_seconds = task.when() - (hass.loop.time() + _MONOTONIC_RESOLUTION)
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
@@ -1138,7 +1141,7 @@ class MockEntity(entity.Entity):
         return self._handle("device_class")
 
     @property
-    def device_info(self) -> entity.DeviceInfo | None:
+    def device_info(self) -> dr.DeviceInfo | None:
         """Info how it links to a device."""
         return self._handle("device_info")
 
@@ -1336,8 +1339,17 @@ def mock_integration(
     integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
-    hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
-    hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
+    if integration_cache is None:
+        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
+        loader._async_mount_config_dir(hass)
+    integration_cache[module.DOMAIN] = integration
+
+    module_cache = hass.data.get(loader.DATA_COMPONENTS)
+    if module_cache is None:
+        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
+        loader._async_mount_config_dir(hass)
+    module_cache[module.DOMAIN] = module
 
     return integration
 
@@ -1361,9 +1373,16 @@ def mock_platform(
 
     platform_path is in form hue.config_flow.
     """
-    domain, platform_name = platform_path.split(".")
-    integration_cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
-    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    domain = platform_path.split(".")[0]
+    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
+    if integration_cache is None:
+        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
+        loader._async_mount_config_dir(hass)
+
+    module_cache = hass.data.get(loader.DATA_COMPONENTS)
+    if module_cache is None:
+        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
+        loader._async_mount_config_dir(hass)
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))

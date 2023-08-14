@@ -109,11 +109,51 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         "issue_id": "issue_1",
     }
 
-    ir.async_delete_issue(hass, issues[2]["domain"], issues[2]["issue_id"])
+    # Update an issue by creating it again with the same value,
+    # no update event should be fired, as nothing changed.
+    ir.async_create_issue(
+        hass,
+        issues[2]["domain"],
+        issues[2]["issue_id"],
+        breaks_in_ha_version=issues[2]["breaks_in_ha_version"],
+        is_fixable=issues[2]["is_fixable"],
+        is_persistent=issues[2]["is_persistent"],
+        learn_more_url=issues[2]["learn_more_url"],
+        severity=issues[2]["severity"],
+        translation_key=issues[2]["translation_key"],
+        translation_placeholders=issues[2]["translation_placeholders"],
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 5
+
+    # Update an issue by creating it again, url changed
+    ir.async_create_issue(
+        hass,
+        issues[2]["domain"],
+        issues[2]["issue_id"],
+        breaks_in_ha_version=issues[2]["breaks_in_ha_version"],
+        is_fixable=issues[2]["is_fixable"],
+        is_persistent=issues[2]["is_persistent"],
+        learn_more_url="https://www.example.com/something_changed",
+        severity=issues[2]["severity"],
+        translation_key=issues[2]["translation_key"],
+        translation_placeholders=issues[2]["translation_placeholders"],
+    )
     await hass.async_block_till_done()
 
     assert len(events) == 6
     assert events[5].data == {
+        "action": "update",
+        "domain": "test",
+        "issue_id": "issue_3",
+    }
+
+    ir.async_delete_issue(hass, issues[2]["domain"], issues[2]["issue_id"])
+    await hass.async_block_till_done()
+
+    assert len(events) == 7
+    assert events[6].data == {
         "action": "remove",
         "domain": "test",
         "issue_id": "issue_3",

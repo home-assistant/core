@@ -396,3 +396,14 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_create_lock_with_doorbell(hass: HomeAssistant) -> None:
+    """Test creation of a lock with a doorbell."""
+    lock_one = await _mock_lock_from_fixture(hass, "lock_with_doorbell.online.json")
+    await _create_august_with_devices(hass, [lock_one])
+
+    ding_sensor = hass.states.get(
+        "binary_sensor.a6697750d607098bae8d6baa11ef8063_name_ding"
+    )
+    assert ding_sensor.state == STATE_OFF
