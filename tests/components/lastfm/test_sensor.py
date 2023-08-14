@@ -4,10 +4,7 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lastfm.const import (
-    CONF_USERS,
-    DOMAIN,
-)
+from homeassistant.components.lastfm.const import CONF_USERS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant

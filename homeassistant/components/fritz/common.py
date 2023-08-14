@@ -36,8 +36,9 @@ from homeassistant.helpers import (
     entity_registry as er,
     update_coordinator,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 

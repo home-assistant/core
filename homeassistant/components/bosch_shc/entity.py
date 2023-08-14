@@ -4,8 +4,8 @@ from __future__ import annotations
 from boschshcpy import SHCDevice, SHCIntrusionSystem
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo, async_get as get_dev_reg
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 

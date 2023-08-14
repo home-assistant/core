@@ -15,5 +15,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "switch": {
+      "beeper": {
+        "name": "Keypress Beep"
+      },
+      "lock_and_leave": {
+        "name": "1-Touch Locking"
+      }
+    }
   }
 }
