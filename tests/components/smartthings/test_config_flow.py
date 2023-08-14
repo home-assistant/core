@@ -187,6 +187,7 @@ async def test_entry_created_existing_app_new_oauth_client(
     smartthings_mock.apps.return_value = [app]
     smartthings_mock.generate_app_oauth.return_value = app_oauth_client
     smartthings_mock.locations.return_value = [location]
+    smartthings_mock.create_app = AsyncMock(return_value=(app, app_oauth_client))
     request = Mock()
     request.installed_app_id = installed_app_id
     request.auth_token = token
@@ -377,7 +378,8 @@ async def test_entry_created_with_cloudhook(
         assert result["description_placeholders"][
             "webhook_url"
         ] == smartapp.get_webhook_url(hass)
-        assert mock_create_cloudhook.call_count == 1
+        # One is done by app fixture, one done by new config entry
+        assert mock_create_cloudhook.call_count == 2
 
         # Advance to PAT screen
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
