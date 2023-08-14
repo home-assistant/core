@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
@@ -77,6 +78,7 @@ RESOURCE_SETUP = {
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
         SelectSelectorConfig(options=METHODS, mode=SelectSelectorMode.DROPDOWN)
     ),
+    vol.Optional(CONF_PAYLOAD): ObjectSelector(),
     vol.Optional(CONF_AUTHENTICATION): SelectSelector(
         SelectSelectorConfig(
             options=[HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION],
