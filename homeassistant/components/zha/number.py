@@ -359,9 +359,8 @@ class ZhaNumber(ZhaEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
-        num_value = float(value)
-        if await self._analog_output_cluster_handler.async_set_present_value(num_value):
-            self.async_write_ha_state()
+        await self._analog_output_cluster_handler.async_set_present_value(float(value))
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
