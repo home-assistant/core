@@ -1060,6 +1060,7 @@ omit =
     homeassistant/components/schluter/*
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/coordinator.py
     homeassistant/components/screenlogic/const.py
     homeassistant/components/screenlogic/data.py
     homeassistant/components/screenlogic/entity.py

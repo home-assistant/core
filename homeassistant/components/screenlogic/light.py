@@ -15,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ScreenlogicDataUpdateCoordinator
-from .const import DOMAIN, LIGHT_CIRCUIT_FUNCTIONS
+from .const import DOMAIN as SL_DOMAIN, LIGHT_CIRCUIT_FUNCTIONS
+from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import ScreenLogicCircuitEntity, ScreenLogicPushEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicLight] = []
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
     gateway = coordinator.gateway

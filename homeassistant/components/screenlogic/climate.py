@@ -24,8 +24,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import ScreenlogicDataUpdateCoordinator
-from .const import DOMAIN
+from .const import DOMAIN as SL_DOMAIN
+from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import ScreenLogicPushEntity, ScreenLogicPushEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities = []
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
 

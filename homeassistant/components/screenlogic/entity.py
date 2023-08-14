@@ -12,11 +12,11 @@ from screenlogicpy.const.msg import CODE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ScreenlogicDataUpdateCoordinator
+from .coordinator import ScreenlogicDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -10,6 +10,7 @@ from screenlogicpy.device_const.pump import PUMP_TYPE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.sensor import (
+    DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -19,8 +20,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ScreenlogicDataUpdateCoordinator
-from .const import DOMAIN
+from .const import DOMAIN as SL_DOMAIN
+from .coordinator import ScreenlogicDataUpdateCoordinator
 from .data import (
     EntityParameter,
     PathPart,
@@ -95,7 +96,8 @@ SUPPORTED_DATA: SupportedDeviceDescriptions = {
             VALUE.PH_SETPOINT: {},
             VALUE.SALT_TDS_PPM: {
                 EntityParameter.INCLUDED: ScreenLogicEquipmentRule(
-                    lambda flags: EQUIPMENT_FLAG.CHLORINATOR not in flags,
+                    lambda flags: EQUIPMENT_FLAG.INTELLICHEM in flags
+                    and EQUIPMENT_FLAG.CHLORINATOR not in flags,
                 ),
             },
             VALUE.TOTAL_ALKALINITY: {},
@@ -152,12 +154,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicSensor] = []
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
-    gateway = coordinator.gateway
 
-    for base_kwargs, base_data in process_supported_values(gateway, SUPPORTED_DATA):
+    for base_kwargs, base_data in process_supported_values(
+        coordinator, DOMAIN, SUPPORTED_DATA
+    ):
         base_kwargs["device_class"] = SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
             base_data.value_data.get(ATTR.DEVICE_TYPE)
         )

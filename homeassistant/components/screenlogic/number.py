@@ -5,14 +5,18 @@ import logging
 
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    DOMAIN,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ScreenlogicDataUpdateCoordinator
-from .const import DOMAIN
+from .const import DOMAIN as SL_DOMAIN
+from .coordinator import ScreenlogicDataUpdateCoordinator
 from .data import (
     EntityParameter,
     SupportedDeviceDescriptions,
@@ -59,12 +63,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicNumber] = []
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
     gateway = coordinator.gateway
 
-    for base_kwargs, base_data in process_supported_values(gateway, SUPPORTED_DATA):
+    for base_kwargs, base_data in process_supported_values(
+        coordinator, DOMAIN, SUPPORTED_DATA
+    ):
         if set_value_data := base_data.value_parameters.get(EntityParameter.SET_VALUE):
             set_value_str, set_value_params = set_value_data
             set_value_func = getattr(gateway, set_value_str)

@@ -11,8 +11,10 @@ from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.const import EntityCategory
+from homeassistant.helpers import entity_registry as er
 
-from .const import SL_UNIT_TO_HA_UNIT, generate_unique_id
+from .const import DOMAIN as SL_DOMAIN, SL_UNIT_TO_HA_UNIT, generate_unique_id
+from .coordinator import ScreenlogicDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,9 +155,27 @@ def realize_path_template(
 
 
 def process_supported_values(
-    gateway: ScreenLogicGateway, supported_devices: SupportedDeviceDescriptions
+    coordinator: ScreenlogicDataUpdateCoordinator,
+    platform_domain: str,
+    supported_devices: SupportedDeviceDescriptions,
 ):
     """Process template data."""
+    entity_registry = er.async_get(coordinator.hass)
+
+    def cleanup_excluded_entity(entity_key: str):
+        """Remove entity if it exists."""
+        assert coordinator.config_entry
+        unique_id = f"{coordinator.config_entry.unique_id}_{entity_key}"
+        if entity_id := entity_registry.async_get_entity_id(
+            platform_domain, SL_DOMAIN, unique_id
+        ):
+            _LOGGER.debug(
+                f"Removing existing entity '{entity_id}' per data inclusion rule"
+            )
+            entity_registry.async_remove(entity_id)
+
+    gateway = coordinator.gateway
+
     for device, device_groups in supported_devices.items():
         if "*" in device_groups:
             indexed_values = device_groups.pop("*")
@@ -165,18 +185,21 @@ def process_supported_values(
             for value_key, value_params in group_values.items():
                 data_path = (device, group, value_key)
 
+                entity_key = generate_unique_id(device, group, value_key)
+
                 if (
                     inclusion_rule := value_params.get(EntityParameter.INCLUDED)
                     or DEVICE_INCLUSION_RULES.get(device)
                 ) is not None:
                     assert isinstance(inclusion_rule, ScreenLogicRule)
                     if not inclusion_rule.test(gateway, data_path):
+                        cleanup_excluded_entity(entity_key)
                         continue
 
                 try:
                     value_data = gateway.get_data(*data_path, strict=True)
                 except KeyError:
-                    _LOGGER.info(f"Failed to find {data_path}")
+                    _LOGGER.debug(f"Failed to find {data_path}")
                     continue
 
                 sub_code = value_params.get(
@@ -190,8 +213,6 @@ def process_supported_values(
                 ) is not None:
                     assert isinstance(enabled_rule, ScreenLogicRule)
                     enabled = enabled_rule.test(gateway, data_path)
-
-                entity_key = generate_unique_id(device, group, value_key)
 
                 base_kwargs = {
                     "data_path": data_path,

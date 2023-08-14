@@ -6,6 +6,7 @@ from screenlogicpy.const.common import DEVICE_TYPE, ON_OFF
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -14,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ScreenlogicDataUpdateCoordinator
-from .const import DOMAIN
+from .const import DOMAIN as SL_DOMAIN
+from .coordinator import ScreenlogicDataUpdateCoordinator
 from .data import SupportedDeviceDescriptions, process_supported_values
 from .entity import (
     ScreenlogicEntity,
@@ -80,12 +81,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicBinarySensor] = []
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
-    gateway = coordinator.gateway
 
-    for base_kwargs, base_data in process_supported_values(gateway, SUPPORTED_DATA):
+    for base_kwargs, base_data in process_supported_values(
+        coordinator, DOMAIN, SUPPORTED_DATA
+    ):
         base_kwargs["device_class"] = SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
             base_data.value_data.get(ATTR.DEVICE_TYPE)
         )
