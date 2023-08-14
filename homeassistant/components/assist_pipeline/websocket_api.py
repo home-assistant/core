@@ -206,7 +206,7 @@ async def websocket_run(
 
     try:
         # Task contains a timeout
-        async with timeout(timeout):
+        async with asyncio.timeout(timeout):
             await run_task
     except asyncio.TimeoutError:
         pipeline_input.run.process_event(
