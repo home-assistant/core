@@ -961,7 +961,7 @@ hass-splunk==0.1.1
 hassil==1.2.5
 
 # homeassistant.components.hassmpris
-hassmpris_client==0.0.22
+hassmpris_client==0.0.23
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4

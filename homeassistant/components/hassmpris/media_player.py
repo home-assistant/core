@@ -1,4 +1,7 @@
 """Support for interfacing with the HASS MPRIS agent."""
+
+# mypy: warn-unused-configs, disallow-any-generics, disallow-subclassing-any, disallow-untyped-calls, disallow-untyped-defs, disallow-incomplete-defs, check-untyped-defs, disallow-untyped-decorators, no-implicit-optional, warn-redundant-casts, warn-unused-ignores, warn-return-any, no-implicit-reexport, strict-equality, strict-concatenate
+
 from __future__ import annotations
 
 import asyncio
@@ -17,7 +20,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -83,7 +85,7 @@ async def async_setup_entry(
     await manager.start()
     component_data.entity_manager = manager
 
-    async def _async_stop_manager(*unused_args):
+    async def _async_stop_manager(*unused_args: Any) -> None:
         # The following is a very simple trick to delete the
         # reference to the manager once the manager is stopped
         # once via this mechanism.
@@ -132,13 +134,15 @@ class HASSMPRISEntity(MediaPlayerEntity):
         if initial_state is not None:
             self._attr_state = initial_state
 
-    async def set_unavailable(self):
+    async def set_unavailable(self) -> None:
         """Mark player as unavailable."""
         _LOGGER.debug("Marking %s as unavailable", self.name)
         self._attr_available = False
-        await self.update_state(STATE_UNKNOWN)
+        if self.hass:
+            await self.update_state(MediaPlayerState.OFF)
+            await self.async_update_ha_state(True)
 
-    async def set_available(self):
+    async def set_available(self) -> None:
         """Mark a player as available again.
 
         Arguments:
@@ -215,22 +219,19 @@ class HASSMPRISEntity(MediaPlayerEntity):
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         try:
-            trackid = self._metadata.get("mpris:trackid")
-            if trackid:
-                await self.client.set_position(
-                    self.player_id,
-                    trackid,
-                    position,
-                )
-            else:
-                raise ValueError("No current track ID to seek within")
+            trackid = self._metadata.get("mpris:trackid", None)
+            await self.client.set_position(
+                self.player_id,
+                trackid,
+                position,
+            )
         except Exception as exc:
             raise HomeAssistantError("cannot seek: %s" % exc) from exc
 
     async def update_state(
         self,
         new_state: MediaPlayerState,
-    ):
+    ) -> None:
         """Update player state based on reports from the server."""
         if new_state == self._attr_state:
             return
@@ -244,7 +245,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         if self.hass:
             await self.async_update_ha_state(True)
 
-    async def update_metadata(self, new_metadata: dict[str, Any]):
+    async def update_metadata(self, new_metadata: dict[str, Any]) -> None:
         """Update player metadata based on incoming metadata (a dict)."""
         self._metadata = new_metadata
         if "mpris:length" in self._metadata:
@@ -266,7 +267,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         if self.hass:
             await self.async_update_ha_state(True)
 
-    async def update_position(self, new_position: float):
+    async def update_position(self, new_position: float) -> None:
         """Update position."""
         self._attr_media_position_updated_at = dt_util.utcnow()
         self._attr_media_position = (
@@ -279,7 +280,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
     async def update_mpris_properties(
         self,
         props: mpris_pb2.MPRISPlayerProperties,
-    ):
+    ) -> None:
         """Update player properties based on incoming MPRISPlayerProperties."""
         _LOGGER.debug("%s: new properties: %s", self.name, props)
 
@@ -373,11 +374,11 @@ class EntityManager:
         """Return the MPRIS client associated with this entity manager."""
         return self._client
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the entity manager as a separate task."""
         self.hass.loop.create_task(self.run())
 
-    async def run(self):
+    async def run(self) -> None:
         """Run the entity manager."""
         if self._started:
             _LOGGER.debug("%X: Thread already started", id(self))
@@ -447,11 +448,11 @@ class EntityManager:
         except asyncio.InvalidStateError:
             pass
 
-    async def _mark_all_entities_unavailable(self):
+    async def _mark_all_entities_unavailable(self) -> None:
         for entity in self.players.values():
             await entity.set_unavailable()
 
-    async def _mark_all_entities_available(self):
+    async def _mark_all_entities_available(self) -> None:
         for entity in self.players.values():
             await entity.set_available()
 
@@ -479,7 +480,7 @@ class EntityManager:
     def _remove_player(
         self,
         player_id: str,
-    ):
+    ) -> None:
         reg = er.async_get(self.hass)
         player = self.players.get(player_id)
         if player:
@@ -518,7 +519,7 @@ class EntityManager:
             if e.config_entry_id == self.config_entry.entry_id
         ]
 
-    async def _finish_initial_players_sync(self):
+    async def _finish_initial_players_sync(self) -> None:
         """Sync know player and registry entry state.
 
         Called when the agent has sent us the full list of players it knows
@@ -538,21 +539,17 @@ class EntityManager:
     async def _sync_player_presence(
         self,
         player_id: str,
-    ):
-        """Sync entity and config entry for the player.
-
-        `player` will be None if the directory of known players does not
-        contain it.  Else it will be defined.
-        """
+    ) -> None:
+        """Sync entity and config entry for the player."""
 
         def is_first_instance() -> bool:
             return not bool(re.match(".* [(]\\d+[)]", player_id))
 
-        def is_off_or_absent() -> bool:
+        def is_off_or_not_known() -> bool:
             player = self.players.get(player_id)
             if not player:
                 return True  # It is absent.
-            offstates = [MediaPlayerState.OFF, STATE_UNKNOWN]
+            offstates = [MediaPlayerState.OFF]
             return player.state in offstates
 
         if is_first_instance():
@@ -565,14 +562,14 @@ class EntityManager:
                 # is not implemented for most players).
                 _LOGGER.debug("%X: resuscitating known player %s", id(self), player_id)
                 self._add_player(player_id, initially_off=True)
-            elif is_off_or_absent():
+            elif is_off_or_not_known():
                 # This player is in our directory but is in off or unknown
                 # state.  We have to update its state to off, since this code
                 # may have come back from reconnection, and .
                 off_playa = self.players.get(player_id)
                 if off_playa is not None:
                     await off_playa.update_state(MediaPlayerState.OFF)
-        elif is_off_or_absent():
+        elif is_off_or_not_known():
             # This is a second instance of a player.
             # E.g. `VLC media player`` is not a second instance,
             # but `VLC media player 2`` is in fact a second instance.
@@ -607,7 +604,6 @@ class EntityManager:
                     # happens below in _handle_update() and then at the end
                     # in _finish_initial_players_sync() for all entities that
                     # did not get corresponding updates from the server.
-                    await self._mark_all_entities_available()
                     started_syncing = True
                 if update.HasField("player"):
                     # There's a player update incoming.
@@ -616,6 +612,7 @@ class EntityManager:
                     # Ah, this is the signal that all players known to the agent
                     # have had their information sent to Home Assistant.
                     await self._finish_initial_players_sync()
+                    await self._mark_all_entities_available()
                     finished_syncing = True
                 yield
         finally:
@@ -630,7 +627,7 @@ class EntityManager:
     async def _handle_update(
         self,
         discovery_data: mpris_pb2.MPRISUpdateReply,
-    ):
+    ) -> None:
         """Handle a single player update."""
         _LOGGER.debug("%X: Handling update: %s", id(self), discovery_data)
         state = MediaPlayerState.IDLE
