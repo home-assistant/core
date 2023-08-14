@@ -41,11 +41,21 @@ RELAY_MODE_MAP = {
     DryContactMode.MANUAL: "standard",
     DryContactMode.STATE_OF_CHARGE: "battery",
 }
+REVERSE_RELAY_MODE_MAP = {
+    "standard": DryContactMode.MANUAL,
+    "battery": DryContactMode.STATE_OF_CHARGE,
+}
 RELAY_ACTION_MAP = {
     DryContactAction.APPLY: "powered",
     DryContactAction.SHED: "not_powered",
     DryContactAction.SCHEDULE: "schedule",
     DryContactAction.NONE: "none",
+}
+REVERSE_RELAY_ACTION_MAP = {
+    "powered": DryContactAction.APPLY,
+    "not_powered": DryContactAction.SHED,
+    "schedule": DryContactAction.SCHEDULE,
+    "none": DryContactAction.NONE,
 }
 
 RELAY_ENTITIES = (
@@ -58,9 +68,7 @@ RELAY_ENTITIES = (
         update_fn=lambda envoy, relay, value: envoy.update_dry_contact(
             {
                 "id": relay.id,
-                "mode": next(
-                    key for key, val in RELAY_MODE_MAP.items() if val == value
-                ),
+                "mode": REVERSE_RELAY_MODE_MAP[value],
             }
         ),
     ),
@@ -73,9 +81,7 @@ RELAY_ENTITIES = (
         update_fn=lambda envoy, relay, value: envoy.update_dry_contact(
             {
                 "id": relay.id,
-                "grid_action": next(
-                    key for key, val in RELAY_ACTION_MAP.items() if val == value
-                ),
+                "grid_action": REVERSE_RELAY_ACTION_MAP[value],
             }
         ),
     ),
@@ -88,9 +94,7 @@ RELAY_ENTITIES = (
         update_fn=lambda envoy, relay, value: envoy.update_dry_contact(
             {
                 "id": relay.id,
-                "micro_grid_action": next(
-                    key for key, val in RELAY_ACTION_MAP.items() if val == value
-                ),
+                "micro_grid_action": REVERSE_RELAY_ACTION_MAP[value],
             }
         ),
     ),
@@ -103,9 +107,7 @@ RELAY_ENTITIES = (
         update_fn=lambda envoy, relay, value: envoy.update_dry_contact(
             {
                 "id": relay.id,
-                "generator_action": next(
-                    key for key, val in RELAY_ACTION_MAP.items() if val == value
-                ),
+                "generator_action": REVERSE_RELAY_ACTION_MAP[value],
             }
         ),
     ),
@@ -155,6 +157,7 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
         assert self.enpower is not None
         self._serial_number = self.enpower.serial_number
         self.relay = self.data.dry_contact_settings[relay]
+        self.relay_id = relay
         self._attr_unique_id = (
             f"{self._serial_number}_relay_{relay}_{self.entity_description.key}"
         )
@@ -170,7 +173,9 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the state of the Enpower switch."""
-        return self.entity_description.value_fn(self.relay)
+        return self.entity_description.value_fn(
+            self.data.dry_contact_settings[self.relay_id]
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
