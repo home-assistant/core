@@ -20,17 +20,3 @@ pause:
       domain: lawn_mower
       supported_features:
         - lawn_mower.LawnMowerEntityFeature.PAUSE
-
-enable_schedule:
-  target:
-    entity:
-      domain: lawn_mower
-      supported_features:
-        - lawn_mower.LawnMowerEntityFeature.ENABLE_SCHEDULE
-
-disable_schedule:
-  target:
-    entity:
-      domain: lawn_mower
-      supported_features:
-        - lawn_mower.LawnMowerEntityFeature.DISABLE_SCHEDULE

@@ -1,8 +1,6 @@
 """Demo platform that has a couple fake lawn mowers."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
@@ -27,9 +25,7 @@ async def async_setup_platform(
                 "kitchen_sink_mower_001",
                 "Mower can mow",
                 LawnMowerActivity.MOWING,
-                LawnMowerEntityFeature.START_MOWING
-                | LawnMowerEntityFeature.PAUSE
-                | LawnMowerEntityFeature.DOCK,
+                LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_002",
@@ -45,25 +41,9 @@ async def async_setup_platform(
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_004",
-                "Mower can disable schedule",
-                LawnMowerActivity.DOCKED_SCHEDULE_DISABLED,
-                LawnMowerEntityFeature.DISABLE_SCHEDULE
-                | LawnMowerEntityFeature.ENABLE_SCHEDULE,
-            ),
-            DemoLawnMower(
-                "kitchen_sink_mower_005",
-                "Mower can enable schedule",
-                LawnMowerActivity.DOCKED_SCHEDULE_ENABLED,
-                LawnMowerEntityFeature.ENABLE_SCHEDULE
-                | LawnMowerEntityFeature.DISABLE_SCHEDULE,
-            ),
-            DemoLawnMower(
-                "kitchen_sink_mower_006",
                 "Mower can do all",
-                LawnMowerActivity.DOCKED_SCHEDULE_DISABLED,
-                LawnMowerEntityFeature.ENABLE_SCHEDULE
-                | LawnMowerEntityFeature.DISABLE_SCHEDULE
-                | LawnMowerEntityFeature.DOCK
+                LawnMowerActivity.DOCKED,
+                LawnMowerEntityFeature.DOCK
                 | LawnMowerEntityFeature.PAUSE
                 | LawnMowerEntityFeature.START_MOWING,
             ),
@@ -109,14 +89,4 @@ class DemoLawnMower(LawnMowerEntity):
     async def async_pause(self) -> None:
         """Pause mower."""
         self._attr_activity = LawnMowerActivity.PAUSED
-        self.async_write_ha_state()
-
-    async def async_enable_schedule(self, **kwargs: Any) -> None:
-        """Set docked schedule enabled."""
-        self._attr_activity = LawnMowerActivity.DOCKED_SCHEDULE_ENABLED
-        self.async_write_ha_state()
-
-    async def async_disable_schedule(self) -> None:
-        """Set docked schedule disabled."""
-        self._attr_activity = LawnMowerActivity.DOCKED_SCHEDULE_DISABLED
         self.async_write_ha_state()

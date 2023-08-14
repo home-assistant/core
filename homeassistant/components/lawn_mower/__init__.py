@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, final
+from typing import final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,9 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
-    SERVICE_DISABLE_SCHEDULE,
     SERVICE_DOCK,
-    SERVICE_ENABLE_SCHEDULE,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
     LawnMowerActivity,
@@ -48,18 +46,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_PAUSE, {}, "async_pause", [LawnMowerEntityFeature.PAUSE]
-    )
-    component.async_register_entity_service(
-        SERVICE_ENABLE_SCHEDULE,
-        {},
-        "async_enable_schedule",
-        [LawnMowerEntityFeature.ENABLE_SCHEDULE],
-    )
-    component.async_register_entity_service(
-        SERVICE_DISABLE_SCHEDULE,
-        {},
-        "async_disable_schedule",
-        [LawnMowerEntityFeature.DISABLE_SCHEDULE],
     )
     component.async_register_entity_service(
         SERVICE_DOCK, {}, "async_dock", [LawnMowerEntityFeature.DOCK]
@@ -111,11 +97,11 @@ class LawnMowerEntity(Entity):
         return self._attr_supported_features
 
     def start_mowing(self) -> None:
-        """Start mowing."""
+        """Start or resume mowing."""
         raise NotImplementedError()
 
     async def async_start_mowing(self) -> None:
-        """Start mowing."""
+        """Start or resume mowing."""
         await self.hass.async_add_executor_job(partial(self.start_mowing))
 
     def dock(self) -> None:
@@ -133,19 +119,3 @@ class LawnMowerEntity(Entity):
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
         await self.hass.async_add_executor_job(partial(self.pause))
-
-    def enable_schedule(self) -> None:
-        """Enable the schedule for the lawn mower."""
-        raise NotImplementedError()
-
-    async def async_enable_schedule(self, **kwargs: Any) -> None:
-        """Enable the schedule for the lawn mower."""
-        await self.hass.async_add_executor_job(partial(self.enable_schedule, **kwargs))
-
-    def disable_schedule(self) -> None:
-        """Disable the schedule for the lawn mower."""
-        raise NotImplementedError()
-
-    async def async_disable_schedule(self) -> None:
-        """Disable the schedule for the lawn mower."""
-        await self.hass.async_add_executor_job(partial(self.disable_schedule))

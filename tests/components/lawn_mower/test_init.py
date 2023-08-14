@@ -47,28 +47,6 @@ async def test_sync_pause(hass: HomeAssistant) -> None:
     assert lawn_mower.pause.called
 
 
-async def test_sync_enable_schedule(hass: HomeAssistant) -> None:
-    """Test if async schedule calls sync schedule."""
-    lawn_mower = MockLawnMowerEntity()
-    lawn_mower.hass = hass
-
-    lawn_mower.enable_schedule = MagicMock()
-    await lawn_mower.async_enable_schedule()
-
-    assert lawn_mower.enable_schedule.called
-
-
-async def test_sync_disable_schedule(hass: HomeAssistant) -> None:
-    """Test if async disable calls sync disable."""
-    lawn_mower = MockLawnMowerEntity()
-    lawn_mower.hass = hass
-
-    lawn_mower.disable_schedule = MagicMock()
-    await lawn_mower.async_disable_schedule()
-
-    assert lawn_mower.disable_schedule.called
-
-
 async def test_lawn_mower_default(hass: HomeAssistant) -> None:
     """Test lawn mower entity with defaults."""
     lawn_mower = MockLawnMowerEntity()

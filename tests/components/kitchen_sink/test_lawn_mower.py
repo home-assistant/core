@@ -7,9 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
-    SERVICE_DISABLE_SCHEDULE,
     SERVICE_DOCK,
-    SERVICE_ENABLE_SCHEDULE,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
     LawnMowerActivity,
@@ -49,18 +47,6 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
 @pytest.mark.parametrize(
     ("entity", "service_call", "activity", "next_activity"),
     [
-        (
-            "lawn_mower.mower_can_disable_schedule",
-            SERVICE_ENABLE_SCHEDULE,
-            LawnMowerActivity.DOCKED_SCHEDULE_DISABLED,
-            LawnMowerActivity.DOCKED_SCHEDULE_ENABLED,
-        ),
-        (
-            "lawn_mower.mower_can_enable_schedule",
-            SERVICE_DISABLE_SCHEDULE,
-            LawnMowerActivity.DOCKED_SCHEDULE_ENABLED,
-            LawnMowerActivity.DOCKED_SCHEDULE_DISABLED,
-        ),
         (
             "lawn_mower.mower_can_mow",
             SERVICE_DOCK,
@@ -107,8 +93,6 @@ async def test_mower(
 @pytest.mark.parametrize(
     "service_call",
     [
-        SERVICE_ENABLE_SCHEDULE,
-        SERVICE_DISABLE_SCHEDULE,
         SERVICE_DOCK,
         SERVICE_START_MOWING,
         SERVICE_PAUSE,
