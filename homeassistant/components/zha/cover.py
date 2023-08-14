@@ -23,6 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -266,8 +267,7 @@ class Shade(ZhaEntity, CoverEntity):
         """Open the window cover."""
         res = await self._on_off_cluster_handler.on()
         if res[1] != Status.SUCCESS:
-            self.debug("couldn't open cover: %s", res)
-            return
+            raise HomeAssistantError(f"Failed to open cover: {res[1]}")
 
         self._is_open = True
         self.async_write_ha_state()
@@ -276,8 +276,7 @@ class Shade(ZhaEntity, CoverEntity):
         """Close the window cover."""
         res = await self._on_off_cluster_handler.off()
         if res[1] != Status.SUCCESS:
-            self.debug("couldn't open cover: %s", res)
-            return
+            raise HomeAssistantError(f"Failed to close cover: {res[1]}")
 
         self._is_open = False
         self.async_write_ha_state()
@@ -290,8 +289,7 @@ class Shade(ZhaEntity, CoverEntity):
         )
 
         if res[1] != Status.SUCCESS:
-            self.debug("couldn't set cover's position: %s", res)
-            return
+            raise HomeAssistantError(f"Failed to set cover's position: {res[1]}")
 
         self._position = new_pos
         self.async_write_ha_state()
@@ -300,8 +298,7 @@ class Shade(ZhaEntity, CoverEntity):
         """Stop the cover."""
         res = await self._level_cluster_handler.stop()
         if res[1] != Status.SUCCESS:
-            self.debug("couldn't stop cover: %s", res)
-            return
+            raise HomeAssistantError(f"Failed to stop cover: {res[1]}")
 
 
 @MULTI_MATCH(
