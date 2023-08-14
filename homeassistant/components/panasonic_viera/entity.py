@@ -3,9 +3,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.trigger import PluggableAction
 
 from . import Remote
-from .triggers.turn_on import (
-    async_get_turn_on_trigger,
-)
+from .triggers.turn_on import async_get_turn_on_trigger
 
 
 class PanasonicVieraEntity(Entity):
