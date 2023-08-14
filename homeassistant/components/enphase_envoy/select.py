@@ -136,10 +136,9 @@ async def async_setup_entry(
 
 
 class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
-    """Representation of an Enphase Enpower switch entity."""
+    """Representation of an Enphase Enpower select entity."""
 
     entity_description: EnvoyRelaySelectEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
