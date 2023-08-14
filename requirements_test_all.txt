@@ -478,7 +478,7 @@ bthome-ble==3.0.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.2.0
+caldav==1.3.6
 
 # homeassistant.components.coinbase
 coinbase==2.1.0
