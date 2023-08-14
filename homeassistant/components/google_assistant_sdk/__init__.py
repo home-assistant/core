@@ -29,7 +29,7 @@ from .helpers import (
     GoogleAssistantSDKAudioView,
     InMemoryStorage,
     async_send_text_commands,
-    default_language_code,
+    create_credentials,
 )
 
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
@@ -164,7 +164,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             await session.async_ensure_token_valid()
             self.assistant = None
         if not self.assistant or user_input.language != self.language:
-            credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
+            credentials = await create_credentials(self.hass, self.entry)
             self.language = user_input.language
             self.assistant = TextAssistant(credentials, self.language)
 

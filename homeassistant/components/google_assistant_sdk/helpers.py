@@ -92,7 +92,7 @@ async def create_credentials(hass: HomeAssistant, entry: ConfigEntry) -> Credent
 
 async def async_send_text_commands(
     hass: HomeAssistant, commands: list[str], media_players: list[str] | None = None
-) -> None:
+) -> list[CommandResponse]:
     """Send text commands to Google Assistant Service."""
     # There can only be 1 entry (config_flow has single_instance_allowed)
     entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
