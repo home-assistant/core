@@ -421,7 +421,7 @@ azure-eventhub==5.11.1
 base36==0.1.1
 
 # homeassistant.components.scrape
-beautifulsoup4==4.11.1
+beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
 bellows==0.35.9
