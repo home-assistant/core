@@ -61,7 +61,8 @@ BUTTON_ENTITIES = (
         name="PTZ stop",
         icon="mdi:pan",
         enabled_default=lambda api, ch: api.supported(ch, "pan_tilt"),
-        supported=lambda api, ch: api.supported(ch, "pan_tilt") or api.supported(ch, "zoom_basic"),
+        supported=lambda api, ch: api.supported(ch, "pan_tilt")
+        or api.supported(ch, "zoom_basic"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.stop.value),
     ),
     ReolinkButtonEntityDescription(
@@ -188,7 +189,9 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
             f"{self._host.unique_id}_{channel}_{entity_description.key}"
         )
         if entity_description.enabled_default is not None:
-            self._attr_entity_registry_enabled_default = entity_description.enabled_default(self._host.api, self._channel)
+            self._attr_entity_registry_enabled_default = (
+                entity_description.enabled_default(self._host.api, self._channel)
+            )
 
     async def async_press(self) -> None:
         """Execute the button action."""
