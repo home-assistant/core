@@ -501,6 +501,26 @@ class ClusterHandler(LogMixin):
 
     get_attributes = functools.partialmethod(_get_attributes, False)
 
+    async def write_attributes_safe(
+        self, attributes: dict[str, Any], manufacturer: int | None = None
+    ) -> None:
+        """Wrap `write_attributes` to throw an exception on attribute write failure."""
+
+        res = await self.write_attributes(attributes, manufacturer=manufacturer)
+
+        for record in res[0]:
+            if record.status != Status.SUCCESS:
+                try:
+                    name = self.cluster.attributes_by_id[record.attrid]
+                    value = attributes.get(name, "unknown")
+                except KeyError:
+                    name = f"0x{record.attrid:04x}"
+                    value = "unknown"
+
+                raise HomeAssistantError(
+                    f"Failed to write attribute {name}={value}: {record.status}",
+                )
+
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
@@ -511,9 +531,10 @@ class ClusterHandler(LogMixin):
         """Get attribute or a decorated cluster command."""
         if hasattr(self._cluster, name) and callable(getattr(self._cluster, name)):
             command = getattr(self._cluster, name)
-            command.__name__ = name
+            wrapped_command = retry_request(command)
+            wrapped_command.__name__ = name
 
-            return retry_request(command)
+            return wrapped_command
         return self.__getattribute__(name)
 
 

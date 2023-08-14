@@ -6,7 +6,6 @@ import functools
 import math
 from typing import Any
 
-from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import hvac
 
 from homeassistant.components.fan import (
@@ -207,10 +206,7 @@ class FanGroup(BaseFan, ZhaGroupEntity):
 
     async def _async_set_fan_mode(self, fan_mode: int) -> None:
         """Set the fan mode for the group."""
-        try:
-            await self._fan_cluster_handler.write_attributes({"fan_mode": fan_mode})
-        except ZigbeeException as ex:
-            self.error("Could not set fan mode: %s", ex)
+        await self._fan_cluster_handler.write_attributes_safe({"fan_mode": fan_mode})
         self.async_set_state(0, "fan_mode", fan_mode)
 
     async def async_update(self) -> None:

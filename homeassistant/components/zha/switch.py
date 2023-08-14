@@ -5,7 +5,6 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-import zigpy.exceptions
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
@@ -241,17 +240,10 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     async def async_turn_on_off(self, state: bool) -> None:
         """Turn the entity on or off."""
-        try:
-            result = await self._cluster_handler.cluster.write_attributes(
-                {self._zcl_attribute: not state if self.inverted else state}
-            )
-        except zigpy.exceptions.ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return
-        if not isinstance(result, Exception) and all(
-            record.status == Status.SUCCESS for record in result[0]
-        ):
-            self.async_write_ha_state()
+        await self._cluster_handler.write_attributes_safe(
+            {self._zcl_attribute: not state if self.inverted else state}
+        )
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
