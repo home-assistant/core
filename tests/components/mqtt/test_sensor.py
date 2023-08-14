@@ -66,6 +66,7 @@ from .test_common import (
 )
 
 from tests.common import (
+    MockConfigEntry,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
@@ -1123,9 +1124,11 @@ async def test_entity_device_info_with_hub(
 ) -> None:
     """Test MQTT sensor device registry integration."""
     await mqtt_mock_entry()
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
     registry = dr.async_get(hass)
     hub = registry.async_get_or_create(
-        config_entry_id="123",
+        config_entry_id=other_config_entry.entry_id,
         connections=set(),
         identifiers={("mqtt", "hub-id")},
         manufacturer="manufacturer",

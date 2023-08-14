@@ -53,6 +53,7 @@ homeassistant.components.airzone_cloud.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
+homeassistant.components.alexa.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*

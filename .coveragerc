@@ -302,8 +302,11 @@ omit =
     homeassistant/components/enocean/sensor.py
     homeassistant/components/enocean/switch.py
     homeassistant/components/enphase_envoy/__init__.py
+    homeassistant/components/enphase_envoy/binary_sensor.py
     homeassistant/components/enphase_envoy/coordinator.py
+    homeassistant/components/enphase_envoy/entity.py
     homeassistant/components/enphase_envoy/sensor.py
+    homeassistant/components/enphase_envoy/switch.py
     homeassistant/components/entur_public_transport/*
     homeassistant/components/environment_canada/__init__.py
     homeassistant/components/environment_canada/camera.py
@@ -338,6 +341,7 @@ omit =
     homeassistant/components/ezviz/entity.py
     homeassistant/components/ezviz/select.py
     homeassistant/components/ezviz/sensor.py
+    homeassistant/components/ezviz/siren.py
     homeassistant/components/ezviz/switch.py
     homeassistant/components/ezviz/update.py
     homeassistant/components/faa_delays/__init__.py
@@ -419,6 +423,7 @@ omit =
     homeassistant/components/garadget/cover.py
     homeassistant/components/garages_amsterdam/__init__.py
     homeassistant/components/garages_amsterdam/binary_sensor.py
+    homeassistant/components/garages_amsterdam/entity.py
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
@@ -772,6 +777,7 @@ omit =
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py
+    homeassistant/components/neato/button.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/__init__.py
@@ -1344,6 +1350,7 @@ omit =
     homeassistant/components/trafikverket_train/__init__.py
     homeassistant/components/trafikverket_train/coordinator.py
     homeassistant/components/trafikverket_train/sensor.py
+    homeassistant/components/trafikverket_train/util.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py
     homeassistant/components/trafikverket_weatherstation/sensor.py

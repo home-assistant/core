@@ -22,6 +22,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "communicating": {
+        "name": "Communicating"
+      },
+      "dc_switch": {
+        "name": "DC switch"
+      },
+      "operating": {
+        "name": "Operating"
+      },
+      "grid_status": {
+        "name": "Grid status"
+      }
+    },
     "sensor": {
       "last_reported": {
         "name": "Last reported"
@@ -49,6 +63,26 @@
       },
       "lifetime_consumption": {
         "name": "Lifetime energy consumption"
+      },
+      "reserve_soc": {
+        "name": "Reserve battery level"
+      },
+      "available_energy": {
+        "name": "Available battery energy"
+      },
+      "reserve_energy": {
+        "name": "Reserve battery energy"
+      },
+      "max_capacity": {
+        "name": "Battery capacity"
+      },
+      "configured_reserve_soc": {
+        "name": "Configured reserve battery level"
+      }
+    },
+    "switch": {
+      "grid_enabled": {
+        "name": "Grid enabled"
       }
     }
   }

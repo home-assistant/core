@@ -25,7 +25,7 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.8.5",
     "astral==2.2",
-    "async-timeout==4.0.2",
+    "async-timeout==4.0.3",
     "attrs==22.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
@@ -44,7 +44,7 @@ dependencies    = [
     "cryptography==41.0.3",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
-    "orjson==3.9.3",
+    "orjson==3.9.4",
     "packaging>=23.1",
     "pip>=21.3.1",
     "python-slugify==4.0.1",
@@ -537,6 +537,7 @@ known-first-party = [
     "homeassistant",
 ]
 combine-as-imports = true
+split-on-trailing-comma = false
 
 [tool.ruff.per-file-ignores]
 

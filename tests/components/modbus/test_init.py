@@ -929,3 +929,20 @@ async def test_integration_reload_failed(
 
     assert "Modbus reloading" in caplog.text
     assert "connect failed, retry in pymodbus" in caplog.text
+
+
+@pytest.mark.parametrize("do_config", [{}])
+async def test_integration_setup_failed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+) -> None:
+    """Run test for integration setup on reload."""
+    with mock.patch.object(
+        hass_config,
+        "YAML_CONFIG_FILE",
+        get_fixture_path("configuration.yaml", "modbus"),
+    ):
+        hass.data[DOMAIN][TEST_MODBUS_NAME].async_setup = mock.AsyncMock(
+            return_value=False
+        )
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
