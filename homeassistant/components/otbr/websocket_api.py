@@ -47,6 +47,7 @@ async def websocket_info(
     data: OTBRData = hass.data[DOMAIN]
 
     try:
+        border_agent_id = await data.get_border_agent_id()
         dataset = await data.get_active_dataset()
         dataset_tlvs = await data.get_active_dataset_tlvs()
     except HomeAssistantError as exc:
@@ -58,6 +59,7 @@ async def websocket_info(
         {
             "url": data.url,
             "active_dataset_tlvs": dataset_tlvs.hex() if dataset_tlvs else None,
+            "border_agent_id": border_agent_id.hex(),
             "channel": dataset.channel if dataset else None,
         },
     )
