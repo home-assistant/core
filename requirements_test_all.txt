@@ -120,9 +120,6 @@ SQLAlchemy==2.0.15
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
-# homeassistant.components.waze_travel_time
-WazeRouteCalculator==0.14
-
 # homeassistant.components.accuweather
 accuweather==1.0.0
 
@@ -421,7 +418,7 @@ azure-eventhub==5.11.1
 base36==0.1.1
 
 # homeassistant.components.scrape
-beautifulsoup4==4.11.1
+beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
 bellows==0.35.9
@@ -481,7 +478,7 @@ bthome-ble==3.0.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.2.0
+caldav==1.3.6
 
 # homeassistant.components.coinbase
 coinbase==2.1.0
@@ -1259,7 +1256,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.8
+pyfritzhome==0.6.9
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -1573,7 +1570,7 @@ python-opensky==0.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.3.0
+python-otbr-api==2.4.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -1633,6 +1630,9 @@ pyvizio==0.1.61
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
+
+# homeassistant.components.waze_travel_time
+pywaze==0.3.0
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -1860,7 +1860,7 @@ thermopro-ble==0.4.5
 tilt-ble==0.2.3
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.1
+todoist-api-python==2.0.2
 
 # homeassistant.components.tolo
 tololib==0.1.0b4
@@ -2025,7 +2025,7 @@ youtubeaio==1.1.5
 zamg==0.2.4
 
 # homeassistant.components.zeroconf
-zeroconf==0.74.0
+zeroconf==0.76.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

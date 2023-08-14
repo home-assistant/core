@@ -178,6 +178,7 @@ class ScrapeSensor(
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
         raw_data = self.coordinator.data
+        value: str | list[str] | None
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
