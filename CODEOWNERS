@@ -606,8 +606,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
 /tests/components/iotawatt/ @gtdiehl @jyavenard
 /homeassistant/components/iperf3/ @rohankapoorcom
-/homeassistant/components/ipma/ @dgomes
-/tests/components/ipma/ @dgomes
+/homeassistant/components/ipma/ @dgomes @abmantis
+/tests/components/ipma/ @dgomes @abmantis
 /homeassistant/components/ipp/ @ctalkington
 /tests/components/ipp/ @ctalkington
 /homeassistant/components/iqvia/ @bachya
