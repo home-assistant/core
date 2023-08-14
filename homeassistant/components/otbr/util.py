@@ -87,7 +87,7 @@ class OTBRData:
         """Get the border agent ID or None if not supported by the router."""
         try:
             return await self.api.get_border_agent_id()
-        except python_otbr_api.FactoryResetNotSupportedError:
+        except python_otbr_api.GetBorderAgentIdNotSupportedError:
             return None
 
     @_handle_otbr_error
