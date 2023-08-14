@@ -13,7 +13,6 @@ def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{config[CONF_LATITUDE]}, {config[CONF_LONGITUDE]}",
         data=config,
     )
     entry.add_to_hass(hass)
@@ -24,9 +23,9 @@ def config_entry_fixture(hass, config):
 def config_fixture():
     """Define a config entry data fixture."""
     return {
-        CONF_NAME: "home",
-        CONF_LATITUDE: 40.0,
-        CONF_LONGITUDE: 30.0,
+        CONF_NAME: "Home",
+        CONF_LATITUDE: 0,
+        CONF_LONGITUDE: 0,
     }
 
 
