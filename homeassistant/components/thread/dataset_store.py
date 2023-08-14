@@ -186,7 +186,9 @@ class DatasetStore:
         )
 
     @callback
-    def async_add(self, source: str, tlv: str) -> None:
+    def async_add(
+        self, source: str, tlv: str, preferred_border_agent_id: str | None
+    ) -> None:
         """Add dataset, does nothing if it already exists."""
         # Make sure the tlv is valid
         dataset = tlv_parser.parse_tlv(tlv)
@@ -248,7 +250,9 @@ class DatasetStore:
             self.async_schedule_save()
             return
 
-        entry = DatasetEntry(preferred_border_agent_id=None, source=source, tlv=tlv)
+        entry = DatasetEntry(
+            preferred_border_agent_id=preferred_border_agent_id, source=source, tlv=tlv
+        )
         self.datasets[entry.id] = entry
         # Set to preferred if there is no preferred dataset
         if self._preferred_dataset is None:
@@ -337,10 +341,16 @@ async def async_get_store(hass: HomeAssistant) -> DatasetStore:
     return store
 
 
-async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
+async def async_add_dataset(
+    hass: HomeAssistant,
+    source: str,
+    tlv: str,
+    *,
+    preferred_border_agent_id: str | None = None,
+) -> None:
     """Add a dataset."""
     store = await async_get_store(hass)
-    store.async_add(source, tlv)
+    store.async_add(source, tlv, preferred_border_agent_id)
 
 
 async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:
@@ -359,15 +369,3 @@ async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
     ) is None:
         return None
     return entry.tlv
-
-
-async def async_set_preferred_dataset_preferred_border_agent_id(
-    hass: HomeAssistant, border_agent_id: str
-) -> None:
-    """Set the preferred border agent ID of the preferred dataset."""
-    store = await async_get_store(hass)
-    if (preferred_dataset_id := store.preferred_dataset) is None or (
-        store.async_get(preferred_dataset_id)
-    ) is None:
-        raise HomeAssistantError("UnknownDataset")
-    store.async_set_preferred_border_agent_id(preferred_dataset_id, border_agent_id)

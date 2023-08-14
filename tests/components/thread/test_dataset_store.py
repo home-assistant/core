@@ -254,7 +254,7 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
 
     store1 = await dataset_store.async_get_store(hass)
     for dataset in datasets:
-        store1.async_add(dataset["source"], dataset["tlv"])
+        store1.async_add(dataset["source"], dataset["tlv"], None)
     assert len(store1.datasets) == 3
 
     for dataset in store1.datasets.values():
@@ -543,19 +543,12 @@ async def test_migrate_set_default_border_agent_id(
 
 async def test_set_preferred_border_agent_id(hass: HomeAssistant) -> None:
     """Test set the preferred border agent ID of a dataset."""
-    with pytest.raises(HomeAssistantError):
-        await dataset_store.async_set_preferred_dataset_preferred_border_agent_id(
-            hass, "blah"
-        )
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
 
-    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_1, preferred_border_agent_id="blah"
+    )
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert list(store.datasets.values())[0].preferred_border_agent_id is None
-
-    await dataset_store.async_set_preferred_dataset_preferred_border_agent_id(
-        hass, "blah"
-    )
-
     assert list(store.datasets.values())[0].preferred_border_agent_id == "blah"
