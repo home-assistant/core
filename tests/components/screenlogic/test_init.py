@@ -107,7 +107,7 @@ async def test_async_migrate_entries(
 
     device: dr.DeviceEntry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, MOCK_ADAPTER_MAC)},
+        connections={(dr.CONNECTION_NETWORK_MAC, MOCK_ADAPTER_MAC)},
     )
 
     TEST_EXISTING_ENTRY = {
