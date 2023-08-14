@@ -157,7 +157,7 @@ async def test_https_repair_issue(
 
 
 async def test_ssl_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry, reolink_ONVIF_wait: MagicMock
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test repairs issue is raised when global ssl certificate is used."""
     assert await async_setup_component(hass, "webhook", {})
