@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 
 import aiohttp
 import python_otbr_api
@@ -37,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     otbrdata = OTBRData(entry.data["url"], api, entry.entry_id)
     try:
+        border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
     except (
         HomeAssistantError,
@@ -45,19 +45,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
     if dataset_tlvs:
-        border_agent_id: str | None = None
-        with contextlib.suppress(
-            HomeAssistantError, aiohttp.ClientError, asyncio.TimeoutError
-        ):
-            border_agent_bytes = await otbrdata.get_border_agent_id()
-            if border_agent_bytes:
-                border_agent_id = border_agent_bytes.hex()
         await update_issues(hass, otbrdata, dataset_tlvs)
         await async_add_dataset(
             hass,
             DOMAIN,
             dataset_tlvs.hex(),
-            preferred_border_agent_id=border_agent_id,
+            preferred_border_agent_id=border_agent_id.hex(),
         )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
