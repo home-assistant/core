@@ -1,13 +1,14 @@
 """Test for smart home alexa support."""
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.alexa import messages, smart_home
+from homeassistant.components.alexa import smart_home, state_report
 import homeassistant.components.camera as camera
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.media_player import MediaPlayerEntityFeature
-import homeassistant.components.vacuum as vacuum
+from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import Context, Event, HomeAssistant
@@ -28,6 +29,7 @@ from .test_common import (
 )
 
 from tests.common import async_capture_events, async_mock_service
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -57,7 +59,7 @@ def test_create_api_message_defaults(hass: HomeAssistant) -> None:
     """Create an API message response of a request with defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
     directive_header = request["directive"]["header"]
-    directive = messages.AlexaDirective(request)
+    directive = state_report.AlexaDirective(request)
 
     msg = directive.response(payload={"test": 3})._response
 
@@ -83,7 +85,7 @@ def test_create_api_message_special() -> None:
     request = get_new_request("Alexa.PowerController", "TurnOn")
     directive_header = request["directive"]["header"]
     directive_header.pop("correlationToken")
-    directive = messages.AlexaDirective(request)
+    directive = state_report.AlexaDirective(request)
 
     msg = directive.response("testName", "testNameSpace")._response
 
@@ -2136,18 +2138,48 @@ async def test_forced_motion_sensor(hass: HomeAssistant) -> None:
     properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
 
 
-async def test_doorbell_sensor(hass: HomeAssistant) -> None:
-    """Test doorbell sensor discovery."""
-    device = (
-        "binary_sensor.test_doorbell",
-        "off",
-        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
-    )
+@pytest.mark.parametrize(
+    ("device", "endpoint_id", "friendly_name", "display_category"),
+    [
+        (
+            (
+                "binary_sensor.test_doorbell",
+                "off",
+                {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+            ),
+            "binary_sensor#test_doorbell",
+            "Test Doorbell Sensor",
+            "DOORBELL",
+        ),
+        (
+            (
+                "event.test_doorbell",
+                None,
+                {
+                    "friendly_name": "Test Doorbell Event",
+                    "event_types": ["press"],
+                    "device_class": "doorbell",
+                },
+            ),
+            "event#test_doorbell",
+            "Test Doorbell Event",
+            "DOORBELL",
+        ),
+    ],
+)
+async def test_doorbell_event(
+    hass: HomeAssistant,
+    device: tuple[str, str, dict[str, Any]],
+    endpoint_id: str,
+    friendly_name: str,
+    display_category: str,
+) -> None:
+    """Test doorbell event/sensor discovery."""
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "binary_sensor#test_doorbell"
-    assert appliance["displayCategories"][0] == "DOORBELL"
-    assert appliance["friendlyName"] == "Test Doorbell Sensor"
+    assert appliance["endpointId"] == endpoint_id
+    assert appliance["displayCategories"][0] == display_category
+    assert appliance["friendlyName"] == friendly_name
 
     capabilities = assert_endpoint_capabilities(
         appliance, "Alexa.DoorbellEventSource", "Alexa.EndpointHealth", "Alexa"
@@ -2766,20 +2798,13 @@ async def test_disabled(hass: HomeAssistant) -> None:
     hass.states.async_set("switch.test", "on", {"friendly_name": "Test switch"})
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#test")
 
-    call_switch = async_mock_service(hass, "switch", "turn_on")
+    async_mock_service(hass, "switch", "turn_on")
 
-    msg = await smart_home.async_handle_message(
-        hass, get_default_config(hass), request, enabled=False
-    )
-    await hass.async_block_till_done()
-
-    assert "event" in msg
-    msg = msg["event"]
-
-    assert not call_switch
-    assert msg["header"]["name"] == "ErrorResponse"
-    assert msg["header"]["namespace"] == "Alexa"
-    assert msg["payload"]["type"] == "BRIDGE_UNREACHABLE"
+    with pytest.raises(AssertionError):
+        await smart_home.async_handle_message(
+            hass, get_default_config(hass), request, enabled=False
+        )
+        await hass.async_block_till_done()
 
 
 async def test_endpoint_good_health(hass: HomeAssistant) -> None:
@@ -3847,12 +3872,12 @@ async def test_vacuum_discovery(hass: HomeAssistant) -> None:
         "docked",
         {
             "friendly_name": "Test vacuum 1",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_RETURN_HOME
-            | vacuum.SUPPORT_PAUSE,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.PAUSE,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3888,12 +3913,12 @@ async def test_vacuum_fan_speed(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 2",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_PAUSE
-            | vacuum.SUPPORT_FAN_SPEED,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.PAUSE
+            | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
             "fan_speed": "medium",
         },
@@ -4017,12 +4042,12 @@ async def test_vacuum_pause(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 3",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_PAUSE
-            | vacuum.SUPPORT_FAN_SPEED,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.PAUSE
+            | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
             "fan_speed": "medium",
         },
@@ -4055,12 +4080,12 @@ async def test_vacuum_resume(hass: HomeAssistant) -> None:
         "docked",
         {
             "friendly_name": "Test vacuum 4",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_PAUSE
-            | vacuum.SUPPORT_FAN_SPEED,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.PAUSE
+            | VacuumEntityFeature.FAN_SPEED,
             "fan_speed_list": ["off", "low", "medium", "high", "turbo", "super_sucker"],
             "fan_speed": "medium",
         },
@@ -4083,9 +4108,9 @@ async def test_vacuum_discovery_no_turn_on(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 5",
-            "supported_features": vacuum.SUPPORT_TURN_OFF
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_RETURN_HOME,
+            "supported_features": VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.RETURN_HOME,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4113,9 +4138,9 @@ async def test_vacuum_discovery_no_turn_off(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 6",
-            "supported_features": vacuum.SUPPORT_TURN_ON
-            | vacuum.SUPPORT_START
-            | vacuum.SUPPORT_RETURN_HOME,
+            "supported_features": VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.RETURN_HOME,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4144,7 +4169,8 @@ async def test_vacuum_discovery_no_turn_on_or_off(hass: HomeAssistant) -> None:
         "cleaning",
         {
             "friendly_name": "Test vacuum 7",
-            "supported_features": vacuum.SUPPORT_START | vacuum.SUPPORT_RETURN_HOME,
+            "supported_features": VacuumEntityFeature.START
+            | VacuumEntityFeature.RETURN_HOME,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4260,7 +4286,7 @@ async def test_initialize_camera_stream(
         msg = await smart_home.async_handle_message(
             hass, get_default_config(hass), request
         )
-        await hass.async_block_till_done()
+        await hass.async_stop()
 
     assert "event" in msg
     response = msg["event"]
@@ -4341,3 +4367,28 @@ async def test_api_message_sets_authorized(hass: HomeAssistant) -> None:
     config._store.set_authorized.assert_not_called()
     await smart_home.async_handle_message(hass, config, msg)
     config._store.set_authorized.assert_called_once_with(True)
+
+
+async def test_alexa_config(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test all methods of the AlexaConfig class."""
+    config = {
+        "filter": entityfilter.FILTER_SCHEMA({"include_domains": ["sensor"]}),
+    }
+    test_config = smart_home.AlexaConfig(hass, config)
+    await test_config.async_initialize()
+    assert not test_config.supports_auth
+    assert not test_config.should_report_state
+    assert test_config.endpoint is None
+    assert test_config.entity_config == {}
+    assert test_config.user_identifier() == ""
+    assert test_config.locale is None
+    assert test_config.should_expose("sensor.test")
+    assert not test_config.should_expose("switch.test")
+    with patch.object(test_config, "_auth", AsyncMock()):
+        test_config._auth.async_invalidate_access_token = MagicMock()
+        test_config.async_invalidate_access_token()
+        assert len(test_config._auth.async_invalidate_access_token.mock_calls)
+        await test_config.async_accept_grant("grant_code")
+        test_config._auth.async_do_auth.assert_called_once_with("grant_code")

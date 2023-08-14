@@ -264,6 +264,8 @@ async def test_update_entity_ha_not_running(
     """Test update occurs only after HA is running."""
     await hass.async_stop()
 
+    client.async_send_command.return_value = {"updates": []}
+
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -341,7 +343,9 @@ async def test_update_entity_progress(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "success": False, "reInterview": False}
+    }
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -437,7 +441,9 @@ async def test_update_entity_install_failed(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "success": False, "reInterview": False}
+    }
 
     # Test install call - we expect it to finish fail
     install_task = hass.async_create_task(
@@ -577,6 +583,7 @@ async def test_update_entity_delay(
 ) -> None:
     """Test update occurs on a delay after HA starts."""
     client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"updates": []}
     await hass.async_stop()
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
@@ -710,7 +717,9 @@ async def test_update_entity_full_restore_data_update_available(
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] == "11.2.4"
 
-    client.async_send_command.return_value = {"success": True}
+    client.async_send_command.return_value = {
+        "result": {"status": 255, "success": True, "reInterview": False}
+    }
 
     # Test successful install call without a version
     install_task = hass.async_create_task(

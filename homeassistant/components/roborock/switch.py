@@ -9,13 +9,11 @@ from typing import Any
 
 from roborock.api import AttributeCache
 from roborock.command_cache import CacheableAttribute
-from roborock.local_api import RoborockLocalClient
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -86,6 +84,25 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         icon="mdi:bell-cancel",
         entity_category=EntityCategory.CONFIG,
     ),
+    RoborockSwitchDescription(
+        cache_key=CacheableAttribute.valley_electricity_timer,
+        update_value=lambda cache, value: cache.update_value(
+            [
+                cache.value.get("start_hour"),
+                cache.value.get("start_minute"),
+                cache.value.get("end_hour"),
+                cache.value.get("end_minute"),
+            ]
+        )
+        if value
+        else cache.close_value(),
+        attribute="enabled",
+        key="off_peak_switch",
+        translation_key="off_peak_switch",
+        icon="mdi:power-plug",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
 ]
 
 
@@ -121,9 +138,8 @@ async def async_setup_entry(
             valid_entities.append(
                 RoborockSwitch(
                     f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
-                    coordinator.device_info,
+                    coordinator,
                     description,
-                    coordinator.api,
                 )
             )
     async_add_entities(valid_entities)
@@ -137,13 +153,12 @@ class RoborockSwitch(RoborockEntity, SwitchEntity):
     def __init__(
         self,
         unique_id: str,
-        device_info: DeviceInfo,
-        description: RoborockSwitchDescription,
-        api: RoborockLocalClient,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: RoborockSwitchDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(unique_id, device_info, api)
-        self.entity_description = description
+        self.entity_description = entity_description
+        super().__init__(unique_id, coordinator.device_info, coordinator.api)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""

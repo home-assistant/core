@@ -528,6 +528,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "connectable": False,
         "domain": "xiaomi_ble",
+        "service_data_uuid": "0000181d-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "xiaomi_ble",
         "service_data_uuid": "0000fd50-0000-1000-8000-00805f9b34fb",
     },
     {

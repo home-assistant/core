@@ -1304,9 +1304,7 @@ async def test_missing_discover_abbreviations(
                     and match[0] not in ABBREVIATIONS_WHITE_LIST
                 ):
                     missing.append(
-                        "{}: no abbreviation for {} ({})".format(
-                            fil, match[1], match[0]
-                        )
+                        f"{fil}: no abbreviation for {match[1]} ({match[0]})"
                     )
 
     assert not missing

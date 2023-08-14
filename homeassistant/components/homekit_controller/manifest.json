@@ -14,6 +14,6 @@
   "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
   "iot_class": "local_push",
   "loggers": ["aiohomekit", "commentjson"],
-  "requirements": ["aiohomekit==2.6.11"],
+  "requirements": ["aiohomekit==2.6.15"],
   "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."]
 }

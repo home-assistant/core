@@ -57,6 +57,7 @@ CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
 CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
 CONF_IS_NITROUS_OXIDE = "is_nitrous_oxide"
 CONF_IS_OZONE = "is_ozone"
+CONF_IS_PH = "is_ph"
 CONF_IS_PM1 = "is_pm1"
 CONF_IS_PM10 = "is_pm10"
 CONF_IS_PM25 = "is_pm25"
@@ -107,6 +108,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.OZONE: [{CONF_TYPE: CONF_IS_OZONE}],
     SensorDeviceClass.POWER: [{CONF_TYPE: CONF_IS_POWER}],
     SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_IS_POWER_FACTOR}],
+    SensorDeviceClass.PH: [{CONF_TYPE: CONF_IS_PH}],
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_IS_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
@@ -167,6 +169,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_OZONE,
                     CONF_IS_POWER,
                     CONF_IS_POWER_FACTOR,
+                    CONF_IS_PH,
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,

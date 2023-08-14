@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util, ulid as ulid_util
 DATA_STORE = "thread.datasets"
 STORAGE_KEY = "thread.datasets"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,7 +86,9 @@ class DatasetStoreStore(Store):
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         if old_major_version == 1:
+            data = old_data
             if old_minor_version < 2:
+                # Deduplicate datasets
                 datasets: dict[str, DatasetEntry] = {}
                 preferred_dataset = old_data["preferred_dataset"]
 
@@ -156,6 +158,9 @@ class DatasetStoreStore(Store):
                     "preferred_dataset": preferred_dataset,
                     "datasets": [dataset.to_json() for dataset in datasets.values()],
                 }
+            if old_minor_version < 3:
+                # Add border agent ID
+                data.setdefault("preferred_border_agent_id", None)
 
         return data
 
@@ -167,6 +172,7 @@ class DatasetStore:
         """Initialize the dataset store."""
         self.hass = hass
         self.datasets: dict[str, DatasetEntry] = {}
+        self._preferred_border_agent_id: str | None = None
         self._preferred_dataset: str | None = None
         self._store: Store[dict[str, Any]] = DatasetStoreStore(
             hass,
@@ -259,6 +265,17 @@ class DatasetStore:
         """Get dataset by id."""
         return self.datasets.get(dataset_id)
 
+    @callback
+    def async_get_preferred_border_agent_id(self) -> str | None:
+        """Get preferred border agent id."""
+        return self._preferred_border_agent_id
+
+    @callback
+    def async_set_preferred_border_agent_id(self, border_agent_id: str) -> None:
+        """Set preferred border agent id."""
+        self._preferred_border_agent_id = border_agent_id
+        self.async_schedule_save()
+
     @property
     @callback
     def preferred_dataset(self) -> str | None:
@@ -279,6 +296,7 @@ class DatasetStore:
         data = await self._store.async_load()
 
         datasets: dict[str, DatasetEntry] = {}
+        preferred_border_agent_id: str | None = None
         preferred_dataset: str | None = None
 
         if data is not None:
@@ -290,9 +308,11 @@ class DatasetStore:
                     source=dataset["source"],
                     tlv=dataset["tlv"],
                 )
+            preferred_border_agent_id = data["preferred_border_agent_id"]
             preferred_dataset = data["preferred_dataset"]
 
         self.datasets = datasets
+        self._preferred_border_agent_id = preferred_border_agent_id
         self._preferred_dataset = preferred_dataset
 
     @callback
@@ -305,6 +325,7 @@ class DatasetStore:
         """Return data of datasets to store in a file."""
         data: dict[str, Any] = {}
         data["datasets"] = [dataset.to_json() for dataset in self.datasets.values()]
+        data["preferred_border_agent_id"] = self._preferred_border_agent_id
         data["preferred_dataset"] = self._preferred_dataset
         return data
 
@@ -329,6 +350,20 @@ async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:
     if (entry := store.async_get(dataset_id)) is None:
         return None
     return entry.tlv
+
+
+async def async_get_preferred_border_agent_id(hass: HomeAssistant) -> str | None:
+    """Get the preferred border agent ID."""
+    store = await async_get_store(hass)
+    return store.async_get_preferred_border_agent_id()
+
+
+async def async_set_preferred_border_agent_id(
+    hass: HomeAssistant, border_agent_id: str
+) -> None:
+    """Get the preferred border agent ID."""
+    store = await async_get_store(hass)
+    store.async_set_preferred_border_agent_id(border_agent_id)
 
 
 async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:

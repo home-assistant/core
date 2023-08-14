@@ -4,17 +4,14 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lastfm.const import (
-    CONF_USERS,
-    DOMAIN,
-)
+from homeassistant.components.lastfm.const import CONF_USERS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import API_KEY, USERNAME_1
+from . import API_KEY, USERNAME_1, MockUser
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
@@ -28,7 +25,7 @@ LEGACY_CONFIG = {
 
 async def test_legacy_migration(hass: HomeAssistant) -> None:
     """Test migration from yaml to config flow."""
-    with patch("pylast.User", return_value=None):
+    with patch("pylast.User", return_value=MockUser()):
         assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
         await hass.async_block_till_done()
     entries = hass.config_entries.async_entries(DOMAIN)

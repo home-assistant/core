@@ -51,10 +51,11 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_state_added_domain,
     async_track_time_interval,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
@@ -317,14 +318,16 @@ class DeviceTrackerWatcher(WatcherBase):
             self._async_process_device_state(state)
 
     @callback
-    def _async_process_device_event(self, event: Event) -> None:
+    def _async_process_device_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Process a device tracker state change event."""
         self._async_process_device_state(event.data["new_state"])
 
     @callback
-    def _async_process_device_state(self, state: State) -> None:
+    def _async_process_device_state(self, state: State | None) -> None:
         """Process a device tracker state."""
-        if state.state != STATE_HOME:
+        if state is None or state.state != STATE_HOME:
             return
 
         attributes = state.attributes

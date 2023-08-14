@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-import json
 import logging
 import os
 from typing import Any, Final
 from unittest import mock
 
+from aiohomekit.hkjson import loads as hkloads
 from aiohomekit.model import (
     Accessories,
     AccessoriesState,
@@ -185,7 +185,7 @@ async def setup_accessories_from_file(hass, path):
     accessories_fixture = await hass.async_add_executor_job(
         load_fixture, os.path.join("homekit_controller", path)
     )
-    accessories_json = json.loads(accessories_fixture)
+    accessories_json = hkloads(accessories_fixture)
     accessories = Accessories.from_list(accessories_json)
     return accessories
 

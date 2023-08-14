@@ -7,12 +7,12 @@ from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import attr
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
@@ -305,6 +305,7 @@ class MqttData:
     )
     discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
+    issues: dict[str, set[str]] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
