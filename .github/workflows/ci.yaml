@@ -735,6 +735,8 @@ jobs:
         if: needs.info.outputs.test_full_suite == 'true'
         timeout-minutes: 60
         id: pytest-full
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
@@ -759,6 +761,8 @@ jobs:
         timeout-minutes: 10
         id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
@@ -877,6 +881,8 @@ jobs:
         timeout-minutes: 20
         id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
@@ -994,6 +1000,8 @@ jobs:
         timeout-minutes: 20
         id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
