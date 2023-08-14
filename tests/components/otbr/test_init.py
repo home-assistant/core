@@ -198,6 +198,22 @@ async def test_config_entry_not_ready(hass: HomeAssistant, error) -> None:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
 
+async def test_border_agent_id_not_supported(hass: HomeAssistant) -> None:
+    """Test border router does not support border agent ID."""
+
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ), patch("python_otbr_api.OTBR.get_border_agent_id", return_value=None):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+
 async def test_config_entry_update(hass: HomeAssistant) -> None:
     """Test update config entry settings."""
     config_entry = MockConfigEntry(
