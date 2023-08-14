@@ -205,7 +205,11 @@ async def setup_smartapp_endpoint(hass: HomeAssistant, clean: bool):
     """
     if hass.data.get(DOMAIN):
         # already setup
-        return
+        if not clean:
+            return
+
+        # We're cleaning up, so unload it.
+        await unload_smartapp_endpoint(hass)
 
     # Get/create config to store a unique id for this hass instance.
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
