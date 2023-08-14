@@ -114,7 +114,9 @@ class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         """Device info for the controller."""
         data = self.coordinator.data
         configuration_url = (
-            f"https://{data.remoteaccess}" if data.remoteaccess else None
+            f"https://{data.remoteaccess}"
+            if data.remoteaccessenabled
+            else f"http://{self._config_entry.data[CONF_IP_ADDRESS]}"
         )
         return DeviceInfo(
             configuration_url=configuration_url,
