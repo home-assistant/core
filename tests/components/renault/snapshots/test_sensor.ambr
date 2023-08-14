@@ -404,7 +404,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': 'mdi:timer',
       'original_name': 'Charging remaining time',
       'platform': 'renault',
@@ -1100,7 +1100,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': 'mdi:timer',
       'original_name': 'Charging remaining time',
       'platform': 'renault',
@@ -1790,7 +1790,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': 'mdi:timer',
       'original_name': 'Charging remaining time',
       'platform': 'renault',
@@ -2803,7 +2803,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': 'mdi:timer',
       'original_name': 'Charging remaining time',
       'platform': 'renault',
@@ -3417,7 +3417,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'device_class': None,
+      'device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'device_id': <ANY>,
       'disabled_by': None,
       'domain': 'sensor',
@@ -3499,7 +3499,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': 'mdi:timer',
       'original_name': 'Charging remaining time',
       'platform': 'renault',
@@ -4107,7 +4107,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'device_class': None,
+      'device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'device_id': <ANY>,
       'disabled_by': None,
       'domain': 'sensor',
@@ -4189,7 +4189,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': 'mdi:timer',
       'original_name': 'Charging remaining time',
       'platform': 'renault',
