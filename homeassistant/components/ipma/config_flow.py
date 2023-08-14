@@ -22,9 +22,12 @@ class IpmaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
-            unique_id = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match(
+                {
+                    CONF_LATITUDE: user_input[CONF_LATITUDE],
+                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                }
+            )
 
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
