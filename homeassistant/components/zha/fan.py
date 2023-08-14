@@ -27,6 +27,7 @@ from homeassistant.util.percentage import (
 )
 
 from .core import discovery
+from .core.cluster_handlers import wrap_zigpy_exceptions
 from .core.const import (
     CLUSTER_HANDLER_FAN,
     DATA_ZHA,
@@ -206,7 +207,10 @@ class FanGroup(BaseFan, ZhaGroupEntity):
 
     async def _async_set_fan_mode(self, fan_mode: int) -> None:
         """Set the fan mode for the group."""
-        await self._fan_cluster_handler.write_attributes_safe({"fan_mode": fan_mode})
+
+        with wrap_zigpy_exceptions():
+            await self._fan_cluster_handler.write_attributes({"fan_mode": fan_mode})
+
         self.async_set_state(0, "fan_mode", fan_mode)
 
     async def async_update(self) -> None:

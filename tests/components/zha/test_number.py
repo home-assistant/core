@@ -9,8 +9,10 @@ import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -162,8 +164,9 @@ async def test_number(
             {"entity_id": entity_id, "value": 30.0},
             blocking=True,
         )
-        assert len(cluster.write_attributes.mock_calls) == 1
-        assert cluster.write_attributes.call_args == call({"present_value": 30.0})
+        assert cluster.write_attributes.mock_calls == [
+            call({"present_value": 30.0}, manufacturer=None)
+        ]
         cluster.PLUGGED_ATTR_READS["present_value"] = 30.0
 
     # test rejoin
@@ -200,7 +203,12 @@ async def test_number(
     ),
 )
 async def test_level_control_number(
-    hass: HomeAssistant, light, zha_device_joined, attr, initial_value, new_value
+    hass: HomeAssistant,
+    light: ZHADevice,
+    zha_device_joined,
+    attr: str,
+    initial_value: int,
+    new_value: int,
 ) -> None:
     """Test ZHA level control number entities - new join."""
 
@@ -219,8 +227,7 @@ async def test_level_control_number(
     )
     assert entity_id is not None
 
-    assert level_control_cluster.read_attributes.call_count == 3
-    assert (
+    assert level_control_cluster.read_attributes.mock_calls == [
         call(
             [
                 "on_off_transition_time",
@@ -232,21 +239,13 @@ async def test_level_control_number(
             allow_cache=True,
             only_cache=False,
             manufacturer=None,
-        )
-        in level_control_cluster.read_attributes.call_args_list
-    )
-
-    assert (
+        ),
         call(
             ["start_up_current_level"],
             allow_cache=True,
             only_cache=False,
             manufacturer=None,
-        )
-        in level_control_cluster.read_attributes.call_args_list
-    )
-
-    assert (
+        ),
         call(
             [
                 "current_level",
@@ -254,9 +253,8 @@ async def test_level_control_number(
             allow_cache=False,
             only_cache=False,
             manufacturer=None,
-        )
-        in level_control_cluster.read_attributes.call_args_list
-    )
+        ),
+    ]
 
     state = hass.states.get(entity_id)
     assert state
@@ -277,10 +275,9 @@ async def test_level_control_number(
         blocking=True,
     )
 
-    assert level_control_cluster.write_attributes.call_count == 1
-    assert level_control_cluster.write_attributes.call_args[0][0] == {
-        attr: new_value,
-    }
+    assert level_control_cluster.write_attributes.mock_calls == [
+        call({attr: new_value}, manufacturer=None)
+    ]
 
     state = hass.states.get(entity_id)
     assert state
@@ -295,36 +292,34 @@ async def test_level_control_number(
     )
     # the mocking doesn't update the attr cache so this flips back to initial value
     assert hass.states.get(entity_id).state == str(initial_value)
-    assert level_control_cluster.read_attributes.call_count == 1
-    assert (
+    assert level_control_cluster.read_attributes.mock_calls == [
         call(
-            [
-                attr,
-            ],
+            [attr],
             allow_cache=False,
             only_cache=False,
             manufacturer=None,
         )
-        in level_control_cluster.read_attributes.call_args_list
-    )
+    ]
 
     level_control_cluster.write_attributes.reset_mock()
     level_control_cluster.write_attributes.side_effect = ZigbeeException
 
-    await hass.services.async_call(
-        "number",
-        "set_value",
-        {
-            "entity_id": entity_id,
-            "value": new_value,
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {
+                "entity_id": entity_id,
+                "value": new_value,
+            },
+            blocking=True,
+        )
 
-    assert level_control_cluster.write_attributes.call_count == 1
-    assert level_control_cluster.write_attributes.call_args[0][0] == {
-        attr: new_value,
-    }
+    assert level_control_cluster.write_attributes.mock_calls == [
+        call({attr: new_value}, manufacturer=None),
+        call({attr: new_value}, manufacturer=None),
+        call({attr: new_value}, manufacturer=None),
+    ]
     assert hass.states.get(entity_id).state == str(initial_value)
 
 
@@ -333,7 +328,12 @@ async def test_level_control_number(
     (("start_up_color_temperature", 500, 350),),
 )
 async def test_color_number(
-    hass: HomeAssistant, light, zha_device_joined, attr, initial_value, new_value
+    hass: HomeAssistant,
+    light: ZHADevice,
+    zha_device_joined,
+    attr: str,
+    initial_value: int,
+    new_value: int,
 ) -> None:
     """Test ZHA color number entities - new join."""
 
@@ -409,9 +409,7 @@ async def test_color_number(
     assert color_cluster.read_attributes.call_count == 1
     assert (
         call(
-            [
-                attr,
-            ],
+            [attr],
             allow_cache=False,
             only_cache=False,
             manufacturer=None,
@@ -422,18 +420,20 @@ async def test_color_number(
     color_cluster.write_attributes.reset_mock()
     color_cluster.write_attributes.side_effect = ZigbeeException
 
-    await hass.services.async_call(
-        "number",
-        "set_value",
-        {
-            "entity_id": entity_id,
-            "value": new_value,
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {
+                "entity_id": entity_id,
+                "value": new_value,
+            },
+            blocking=True,
+        )
 
-    assert color_cluster.write_attributes.call_count == 1
-    assert color_cluster.write_attributes.call_args[0][0] == {
-        attr: new_value,
-    }
+    assert color_cluster.write_attributes.mock_calls == [
+        call({attr: new_value}, manufacturer=None),
+        call({attr: new_value}, manufacturer=None),
+        call({attr: new_value}, manufacturer=None),
+    ]
     assert hass.states.get(entity_id).state == str(initial_value)

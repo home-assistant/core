@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Iterator
+import contextlib
 from enum import Enum
 import functools
 import logging
@@ -55,24 +56,31 @@ _FuncType = Callable[_P, Awaitable[Any]]
 _ReturnFuncType = Callable[_P, Coroutine[Any, Any, Any]]
 
 
+@contextlib.contextmanager
+def wrap_zigpy_exceptions() -> Iterator[None]:
+    """Wrap zigpy exceptions in `HomeAssistantError` exceptions."""
+    try:
+        yield
+    except asyncio.TimeoutError as exc:
+        raise HomeAssistantError(
+            "Failed to send request: device did not respond"
+        ) from exc
+    except zigpy.exceptions.ZigbeeException as exc:
+        message = "Failed to send request"
+
+        if str(exc):
+            message = f"{message}: {exc}"
+
+        raise HomeAssistantError(message) from exc
+
+
 def retry_request(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
     """Send a request with retries and wrap expected zigpy exceptions."""
 
     @functools.wraps(func)
     async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> Any:
-        try:
+        with wrap_zigpy_exceptions():
             return await RETRYABLE_REQUEST_DECORATOR(func)(*args, **kwargs)
-        except asyncio.TimeoutError as exc:
-            raise HomeAssistantError(
-                "Failed to send request: device did not respond"
-            ) from exc
-        except zigpy.exceptions.ZigbeeException as exc:
-            message = "Failed to send request"
-
-            if str(exc):
-                message = f"{message}: {exc}"
-
-            raise HomeAssistantError(message) from exc
 
     return wrapper
 
@@ -511,7 +519,7 @@ class ClusterHandler(LogMixin):
         for record in res[0]:
             if record.status != Status.SUCCESS:
                 try:
-                    name = self.cluster.attributes_by_id[record.attrid]
+                    name = self.cluster.attributes[record.attrid].name
                     value = attributes.get(name, "unknown")
                 except KeyError:
                     name = f"0x{record.attrid:04x}"

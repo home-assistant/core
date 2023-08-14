@@ -30,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import find_entity_id
@@ -200,8 +201,9 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert len(cluster.write_attributes.mock_calls) == 1
-        assert cluster.write_attributes.call_args == call({"frost_lock_reset": 0})
+        assert cluster.write_attributes.mock_calls == [
+            call({"frost_lock_reset": 0}, manufacturer=None)
+        ]
 
     state = hass.states.get(entity_id)
     assert state
@@ -210,11 +212,17 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
     cluster.write_attributes.reset_mock()
     cluster.write_attributes.side_effect = ZigbeeException
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"frost_lock_reset": 0})
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    # There are three retries
+    assert cluster.write_attributes.mock_calls == [
+        call({"frost_lock_reset": 0}, manufacturer=None),
+        call({"frost_lock_reset": 0}, manufacturer=None),
+        call({"frost_lock_reset": 0}, manufacturer=None),
+    ]

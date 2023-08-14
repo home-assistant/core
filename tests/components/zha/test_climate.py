@@ -1,8 +1,10 @@
 """Test ZHA climate."""
+from typing import Literal
 from unittest.mock import patch
 
 import pytest
 import zhaquirks.sinope.thermostat
+from zhaquirks.sinope.thermostat import SinopeTechnologiesThermostatCluster
 import zhaquirks.tuya.ts0601_trv
 import zigpy.profiles
 import zigpy.types
@@ -45,6 +47,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -553,7 +556,11 @@ async def test_hvac_modes(
     ),
 )
 async def test_target_temperature(
-    hass: HomeAssistant, device_climate_mock, sys_mode, preset, target_temp
+    hass: HomeAssistant,
+    device_climate_mock,
+    sys_mode: Thermostat.SystemMode,
+    preset: Literal[PRESET_AWAY] | None,
+    target_temp: int,
 ) -> None:
     """Test target temperature property."""
 
@@ -720,15 +727,23 @@ async def test_preset_setting(hass: HomeAssistant, device_climate_sinope) -> Non
 
     # unsuccessful occupancy change
     thrm_cluster.write_attributes.return_value = [
-        zcl_f.WriteAttributesResponse.deserialize(b"\x01\x00\x00")[0]
+        zcl_f.WriteAttributesResponse(
+            [
+                zcl_f.WriteAttributesStatusRecord(
+                    status=zcl_f.Status.FAILURE,
+                    attrid=SinopeTechnologiesThermostatCluster.AttributeDefs.set_occupancy.id,
+                )
+            ]
+        )
     ]
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+            blocking=True,
+        )
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
@@ -738,7 +753,9 @@ async def test_preset_setting(hass: HomeAssistant, device_climate_sinope) -> Non
     # successful occupancy change
     thrm_cluster.write_attributes.reset_mock()
     thrm_cluster.write_attributes.return_value = [
-        zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]
+        zcl_f.WriteAttributesResponse(
+            [zcl_f.WriteAttributesStatusRecord(status=zcl_f.Status.SUCCESS)]
+        )
     ]
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -755,14 +772,23 @@ async def test_preset_setting(hass: HomeAssistant, device_climate_sinope) -> Non
     # unsuccessful occupancy change
     thrm_cluster.write_attributes.reset_mock()
     thrm_cluster.write_attributes.return_value = [
-        zcl_f.WriteAttributesResponse.deserialize(b"\x01\x01\x01")[0]
+        zcl_f.WriteAttributesResponse(
+            [
+                zcl_f.WriteAttributesStatusRecord(
+                    status=zcl_f.Status.FAILURE,
+                    attrid=SinopeTechnologiesThermostatCluster.AttributeDefs.set_occupancy.id,
+                )
+            ]
+        )
     ]
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
-        blocking=True,
-    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+            blocking=True,
+        )
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
@@ -772,7 +798,9 @@ async def test_preset_setting(hass: HomeAssistant, device_climate_sinope) -> Non
     # successful occupancy change
     thrm_cluster.write_attributes.reset_mock()
     thrm_cluster.write_attributes.return_value = [
-        zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]
+        zcl_f.WriteAttributesResponse(
+            [zcl_f.WriteAttributesStatusRecord(status=zcl_f.Status.SUCCESS)]
+        )
     ]
     await hass.services.async_call(
         CLIMATE_DOMAIN,
