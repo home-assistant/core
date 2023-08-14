@@ -36,6 +36,38 @@
         "name": "Grid status"
       }
     },
+    "select": {
+      "relay_mode": {
+        "state": {
+          "standard": "Standard",
+          "battery": "Battery Level"
+        }
+      },
+      "relay_grid_action": {
+        "state": {
+          "powered": "Powered",
+          "not_powered": "Not Powered",
+          "schedule": "Follow Schedule",
+          "none": "None"
+        }
+      },
+      "relay_microgrid_action": {
+        "state": {
+          "powered": "Powered",
+          "not_powered": "Not Powered",
+          "schedule": "Follow Schedule",
+          "none": "None"
+        }
+      },
+      "relay_generator_action": {
+        "state": {
+          "powered": "Powered",
+          "not_powered": "Not Powered",
+          "schedule": "Follow Schedule",
+          "none": "None"
+        }
+      }
+    },
     "sensor": {
       "last_reported": {
         "name": "Last reported"
