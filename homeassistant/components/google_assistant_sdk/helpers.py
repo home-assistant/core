@@ -59,7 +59,9 @@ class CommandResponse:
     text: str
 
 
-async def create_credentials(hass: HomeAssistant, entry: ConfigEntry) -> Credentials:
+async def async_create_credentials(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> Credentials:
     """Create credentials to pass to TextAssistant."""
     # Credentials already exist in memory, return that.
     if DATA_CREDENTIALS in hass.data[DOMAIN][entry.entry_id]:
@@ -97,7 +99,7 @@ async def async_send_text_commands(
     # There can only be 1 entry (config_flow has single_instance_allowed)
     entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    credentials = await create_credentials(hass, entry)
+    credentials = await async_create_credentials(hass, entry)
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
     with TextAssistant(
         credentials, language_code, audio_out=bool(media_players)
