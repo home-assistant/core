@@ -90,7 +90,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 class FlowManagerResourceView(_BaseFlowManagerView):
     """View to interact with the flow manager."""
 
-    async def get(self, request: web.Request, flow_id: str) -> web.Response:
+    async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         try:
             result = await self._flow_mgr.async_configure(flow_id)
