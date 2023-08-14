@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster, IasZone
@@ -350,8 +349,11 @@ class IASZoneClusterHandler(ClusterHandler):
             self.debug("Updated alarm state: %s", zone_status)
         elif command_id == 1:
             self.debug("Enroll requested")
-            res = self._cluster.enroll_response(0, 0)
-            self._cluster.create_catching_task(res)
+            self._cluster.create_catching_task(
+                self.enroll_response(
+                    enroll_response_code=IasZone.EnrollResponse.Success, zone_id=0
+                )
+            )
 
     async def async_configure(self):
         """Configure IAS device."""
@@ -365,24 +367,12 @@ class IASZoneClusterHandler(ClusterHandler):
         await self.bind()
         ieee = self.cluster.endpoint.device.application.state.node_info.ieee
 
-        try:
-            res = await self._cluster.write_attributes({"cie_addr": ieee})
-            self.debug(
-                "wrote cie_addr: %s to '%s' cluster: %s",
-                str(ieee),
-                self._cluster.ep_attribute,
-                res[0],
-            )
-        except ZigbeeException as ex:
-            self.debug(
-                "Failed to write cie_addr: %s to '%s' cluster: %s",
-                str(ieee),
-                self._cluster.ep_attribute,
-                str(ex),
-            )
+        await self.write_attributes_safe({"cie_addr": ieee})
 
         self.debug("Sending pro-active IAS enroll response")
-        self._cluster.create_catching_task(self._cluster.enroll_response(0, 0))
+        await self.enroll_response(
+            enroll_response_code=IasZone.EnrollResponse.Success, zone_id=0
+        )
 
         self._status = ClusterHandlerStatus.CONFIGURED
         self.debug("finished IASZoneClusterHandler configuration")
