@@ -48,9 +48,9 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
         )
 
         self.controller = controller
+        self.yid = entry.data["yid"]
         self._name = entry.title
         self._model = entry.data["model"]
-        self._yid = entry.data["yid"]
         self._amount_of_zones = entry.data["zones"]
 
     @property
@@ -58,7 +58,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
         """Return information about the device."""
         return DeviceInfo(
             name=self._name,
-            identifiers={(DOMAIN, self._yid)},
+            identifiers={(DOMAIN, self.yid)},
             manufacturer=MANUFACTURER,
             model=self._model,
         )

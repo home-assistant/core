@@ -29,14 +29,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def fetch_device_info(self, host, access_token):
+    async def fetch_device_info(self, host: str, access_token: str):
         yarcli = AsyncYardianClient(
             async_get_clientsession(self.hass),
             host,
             access_token,
         )
-        device_info = await yarcli.fetch_device_info()
-        return device_info
+        return await yarcli.fetch_device_info()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
