@@ -84,16 +84,12 @@ class Switch(ZhaEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        result = await self._on_off_cluster_handler.turn_on()
-        if not result:
-            return
+        await self._on_off_cluster_handler.turn_on()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        result = await self._on_off_cluster_handler.turn_off()
-        if not result:
-            return
+        await self._on_off_cluster_handler.turn_off()
         self.async_write_ha_state()
 
     @callback
@@ -144,7 +140,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         result = await self._on_off_cluster_handler.on()
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+        if result[1] is not Status.SUCCESS:
             return
         self._state = True
         self.async_write_ha_state()
@@ -152,7 +148,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         result = await self._on_off_cluster_handler.off()
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+        if result[1] is not Status.SUCCESS:
             return
         self._state = False
         self.async_write_ha_state()

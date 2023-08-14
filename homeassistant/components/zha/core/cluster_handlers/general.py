@@ -11,6 +11,7 @@ from zigpy.zcl.clusters import general
 from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later
 
 from .. import registries
@@ -384,21 +385,19 @@ class OnOffClusterHandler(ClusterHandler):
         """Return cached value of on/off attribute."""
         return self.cluster.get("on_off")
 
-    async def turn_on(self) -> bool:
+    async def turn_on(self) -> None:
         """Turn the on off cluster on."""
         result = await self.on()
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
-            return False
+        if result[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to turn on: {result[1]}")
         self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
-        return True
 
-    async def turn_off(self) -> bool:
+    async def turn_off(self) -> None:
         """Turn the on off cluster off."""
         result = await self.off()
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
-            return False
+        if result[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to turn off: {result[1]}")
         self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
-        return True
 
     @callback
     def cluster_command(self, tsn, command_id, args):
