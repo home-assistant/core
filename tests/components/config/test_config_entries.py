@@ -828,7 +828,7 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
 @pytest.mark.parametrize(
     ("endpoint", "method"),
     [
-        ("/api/config/config_entries/options/flow", "get"),
+        ("/api/config/config_entries/options/flow", "post"),
         ("/api/config/config_entries/options/flow/1", "get"),
         ("/api/config/config_entries/options/flow/1", "post"),
     ],
