@@ -12,7 +12,7 @@ from typing import Any
 from aiohttp import web
 from async_timeout import timeout
 from httpx import HTTPStatusError, RequestError, TimeoutException
-import PIL
+import PIL.Image
 import voluptuous as vol
 import yarl
 
@@ -137,7 +137,7 @@ def get_image_type(image: bytes) -> str | None:
     imagefile = io.BytesIO(image)
     with contextlib.suppress(PIL.UnidentifiedImageError):
         img = PIL.Image.open(imagefile)
-        fmt = img.format.lower()
+        fmt = img.format.lower() if img.format else None
 
     if fmt is None:
         # if PIL can't figure it out, could be svg.
