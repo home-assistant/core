@@ -32,6 +32,7 @@ class ThreadRouterDiscoveryData:
     """Thread router discovery data."""
 
     addresses: list[str] | None
+    border_agent_id: str | None
     brand: str | None
     extended_address: str | None
     extended_pan_id: str | None
@@ -61,13 +62,16 @@ def async_discovery_data_from_service(
     # For legacy backwards compatibility zeroconf allows properties to be set
     # as strings but we never do that so we can safely cast here.
     service_properties = cast(dict[bytes, bytes | None], service.properties)
+
+    border_agent_id = service_properties.get(b"id")
     ext_addr = service_properties.get(b"xa")
     ext_pan_id = service_properties.get(b"xp")
-    network_name = try_decode(service_properties.get(b"nn"))
     model_name = try_decode(service_properties.get(b"mn"))
+    network_name = try_decode(service_properties.get(b"nn"))
     server = service.server
-    vendor_name = try_decode(service_properties.get(b"vn"))
     thread_version = try_decode(service_properties.get(b"tv"))
+    vendor_name = try_decode(service_properties.get(b"vn"))
+
     unconfigured = None
     brand = KNOWN_BRANDS.get(vendor_name)
     if brand == "homeassistant":
@@ -84,6 +88,7 @@ def async_discovery_data_from_service(
 
     return ThreadRouterDiscoveryData(
         addresses=service.parsed_addresses(),
+        border_agent_id=border_agent_id.hex() if border_agent_id is not None else None,
         brand=brand,
         extended_address=ext_addr.hex() if ext_addr is not None else None,
         extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,

@@ -280,9 +280,10 @@ class AlexaEntity:
 
     def friendly_name(self) -> str:
         """Return the Alexa API friendly name."""
-        return self.entity_conf.get(CONF_NAME, self.entity.name).translate(
-            TRANSLATION_TABLE
-        )
+        friendly_name: str = self.entity_conf.get(
+            CONF_NAME, self.entity.name
+        ).translate(TRANSLATION_TABLE)
+        return friendly_name
 
     def description(self) -> str:
         """Return the Alexa API description."""
@@ -725,7 +726,7 @@ class MediaPlayerCapabilities(AlexaEntity):
 class SceneCapabilities(AlexaEntity):
     """Class to represent Scene capabilities."""
 
-    def description(self):
+    def description(self) -> str:
         """Return the Alexa API description."""
         description = AlexaEntity.description(self)
         if "scene" not in description.casefold():

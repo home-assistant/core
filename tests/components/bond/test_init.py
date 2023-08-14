@@ -159,6 +159,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
+    config_entry.add_to_hass(hass)
 
     old_identifers = (DOMAIN, "device_id")
     new_identifiers = (DOMAIN, "ZXXX12345", "device_id")
@@ -169,8 +170,6 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
         manufacturer="any",
         name="old",
     )
-
-    config_entry.add_to_hass(hass)
 
     with patch_bond_bridge(), patch_bond_version(
         return_value={

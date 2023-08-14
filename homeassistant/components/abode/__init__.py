@@ -28,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import ATTRIBUTION, CONF_POLLING, DOMAIN, LOGGER
@@ -320,9 +321,9 @@ class AbodeDevice(AbodeEntity):
         }
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return entity.DeviceInfo(
+        return DeviceInfo(
             identifiers={(DOMAIN, self._device.id)},
             manufacturer="Abode",
             model=self._device.type,
