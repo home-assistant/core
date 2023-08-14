@@ -89,6 +89,7 @@ class RepairsFlowIndexView(FlowManagerIndexView):
     url = "/api/repairs/issues/fix"
     name = "api:repairs:issues:fix"
 
+    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
     @RequestDataValidator(
         vol.Schema(
             {
@@ -100,9 +101,6 @@ class RepairsFlowIndexView(FlowManagerIndexView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(permission=POLICY_EDIT)
-
         try:
             result = await self._flow_mgr.async_init(
                 data["handler"],
