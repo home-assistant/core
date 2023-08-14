@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, Host
+from reolink_aio.api import Host
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -284,8 +284,6 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
             self._attr_native_max_value = entity_description.get_max_value(
                 self._host.api, channel
             )
-        if self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS and entity_description.supported(self._host.api, 1):
-            self._attr_name = f"{entity_description.name} lens {self._channel}"
         self._attr_mode = entity_description.mode
         self._attr_unique_id = (
             f"{self._host.unique_id}_{channel}_{entity_description.key}"
