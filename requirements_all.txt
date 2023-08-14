@@ -583,7 +583,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.2.0
+caldav==1.3.6
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1
