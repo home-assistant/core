@@ -13,6 +13,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,12 +44,14 @@ RELAY_ENTITIES = (
         key="soc_low",
         translation_key="cutoff_battery_level",
         device_class=NumberDeviceClass.BATTERY,
+        entity_category=EntityCategory.CONFIG,
         value_fn=lambda relay: relay.soc_low,
     ),
     EnvoyRelayNumberEntityDescription(
         key="soc_high",
         translation_key="resume_battery_level",
         device_class=NumberDeviceClass.BATTERY,
+        entity_category=EntityCategory.CONFIG,
         value_fn=lambda relay: relay.soc_high,
     ),
 )
