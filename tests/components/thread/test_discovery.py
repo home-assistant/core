@@ -16,7 +16,8 @@ from . import (
     ROUTER_DISCOVERY_HASS_BAD_DATA,
     ROUTER_DISCOVERY_HASS_BAD_STATE_BITMAP,
     ROUTER_DISCOVERY_HASS_MISSING_DATA,
-    ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA,
+    ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA_XA,
+    ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA_XP,
     ROUTER_DISCOVERY_HASS_NO_ACTIVE_TIMESTAMP,
     ROUTER_DISCOVERY_HASS_NO_STATE_BITMAP,
     ROUTER_DISCOVERY_HASS_STATE_BITMAP_NOT_ACTIVE,
@@ -152,7 +153,7 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) 
 async def test_discover_routers_unconfigured(
     hass: HomeAssistant, mock_async_zeroconf: None, data, unconfigured
 ) -> None:
-    """Test discovering thread routers with bad or missing vendor mDNS data."""
+    """Test discovering thread routers and setting the unconfigured flag."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
     mock_async_zeroconf.async_remove_service_listener = AsyncMock()
     mock_async_zeroconf.async_get_service_info = AsyncMock()
@@ -195,7 +196,7 @@ async def test_discover_routers_unconfigured(
 @pytest.mark.parametrize(
     "data", (ROUTER_DISCOVERY_HASS_BAD_DATA, ROUTER_DISCOVERY_HASS_MISSING_DATA)
 )
-async def test_discover_routers_bad_data(
+async def test_discover_routers_bad_or_missing_optional_data(
     hass: HomeAssistant, mock_async_zeroconf: None, data
 ) -> None:
     """Test discovering thread routers with bad or missing vendor mDNS data."""
@@ -238,8 +239,15 @@ async def test_discover_routers_bad_data(
     )
 
 
-async def test_discover_routers_missing_mandatory_data(
-    hass: HomeAssistant, mock_async_zeroconf: None
+@pytest.mark.parametrize(
+    "service",
+    [
+        ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA_XA,
+        ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA_XP,
+    ],
+)
+async def test_discover_routers_bad_or_missing_mandatory_data(
+    hass: HomeAssistant, mock_async_zeroconf: None, service
 ) -> None:
     """Test discovering thread routers with missing mandatory mDNS data."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
@@ -261,12 +269,12 @@ async def test_discover_routers_missing_mandatory_data(
 
     # Discover a service with missing mandatory data
     mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
-        **ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA
+        **service
     )
     listener.add_service(
         None,
-        ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA["type_"],
-        ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA["name"],
+        service["type_"],
+        service["name"],
     )
     await hass.async_block_till_done()
     router_discovered_removed.assert_not_called()

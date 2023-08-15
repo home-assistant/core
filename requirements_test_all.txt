@@ -169,7 +169,7 @@ aioairq==0.2.4
 aioairzone-cloud==0.2.1
 
 # homeassistant.components.airzone
-aioairzone==0.6.5
+aioairzone==0.6.6
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -1226,7 +1226,7 @@ pyeconet==0.1.20
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.5.2
+pyenphase==1.6.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1289,7 +1289,7 @@ pyinsteon==1.4.3
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.14.2
+pyipp==0.14.3
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -1337,7 +1337,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.2
+pylitterbot==2023.4.4
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.1
@@ -1570,7 +1570,7 @@ python-opensky==0.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.4.0
+python-otbr-api==2.5.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -1677,7 +1677,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.6
+reolink-aio==0.7.7
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1686,7 +1686,7 @@ rflink==0.0.65
 ring-doorbell==0.7.2
 
 # homeassistant.components.roku
-rokuecp==0.18.0
+rokuecp==0.18.1
 
 # homeassistant.components.roomba
 roombapy==1.6.8
@@ -2025,7 +2025,7 @@ youtubeaio==1.1.5
 zamg==0.2.4
 
 # homeassistant.components.zeroconf
-zeroconf==0.76.0
+zeroconf==0.78.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
