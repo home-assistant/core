@@ -1,11 +1,11 @@
 """Select platform for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from pyenphase import EnvoyDryContactSettings
+from pyenphase import Envoy, EnvoyDryContactSettings
 from pyenphase.models.dry_contacts import DryContactAction, DryContactMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -24,7 +24,9 @@ class EnvoyRelayRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyDryContactSettings], str]
-    update_fn: Callable[[Any, Any, Any], Any]
+    update_fn: Callable[
+        [Envoy, EnvoyDryContactSettings, str], Coroutine[Any, Any, dict[str, Any]]
+    ]
 
 
 @dataclass
@@ -129,36 +131,34 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
         self,
         coordinator: EnphaseUpdateCoordinator,
         description: EnvoyRelaySelectEntityDescription,
-        relay: str,
+        relay_id: str,
     ) -> None:
         """Initialize the Enphase relay select entity."""
         super().__init__(coordinator, description)
         self.envoy = coordinator.envoy
-        assert self.envoy is not None
-        assert self.data is not None
-        self.enpower = self.data.enpower
-        assert self.enpower is not None
-        self._serial_number = self.enpower.serial_number
-        self.relay = self.data.dry_contact_settings[relay]
-        self.relay_id = relay
-        self._attr_unique_id = (
-            f"{self._serial_number}_relay_{relay}_{self.entity_description.key}"
-        )
+        enpower = self.data.enpower
+        assert enpower is not None
+        serial_number = enpower.serial_number
+        self._relay_id = relay_id
+        self._attr_unique_id = f"{serial_number}_relay_{relay_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, relay)},
+            identifiers={(DOMAIN, relay_id)},
             manufacturer="Enphase",
             model="Dry contact relay",
             name=self.relay.load_name,
-            sw_version=str(self.enpower.firmware_version),
-            via_device=(DOMAIN, self._serial_number),
+            sw_version=str(enpower.firmware_version),
+            via_device=(DOMAIN, serial_number),
         )
+
+    @property
+    def relay(self) -> EnvoyDryContactSettings:
+        """Return the relay object."""
+        return self.data.dry_contact_settings[self._relay_id]
 
     @property
     def current_option(self) -> str:
         """Return the state of the Enpower switch."""
-        return self.entity_description.value_fn(
-            self.data.dry_contact_settings[self.relay_id]
-        )
+        return self.entity_description.value_fn(self.relay)
 
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
