@@ -149,7 +149,6 @@ class SmhiWeather(WeatherEntity):
             name=name,
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
-        self._attr_condition = None
         self._attr_native_temperature = None
 
     @property
