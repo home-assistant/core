@@ -251,8 +251,11 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             condition = values.get(TMRW_ATTR_CONDITION)
             precipitation = values.get(TMRW_ATTR_PRECIPITATION)
             precipitation_probability = values.get(TMRW_ATTR_PRECIPITATION_PROBABILITY)
-            if precipitation_probability is not None:
+
+            try:
                 precipitation_probability = round(precipitation_probability)
+            except TypeError:
+                precipitation_probability = None
 
             temp = values.get(TMRW_ATTR_TEMPERATURE_HIGH)
             temp_low = None

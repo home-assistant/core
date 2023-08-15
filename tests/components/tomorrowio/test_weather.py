@@ -71,7 +71,7 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     assert updated_entry.disabled is False
 
 
-async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
+async def _setup_config_entry(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     data = _get_config_schema(hass, SOURCE_USER)(config)
     data[CONF_NAME] = DEFAULT_NAME
@@ -87,10 +87,10 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
     await hass.async_block_till_done()
 
 
-async def _setup_modern(hass: HomeAssistant, config: dict[str, Any]) -> State:
+async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     with freeze_time(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)):
-        await _setup(hass, config)
+        await _setup_config_entry(hass, config)
 
     return hass.states.get("weather.tomorrow_io_daily")
 
@@ -111,7 +111,7 @@ async def _setup_legacy(hass: HomeAssistant, config: dict[str, Any]) -> State:
     with freeze_time(
         datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)
     ) as frozen_time:
-        await _setup(hass, config)
+        await _setup_config_entry(hass, config)
         for entity_name in ("hourly", "nowcast"):
             _enable_entity(hass, f"weather.tomorrow_io_{entity_name}")
         await hass.async_block_till_done()
@@ -153,7 +153,7 @@ async def test_legacy_config_entry(hass: HomeAssistant) -> None:
 
 async def test_v4_weather(hass: HomeAssistant) -> None:
     """Test v4 weather data."""
-    weather_state = await _setup_modern(hass, API_V4_ENTRY_DATA)
+    weather_state = await _setup(hass, API_V4_ENTRY_DATA)
     assert weather_state.state == ATTR_CONDITION_SUNNY
     assert weather_state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
     assert len(weather_state.attributes[ATTR_FORECAST]) == 14
@@ -219,7 +219,7 @@ async def test_v4_forecast_service(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test multiple forecast."""
-    weather_state = await _setup_modern(hass, API_V4_ENTRY_DATA)
+    weather_state = await _setup(hass, API_V4_ENTRY_DATA)
     entity_id = weather_state.entity_id
 
     for forecast_type in ("daily", "hourly"):
@@ -249,7 +249,7 @@ async def test_forecast_subscription(
     client = await hass_ws_client(hass)
     freezer.move_to(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
 
-    weather_state = await _setup_modern(hass, API_V4_ENTRY_DATA)
+    weather_state = await _setup(hass, API_V4_ENTRY_DATA)
     entity_id = weather_state.entity_id
 
     await client.send_json_auto_id(
