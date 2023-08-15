@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature, PRECISION_HALVES, PRECISION_WHOLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -113,7 +113,7 @@ async def async_setup_entry(
                     ),
                     location,
                     device,
-                    hass.config.units.temperature_unit,
+                    UnitOfTemperature.FAHRENHEIT if device.units == "Fahrenheit" else UnitOfTemperature.CELSIUS
                 )
             )
 
@@ -180,6 +180,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return self._temperature_unit
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        return PRECISION_WHOLE if self.device.units == "Fahrenheit" else PRECISION_HALVES
 
     @property
     def current_temperature(self) -> float | None:
