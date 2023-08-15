@@ -147,7 +147,7 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
             identifiers={(DOMAIN, relay_id)},
             manufacturer="Enphase",
             model="Dry contact relay",
-            name=self.data.dry_contact_settings[relay_id].load_name,
+            name=self.relay.load_name,
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, serial_number),
         )
