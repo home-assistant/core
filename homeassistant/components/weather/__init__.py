@@ -427,6 +427,11 @@ class WeatherEntity(Entity, PostInit):
                 self.entity_id,
                 report_issue,
             )
+            if report_issue.startswith("create"):
+                report_issue = (
+                    "create a [bug report]"
+                    "(https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue)"
+                )
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -439,6 +444,7 @@ class WeatherEntity(Entity, PostInit):
                 translation_key="deprecated_weather_forecast",
                 translation_placeholders={
                     "platform": self.platform.platform_name,
+                    "report_issue": report_issue,
                 },
             )
             _reported_forecast = True

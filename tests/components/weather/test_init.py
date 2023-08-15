@@ -1293,7 +1293,10 @@ async def test_issue_forecast_deprecated(
     assert issue
     assert issue.issue_domain == "test"
     assert issue.issue_id == "deprecated_weather_forecast_test"
-    assert issue.translation_placeholders == {"platform": "test"}
+    assert issue.translation_placeholders == {
+        "platform": "test",
+        "report_issue": "report it to the custom integration author.",
+    }
 
     assert (
         "custom_components.test.weather::weather.testing is using a forecast attribute on an instance of WeatherEntity"
