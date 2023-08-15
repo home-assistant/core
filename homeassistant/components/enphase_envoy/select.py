@@ -153,15 +153,16 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
         )
 
     @property
+    def relay(self) -> EnvoyDryContactSettings:
+        """Return the relay object."""
+        return self.data.dry_contact_settings[self._relay_id]
+
+    @property
     def current_option(self) -> str:
         """Return the state of the Enpower switch."""
-        return self.entity_description.value_fn(
-            self.data.dry_contact_settings[self._relay_id]
-        )
+        return self.entity_description.value_fn(self.relay)
 
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
-        await self.entity_description.update_fn(
-            self.envoy, self.data.dry_contact_settings[self._relay_id], option
-        )
+        await self.entity_description.update_fn(self.envoy, self.relay, option)
         await self.coordinator.async_request_refresh()
