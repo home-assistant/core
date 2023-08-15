@@ -1,11 +1,11 @@
 """Select platform for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from pyenphase import EnvoyDryContactSettings
+from pyenphase import Envoy, EnvoyDryContactSettings
 from pyenphase.models.dry_contacts import DryContactAction, DryContactMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -24,7 +24,9 @@ class EnvoyRelayRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyDryContactSettings], str]
-    update_fn: Callable[[Any, Any, Any], Any]
+    update_fn: Callable[
+        [Envoy, EnvoyDryContactSettings, str], Coroutine[Any, Any, dict[str, Any]]
+    ]
 
 
 @dataclass
@@ -159,5 +161,7 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
-        await self.entity_description.update_fn(self.envoy, self._relay_id, option)
+        await self.entity_description.update_fn(
+            self.envoy, self.data.dry_contact_settings[self._relay_id], option
+        )
         await self.coordinator.async_request_refresh()
