@@ -5,17 +5,17 @@ from enum import IntFlag, StrEnum
 class LawnMowerActivity(StrEnum):
     """Activity state of lawn mower devices."""
 
-    # Device is in error state, needs assistance
     ERROR = "error"
+    """Device is in error state, needs assistance."""
 
-    # Paused during activity
     PAUSED = "paused"
+    """Paused during activity."""
 
-    # Device is mowing
     MOWING = "mowing"
+    """Device is mowing."""
 
-    # Device is docked
     DOCKED = "docked"
+    """Device is docked."""
 
 
 class LawnMowerEntityFeature(IntFlag):
