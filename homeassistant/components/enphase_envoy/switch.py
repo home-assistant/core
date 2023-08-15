@@ -43,8 +43,8 @@ class EnvoyDryContactRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyDryContactStatus], bool]
-    turn_on_fn: Callable[[Any, Any], Any]
-    turn_off_fn: Callable[[Any, Any], Any]
+    turn_on_fn: Callable[[Envoy, str], Coroutine[Any, Any, dict[str, Any]]]
+    turn_off_fn: Callable[[Envoy, str], Coroutine[Any, Any, dict[str, Any]]]
 
 
 @dataclass
@@ -157,21 +157,19 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         """Initialize the Enphase dry contact switch entity."""
         super().__init__(coordinator, description)
         self.envoy = coordinator.envoy
-        self.enpower = self.data.enpower
-        assert self.enpower is not None
+        enpower = self.data.enpower
+        assert enpower is not None
         self.relay_id = relay_id
-        self._serial_number = self.enpower.serial_number
-        self._attr_unique_id = (
-            f"{self._serial_number}_relay_{relay_id}_{description.key}"
-        )
-        self.relay = self.data.dry_contact_settings[relay_id]
+        serial_number = enpower.serial_number
+        self._attr_unique_id = f"{serial_number}_relay_{relay_id}_{description.key}"
+        relay = self.data.dry_contact_settings[relay_id]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, relay_id)},
             manufacturer="Enphase",
             model="Dry contact relay",
-            name=self.relay.load_name,
-            sw_version=str(self.enpower.firmware_version),
-            via_device=(DOMAIN, self.enpower.serial_number),
+            name=relay.load_name,
+            sw_version=str(enpower.firmware_version),
+            via_device=(DOMAIN, enpower.serial_number),
         )
 
     @property
