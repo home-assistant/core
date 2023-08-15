@@ -601,9 +601,10 @@ class _ScriptRun:
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
+            # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context.deadline:
-                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            if to_context and to_context._when:
+                wait_var["remaining"] = to_context._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["completed"] = True
@@ -970,9 +971,10 @@ class _ScriptRun:
         done = asyncio.Event()
 
         async def async_done(variables, context=None):
+            # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context.deadline:
-                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            if to_context and to_context._when:
+                wait_var["remaining"] = to_context._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["trigger"] = variables["trigger"]
