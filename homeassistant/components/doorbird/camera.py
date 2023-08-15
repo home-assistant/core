@@ -6,7 +6,6 @@ import datetime
 import logging
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -118,7 +117,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
 
         try:
             websession = async_get_clientsession(self.hass)
-            async with async_timeout.timeout(_TIMEOUT):
+            async with asyncio.timeout(_TIMEOUT):
                 response = await websession.get(self._url)
 
             self._last_image = await response.read()
