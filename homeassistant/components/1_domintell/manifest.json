@@ -1,0 +1,9 @@
+{
+  "domain": "1_domintell",
+  "name": "Domintell Virtual Switch",
+  "documentation": "https://www.domintell.com",
+  "codeowners": ["@nikoden-io"],
+  "dependencies": [],
+  "requirements": [],
+  "version": "0.1.0"
+}

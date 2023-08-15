@@ -1,0 +1,13 @@
+{
+  "domain": "2_domintell",
+  "name": "Domintell Integration",
+  "codeowners": ["@nikoden-io"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/2_domintell",
+  "homekit": {},
+  "iot_class": "assumed_state",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
