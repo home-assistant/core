@@ -323,6 +323,10 @@
         "transition": {
           "name": "[%key:component::light::services::turn_on::fields::transition::name%]",
           "description": "[%key:component::light::services::turn_on::fields::transition::description%]"
+        },
+        "flash": {
+          "name": "[%key:component::light::services::turn_on::fields::flash::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::flash::description%]"
         }
       }
     },
