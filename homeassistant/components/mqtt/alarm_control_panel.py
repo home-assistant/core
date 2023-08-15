@@ -39,6 +39,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_SUPPORTED_FEATURES,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
@@ -46,6 +47,15 @@ from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+_SUPPORTED_FEATURES = {
+    "arm_home": AlarmControlPanelEntityFeature.ARM_HOME,
+    "arm_away": AlarmControlPanelEntityFeature.ARM_AWAY,
+    "arm_night": AlarmControlPanelEntityFeature.ARM_NIGHT,
+    "arm_vacation": AlarmControlPanelEntityFeature.ARM_VACATION,
+    "arm_custom_bypass": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    "trigger": AlarmControlPanelEntityFeature.TRIGGER,
+}
 
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_DISARM_REQUIRED = "code_disarm_required"
@@ -81,6 +91,9 @@ REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
+        vol.Required(
+            CONF_SUPPORTED_FEATURES, default=list(_SUPPORTED_FEATURES)
+        ): cv.multi_select(_SUPPORTED_FEATURES),
         vol.Optional(CONF_CODE): cv.string,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
@@ -139,6 +152,9 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = alarm.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
+    _attr_supported_features: AlarmControlPanelEntityFeature = (
+        AlarmControlPanelEntityFeature(0)
+    )
 
     def __init__(
         self,
@@ -166,6 +182,9 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         self._command_template = MqttCommandTemplate(
             config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
+
+        for feature in self._config[CONF_SUPPORTED_FEATURES]:
+            self._attr_supported_features |= _SUPPORTED_FEATURES[feature]
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -213,18 +232,6 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     def state(self) -> str | None:
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
-        """Return the list of supported features."""
-        return (
-            AlarmControlPanelEntityFeature.ARM_HOME
-            | AlarmControlPanelEntityFeature.ARM_AWAY
-            | AlarmControlPanelEntityFeature.ARM_NIGHT
-            | AlarmControlPanelEntityFeature.ARM_VACATION
-            | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
-            | AlarmControlPanelEntityFeature.TRIGGER
-        )
 
     @property
     def code_format(self) -> alarm.CodeFormat | None:
