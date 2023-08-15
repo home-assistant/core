@@ -25,7 +25,9 @@ async def async_setup_entry(
     entities: list[BinarySensorEntity] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
-    for binary_sensor in session.device_helper.shutter_contacts:
+    for binary_sensor in (
+        session.device_helper.shutter_contacts + session.device_helper.shutter_contacts2
+    ):
         entities.append(
             ShutterContactSensor(
                 device=binary_sensor,
@@ -37,6 +39,7 @@ async def async_setup_entry(
     for binary_sensor in (
         session.device_helper.motion_detectors
         + session.device_helper.shutter_contacts
+        + session.device_helper.shutter_contacts2
         + session.device_helper.smoke_detectors
         + session.device_helper.thermostats
         + session.device_helper.twinguards

@@ -216,6 +216,6 @@ async def test_esphome_device_without_friendly_name(
         states=states,
         device_info={"friendly_name": None},
     )
-    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    state = hass.states.get("binary_sensor.my_binary_sensor")
     assert state is not None
     assert state.state == STATE_ON

@@ -15,7 +15,8 @@
       "cannot_connect": "Failed to connect: {error}"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   },
   "entity": {

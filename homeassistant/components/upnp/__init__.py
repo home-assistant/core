@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
-import async_timeout
 from async_upnp_client.exceptions import UpnpConnectionError
 
 from homeassistant.components import ssdp
@@ -71,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             await device_discovered_event.wait()
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err

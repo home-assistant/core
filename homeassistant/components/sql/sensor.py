@@ -38,8 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
@@ -344,16 +343,15 @@ class SQLSensor(ManualTriggerEntity, SensorEntity):
         self._attr_extra_state_attributes = {}
         self._use_database_executor = use_database_executor
         self._lambda_stmt = _generate_lambda_stmt(query)
-        self._attr_name = (
-            None if not yaml else trigger_entity_config[CONF_NAME].template
-        )
-        self._attr_has_entity_name = not yaml
+        if not yaml:
+            self._attr_name = None
+            self._attr_has_entity_name = True
         if not yaml and trigger_entity_config.get(CONF_UNIQUE_ID):
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, trigger_entity_config[CONF_UNIQUE_ID])},
                 manufacturer="SQL",
-                name=trigger_entity_config[CONF_NAME].template,
+                name=self.name,
             )
 
     async def async_added_to_hass(self) -> None:
