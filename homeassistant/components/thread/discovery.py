@@ -196,10 +196,16 @@ class ThreadRouterDiscovery:
 
             # We need xa and xp, bail out if either is missing
             if not (xa := service_properties.get(b"xa")):
-                _LOGGER.debug("_add_update_service failed to find xa in %s", service)
+                _LOGGER.info(
+                    "Discovered unsupported Thread router without extended address: %s",
+                    service,
+                )
                 return
             if not (xp := service_properties.get(b"xp")):
-                _LOGGER.debug("_add_update_service failed to find xp in %s", service)
+                _LOGGER.info(
+                    "Discovered unsupported Thread router without extended pan ID: %s",
+                    service,
+                )
                 return
 
             data = async_discovery_data_from_service(service, xa, xp)
