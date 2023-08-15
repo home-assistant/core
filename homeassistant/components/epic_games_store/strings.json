@@ -14,5 +14,37 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "free_games": {
+        "name": "Free games",
+        "state_attributes": {
+          "start_at": {
+            "name": "Start at"
+          },
+          "end_at": {
+            "name": "End at"
+          },
+          "games": {
+            "name": "Games"
+          }
+        }
+      },
+      "next_free_games": {
+        "name": "Next free games",
+        "state_attributes": {
+          "start_at": {
+            "name": "[%key:component::epic_games_store::entity::sensor::free_games::state_attributes::start_at::name%]"
+          },
+          "end_at": {
+            "name": "[%key:component::epic_games_store::entity::sensor::free_games::state_attributes::end_at::name%]"
+          },
+          "games": {
+            "name": "[%key:component::epic_games_store::entity::sensor::free_games::state_attributes::games::name%]"
+          }
+        }
+      }
+    }
   }
 }
