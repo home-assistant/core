@@ -305,6 +305,7 @@ omit =
     homeassistant/components/enphase_envoy/binary_sensor.py
     homeassistant/components/enphase_envoy/coordinator.py
     homeassistant/components/enphase_envoy/entity.py
+    homeassistant/components/enphase_envoy/select.py
     homeassistant/components/enphase_envoy/sensor.py
     homeassistant/components/enphase_envoy/switch.py
     homeassistant/components/entur_public_transport/*
