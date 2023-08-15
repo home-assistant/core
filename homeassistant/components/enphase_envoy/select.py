@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pyenphase import EnvoyDryContactSettings
@@ -18,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -134,38 +131,33 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
         self,
         coordinator: EnphaseUpdateCoordinator,
         description: EnvoyRelaySelectEntityDescription,
-        relay: str,
+        relay_id: str,
     ) -> None:
         """Initialize the Enphase relay select entity."""
         super().__init__(coordinator, description)
         self.envoy = coordinator.envoy
-        assert self.envoy is not None
-        assert self.data is not None
-        self.enpower = self.data.enpower
-        assert self.enpower is not None
-        self._serial_number = self.enpower.serial_number
-        self.relay = self.data.dry_contact_settings[relay]
-        self.relay_id = relay
-        self._attr_unique_id = (
-            f"{self._serial_number}_relay_{relay}_{self.entity_description.key}"
-        )
+        enpower = self.data.enpower
+        assert enpower is not None
+        serial_number = enpower.serial_number
+        self._relay_id = relay_id
+        self._attr_unique_id = f"{serial_number}_relay_{relay_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, relay)},
+            identifiers={(DOMAIN, relay_id)},
             manufacturer="Enphase",
             model="Dry contact relay",
-            name=self.relay.load_name,
-            sw_version=str(self.enpower.firmware_version),
-            via_device=(DOMAIN, self._serial_number),
+            name=self.data.dry_contact_settings[relay_id].load_name,
+            sw_version=str(enpower.firmware_version),
+            via_device=(DOMAIN, serial_number),
         )
 
     @property
     def current_option(self) -> str:
         """Return the state of the Enpower switch."""
         return self.entity_description.value_fn(
-            self.data.dry_contact_settings[self.relay_id]
+            self.data.dry_contact_settings[self._relay_id]
         )
 
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
-        await self.entity_description.update_fn(self.envoy, self.relay, option)
+        await self.entity_description.update_fn(self.envoy, self._relay_id, option)
         await self.coordinator.async_request_refresh()
