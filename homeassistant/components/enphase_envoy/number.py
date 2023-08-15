@@ -1,4 +1,4 @@
-"""Select platform for Enphase Envoy solar energy monitor."""
+"""Number platform for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -89,7 +89,7 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
         description: EnvoyRelayNumberEntityDescription,
         relay: str,
     ) -> None:
-        """Initialize the Enphase relay select entity."""
+        """Initialize the Enphase relay number entity."""
         super().__init__(coordinator, description)
         self.envoy = coordinator.envoy
         assert self.envoy is not None
