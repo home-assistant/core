@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Literal
+from typing import Any, Literal
 
 import voluptuous as vol
 
@@ -415,31 +415,33 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def _validate_forecast(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
-        result: list[Forecast] | TemplateError,
+        result: Any,
     ) -> list[Forecast] | None:
         """Validate the forecasts."""
-        if result is None or isinstance(result, TemplateError):
+        if result is None:
             return None
 
-        if isinstance(result, list):
-            for forecast in result:
-                diff_result = (
-                    set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
+        if not isinstance(result, list):
+            raise vol.Invalid(
+                "Forecasts is not a list, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+            )
+        for forecast in result:
+            if not isinstance(forecast, dict):
+                raise vol.Invalid(
+                    "Forecast in list is not a dict, see Weather documentation https://www.home-assistant.io/integrations/weather/"
                 )
-                if diff_result:
-                    raise vol.Invalid(
-                        "Only valid keys in Forecast are allowed, see Weather documentation https://www.home-assistant.io/integrations/weather/"
-                    )
-                if (
-                    forecast_type == "twice_daily"
-                    and "is_daytime" not in forecast.keys()
-                ):
-                    raise vol.Invalid(
-                        "`is_daytime` is missing in twice_daily forecast, see Weather documentation https://www.home-assistant.io/integrations/weather/"
-                    )
-                if "datetime" not in forecast.keys():
-                    raise vol.Invalid(
-                        "`datetime` is required in forecasts, see Weather documentation https://www.home-assistant.io/integrations/weather/"
-                    )
-                continue
+            diff_result = set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
+            if diff_result:
+                raise vol.Invalid(
+                    "Only valid keys in Forecast are allowed, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+                )
+            if forecast_type == "twice_daily" and "is_daytime" not in forecast.keys():
+                raise vol.Invalid(
+                    "`is_daytime` is missing in twice_daily forecast, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+                )
+            if "datetime" not in forecast.keys():
+                raise vol.Invalid(
+                    "`datetime` is required in forecasts, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+                )
+            continue
         return result
