@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.group import DOMAIN, async_setup_entry
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -26,6 +27,18 @@ from tests.common import MockConfigEntry
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
+        (
+            "event",
+            STATE_UNKNOWN,
+            "2021-01-01T23:59:59.123+00:00",
+            {
+                "event_type": "single_press",
+                "event_types": ["single_press", "double_press"],
+            },
+            {},
+            {},
+            {},
+        ),
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
@@ -120,6 +133,7 @@ async def test_config_flow(
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),
+        ("event", {}),
         ("fan", {}),
         ("light", {}),
         ("lock", {}),
@@ -192,6 +206,7 @@ def get_suggested(schema, key):
     (
         ("binary_sensor", "on", {"all": False}, {}),
         ("cover", "open", {}, {}),
+        ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("fan", "on", {}, {}),
         ("light", "on", {"all": False}, {}),
         ("lock", "locked", {}, {}),
@@ -375,6 +390,7 @@ async def test_all_options(
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),
+        ("event", {}),
         ("fan", {}),
         ("light", {}),
         ("lock", {}),
