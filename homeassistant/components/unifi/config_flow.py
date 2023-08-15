@@ -13,6 +13,7 @@ from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse
 
+from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -63,6 +64,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
     VERSION = 1
 
+    sites: Sites
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -74,8 +77,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
         self.config: dict[str, Any] = {}
-        self.site_ids: dict[str, str] = {}
-        self.site_names: dict[str, str] = {}
         self.reauth_config_entry: config_entries.ConfigEntry | None = None
         self.reauth_schema: dict[vol.Marker, Any] = {}
 
@@ -100,7 +101,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                     self.hass, MappingProxyType(self.config)
                 )
                 await controller.sites.update()
-                sites = controller.sites.values()
+                self.sites = controller.sites
 
             except AuthenticationRequired:
                 errors["base"] = "faulty_credentials"
@@ -109,12 +110,10 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 errors["base"] = "service_unavailable"
 
             else:
-                self.site_ids = {site.site_id: site.name for site in sites}
-                self.site_names = {site.site_id: site.description for site in sites}
-
                 if (
                     self.reauth_config_entry
-                    and self.reauth_config_entry.unique_id in self.site_names
+                    and self.reauth_config_entry.unique_id is not None
+                    and self.reauth_config_entry.unique_id in self.sites
                 ):
                     return await self.async_step_site(
                         {CONF_SITE_ID: self.reauth_config_entry.unique_id}
@@ -149,7 +148,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         """Select site to control."""
         if user_input is not None:
             unique_id = user_input[CONF_SITE_ID]
-            self.config[CONF_SITE_ID] = self.site_ids[unique_id]
+            self.config[CONF_SITE_ID] = self.sites[unique_id].name
 
             config_entry = await self.async_set_unique_id(unique_id)
             abort_reason = "configuration_updated"
@@ -172,19 +171,16 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 await self.hass.config_entries.async_reload(config_entry.entry_id)
                 return self.async_abort(reason=abort_reason)
 
-            site_nice_name = self.site_names[unique_id]
+            site_nice_name = self.sites[unique_id].description
             return self.async_create_entry(title=site_nice_name, data=self.config)
 
-        if len(self.site_names) == 1:
-            return await self.async_step_site(
-                {CONF_SITE_ID: next(iter(self.site_names))}
-            )
+        if len(self.sites.values()) == 1:
+            return await self.async_step_site({CONF_SITE_ID: next(iter(self.sites))})
 
+        site_names = {site.site_id: site.description for site in self.sites.values()}
         return self.async_show_form(
             step_id="site",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_SITE_ID): vol.In(self.site_names)}
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(site_names)}),
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
