@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 RETRYABLE_REQUEST_DECORATOR = zigpy.util.retryable_request(tries=3)
+UNPROXIED_CLUSTER_METHODS = {"general_command"}
 
 
 _P = ParamSpec("_P")
@@ -537,7 +538,11 @@ class ClusterHandler(LogMixin):
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
-        if hasattr(self._cluster, name) and callable(getattr(self._cluster, name)):
+        if (
+            hasattr(self._cluster, name)
+            and callable(getattr(self._cluster, name))
+            and name not in UNPROXIED_CLUSTER_METHODS
+        ):
             command = getattr(self._cluster, name)
             wrapped_command = retry_request(command)
             wrapped_command.__name__ = name
