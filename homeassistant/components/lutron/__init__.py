@@ -1,10 +1,11 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
-import asyncio
 import logging
 
 from pylutron import Button, Lutron
 import voluptuous as vol
 
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ID,
     CONF_HOST,
@@ -12,14 +13,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
-from .config_flow import LutronConfigFlow
 
 from .const import DOMAIN
 
@@ -55,19 +53,32 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, base_config: ConfigType) -> bool:
-    # Initialize and set up your integration using the configuration entry data
-    # For example, you might establish a connection to the Lutron device using the entry data
-    # You can also add entities, platforms, and other integration-specific logic here
-    
-    # Example: Create a LutronDevice object and add it to Home Assistant
-    #device = Lutron(entry.data['ip_address'],entry.data['username'], entry.data['password'])
-    #hass.data[DOMAIN][entry.entry_id] = device
+
+async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
+    """Set up the Lutron component."""
+    hass.data.setdefault(DOMAIN, {})
+
+    if DOMAIN in base_config:
+        lutron_configs = base_config[DOMAIN]
+        for config in lutron_configs:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    # extract the config keys one-by-one just to be explicit
+                    data={
+                        CONF_HOST: config[CONF_HOST],
+                        CONF_PASSWORD: config[CONF_PASSWORD],
+                        CONF_USERNAME: config[CONF_USERNAME],
+                    },
+                )
+            )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Lutron integration."""
-    #if entry.source == entry.SOURCE_USER:
-    #    hass.async_create_task(
-    #        hass.config_entries.async_forward_entry_setup(entry, "switch")
-    #    )
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {
@@ -77,19 +88,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, base_config
         "scene": [],
         "binary_sensor": [],
     }
+    host = config_entry.data[CONF_HOST]
+    uid = config_entry.data[CONF_USERNAME]
+    pwd = config_entry.data[CONF_PASSWORD]
 
-    config = base_config[DOMAIN]
-    hass.data[LUTRON_CONTROLLER] = Lutron(
-        config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD]
-    )
+    def _connect() -> bool:
+        hass.data[LUTRON_CONTROLLER].load_xml_db()
+        return True
 
-    hass.data[LUTRON_CONTROLLER].load_xml_db()
+    hass.data[LUTRON_CONTROLLER] = Lutron(host, uid, pwd)
+    await hass.async_add_executor_job(_connect)
     hass.data[LUTRON_CONTROLLER].connect()
-    _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
+    _LOGGER.info("Connected to main repeater at %s", host)
 
     # Sort our devices into types
+    _LOGGER.debug("Start adding devices")
     for area in hass.data[LUTRON_CONTROLLER].areas:
+        _LOGGER.debug("Working on area %s", area.name)
         for output in area.outputs:
+            _LOGGER.debug("Working on output %s", output.type)
             if output.type == "SYSTEM_SHADE":
                 hass.data[LUTRON_DEVICES]["cover"].append((area.name, output))
             elif output.is_dimmable:
@@ -121,22 +138,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, base_config
             hass.data[LUTRON_DEVICES]["binary_sensor"].append(
                 (area.name, area.occupancy_group)
             )
-
-    for platform in PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
-
-
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    # Clean up resources and entities associated with the integration
-    # For example, you might disconnect from the Lutron device and remove entities
-    
+    """Clean up resources and entities associated with the integration."""
     if entry.entry_id in hass.data[DOMAIN]:
         device = hass.data[DOMAIN].pop(entry.entry_id)
         await device.cleanup()  # Perform cleanup operations
-        
+
     return True
 
 
@@ -145,7 +157,7 @@ class LutronDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, area_name, lutron_device, controller):
+    def __init__(self, area_name, lutron_device, controller) -> None:
         """Initialize the device."""
         self._lutron_device = lutron_device
         self._controller = controller
@@ -181,7 +193,7 @@ class LutronButton:
     represented as an entity; it simply fires events.
     """
 
-    def __init__(self, hass, area_name, keypad, button):
+    def __init__(self, hass: HomeAssistant, area_name, keypad, button) -> None:
         """Register callback for activity on the button."""
         name = f"{keypad.name}: {button.name}"
         if button.name == "Unknown Button":

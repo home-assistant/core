@@ -4,11 +4,11 @@
     "step": {
       "user": {
         "title": "Lutron Setup",
-        "description": "Please enter the details",
+        "description": "Please enter the Main Repeater login information",
         "data": {
-          "ip_address": "IP Address",
+          "host": "Main Repeater IP Address",
           "username": "Username",
-          "password": "Secret Key"
+          "password": "Password"
         }
       }
     },
