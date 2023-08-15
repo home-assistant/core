@@ -388,7 +388,15 @@ class WeatherEntity(Entity, PostInit):
                     report_issue,
                 )
         if any(method in cls.__dict__ for method in ("_attr_forecast", "forecast")):
-            cls.__weather_legacy_forecast = True
+            if not any(
+                method in cls.__dict__
+                for method in (
+                    "async_forecast_daily",
+                    "async_forecast_hourly",
+                    "async_forecast_twice_daily",
+                )
+            ):
+                cls.__weather_legacy_forecast = True
 
     @callback
     def add_to_platform_start(
