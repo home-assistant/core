@@ -49,21 +49,27 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     [
         (
             "lawn_mower.mower_can_mow",
-            SERVICE_DOCK,
+            SERVICE_START_MOWING,
+            LawnMowerActivity.DOCKED,
             LawnMowerActivity.MOWING,
-            LawnMowerActivity.DOCKING,
         ),
         (
             "lawn_mower.mower_can_pause",
+            SERVICE_PAUSE,
+            LawnMowerActivity.DOCKING,
+            LawnMowerActivity.PAUSED,
+        ),
+        (
+            "lawn_mower.mower_is_paused",
             SERVICE_START_MOWING,
             LawnMowerActivity.PAUSED,
             LawnMowerActivity.MOWING,
         ),
         (
-            "lawn_mower.mower_can_mow",
-            SERVICE_PAUSE,
+            "lawn_mower.mower_can_dock",
+            SERVICE_DOCK,
             LawnMowerActivity.MOWING,
-            LawnMowerActivity.PAUSED,
+            LawnMowerActivity.DOCKING,
         ),
     ],
 )

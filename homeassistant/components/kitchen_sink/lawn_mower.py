@@ -24,25 +24,33 @@ async def async_setup_platform(
             DemoLawnMower(
                 "kitchen_sink_mower_001",
                 "Mower can mow",
-                LawnMowerActivity.MOWING,
+                LawnMowerActivity.DOCKED,
                 LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_002",
                 "Mower can dock",
-                LawnMowerActivity.DOCKING,
+                LawnMowerActivity.MOWING,
                 LawnMowerEntityFeature.DOCK | LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_003",
                 "Mower can pause",
-                LawnMowerActivity.PAUSED,
+                LawnMowerActivity.DOCKING,
                 LawnMowerEntityFeature.PAUSE | LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_004",
                 "Mower can do all",
                 LawnMowerActivity.DOCKED,
+                LawnMowerEntityFeature.DOCK
+                | LawnMowerEntityFeature.PAUSE
+                | LawnMowerEntityFeature.START_MOWING,
+            ),
+            DemoLawnMower(
+                "kitchen_sink_mower_005",
+                "Mower is paused",
+                LawnMowerActivity.PAUSED,
                 LawnMowerEntityFeature.DOCK
                 | LawnMowerEntityFeature.PAUSE
                 | LawnMowerEntityFeature.START_MOWING,
