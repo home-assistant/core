@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
 from typing import TypeVar
 
-import async_timeout
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
@@ -86,7 +86,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
     async def _async_update_data(self) -> RainbirdDeviceState:
         """Fetch data from Rain Bird device."""
         try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
+            async with asyncio.timeout(TIMEOUT_SECONDS):
                 return await self._fetch_data()
         except RainbirdDeviceBusyException as err:
             raise UpdateFailed("Rain Bird device is busy") from err
