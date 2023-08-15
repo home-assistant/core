@@ -72,6 +72,9 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=ExtendedBinarySensorDeviceClass.PRY_THE_DOOR,
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
+    ExtendedBinarySensorDeviceClass.TOOTHBRUSH: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.TOOTHBRUSH,
+    ),
 }
 
 
@@ -119,7 +122,9 @@ async def async_setup_entry(
             XiaomiBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, BinarySensorEntityDescription)
+    )
 
 
 class XiaomiBluetoothSensorEntity(

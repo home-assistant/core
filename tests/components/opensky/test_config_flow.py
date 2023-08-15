@@ -3,11 +3,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.opensky.const import (
-    CONF_ALTITUDE,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from homeassistant.components.opensky.const import CONF_ALTITUDE, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_RADIUS
 from homeassistant.core import HomeAssistant
