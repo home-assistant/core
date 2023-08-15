@@ -36,6 +36,14 @@
         "name": "Grid status"
       }
     },
+    "number": {
+      "cutoff_battery_level": {
+        "name": "Cutoff battery level"
+      },
+      "resume_battery_level": {
+        "name": "Resume battery level"
+      }
+    },
     "select": {
       "relay_mode": {
         "name": "Mode",
