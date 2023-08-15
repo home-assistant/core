@@ -83,7 +83,7 @@ class LawnMowerEntity(Entity):
         """Return the current state."""
         if (activity := self.activity) is None:
             return None
-        return str(activity.value)
+        return str(activity)
 
     @property
     def activity(self) -> LawnMowerActivity | None:
