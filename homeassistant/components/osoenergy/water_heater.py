@@ -12,14 +12,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import OSOEnergyEntity
 from .const import (
-    ATTR_FULL_UTILIZATION,
     ATTR_PROFILE_HOURS,
+    ATTR_UNTIL_TEMP_LIMIT,
     ATTR_V40MIN,
     DOMAIN,
     EXTRA_HEATER_ATTR,
@@ -51,13 +51,13 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_TURN_ON,
-        {vol.Required(ATTR_FULL_UTILIZATION): vol.All(cv.boolean)},
+        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
         "async_oso_turn_on",
     )
 
     platform.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {vol.Required(ATTR_FULL_UTILIZATION): vol.All(cv.boolean)},
+        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
         "async_oso_turn_off",
     )
 
@@ -70,30 +70,30 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_PROFILE,
         {
-            vol.Required(ATTR_PROFILE_HOURS["00"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["01"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["02"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["03"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["04"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["05"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["06"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["07"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["08"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["09"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["10"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["11"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["12"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["13"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["14"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["15"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["16"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["17"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["18"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["19"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["20"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["21"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["22"]): vol.Coerce(int),
-            vol.Required(ATTR_PROFILE_HOURS["23"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["00"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["01"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["02"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["03"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["04"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["05"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["06"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["07"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["08"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["09"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["10"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["11"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["12"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["13"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["14"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["15"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["16"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["17"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["18"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["19"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["20"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["21"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["22"]): vol.Coerce(int),
+            vol.Optional(ATTR_PROFILE_HOURS["23"]): vol.Coerce(int),
         },
         "async_set_profile",
     )
@@ -131,9 +131,11 @@ def _convert_profile_to_local(values):
 class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
     """OSO Energy Water Heater Device."""
 
+    _attr_name = None
     _attr_operation_list = OPERATION_LIST
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "saga_heater"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -200,6 +202,9 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
             final = value
             if attribute == "profile":
                 final = _convert_profile_to_local(value)
+            elif attribute in ("heater_state", "heater_mode", "optimization_mode"):
+                value_key = f"{value}".lower()
+                final = OSO_ENERGY_TO_HASS_STATE.get(value_key, final)
 
             attr.update({ha_name: final})
 
@@ -213,13 +218,13 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
         """Turn off hotwater."""
         await self.osoenergy.hotwater.turn_off(self.device, True)
 
-    async def async_oso_turn_on(self, full_utilization) -> None:
+    async def async_oso_turn_on(self, until_temp_limit) -> None:
         """Handle the service call."""
-        await self.osoenergy.hotwater.turn_on(self.device, full_utilization)
+        await self.osoenergy.hotwater.turn_on(self.device, until_temp_limit)
 
-    async def async_oso_turn_off(self, full_utilization) -> None:
+    async def async_oso_turn_off(self, until_temp_limit) -> None:
         """Handle the service call."""
-        await self.osoenergy.hotwater.turn_off(self.device, full_utilization)
+        await self.osoenergy.hotwater.turn_off(self.device, until_temp_limit)
 
     async def async_set_v40_min(self, v40_min) -> None:
         """Handle the service call."""
@@ -232,59 +237,15 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
 
         await self.osoenergy.hotwater.set_profile(self.device, profile)
 
-    async def async_set_profile(
-        self,
-        hour_00,
-        hour_01,
-        hour_02,
-        hour_03,
-        hour_04,
-        hour_05,
-        hour_06,
-        hour_07,
-        hour_08,
-        hour_09,
-        hour_10,
-        hour_11,
-        hour_12,
-        hour_13,
-        hour_14,
-        hour_15,
-        hour_16,
-        hour_17,
-        hour_18,
-        hour_19,
-        hour_20,
-        hour_21,
-        hour_22,
-        hour_23,
-    ) -> None:
+    async def async_set_profile(self, **kwargs: Any) -> None:
         """Handle the service call."""
-        profile = [None] * 24
-        profile[_get_utc_hour(0)] = hour_00
-        profile[_get_utc_hour(1)] = hour_01
-        profile[_get_utc_hour(2)] = hour_02
-        profile[_get_utc_hour(3)] = hour_03
-        profile[_get_utc_hour(4)] = hour_04
-        profile[_get_utc_hour(5)] = hour_05
-        profile[_get_utc_hour(6)] = hour_06
-        profile[_get_utc_hour(7)] = hour_07
-        profile[_get_utc_hour(8)] = hour_08
-        profile[_get_utc_hour(9)] = hour_09
-        profile[_get_utc_hour(10)] = hour_10
-        profile[_get_utc_hour(11)] = hour_11
-        profile[_get_utc_hour(12)] = hour_12
-        profile[_get_utc_hour(13)] = hour_13
-        profile[_get_utc_hour(14)] = hour_14
-        profile[_get_utc_hour(15)] = hour_15
-        profile[_get_utc_hour(16)] = hour_16
-        profile[_get_utc_hour(17)] = hour_17
-        profile[_get_utc_hour(18)] = hour_18
-        profile[_get_utc_hour(19)] = hour_19
-        profile[_get_utc_hour(20)] = hour_20
-        profile[_get_utc_hour(21)] = hour_21
-        profile[_get_utc_hour(22)] = hour_22
-        profile[_get_utc_hour(23)] = hour_23
+        profile = self.device.get("attributes", {}).get("profile")
+
+        for hour in range(24):
+            hour_key = f"{hour:02d}"
+
+            if ATTR_PROFILE_HOURS[hour_key] in kwargs:
+                profile[_get_utc_hour(hour)] = kwargs[ATTR_PROFILE_HOURS[hour_key]]
 
         await self.osoenergy.hotwater.set_profile(self.device, profile)
 

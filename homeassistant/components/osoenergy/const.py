@@ -2,7 +2,7 @@
 from homeassistant.components.water_heater import STATE_PERFORMANCE
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 
-ATTR_FULL_UTILIZATION = "full_utilization"
+ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
 ATTR_V40MIN = "v40_min"
 ATTR_PROFILE_HOURS = {
     "00": "hour_00",
@@ -61,7 +61,18 @@ SERVICE_SET_PROFILE = "set_profile"
 TITLE = "OSO Energy"
 
 OSO_ENERGY_TO_HASS_STATE = {
+    "auto": "auto",
     "on": STATE_ON,
     "off": STATE_OFF,
+    "manual": "manual",
+    "legionella": "legionella",
+    "powersave": "power_save",
+    "extraenergy": "extra_energy",
+    "voltage": "voltage",
+    "ffr": "ffr",
+    "oso": "oso",
+    "gridcompany": "grid_company",
+    "smartcompany": "smart_company",
+    "advanced": "advanced",
 }
 OPERATION_LIST = [STATE_OFF, STATE_ON, STATE_PERFORMANCE]

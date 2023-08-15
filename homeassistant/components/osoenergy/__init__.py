@@ -59,6 +59,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class OSOEnergyEntity(Entity):
     """Initiate OSO Energy Base Class."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, osoenergy, osoenergy_device) -> None:
         """Initialize the instance."""
         self.osoenergy = osoenergy
