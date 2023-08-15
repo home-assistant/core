@@ -513,8 +513,22 @@ POWER_BTU_PER_HOUR: Final = "BTU/h"
 """Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
 
 # Reactive power units
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+class UnitOfReactivePower(StrEnum):
+    """Reactive power units."""
 
+    VOLT_AMPERE_REACTIVE = "var"
+    KILO_VOLT_AMPERE_REACTIVE = "kvar"
+
+# Reactive power units
+POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
+
+# Reactive energy units
+class UnitOfReactiveEnergy(StrEnum):
+    """Reactive energy (power over time) units."""
+
+    VOLT_AMPERE_REACTIVE_HOUR = "varh"
+    KILO_VOLT_AMPERE_REACTIVE_HOUR = "kvarh"
 
 # Energy units
 class UnitOfEnergy(StrEnum):
