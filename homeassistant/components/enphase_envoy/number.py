@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from pyenphase import EnvoyDryContactSettings
 
@@ -21,8 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -93,7 +90,6 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
         enpower = self.data.enpower
         assert enpower is not None
         serial_number = enpower.serial_number
-        self._serial_number = serial_number
         self._relay_id = relay_id
         self._attr_unique_id = f"{serial_number}_relay_{relay_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
