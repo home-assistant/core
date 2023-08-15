@@ -12,7 +12,6 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
@@ -20,26 +19,12 @@ from .const import DOMAIN, HUB_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
-API_VERSION_AUTO = "Detect Automatically"
-API_VERSION_1 = "Generation 1"
-API_VERSION_2 = "Generation 2"
-API_VERSION_3 = "Generation 3"
-API_SCHEMA: list[str] = [API_VERSION_AUTO, API_VERSION_1, API_VERSION_2, API_VERSION_3]
-API_MAP: dict[str, int | None] = {
-    API_VERSION_AUTO: None,
-    API_VERSION_1: 1,
-    API_VERSION_2: 2,
-    API_VERSION_3: 3,
-}
-
 HAP_SUFFIX = "._hap._tcp.local."
 POWERVIEW_G2_SUFFIX = "._powerview._tcp.local."
 POWERVIEW_G3_SUFFIX = ".powerview-g3.local."
 
 
-async def validate_input(
-    hass: core.HomeAssistant, hub_address: str, api_str: str
-) -> dict[str, str]:
+async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -47,12 +32,7 @@ async def validate_input(
 
     websession = async_get_clientsession(hass)
 
-    api_version = API_MAP.get(api_str, None)
-    _LOGGER.debug("Connection request made using api version: %s", api_version)
-
-    pv_request = AioRequest(
-        hub_address, loop=hass.loop, websession=websession, api_version=api_version
-    )
+    pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
 
     try:
         async with async_timeout.timeout(10):
@@ -73,38 +53,10 @@ async def validate_input(
     }
 
 
-class PowerviewOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Powerview options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize PowerviewOptionsFlowHandler."""
-        self.config_entry = config_entry
-        _LOGGER.warning(self.config_entry.options)
-
-    async def async_step_init(
-        self, user_input=None  #: dict[str, Any] | None
-    ) -> FlowResult:
-        """Manage the Powerview options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_API_VERSION,
-                        default=self.config_entry.options[CONF_API_VERSION],
-                    ): vol.In(API_SCHEMA),
-                }
-            ),
-        )
-
-
 class PowerviewConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hunter Douglas PowerView."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the powerview config flow."""
@@ -116,24 +68,9 @@ class PowerviewConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        if self.show_advanced_options:
-            self.data_schema[
-                vol.Required(
-                    CONF_API_VERSION,
-                    default=API_VERSION_AUTO,
-                )
-            ] = selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=API_SCHEMA,
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
-            )
 
         if user_input is not None:
-            info, error = await self._async_validate_or_error(
-                user_input[CONF_HOST],
-                user_input.get(CONF_API_VERSION, API_VERSION_AUTO),
-            )
+            info, error = await self._async_validate_or_error(user_input[CONF_HOST])
 
             if not error:
                 self.powerview_config = {
@@ -155,11 +92,11 @@ class PowerviewConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=vol.Schema(self.data_schema), errors=errors
         )
 
-    async def _async_validate_or_error(self, host, api):
+    async def _async_validate_or_error(self, host):
         self._async_abort_entries_match({CONF_HOST: host})
 
         try:
-            info = await validate_input(self.hass, host, api)
+            info = await validate_input(self.hass, host)
         except CannotConnect:
             return None, "cannot_connect"
         except Exception:  # pylint: disable=broad-except
@@ -204,9 +141,7 @@ class PowerviewConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: self.discovered_ip})
 
-        info, error = await self._async_validate_or_error(
-            self.discovered_ip, API_VERSION_AUTO
-        )
+        info, error = await self._async_validate_or_error(self.discovered_ip)
         if error:
             return self.async_abort(reason=error)
 

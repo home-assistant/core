@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
 
     hub_address = config[CONF_HOST]
-    api_version = config[CONF_API_VERSION]
+    api_version = config.get(CONF_API_VERSION, None)
     _LOGGER.debug("Connecting %s at %s with v%s api", DOMAIN, hub_address, api_version)
 
     websession = async_get_clientsession(hass)
@@ -60,6 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise IntegrationError(
                     f"{hub.name} ({hub.hub_address}) is performing role of {hub.role} Hub. Only the Primary Hub can manage shades"
                 )
+            if CONF_API_VERSION not in config:
+                new_data = {**entry.data}
+                new_data[CONF_API_VERSION] = hub.api_version
+                hass.config_entries.async_update_entry(entry, data=new_data)
 
         async with async_timeout.timeout(10):
             rooms = Rooms(pv_request)
@@ -117,31 +121,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate to new config version."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-    if config_entry.version == 1:
-        new_data = {**config_entry.data}
-
-        websession = async_get_clientsession(hass)
-        pv_request = AioRequest(
-            config_entry.data[CONF_HOST], loop=hass.loop, websession=websession
-        )
-
-        # fetch and add the API version
-        hub = Hub(pv_request)
-        await hub.query_firmware()
-        new_data[CONF_API_VERSION] = hub.api_version
-
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
-
-        _LOGGER.info(
-            "Migration of %s from version 1 to version %s successful",
-            DOMAIN,
-            config_entry.version,
-        )
-
-    return True
