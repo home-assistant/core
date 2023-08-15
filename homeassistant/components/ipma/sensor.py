@@ -1,11 +1,11 @@
 """Support for IPMA sensors."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 
-import async_timeout
 from pyipma.api import IPMA_API
 from pyipma.location import Location
 
@@ -83,7 +83,7 @@ class IPMASensor(SensorEntity, IPMADevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update Fire risk."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             self._attr_native_value = await self.entity_description.value_fn(
                 self._location, self._api
             )

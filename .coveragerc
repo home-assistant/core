@@ -233,6 +233,8 @@ omit =
     homeassistant/components/duotecno/__init__.py
     homeassistant/components/duotecno/entity.py
     homeassistant/components/duotecno/switch.py
+    homeassistant/components/duotecno/cover.py
+    homeassistant/components/duotecno/light.py
     homeassistant/components/dwd_weather_warnings/const.py
     homeassistant/components/dwd_weather_warnings/coordinator.py
     homeassistant/components/dwd_weather_warnings/sensor.py
@@ -269,6 +271,7 @@ omit =
     homeassistant/components/electric_kiwi/oauth2.py
     homeassistant/components/electric_kiwi/sensor.py
     homeassistant/components/electric_kiwi/coordinator.py
+    homeassistant/components/electric_kiwi/select.py
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/__init__.py
     homeassistant/components/elkm1/alarm_control_panel.py
@@ -281,7 +284,8 @@ omit =
     homeassistant/components/elmax/alarm_control_panel.py
     homeassistant/components/elmax/binary_sensor.py
     homeassistant/components/elmax/common.py
-    homeassistant/components/elmax/binary_sensor.py
+    homeassistant/components/elmax/const.py
+    homeassistant/components/elmax/cover.py
     homeassistant/components/elmax/switch.py
     homeassistant/components/elv/*
     homeassistant/components/emby/media_player.py
@@ -298,7 +302,13 @@ omit =
     homeassistant/components/enocean/sensor.py
     homeassistant/components/enocean/switch.py
     homeassistant/components/enphase_envoy/__init__.py
+    homeassistant/components/enphase_envoy/binary_sensor.py
+    homeassistant/components/enphase_envoy/coordinator.py
+    homeassistant/components/enphase_envoy/entity.py
+    homeassistant/components/enphase_envoy/number.py
+    homeassistant/components/enphase_envoy/select.py
     homeassistant/components/enphase_envoy/sensor.py
+    homeassistant/components/enphase_envoy/switch.py
     homeassistant/components/entur_public_transport/*
     homeassistant/components/environment_canada/__init__.py
     homeassistant/components/environment_canada/camera.py
@@ -333,6 +343,7 @@ omit =
     homeassistant/components/ezviz/entity.py
     homeassistant/components/ezviz/select.py
     homeassistant/components/ezviz/sensor.py
+    homeassistant/components/ezviz/siren.py
     homeassistant/components/ezviz/switch.py
     homeassistant/components/ezviz/update.py
     homeassistant/components/faa_delays/__init__.py
@@ -414,6 +425,7 @@ omit =
     homeassistant/components/garadget/cover.py
     homeassistant/components/garages_amsterdam/__init__.py
     homeassistant/components/garages_amsterdam/binary_sensor.py
+    homeassistant/components/garages_amsterdam/entity.py
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
@@ -767,6 +779,7 @@ omit =
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py
+    homeassistant/components/neato/button.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/__init__.py
@@ -858,7 +871,6 @@ omit =
     homeassistant/components/openhome/const.py
     homeassistant/components/openhome/media_player.py
     homeassistant/components/opensensemap/air_quality.py
-    homeassistant/components/opensky/sensor.py
     homeassistant/components/opentherm_gw/__init__.py
     homeassistant/components/opentherm_gw/binary_sensor.py
     homeassistant/components/opentherm_gw/climate.py
@@ -1166,7 +1178,12 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
+    homeassistant/components/starlink/__init__.py
+    homeassistant/components/starlink/binary_sensor.py
+    homeassistant/components/starlink/button.py
     homeassistant/components/starlink/coordinator.py
+    homeassistant/components/starlink/sensor.py
+    homeassistant/components/starlink/switch.py
     homeassistant/components/starline/__init__.py
     homeassistant/components/starline/account.py
     homeassistant/components/starline/binary_sensor.py
@@ -1332,6 +1349,7 @@ omit =
     homeassistant/components/trafikverket_train/__init__.py
     homeassistant/components/trafikverket_train/coordinator.py
     homeassistant/components/trafikverket_train/sensor.py
+    homeassistant/components/trafikverket_train/util.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py
     homeassistant/components/trafikverket_weatherstation/sensor.py

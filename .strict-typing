@@ -53,6 +53,7 @@ homeassistant.components.airzone_cloud.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
+homeassistant.components.alexa.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
@@ -296,6 +297,7 @@ homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.sql.*
 homeassistant.components.ssdp.*
+homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
