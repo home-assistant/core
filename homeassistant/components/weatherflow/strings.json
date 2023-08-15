@@ -1,0 +1,98 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "error": {
+      "address_in_use": "The host address is already in use. Please specify a different host address below.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "name": "Temperature"
+      },
+      "air_density": {
+        "name": "Air density"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "feels_like": {
+        "name": "Feels like"
+      },
+      "illuminance": {
+        "name": "Illuminance"
+      },
+      "lightning_average_distance": {
+        "name": "Lightning average distance"
+      },
+      "lightning_count": {
+        "name": "Lightning count"
+      },
+      "precipitation_type": {
+        "name": "Precipitation type"
+      },
+      "rain_amount": {
+        "name": "Rain amount"
+      },
+      "rain_rate": {
+        "name": "Rain rate"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "rssi": {
+        "name": "Rssi"
+      },
+      "station_pressure": {
+        "name": "Station pressure"
+      },
+      "solar_radiation": {
+        "name": "Solar radiation"
+      },
+      "up_since": {
+        "name": "Up since"
+      },
+      "uv": {
+        "name": "Uv"
+      },
+      "vapor_pressure": {
+        "name": "Vapor pressure"
+      },
+      "wet_bulb_temperature": {
+        "name": "Wet bulb temperature"
+      },
+      "wind_speed_average": {
+        "name": "Wind speed average"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_direction_average": {
+        "name": "Wind direction average"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "wind_lull": {
+        "name": "Wind lull"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      }
+    }
+  }
+}
