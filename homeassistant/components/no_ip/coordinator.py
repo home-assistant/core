@@ -9,7 +9,6 @@ from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -71,7 +70,7 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
         }
 
         try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT), session.get(
+            async with asyncio.timeout(DEFAULT_TIMEOUT), session.get(
                 UPDATE_URL, params=params, headers=headers
             ) as resp:
                 body = await resp.text()

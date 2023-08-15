@@ -8,7 +8,6 @@ from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -75,7 +74,7 @@ async def async_validate_no_ip(
     }
 
     try:
-        async with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with asyncio.timeout(DEFAULT_TIMEOUT):
             resp = await session.get(
                 UPDATE_URL, params=params, headers=headers, raise_for_status=True
             )
