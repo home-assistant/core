@@ -49,7 +49,7 @@ RELAY_ENTITIES = (
     ),
     EnvoyRelayNumberEntityDescription(
         key="soc_high",
-        translation_key="resume_battery_level",
+        translation_key="restore_battery_level",
         device_class=NumberDeviceClass.BATTERY,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda relay: relay.soc_high,

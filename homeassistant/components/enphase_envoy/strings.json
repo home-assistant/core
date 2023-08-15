@@ -40,8 +40,8 @@
       "cutoff_battery_level": {
         "name": "Cutoff battery level"
       },
-      "resume_battery_level": {
-        "name": "Resume battery level"
+      "restore_battery_level": {
+        "name": "Restore battery level"
       }
     },
     "select": {
