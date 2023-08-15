@@ -84,7 +84,9 @@ async def async_setup_entry(
                             name="Indoor Temperature",
                             device_class=SensorDeviceClass.TEMPERATURE,
                             state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT if device.units == "Fahrenheit" else UnitOfTemperature.CELSIUS,
+                            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT
+                            if device.units == "Fahrenheit"
+                            else UnitOfTemperature.CELSIUS,
                             value=lambda device: device.indoorTemperature,
                         ),
                         location,
@@ -116,7 +118,9 @@ async def async_setup_entry(
                             name="Outdoor Temperature",
                             device_class=SensorDeviceClass.TEMPERATURE,
                             state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT if device.units == "Fahrenheit" else UnitOfTemperature.CELSIUS,
+                            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT
+                            if device.units == "Fahrenheit"
+                            else UnitOfTemperature.CELSIUS,
                             value=lambda device: device.outdoorTemperature,
                         ),
                         location,
