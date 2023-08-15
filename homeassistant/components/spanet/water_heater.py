@@ -9,7 +9,7 @@
 import logging
 from typing import Any
 
-import aiohttp
+import spanetlib
 import voluptuous as vol
 
 from homeassistant.components.water_heater import PLATFORM_SCHEMA, WaterHeaterEntity
@@ -19,14 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    DOMAIN,
-    GET_OPERATION_MODE,
-    GET_TARGET_TEMPERATURE,
-    GET_TEMPERATURE,
-    SET_OPERATION_MODE,
-    SET_TEMPERATURE,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,137 +113,26 @@ class Spa(WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the current Operation Mode - NORM, AWAY, WEEKEND."""
-        await self.setOperationModeAPI(operation_mode)
+        await spanetlib.setOperationMode(operation_mode, self._access_token)
 
     async def async_update(self) -> None:
         """Retrieve updated data by calling the API."""
-        self._current_temperature = await self.getCurrentTemperatureAPI()
-        self._target_temperature = await self.getTargetTemperatureAPI()
+        self._current_temperature = await spanetlib.getCurrentTemperature(
+            access_token=self._access_token
+        )
 
-        self._operation_mode = await self.getOperationModeAPI()
+        self._target_temperature = await spanetlib.getTargetTemperature(
+            access_token=self._access_token
+        )
+
+        self._operation_mode = await spanetlib.getOperationMode(
+            access_token=self._access_token
+        )
         self._is_away_mode_on = self._operation_mode.lower() == "AWAY"
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set temperature of spa."""
         if "temperature" in kwargs:
-            await self.setTemperatureAPI(int(kwargs["temperature"] * 10))
-
-    async def getCurrentTemperatureAPI(self) -> float:
-        """Retrieve current temperature."""
-        headers = {"Authorization": f"Bearer {self._access_token}"}
-        url = GET_TEMPERATURE
-        try:
-            async with aiohttp.ClientSession() as session, session.get(
-                url, headers=headers
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("temperature") / 10.0
-
-                _LOGGER.error(
-                    "Get Temperature failed with status code: %s",
-                    response.status,
-                )
-                return 0.0
-
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error occurred during API call: %s", err)
-            return 0.0
-
-    async def getTargetTemperatureAPI(self) -> float:
-        """Get target temperature."""
-        headers = {"Authorization": f"Bearer {self._access_token}"}
-        url = GET_TARGET_TEMPERATURE
-        try:
-            async with aiohttp.ClientSession() as session, session.get(
-                url, headers=headers
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("temperature") / 10.0
-
-                _LOGGER.error(
-                    "Get Temperature failed with status code: %s",
-                    response.status,
-                )
-                return 0.0
-
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error occurred during API call: %s", err)
-            return 0.0
-
-    async def getOperationModeAPI(self) -> str:
-        """Retrieve operation mode."""
-        headers = {"Authorization": f"Bearer {self._access_token}"}
-        url = GET_OPERATION_MODE
-        try:
-            async with aiohttp.ClientSession() as session, session.get(
-                url, headers=headers
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("mode")
-
-                _LOGGER.error(
-                    "Get Temperature failed with status code: %s",
-                    response.status,
-                )
-                return ""
-
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error occurred during API call: %s", err)
-            return ""
-
-    async def setTemperatureAPI(self, temperature):
-        """Set target temperature."""
-        headers = {
-            "Content-Type": "application/json",
-        }
-        payload = {"temperature": temperature}
-        headers = {"Authorization": f"Bearer {self._access_token}"}
-        url = SET_TEMPERATURE
-        try:
-            async with aiohttp.ClientSession() as session, session.post(
-                url, json=payload, headers=headers
-            ) as response:
-                if response.status == 200:
-                    _LOGGER.info("New temperature set successfully")
-                    self._current_temperature = temperature
-                    return True
-
-                _LOGGER.error(
-                    "Set Temperature failed with status code: %s",
-                    response.status,
-                )
-                return False
-
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error occurred during API call: %s", err)
-            return False
-
-    async def setOperationModeAPI(self, operation_mode):
-        """Set spa operation mode. Modes are: NORM, AWAY, WEEKEND."""
-        headers = {
-            "Content-Type": "application/json",
-        }
-        payload = {"mode": operation_mode}
-        headers = {"Authorization": f"Bearer {self._access_token}"}
-        url = SET_OPERATION_MODE
-        try:
-            async with aiohttp.ClientSession() as session, session.post(
-                url, json=payload, headers=headers
-            ) as response:
-                if response.status == 200:
-                    _LOGGER.info("New mode set successfully")
-                    self._operation_mode = operation_mode
-                    return True
-
-                _LOGGER.error(
-                    "Set Operation Mode failed with status code: %s",
-                    response.status,
-                )
-                return False
-
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error occurred during API call: %s", err)
-            return False
+            await spanetlib.setTemperature(
+                int(kwargs["temperature"] * 10), access_token=self._access_token
+            )
