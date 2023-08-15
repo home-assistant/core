@@ -353,7 +353,13 @@ async def test_shade(
     assert hass.states.get(entity_id).state == STATE_OPEN
 
     # close from UI command fails
-    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+    with patch(
+        "zigpy.zcl.Cluster.request",
+        return_value=Default_Response(
+            command_id=closures.WindowCovering.ServerCommandDefs.down_close.id,
+            status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
+        ),
+    ):
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
@@ -361,7 +367,7 @@ async def test_shade(
                 {"entity_id": entity_id},
                 blocking=True,
             )
-        assert cluster_on_off.request.call_count == 3
+        assert cluster_on_off.request.call_count == 1
         assert cluster_on_off.request.call_args[0][0] is False
         assert cluster_on_off.request.call_args[0][1] == 0x0000
         assert hass.states.get(entity_id).state == STATE_OPEN
@@ -378,7 +384,13 @@ async def test_shade(
     # open from UI command fails
     assert ATTR_CURRENT_POSITION not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster_level, {0: 0})
-    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+    with patch(
+        "zigpy.zcl.Cluster.request",
+        return_value=Default_Response(
+            command_id=closures.WindowCovering.ServerCommandDefs.up_open.id,
+            status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
+        ),
+    ):
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
@@ -386,9 +398,33 @@ async def test_shade(
                 {"entity_id": entity_id},
                 blocking=True,
             )
-        assert cluster_on_off.request.call_count == 3
+        assert cluster_on_off.request.call_count == 1
         assert cluster_on_off.request.call_args[0][0] is False
         assert cluster_on_off.request.call_args[0][1] == 0x0001
+        assert hass.states.get(entity_id).state == STATE_CLOSED
+
+    # stop from UI command fails
+    with patch(
+        "zigpy.zcl.Cluster.request",
+        return_value=Default_Response(
+            command_id=general.LevelControl.ServerCommandDefs.stop.id,
+            status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
+        ),
+    ):
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                COVER_DOMAIN,
+                SERVICE_STOP_COVER,
+                {"entity_id": entity_id},
+                blocking=True,
+            )
+
+        assert cluster_level.request.call_count == 1
+        assert cluster_level.request.call_args[0][0] is False
+        assert (
+            cluster_level.request.call_args[0][1]
+            == general.LevelControl.ServerCommandDefs.stop.id
+        )
         assert hass.states.get(entity_id).state == STATE_CLOSED
 
     # open from UI succeeds
@@ -402,7 +438,13 @@ async def test_shade(
         assert hass.states.get(entity_id).state == STATE_OPEN
 
     # set position UI command fails
-    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+    with patch(
+        "zigpy.zcl.Cluster.request",
+        return_value=Default_Response(
+            command_id=closures.WindowCovering.ServerCommandDefs.go_to_lift_percentage.id,
+            status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
+        ),
+    ):
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
@@ -410,7 +452,8 @@ async def test_shade(
                 {"entity_id": entity_id, "position": 47},
                 blocking=True,
             )
-        assert cluster_level.request.call_count == 3
+
+        assert cluster_level.request.call_count == 1
         assert cluster_level.request.call_args[0][0] is False
         assert cluster_level.request.call_args[0][1] == 0x0004
         assert int(cluster_level.request.call_args[0][3] * 100 / 255) == 47
