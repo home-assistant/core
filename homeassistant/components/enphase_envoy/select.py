@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pyenphase import EnvoyDryContactSettings
@@ -18,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -113,8 +110,6 @@ async def async_setup_entry(
     coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
-    envoy_serial_num = config_entry.unique_id
-    assert envoy_serial_num is not None
     entities: list[SelectEntity] = []
     if envoy_data.dry_contact_settings:
         entities.extend(
