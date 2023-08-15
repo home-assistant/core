@@ -228,8 +228,7 @@ async def test_controller_setup(
     assert forward_entry_setup.mock_calls[4][1] == (entry, SWITCH_DOMAIN)
 
     assert controller.host == ENTRY_CONFIG[CONF_HOST]
-    assert controller.site_role == SITE[0]["role"]
-    # assert controller.site.role == SITE[0]["role"]
+    assert controller.is_admin == (SITE[0]["role"] == "admin")
 
     assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
     assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
