@@ -305,6 +305,7 @@ omit =
     homeassistant/components/enphase_envoy/binary_sensor.py
     homeassistant/components/enphase_envoy/coordinator.py
     homeassistant/components/enphase_envoy/entity.py
+    homeassistant/components/enphase_envoy/select.py
     homeassistant/components/enphase_envoy/sensor.py
     homeassistant/components/enphase_envoy/switch.py
     homeassistant/components/entur_public_transport/*
@@ -341,6 +342,7 @@ omit =
     homeassistant/components/ezviz/entity.py
     homeassistant/components/ezviz/select.py
     homeassistant/components/ezviz/sensor.py
+    homeassistant/components/ezviz/siren.py
     homeassistant/components/ezviz/switch.py
     homeassistant/components/ezviz/update.py
     homeassistant/components/faa_delays/__init__.py

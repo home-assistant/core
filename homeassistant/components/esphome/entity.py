@@ -105,8 +105,8 @@ def esphome_state_property(
         if not self._has_state:
             return None
         val = func(self)
-        if isinstance(val, float) and math.isnan(val):
-            # Home Assistant doesn't use NAN values in state machine
+        if isinstance(val, float) and not math.isfinite(val):
+            # Home Assistant doesn't use NaN or inf values in state machine
             # (not JSON serializable)
             return None
         return val

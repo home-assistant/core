@@ -8,7 +8,6 @@ import logging
 from typing import Any, Final
 
 import aiohttp
-import async_timeout
 from smhi import Smhi
 from smhi.smhi_lib import SmhiForecast, SmhiForecastException
 
@@ -149,7 +148,6 @@ class SmhiWeather(WeatherEntity):
             name=name,
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
-        self._attr_condition = None
         self._attr_native_temperature = None
 
     @property
@@ -165,7 +163,7 @@ class SmhiWeather(WeatherEntity):
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT):
                 self._forecast_daily = await self._smhi_api.async_get_forecast()
                 self._forecast_hourly = await self._smhi_api.async_get_forecast_hour()
                 self._fail_count = 0

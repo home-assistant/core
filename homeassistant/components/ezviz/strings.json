@@ -92,6 +92,17 @@
           }
         }
       }
+    },
+    "service_depreciation_sound_alarm": {
+      "title": "Ezviz Sound alarm service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::ezviz::issues::service_depreciation_sound_alarm::title%]",
+            "description": "Ezviz Sound alarm service is deprecated and will be removed.\nTo sound the alarm, you can instead use the `siren.toggle` service targeting the Siren entity.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to fix this issue."
+          }
+        }
+      }
     }
   },
   "entity": {
@@ -215,6 +226,11 @@
     "update": {
       "firmware": {
         "name": "[%key:component::update::entity_component::firmware::name%]"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
       }
     }
   },

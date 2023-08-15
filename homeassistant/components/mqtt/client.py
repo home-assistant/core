@@ -12,7 +12,6 @@ import time
 from typing import TYPE_CHECKING, Any
 import uuid
 
-import async_timeout
 import attr
 import certifi
 
@@ -918,7 +917,7 @@ class MQTT:
         # may be executed first.
         await self._register_mid(mid)
         try:
-            async with async_timeout.timeout(TIMEOUT_ACK):
+            async with asyncio.timeout(TIMEOUT_ACK):
                 await self._pending_operations[mid].wait()
         except asyncio.TimeoutError:
             _LOGGER.warning(
