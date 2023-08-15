@@ -111,35 +111,6 @@ class MockWeatherEntity(WeatherEntity):
         ]
 
 
-class MockWeatherEntityLegacyForecast(WeatherEntity):
-    """Mock a Weather Entity with only legacy forecast."""
-
-    def __init__(self) -> None:
-        """Initiate Entity."""
-        super().__init__()
-        self._attr_condition = ATTR_CONDITION_SUNNY
-        self._attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
-        self._attr_native_pressure = 10
-        self._attr_native_pressure_unit = UnitOfPressure.HPA
-        self._attr_native_temperature = 20
-        self._attr_native_apparent_temperature = 25
-        self._attr_native_dew_point = 2
-        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_native_visibility = 30
-        self._attr_native_visibility_unit = UnitOfLength.KILOMETERS
-        self._attr_native_wind_gust_speed = 10
-        self._attr_native_wind_speed = 3
-        self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
-        self._attr_forecast = [
-            Forecast(
-                datetime=datetime(2022, 6, 20, 00, 00, 00, tzinfo=dt_util.UTC),
-                native_precipitation=1,
-                native_temperature=20,
-                native_dew_point=2,
-            )
-        ]
-
-
 class MockWeatherEntityPrecision(WeatherEntity):
     """Mock a Weather Entity with precision."""
 
