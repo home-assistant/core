@@ -185,10 +185,12 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             CharacteristicsTypes.ROTATION_SPEED,
         ]
 
-    def _get_rotation_speed_range(self) -> tuple[float,float]:
-         return  (round(self.service[CharacteristicsTypes.ROTATION_SPEED].minValue or 0) + 1,
-                  round(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100))
-    
+    def _get_rotation_speed_range(self) -> tuple[float, float]:
+        return (
+            round(self.service[CharacteristicsTypes.ROTATION_SPEED].minValue or 0) + 1,
+            round(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100),
+        )
+
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the available fan modes."""
@@ -201,8 +203,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         """Return the current fan mode."""
         speed_range = self._get_rotation_speed_range()
         speed_percentage = ranged_value_to_percentage(
-            speed_range, self.service.value(
-                CharacteristicsTypes.ROTATION_SPEED)
+            speed_range, self.service.value(CharacteristicsTypes.ROTATION_SPEED)
         )
         fan_mode = FAN_OFF
 
@@ -227,9 +228,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             rotation = ROTATION_SPEED_HIGH
 
         speed_range = self._get_rotation_speed_range()
-        speed = round(
-            percentage_to_ranged_value(speed_range, rotation)
-        )
+        speed = round(percentage_to_ranged_value(speed_range, rotation))
         await self.async_put_characteristics(
             {CharacteristicsTypes.ROTATION_SPEED: speed}
         )
