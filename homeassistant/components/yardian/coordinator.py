@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import datetime
 import logging
 
-import async_timeout
 from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
 
 from homeassistant.config_entries import ConfigEntry
@@ -66,7 +65,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
     async def _async_update_data(self) -> YardianDeviceState:
         """Fetch data from Yardian device."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 zones = await self.controller.fetch_zone_info(self._amount_of_zones)
                 active_zones = await self.controller.fetch_active_zones()
                 return YardianDeviceState(zones=zones, active_zones=active_zones)
