@@ -14,9 +14,6 @@ class LawnMowerActivity(StrEnum):
     # Device is mowing
     MOWING = "mowing"
 
-    # Device is in process of going back to dock
-    DOCKING = "docking"
-
     # Device is docked
     DOCKED = "docked"
 

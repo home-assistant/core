@@ -36,7 +36,7 @@ async def async_setup_platform(
             DemoLawnMower(
                 "kitchen_sink_mower_003",
                 "Mower can pause",
-                LawnMowerActivity.DOCKING,
+                LawnMowerActivity.DOCKED,
                 LawnMowerEntityFeature.PAUSE | LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
@@ -91,7 +91,7 @@ class DemoLawnMower(LawnMowerEntity):
 
     async def async_dock(self) -> None:
         """Start docking."""
-        self._attr_activity = LawnMowerActivity.DOCKING
+        self._attr_activity = LawnMowerActivity.DOCKED
         self.async_write_ha_state()
 
     async def async_pause(self) -> None:

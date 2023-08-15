@@ -7,7 +7,6 @@
         "error": "Error",
         "paused": "Paused",
         "mowing": "Mowing",
-        "docking": "Docking",
         "docked": "Docked"
       }
     }

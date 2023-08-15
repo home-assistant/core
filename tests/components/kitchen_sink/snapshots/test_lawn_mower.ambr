@@ -43,7 +43,7 @@
       'entity_id': 'lawn_mower.mower_can_pause',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
-      'state': 'docking',
+      'state': 'docked',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

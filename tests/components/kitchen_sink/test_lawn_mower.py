@@ -56,7 +56,7 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
         (
             "lawn_mower.mower_can_pause",
             SERVICE_PAUSE,
-            LawnMowerActivity.DOCKING,
+            LawnMowerActivity.DOCKED,
             LawnMowerActivity.PAUSED,
         ),
         (
@@ -69,7 +69,7 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
             "lawn_mower.mower_can_dock",
             SERVICE_DOCK,
             LawnMowerActivity.MOWING,
-            LawnMowerActivity.DOCKING,
+            LawnMowerActivity.DOCKED,
         ),
     ],
 )
