@@ -65,16 +65,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "aeonmatrix": {
-      "name": "Aeon Matrix",
-      "integrations": {
-        "yardian": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "Yardian"
-        }
-      }
+    "yardian": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling",
+      "name": "Yardian"
     },
     "aftership": {
       "name": "AfterShip",
