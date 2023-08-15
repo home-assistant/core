@@ -6,7 +6,6 @@ import contextlib
 import logging
 from typing import Literal
 
-import async_timeout
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast as IPMAForecast
 from pyipma.location import Location
@@ -91,7 +90,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update Condition and Forecast."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             new_observation = await self._location.observation(self._api)
 
             if new_observation:
@@ -225,7 +224,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     ) -> None:
         """Try to update weather forecast."""
         with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await self._update_forecast(forecast_type, period, False)
 
     async def async_forecast_daily(self) -> list[Forecast]:

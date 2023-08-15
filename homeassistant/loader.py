@@ -166,6 +166,13 @@ class Manifest(TypedDict, total=False):
     loggers: list[str]
 
 
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the necessary data structures."""
+    _async_mount_config_dir(hass)
+    hass.data[DATA_COMPONENTS] = {}
+    hass.data[DATA_INTEGRATIONS] = {}
+
+
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
     """Generate a manifest from a legacy module."""
     return {
@@ -802,9 +809,7 @@ class Integration:
 
     def get_component(self) -> ComponentProtocol:
         """Return the component."""
-        cache: dict[str, ComponentProtocol] = self.hass.data.setdefault(
-            DATA_COMPONENTS, {}
-        )
+        cache: dict[str, ComponentProtocol] = self.hass.data[DATA_COMPONENTS]
         if self.domain in cache:
             return cache[self.domain]
 
@@ -824,7 +829,7 @@ class Integration:
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
         full_name = f"{self.domain}.{platform_name}"
         if full_name in cache:
             return cache[full_name]
@@ -883,11 +888,7 @@ async def async_get_integrations(
     hass: HomeAssistant, domains: Iterable[str]
 ) -> dict[str, Integration | Exception]:
     """Get integrations."""
-    if (cache := hass.data.get(DATA_INTEGRATIONS)) is None:
-        if not _async_mount_config_dir(hass):
-            return {domain: IntegrationNotFound(domain) for domain in domains}
-        cache = hass.data[DATA_INTEGRATIONS] = {}
-
+    cache = hass.data[DATA_INTEGRATIONS]
     results: dict[str, Integration | Exception] = {}
     needed: dict[str, asyncio.Future[None]] = {}
     in_progress: dict[str, asyncio.Future[None]] = {}
@@ -993,10 +994,7 @@ def _load_file(
             comp_or_platform
         ]
 
-    if (cache := hass.data.get(DATA_COMPONENTS)) is None:
-        if not _async_mount_config_dir(hass):
-            return None
-        cache = hass.data[DATA_COMPONENTS] = {}
+    cache = hass.data[DATA_COMPONENTS]
 
     for path in (f"{base}.{comp_or_platform}" for base in base_paths):
         try:
@@ -1066,7 +1064,7 @@ class Components:
     def __getattr__(self, comp_name: str) -> ModuleWrapper:
         """Fetch a component."""
         # Test integration cache
-        integration = self._hass.data.get(DATA_INTEGRATIONS, {}).get(comp_name)
+        integration = self._hass.data[DATA_INTEGRATIONS].get(comp_name)
 
         if isinstance(integration, Integration):
             component: ComponentProtocol | None = integration.get_component()

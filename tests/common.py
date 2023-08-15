@@ -256,6 +256,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     # Load the registries
     entity.async_setup(hass)
+    loader.async_setup(hass)
     if load_registries:
         with patch(
             "homeassistant.helpers.storage.Store.async_load", return_value=None
@@ -1339,16 +1340,10 @@ def mock_integration(
     integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
-    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
-    if integration_cache is None:
-        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
-        loader._async_mount_config_dir(hass)
+    integration_cache = hass.data[loader.DATA_INTEGRATIONS]
     integration_cache[module.DOMAIN] = integration
 
-    module_cache = hass.data.get(loader.DATA_COMPONENTS)
-    if module_cache is None:
-        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
-        loader._async_mount_config_dir(hass)
+    module_cache = hass.data[loader.DATA_COMPONENTS]
     module_cache[module.DOMAIN] = module
 
     return integration
@@ -1374,15 +1369,8 @@ def mock_platform(
     platform_path is in form hue.config_flow.
     """
     domain = platform_path.split(".")[0]
-    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
-    if integration_cache is None:
-        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
-        loader._async_mount_config_dir(hass)
-
-    module_cache = hass.data.get(loader.DATA_COMPONENTS)
-    if module_cache is None:
-        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
-        loader._async_mount_config_dir(hass)
+    integration_cache = hass.data[loader.DATA_INTEGRATIONS]
+    module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))

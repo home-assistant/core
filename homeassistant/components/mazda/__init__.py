@@ -1,11 +1,11 @@
 """The Mazda Connected Services integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 from pymazda import (
     Client as MazdaAPI,
     MazdaAccountLockedException,
@@ -53,7 +53,7 @@ PLATFORMS = [
 
 async def with_timeout(task, timeout_seconds=30):
     """Run an async task with a timeout."""
-    async with async_timeout.timeout(timeout_seconds):
+    async with asyncio.timeout(timeout_seconds):
         return await task
 
 

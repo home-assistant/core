@@ -1,6 +1,7 @@
 """Config flow for generic (IP Camera)."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import contextlib
 from datetime import datetime
@@ -10,7 +11,6 @@ import logging
 from typing import Any
 
 from aiohttp import web
-from async_timeout import timeout
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import PIL.Image
 import voluptuous as vol
@@ -171,7 +171,7 @@ async def async_test_still(
     auth = generate_auth(info)
     try:
         async_client = get_async_client(hass, verify_ssl=verify_ssl)
-        async with timeout(GET_IMAGE_TIMEOUT):
+        async with asyncio.timeout(GET_IMAGE_TIMEOUT):
             response = await async_client.get(url, auth=auth, timeout=GET_IMAGE_TIMEOUT)
             response.raise_for_status()
             image = response.content

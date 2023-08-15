@@ -753,9 +753,9 @@ class BrSensor(SensorEntity):
             self._timeframe = None
 
     @callback
-    def data_updated(self, data):
+    def data_updated(self, data: BrData):
         """Update data."""
-        if self.hass and self._load_data(data):
+        if self.hass and self._load_data(data.data):
             self.async_write_ha_state()
 
     @callback

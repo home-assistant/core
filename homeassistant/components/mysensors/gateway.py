@@ -9,7 +9,6 @@ import socket
 import sys
 from typing import Any
 
-import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
@@ -107,7 +106,7 @@ async def try_connect(
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
-            async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+            async with asyncio.timeout(GATEWAY_READY_TIMEOUT):
                 await gateway_ready.wait()
                 return True
         except asyncio.TimeoutError:
@@ -299,7 +298,7 @@ async def _gw_start(
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     try:
-        async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+        async with asyncio.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready.wait()
     except asyncio.TimeoutError:
         _LOGGER.warning(
