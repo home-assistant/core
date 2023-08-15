@@ -31,11 +31,11 @@ TYPE_PTR = 12
 class ThreadRouterDiscoveryData:
     """Thread router discovery data."""
 
-    addresses: list[str] | None
+    addresses: list[str]
     border_agent_id: str | None
     brand: str | None
-    extended_address: str | None
-    extended_pan_id: str | None
+    extended_address: str
+    extended_pan_id: str
     model_name: str | None
     network_name: str | None
     server: str | None
@@ -46,6 +46,8 @@ class ThreadRouterDiscoveryData:
 
 def async_discovery_data_from_service(
     service: AsyncServiceInfo,
+    ext_addr: bytes,
+    ext_pan_id: bytes,
 ) -> ThreadRouterDiscoveryData:
     """Get a ThreadRouterDiscoveryData from an AsyncServiceInfo."""
 
@@ -64,8 +66,6 @@ def async_discovery_data_from_service(
     service_properties = cast(dict[bytes, bytes | None], service.properties)
 
     border_agent_id = service_properties.get(b"id")
-    ext_addr = service_properties.get(b"xa")
-    ext_pan_id = service_properties.get(b"xp")
     model_name = try_decode(service_properties.get(b"mn"))
     network_name = try_decode(service_properties.get(b"nn"))
     server = service.server
@@ -90,8 +90,8 @@ def async_discovery_data_from_service(
         addresses=service.parsed_addresses(),
         border_agent_id=border_agent_id.hex() if border_agent_id is not None else None,
         brand=brand,
-        extended_address=ext_addr.hex() if ext_addr is not None else None,
-        extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
+        extended_address=ext_addr.hex(),
+        extended_pan_id=ext_pan_id.hex(),
         model_name=model_name,
         network_name=network_name,
         server=server,
@@ -121,7 +121,19 @@ def async_read_zeroconf_cache(aiozc: AsyncZeroconf) -> list[ThreadRouterDiscover
             # data is not fully in the cache, so ignore for now
             continue
 
-        results.append(async_discovery_data_from_service(info))
+        # Service properties are always bytes if they are set from the network.
+        # For legacy backwards compatibility zeroconf allows properties to be set
+        # as strings but we never do that so we can safely cast here.
+        service_properties = cast(dict[bytes, bytes | None], info.properties)
+
+        if not (xa := service_properties.get(b"xa")):
+            _LOGGER.debug("Ignoring record without xa %s", info)
+            continue
+        if not (xp := service_properties.get(b"xp")):
+            _LOGGER.debug("Ignoring record without xp %s", info)
+            continue
+
+        results.append(async_discovery_data_from_service(info, xa, xp))
 
     return results
 
@@ -182,18 +194,16 @@ class ThreadRouterDiscovery:
             # as strings but we never do that so we can safely cast here.
             service_properties = cast(dict[bytes, bytes | None], service.properties)
 
+            # We need xa and xp, bail out if either is missing
             if not (xa := service_properties.get(b"xa")):
                 _LOGGER.debug("_add_update_service failed to find xa in %s", service)
                 return
-
-            # We use the extended mac address as key, bail out if it's missing
-            try:
-                extended_mac_address = xa.hex()
-            except UnicodeDecodeError as err:
-                _LOGGER.debug("_add_update_service failed to parse service %s", err)
+            if not (xp := service_properties.get(b"xp")):
+                _LOGGER.debug("_add_update_service failed to find xp in %s", service)
                 return
 
-            data = async_discovery_data_from_service(service)
+            data = async_discovery_data_from_service(service, xa, xp)
+            extended_mac_address = xa.hex()
             if name in self._known_routers and self._known_routers[name] == (
                 extended_mac_address,
                 data,
