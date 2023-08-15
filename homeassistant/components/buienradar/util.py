@@ -27,7 +27,7 @@ from buienradar.constants import (
 from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -77,7 +77,8 @@ class BrData:
         for dev in self.devices:
             dev.data_updated(self)
 
-    async def schedule_update(self, minute=1):
+    @callback
+    def async_schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
         _LOGGER.debug("Scheduling next update in %s minutes", minute)
         nxt = dt_util.utcnow() + timedelta(minutes=minute)
@@ -110,7 +111,7 @@ class BrData:
             if resp is not None:
                 await resp.release()
 
-    async def async_update(self, *_):
+    async def _async_update(self):
         """Update the data from buienradar."""
         content = await self.get_data(JSON_FEED_URL)
 
@@ -123,9 +124,7 @@ class BrData:
                 content.get(MESSAGE),
                 content.get(STATUS_CODE),
             )
-            # schedule new call
-            await self.schedule_update(SCHEDULE_NOK)
-            return
+            return None
         self.load_error_count = 0
 
         # rounding coordinates prevents unnecessary redirects/calls
@@ -143,9 +142,7 @@ class BrData:
                 raincontent.get(MESSAGE),
                 raincontent.get(STATUS_CODE),
             )
-            # schedule new call
-            await self.schedule_update(SCHEDULE_NOK)
-            return
+            return None
         self.rain_error_count = 0
 
         result = parse_data(
@@ -164,12 +161,21 @@ class BrData:
                     "Unable to parse data from Buienradar. (Msg: %s)",
                     result.get(MESSAGE),
                 )
-            await self.schedule_update(SCHEDULE_NOK)
+            return None
+
+        return result[DATA]
+
+    async def async_update(self, *_):
+        """Update the data from buienradar and schedule the next update."""
+        data = await self._async_update()
+
+        if data is None:
+            self.async_schedule_update(SCHEDULE_NOK)
             return
 
-        self.data = result.get(DATA)
+        self.data = data
         await self.update_devices()
-        await self.schedule_update(SCHEDULE_OK)
+        self.async_schedule_update(SCHEDULE_OK)
 
     @property
     def attribution(self):
