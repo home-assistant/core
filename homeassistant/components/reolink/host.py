@@ -163,7 +163,7 @@ class ReolinkHost:
         else:
             _LOGGER.debug(
                 "Camera model %s most likely does not push its initial state"
-                "upon ONVIF subscription, do not check",
+                " upon ONVIF subscription, do not check",
                 self._api.model,
             )
         self._cancel_onvif_check = async_call_later(
