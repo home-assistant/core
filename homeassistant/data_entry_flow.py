@@ -5,14 +5,13 @@ import abc
 from collections.abc import Callable, Iterable, Mapping
 import copy
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict
+from typing import Any, Required, TypedDict
 
-from typing_extensions import Required
 import voluptuous as vol
 
-from .backports.enum import StrEnum
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.frame import report

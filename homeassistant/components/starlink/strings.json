@@ -16,7 +16,7 @@
   },
   "entity": {
     "binary_sensor": {
-      "roaming_mode": {
+      "roaming": {
         "name": "Roaming mode"
       },
       "currently_obstructed": {
@@ -26,7 +26,7 @@
         "name": "Heating"
       },
       "power_save_idle": {
-        "name": "Idle"
+        "name": "[%key:common::state::idle%]"
       },
       "mast_near_vertical": {
         "name": "Mast near vertical"
@@ -52,7 +52,7 @@
         "name": "Azimuth"
       },
       "elevation": {
-        "name": "Elevation"
+        "name": "[%key:common::config_flow::data::elevation%]"
       },
       "uplink_throughput": {
         "name": "Uplink throughput"

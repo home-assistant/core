@@ -7,8 +7,9 @@ from typing import Any
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
 from zwave_js_server.dump import dump_msgs
-from zwave_js_server.model.node import Node, NodeDataType
+from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import ValueDataType
+from zwave_js_server.util.node import dump_node_state
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.diagnostics.util import async_redact_data
@@ -54,13 +55,20 @@ def optionally_redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueD
     return zwave_value
 
 
-def redact_node_state(node_state: NodeDataType) -> NodeDataType:
+def redact_node_state(node_state: dict) -> dict:
     """Redact node state."""
-    redacted_state: NodeDataType = deepcopy(node_state)
-    redacted_state["values"] = [
-        optionally_redact_value_of_zwave_value(zwave_value)
-        for zwave_value in node_state["values"]
-    ]
+    redacted_state: dict = deepcopy(node_state)
+    # dump_msgs returns values in a list but dump_node_state returns them in a dict
+    if isinstance(node_state["values"], list):
+        redacted_state["values"] = [
+            optionally_redact_value_of_zwave_value(zwave_value)
+            for zwave_value in node_state["values"]
+        ]
+    else:
+        redacted_state["values"] = {
+            value_id: optionally_redact_value_of_zwave_value(zwave_value)
+            for value_id, zwave_value in node_state["values"].items()
+        }
     return redacted_state
 
 
@@ -129,8 +137,8 @@ async def async_get_config_entry_diagnostics(
     handshake_msgs = msgs[:-1]
     network_state = msgs[-1]
     network_state["result"]["state"]["nodes"] = [
-        redact_node_state(async_redact_data(node, KEYS_TO_REDACT))
-        for node in network_state["result"]["state"]["nodes"]
+        redact_node_state(async_redact_data(node_data, KEYS_TO_REDACT))
+        for node_data in network_state["result"]["state"]["nodes"]
     ]
     return {"messages": [*handshake_msgs, network_state]}
 
@@ -148,7 +156,9 @@ async def async_get_device_diagnostics(
     node = driver.controller.nodes[node_id]
     entities = get_device_entities(hass, node, config_entry, device)
     assert client.version
-    node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
+    node_state = redact_node_state(
+        async_redact_data(dump_node_state(node), KEYS_TO_REDACT)
+    )
     return {
         "versionInfo": {
             "driverVersion": client.version.driver_version,

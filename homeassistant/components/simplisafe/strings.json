@@ -36,5 +36,85 @@
         "name": "Clear notifications"
       }
     }
+  },
+  "services": {
+    "remove_pin": {
+      "name": "Remove PIN",
+      "description": "Removes a PIN by its label or value.",
+      "fields": {
+        "device_id": {
+          "name": "System",
+          "description": "The system to remove the PIN from."
+        },
+        "label_or_pin": {
+          "name": "Label/PIN",
+          "description": "The label/value to remove."
+        }
+      }
+    },
+    "set_pin": {
+      "name": "Set PIN",
+      "description": "Sets/updates a PIN.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::simplisafe::services::remove_pin::fields::device_id::name%]",
+          "description": "The system to set the PIN on."
+        },
+        "label": {
+          "name": "Label",
+          "description": "The label of the PIN."
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "The value of the PIN."
+        }
+      }
+    },
+    "set_system_properties": {
+      "name": "Set system properties",
+      "description": "Sets one or more system properties.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::simplisafe::services::remove_pin::fields::device_id::name%]",
+          "description": "The system whose properties should be set."
+        },
+        "alarm_duration": {
+          "name": "Alarm duration",
+          "description": "The length of a triggered alarm."
+        },
+        "alarm_volume": {
+          "name": "Alarm volume",
+          "description": "The volume level of a triggered alarm."
+        },
+        "chime_volume": {
+          "name": "Chime volume",
+          "description": "The volume level of the door chime."
+        },
+        "entry_delay_away": {
+          "name": "Entry delay away",
+          "description": "How long to delay when entering while \"away\"."
+        },
+        "entry_delay_home": {
+          "name": "Entry delay home",
+          "description": "How long to delay when entering while \"home\"."
+        },
+        "exit_delay_away": {
+          "name": "Exit delay away",
+          "description": "How long to delay when exiting while \"away\"."
+        },
+        "exit_delay_home": {
+          "name": "Exit delay home",
+          "description": "How long to delay when exiting while \"home\"."
+        },
+        "light": {
+          "name": "Light",
+          "description": "Whether the armed light should be visible."
+        },
+        "voice_prompt_volume": {
+          "name": "Voice prompt volume",
+          "description": "The volume level of the voice prompt."
+        }
+      }
+    }
   }
 }

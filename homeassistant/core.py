@@ -26,24 +26,14 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    ParamSpec,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
 from urllib.parse import urlparse
 
 import async_timeout
-from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
 from . import block_async_io, loader, util
-from .backports.enum import StrEnum
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -133,7 +123,7 @@ BLOCK_LOG_TIMEOUT = 60
 ServiceResponse = JsonObjectType | None
 
 
-class ConfigSource(StrEnum):
+class ConfigSource(enum.StrEnum):
     """Source of core configuration."""
 
     DEFAULT = "default"
@@ -764,7 +754,7 @@ class HomeAssistant:
         for task in self._background_tasks:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
-            task.cancel()
+            task.cancel("Home Assistant is stopping")
         self._cancel_cancellable_timers()
 
         self.exit_code = exit_code
@@ -814,7 +804,7 @@ class HomeAssistant:
                 "the stop event to prevent delaying shutdown",
                 task,
             )
-            task.cancel()
+            task.cancel("Home Assistant stage 2 shutdown")
             try:
                 async with async_timeout.timeout(0.1):
                     await task
@@ -1669,7 +1659,7 @@ class StateMachine:
         )
 
 
-class SupportsResponse(StrEnum):
+class SupportsResponse(enum.StrEnum):
     """Service call response configuration."""
 
     NONE = "none"
@@ -1770,7 +1760,7 @@ class ServiceRegistry:
         the context. Will return NONE if the service does not exist as there is
         other error handling when calling the service if it does not exist.
         """
-        if not (handler := self._services[domain][service]):
+        if not (handler := self._services[domain.lower()][service.lower()]):
             return SupportsResponse.NONE
         return handler.supports_response
 

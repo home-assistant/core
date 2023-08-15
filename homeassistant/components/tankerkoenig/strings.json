@@ -38,7 +38,7 @@
       "init": {
         "title": "Tankerkoenig options",
         "data": {
-          "stations": "Stations",
+          "stations": "[%key:component::tankerkoenig::config::step::select_station::data::stations%]",
           "show_on_map": "Show stations on map"
         }
       }

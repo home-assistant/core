@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -154,17 +154,18 @@ class AmbiclimateEntity(ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, heater, store):
         """Initialize the thermostat."""
         self._heater = heater
         self._store = store
         self._attr_unique_id = heater.device_id
-        self._attr_name = heater.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Ambiclimate",
-            name=self.name,
+            name=heater.name,
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:

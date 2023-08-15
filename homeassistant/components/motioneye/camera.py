@@ -12,7 +12,6 @@ from motioneye_client.const import (
     DEFAULT_SURVEILLANCE_USERNAME,
     KEY_ACTION_SNAPSHOT,
     KEY_MOTION_DETECTION,
-    KEY_NAME,
     KEY_STREAMING_AUTH_MODE,
     KEY_TEXT_OVERLAY_CAMERA_NAME,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT,
@@ -144,8 +143,6 @@ async def async_setup_entry(
 class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     """motionEye mjpeg camera."""
 
-    _name: str
-
     def __init__(
         self,
         config_entry_id: str,
@@ -203,7 +200,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
                 streaming_url = self._client.get_camera_stream_url(camera)
 
         return {
-            CONF_NAME: camera[KEY_NAME],
+            CONF_NAME: None,
             CONF_USERNAME: self._surveillance_username if auth is not None else None,
             CONF_PASSWORD: self._surveillance_password if auth is not None else "",
             CONF_MJPEG_URL: streaming_url or "",
@@ -218,7 +215,6 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         # Sets the state of the underlying (inherited) MjpegCamera based on the updated
         # MotionEye camera dictionary.
         properties = self._get_mjpeg_camera_properties_for_camera(camera)
-        self._name = properties[CONF_NAME]
         self._username = properties[CONF_USERNAME]
         self._password = properties[CONF_PASSWORD]
         self._mjpeg_url = properties[CONF_MJPEG_URL]

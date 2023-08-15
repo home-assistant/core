@@ -118,7 +118,11 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
     _attr_device_class = CoverDeviceClass.SHADE
-    _attr_supported_features = CoverEntityFeature(0)
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
 
     def __init__(
         self,
@@ -131,7 +135,6 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._shade: BaseShade = shade
-        self._attr_name = self._shade_name
         self._scheduled_transition_update: CALLBACK_TYPE | None = None
         if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
@@ -346,25 +349,13 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
 class PowerViewShade(PowerViewShadeBase):
     """Represent a standard shade."""
 
-    def __init__(
-        self,
-        coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: PowerviewDeviceInfo,
-        room_name: str,
-        shade: BaseShade,
-        name: str,
-    ) -> None:
-        """Initialize the shade."""
-        super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_supported_features |= (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
-        )
+    _attr_name = None
 
 
-class PowerViewShadeWithTiltBase(PowerViewShade):
+class PowerViewShadeWithTiltBase(PowerViewShadeBase):
     """Representation for PowerView shades with tilt capabilities."""
+
+    _attr_name = None
 
     def __init__(
         self,
@@ -453,8 +444,10 @@ class PowerViewShadeWithTiltOnClosed(PowerViewShadeWithTiltBase):
     API Class: ShadeBottomUpTiltOnClosed + ShadeBottomUpTiltOnClosed90
 
     Type 1 - Bottom Up w/ 90° Tilt
-    Shade 44 - a shade thought to have been a firmware issue (type 0 usually dont tilt)
+    Shade 44 - a shade thought to have been a firmware issue (type 0 usually don't tilt)
     """
+
+    _attr_name = None
 
     @property
     def open_position(self) -> PowerviewShadeMove:
@@ -570,7 +563,7 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         self._max_tilt = self._shade.shade_limits.tilt_max
 
 
-class PowerViewShadeTopDown(PowerViewShade):
+class PowerViewShadeTopDown(PowerViewShadeBase):
     """Representation of a shade that lowers from the roof to the floor.
 
     These shades are inverted where MAX_POSITION equates to closed and MIN_POSITION is open
@@ -578,6 +571,8 @@ class PowerViewShadeTopDown(PowerViewShade):
 
     Type 6 - Top Down
     """
+
+    _attr_name = None
 
     @property
     def current_cover_position(self) -> int:
@@ -594,7 +589,7 @@ class PowerViewShadeTopDown(PowerViewShade):
         await self._async_set_cover_position(100 - kwargs[ATTR_POSITION])
 
 
-class PowerViewShadeDualRailBase(PowerViewShade):
+class PowerViewShadeDualRailBase(PowerViewShadeBase):
     """Representation of a shade with top/down bottom/up capabilities.
 
     Base methods shared between the two shades created
@@ -613,10 +608,12 @@ class PowerViewShadeDualRailBase(PowerViewShade):
 class PowerViewShadeTDBUBottom(PowerViewShadeDualRailBase):
     """Representation of the bottom PowerViewShadeDualRailBase shade.
 
-    These shades have top/down bottom up functionality and two entiites.
+    These shades have top/down bottom up functionality and two entities.
     Sibling Class: PowerViewShadeTDBUTop
     API Class: ShadeTopDownBottomUp
     """
+
+    _attr_translation_key = "bottom"
 
     def __init__(
         self,
@@ -629,7 +626,6 @@ class PowerViewShadeTDBUBottom(PowerViewShadeDualRailBase):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_bottom"
-        self._attr_name = f"{self._shade_name} Bottom"
 
     @callback
     def _clamp_cover_limit(self, target_hass_position: int) -> int:
@@ -655,10 +651,12 @@ class PowerViewShadeTDBUBottom(PowerViewShadeDualRailBase):
 class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
     """Representation of the top PowerViewShadeDualRailBase shade.
 
-    These shades have top/down bottom up functionality and two entiites.
+    These shades have top/down bottom up functionality and two entities.
     Sibling Class: PowerViewShadeTDBUBottom
     API Class: ShadeTopDownBottomUp
     """
+
+    _attr_translation_key = "top"
 
     def __init__(
         self,
@@ -671,7 +669,6 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_top"
-        self._attr_name = f"{self._shade_name} Top"
 
     @property
     def should_poll(self) -> bool:
@@ -711,7 +708,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
 
     @callback
     def _clamp_cover_limit(self, target_hass_position: int) -> int:
-        """Dont allow a cover to go into an impossbile position."""
+        """Don't allow a cover to go into an impossbile position."""
         cover_bottom = hd_position_to_hass(self.positions.primary, MAX_POSITION)
         return min(target_hass_position, (100 - cover_bottom))
 
@@ -730,7 +727,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
         )
 
 
-class PowerViewShadeDualOverlappedBase(PowerViewShade):
+class PowerViewShadeDualOverlappedBase(PowerViewShadeBase):
     """Represent a shade that has a front sheer and rear opaque panel.
 
     This equates to two shades being controlled by one motor
@@ -783,6 +780,8 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
     Type 8 - Duolite (front and rear shades)
     """
 
+    _attr_translation_key = "combined"
+
     # type
     def __init__(
         self,
@@ -795,7 +794,6 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_combined"
-        self._attr_name = f"{self._shade_name} Combined"
 
     @property
     def is_closed(self) -> bool:
@@ -842,7 +840,7 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
 
 
 class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
-    """Represent the shade front panel - These have a opaque panel too.
+    """Represent the shade front panel - These have an opaque panel too.
 
     This equates to two shades being controlled by one motor.
     The front shade must be completely down before the rear shade will move.
@@ -857,6 +855,8 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
     Type 10 - Duolite with 180° Tilt
     """
 
+    _attr_translation_key = "front"
+
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
@@ -868,7 +868,6 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_front"
-        self._attr_name = f"{self._shade_name} Front"
 
     @property
     def should_poll(self) -> bool:
@@ -906,7 +905,7 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
 
 
 class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
-    """Represent the shade front panel - These have a opaque panel too.
+    """Represent the shade front panel - These have an opaque panel too.
 
     This equates to two shades being controlled by one motor.
     The front shade must be completely down before the rear shade will move.
@@ -921,6 +920,8 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
     Type 10 - Duolite with 180° Tilt
     """
 
+    _attr_translation_key = "rear"
+
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
@@ -932,7 +933,6 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_rear"
-        self._attr_name = f"{self._shade_name} Rear"
 
     @property
     def should_poll(self) -> bool:

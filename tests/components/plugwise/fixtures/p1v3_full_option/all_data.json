@@ -1,11 +1,9 @@
-[
-  {
-    "smile_name": "Smile P1",
-    "gateway_id": "cd3e822288064775a7c4afcdd70bdda2",
-    "notifications": {}
-  },
-  {
+{
+  "devices": {
     "cd3e822288064775a7c4afcdd70bdda2": {
+      "binary_sensors": {
+        "plugwise_notification": false
+      },
       "dev_class": "gateway",
       "firmware": "3.3.9",
       "hardware": "AME Smile 2.0 board",
@@ -13,36 +11,38 @@
       "mac_address": "012345670001",
       "model": "Gateway",
       "name": "Smile P1",
-      "vendor": "Plugwise",
-      "binary_sensors": {
-        "plugwise_notification": false
-      }
+      "vendor": "Plugwise"
     },
     "e950c7d5e1ee407a858e2a8b5016c8b3": {
+      "available": true,
       "dev_class": "smartmeter",
       "location": "cd3e822288064775a7c4afcdd70bdda2",
       "model": "2M550E-1012",
       "name": "P1",
-      "vendor": "ISKRAEMECO",
-      "available": true,
       "sensors": {
-        "net_electricity_point": -2816,
-        "electricity_consumed_peak_point": 0,
-        "electricity_consumed_off_peak_point": 0,
-        "net_electricity_cumulative": 442.972,
-        "electricity_consumed_peak_cumulative": 442.932,
         "electricity_consumed_off_peak_cumulative": 551.09,
-        "electricity_consumed_peak_interval": 0,
         "electricity_consumed_off_peak_interval": 0,
-        "electricity_produced_peak_point": 2816,
+        "electricity_consumed_off_peak_point": 0,
+        "electricity_consumed_peak_cumulative": 442.932,
+        "electricity_consumed_peak_interval": 0,
+        "electricity_consumed_peak_point": 0,
+        "electricity_produced_off_peak_cumulative": 154.491,
+        "electricity_produced_off_peak_interval": 0,
         "electricity_produced_off_peak_point": 0,
         "electricity_produced_peak_cumulative": 396.559,
-        "electricity_produced_off_peak_cumulative": 154.491,
         "electricity_produced_peak_interval": 0,
-        "electricity_produced_off_peak_interval": 0,
+        "electricity_produced_peak_point": 2816,
         "gas_consumed_cumulative": 584.85,
-        "gas_consumed_interval": 0.0
-      }
+        "gas_consumed_interval": 0.0,
+        "net_electricity_cumulative": 442.972,
+        "net_electricity_point": -2816
+      },
+      "vendor": "ISKRAEMECO"
     }
+  },
+  "gateway": {
+    "gateway_id": "cd3e822288064775a7c4afcdd70bdda2",
+    "notifications": {},
+    "smile_name": "Smile P1"
   }
-]
+}

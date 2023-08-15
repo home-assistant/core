@@ -20,8 +20,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, KEY_MAC, TIMEOUT
@@ -139,7 +138,7 @@ async def async_migrate_unique_id(
     dev_reg = dr.async_get(hass)
     old_unique_id = config_entry.unique_id
     new_unique_id = api.device.mac
-    new_name = api.device.values["name"]
+    new_name = api.device.values.get("name")
 
     @callback
     def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:

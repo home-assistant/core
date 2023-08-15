@@ -117,7 +117,7 @@ async def test_device_diagnostics(
     assert config_entry.state is ConfigEntryState.LOADED
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, NEST_DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, NEST_DEVICE_ID)})
     assert device is not None
 
     assert (

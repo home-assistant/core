@@ -3,13 +3,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
 
 class TractiveEntity(Entity):
     """Tractive entity class."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self, user_id: str, trackable: dict[str, Any], tracker_details: dict[str, Any]

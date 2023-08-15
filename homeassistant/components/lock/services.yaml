@@ -1,22 +1,16 @@
 # Describes the format for available lock services
 
 lock:
-  name: Lock
-  description: Lock all or specified locks.
   target:
     entity:
       domain: lock
   fields:
     code:
-      name: Code
-      description: An optional code to lock the lock with.
       example: 1234
       selector:
         text:
 
 open:
-  name: Open
-  description: Open all or specified locks.
   target:
     entity:
       domain: lock
@@ -24,22 +18,16 @@ open:
         - lock.LockEntityFeature.OPEN
   fields:
     code:
-      name: Code
-      description: An optional code to open the lock with.
       example: 1234
       selector:
         text:
 
 unlock:
-  name: Unlock
-  description: Unlock all or specified locks.
   target:
     entity:
       domain: lock
   fields:
     code:
-      name: Code
-      description: An optional code to unlock the lock with.
       example: 1234
       selector:
         text:

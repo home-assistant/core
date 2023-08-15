@@ -59,7 +59,7 @@ def mock_responses(
         )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetInverterInfo.cgi",
-        text=load_fixture(f"{fixture_set}/GetInverterInfo.json", "fronius"),
+        text=load_fixture(f"{fixture_set}/GetInverterInfo{_night}.json", "fronius"),
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetLoggerInfo.cgi",

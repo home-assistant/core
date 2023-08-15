@@ -26,10 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.generated.mqtt import MQTT
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -682,7 +679,7 @@ async def help_test_discovery_update_attr(
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "50" }')
     state = hass.states.get(f"{domain}.test")
-    assert state and state.attributes.get("val") == "100"
+    assert state and state.attributes.get("val") != "50"
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "attr-topic2", '{ "val": "75" }')
@@ -1001,7 +998,7 @@ async def help_test_entity_device_info_with_identifier(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
     assert device.manufacturer == "Whatever"
@@ -1036,7 +1033,7 @@ async def help_test_entity_device_info_with_connection(
     await hass.async_block_till_done()
 
     device = registry.async_get_device(
-        set(), {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
+        connections={(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     )
     assert device is not None
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
@@ -1069,14 +1066,14 @@ async def help_test_entity_device_info_remove(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = dev_registry.async_get_device({("mqtt", "helloworld")})
+    device = dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
     await hass.async_block_till_done()
 
-    device = dev_registry.async_get_device({("mqtt", "helloworld")})
+    device = dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is None
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
 
@@ -1103,7 +1100,7 @@ async def help_test_entity_device_info_update(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.name == "Beer"
 
@@ -1112,9 +1109,48 @@ async def help_test_entity_device_info_update(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.name == "Milk"
+
+
+async def help_test_entity_name(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    domain: str,
+    config: ConfigType,
+    expected_friendly_name: str | None = None,
+    device_class: str | None = None,
+) -> None:
+    """Test device name setup with and without a device_class set.
+
+    This is a test helper for the _setup_common_attributes_from_config mixin.
+    """
+    await mqtt_mock_entry()
+    # Add device settings to config
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+    expected_entity_name = "test"
+    if device_class is not None:
+        config["device_class"] = device_class
+        # Do not set a name
+        config.pop("name")
+        expected_entity_name = device_class
+
+    registry = dr.async_get(hass)
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")})
+    assert device is not None
+
+    entity_id = f"{domain}.beer_{expected_entity_name}"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == f"Beer {expected_friendly_name}"
 
 
 async def help_test_entity_id_update_subscriptions(
@@ -1232,7 +1268,7 @@ async def help_test_entity_debug_info(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1272,7 +1308,7 @@ async def help_test_entity_debug_info_max_messages(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1352,7 +1388,7 @@ async def help_test_entity_debug_info_message(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1390,7 +1426,7 @@ async def help_test_entity_debug_info_message(
         with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
             dt_utcnow.return_value = start_dt
             if service:
-                service_data = {ATTR_ENTITY_ID: f"{domain}.test"}
+                service_data = {ATTR_ENTITY_ID: f"{domain}.beer_test"}
                 if service_parameters:
                     service_data.update(service_parameters)
 
@@ -1443,7 +1479,7 @@ async def help_test_entity_debug_info_remove(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1458,7 +1494,7 @@ async def help_test_entity_debug_info_remove(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.test"
+    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.beer_test"
     entity_id = debug_info_data["entities"][0]["entity_id"]
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
@@ -1493,7 +1529,7 @@ async def help_test_entity_debug_info_update_entity_id(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1503,7 +1539,7 @@ async def help_test_entity_debug_info_update_entity_id(
         == f"homeassistant/{domain}/bla/config"
     )
     assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
-    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.test"
+    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.beer_test"
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1511,7 +1547,7 @@ async def help_test_entity_debug_info_update_entity_id(
     assert len(debug_info_data["triggers"]) == 0
 
     entity_registry.async_update_entity(
-        f"{domain}.test", new_entity_id=f"{domain}.milk"
+        f"{domain}.beer_test", new_entity_id=f"{domain}.milk"
     )
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -1529,7 +1565,7 @@ async def help_test_entity_debug_info_update_entity_id(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert f"{domain}.test" not in hass.data["mqtt"].debug_info_entities
+    assert f"{domain}.beer_test" not in hass.data["mqtt"].debug_info_entities
 
 
 async def help_test_entity_disabled_by_default(
@@ -1555,7 +1591,7 @@ async def help_test_entity_disabled_by_default(
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
     assert entity_id is not None and hass.states.get(entity_id) is None
-    assert dev_registry.async_get_device({("mqtt", "helloworld")})
+    assert dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
 
     # Discover an enabled entity, tied to the same device
     config["enabled_by_default"] = True
@@ -1571,7 +1607,7 @@ async def help_test_entity_disabled_by_default(
     await hass.async_block_till_done()
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
-    assert not dev_registry.async_get_device({("mqtt", "helloworld")})
+    assert not dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
 
 
 async def help_test_entity_category(

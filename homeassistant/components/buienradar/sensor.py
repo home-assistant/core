@@ -129,14 +129,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -150,7 +149,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="windspeed",
-        translation_key="windspeed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
@@ -174,7 +172,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="pressure",
-        translation_key="pressure",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
@@ -194,14 +192,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="precipitation",
-        translation_key="precipitation",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="irradiance",
-        translation_key="irradiance",
         device_class=SensorDeviceClass.IRRADIANCE,
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -757,9 +753,9 @@ class BrSensor(SensorEntity):
             self._timeframe = None
 
     @callback
-    def data_updated(self, data):
+    def data_updated(self, data: BrData):
         """Update data."""
-        if self.hass and self._load_data(data):
+        if self.hass and self._load_data(data.data):
             self.async_write_ha_state()
 
     @callback
