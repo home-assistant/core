@@ -13,6 +13,7 @@ from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster, IasZone
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .. import registries
 from ..const import (
@@ -367,11 +368,27 @@ class IASZoneClusterHandler(ClusterHandler):
         await self.bind()
         ieee = self.cluster.endpoint.device.application.state.node_info.ieee
 
-        await self.write_attributes_safe({"cie_addr": ieee})
+        try:
+            res = await self.write_attributes_safe({"cie_addr": ieee})
+            self.debug(
+                "wrote cie_addr: %s to '%s' cluster: %s",
+                str(ieee),
+                self._cluster.ep_attribute,
+                res[0],
+            )
+        except HomeAssistantError as ex:
+            self.debug(
+                "Failed to write cie_addr: %s to '%s' cluster: %s",
+                str(ieee),
+                self._cluster.ep_attribute,
+                str(ex),
+            )
 
         self.debug("Sending pro-active IAS enroll response")
-        await self.enroll_response(
-            enroll_response_code=IasZone.EnrollResponse.Success, zone_id=0
+        self._cluster.create_catching_task(
+            self.enroll_response(
+                enroll_response_code=IasZone.EnrollResponse.Success, zone_id=0
+            )
         )
 
         self._status = ClusterHandlerStatus.CONFIGURED
