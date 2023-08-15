@@ -55,8 +55,6 @@ async def async_setup_entry(
     coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
-    envoy_serial_num = config_entry.unique_id
-    assert envoy_serial_num is not None
     entities: list[SwitchEntity] = []
     if envoy_data.enpower:
         entities.extend(

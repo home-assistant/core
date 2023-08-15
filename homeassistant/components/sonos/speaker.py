@@ -10,7 +10,6 @@ import logging
 import time
 from typing import Any, cast
 
-import async_timeout
 import defusedxml.ElementTree as ET
 from soco.core import SoCo
 from soco.events_base import Event as SonosEvent, SubscriptionBase
@@ -1122,7 +1121,7 @@ class SonosSpeaker:
             return True
 
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio.timeout(5):
                 while not _test_groups(groups):
                     await hass.data[DATA_SONOS].topology_condition.wait()
         except asyncio.TimeoutError:
