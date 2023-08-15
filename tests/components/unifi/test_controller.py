@@ -80,7 +80,6 @@ ENTRY_OPTIONS = {}
 CONFIGURATION = []
 
 SITE = [{"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}]
-DESCRIPTION = [{"name": "username", "site_name": "site_id", "site_role": "admin"}]
 
 
 def mock_default_unifi_requests(
@@ -88,12 +87,12 @@ def mock_default_unifi_requests(
     host,
     site_id,
     sites=None,
-    description=None,
     clients_response=None,
     clients_all_response=None,
     devices_response=None,
     dpiapp_response=None,
     dpigroup_response=None,
+    port_forward_response=None,
     wlans_response=None,
 ):
     """Mock default UniFi requests responses."""
@@ -108,12 +107,6 @@ def mock_default_unifi_requests(
     aioclient_mock.get(
         f"https://{host}:1234/api/self/sites",
         json={"data": sites or [], "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        f"https://{host}:1234/api/s/{site_id}/self",
-        json={"data": description or [], "meta": {"rc": "ok"}},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -143,6 +136,11 @@ def mock_default_unifi_requests(
         headers={"content-type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/rest/portforward",
+        json={"data": port_forward_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
         f"https://{host}:1234/api/s/{site_id}/rest/wlanconf",
         json={"data": wlans_response or [], "meta": {"rc": "ok"}},
         headers={"content-type": CONTENT_TYPE_JSON},
@@ -156,12 +154,12 @@ async def setup_unifi_integration(
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
     sites=SITE,
-    site_description=DESCRIPTION,
     clients_response=None,
     clients_all_response=None,
     devices_response=None,
     dpiapp_response=None,
     dpigroup_response=None,
+    port_forward_response=None,
     wlans_response=None,
     known_wireless_clients=None,
     controllers=None,
@@ -192,12 +190,12 @@ async def setup_unifi_integration(
             host=config_entry.data[CONF_HOST],
             site_id=config_entry.data[CONF_SITE_ID],
             sites=sites,
-            description=site_description,
             clients_response=clients_response,
             clients_all_response=clients_all_response,
             devices_response=devices_response,
             dpiapp_response=dpiapp_response,
             dpigroup_response=dpigroup_response,
+            port_forward_response=port_forward_response,
             wlans_response=wlans_response,
         )
 
@@ -230,9 +228,8 @@ async def test_controller_setup(
     assert forward_entry_setup.mock_calls[4][1] == (entry, SWITCH_DOMAIN)
 
     assert controller.host == ENTRY_CONFIG[CONF_HOST]
-    assert controller.site == ENTRY_CONFIG[CONF_SITE_ID]
-    assert controller.site_name == SITE[0]["desc"]
     assert controller.site_role == SITE[0]["role"]
+    # assert controller.site.role == SITE[0]["role"]
 
     assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
     assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS

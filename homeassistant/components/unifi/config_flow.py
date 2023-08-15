@@ -99,7 +99,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 controller = await get_unifi_controller(
                     self.hass, MappingProxyType(self.config)
                 )
-                sites = await controller.sites()
+                await controller.sites.update()
+                sites = controller.sites.values()
 
             except AuthenticationRequired:
                 errors["base"] = "faulty_credentials"
@@ -108,8 +109,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 errors["base"] = "service_unavailable"
 
             else:
-                self.site_ids = {site["_id"]: site["name"] for site in sites.values()}
-                self.site_names = {site["_id"]: site["desc"] for site in sites.values()}
+                self.site_ids = {site.site_id: site.name for site in sites}
+                self.site_names = {site.site_id: site.description for site in sites}
 
                 if (
                     self.reauth_config_entry

@@ -36,8 +36,8 @@ from homeassistant.util import dt as dt_util
 
 from .test_controller import (
     CONTROLLER_HOST,
-    DESCRIPTION,
     ENTRY_CONFIG,
+    SITE,
     setup_unifi_integration,
 )
 
@@ -803,13 +803,13 @@ async def test_not_admin(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that switch platform only work on an admin account."""
-    description = deepcopy(DESCRIPTION)
-    description[0]["site_role"] = "not admin"
+    site = deepcopy(SITE)
+    site[0]["role"] = "not admin"
     await setup_unifi_integration(
         hass,
         aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
-        site_description=description,
+        sites=site,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )

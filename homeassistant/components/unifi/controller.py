@@ -10,6 +10,8 @@ from typing import Any
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
+
+# from aiounifi.models.site import Site
 from aiounifi.websocket import WebsocketState
 
 from homeassistant.config_entries import ConfigEntry
@@ -87,9 +89,8 @@ class UniFiController:
         self.available = True
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self.site_id: str = ""
-        self._site_name: str | None = None
-        self._site_role: str | None = None
+        self.site = config_entry.data[CONF_SITE_ID]
+        self.site_role: str | None = None
 
         self._cancel_heartbeat_check: CALLBACK_TYPE | None = None
         self._heartbeat_time: dict[str, datetime] = {}
@@ -154,21 +155,10 @@ class UniFiController:
         host: str = self.config_entry.data[CONF_HOST]
         return host
 
-    @property
-    def site(self) -> str:
-        """Return the site of this config entry."""
-        site_id: str = self.config_entry.data[CONF_SITE_ID]
-        return site_id
-
-    @property
-    def site_name(self) -> str | None:
-        """Return the nice name of site."""
-        return self._site_name
-
-    @property
-    def site_role(self) -> str | None:
-        """Return the site user role of this controller."""
-        return self._site_role
+    # @property
+    # def site(self) -> Site:
+    #     """"""
+    #     return self.api.sites[self.config_entry.unique_id]
 
     @property
     def mac(self) -> str | None:
@@ -264,15 +254,9 @@ class UniFiController:
         """Set up a UniFi Network instance."""
         await self.api.initialize()
 
-        sites = await self.api.sites()
-        for site in sites.values():
-            if self.site == site["name"]:
-                self.site_id = site["_id"]
-                self._site_name = site["desc"]
-                break
-
-        description = await self.api.site_description()
-        self._site_role = description[0]["site_role"]
+        unique_id = self.config_entry.unique_id
+        assert unique_id is not None
+        self.site_role = self.api.sites[unique_id].role
 
         # Restore clients that are not a part of active clients list.
         entity_registry = er.async_get(self.hass)
