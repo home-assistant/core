@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import deque
-from collections.abc import AsyncIterable, Callable, MutableSequence, Sequence
+from collections.abc import AsyncIterable, Callable
 import logging
 import socket
 from typing import cast
@@ -18,10 +17,6 @@ from homeassistant.components.assist_pipeline import (
     PipelineStage,
     async_pipeline_from_audio_stream,
     select as pipeline_select,
-)
-from homeassistant.components.assist_pipeline.vad import (
-    VadSensitivity,
-    VoiceCommandSegmenter,
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
@@ -208,103 +203,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             self._tts_done.set()
             self.handle_finished()
 
-    async def _wait_for_speech(
-        self,
-        segmenter: VoiceCommandSegmenter,
-        chunk_buffer: MutableSequence[bytes],
-    ) -> bool:
-        """Buffer audio chunks until speech is detected.
-
-        Raises asyncio.TimeoutError if no audio data is retrievable from the queue (device stops sending packets / networking issue).
-
-        Returns True if speech was detected
-        Returns False if the connection was stopped gracefully (b"" put onto the queue).
-        """
-        # Timeout if no audio comes in for a while.
-        async with asyncio.timeout(self.audio_timeout):
-            chunk = await self.queue.get()
-
-        while chunk:
-            segmenter.process(chunk)
-            # Buffer the data we have taken from the queue
-            chunk_buffer.append(chunk)
-            if segmenter.in_command:
-                return True
-
-            async with asyncio.timeout(self.audio_timeout):
-                chunk = await self.queue.get()
-
-        # If chunk is falsey, `stop()` was called
-        return False
-
-    async def _segment_audio(
-        self,
-        segmenter: VoiceCommandSegmenter,
-        chunk_buffer: Sequence[bytes],
-    ) -> AsyncIterable[bytes]:
-        """Yield audio chunks until voice command has finished.
-
-        Raises asyncio.TimeoutError if no audio data is retrievable from the queue.
-        """
-        # Buffered chunks first
-        for buffered_chunk in chunk_buffer:
-            yield buffered_chunk
-
-        # Timeout if no audio comes in for a while.
-        async with asyncio.timeout(self.audio_timeout):
-            chunk = await self.queue.get()
-
-        while chunk:
-            if not segmenter.process(chunk):
-                # Voice command is finished
-                break
-
-            yield chunk
-
-            async with asyncio.timeout(self.audio_timeout):
-                chunk = await self.queue.get()
-
-    async def _iterate_packets_with_vad(
-        self, pipeline_timeout: float, silence_seconds: float
-    ) -> Callable[[], AsyncIterable[bytes]] | None:
-        segmenter = VoiceCommandSegmenter(silence_seconds=silence_seconds)
-        chunk_buffer: deque[bytes] = deque(maxlen=100)
-        try:
-            async with asyncio.timeout(pipeline_timeout):
-                speech_detected = await self._wait_for_speech(segmenter, chunk_buffer)
-                if not speech_detected:
-                    _LOGGER.debug(
-                        "Device stopped sending audio before speech was detected"
-                    )
-                    self.handle_finished()
-                    return None
-        except asyncio.TimeoutError:
-            self.handle_event(
-                VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
-                {
-                    "code": "speech-timeout",
-                    "message": "Timed out waiting for speech",
-                },
-            )
-            self.handle_finished()
-            return None
-
-        async def _stream_packets() -> AsyncIterable[bytes]:
-            try:
-                async for chunk in self._segment_audio(segmenter, chunk_buffer):
-                    yield chunk
-            except asyncio.TimeoutError:
-                self.handle_event(
-                    VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
-                    {
-                        "code": "speech-timeout",
-                        "message": "No speech detected",
-                    },
-                )
-                self.handle_finished()
-
-        return _stream_packets
-
     async def run_pipeline(
         self,
         device_id: str,
@@ -317,23 +215,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         tts_audio_output = (
             "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
         )
-
-        if flags & VoiceAssistantCommandFlag.USE_VAD:
-            stt_stream = await self._iterate_packets_with_vad(
-                pipeline_timeout,
-                silence_seconds=VadSensitivity.to_seconds(
-                    pipeline_select.get_vad_sensitivity(
-                        self.hass,
-                        DOMAIN,
-                        self.device_info.mac_address,
-                    )
-                ),
-            )
-            # Error or timeout occurred and was handled already
-            if stt_stream is None:
-                return
-        else:
-            stt_stream = self._iterate_packets
 
         _LOGGER.debug("Starting pipeline")
         if flags & VoiceAssistantCommandFlag.USE_WAKE_WORD:
@@ -354,7 +235,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                         sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
                         channel=stt.AudioChannels.CHANNEL_MONO,
                     ),
-                    stt_stream=stt_stream(),
+                    stt_stream=self._iterate_packets(),
                     pipeline_id=pipeline_select.get_chosen_pipeline(
                         self.hass, DOMAIN, self.device_info.mac_address
                     ),
