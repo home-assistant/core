@@ -1,6 +1,6 @@
 """Test ZHA climate."""
 from typing import Literal
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 import zhaquirks.sinope.thermostat
@@ -39,7 +39,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.zha.climate import HVAC_MODE_2_SYSTEM, SEQ_OF_OPERATION
-from homeassistant.components.zha.core.const import PRESET_COMPLEX, PRESET_SCHEDULE
+from homeassistant.components.zha.core.const import (
+    PRESET_COMPLEX,
+    PRESET_SCHEDULE,
+    PRESET_TEMP_MANUAL,
+)
+from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -132,6 +137,23 @@ CLIMATE_MOES = {
     }
 }
 
+CLIMATE_BECA = {
+    1: {
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.SMART_PLUG,
+        SIG_EP_INPUT: [
+            zigpy.zcl.clusters.general.Basic.cluster_id,
+            zigpy.zcl.clusters.general.Groups.cluster_id,
+            zigpy.zcl.clusters.general.Scenes.cluster_id,
+            61148,
+        ],
+        SIG_EP_OUTPUT: [
+            zigpy.zcl.clusters.general.Time.cluster_id,
+            zigpy.zcl.clusters.general.Ota.cluster_id,
+        ],
+    }
+}
+
 CLIMATE_ZONNSMART = {
     1: {
         SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
@@ -149,6 +171,7 @@ CLIMATE_ZONNSMART = {
 MANUF_SINOPE = "Sinope Technologies"
 MANUF_ZEN = "Zen Within"
 MANUF_MOES = "_TZE200_ckud7u2l"
+MANUF_BECA = "_TZE200_b6wax7g0"
 MANUF_ZONNSMART = "_TZE200_hue3yfsn"
 
 ZCL_ATTR_PLUG = {
@@ -257,6 +280,17 @@ async def device_climate_moes(device_climate_mock):
 
     return await device_climate_mock(
         CLIMATE_MOES, manuf=MANUF_MOES, quirk=zhaquirks.tuya.ts0601_trv.MoesHY368_Type1
+    )
+
+
+@pytest.fixture
+async def device_climate_beca(device_climate_mock) -> ZHADevice:
+    """Beca thermostat."""
+
+    return await device_climate_mock(
+        CLIMATE_BECA,
+        manuf=MANUF_BECA,
+        quirk=zhaquirks.tuya.ts0601_trv.MoesHY368_Type1new,
     )
 
 
@@ -1412,6 +1446,49 @@ async def test_set_moes_operation_mode(
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_COMPLEX
+
+
+@pytest.mark.parametrize(
+    ("preset_attr", "preset_mode"),
+    [
+        (0, PRESET_AWAY),
+        (1, PRESET_SCHEDULE),
+        # (2, PRESET_NONE),  # TODO: why does this not work?
+        (4, PRESET_ECO),
+        (5, PRESET_BOOST),
+        (7, PRESET_TEMP_MANUAL),
+    ],
+)
+async def test_beca_operation_mode_update(
+    hass: HomeAssistant,
+    device_climate_beca: ZHADevice,
+    preset_attr: int,
+    preset_mode: str,
+) -> None:
+    """Test beca trv operation mode attribute update."""
+
+    entity_id = find_entity_id(Platform.CLIMATE, device_climate_beca, hass)
+    thrm_cluster = device_climate_beca.device.endpoints[1].thermostat
+
+    # Test sending an attribute report
+    await send_attributes_report(hass, thrm_cluster, {"operation_preset": preset_attr})
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == preset_mode
+
+    # Test setting the preset
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: preset_mode},
+        blocking=True,
+    )
+
+    assert thrm_cluster.write_attributes.mock_calls == [
+        call(
+            {"operation_preset": preset_attr},
+            manufacturer=device_climate_beca.manufacturer_code,
+        )
+    ]
 
 
 async def test_set_zonnsmart_preset(
