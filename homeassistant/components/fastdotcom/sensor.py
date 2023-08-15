@@ -53,10 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fast.com sensor."""
-    _LOGGER.debug("Setting up Fast.com sensor with domain %s", FASTDOTCOM_DOMAIN)
-    # get this working!
-    # hass.data[DOMAIN][entry.entry_id]
-    # async_add_entities([SpeedtestSensor(api)])
+    async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN][entry.entry_id])])
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
