@@ -1810,7 +1810,7 @@ async def test_execute_script_with_dynamically_validated_action(
 
     ws_client = await hass_ws_client(hass)
 
-    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module_cache = hass.data[loader.DATA_COMPONENTS]
     module = module_cache["fake_integration.device_action"]
     module.async_call_action_from_config = AsyncMock()
     module.async_validate_action_config = AsyncMock(
