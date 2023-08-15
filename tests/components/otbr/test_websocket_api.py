@@ -8,7 +8,7 @@ from homeassistant.components import otbr, thread
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import BASE_URL, DATASET_CH15, DATASET_CH16
+from . import BASE_URL, DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
@@ -31,7 +31,11 @@ async def test_get_info(
     with patch(
         "python_otbr_api.OTBR.get_active_dataset",
         return_value=python_otbr_api.ActiveDataSet(channel=16),
-    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16):
+    ), patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
+    ):
         await websocket_client.send_json_auto_id({"type": "otbr/info"})
         msg = await websocket_client.receive_json()
 
@@ -40,6 +44,7 @@ async def test_get_info(
         "url": BASE_URL,
         "active_dataset_tlvs": DATASET_CH16.hex().lower(),
         "channel": 16,
+        "border_agent_id": TEST_BORDER_AGENT_ID.hex(),
     }
 
 
@@ -68,6 +73,8 @@ async def test_get_info_fetch_fails(
     with patch(
         "python_otbr_api.OTBR.get_active_dataset",
         side_effect=python_otbr_api.OTBRError,
+    ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/info"})
         msg = await websocket_client.receive_json()
