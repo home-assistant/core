@@ -51,7 +51,7 @@ PRESET_HOLD = "Hold"
 async def test_no_thermostat_options(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
 ) -> None:
-    """Test the setup of the climate entities when there are additional options available."""
+    """Test the setup of the climate entities when there are no additional options available."""
     device._data = {}
     await init_integration(hass, config_entry)
     assert len(hass.states.async_all()) == 1
