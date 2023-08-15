@@ -1,11 +1,11 @@
 """Shared utilities for different supported platforms."""
 import asyncio
+from asyncio import timeout
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 from buienradar.buienradar import parse_data
 from buienradar.constants import (
     ATTRIBUTION,
@@ -92,7 +92,7 @@ class BrData:
         resp = None
         try:
             websession = async_get_clientsession(self.hass)
-            async with async_timeout.timeout(10):
+            async with timeout(10):
                 resp = await websession.get(url)
 
                 result[STATUS_CODE] = resp.status
