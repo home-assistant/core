@@ -1,7 +1,11 @@
 """Tests for ScreenLogic integration data processing."""
 from unittest.mock import patch
 
+import pytest
+from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
+
 from homeassistant.components.screenlogic import DOMAIN
+from homeassistant.components.screenlogic.data import PathPart, realize_path_template
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -57,3 +61,23 @@ async def test_async_cleanup_entries(
 
     deleted_entity = entity_registry.async_get(unused_entity.entity_id)
     assert deleted_entity is None
+
+
+@pytest.mark.parametrize(
+    ("data_path", "template", "expected"),
+    [
+        (
+            (DEVICE.PUMP, 0, VALUE.WATTS_NOW),
+            (PathPart.DEVICE, PathPart.INDEX),
+            (DEVICE.PUMP, 0),
+        ),
+        (
+            (DEVICE.CIRCUIT, 500, GROUP.CONFIGURATION),
+            (PathPart.DEVICE, PathPart.INDEX, PathPart.VALUE, ATTR.NAME_INDEX),
+            (DEVICE.CIRCUIT, 500, GROUP.CONFIGURATION, ATTR.NAME_INDEX),
+        ),
+    ],
+)
+def test_realize_path_templates(data_path, template, expected) -> None:
+    """Test path template realization."""
+    assert realize_path_template(template, data_path) == expected
