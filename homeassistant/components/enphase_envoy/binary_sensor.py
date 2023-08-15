@@ -186,13 +186,12 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         super().__init__(coordinator, description)
         enpower = self.data.enpower
         assert enpower is not None
-        self._serial_number = enpower.serial_number
-        self._attr_unique_id = f"{self._serial_number}_{description.key}"
+        self._attr_unique_id = f"{enpower.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
+            identifiers={(DOMAIN, enpower.serial_number)},
             manufacturer="Enphase",
             model="Enpower",
-            name=f"Enpower {self._serial_number}",
+            name=f"Enpower {enpower.serial_number}",
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
         )
@@ -218,15 +217,13 @@ class EnvoyRelayBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         super().__init__(coordinator, description)
         enpower = self.data.enpower
         assert enpower is not None
-        self.relay_id = relay_id
-        self.relay = self.data.dry_contact_settings[self.relay_id]
-        self._serial_number = enpower.serial_number
-        self._attr_unique_id = f"{self._serial_number}_relay_{relay_id}"
+        self._relay_id = relay_id
+        self._attr_unique_id = f"{enpower.serial_number}_relay_{relay_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, relay_id)},
             manufacturer="Enphase",
             model="Dry contact relay",
-            name=self.relay.load_name,
+            name=self.data.dry_contact_settings[relay_id].load_name,
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, enpower.serial_number),
         )
@@ -234,5 +231,5 @@ class EnvoyRelayBinarySensorEntity(EnvoyBaseBinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the Enpower binary_sensor."""
-        relay = self.data.dry_contact_status[self.relay_id]
+        relay = self.data.dry_contact_status[self._relay_id]
         return relay.status == DryContactStatus.CLOSED
