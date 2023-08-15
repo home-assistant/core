@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import datetime
+from dateutil import parser
+import pytz
 import json
 import logging
 from typing import Any
@@ -13,6 +15,7 @@ from tenacity import retry, retry_if_exception_type
 AUTH_ENDPOINT = "account/signin"
 DASHBOARD_ENDPOINT = "/dashboard/"
 SEARCH_ENDPOINT = "/api/2/residential/new_search"
+CONSUMPTION_ENDPOINT = "/api/2/residential/consumption?eow=True"
 
 MEASUREMENT_GALLONS = "GAL"
 MEASUREMENT_100_GALLONS = "100 GAL"
@@ -139,6 +142,54 @@ class Meter:
             else:
                 raise EyeOnWaterAPIError(f"Unsupported measurement unit: {read_unit}")
         return amount
+
+    async def get_consumption(self, date, client: Client):
+        query = {
+            "params":{
+                "source":"barnacle",
+                "aggregate":"hourly",
+                "units":"GAL",
+                "combine":"true",
+                "perspective":"billing",
+                "display_minutes":True,
+                "display_hours":True,
+                "display_days":True,
+                "date": date,
+                "furthest_zoom":"hr",
+                "display_weeks":True
+            },
+            "query":{
+                "query":{
+                    "terms":{
+                        "meter.meter_uuid":[
+                            self.meter_uuid
+                        ]
+                    }
+                }
+            }
+        }
+        data = await client.request(path=CONSUMPTION_ENDPOINT, method="post", json=query)
+        data = json.loads(data)
+
+        key = f"{self.meter_uuid},0"
+        if key not in data["timeseries"]:
+            raise Exception("Response is empty")
+
+        timezone = data["hit"]["meter.timezone"][0]
+        timezone = pytz.timezone(timezone)
+        # tzinfos = {data["timezone"] : timezone }
+
+        data = data["timeseries"][key]["series"]
+        statistics = [{"start": timezone.localize(parser.parse(d["date"])), "sum": d["bill_read"]} for d in data]
+
+        for statistic in statistics:
+            start = statistic["start"]
+            if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
+                raise Exception("Naive timestamp")
+            if start.minute != 0 or start.second != 0 or start.microsecond != 0:
+                raise Exception("Invalid timestamp")
+
+        return statistics
 
 
 class Account:
