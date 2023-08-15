@@ -93,14 +93,14 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
         enpower = self.data.enpower
         assert enpower is not None
         self._serial_number = enpower.serial_number
-        self.relay = self.data.dry_contact_settings[relay]
+        relay_data = self.data.dry_contact_settings[relay]
         self.relay_id = relay
         self._attr_unique_id = f"{self._serial_number}_relay_{relay}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, relay)},
             manufacturer="Enphase",
             model="Dry contact relay",
-            name=self.relay.load_name,
+            name=relay_data.load_name,
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, self._serial_number),
         )
@@ -115,6 +115,6 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the relay."""
         await self.envoy.update_dry_contact(
-            {"id": self.relay.id, self.entity_description.key: int(value)}
+            {"id": self.relay_id, self.entity_description.key: int(value)}
         )
         await self.coordinator.async_request_refresh()
