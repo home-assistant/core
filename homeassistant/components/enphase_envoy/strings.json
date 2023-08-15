@@ -39,6 +39,14 @@
         "name": "Relay status"
       }
     },
+    "number": {
+      "cutoff_battery_level": {
+        "name": "Cutoff battery level"
+      },
+      "restore_battery_level": {
+        "name": "Restore battery level"
+      }
+    },
     "select": {
       "relay_mode": {
         "name": "Mode",
