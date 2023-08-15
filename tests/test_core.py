@@ -1429,7 +1429,7 @@ async def test_serviceregistry_return_response_optional(
 async def test_config_defaults() -> None:
     """Test config defaults."""
     hass = Mock()
-    config = ha.Config(hass)
+    config = ha.Config(hass, "/test/ha-config")
     assert config.hass is hass
     assert config.latitude == 0
     assert config.longitude == 0
@@ -1443,7 +1443,7 @@ async def test_config_defaults() -> None:
     assert config.skip_pip_packages == []
     assert config.components == set()
     assert config.api is None
-    assert config.config_dir is None
+    assert config.config_dir == "/test/ha-config"
     assert config.allowlist_external_dirs == set()
     assert config.allowlist_external_urls == set()
     assert config.media_dirs == {}
@@ -1456,22 +1456,19 @@ async def test_config_defaults() -> None:
 
 async def test_config_path_with_file() -> None:
     """Test get_config_path method."""
-    config = ha.Config(None)
-    config.config_dir = "/test/ha-config"
+    config = ha.Config(None, "/test/ha-config")
     assert config.path("test.conf") == "/test/ha-config/test.conf"
 
 
 async def test_config_path_with_dir_and_file() -> None:
     """Test get_config_path method."""
-    config = ha.Config(None)
-    config.config_dir = "/test/ha-config"
+    config = ha.Config(None, "/test/ha-config")
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
 async def test_config_as_dict() -> None:
     """Test as dict."""
-    config = ha.Config(None)
-    config.config_dir = "/test/ha-config"
+    config = ha.Config(None, "/test/ha-config")
     config.hass = MagicMock()
     type(config.hass.state).value = PropertyMock(return_value="RUNNING")
     expected = {
@@ -1502,7 +1499,7 @@ async def test_config_as_dict() -> None:
 
 async def test_config_is_allowed_path() -> None:
     """Test is_allowed_path method."""
-    config = ha.Config(None)
+    config = ha.Config(None, "/test/ha-config")
     with TemporaryDirectory() as tmp_dir:
         # The created dir is in /tmp. This is a symlink on OS X
         # causing this test to fail unless we resolve path first.
@@ -1534,7 +1531,7 @@ async def test_config_is_allowed_path() -> None:
 
 async def test_config_is_allowed_external_url() -> None:
     """Test is_allowed_external_url method."""
-    config = ha.Config(None)
+    config = ha.Config(None, "/test/ha-config")
     config.allowlist_external_urls = [
         "http://x.com/",
         "https://y.com/bla/",
@@ -1585,7 +1582,7 @@ async def test_start_taking_too_long(
     event_loop, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test when async_start takes too long."""
-    hass = ha.HomeAssistant()
+    hass = ha.HomeAssistant("/test/ha-config")
     caplog.set_level(logging.WARNING)
     hass.async_create_task(asyncio.sleep(0))
 
@@ -1752,7 +1749,7 @@ async def test_additional_data_in_core_config(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test that we can handle additional data in core configuration."""
-    config = ha.Config(hass)
+    config = ha.Config(hass, "/test/ha-config")
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
         "data": {"location_name": "Test Name", "additional_valid_key": "value"},
@@ -1765,7 +1762,7 @@ async def test_incorrect_internal_external_url(
     hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that we warn when detecting invalid internal/external url."""
-    config = ha.Config(hass)
+    config = ha.Config(hass, "/test/ha-config")
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
@@ -1778,7 +1775,7 @@ async def test_incorrect_internal_external_url(
     assert "Invalid external_url set" not in caplog.text
     assert "Invalid internal_url set" not in caplog.text
 
-    config = ha.Config(hass)
+    config = ha.Config(hass, "/test/ha-config")
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
