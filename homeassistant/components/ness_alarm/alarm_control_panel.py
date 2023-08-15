@@ -26,6 +26,15 @@ from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
+ARMING_MODE_TO_STATE = {
+    ArmingMode.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
+    ArmingMode.ARMED_HOME: STATE_ALARM_ARMED_HOME,
+    ArmingMode.ARMED_DAY: STATE_ALARM_ARMED_AWAY,  # no applicable state, fallback to away
+    ArmingMode.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
+    ArmingMode.ARMED_VACATION: STATE_ALARM_ARMED_VACATION,
+    ArmingMode.ARMED_HIGHEST: STATE_ALARM_ARMED_AWAY,  # no applicable state, fallback to away
+}
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -96,7 +105,9 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
         elif arming_state == ArmingState.EXIT_DELAY:
             self._attr_state = STATE_ALARM_ARMING
         elif arming_state == ArmingState.ARMED:
-            self._attr_state = _get_state_for_arming_mode(arming_mode)
+            self._attr_state = ARMING_MODE_TO_STATE.get(
+                arming_mode, STATE_ALARM_ARMED_AWAY
+            )
         elif arming_state == ArmingState.ENTRY_DELAY:
             self._attr_state = STATE_ALARM_PENDING
         elif arming_state == ArmingState.TRIGGERED:
@@ -105,15 +116,3 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
             _LOGGER.warning("Unhandled arming state: %s", arming_state)
 
         self.async_write_ha_state()
-
-
-def _get_state_for_arming_mode(arming_mode: ArmingMode):
-    arming_mode_to_state_map = {
-        ArmingMode.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-        ArmingMode.ARMED_HOME: STATE_ALARM_ARMED_HOME,
-        ArmingMode.ARMED_DAY: STATE_ALARM_ARMED_AWAY,  # no applicable state, fallback to away
-        ArmingMode.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
-        ArmingMode.ARMED_VACATION: STATE_ALARM_ARMED_VACATION,
-        ArmingMode.ARMED_HIGHEST: STATE_ALARM_ARMED_AWAY,  # no applicable state, fallback to away
-    }
-    return arming_mode_to_state_map.get(arming_mode, STATE_ALARM_ARMED_AWAY)

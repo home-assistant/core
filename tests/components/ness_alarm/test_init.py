@@ -216,10 +216,7 @@ class MockArmingMode(Enum):
 
     ARMED_AWAY = "ARMED_AWAY"
     ARMED_HOME = "ARMED_HOME"
-    ARMED_DAY = "ARMED_DAY"
     ARMED_NIGHT = "ARMED_NIGHT"
-    ARMED_VACATION = "ARMED_VACATION"
-    ARMED_HIGHEST = "ARMED_HIGHEST"
 
 
 class MockClient:
@@ -272,12 +269,7 @@ def mock_nessclient():
     ), patch(
         "homeassistant.components.ness_alarm.ArmingState", new=MockArmingState
     ), patch(
-        "homeassistant.components.ness_alarm.ArmingMode", new=MockArmingMode
-    ), patch(
         "homeassistant.components.ness_alarm.alarm_control_panel.ArmingState",
         new=MockArmingState,
-    ), patch(
-        "homeassistant.components.ness_alarm.alarm_control_panel.ArmingMode",
-        new=MockArmingMode,
     ):
         yield _mock_instance
