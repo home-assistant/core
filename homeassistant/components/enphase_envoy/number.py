@@ -85,7 +85,7 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
         self,
         coordinator: EnphaseUpdateCoordinator,
         description: EnvoyRelayNumberEntityDescription,
-        relay: str,
+        relay_id: str,
     ) -> None:
         """Initialize the Enphase relay number entity."""
         super().__init__(coordinator, description)
@@ -93,14 +93,15 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
         enpower = self.data.enpower
         assert enpower is not None
         self._serial_number = enpower.serial_number
-        relay_data = self.data.dry_contact_settings[relay]
-        self.relay_id = relay
-        self._attr_unique_id = f"{self._serial_number}_relay_{relay}_{description.key}"
+        self._relay_id = relay_id
+        self._attr_unique_id = (
+            f"{self._serial_number}_relay_{relay_id}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, relay)},
+            identifiers={(DOMAIN, relay_id)},
             manufacturer="Enphase",
             model="Dry contact relay",
-            name=relay_data.load_name,
+            name=self.data.dry_contact_settings[relay_id].load_name,
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, self._serial_number),
         )
@@ -109,12 +110,12 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
     def native_value(self) -> float:
         """Return the state of the relay entity."""
         return self.entity_description.value_fn(
-            self.data.dry_contact_settings[self.relay_id]
+            self.data.dry_contact_settings[self._relay_id]
         )
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the relay."""
         await self.envoy.update_dry_contact(
-            {"id": self.relay_id, self.entity_description.key: int(value)}
+            {"id": self._relay_id, self.entity_description.key: int(value)}
         )
         await self.coordinator.async_request_refresh()
