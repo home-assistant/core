@@ -92,18 +92,17 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
         self.envoy = coordinator.envoy
         enpower = self.data.enpower
         assert enpower is not None
-        self._serial_number = enpower.serial_number
+        serial_number = enpower.serial_number
+        self._serial_number = serial_number
         self._relay_id = relay_id
-        self._attr_unique_id = (
-            f"{self._serial_number}_relay_{relay_id}_{description.key}"
-        )
+        self._attr_unique_id = f"{serial_number}_relay_{relay_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, relay_id)},
             manufacturer="Enphase",
             model="Dry contact relay",
             name=self.data.dry_contact_settings[relay_id].load_name,
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, self._serial_number),
+            via_device=(DOMAIN, serial_number),
         )
 
     @property
