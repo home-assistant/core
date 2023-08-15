@@ -1148,14 +1148,13 @@ async def _async_component_dependencies(
     return loaded
 
 
-def _async_mount_config_dir(hass: HomeAssistant) -> bool:
+def _async_mount_config_dir(hass: HomeAssistant) -> None:
     """Mount config dir in order to load custom_component.
 
     Async friendly but not a coroutine.
     """
     if hass.config.config_dir not in sys.path:
         sys.path.insert(0, hass.config.config_dir)
-    return True
 
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:
