@@ -33,6 +33,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,9 +41,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     ATTR_AIRCLEANER_MODE,
     ATTR_DEHUMIDIFY_SETPOINT,
+    ATTR_FAN_SPEED,
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_RUN_MODE,
     DOMAIN,
+    SERVICE_SET_FAN_SPEED,
 )
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
@@ -136,6 +139,11 @@ async def async_setup_entry(
         SET_HVAC_RUN_MODE_SCHEMA,
         f"async_{SERVICE_SET_HVAC_RUN_MODE}",
     )
+    platform.async_register_entity_service(
+        SERVICE_SET_FAN_SPEED,
+        {vol.Required(ATTR_FAN_SPEED): vol.Coerce(int)},
+        f"async_{SERVICE_SET_FAN_SPEED}",
+    )
 
     entities: list[NexiaZone] = []
     for thermostat_id in nexia_home.get_thermostat_ids():
@@ -166,6 +174,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._has_emergency_heat = self._thermostat.has_emergency_heat()
         self._has_humidify_support = self._thermostat.has_humidify_support()
         self._has_dehumidify_support = self._thermostat.has_dehumidify_support()
+        self._has_fan_speed_support = self._thermostat.has_variable_fan_speed()
         self._attr_supported_features = NEXIA_SUPPORTED
         if self._has_humidify_support or self._has_dehumidify_support:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
@@ -202,6 +211,24 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         """Set new target fan mode."""
         await self._thermostat.set_fan_mode(fan_mode)
         self._signal_thermostat_update()
+
+    @property
+    def fan_speed(self):
+        """Return the fan speed setting."""
+        if self._has_fan_speed_support:
+            return percent_conv(self._thermostat.get_fan_speed_setpoint())
+
+        return None
+
+    async def async_set_fan_speed(self, fan_speed: int) -> None:
+        """Set new target fan mode."""
+        if self._has_fan_speed_support:
+            await self._thermostat.set_fan_setpoint(fan_speed / 100)
+            self._signal_thermostat_update()
+        else:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} does not support this service."
+            )
 
     async def async_set_hvac_run_mode(self, run_mode, hvac_mode):
         """Set the hvac run mode."""
@@ -365,6 +392,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         if self._has_humidify_support:
             humdify_setpoint = percent_conv(self._thermostat.get_humidify_setpoint())
             attrs[ATTR_HUMIDIFY_SETPOINT] = humdify_setpoint
+        if self._has_fan_speed_support:
+            attrs[ATTR_FAN_SPEED] = self.fan_speed
+
         return attrs
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

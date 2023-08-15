@@ -7,6 +7,7 @@ from homeassistant.components.climate import (
     _LOGGER,
     ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
+    ATTR_FAN_SPEED,
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -16,6 +17,7 @@ from homeassistant.components.climate import (
     DOMAIN,
     SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_FAN_SPEED,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -165,6 +167,27 @@ def set_fan_mode(hass, fan, entity_id=ENTITY_MATCH_ALL):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
+
+
+async def async_set_fan_speed(hass, fan, entity_id=ENTITY_MATCH_ALL):
+    """Set all or specified climate devices fan speeds."""
+    data = {ATTR_FAN_SPEED: fan}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_FAN_SPEED, data, blocking=True)
+
+
+@bind_hass
+def set_fan_speed(hass, fan, entity_id=ENTITY_MATCH_ALL):
+    """Set all or specified climate devices fan speeds."""
+    data = {ATTR_FAN_SPEED: fan}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_FAN_SPEED, data)
 
 
 async def async_set_hvac_mode(hass, hvac_mode, entity_id=ENTITY_MATCH_ALL):

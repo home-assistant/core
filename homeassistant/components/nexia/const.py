@@ -23,7 +23,9 @@ ATTR_RUN_MODE = "run_mode"
 
 ATTR_HUMIDIFY_SETPOINT = "humidify_setpoint"
 ATTR_DEHUMIDIFY_SETPOINT = "dehumidify_setpoint"
+ATTR_FAN_SPEED = "fan_speed"
 
+SERVICE_SET_FAN_SPEED = "set_fan_speed"
 
 MANUFACTURER = "Trane"
 

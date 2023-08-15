@@ -4,6 +4,7 @@ import pytest
 from homeassistant.components.climate import (
     ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
+    ATTR_FAN_SPEED,
     ATTR_HUMIDITY,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
@@ -12,6 +13,7 @@ from homeassistant.components.climate import (
     DOMAIN,
     SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_FAN_SPEED,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -99,6 +101,7 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
         (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
         (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
         (SERVICE_SET_FAN_MODE, ATTR_FAN_MODE),
+        (SERVICE_SET_FAN_SPEED, ATTR_FAN_SPEED),
         (SERVICE_SET_HUMIDITY, ATTR_HUMIDITY),
         (SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE),
         (SERVICE_SET_TEMPERATURE, ATTR_TARGET_TEMP_HIGH),
