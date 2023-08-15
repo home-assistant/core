@@ -48,7 +48,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 # Reuse data and API logic from the sensor implementation
@@ -99,11 +99,13 @@ async def async_setup_entry(
 
     coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
 
-    # create weather data:
-    data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, None)
-    hass.data[DOMAIN][entry.entry_id][Platform.WEATHER] = data
-    # create weather device:
+    # create weather entity:
     _LOGGER.debug("Initializing buienradar weather: coordinates %s", coordinates)
+    entities = [BrWeather(config, coordinates)]
+
+    # create weather data:
+    data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, entities)
+    hass.data[DOMAIN][entry.entry_id][Platform.WEATHER] = data
 
     # create condition helper
     if DATA_CONDITION not in hass.data[DOMAIN]:
@@ -113,7 +115,7 @@ async def async_setup_entry(
             for condi in condlst:
                 hass.data[DOMAIN][DATA_CONDITION][condi] = cond
 
-    async_add_entities([BrWeather(data, config, coordinates)])
+    async_add_entities(entities)
 
     # schedule the first update in 1 minute from now:
     await data.schedule_update(1)
@@ -127,75 +129,57 @@ class BrWeather(WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_visibility_unit = UnitOfLength.METERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_should_poll = False
 
-    def __init__(self, data, config, coordinates):
+    def __init__(self, config, coordinates):
         """Initialize the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME, "Buienradar")
-        self._attr_name = (
-            self._stationname or f"BR {data.stationname or '(unknown station)'}"
-        )
-        self._data = data
+        self._attr_name = self._stationname or f"BR {'(unknown station)'}"
 
+        self._attr_condition = None
         self._attr_unique_id = "{:2.6f}{:2.6f}".format(
             coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE]
         )
 
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return self._data.attribution
+    @callback
+    def data_updated(self, data: BrData) -> None:
+        """Update data."""
+        if not self.hass:
+            return
 
-    @property
-    def condition(self):
+        self._attr_attribution = data.attribution
+        self._attr_condition = self._calc_condition(data)
+        self._attr_forecast = self._calc_forecast(data)
+        self._attr_humidity = data.humidity
+        self._attr_name = (
+            self._stationname or f"BR {data.stationname or '(unknown station)'}"
+        )
+        self._attr_native_pressure = data.pressure
+        self._attr_native_temperature = data.temperature
+        self._attr_native_visibility = data.visibility
+        self._attr_native_wind_speed = data.wind_speed
+        self._attr_wind_bearing = data.wind_bearing
+        self.async_write_ha_state()
+
+    def _calc_condition(self, data: BrData):
         """Return the current condition."""
         if (
-            self._data
-            and self._data.condition
-            and (ccode := self._data.condition.get(CONDCODE))
+            data.condition
+            and (ccode := data.condition.get(CONDCODE))
             and (conditions := self.hass.data[DOMAIN].get(DATA_CONDITION))
         ):
             return conditions.get(ccode)
+        return None
 
-    @property
-    def native_temperature(self):
-        """Return the current temperature."""
-        return self._data.temperature
-
-    @property
-    def native_pressure(self):
-        """Return the current pressure."""
-        return self._data.pressure
-
-    @property
-    def humidity(self):
-        """Return the name of the sensor."""
-        return self._data.humidity
-
-    @property
-    def native_visibility(self):
-        """Return the current visibility in m."""
-        return self._data.visibility
-
-    @property
-    def native_wind_speed(self):
-        """Return the current windspeed in m/s."""
-        return self._data.wind_speed
-
-    @property
-    def wind_bearing(self):
-        """Return the current wind bearing (degrees)."""
-        return self._data.wind_bearing
-
-    @property
-    def forecast(self):
+    def _calc_forecast(self, data: BrData):
         """Return the forecast array."""
         fcdata_out = []
         cond = self.hass.data[DOMAIN][DATA_CONDITION]
 
-        if not self._data.forecast:
+        if not data.forecast:
             return None
 
-        for data_in in self._data.forecast:
+        for data_in in data.forecast:
             # remap keys from external library to
             # keys understood by the weather component:
             condcode = data_in.get(CONDITION, []).get(CONDCODE)

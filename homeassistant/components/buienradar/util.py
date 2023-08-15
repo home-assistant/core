@@ -75,7 +75,7 @@ class BrData:
 
         # Update all devices
         for dev in self.devices:
-            dev.data_updated(self.data)
+            dev.data_updated(self)
 
     async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
