@@ -51,7 +51,7 @@ class EnvoyDryContactRequiredKeysMixin:
 class EnvoyDryContactSwitchEntityDescription(
     SwitchEntityDescription, EnvoyDryContactRequiredKeysMixin
 ):
-    """Describes an Envoy Enpower switch entity."""
+    """Describes an Envoy Enpower dry contact switch entity."""
 
 
 ENPOWER_GRID_SWITCH = EnvoyEnpowerSwitchEntityDescription(
