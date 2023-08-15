@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from functools import partial
 import logging
 from typing import final
 
@@ -102,7 +101,7 @@ class LawnMowerEntity(Entity):
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
-        await self.hass.async_add_executor_job(partial(self.start_mowing))
+        await self.hass.async_add_executor_job(self.start_mowing)
 
     def dock(self) -> None:
         """Dock the mower."""
@@ -110,7 +109,7 @@ class LawnMowerEntity(Entity):
 
     async def async_dock(self) -> None:
         """Dock the mower."""
-        await self.hass.async_add_executor_job(partial(self.dock))
+        await self.hass.async_add_executor_job(self.dock)
 
     def pause(self) -> None:
         """Pause the lawn mower."""
@@ -118,4 +117,4 @@ class LawnMowerEntity(Entity):
 
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
-        await self.hass.async_add_executor_job(partial(self.pause))
+        await self.hass.async_add_executor_job(self.pause)
