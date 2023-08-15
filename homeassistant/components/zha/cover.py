@@ -140,30 +140,34 @@ class ZhaCover(ZhaEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the window cover."""
         res = await self._cover_cluster_handler.up_open()
-        if res[1] is Status.SUCCESS:
-            self.async_update_state(STATE_OPENING)
+        if res[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to open cover: {res[1]}")
+        self.async_update_state(STATE_OPENING)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the window cover."""
         res = await self._cover_cluster_handler.down_close()
-        if res[1] is Status.SUCCESS:
-            self.async_update_state(STATE_CLOSING)
+        if res[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to close cover: {res[1]}")
+        self.async_update_state(STATE_CLOSING)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the roller shutter to a specific position."""
         new_pos = kwargs[ATTR_POSITION]
         res = await self._cover_cluster_handler.go_to_lift_percentage(100 - new_pos)
-        if res[1] is Status.SUCCESS:
-            self.async_update_state(
-                STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
-            )
+        if res[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to set cover position: {res[1]}")
+        self.async_update_state(
+            STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the window cover."""
         res = await self._cover_cluster_handler.stop()
-        if res[1] is Status.SUCCESS:
-            self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
-            self.async_write_ha_state()
+        if res[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to stop cover: {res[1]}")
+        self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Attempt to retrieve the open/close state of the cover."""
@@ -289,7 +293,7 @@ class Shade(ZhaEntity, CoverEntity):
         )
 
         if res[1] != Status.SUCCESS:
-            raise HomeAssistantError(f"Failed to set cover's position: {res[1]}")
+            raise HomeAssistantError(f"Failed to set cover position: {res[1]}")
 
         self._position = new_pos
         self.async_write_ha_state()
