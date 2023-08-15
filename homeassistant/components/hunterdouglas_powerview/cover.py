@@ -19,7 +19,6 @@ from aiopvapi.helpers.constants import (
     MIN_POSITION,
 )
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
-import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -84,7 +83,7 @@ async def async_setup_entry(
         shade: BaseShade = PvShade(raw_shade, pv_entry.api)
         name_before_refresh = shade.name
         with suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(1):
+            async with asyncio.timeout(1):
                 await shade.refresh()
 
         if ATTR_POSITION_DATA not in shade.raw_data:
