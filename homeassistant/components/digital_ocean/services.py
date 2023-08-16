@@ -6,10 +6,10 @@ from homeassistant.core import HomeAssistant, ServiceCall
 
 from .constants import (
     MIN_TIME_BETWEEN_DOMAIN_UPDATES,
-    SERVICE_PARAM_DOMAIN_NAME,
-    SERVICE_PARAM_RECORD_NAME,
-    SERVICE_PARAM_RECORD_TYPE,
-    SERVICE_PARAM_RECORD_VALUE,
+    ATTR_DOMAIN_NAME,
+    ATTR_RECORD_NAME,
+    ATTR_RECORD_TYPE,
+    ATTR_RECORD_VALUE,
 )
 from .exceptions import DomainRecordAlreadySet, UpdateThrottled
 
@@ -18,14 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 def handle_update_domain_record(call: ServiceCall, hass: HomeAssistant) -> None:
     """Handle the service call to update a domain record."""
-    from . import DATA_DIGITAL_OCEAN  # pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel
+    from . import DATA_DIGITAL_OCEAN
 
-    domain_name = call.data[SERVICE_PARAM_DOMAIN_NAME]
-    record_name = call.data[SERVICE_PARAM_RECORD_NAME]
-    record_value = call.data[SERVICE_PARAM_RECORD_VALUE]
-    record_type = call.data[SERVICE_PARAM_RECORD_TYPE]
-
-    # TO-DO: Add validation
+    domain_name = call.data[ATTR_DOMAIN_NAME]
+    record_name = call.data[ATTR_RECORD_NAME]
+    record_value = call.data[ATTR_RECORD_VALUE]
+    record_type = call.data[ATTR_RECORD_TYPE]
 
     try:
         do_wrapper = hass.data[DATA_DIGITAL_OCEAN]
@@ -42,8 +41,14 @@ def handle_update_domain_record(call: ServiceCall, hass: HomeAssistant) -> None:
                 f"{MIN_TIME_BETWEEN_DOMAIN_UPDATES} between service calls"
             )
         _LOGGER.debug(
-            f"Successfully updated record {record_name} ({record_type})"
-            f"of domain {domain_name} to {record_value}",
+            "Successfully updated record {record_name} ({record_type})"
+            "of domain {domain_name} to {record_value}",
+            extra={
+                "record_name": record_name,
+                "record_type": record_type,
+                "domain_name": domain_name,
+                "record_value": record_value,
+            },
         )
     except DomainRecordAlreadySet as e:
         # Avoiding this being tagged as error

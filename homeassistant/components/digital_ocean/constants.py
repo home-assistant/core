@@ -2,9 +2,16 @@
 
 from datetime import timedelta
 
-SERVICE_PARAM_DOMAIN_NAME = "domain"
-SERVICE_PARAM_RECORD_NAME = "record"
-SERVICE_PARAM_RECORD_VALUE = "value"
-SERVICE_PARAM_RECORD_TYPE = "type"
+ATTR_DOMAIN_NAME = "domain"
+ATTR_RECORD_NAME = "record"
+ATTR_RECORD_VALUE = "value"
+ATTR_RECORD_TYPE = "type"
+
+# Domain validation Regex
+# from https://stackoverflow.com/questions/3026957/how-to-validate-a-domain-name-using-regex-php/16491074#16491074
+DOMAIN_NAME_REGEX = r"^(?!\-)(?:(?:[a-zA-Z\d][a-zA-Z\d\-]{0,61})?[a-zA-Z\d]\.){1,126}(?!\d+)[a-zA-Z\d]{1,63}$"
+
+# Regular expression to match IPV4 addresses
+IPV4_REGEX = r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
 
 MIN_TIME_BETWEEN_DOMAIN_UPDATES = timedelta(minutes=5)

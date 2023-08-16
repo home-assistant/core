@@ -15,6 +15,7 @@ from homeassistant.util import Throttle
 
 from .constants import MIN_TIME_BETWEEN_DOMAIN_UPDATES
 from .exceptions import DomainRecordAlreadySet, DomainRecordsNotFound
+from .schemas import UPDATE_DOMAIN_RECORD_SCHEMA
 from .services import handle_update_domain_record
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,6 +67,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         "update_domain_record",
         functools.partial(handle_update_domain_record, hass=hass),
+        schema=UPDATE_DOMAIN_RECORD_SCHEMA,
     )
     return True
 
