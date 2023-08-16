@@ -133,3 +133,17 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     assert all(
         state.attributes[key] == expected_attributes[key] for key in expected_attributes
     )
+
+    state = hass.states.get("sensor.master_suite_fan_speed")
+    assert state.state == "35.0"
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "friendly_name": "Master Suite Fan Speed",
+        "unit_of_measurement": PERCENTAGE,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+    )
