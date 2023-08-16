@@ -5,7 +5,6 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
-import async_timeout
 from icmplib import NameLookupError, async_ping
 
 from homeassistant.core import HomeAssistant
@@ -103,7 +102,7 @@ class PingDataSubProcess(PingData):
             close_fds=False,  # required for posix_spawn
         )
         try:
-            async with async_timeout.timeout(self._count + PING_TIMEOUT):
+            async with asyncio.timeout(self._count + PING_TIMEOUT):
                 out_data, out_error = await pinger.communicate()
 
             if out_data:
