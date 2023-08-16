@@ -247,9 +247,8 @@ class UniFiController:
         """Set up a UniFi Network instance."""
         await self.api.initialize()
 
-        unique_id = self.config_entry.unique_id
-        assert unique_id is not None
-        self.is_admin = self.api.sites[unique_id].role == "admin"
+        assert self.config_entry.unique_id is not None
+        self.is_admin = self.api.sites[self.config_entry.unique_id].role == "admin"
 
         # Restore clients that are not a part of active clients list.
         entity_registry = er.async_get(self.hass)

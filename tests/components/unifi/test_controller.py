@@ -93,6 +93,7 @@ def mock_default_unifi_requests(
     dpiapp_response=None,
     dpigroup_response=None,
     port_forward_response=None,
+    system_information_response=None,
     wlans_response=None,
 ):
     """Mock default UniFi requests responses."""
@@ -141,6 +142,11 @@ def mock_default_unifi_requests(
         headers={"content-type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/stat/sysinfo",
+        json={"data": system_information_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
         f"https://{host}:1234/api/s/{site_id}/rest/wlanconf",
         json={"data": wlans_response or [], "meta": {"rc": "ok"}},
         headers={"content-type": CONTENT_TYPE_JSON},
@@ -160,6 +166,7 @@ async def setup_unifi_integration(
     dpiapp_response=None,
     dpigroup_response=None,
     port_forward_response=None,
+    system_information_response=None,
     wlans_response=None,
     known_wireless_clients=None,
     controllers=None,
@@ -196,6 +203,7 @@ async def setup_unifi_integration(
             dpiapp_response=dpiapp_response,
             dpigroup_response=dpigroup_response,
             port_forward_response=port_forward_response,
+            system_information_response=system_information_response,
             wlans_response=wlans_response,
         )
 
