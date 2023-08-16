@@ -63,21 +63,19 @@ async def test_async_cleanup_entries(
     assert deleted_entity is None
 
 
-@pytest.mark.parametrize(
-    ("data_path", "template", "expected"),
-    [
-        (
-            (DEVICE.PUMP, 0, VALUE.WATTS_NOW),
-            (PathPart.DEVICE, PathPart.INDEX),
-            (DEVICE.PUMP, 0),
-        ),
-        (
-            (DEVICE.CIRCUIT, 500, GROUP.CONFIGURATION),
-            (PathPart.DEVICE, PathPart.INDEX, PathPart.VALUE, ATTR.NAME_INDEX),
-            (DEVICE.CIRCUIT, 500, GROUP.CONFIGURATION, ATTR.NAME_INDEX),
-        ),
-    ],
-)
-def test_realize_path_templates(data_path, template, expected) -> None:
+def test_realize_path_templates() -> None:
     """Test path template realization."""
-    assert realize_path_template(template, data_path) == expected
+    assert realize_path_template(
+        (PathPart.DEVICE, PathPart.INDEX), (DEVICE.PUMP, 0, VALUE.WATTS_NOW)
+    ) == (DEVICE.PUMP, 0)
+
+    assert realize_path_template(
+        (PathPart.DEVICE, PathPart.INDEX, PathPart.VALUE, ATTR.NAME_INDEX),
+        (DEVICE.CIRCUIT, 500, GROUP.CONFIGURATION),
+    ) == (DEVICE.CIRCUIT, 500, GROUP.CONFIGURATION, ATTR.NAME_INDEX)
+
+    with pytest.raises(KeyError):
+        realize_path_template(
+            (PathPart.DEVICE, PathPart.KEY, ATTR.VALUE),
+            (DEVICE.ADAPTER, VALUE.FIRMWARE),
+        )
