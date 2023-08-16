@@ -561,6 +561,58 @@ async def test_multiple_runs_no_wait(hass: HomeAssistant) -> None:
     assert len(calls) == 4
 
 
+@patch("homeassistant.helpers.script._SERVICE_CALL_LIMIT", 0.1)
+async def test_service_call_timeout(hass: HomeAssistant) -> None:
+    """Test a service call that takes longer than the timeout."""
+
+    async def async_simulate_long_service(service):
+        """Service that takes not insignificant time."""
+        await asyncio.sleep(10)
+
+    hass.services.async_register("test", "script", async_simulate_long_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "service": "test.script",
+                "data_template": {"fire": "{{ fire1 }}"},
+            },
+        ]
+    )
+    script_obj = script.Script(
+        hass, sequence, "Test Name", "test_domain", script_mode="parallel", max_runs=2
+    )
+
+    # The patch at the start of the function sets the service call timeout to
+    # something much smaller than the sleep in the service call.
+    with pytest.raises(asyncio.CancelledError):
+        await hass.async_create_task(
+            script_obj.async_run(
+                MappingProxyType({"fire1": "1"}),
+                Context(),
+            )
+        )
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"fire": 1},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ],
+        },
+        expected_script_execution="cancelled",
+    )
+
+
 async def test_activating_scene(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

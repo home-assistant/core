@@ -137,7 +137,7 @@ _LOG_EXCEPTION = logging.ERROR + 1
 _TIMEOUT_MSG = "Timeout reached, abort script."
 
 _SHUTDOWN_MAX_WAIT = 60
-
+_SERVICE_CALL_LIMIT = 10
 
 ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
@@ -634,7 +634,9 @@ class _ScriptRun:
                 task.cancel()
             unsub()
 
-    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
+    async def _async_run_long_action(
+        self, long_task: asyncio.Task[_T], timeout: float | None = None
+    ) -> _T | None:
         """Run a long task while monitoring for stop request."""
 
         async def async_cancel_long_task() -> None:
@@ -647,7 +649,9 @@ class _ScriptRun:
         stop_task = self._hass.async_create_task(self._stop.wait())
         try:
             await asyncio.wait(
-                {long_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
+                {long_task, stop_task},
+                return_when=asyncio.FIRST_COMPLETED,
+                timeout=timeout,
             )
         # If our task is cancelled, then cancel long task, too. Note that if long task
         # is cancelled otherwise the CancelledError exception will not be raised to
@@ -656,16 +660,18 @@ class _ScriptRun:
             await async_cancel_long_task()
             raise
         finally:
+            stopped = stop_task.done()
             stop_task.cancel()
-
         if long_task.cancelled():
             raise asyncio.CancelledError
         if long_task.done():
             # Propagate any exceptions that occurred.
             return long_task.result()
-        # Stopped before long task completed, so cancel it.
+        # Stopped or timed out before long task completed, so cancel it.
         await async_cancel_long_task()
-        return None
+        if stopped:
+            return None
+        raise asyncio.TimeoutError("Timeout while running task")
 
     async def _async_call_service_step(self):
         """Call the service specified in the action."""
@@ -699,6 +705,12 @@ class _ScriptRun:
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
+        # If this might start a script then disable the call timeout.
+        # Otherwise use the normal service call limit.
+        if running_script:
+            limit = None
+        else:
+            limit = _SERVICE_CALL_LIMIT
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
             self._hass.async_create_task(
@@ -709,6 +721,7 @@ class _ScriptRun:
                     return_response=return_response,
                 )
             ),
+            timeout=limit,
         )
         if response_variable:
             self._variables[response_variable] = response_data
@@ -1569,6 +1582,7 @@ class Script:
         try:
             return await asyncio.shield(run.async_run())
         except asyncio.CancelledError:
+            script_execution_set("cancelled")
             await run.async_stop()
             self._changed()
             raise
