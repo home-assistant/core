@@ -73,7 +73,7 @@ class WebSocketHandler:
 
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
 
-    async def rm_details_watchdog(self):
+    async def rm_details_watchdog(self) -> None:
         """Define a service in Home Assistant, or could be a HTTP endpoint to trigger schedules.
 
         Args:
@@ -118,11 +118,11 @@ class WebSocketHandler:
         cem = self.cem
 
         async for msg in self.wsock:
-            m = json.loads(msg.json())
+            message = json.loads(msg.json())
             print(
                 Panel(
-                    JSON(json.dumps(m)),
-                    title=f"Receiving - {m.get('message_type')}",
+                    JSON(json.dumps(message)),
+                    title=f"Receiving - {message.get('message_type')}",
                     expand=False,
                 )
             )
@@ -134,7 +134,7 @@ class WebSocketHandler:
                     cem.close()
                     await self.wsock.close()
                 else:
-                    await cem.handle_message(m)
+                    await cem.handle_message(message)
 
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 print("close...")

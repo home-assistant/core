@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import json
 import logging
 
-from flexmeasures_client.client import FlexMeasuresClient
 from flexmeasures_client.s2.cem import CEM
 from flexmeasures_client.s2.control_types.FRBC.frbc_simple import FRBCSimple
 from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
@@ -55,42 +54,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config_data["coordinator"] = client
     hass.data[DOMAIN][entry.entry_id] = config_data
 
-    async def handle_api(call):
-        """Handle the service call to the FlexMeasures REST API."""
-        call.data.get(ATTR_NAME, DEFAULT_NAME)
-        method = call.data.get("method")
-        call_dict = {**call.data}
-        call_dict.pop("method")
-        if method == "post_measurements":
-            logging.info("post measurement")
-            await getattr(client, method)(**call_dict)
-        elif method == "trigger_storage_schedule":
-            logging.info("trigger_schedule")
-            schedule_id = await getattr(client, method)(**call_dict)
-            hass.states.async_set(f"{DOMAIN}.schedule_id", schedule_id)
-        elif method == "trigger_and_get_schedule":
-            logging.info("trigger_schedule")
-            schedule = await getattr(client, method)(**call_dict)
-            new_state = (
-                "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
-            )
-            hass.states.async_set(
-                f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
-            )
-        elif method == "get_schedule":
-            logging.info("get schedule")
-            schedule = await getattr(client, method)(**call_dict)
-            new_state = (
-                "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
-            )
-            hass.states.async_set(
-                f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
-            )
+    # async def handle_api(call):
+    #     """Handle the service call to the FlexMeasures REST API."""
+    #     call.data.get(ATTR_NAME, DEFAULT_NAME)
+    #     method = call.data.get("method")
+    #     call_dict = {**call.data}
+    #     call_dict.pop("method")
+    #     if method == "post_measurements":
+    #         logging.info("post measurement")
+    #         await getattr(client, method)(**call_dict)
+    #     elif method == "trigger_storage_schedule":
+    #         logging.info("trigger_schedule")
+    #         schedule_id = await getattr(client, method)(**call_dict)
+    #         hass.states.async_set(f"{DOMAIN}.schedule_id", schedule_id)
+    #     elif method == "trigger_and_get_schedule":
+    #         logging.info("trigger_schedule")
+    #         schedule = await getattr(client, method)(**call_dict)
+    #         new_state = (
+    #             "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
+    #         )
+    #         hass.states.async_set(
+    #             f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
+    #         )
+    #     elif method == "get_schedule":
+    #         logging.info("get schedule")
+    #         schedule = await getattr(client, method)(**call_dict)
+    #         new_state = (
+    #             "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
+    #         )
+    #         hass.states.async_set(
+    #             f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
+    #         )
 
-        elif method is not None and hasattr(client, method):
-            await getattr(client, method)(**call_dict)
+    #     elif method is not None and hasattr(client, method):
+    #         await getattr(client, method)(**call_dict)
 
-    async def schedule_trigger_event_listener(event):
+    async def client_event_listener(event):
         state = event.data.get("new_state")
 
         try:
@@ -146,8 +145,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.states.set("flexmeasures_s2.message", name)
 
     # Register services
-    hass.services.async_register(DOMAIN, "api", handle_api)
-    hass.bus.async_listen(EVENT_STATE_CHANGED, schedule_trigger_event_listener)
+    # hass.services.async_register(DOMAIN, "api", handle_api)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, client_event_listener)
     hass.services.async_register(DOMAIN, "s2", handle_s2)
     async_register_s2_api(hass)
 
@@ -155,11 +154,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     """Initialize the websocket API."""
     # TODO: create CEM in __init__ just once, when CEM supports multiple RMs
-    fm_client = FlexMeasuresClient(
-        "toy-password", "toy-user@flexmeasures.io"
-    )  # replace by helpers/get_fm_client
+    # fm_client = FlexMeasuresClient(
+    #     "toy-password", "toy-user@flexmeasures.io"
+    # )  # replace by helpers/get_fm_client
 
-    cem = CEM(fm_client=fm_client)
+    cem = CEM(fm_client=client)
     frbc = FRBCSimple(
         power_sensor_id=1,
         price_sensor_id=2,
