@@ -1,4 +1,10 @@
 # serializer version: 1
+# name: test_connected_state
+  None
+# ---
+# name: test_connected_state.1
+  None
+# ---
 # name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-sensor.mock_title_valve_closing]
   StateSnapshot({
     'attributes': ReadOnlyDict({

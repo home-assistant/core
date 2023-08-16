@@ -130,9 +130,12 @@ class GardenaBluetoothDescriptorEntity(GardenaBluetoothEntity):
     """Coordinator entity for entities with entity description."""
 
     def __init__(
-        self, coordinator: Coordinator, description: EntityDescription
+        self,
+        coordinator: Coordinator,
+        description: EntityDescription,
+        context: set[str],
     ) -> None:
         """Initialize description entity."""
-        super().__init__(coordinator, {description.key})
+        super().__init__(coordinator, context)
         self._attr_unique_id = f"{coordinator.address}-{description.key}"
         self.entity_description = description

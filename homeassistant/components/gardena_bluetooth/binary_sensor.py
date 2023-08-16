@@ -26,6 +26,11 @@ class GardenaBluetoothBinarySensorEntityDescription(BinarySensorEntityDescriptio
 
     char: CharacteristicBool = field(default_factory=lambda: CharacteristicBool(""))
 
+    @property
+    def context(self) -> set[str]:
+        """Context needed for update coordinator."""
+        return {self.char.uuid}
+
 
 DESCRIPTIONS = (
     GardenaBluetoothBinarySensorEntityDescription(
@@ -51,7 +56,7 @@ async def async_setup_entry(
     """Set up binary sensor based on a config entry."""
     coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = [
-        GardenaBluetoothBinarySensor(coordinator, description)
+        GardenaBluetoothBinarySensor(coordinator, description, description.context)
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]

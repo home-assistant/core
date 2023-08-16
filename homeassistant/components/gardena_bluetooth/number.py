@@ -38,6 +38,14 @@ class GardenaBluetoothNumberEntityDescription(NumberEntityDescription):
     )
     connected_state: Characteristic | None = None
 
+    @property
+    def context(self) -> set[str]:
+        """Context needed for update coordinator."""
+        data = {self.char.uuid}
+        if self.connected_state:
+            data.add(self.connected_state.uuid)
+        return data
+
 
 DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
@@ -104,7 +112,7 @@ async def async_setup_entry(
     """Set up entity based on a config entry."""
     coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[NumberEntity] = [
-        GardenaBluetoothNumber(coordinator, description)
+        GardenaBluetoothNumber(coordinator, description, description.context)
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]
