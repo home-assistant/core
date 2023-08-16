@@ -29,7 +29,6 @@ from time import monotonic
 from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
 from urllib.parse import urlparse
 
-import async_timeout
 import voluptuous as vol
 import yarl
 
@@ -289,13 +288,13 @@ class HomeAssistant:
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
-    def __new__(cls) -> HomeAssistant:
+    def __new__(cls, config_dir: str) -> HomeAssistant:
         """Set the _hass thread local data."""
         hass = super().__new__(cls)
         _hass.hass = hass
         return hass
 
-    def __init__(self) -> None:
+    def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
@@ -303,7 +302,7 @@ class HomeAssistant:
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
-        self.config = Config(self)
+        self.config = Config(self, config_dir)
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
@@ -806,7 +805,7 @@ class HomeAssistant:
             )
             task.cancel("Home Assistant stage 2 shutdown")
             try:
-                async with async_timeout.timeout(0.1):
+                async with asyncio.timeout(0.1):
                     await task
             except asyncio.CancelledError:
                 pass
@@ -2012,7 +2011,7 @@ class ServiceRegistry:
 class Config:
     """Configuration settings for Home Assistant."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
         self.hass = hass
 
@@ -2048,7 +2047,7 @@ class Config:
         self.api: ApiConfig | None = None
 
         # Directory that holds the configuration
-        self.config_dir: str | None = None
+        self.config_dir: str = config_dir
 
         # List of allowed external dirs to access
         self.allowlist_external_dirs: set[str] = set()
@@ -2079,8 +2078,6 @@ class Config:
 
         Async friendly.
         """
-        if self.config_dir is None:
-            raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
     def is_allowed_external_url(self, url: str) -> bool:

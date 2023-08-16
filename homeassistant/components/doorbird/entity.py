@@ -1,5 +1,7 @@
 """The DoorBird integration base entity."""
 
+from typing import Any
+
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -10,6 +12,7 @@ from .const import (
     DOORBIRD_INFO_KEY_FIRMWARE,
     MANUFACTURER,
 )
+from .device import ConfiguredDoorBird
 from .util import get_mac_address_from_doorstation_info
 
 
@@ -18,7 +21,9 @@ class DoorBirdEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, doorstation, doorstation_info):
+    def __init__(
+        self, doorstation: ConfiguredDoorBird, doorstation_info: dict[str, Any]
+    ) -> None:
         """Initialize the entity."""
         super().__init__()
         self._doorstation = doorstation

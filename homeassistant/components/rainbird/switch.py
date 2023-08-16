@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import logging
 
+from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -86,15 +88,30 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        await self.coordinator.controller.irrigate_zone(
-            int(self._zone),
-            int(kwargs.get(ATTR_DURATION, self._duration_minutes)),
-        )
+        try:
+            await self.coordinator.controller.irrigate_zone(
+                int(self._zone),
+                int(kwargs.get(ATTR_DURATION, self._duration_minutes)),
+            )
+        except RainbirdDeviceBusyException as err:
+            raise HomeAssistantError(
+                "Rain Bird device is busy; Wait and try again"
+            ) from err
+        except RainbirdApiException as err:
+            raise HomeAssistantError("Rain Bird device failure") from err
+
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        await self.coordinator.controller.stop_irrigation()
+        try:
+            await self.coordinator.controller.stop_irrigation()
+        except RainbirdDeviceBusyException as err:
+            raise HomeAssistantError(
+                "Rain Bird device is busy; Wait and try again"
+            ) from err
+        except RainbirdApiException as err:
+            raise HomeAssistantError("Rain Bird device failure") from err
         await self.coordinator.async_request_refresh()
 
     @property

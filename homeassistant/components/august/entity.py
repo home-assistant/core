@@ -19,6 +19,7 @@ class AugustEntityMixin(Entity):
     """Base implementation for August device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, data: AugustData, device: Doorbell | Lock) -> None:
         """Initialize an August device."""

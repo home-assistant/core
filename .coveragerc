@@ -212,8 +212,9 @@ omit =
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
     homeassistant/components/doorbird/__init__.py
-    homeassistant/components/doorbird/button.py
     homeassistant/components/doorbird/camera.py
+    homeassistant/components/doorbird/button.py
+    homeassistant/components/doorbird/device.py
     homeassistant/components/doorbird/entity.py
     homeassistant/components/doorbird/util.py
     homeassistant/components/dormakaba_dkey/__init__.py
@@ -305,6 +306,8 @@ omit =
     homeassistant/components/enphase_envoy/binary_sensor.py
     homeassistant/components/enphase_envoy/coordinator.py
     homeassistant/components/enphase_envoy/entity.py
+    homeassistant/components/enphase_envoy/number.py
+    homeassistant/components/enphase_envoy/select.py
     homeassistant/components/enphase_envoy/sensor.py
     homeassistant/components/enphase_envoy/switch.py
     homeassistant/components/entur_public_transport/*
@@ -1326,9 +1329,6 @@ omit =
     homeassistant/components/tplink_omada/__init__.py
     homeassistant/components/tplink_omada/binary_sensor.py
     homeassistant/components/tplink_omada/controller.py
-    homeassistant/components/tplink_omada/coordinator.py
-    homeassistant/components/tplink_omada/entity.py
-    homeassistant/components/tplink_omada/switch.py
     homeassistant/components/tplink_omada/update.py
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/tractive/__init__.py

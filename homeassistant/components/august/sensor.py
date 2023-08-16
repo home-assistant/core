@@ -75,7 +75,6 @@ class AugustSensorEntityDescription(
 
 SENSOR_TYPE_DEVICE_BATTERY = AugustSensorEntityDescription[LockDetail](
     key="device_battery",
-    name="Battery",
     entity_category=EntityCategory.DIAGNOSTIC,
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=_retrieve_device_battery_state,
@@ -83,7 +82,6 @@ SENSOR_TYPE_DEVICE_BATTERY = AugustSensorEntityDescription[LockDetail](
 
 SENSOR_TYPE_KEYPAD_BATTERY = AugustSensorEntityDescription[KeypadDetail](
     key="linked_keypad_battery",
-    name="Battery",
     entity_category=EntityCategory.DIAGNOSTIC,
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=_retrieve_linked_keypad_battery_state,
@@ -176,6 +174,8 @@ async def _async_migrate_old_unique_ids(hass, devices):
 class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
     """Representation of an August lock operation sensor."""
 
+    _attr_translation_key = "operator"
+
     def __init__(self, data, device):
         """Initialize the sensor."""
         super().__init__(data, device)
@@ -187,11 +187,6 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         self._operated_time = None
         self._entity_picture = None
         self._update_from_data()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._device.device_name} Operator"
 
     @callback
     def _update_from_data(self):
@@ -278,7 +273,6 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
         super().__init__(data, device)
         self.entity_description = description
         self._old_device = old_device
-        self._attr_name = f"{device.device_name} {description.name}"
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._update_from_data()
 

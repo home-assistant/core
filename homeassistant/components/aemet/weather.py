@@ -1,4 +1,6 @@
 """Support for the AEMET OpenData service."""
+from typing import cast
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
@@ -8,7 +10,10 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    DOMAIN as WEATHER_DOMAIN,
+    Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,7 +22,8 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -79,10 +85,28 @@ async def async_setup_entry(
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
 
     entities = []
-    for mode in FORECAST_MODES:
-        name = f"{domain_data[ENTRY_NAME]} {mode}"
-        unique_id = f"{config_entry.unique_id} {mode}"
-        entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
+    entity_registry = er.async_get(hass)
+
+    # Add daily + hourly entity for legacy config entries, only add daily for new
+    # config entries. This can be removed in HA Core 2024.3
+    if entity_registry.async_get_entity_id(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        f"{config_entry.unique_id} {FORECAST_MODE_HOURLY}",
+    ):
+        for mode in FORECAST_MODES:
+            name = f"{domain_data[ENTRY_NAME]} {mode}"
+            unique_id = f"{config_entry.unique_id} {mode}"
+            entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
+    else:
+        entities.append(
+            AemetWeather(
+                domain_data[ENTRY_NAME],
+                config_entry.unique_id,
+                weather_coordinator,
+                FORECAST_MODE_DAILY,
+            )
+        )
 
     async_add_entities(entities, False)
 
@@ -95,6 +119,9 @@ class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
 
     def __init__(
         self,
@@ -112,20 +139,44 @@ class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+        assert self.platform.config_entry
+        self.platform.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(("daily", "hourly"))
+        )
+
     @property
     def condition(self):
         """Return the current condition."""
         return self.coordinator.data[ATTR_API_CONDITION]
 
-    @property
-    def forecast(self):
+    def _forecast(self, forecast_mode: str) -> list[Forecast]:
         """Return the forecast array."""
-        forecasts = self.coordinator.data[FORECAST_MODE_ATTR_API[self._forecast_mode]]
-        forecast_map = FORECAST_MAP[self._forecast_mode]
-        return [
-            {ha_key: forecast[api_key] for api_key, ha_key in forecast_map.items()}
-            for forecast in forecasts
-        ]
+        forecasts = self.coordinator.data[FORECAST_MODE_ATTR_API[forecast_mode]]
+        forecast_map = FORECAST_MAP[forecast_mode]
+        return cast(
+            list[Forecast],
+            [
+                {ha_key: forecast[api_key] for api_key, ha_key in forecast_map.items()}
+                for forecast in forecasts
+            ],
+        )
+
+    @property
+    def forecast(self) -> list[Forecast]:
+        """Return the forecast array."""
+        return self._forecast(self._forecast_mode)
+
+    async def async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self._forecast(FORECAST_MODE_DAILY)
+
+    async def async_forecast_hourly(self) -> list[Forecast]:
+        """Return the hourly forecast in native units."""
+        return self._forecast(FORECAST_MODE_HOURLY)
 
     @property
     def humidity(self):
