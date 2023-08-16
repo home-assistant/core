@@ -27,9 +27,22 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.camera import CameraEntityFeature
+from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
-from homeassistant.components.media_player import SERVICE_PLAY_MEDIA, MediaType
+from homeassistant.components.humidifier import HumidifierEntityFeature
+from homeassistant.components.light import LightEntityFeature
+from homeassistant.components.lock import LockEntityFeature
+from homeassistant.components.media_player import (
+    SERVICE_PLAY_MEDIA,
+    MediaPlayerEntityFeature,
+    MediaType,
+)
+from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -126,7 +139,7 @@ async def test_camera_stream(hass: HomeAssistant) -> None:
     )
     assert helpers.get_google_type(camera.DOMAIN, None) is not None
     assert trait.CameraStreamTrait.supported(
-        camera.DOMAIN, camera.SUPPORT_STREAM, None, None
+        camera.DOMAIN, CameraEntityFeature.STREAM, None, None
     )
 
     trt = trait.CameraStreamTrait(
@@ -364,7 +377,7 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
     """Test locate trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.LocatorTrait.supported(
-        vacuum.DOMAIN, vacuum.VacuumEntityFeature.LOCATE, None, None
+        vacuum.DOMAIN, VacuumEntityFeature.LOCATE, None, None
     )
 
     trt = trait.LocatorTrait(
@@ -372,7 +385,7 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
         State(
             "vacuum.bla",
             vacuum.STATE_IDLE,
-            {ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.LOCATE},
+            {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.LOCATE},
         ),
         BASIC_CONFIG,
     )
@@ -395,7 +408,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
     """Test EnergyStorage trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.EnergyStorageTrait.supported(
-        vacuum.DOMAIN, vacuum.VacuumEntityFeature.BATTERY, None, None
+        vacuum.DOMAIN, VacuumEntityFeature.BATTERY, None, None
     )
 
     trt = trait.EnergyStorageTrait(
@@ -404,7 +417,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
             "vacuum.bla",
             vacuum.STATE_DOCKED,
             {
-                ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.BATTERY,
+                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 100,
             },
         ),
@@ -430,7 +443,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
             "vacuum.bla",
             vacuum.STATE_CLEANING,
             {
-                ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.BATTERY,
+                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 20,
             },
         ),
@@ -469,7 +482,7 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
         State(
             "vacuum.bla",
             vacuum.STATE_PAUSED,
-            {ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.PAUSE},
+            {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE},
         ),
         BASIC_CONFIG,
     )
@@ -502,12 +515,14 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
 async def test_startstop_cover(hass: HomeAssistant) -> None:
     """Test startStop trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.StartStopTrait.supported(cover.DOMAIN, cover.SUPPORT_STOP, None, None)
+    assert trait.StartStopTrait.supported(
+        cover.DOMAIN, CoverEntityFeature.STOP, None, None
+    )
 
     state = State(
         "cover.bla",
         cover.STATE_CLOSED,
-        {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_STOP},
+        {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.STOP},
     )
 
     trt = trait.StartStopTrait(
@@ -551,7 +566,10 @@ async def test_startstop_cover_assumed(hass: HomeAssistant) -> None:
         State(
             "cover.bla",
             cover.STATE_CLOSED,
-            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_STOP, ATTR_ASSUMED_STATE: True},
+            {
+                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.STOP,
+                ATTR_ASSUMED_STATE: True,
+            },
         ),
         BASIC_CONFIG,
     )
@@ -707,7 +725,9 @@ async def test_color_light_temperature_light_bad_temp(hass: HomeAssistant) -> No
 async def test_light_modes(hass: HomeAssistant) -> None:
     """Test Light Mode trait."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
-    assert trait.ModesTrait.supported(light.DOMAIN, light.SUPPORT_EFFECT, None, None)
+    assert trait.ModesTrait.supported(
+        light.DOMAIN, LightEntityFeature.EFFECT, None, None
+    )
 
     trt = trait.ModesTrait(
         hass,
@@ -847,7 +867,7 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
             "climate.bla",
             climate.HVACMode.AUTO,
             {
-                ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
                 climate.ATTR_HVAC_MODES: [
                     climate.HVACMode.OFF,
                     climate.HVACMode.COOL,
@@ -928,7 +948,7 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
             {
                 climate.ATTR_CURRENT_TEMPERATURE: 70,
                 climate.ATTR_CURRENT_HUMIDITY: 25,
-                ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
                 climate.ATTR_HVAC_MODES: [
                     STATE_OFF,
                     climate.HVACMode.COOL,
@@ -1040,7 +1060,7 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
             "climate.bla",
             climate.HVACMode.COOL,
             {
-                ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
                 climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVACMode.COOL],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
@@ -1230,8 +1250,10 @@ async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None
 async def test_lock_unlock_lock(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
-    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
-    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+    assert trait.LockUnlockTrait.supported(
+        lock.DOMAIN, LockEntityFeature.OPEN, None, None
+    )
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
         hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
@@ -1254,8 +1276,10 @@ async def test_lock_unlock_lock(hass: HomeAssistant) -> None:
 async def test_lock_unlock_unlocking(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
-    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
-    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+    assert trait.LockUnlockTrait.supported(
+        lock.DOMAIN, LockEntityFeature.OPEN, None, None
+    )
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
         hass, State("lock.front_door", lock.STATE_UNLOCKING), PIN_CONFIG
@@ -1269,8 +1293,10 @@ async def test_lock_unlock_unlocking(hass: HomeAssistant) -> None:
 async def test_lock_unlock_lock_jammed(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain that jams."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
-    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
-    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+    assert trait.LockUnlockTrait.supported(
+        lock.DOMAIN, LockEntityFeature.OPEN, None, None
+    )
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
         hass, State("lock.front_door", lock.STATE_JAMMED), PIN_CONFIG
@@ -1293,7 +1319,9 @@ async def test_lock_unlock_lock_jammed(hass: HomeAssistant) -> None:
 async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
     """Test LockUnlock trait unlocking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
-    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
+    assert trait.LockUnlockTrait.supported(
+        lock.DOMAIN, LockEntityFeature.OPEN, None, None
+    )
 
     trt = trait.LockUnlockTrait(
         hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
@@ -1363,8 +1391,8 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
             STATE_ALARM_ARMED_AWAY,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
-                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_ARM_HOME
-                | alarm_control_panel.const.SUPPORT_ALARM_ARM_AWAY,
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.ARM_AWAY,
             },
         ),
         PIN_CONFIG,
@@ -1526,8 +1554,8 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
             STATE_ALARM_DISARMED,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
-                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_TRIGGER
-                | alarm_control_panel.const.SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
+                | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
             },
         ),
         PIN_CONFIG,
@@ -1662,7 +1690,9 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
 async def test_fan_speed(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
-    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+    assert trait.FanSpeedTrait.supported(
+        fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
+    )
 
     trt = trait.FanSpeedTrait(
         hass,
@@ -1700,7 +1730,9 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
 async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control percentage step for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
-    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+    assert trait.FanSpeedTrait.supported(
+        fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
+    )
 
     trt = trait.FanSpeedTrait(
         hass,
@@ -1787,7 +1819,9 @@ async def test_fan_speed_ordered(
 ):
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
-    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+    assert trait.FanSpeedTrait.supported(
+        fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
+    )
 
     trt = trait.FanSpeedTrait(
         hass,
@@ -1858,7 +1892,7 @@ async def test_fan_reverse(
                 "percentage": 33,
                 "percentage_step": 1.0,
                 "direction": direction_state,
-                "supported_features": fan.SUPPORT_DIRECTION,
+                "supported_features": FanEntityFeature.DIRECTION,
             },
         ),
         BASIC_CONFIG,
@@ -1889,7 +1923,7 @@ async def test_climate_fan_speed(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control support for climate domain."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(
-        climate.DOMAIN, climate.SUPPORT_FAN_MODE, None, None
+        climate.DOMAIN, ClimateEntityFeature.FAN_MODE, None, None
     )
 
     trt = trait.FanSpeedTrait(
@@ -1951,7 +1985,7 @@ async def test_inputselector(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.InputSelectorTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.SELECT_SOURCE,
+        MediaPlayerEntityFeature.SELECT_SOURCE,
         None,
         None,
     )
@@ -2265,7 +2299,7 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
     """Test Humidifier Mode trait."""
     assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
-        humidifier.DOMAIN, humidifier.SUPPORT_MODES, None, None
+        humidifier.DOMAIN, HumidifierEntityFeature.MODES, None, None
     )
 
     trt = trait.ModesTrait(
@@ -2279,7 +2313,7 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
                     humidifier.MODE_AUTO,
                     humidifier.MODE_AWAY,
                 ],
-                ATTR_SUPPORTED_FEATURES: humidifier.SUPPORT_MODES,
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES,
                 humidifier.ATTR_MIN_HUMIDITY: 30,
                 humidifier.ATTR_MAX_HUMIDITY: 99,
                 humidifier.ATTR_HUMIDITY: 50,
@@ -2345,7 +2379,7 @@ async def test_sound_modes(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE,
+        MediaPlayerEntityFeature.SELECT_SOUND_MODE,
         None,
         None,
     )
@@ -2420,7 +2454,9 @@ async def test_sound_modes(hass: HomeAssistant) -> None:
 async def test_preset_modes(hass: HomeAssistant) -> None:
     """Test Mode trait for fan preset modes."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
-    assert trait.ModesTrait.supported(fan.DOMAIN, fan.SUPPORT_PRESET_MODE, None, None)
+    assert trait.ModesTrait.supported(
+        fan.DOMAIN, FanEntityFeature.PRESET_MODE, None, None
+    )
 
     trt = trait.ModesTrait(
         hass,
@@ -2430,7 +2466,7 @@ async def test_preset_modes(hass: HomeAssistant) -> None:
             attributes={
                 fan.ATTR_PRESET_MODES: ["auto", "whoosh"],
                 fan.ATTR_PRESET_MODE: "auto",
-                ATTR_SUPPORTED_FEATURES: fan.SUPPORT_PRESET_MODE,
+                ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE,
             },
         ),
         BASIC_CONFIG,
@@ -2514,7 +2550,7 @@ async def test_openclose_cover(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, None, None
+        cover.DOMAIN, CoverEntityFeature.SET_POSITION, None, None
     )
 
     trt = trait.OpenCloseTrait(
@@ -2524,7 +2560,7 @@ async def test_openclose_cover(hass: HomeAssistant) -> None:
             cover.STATE_OPEN,
             {
                 cover.ATTR_CURRENT_POSITION: 75,
-                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
             },
         ),
         BASIC_CONFIG,
@@ -2551,14 +2587,16 @@ async def test_openclose_cover_unknown_state(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain with unknown state."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, None, None
+        cover.DOMAIN, CoverEntityFeature.SET_POSITION, None, None
     )
 
     # No state
     trt = trait.OpenCloseTrait(
         hass,
         State(
-            "cover.bla", STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN}
+            "cover.bla",
+            STATE_UNKNOWN,
+            {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.OPEN},
         ),
         BASIC_CONFIG,
     )
@@ -2581,7 +2619,7 @@ async def test_openclose_cover_assumed_state(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, None, None
+        cover.DOMAIN, CoverEntityFeature.SET_POSITION, None, None
     )
 
     trt = trait.OpenCloseTrait(
@@ -2591,7 +2629,7 @@ async def test_openclose_cover_assumed_state(hass: HomeAssistant) -> None:
             cover.STATE_OPEN,
             {
                 ATTR_ASSUMED_STATE: True,
-                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
             },
         ),
         BASIC_CONFIG,
@@ -2634,14 +2672,17 @@ async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE, None, None
+        cover.DOMAIN,
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+        None,
+        None,
     )
 
     state = State(
         "cover.bla",
         cover.STATE_OPEN,
         {
-            ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
         },
     )
 
@@ -2695,10 +2736,10 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class, None
+        cover.DOMAIN, CoverEntityFeature.SET_POSITION, device_class, None
     )
     assert trait.OpenCloseTrait.might_2fa(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class
+        cover.DOMAIN, CoverEntityFeature.SET_POSITION, device_class
     )
 
     trt = trait.OpenCloseTrait(
@@ -2708,7 +2749,7 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
             cover.STATE_OPEN,
             {
                 ATTR_DEVICE_CLASS: device_class,
-                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
                 cover.ATTR_CURRENT_POSITION: 75,
             },
         ),
@@ -2796,7 +2837,7 @@ async def test_volume_media_player(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.VOLUME_SET,
+        MediaPlayerEntityFeature.VOLUME_SET,
         None,
         None,
     )
@@ -2807,7 +2848,7 @@ async def test_volume_media_player(hass: HomeAssistant) -> None:
             "media_player.bla",
             media_player.STATE_PLAYING,
             {
-                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.VOLUME_SET,
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_SET,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.3,
             },
         ),
@@ -2850,7 +2891,7 @@ async def test_volume_media_player_relative(hass: HomeAssistant) -> None:
     """Test volume trait support for relative-volume-only media players."""
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.VOLUME_STEP,
+        MediaPlayerEntityFeature.VOLUME_STEP,
         None,
         None,
     )
@@ -2861,7 +2902,7 @@ async def test_volume_media_player_relative(hass: HomeAssistant) -> None:
             media_player.STATE_PLAYING,
             {
                 ATTR_ASSUMED_STATE: True,
-                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.VOLUME_STEP,
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_STEP,
             },
         ),
         BASIC_CONFIG,
@@ -2918,8 +2959,7 @@ async def test_media_player_mute(hass: HomeAssistant) -> None:
     """Test volume trait support for muting."""
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.VOLUME_STEP
-        | media_player.MediaPlayerEntityFeature.VOLUME_MUTE,
+        MediaPlayerEntityFeature.VOLUME_STEP | MediaPlayerEntityFeature.VOLUME_MUTE,
         None,
         None,
     )
@@ -2930,8 +2970,8 @@ async def test_media_player_mute(hass: HomeAssistant) -> None:
             media_player.STATE_PLAYING,
             {
                 ATTR_SUPPORTED_FEATURES: (
-                    media_player.MediaPlayerEntityFeature.VOLUME_STEP
-                    | media_player.MediaPlayerEntityFeature.VOLUME_MUTE
+                    MediaPlayerEntityFeature.VOLUME_STEP
+                    | MediaPlayerEntityFeature.VOLUME_MUTE
                 ),
                 media_player.ATTR_MEDIA_VOLUME_MUTED: False,
             },
@@ -3095,8 +3135,8 @@ async def test_transport_control(hass: HomeAssistant) -> None:
                 media_player.ATTR_MEDIA_POSITION_UPDATED_AT: now
                 - timedelta(seconds=10),
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
-                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.PLAY
-                | media_player.MediaPlayerEntityFeature.STOP,
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP,
             },
         ),
         BASIC_CONFIG,
@@ -3210,7 +3250,7 @@ async def test_media_state(hass: HomeAssistant, state) -> None:
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
 
     assert trait.TransportControlTrait.supported(
-        media_player.DOMAIN, media_player.MediaPlayerEntityFeature.PLAY, None, None
+        media_player.DOMAIN, MediaPlayerEntityFeature.PLAY, None, None
     )
 
     trt = trait.MediaStateTrait(
@@ -3222,8 +3262,8 @@ async def test_media_state(hass: HomeAssistant, state) -> None:
                 media_player.ATTR_MEDIA_POSITION: 100,
                 media_player.ATTR_MEDIA_DURATION: 200,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
-                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.PLAY
-                | media_player.MediaPlayerEntityFeature.STOP,
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP,
             },
         ),
         BASIC_CONFIG,
@@ -3244,14 +3284,14 @@ async def test_channel(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ChannelTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.PLAY_MEDIA,
+        MediaPlayerEntityFeature.PLAY_MEDIA,
         media_player.MediaPlayerDeviceClass.TV,
         None,
     )
     assert (
         trait.ChannelTrait.supported(
             media_player.DOMAIN,
-            media_player.MediaPlayerEntityFeature.PLAY_MEDIA,
+            MediaPlayerEntityFeature.PLAY_MEDIA,
             None,
             None,
         )

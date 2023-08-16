@@ -1,9 +1,9 @@
 """Electric Kiwi coordinators."""
+import asyncio
 from collections import OrderedDict
 from datetime import timedelta
 import logging
 
-import async_timeout
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException
 from electrickiwi_api.model import Hop, HopIntervals
@@ -61,7 +61,7 @@ class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
         filters the intervals to remove ones that are not active
         """
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio.timeout(60):
                 if self.hop_intervals is None:
                     hop_intervals: HopIntervals = await self._ek_api.get_hop_intervals()
                     hop_intervals.intervals = OrderedDict(

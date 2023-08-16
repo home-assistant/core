@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -160,6 +161,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
                 self._attr_min_temp <= temperature <= self._attr_max_temp
             ):
                 raise ValueError("Invalid temperature change requested")
+
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(mode)
 
         await self.coordinator.api.set_temperature(self.device["location"], data)
 

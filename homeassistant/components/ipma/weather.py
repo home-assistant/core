@@ -6,7 +6,6 @@ import contextlib
 import logging
 from typing import Literal
 
-import async_timeout
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast as IPMAForecast
 from pyipma.location import Location
@@ -38,7 +37,7 @@ from homeassistant.util import Throttle
 
 from .const import (
     ATTRIBUTION,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DATA_API,
     DATA_LOCATION,
     DOMAIN,
@@ -91,7 +90,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update Condition and Forecast."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             new_observation = await self._location.observation(self._api)
 
             if new_observation:
@@ -136,10 +135,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         if identifier == 1 and not is_up(self.hass, forecast_dt):
             identifier = -identifier
 
-        return next(
-            (k for k, v in CONDITION_CLASSES.items() if identifier in v),
-            None,
-        )
+        return CONDITION_MAP.get(identifier)
 
     @property
     def condition(self):
@@ -225,7 +221,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     ) -> None:
         """Try to update weather forecast."""
         with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await self._update_forecast(forecast_type, period, False)
 
     async def async_forecast_daily(self) -> list[Forecast]:
