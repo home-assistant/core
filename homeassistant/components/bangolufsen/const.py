@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Final, cast
 
 from mozart_api.models import (
@@ -18,15 +18,14 @@ from mozart_api.models import (
 )
 from mozart_api.mozart_client import MozartClient
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 
 class ArtSizeEnum(Enum):
@@ -40,15 +39,15 @@ class ArtSizeEnum(Enum):
 class SourceEnum(StrEnum):
     """Enum used for associating device source ids with friendly names. May not include all sources."""
 
-    uriStreamer = "Audio Streamer"
+    uriStreamer = "Audio Streamer"  # noqa: N815
     bluetooth = "Bluetooth"
-    airPlay = "AirPlay"
-    chromeCast = "Chromecast built-in"
+    airPlay = "AirPlay"  # noqa: N815
+    chromeCast = "Chromecast built-in"  # noqa: N815
     spotify = "Spotify Connect"
     generator = "Tone Generator"
-    lineIn = "Line-In"
+    lineIn = "Line-In"  # noqa: N815
     spdif = "Optical"
-    netRadio = "B&O Radio"
+    netRadio = "B&O Radio"  # noqa: N815
     local = "Local"
     dlna = "DLNA"
     qplay = "QPlay"
@@ -57,7 +56,7 @@ class SourceEnum(StrEnum):
     tv = "TV"
     deezer = "Deezer"
     beolink = "Networklink"
-    tidalConnect = "Tidal Connect"
+    tidalConnect = "Tidal Connect"  # noqa: N815
 
 
 class RepeatEnum(StrEnum):
@@ -83,7 +82,7 @@ class StateEnum(StrEnum):
     unknown = MediaPlayerState.IDLE
 
     # Power states
-    networkStandby = MediaPlayerState.IDLE
+    networkStandby = MediaPlayerState.IDLE  # noqa: N815
 
 
 # Media types for play_media
@@ -297,13 +296,19 @@ CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 BEOLINK_LEADER_COMMAND: Final[str] = "BEOLINK_LEADER_COMMAND"
 BEOLINK_LISTENER_COMMAND: Final[str] = "BEOLINK_LISTENER_COMMAND"
 BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"
+BEOLINK_RELATIVE_VOLUME: Final[str] = "BEOLINK_RELATIVE_VOLUME"
 
 
 # Misc.
 NO_METADATA: Final[tuple] = (None, "", 0)
 
 # Valid commands and their expected parameter type for beolink_command service
-FLOAT_PARAMETERS: Final[tuple] = ("set_volume_level", "media_seek", float)
+FLOAT_PARAMETERS: Final[tuple] = (
+    "set_volume_level",
+    "media_seek",
+    "set_relative_volume_level",
+    float,
+)
 BOOL_PARAMETERS: Final[tuple] = ("mute_volume", bool)
 STR_PARAMETERS: Final[tuple] = ("select_source", str)
 NONE_PARAMETERS: Final[tuple] = (
