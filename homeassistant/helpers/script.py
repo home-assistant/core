@@ -642,7 +642,7 @@ class _ScriptRun:
         async def async_cancel_long_task() -> None:
             # Stop long task and wait for it to finish.
             long_task.cancel()
-            with suppress(Exception):
+            with suppress(Exception, asyncio.CancelledError):
                 await long_task
 
         # Wait for long task while monitoring for a stop request.
@@ -1582,7 +1582,6 @@ class Script:
         try:
             return await asyncio.shield(run.async_run())
         except asyncio.CancelledError:
-            script_execution_set("cancelled")
             await run.async_stop()
             self._changed()
             raise

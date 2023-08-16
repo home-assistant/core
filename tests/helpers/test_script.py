@@ -585,7 +585,7 @@ async def test_service_call_timeout(hass: HomeAssistant) -> None:
 
     # The patch at the start of the function sets the service call timeout to
     # something much smaller than the sleep in the service call.
-    with pytest.raises(asyncio.CancelledError):
+    with pytest.raises(asyncio.TimeoutError):
         await hass.async_create_task(
             script_obj.async_run(
                 MappingProxyType({"fire1": "1"}),
@@ -605,11 +605,12 @@ async def test_service_call_timeout(hass: HomeAssistant) -> None:
                             "target": {},
                         },
                         "running_script": False,
-                    }
+                    },
+                    "error_type": asyncio.TimeoutError,
                 }
             ],
         },
-        expected_script_execution="cancelled",
+        expected_script_execution="error",
     )
 
 
