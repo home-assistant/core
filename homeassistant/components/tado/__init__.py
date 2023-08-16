@@ -327,7 +327,7 @@ class TadoConnector:
                 device_type,
                 "ON",
                 mode,
-                fanSpeed=fan_speed,
+                fan_speed=fan_speed,
                 swing=swing,
             )
 

@@ -106,6 +106,15 @@ async def async_dpi_group_control_fn(
     )
 
 
+@callback
+def async_outlet_supports_switching_fn(
+    controller: UniFiController, obj_id: str
+) -> bool:
+    """Determine if an outlet supports switching."""
+    outlet = controller.api.outlets[obj_id]
+    return outlet.has_relay or outlet.caps in (1, 3)
+
+
 async def async_outlet_control_fn(
     api: aiounifi.Controller, obj_id: str, target: bool
 ) -> None:
@@ -210,7 +219,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         name_fn=lambda outlet: outlet.name,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         should_poll=False,
-        supported_fn=lambda c, obj_id: c.api.outlets[obj_id].has_relay,
+        supported_fn=async_outlet_supports_switching_fn,
         unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](

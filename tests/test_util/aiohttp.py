@@ -255,7 +255,7 @@ class AiohttpClientMockResponse:
         """Return mock response as a json."""
         return loads(self.response.decode(encoding))
 
-    def release(self):
+    async def release(self):
         """Mock release."""
 
     def raise_for_status(self):

@@ -13,7 +13,6 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
-import async_timeout
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.engine import Engine
@@ -1306,7 +1305,7 @@ class Recorder(threading.Thread):
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue_task(task)
         try:
-            async with async_timeout.timeout(DB_LOCK_TIMEOUT):
+            async with asyncio.timeout(DB_LOCK_TIMEOUT):
                 await database_locked.wait()
         except asyncio.TimeoutError as err:
             task.database_unlock.set()

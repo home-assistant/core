@@ -1,10 +1,12 @@
 """Support for Met Éireann weather service."""
 import logging
-from typing import cast
+from types import MappingProxyType
+from typing import Any, cast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
+    DOMAIN as WEATHER_DOMAIN,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -20,11 +22,16 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import dt as dt_util
 
+from . import MetEireannWeatherData
 from .const import CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,15 +53,33 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
-            MetEireannWeather(coordinator, config_entry.data, False),
-            MetEireannWeather(coordinator, config_entry.data, True),
-        ]
-    )
+    entity_registry = er.async_get(hass)
+
+    entities = [MetEireannWeather(coordinator, config_entry.data, False)]
+
+    # Add hourly entity to legacy config entries
+    if entity_registry.async_get_entity_id(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        _calculate_unique_id(config_entry.data, True),
+    ):
+        entities.append(MetEireannWeather(coordinator, config_entry.data, True))
+
+    async_add_entities(entities)
 
 
-class MetEireannWeather(CoordinatorEntity, WeatherEntity):
+def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+    """Calculate unique ID."""
+    name_appendix = ""
+    if hourly:
+        name_appendix = "-hourly"
+
+    return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
+
+
+class MetEireannWeather(
+    CoordinatorEntity[DataUpdateCoordinator[MetEireannWeatherData]], WeatherEntity
+):
     """Implementation of a Met Éireann weather condition."""
 
     _attr_attribution = "Data provided by Met Éireann"
@@ -69,6 +94,7 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     def __init__(self, coordinator, config, hourly):
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
+        self._attr_unique_id = _calculate_unique_id(config, hourly)
         self._config = config
         self._hourly = hourly
 
@@ -80,15 +106,6 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
         self.platform.config_entry.async_create_task(
             self.hass, self.async_update_listeners(("daily", "hourly"))
         )
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = "-hourly"
-
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{name_appendix}"
 
     @property
     def name(self):

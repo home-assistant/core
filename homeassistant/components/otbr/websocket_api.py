@@ -24,7 +24,6 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the OTBR Websocket API."""
     websocket_api.async_register_command(hass, websocket_info)
     websocket_api.async_register_command(hass, websocket_create_network)
-    websocket_api.async_register_command(hass, websocket_get_extended_address)
     websocket_api.async_register_command(hass, websocket_set_channel)
     websocket_api.async_register_command(hass, websocket_set_network)
 
@@ -47,18 +46,25 @@ async def websocket_info(
     data: OTBRData = hass.data[DOMAIN]
 
     try:
+        border_agent_id = await data.get_border_agent_id()
         dataset = await data.get_active_dataset()
         dataset_tlvs = await data.get_active_dataset_tlvs()
+        extended_address = await data.get_extended_address()
     except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "get_dataset_failed", str(exc))
+        connection.send_error(msg["id"], "otbr_info_failed", str(exc))
         return
 
+    # The border agent ID is checked when the OTBR config entry is setup,
+    # we can assert it's not None
+    assert border_agent_id is not None
     connection.send_result(
         msg["id"],
         {
-            "url": data.url,
             "active_dataset_tlvs": dataset_tlvs.hex() if dataset_tlvs else None,
+            "border_agent_id": border_agent_id.hex(),
             "channel": dataset.channel if dataset else None,
+            "extended_address": extended_address.hex(),
+            "url": data.url,
         },
     )
 
@@ -185,32 +191,6 @@ async def websocket_set_network(
     await update_issues(hass, data, bytes.fromhex(dataset_tlv))
 
     connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
-        "type": "otbr/get_extended_address",
-    }
-)
-@websocket_api.require_admin
-@websocket_api.async_response
-async def websocket_get_extended_address(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-) -> None:
-    """Get extended address (EUI-64)."""
-    if DOMAIN not in hass.data:
-        connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
-        return
-
-    data: OTBRData = hass.data[DOMAIN]
-
-    try:
-        extended_address = await data.get_extended_address()
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "get_extended_address_failed", str(exc))
-        return
-
-    connection.send_result(msg["id"], {"extended_address": extended_address.hex()})
 
 
 @websocket_api.websocket_command(
