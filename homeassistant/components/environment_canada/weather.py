@@ -21,10 +21,14 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
+<<<<<<< HEAD
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
+=======
+    WeatherEntity,
+>>>>>>> dde6ce6a996 (Add unit tests)
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,8 +37,12 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
+<<<<<<< HEAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+=======
+from homeassistant.core import HomeAssistant
+>>>>>>> dde6ce6a996 (Add unit tests)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -67,6 +75,7 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
+<<<<<<< HEAD
     entity_registry = er.async_get(hass)
 
     entities = [ECWeather(coordinator, False)]
@@ -85,6 +94,9 @@ async def async_setup_entry(
 def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> str:
     """Calculate unique ID."""
     return f"{config_entry_unique_id}{'-hourly' if hourly else '-daily'}"
+=======
+    async_add_entities([ECWeather(coordinator, False), ECWeather(coordinator, True)])
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 
 class ECWeather(CoordinatorEntity, WeatherEntity):
@@ -95,9 +107,12 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_visibility_unit = UnitOfLength.KILOMETERS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+<<<<<<< HEAD
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     def __init__(self, coordinator, hourly):
         """Initialize Environment Canada weather."""
@@ -105,13 +120,19 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
         self.ec_data = coordinator.ec_data
         self._attr_attribution = self.ec_data.metadata["attribution"]
         self._attr_translation_key = "hourly_forecast" if hourly else "forecast"
+<<<<<<< HEAD
         self._attr_unique_id = _calculate_unique_id(
             coordinator.config_entry.unique_id, hourly
+=======
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}{'-hourly' if hourly else '-daily'}"
+>>>>>>> dde6ce6a996 (Add unit tests)
         )
         self._attr_entity_registry_enabled_default = not hourly
         self._hourly = hourly
         self._attr_device_info = device_info(coordinator.config_entry)
 
+<<<<<<< HEAD
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -121,6 +142,8 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
             self.hass, self.async_update_listeners(("daily", "hourly"))
         )
 
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
     @property
     def native_temperature(self):
         """Return the temperature."""
@@ -188,6 +211,7 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
         return ""
 
     @property
+<<<<<<< HEAD
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         return get_forecast(self.ec_data, self._hourly)
@@ -204,12 +228,26 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
 def get_forecast(ec_data, hourly) -> list[Forecast] | None:
     """Build the forecast array."""
     forecast_array: list[Forecast] = []
+=======
+    def forecast(self):
+        """Return the forecast array."""
+        return get_forecast(self.ec_data, self._hourly)
+
+
+def get_forecast(ec_data, hourly):
+    """Build the forecast array."""
+    forecast_array = []
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     if not hourly:
         if not (half_days := ec_data.daily_forecasts):
             return None
 
+<<<<<<< HEAD
         today: Forecast = {
+=======
+        today = {
+>>>>>>> dde6ce6a996 (Add unit tests)
             ATTR_FORECAST_TIME: dt_util.now().isoformat(),
             ATTR_FORECAST_CONDITION: icon_code_to_condition(
                 int(half_days[0]["icon_code"])

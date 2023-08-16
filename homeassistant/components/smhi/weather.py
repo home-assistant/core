@@ -81,11 +81,14 @@ CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
+<<<<<<< HEAD
 CONDITION_MAP = {
     cond_code: cond_ha
     for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
 }
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 TIMEOUT = 10
 # 5 minutes between retrying connect to API again
@@ -153,6 +156,10 @@ class SmhiWeather(WeatherEntity):
             name=name,
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
+<<<<<<< HEAD
+=======
+        self._attr_native_temperature = None
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -187,7 +194,18 @@ class SmhiWeather(WeatherEntity):
             self._attr_native_pressure = self._forecast_daily[0].pressure
             self._attr_native_wind_gust_speed = self._forecast_daily[0].wind_gust
             self._attr_cloud_coverage = self._forecast_daily[0].cloudiness
+<<<<<<< HEAD
             self._attr_condition = CONDITION_MAP.get(self._forecast_daily[0].symbol)
+=======
+            self._attr_condition = next(
+                (
+                    k
+                    for k, v in CONDITION_CLASSES.items()
+                    if self._forecast_daily[0].symbol in v
+                ),
+                None,
+            )
+>>>>>>> dde6ce6a996 (Add unit tests)
         await self.async_update_listeners(("daily", "hourly"))
 
     async def retry_update(self, _: datetime) -> None:
@@ -205,7 +223,13 @@ class SmhiWeather(WeatherEntity):
         data: list[Forecast] = []
 
         for forecast in self._forecast_daily[1:]:
+<<<<<<< HEAD
             condition = CONDITION_MAP.get(forecast.symbol)
+=======
+            condition = next(
+                (k for k, v in CONDITION_CLASSES.items() if forecast.symbol in v), None
+            )
+>>>>>>> dde6ce6a996 (Add unit tests)
 
             data.append(
                 {
@@ -235,7 +259,13 @@ class SmhiWeather(WeatherEntity):
         data: list[Forecast] = []
 
         for forecast in forecast_data[1:]:
+<<<<<<< HEAD
             condition = CONDITION_MAP.get(forecast.symbol)
+=======
+            condition = next(
+                (k for k, v in CONDITION_CLASSES.items() if forecast.symbol in v), None
+            )
+>>>>>>> dde6ce6a996 (Add unit tests)
 
             data.append(
                 {

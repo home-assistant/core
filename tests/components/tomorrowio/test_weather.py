@@ -1,6 +1,7 @@
 """Tests for Tomorrow.io weather entity."""
 from __future__ import annotations
 
+<<<<<<< HEAD
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -8,6 +9,12 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+=======
+from datetime import datetime
+from typing import Any
+
+from freezegun import freeze_time
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
@@ -44,19 +51,28 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
+<<<<<<< HEAD
     SERVICE_GET_FORECAST,
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
+<<<<<<< HEAD
 from homeassistant.helpers import entity_registry as er
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
 from .const import API_V4_ENTRY_DATA
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+<<<<<<< HEAD
 from tests.typing import WebSocketGenerator
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 
 @callback
@@ -71,6 +87,7 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     assert updated_entry.disabled is False
 
 
+<<<<<<< HEAD
 async def _setup_config_entry(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     data = _get_config_schema(hass, SOURCE_USER)(config)
@@ -112,6 +129,25 @@ async def _setup_legacy(hass: HomeAssistant, config: dict[str, Any]) -> State:
         datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)
     ) as frozen_time:
         await _setup_config_entry(hass, config)
+=======
+async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
+    """Set up entry and return entity state."""
+    with freeze_time(
+        datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)
+    ) as frozen_time:
+        data = _get_config_schema(hass, SOURCE_USER)(config)
+        data[CONF_NAME] = DEFAULT_NAME
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=data,
+            options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
+            unique_id=_get_unique_id(hass, data),
+            version=1,
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+>>>>>>> dde6ce6a996 (Add unit tests)
         for entity_name in ("hourly", "nowcast"):
             _enable_entity(hass, f"weather.tomorrow_io_{entity_name}")
         await hass.async_block_till_done()
@@ -124,6 +160,7 @@ async def _setup_legacy(hass: HomeAssistant, config: dict[str, Any]) -> State:
     return hass.states.get("weather.tomorrow_io_daily")
 
 
+<<<<<<< HEAD
 async def test_new_config_entry(hass: HomeAssistant) -> None:
     """Test the expected entities are created."""
     registry = er.async_get(hass)
@@ -151,6 +188,8 @@ async def test_legacy_config_entry(hass: HomeAssistant) -> None:
     assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 30
 
 
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 async def test_v4_weather(hass: HomeAssistant) -> None:
     """Test v4 weather data."""
     weather_state = await _setup(hass, API_V4_ENTRY_DATA)
@@ -180,6 +219,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == "km/h"
+<<<<<<< HEAD
 
 
 async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
@@ -313,3 +353,5 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)

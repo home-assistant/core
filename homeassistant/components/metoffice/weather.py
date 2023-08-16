@@ -26,7 +26,11 @@ from homeassistant.helpers.update_coordinator import (
 from . import get_device_info
 from .const import (
     ATTRIBUTION,
+<<<<<<< HEAD
     CONDITION_MAP,
+=======
+    CONDITION_CLASSES,
+>>>>>>> dde6ce6a996 (Add unit tests)
     DOMAIN,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
@@ -55,7 +59,11 @@ async def async_setup_entry(
 def _build_forecast_data(timestep: Timestep) -> Forecast:
     data = Forecast(datetime=timestep.date.isoformat())
     if timestep.weather:
+<<<<<<< HEAD
         data[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(timestep.weather.value)
+=======
+        data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
+>>>>>>> dde6ce6a996 (Add unit tests)
     if timestep.precipitation:
         data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
     if timestep.temperature:
@@ -67,6 +75,16 @@ def _build_forecast_data(timestep: Timestep) -> Forecast:
     return data
 
 
+<<<<<<< HEAD
+=======
+def _get_weather_condition(metoffice_code: str) -> str | None:
+    for hass_name, metoffice_codes in CONDITION_CLASSES.items():
+        if metoffice_code in metoffice_codes:
+            return hass_name
+    return None
+
+
+>>>>>>> dde6ce6a996 (Add unit tests)
 class MetOfficeWeather(
     CoordinatorEntity[DataUpdateCoordinator[MetOfficeData]], WeatherEntity
 ):
@@ -100,7 +118,11 @@ class MetOfficeWeather(
     def condition(self) -> str | None:
         """Return the current condition."""
         if self.coordinator.data.now:
+<<<<<<< HEAD
             return CONDITION_MAP.get(self.coordinator.data.now.weather.value)
+=======
+            return _get_weather_condition(self.coordinator.data.now.weather.value)
+>>>>>>> dde6ce6a996 (Add unit tests)
         return None
 
     @property

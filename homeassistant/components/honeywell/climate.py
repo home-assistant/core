@@ -146,6 +146,7 @@ class HoneywellUSThermostat(ClimateEntity):
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
 
+<<<<<<< HEAD
         if device._data.get("canControlHumidification"):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
 
@@ -153,6 +154,15 @@ class HoneywellUSThermostat(ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
         if not device._data.get("hasFan"):
+=======
+        if device._data["canControlHumidification"]:
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
+
+        if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
+            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
+
+        if not device._data["hasFan"]:
+>>>>>>> dde6ce6a996 (Add unit tests)
             return
 
         # not all honeywell fans support all modes

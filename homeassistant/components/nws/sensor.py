@@ -5,6 +5,11 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any
 
+<<<<<<< HEAD
+=======
+from pynws import SimpleNWS
+
+>>>>>>> dde6ce6a996 (Add unit tests)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -34,8 +39,20 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
+<<<<<<< HEAD
 from . import NWSData, NwsDataUpdateCoordinator, base_unique_id, device_info
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, OBSERVATION_VALID_TIME
+=======
+from . import NwsDataUpdateCoordinator, base_unique_id, device_info
+from .const import (
+    ATTRIBUTION,
+    CONF_STATION,
+    COORDINATOR_OBSERVATION,
+    DOMAIN,
+    NWS_DATA,
+    OBSERVATION_VALID_TIME,
+)
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 PARALLEL_UPDATES = 0
 
@@ -143,14 +160,22 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
+<<<<<<< HEAD
     nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
+=======
+    hass_data = hass.data[DOMAIN][entry.entry_id]
+>>>>>>> dde6ce6a996 (Add unit tests)
     station = entry.data[CONF_STATION]
 
     async_add_entities(
         NWSSensor(
             hass=hass,
             entry_data=entry.data,
+<<<<<<< HEAD
             nws_data=nws_data,
+=======
+            hass_data=hass_data,
+>>>>>>> dde6ce6a996 (Add unit tests)
             description=description,
             station=station,
         )
@@ -168,13 +193,22 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
         self,
         hass: HomeAssistant,
         entry_data: MappingProxyType[str, Any],
+<<<<<<< HEAD
         nws_data: NWSData,
+=======
+        hass_data: dict[str, Any],
+>>>>>>> dde6ce6a996 (Add unit tests)
         description: NWSSensorEntityDescription,
         station: str,
     ) -> None:
         """Initialise the platform with a data instance."""
+<<<<<<< HEAD
         super().__init__(nws_data.coordinator_observation)
         self._nws = nws_data.api
+=======
+        super().__init__(hass_data[COORDINATOR_OBSERVATION])
+        self._nws: SimpleNWS = hass_data[NWS_DATA]
+>>>>>>> dde6ce6a996 (Add unit tests)
         self._latitude = entry_data[CONF_LATITUDE]
         self._longitude = entry_data[CONF_LONGITUDE]
         self.entity_description = description

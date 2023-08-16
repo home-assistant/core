@@ -1025,11 +1025,14 @@ class EventBus:
         listeners = self._listeners.get(event_type, [])
         match_all_listeners = self._match_all_listeners
 
+<<<<<<< HEAD
         event = Event(event_type, event_data, origin, time_fired, context)
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("Bus:Handling %s", event)
 
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
         if not listeners and not match_all_listeners:
             return
 
@@ -1037,6 +1040,14 @@ class EventBus:
         if event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
 
+<<<<<<< HEAD
+=======
+        event = Event(event_type, event_data, origin, time_fired, context)
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Bus:Handling %s", event)
+
+>>>>>>> dde6ce6a996 (Add unit tests)
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
                 try:

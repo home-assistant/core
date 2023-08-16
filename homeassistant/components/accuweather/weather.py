@@ -40,7 +40,11 @@ from .const import (
     ATTR_SPEED,
     ATTR_VALUE,
     ATTRIBUTION,
+<<<<<<< HEAD
     CONDITION_MAP,
+=======
+    CONDITION_CLASSES,
+>>>>>>> dde6ce6a996 (Add unit tests)
     DOMAIN,
 )
 
@@ -80,7 +84,18 @@ class AccuWeatherEntity(
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
+<<<<<<< HEAD
         return CONDITION_MAP.get(self.coordinator.data["WeatherIcon"])
+=======
+        try:
+            return [
+                k
+                for k, v in CONDITION_CLASSES.items()
+                if self.coordinator.data["WeatherIcon"] in v
+            ][0]
+        except IndexError:
+            return None
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     @property
     def cloud_coverage(self) -> float:
@@ -170,7 +185,13 @@ class AccuWeatherEntity(
                 ],
                 ATTR_FORECAST_UV_INDEX: item["UVIndex"][ATTR_VALUE],
                 ATTR_FORECAST_WIND_BEARING: item["WindDay"][ATTR_DIRECTION]["Degrees"],
+<<<<<<< HEAD
                 ATTR_FORECAST_CONDITION: CONDITION_MAP.get(item["IconDay"]),
+=======
+                ATTR_FORECAST_CONDITION: [
+                    k for k, v in CONDITION_CLASSES.items() if item["IconDay"] in v
+                ][0],
+>>>>>>> dde6ce6a996 (Add unit tests)
             }
             for item in self.coordinator.data[ATTR_FORECAST]
         ]

@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+<<<<<<< HEAD
 from dataclasses import dataclass
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 import datetime
 import logging
 from typing import TYPE_CHECKING
@@ -19,7 +22,19 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
+<<<<<<< HEAD
 from .const import CONF_STATION, DOMAIN, UPDATE_TIME_PERIOD
+=======
+from .const import (
+    CONF_STATION,
+    COORDINATOR_FORECAST,
+    COORDINATOR_FORECAST_HOURLY,
+    COORDINATOR_OBSERVATION,
+    DOMAIN,
+    NWS_DATA,
+    UPDATE_TIME_PERIOD,
+)
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +50,7 @@ def base_unique_id(latitude: float, longitude: float) -> str:
     return f"{latitude}_{longitude}"
 
 
+<<<<<<< HEAD
 @dataclass
 class NWSData:
     """Data for the National Weather Service integration."""
@@ -45,6 +61,8 @@ class NWSData:
     coordinator_forecast_hourly: NwsDataUpdateCoordinator
 
 
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """NWS data update coordinator.
 
@@ -153,12 +171,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
     nws_hass_data = hass.data.setdefault(DOMAIN, {})
+<<<<<<< HEAD
     nws_hass_data[entry.entry_id] = NWSData(
         nws_data,
         coordinator_observation,
         coordinator_forecast,
         coordinator_forecast_hourly,
     )
+=======
+    nws_hass_data[entry.entry_id] = {
+        NWS_DATA: nws_data,
+        COORDINATOR_OBSERVATION: coordinator_observation,
+        COORDINATOR_FORECAST: coordinator_forecast,
+        COORDINATOR_FORECAST_HOURLY: coordinator_forecast_hourly,
+    }
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator_observation.async_refresh()

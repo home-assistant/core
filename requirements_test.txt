@@ -11,7 +11,11 @@ astroid==2.15.4
 coverage==7.3.0
 freezegun==1.2.2
 mock-open==1.4.0
+<<<<<<< HEAD
 mypy==1.5.1
+=======
+mypy==1.5.0
+>>>>>>> dde6ce6a996 (Add unit tests)
 pre-commit==3.3.3
 pydantic==1.10.12
 pylint==2.17.4

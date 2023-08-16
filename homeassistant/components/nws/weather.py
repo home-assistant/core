@@ -35,15 +35,29 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 from homeassistant.util.unit_system import UnitSystem
 
+<<<<<<< HEAD
 from . import NWSData, base_unique_id, device_info
+=======
+from . import base_unique_id, device_info
+>>>>>>> dde6ce6a996 (Add unit tests)
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTRIBUTION,
     CONDITION_CLASSES,
+<<<<<<< HEAD
+=======
+    COORDINATOR_FORECAST,
+    COORDINATOR_FORECAST_HOURLY,
+    COORDINATOR_OBSERVATION,
+>>>>>>> dde6ce6a996 (Add unit tests)
     DAYNIGHT,
     DOMAIN,
     FORECAST_VALID_TIME,
     HOURLY,
+<<<<<<< HEAD
+=======
+    NWS_DATA,
+>>>>>>> dde6ce6a996 (Add unit tests)
     OBSERVATION_VALID_TIME,
 )
 
@@ -80,12 +94,21 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
+<<<<<<< HEAD
     nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
             NWSWeather(entry.data, nws_data, DAYNIGHT, hass.config.units),
             NWSWeather(entry.data, nws_data, HOURLY, hass.config.units),
+=======
+    hass_data = hass.data[DOMAIN][entry.entry_id]
+
+    async_add_entities(
+        [
+            NWSWeather(entry.data, hass_data, DAYNIGHT, hass.config.units),
+            NWSWeather(entry.data, hass_data, HOURLY, hass.config.units),
+>>>>>>> dde6ce6a996 (Add unit tests)
         ],
         False,
     )
@@ -108,11 +131,16 @@ class NWSWeather(WeatherEntity):
     def __init__(
         self,
         entry_data: MappingProxyType[str, Any],
+<<<<<<< HEAD
         nws_data: NWSData,
+=======
+        hass_data: dict[str, Any],
+>>>>>>> dde6ce6a996 (Add unit tests)
         mode: str,
         units: UnitSystem,
     ) -> None:
         """Initialise the platform with a data instance and station name."""
+<<<<<<< HEAD
         self.nws = nws_data.api
         self.latitude = entry_data[CONF_LATITUDE]
         self.longitude = entry_data[CONF_LONGITUDE]
@@ -121,6 +149,16 @@ class NWSWeather(WeatherEntity):
             self.coordinator_forecast = nws_data.coordinator_forecast
         else:
             self.coordinator_forecast = nws_data.coordinator_forecast_hourly
+=======
+        self.nws = hass_data[NWS_DATA]
+        self.latitude = entry_data[CONF_LATITUDE]
+        self.longitude = entry_data[CONF_LONGITUDE]
+        self.coordinator_observation = hass_data[COORDINATOR_OBSERVATION]
+        if mode == DAYNIGHT:
+            self.coordinator_forecast = hass_data[COORDINATOR_FORECAST]
+        else:
+            self.coordinator_forecast = hass_data[COORDINATOR_FORECAST_HOURLY]
+>>>>>>> dde6ce6a996 (Add unit tests)
         self.station = self.nws.station
 
         self.mode = mode

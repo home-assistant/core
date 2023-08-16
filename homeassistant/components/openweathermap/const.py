@@ -157,8 +157,11 @@ CONDITION_CLASSES = {
         904,
     ],
 }
+<<<<<<< HEAD
 CONDITION_MAP = {
     cond_code: cond_ha
     for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
 }
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)

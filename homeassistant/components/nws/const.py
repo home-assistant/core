@@ -74,6 +74,14 @@ CONDITION_CLASSES: dict[str, list[str]] = {
 DAYNIGHT = "daynight"
 HOURLY = "hourly"
 
+<<<<<<< HEAD
+=======
+NWS_DATA = "nws data"
+COORDINATOR_OBSERVATION = "coordinator_observation"
+COORDINATOR_FORECAST = "coordinator_forecast"
+COORDINATOR_FORECAST_HOURLY = "coordinator_forecast_hourly"
+
+>>>>>>> dde6ce6a996 (Add unit tests)
 OBSERVATION_VALID_TIME = timedelta(minutes=20)
 FORECAST_VALID_TIME = timedelta(minutes=45)
 # A lot of stations update once hourly plus some wiggle room

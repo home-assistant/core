@@ -52,11 +52,14 @@ CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
+<<<<<<< HEAD
 CONDITION_MAP = {
     cond_code: cond_ha
     for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
 }
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 VISIBILITY_CLASSES = {
     "VP": "Very Poor",

@@ -8,12 +8,19 @@ from aioesphomeapi import (
     BinarySensorState,
     EntityInfo,
     EntityState,
+<<<<<<< HEAD
     SensorInfo,
     SensorState,
     UserService,
 )
 
 from homeassistant.const import ATTR_RESTORED, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+=======
+    UserService,
+)
+
+from homeassistant.const import ATTR_RESTORED, STATE_ON, STATE_UNAVAILABLE
+>>>>>>> dde6ce6a996 (Add unit tests)
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDevice
@@ -151,17 +158,23 @@ async def test_deep_sleep_device(
             name="my binary_sensor",
             unique_id="my_binary_sensor",
         ),
+<<<<<<< HEAD
         SensorInfo(
             object_id="my_sensor",
             key=3,
             name="my sensor",
             unique_id="my_sensor",
         ),
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
     ]
     states = [
         BinarySensorState(key=1, state=True, missing_state=False),
         BinarySensorState(key=2, state=True, missing_state=False),
+<<<<<<< HEAD
         SensorState(key=3, state=123.0, missing_state=False),
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
     ]
     user_service = []
     mock_device = await mock_esphome_device(
@@ -174,18 +187,24 @@ async def test_deep_sleep_device(
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
+<<<<<<< HEAD
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "123"
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     await mock_device.mock_disconnect(False)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+<<<<<<< HEAD
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     await mock_device.mock_connect()
     await hass.async_block_till_done()
@@ -193,6 +212,7 @@ async def test_deep_sleep_device(
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
+<<<<<<< HEAD
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "123"
@@ -210,11 +230,14 @@ async def test_deep_sleep_device(
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "56"
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     await mock_device.mock_disconnect(True)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
+<<<<<<< HEAD
     assert state.state == STATE_OFF
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
@@ -230,6 +253,9 @@ async def test_deep_sleep_device(
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+=======
+    assert state.state == STATE_ON
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 
 async def test_esphome_device_without_friendly_name(

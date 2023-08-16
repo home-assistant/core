@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+<<<<<<< HEAD
 from .const import ATTRIBUTION, CONDITION_MAP, DOMAIN, MANUFACTURER, MODEL
 
 
@@ -19,6 +20,16 @@ def format_condition(condition):
     """Return condition from dict CONDITION_MAP."""
     if condition in CONDITION_MAP:
         return CONDITION_MAP[condition]
+=======
+from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN, MANUFACTURER, MODEL
+
+
+def format_condition(condition):
+    """Return condition from dict CONDITION_CLASSES."""
+    for key, value in CONDITION_CLASSES.items():
+        if condition in value:
+            return key
+>>>>>>> dde6ce6a996 (Add unit tests)
     if isinstance(condition, Condition):
         return condition.value
     return condition

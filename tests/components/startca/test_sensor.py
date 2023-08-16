@@ -157,15 +157,28 @@ async def test_unlimited_setup(
     await async_setup_component(hass, "sensor", {"sensor": config})
     await hass.async_block_till_done()
 
+<<<<<<< HEAD
     # These sensors should not be created for unlimited setups
     assert hass.states.get("sensor.start_ca_usage_ratio") is None
     assert hass.states.get("sensor.start_ca_data_limit") is None
     assert hass.states.get("sensor.start_ca_remaining") is None
+=======
+    state = hass.states.get("sensor.start_ca_usage_ratio")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.state == "0"
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     state = hass.states.get("sensor.start_ca_usage")
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.state == "0.0"
 
+<<<<<<< HEAD
+=======
+    state = hass.states.get("sensor.start_ca_data_limit")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
+    assert state.state == "inf"
+
+>>>>>>> dde6ce6a996 (Add unit tests)
     state = hass.states.get("sensor.start_ca_used_download")
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.state == "0.0"
@@ -198,6 +211,13 @@ async def test_unlimited_setup(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.state == "6.48"
 
+<<<<<<< HEAD
+=======
+    state = hass.states.get("sensor.start_ca_remaining")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
+    assert state.state == "inf"
+
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 async def test_bad_return_code(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker

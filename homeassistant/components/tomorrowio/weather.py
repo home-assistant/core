@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+<<<<<<< HEAD
+=======
+from typing import Any
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
@@ -14,10 +18,14 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+<<<<<<< HEAD
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
+=======
+    WeatherEntity,
+>>>>>>> dde6ce6a996 (Add unit tests)
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -29,8 +37,12 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
+<<<<<<< HEAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+=======
+from homeassistant.core import HomeAssistant
+>>>>>>> dde6ce6a996 (Add unit tests)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import dt as dt_util
@@ -66,6 +78,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
+<<<<<<< HEAD
     entity_registry = er.async_get(hass)
 
     entities = [TomorrowioWeatherEntity(config_entry, coordinator, 4, DAILY)]
@@ -90,6 +103,16 @@ def _calculate_unique_id(config_entry_unique_id: str | None, forecast_type: str)
     return f"{config_entry_unique_id}_{forecast_type}"
 
 
+=======
+
+    entities = [
+        TomorrowioWeatherEntity(config_entry, coordinator, 4, forecast_type)
+        for forecast_type in (DAILY, HOURLY, NOWCAST)
+    ]
+    async_add_entities(entities)
+
+
+>>>>>>> dde6ce6a996 (Add unit tests)
 class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
@@ -98,9 +121,12 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_visibility_unit = UnitOfLength.KILOMETERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+<<<<<<< HEAD
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     def __init__(
         self,
@@ -116,6 +142,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             forecast_type == DEFAULT_FORECAST_TYPE
         )
         self._attr_name = f"{config_entry.data[CONF_NAME]} - {forecast_type.title()}"
+<<<<<<< HEAD
         self._attr_unique_id = _calculate_unique_id(
             config_entry.unique_id, forecast_type
         )
@@ -128,6 +155,9 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         self.platform.config_entry.async_create_task(
             self.hass, self.async_update_listeners(("daily", "hourly"))
         )
+=======
+        self._attr_unique_id = f"{config_entry.unique_id}_{forecast_type}"
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     def _forecast_dict(
         self,
@@ -135,12 +165,20 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         use_datetime: bool,
         condition: int,
         precipitation: float | None,
+<<<<<<< HEAD
         precipitation_probability: int | None,
+=======
+        precipitation_probability: float | None,
+>>>>>>> dde6ce6a996 (Add unit tests)
         temp: float | None,
         temp_low: float | None,
         wind_direction: float | None,
         wind_speed: float | None,
+<<<<<<< HEAD
     ) -> Forecast:
+=======
+    ) -> dict[str, Any]:
+>>>>>>> dde6ce6a996 (Add unit tests)
         """Return formatted Forecast dict from Tomorrow.io forecast data."""
         if use_datetime:
             translated_condition = self._translate_condition(
@@ -149,7 +187,11 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         else:
             translated_condition = self._translate_condition(condition, True)
 
+<<<<<<< HEAD
         return {
+=======
+        data = {
+>>>>>>> dde6ce6a996 (Add unit tests)
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
             ATTR_FORECAST_NATIVE_PRECIPITATION: precipitation,
@@ -160,6 +202,11 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             ATTR_FORECAST_NATIVE_WIND_SPEED: wind_speed,
         }
 
+<<<<<<< HEAD
+=======
+        return {k: v for k, v in data.items() if v is not None}
+
+>>>>>>> dde6ce6a996 (Add unit tests)
     @staticmethod
     def _translate_condition(
         condition: int | None, sun_is_up: bool = True
@@ -218,19 +265,33 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         """Return the raw visibility."""
         return self._get_current_property(TMRW_ATTR_VISIBILITY)
 
+<<<<<<< HEAD
     def _forecast(self, forecast_type: str) -> list[Forecast] | None:
+=======
+    @property
+    def forecast(self):
+>>>>>>> dde6ce6a996 (Add unit tests)
         """Return the forecast."""
         # Check if forecasts are available
         raw_forecasts = (
             self.coordinator.data.get(self._config_entry.entry_id, {})
             .get(FORECASTS, {})
+<<<<<<< HEAD
             .get(forecast_type)
+=======
+            .get(self.forecast_type)
+>>>>>>> dde6ce6a996 (Add unit tests)
         )
         if not raw_forecasts:
             return None
 
+<<<<<<< HEAD
         forecasts: list[Forecast] = []
         max_forecasts = MAX_FORECASTS[forecast_type]
+=======
+        forecasts = []
+        max_forecasts = MAX_FORECASTS[self.forecast_type]
+>>>>>>> dde6ce6a996 (Add unit tests)
         forecast_count = 0
 
         # Convert utcnow to local to be compatible with tests
@@ -242,7 +303,11 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             forecast_dt = dt_util.parse_datetime(forecast[TMRW_ATTR_TIMESTAMP])
 
             # Throw out past data
+<<<<<<< HEAD
             if forecast_dt is None or dt_util.as_local(forecast_dt).date() < today:
+=======
+            if dt_util.as_local(forecast_dt).date() < today:
+>>>>>>> dde6ce6a996 (Add unit tests)
                 continue
 
             values = forecast["values"]
@@ -252,23 +317,34 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             precipitation = values.get(TMRW_ATTR_PRECIPITATION)
             precipitation_probability = values.get(TMRW_ATTR_PRECIPITATION_PROBABILITY)
 
+<<<<<<< HEAD
             try:
                 precipitation_probability = round(precipitation_probability)
             except TypeError:
                 precipitation_probability = None
 
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
             temp = values.get(TMRW_ATTR_TEMPERATURE_HIGH)
             temp_low = None
 
             wind_direction = values.get(TMRW_ATTR_WIND_DIRECTION)
             wind_speed = values.get(TMRW_ATTR_WIND_SPEED)
 
+<<<<<<< HEAD
             if forecast_type == DAILY:
+=======
+            if self.forecast_type == DAILY:
+>>>>>>> dde6ce6a996 (Add unit tests)
                 use_datetime = False
                 temp_low = values.get(TMRW_ATTR_TEMPERATURE_LOW)
                 if precipitation:
                     precipitation = precipitation * 24
+<<<<<<< HEAD
             elif forecast_type == NOWCAST:
+=======
+            elif self.forecast_type == NOWCAST:
+>>>>>>> dde6ce6a996 (Add unit tests)
                 # Precipitation is forecasted in CONF_TIMESTEP increments but in a
                 # per hour rate, so value needs to be converted to an amount.
                 if precipitation:
@@ -295,6 +371,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
                 break
 
         return forecasts
+<<<<<<< HEAD
 
     @property
     def forecast(self) -> list[Forecast] | None:
@@ -308,3 +385,5 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(HOURLY)
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)

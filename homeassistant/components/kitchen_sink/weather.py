@@ -45,11 +45,14 @@ CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
+<<<<<<< HEAD
 CONDITION_MAP = {
     cond_code: cond_ha
     for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
 }
+=======
+>>>>>>> dde6ce6a996 (Add unit tests)
 
 
 async def async_setup_entry(
@@ -357,7 +360,13 @@ class DemoWeather(WeatherEntity):
     @property
     def condition(self) -> str:
         """Return the weather condition."""
+<<<<<<< HEAD
         return CONDITION_MAP[self._condition.lower()]
+=======
+        return [
+            k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
+        ][0]
+>>>>>>> dde6ce6a996 (Add unit tests)
 
     @property
     def forecast(self) -> list[Forecast]:
