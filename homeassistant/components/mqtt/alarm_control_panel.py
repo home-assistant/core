@@ -91,7 +91,7 @@ REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Required(
+        vol.Optional(
             CONF_SUPPORTED_FEATURES, default=list(_SUPPORTED_FEATURES)
         ): cv.multi_select(_SUPPORTED_FEATURES),
         vol.Optional(CONF_CODE): cv.string,
@@ -152,9 +152,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = alarm.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
-    _attr_supported_features: AlarmControlPanelEntityFeature = (
-        AlarmControlPanelEntityFeature(0)
-    )
+    _attr_supported_features: AlarmControlPanelEntityFeature
 
     def __init__(
         self,
@@ -183,6 +181,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
+        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
         for feature in self._config[CONF_SUPPORTED_FEATURES]:
             self._attr_supported_features |= _SUPPORTED_FEATURES[feature]
 
