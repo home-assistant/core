@@ -47,6 +47,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
+from tests.common import mock_restore_cache_with_extra_data
+
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 SLAVE_UNIQUE_ID = "ground_floor_sensor"
 
@@ -906,23 +908,27 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
     assert hass.states.get(ENTITY_ID).state == expected
 
 
-@pytest.mark.parametrize(
-    "mock_test_state",
-    [(State(ENTITY_ID, "unknown"), State(f"{ENTITY_ID}_1", "119"))],
-    indirect=True,
-)
+@pytest.fixture(name="mock_restore")
+async def mock_restore(hass):
+    """Mock restore cache."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(ENTITY_ID, "121"),
+                {"native_value": "121", "native_unit_of_measurement": "kg"},
+            ),
+            (
+                State(ENTITY_ID + "_1", "119"),
+                {"native_value": "119", "native_unit_of_measurement": "kg"},
+            ),
+        ),
+    )
+
+
 @pytest.mark.parametrize(
     "do_config",
     [
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_SCAN_INTERVAL: 0,
-                }
-            ]
-        },
         {
             CONF_SENSORS: [
                 {
@@ -936,10 +942,13 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
     ],
 )
 async def test_restore_state_sensor(
-    hass: HomeAssistant, mock_test_state, mock_modbus
+    hass: HomeAssistant, mock_restore, mock_modbus
 ) -> None:
     """Run test for sensor restore state."""
-    assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
+    state = hass.states.get(ENTITY_ID).state
+    state2 = hass.states.get(ENTITY_ID + "_1").state
+    assert state
+    assert state2
 
 
 @pytest.mark.parametrize(

@@ -26,8 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -37,7 +36,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     COORDINATOR_FORECAST,
     DOMAIN,
     FORECAST_MODE_DAILY,
@@ -50,11 +49,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def format_condition(condition: str):
-    """Return condition from dict CONDITION_CLASSES."""
-    for key, value in CONDITION_CLASSES.items():
-        if condition in value:
-            return key
-    return condition
+    """Return condition from dict CONDITION_MAP."""
+    return CONDITION_MAP.get(condition, condition)
 
 
 async def async_setup_entry(
