@@ -1122,7 +1122,10 @@ def _no_yaml_config_schema(
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
-        with contextlib.suppress(HomeAssistantError):
+        # HomeAssistantError is raised if called from the wrong thread
+        # KeyError is raised if the issue registry is not set up, e.g.
+        # if validation happens from check_config
+        with contextlib.suppress(HomeAssistantError, KeyError):
             hass = async_get_hass()
             async_create_issue(
                 hass,
