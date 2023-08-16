@@ -16,28 +16,9 @@ def get_door_station_by_token(
     hass: HomeAssistant, token: str
 ) -> ConfiguredDoorBird | None:
     """Get door station by token."""
-    return _get_door_station_by_attr(hass, "token", token)
-
-
-def get_door_station_by_slug(
-    hass: HomeAssistant, slug: str
-) -> ConfiguredDoorBird | None:
-    """Get door station by slug."""
-    return _get_door_station_by_attr(hass, "slug", slug)
-
-
-def _get_door_station_by_attr(
-    hass: HomeAssistant, attr: str, val: str
-) -> ConfiguredDoorBird | None:
     domain_data: dict[str, DoorBirdData] = hass.data[DOMAIN]
     for data in domain_data.values():
         door_station = data.door_station
-        if getattr(door_station, attr) == val:
+        if door_station.token == token:
             return door_station
     return None
-
-
-def get_all_door_stations(hass: HomeAssistant) -> list[ConfiguredDoorBird]:
-    """Get all door stations."""
-    domain_data: dict[str, DoorBirdData] = hass.data[DOMAIN]
-    return [data.door_station for data in domain_data.values()]
