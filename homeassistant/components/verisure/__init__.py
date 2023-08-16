@@ -96,8 +96,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             new_options = entry.options.copy()
             del new_options[CONF_LOCK_DEFAULT_CODE]
 
+            hass.config_entries.async_update_entry(entry, options=new_options)
+
         entry.version = 2
-        hass.config_entries.async_update_entry(entry, options=new_options)
 
     LOGGER.info("Migration to version %s successful", entry.version)
 
