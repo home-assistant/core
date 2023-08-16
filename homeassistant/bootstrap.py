@@ -135,6 +135,7 @@ async def async_setup_hass(
 
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
+    loader.async_setup(hass)
     config_dict = None
     basic_setup_success = False
 
@@ -186,6 +187,8 @@ async def async_setup_hass(
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
         hass.config.config_dir = old_config.config_dir
+        # Setup loader cache after the config dir has been set
+        loader.async_setup(hass)
 
     if safe_mode:
         _LOGGER.info("Starting in safe mode")

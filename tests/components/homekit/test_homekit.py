@@ -1019,6 +1019,7 @@ async def test_homekit_unpair_not_homekit_device(
     not_homekit_entry = MockConfigEntry(
         domain="not_homekit", data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    not_homekit_entry.add_to_hass(hass)
     entity_id = "light.demo"
     hass.states.async_set("light.demo", "on")
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
