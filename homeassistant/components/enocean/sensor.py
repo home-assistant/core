@@ -151,7 +151,7 @@ def setup_platform(
 
 
 class EnOceanSensor(EnOceanEntity, RestoreSensor):
-    """Representation of an  EnOcean sensor device such as a power meter."""
+    """Representation of an EnOcean sensor device such as a power meter."""
 
     def __init__(
         self,
