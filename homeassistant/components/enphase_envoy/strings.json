@@ -22,6 +22,67 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "communicating": {
+        "name": "Communicating"
+      },
+      "dc_switch": {
+        "name": "DC switch"
+      },
+      "operating": {
+        "name": "Operating"
+      },
+      "grid_status": {
+        "name": "Grid status"
+      },
+      "relay": {
+        "name": "Relay status"
+      }
+    },
+    "number": {
+      "cutoff_battery_level": {
+        "name": "Cutoff battery level"
+      },
+      "restore_battery_level": {
+        "name": "Restore battery level"
+      }
+    },
+    "select": {
+      "relay_mode": {
+        "name": "Mode",
+        "state": {
+          "standard": "Standard",
+          "battery": "Battery level"
+        }
+      },
+      "relay_grid_action": {
+        "name": "Grid action",
+        "state": {
+          "powered": "Powered",
+          "not_powered": "Not powered",
+          "schedule": "Follow schedule",
+          "none": "None"
+        }
+      },
+      "relay_microgrid_action": {
+        "name": "Microgrid action",
+        "state": {
+          "powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::powered%]",
+          "not_powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::not_powered%]",
+          "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
+          "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
+        }
+      },
+      "relay_generator_action": {
+        "name": "Generator action",
+        "state": {
+          "powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::powered%]",
+          "not_powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::not_powered%]",
+          "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
+          "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
+        }
+      }
+    },
     "sensor": {
       "last_reported": {
         "name": "Last reported"
@@ -49,6 +110,26 @@
       },
       "lifetime_consumption": {
         "name": "Lifetime energy consumption"
+      },
+      "reserve_soc": {
+        "name": "Reserve battery level"
+      },
+      "available_energy": {
+        "name": "Available battery energy"
+      },
+      "reserve_energy": {
+        "name": "Reserve battery energy"
+      },
+      "max_capacity": {
+        "name": "Battery capacity"
+      },
+      "configured_reserve_soc": {
+        "name": "Configured reserve battery level"
+      }
+    },
+    "switch": {
+      "grid_enabled": {
+        "name": "Grid enabled"
       }
     }
   }

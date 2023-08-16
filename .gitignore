@@ -67,6 +67,7 @@ htmlcov/
 test-reports/
 test-results.xml
 test-output.xml
+pytest-*.txt
 
 # Translations
 *.mo

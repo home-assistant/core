@@ -1,6 +1,7 @@
 """The Honeywell Lyric integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -23,7 +24,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -75,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(exception) from exception
 
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio.timeout(60):
                 await lyric.get_locations()
                 for location in lyric.locations:
                     for device in location.devices:

@@ -1,5 +1,6 @@
 """The test for weather entity."""
 from datetime import datetime
+from typing import Any
 
 import pytest
 
@@ -31,7 +32,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
+    DOMAIN,
     ROUNDING_PRECISION,
+    SERVICE_GET_FORECAST,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -53,6 +56,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1103,3 +1107,121 @@ async def test_forecast_twice_daily_missing_is_daytime(
     assert msg["error"] == {"code": "unknown_error", "message": "Unknown error"}
     assert not msg["success"]
     assert msg["type"] == "result"
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "supported_features", "extra"),
+    [
+        ("daily", WeatherEntityFeature.FORECAST_DAILY, {}),
+        ("hourly", WeatherEntityFeature.FORECAST_HOURLY, {}),
+        (
+            "twice_daily",
+            WeatherEntityFeature.FORECAST_TWICE_DAILY,
+            {"is_daytime": True},
+        ),
+    ],
+)
+async def test_get_forecast(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    forecast_type: str,
+    supported_features: int,
+    extra: dict[str, Any],
+) -> None:
+    """Test get forecast service."""
+
+    entity0 = await create_entity(
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+        supported_features=supported_features,
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": entity0.entity_id,
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": [
+            {
+                "cloud_coverage": None,
+                "temperature": 38.0,
+                "templow": 38.0,
+                "uv_index": None,
+                "wind_bearing": None,
+            }
+            | extra
+        ],
+    }
+
+
+async def test_get_forecast_no_forecast(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test get forecast service."""
+
+    entity0 = await create_entity(
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+        supported_features=WeatherEntityFeature.FORECAST_DAILY,
+    )
+
+    entity0.forecast_list = None
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": entity0.entity_id,
+            "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "forecast": [],
+    }
+
+
+@pytest.mark.parametrize(
+    ("supported_features", "forecast_types"),
+    [
+        (WeatherEntityFeature.FORECAST_DAILY, ["hourly", "twice_daily"]),
+        (WeatherEntityFeature.FORECAST_HOURLY, ["daily", "twice_daily"]),
+        (WeatherEntityFeature.FORECAST_TWICE_DAILY, ["daily", "hourly"]),
+    ],
+)
+async def test_get_forecast_unsupported(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    forecast_types: list[str],
+    supported_features: int,
+) -> None:
+    """Test get forecast service."""
+
+    entity0 = await create_entity(
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+        supported_features=supported_features,
+    )
+
+    for forecast_type in forecast_types:
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_GET_FORECAST,
+                {
+                    "entity_id": entity0.entity_id,
+                    "type": forecast_type,
+                },
+                blocking=True,
+                return_response=True,
+            )
