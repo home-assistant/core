@@ -1025,20 +1025,16 @@ class EventBus:
         listeners = self._listeners.get(event_type, [])
         match_all_listeners = self._match_all_listeners
 
+        event = Event(event_type, event_data, origin, time_fired, context)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Bus:Handling %s", event)
+
         if not listeners and not match_all_listeners:
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                event = Event(event_type, event_data, origin, time_fired, context)
-                _LOGGER.debug("Bus:Handling %s", event)
             return
 
         # EVENT_HOMEASSISTANT_CLOSE should not be sent to MATCH_ALL listeners
         if event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
-
-        event = Event(event_type, event_data, origin, time_fired, context)
-
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Bus:Handling %s", event)
 
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
