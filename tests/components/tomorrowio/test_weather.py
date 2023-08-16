@@ -166,8 +166,8 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
         ATTR_FORECAST_TEMP: 45.9,
         ATTR_FORECAST_TEMP_LOW: 26.1,
-        ATTR_FORECAST_HUMIDITY: 58,
         ATTR_FORECAST_DEW_POINT: 12.8,
+        ATTR_FORECAST_HUMIDITY: 58,
         ATTR_FORECAST_WIND_BEARING: 239.6,
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
@@ -195,8 +195,8 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
     assert weather_state.attributes[ATTR_FORECAST][0] == {
         ATTR_FORECAST_CONDITION: ATTR_CONDITION_SUNNY,
         ATTR_FORECAST_TIME: "2021-03-07T11:00:00+00:00",
-        ATTR_FORECAST_HUMIDITY: 58,
         ATTR_FORECAST_DEW_POINT: 12.8,
+        ATTR_FORECAST_HUMIDITY: 58,
         ATTR_FORECAST_PRECIPITATION: 0,
         ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
         ATTR_FORECAST_TEMP: 45.9,
