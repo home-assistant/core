@@ -12,6 +12,7 @@ from yalexs.keypad import KeypadDetail
 from yalexs.lock import Lock, LockDetail
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -27,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import AugustData
 from .const import (
@@ -170,8 +170,7 @@ async def _async_migrate_old_unique_ids(hass, devices):
             registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
+class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     """Representation of an August lock operation sensor."""
 
     _attr_translation_key = "operator"
@@ -231,10 +230,15 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if not last_state or last_state.state == STATE_UNAVAILABLE:
+        last_sensor_state = await self.async_get_last_sensor_data()
+        if (
+            not last_state
+            or not last_sensor_state
+            or last_state.state == STATE_UNAVAILABLE
+        ):
             return
 
-        self._attr_native_value = last_state.state
+        self._attr_native_value = last_sensor_state.native_value
         if ATTR_ENTITY_PICTURE in last_state.attributes:
             self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
         if ATTR_OPERATION_REMOTE in last_state.attributes:
