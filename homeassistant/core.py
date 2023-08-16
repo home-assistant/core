@@ -1026,6 +1026,7 @@ class EventBus:
         match_all_listeners = self._match_all_listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
+
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("Bus:Handling %s", event)
 
