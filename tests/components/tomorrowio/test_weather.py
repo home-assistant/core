@@ -237,6 +237,37 @@ async def test_v4_forecast_service(
         assert response == snapshot
 
 
+async def test_v4_bad_forecast(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tomorrowio_config_entry_update,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test bad forecast data."""
+    freezer.move_to(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
+
+    weather_state = await _setup(hass, API_V4_ENTRY_DATA)
+    entity_id = weather_state.entity_id
+    hourly_forecast = tomorrowio_config_entry_update.return_value["forecasts"]["hourly"]
+    hourly_forecast[0]["values"]["precipitationProbability"] = "blah"
+
+    # Trigger data refetch
+    freezer.tick(timedelta(minutes=32) + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            "entity_id": entity_id,
+            "type": "hourly",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response["forecast"][0]["precipitation_probability"] is None
+
+
 @pytest.mark.parametrize("forecast_type", ["daily", "hourly"])
 async def test_forecast_subscription(
     hass: HomeAssistant,
