@@ -5,10 +5,7 @@ from meteofrance_api.model import Place
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.meteo_france.const import (
-    CONF_CITY,
-    DOMAIN,
-)
+from homeassistant.components.meteo_france.const import CONF_CITY, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
