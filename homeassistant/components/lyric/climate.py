@@ -117,7 +117,7 @@ async def async_setup_entry(
                         name=device.name,
                     ),
                     location,
-                    device
+                    device,
                 )
             )
 
@@ -143,7 +143,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         coordinator: DataUpdateCoordinator[Lyric],
         description: ClimateEntityDescription,
         location: LyricLocation,
-        device: LyricDevice
+        device: LyricDevice,
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
         # Use the native temperature unit from the device settings
