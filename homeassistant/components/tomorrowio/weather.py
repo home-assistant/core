@@ -82,7 +82,7 @@ async def async_setup_entry(
         ):
             continue
         entities.append(
-        TomorrowioWeatherEntity(config_entry, coordinator, 4, forecast_type)
+            TomorrowioWeatherEntity(config_entry, coordinator, 4, forecast_type)
         )
 
     async_add_entities(entities)
