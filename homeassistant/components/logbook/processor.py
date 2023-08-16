@@ -5,6 +5,7 @@ from collections.abc import Callable, Generator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
+import logging
 from typing import Any
 
 from sqlalchemy.engine import Result
@@ -19,7 +20,10 @@ from homeassistant.components.recorder.models import (
     process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import (
+    execute_stmt_lambda_element,
+    session_scope,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -61,12 +65,14 @@ from .models import EventAsRow, LazyEventPartialState, LogbookConfig, async_even
 from .queries import statement_for_request
 from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(slots=True)
 class LogbookRun:
     """A logbook run which may be a long running event stream or single request."""
 
-    context_lookup: ContextLookup
+    context_lookup: dict[bytes | None, Row | EventAsRow | None]
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ]
@@ -74,6 +80,7 @@ class LogbookRun:
     entity_name_cache: EntityNameCache
     include_entity_name: bool
     format_time: Callable[[Row | EventAsRow], Any]
+    memoize_new_contexts: bool = True
 
 
 class EventProcessor:
@@ -105,7 +112,7 @@ class EventProcessor:
             _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
         )
         self.logbook_run = LogbookRun(
-            context_lookup=ContextLookup(hass),
+            context_lookup={None: None},
             external_events=logbook_config.external_events,
             event_cache=EventCache({}),
             entity_name_cache=EntityNameCache(self.hass),
@@ -126,6 +133,7 @@ class EventProcessor:
         """
         self.logbook_run.event_cache.clear()
         self.logbook_run.context_lookup.clear()
+        self.logbook_run.memoize_new_contexts = False
 
     def get_events(
         self,
@@ -133,25 +141,6 @@ class EventProcessor:
         end_day: dt,
     ) -> list[dict[str, Any]]:
         """Get events for a period of time."""
-
-        def yield_rows(result: Result) -> Sequence[Row] | Result:
-            """Yield rows from the database."""
-            # end_day - start_day intentionally checks .days and not .total_seconds()
-            # since we don't want to switch over to buffered if they go
-            # over one day by a few hours since the UI makes it so easy to do that.
-            if self.limited_select or (end_day - start_day).days <= 1:
-                return result.all()
-            # Only buffer rows to reduce memory pressure
-            # if we expect the result set is going to be very large.
-            # What is considered very large is going to differ
-            # based on the hardware Home Assistant is running on.
-            #
-            # sqlalchemy suggests that is at least 10k, but for
-            # even and RPi3 that number seems higher in testing
-            # so we don't switch over until we request > 1 day+ of data.
-            #
-            return result.yield_per(1024)
-
         with session_scope(hass=self.hass, read_only=True) as session:
             metadata_ids: list[int] | None = None
             instance = get_instance(self.hass)
@@ -176,7 +165,9 @@ class EventProcessor:
                 self.filters,
                 self.context_id,
             )
-            return self.humanify(yield_rows(session.execute(stmt)))
+            return self.humanify(
+                execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            )
 
     def humanify(
         self, rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result
@@ -207,13 +198,18 @@ def _humanify(
     entity_name_cache = logbook_run.entity_name_cache
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
+    memoize_new_contexts = logbook_run.memoize_new_contexts
+    memoize_context = context_lookup.setdefault
 
     # Process rows
     for row in rows:
-        context_id_bin = context_lookup.memorize(row)
+        context_id_bin: bytes = row.context_id_bin
+        if memoize_new_contexts:
+            memoize_context(context_id_bin, row)
         if row.context_only:
             continue
         event_type = row.event_type
+
         if event_type == EVENT_CALL_SERVICE:
             continue
         if event_type is PSEUDO_EVENT_STATE_CHANGED:
@@ -235,7 +231,7 @@ def _humanify(
             }
             if include_entity_name:
                 data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id)
-            if icon := row.icon or row.old_format_icon:
+            if icon := row.icon:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
             context_augmenter.augment(data, row, context_id_bin)
@@ -243,7 +239,13 @@ def _humanify(
 
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]
-            data = describe_event(event_cache.get(row))
+            try:
+                data = describe_event(event_cache.get(row))
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Error with %s describe event for %s", domain, event_type
+                )
+                continue
             data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
             context_augmenter.augment(data, row, context_id_bin)
@@ -269,33 +271,6 @@ def _humanify(
             yield data
 
 
-class ContextLookup:
-    """A lookup class for context origins."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Memorize context origin."""
-        self.hass = hass
-        self._memorize_new = True
-        self._lookup: dict[bytes | None, Row | EventAsRow | None] = {None: None}
-
-    def memorize(self, row: Row | EventAsRow) -> bytes | None:
-        """Memorize a context from the database."""
-        if self._memorize_new:
-            context_id_bin: bytes = row.context_id_bin
-            self._lookup.setdefault(context_id_bin, row)
-            return context_id_bin
-        return None
-
-    def clear(self) -> None:
-        """Clear the context origins and stop recording new ones."""
-        self._lookup.clear()
-        self._memorize_new = False
-
-    def get(self, context_id_bin: bytes) -> Row | EventAsRow | None:
-        """Get the context origin."""
-        return self._lookup.get(context_id_bin)
-
-
 class ContextAugmenter:
     """Augment data with context trace."""
 
@@ -311,8 +286,10 @@ class ContextAugmenter:
         self, context_id_bin: bytes | None, row: Row | EventAsRow
     ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
-        if context_id_bin:
-            return self.context_lookup.get(context_id_bin)
+        if context_id_bin is not None and (
+            context_row := self.context_lookup.get(context_id_bin)
+        ):
+            return context_row
         if (context := getattr(row, "context", None)) is not None and (
             origin_event := context.origin_event
         ) is not None:
@@ -374,7 +351,11 @@ class ContextAugmenter:
         data[CONTEXT_EVENT_TYPE] = event_type
         data[CONTEXT_DOMAIN] = domain
         event = self.event_cache.get(context_row)
-        described = describe_event(event)
+        try:
+            described = describe_event(event)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error with %s describe event for %s", domain, event_type)
+            return
         if name := described.get(LOGBOOK_ENTRY_NAME):
             data[CONTEXT_NAME] = name
         if message := described.get(LOGBOOK_ENTRY_MESSAGE):
@@ -391,15 +372,9 @@ class ContextAugmenter:
 
 def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
-    if (
-        row is other_row
-        or (state_id := row.state_id)
-        and state_id == other_row.state_id
-        or (event_id := row.event_id)
-        and event_id == other_row.event_id
-    ):
-        return True
-    return False
+    return bool(
+        row is other_row or (row_id := row.row_id) and row_id == other_row.row_id
+    )
 
 
 def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:

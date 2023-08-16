@@ -1,12 +1,12 @@
 """Support for Start.ca Bandwidth Monitor."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 from xml.parsers.expat import ExpatError
 
-import async_timeout
 import voluptuous as vol
 import xmltodict
 
@@ -213,7 +213,7 @@ class StartcaData:
         """Get the Start.ca bandwidth data from the web service."""
         _LOGGER.debug("Updating Start.ca usage data")
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
         if req.status != HTTPStatus.OK:
             _LOGGER.error("Request failed with status: %u", req.status)

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from uuid import uuid1
 
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
@@ -23,6 +25,7 @@ from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
+    CONF_ADVERTISE_IP,
     DEFAULT_PORT,
     DOMAIN,
     HOMEKIT,
@@ -115,7 +118,7 @@ def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
         exclude_accessory_mode=False,
         entity_config={},
         homekit_mode=homekit_mode,
-        advertise_ip=None,
+        advertise_ips=None,
         entry_id=entry.entry_id,
         entry_title=entry.title,
         devices=devices,
@@ -169,7 +172,7 @@ async def test_setup_min(hass: HomeAssistant, mock_async_zeroconf: None) -> None
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -211,7 +214,7 @@ async def test_removing_entry(
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -244,7 +247,7 @@ async def test_homekit_setup(
         {},
         {},
         HOMEKIT_MODE_BRIDGE,
-        advertise_ip=None,
+        advertise_ips=None,
         entry_id=entry.entry_id,
         entry_title=entry.title,
     )
@@ -321,7 +324,81 @@ async def test_homekit_setup_ip_address(
     )
 
 
-async def test_homekit_setup_advertise_ip(
+async def test_homekit_with_single_advertise_ips(
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup with a single advertise ips."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345, CONF_ADVERTISE_IP: "1.3.4.4"},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        mock_driver.async_start = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_driver.assert_called_with(
+        hass,
+        entry.entry_id,
+        ANY,
+        entry.title,
+        loop=hass.loop,
+        address=[None],
+        port=ANY,
+        persist_file=ANY,
+        advertised_address="1.3.4.4",
+        async_zeroconf_instance=mock_async_zeroconf,
+        zeroconf_server=ANY,
+        loader=ANY,
+        iid_storage=ANY,
+    )
+
+
+async def test_homekit_with_many_advertise_ips(
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup with many advertise ips."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "mock_name",
+            CONF_PORT: 12345,
+            CONF_ADVERTISE_IP: ["1.3.4.4", "4.3.2.2"],
+        },
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        mock_driver.async_start = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_driver.assert_called_with(
+        hass,
+        entry.entry_id,
+        ANY,
+        entry.title,
+        loop=hass.loop,
+        address=[None],
+        port=ANY,
+        persist_file=ANY,
+        advertised_address=["1.3.4.4", "4.3.2.2"],
+        async_zeroconf_instance=mock_async_zeroconf,
+        zeroconf_server=ANY,
+        loader=ANY,
+        iid_storage=ANY,
+    )
+
+
+async def test_homekit_setup_advertise_ips(
     hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
 ) -> None:
     """Test setup with given IP address to advertise."""
@@ -667,7 +744,7 @@ async def test_homekit_start(
     assert device_registry.async_get(bridge_with_wrong_mac.id) is None
 
     device = device_registry.async_get_device(
-        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -683,7 +760,7 @@ async def test_homekit_start(
         await homekit.async_start()
 
     device = device_registry.async_get_device(
-        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -747,6 +824,7 @@ async def test_homekit_start_with_a_device(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
@@ -867,15 +945,15 @@ async def test_homekit_unpair(
         homekit.driver.aio_stop_event = MagicMock()
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
-        state.add_paired_client("client2", "any", b"0")
-        state.add_paired_client("client3", "any", b"1")
-        state.add_paired_client("client4", "any", b"0")
-        state.add_paired_client("client5", "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
 
         formatted_mac = dr.format_mac(state.mac)
         hk_bridge_dev = device_registry.async_get_device(
-            {}, {(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
         )
 
         await hass.services.async_call(
@@ -916,7 +994,8 @@ async def test_homekit_unpair_missing_device_id(
         homekit.driver.aio_stop_event = MagicMock()
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
+        client_1 = str(uuid1()).encode("utf-8")
+        state.add_paired_client(client_1, "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -925,7 +1004,7 @@ async def test_homekit_unpair_missing_device_id(
                 blocking=True,
             )
         await hass.async_block_till_done()
-        state.paired_clients = {"client1": "any"}
+        state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
 
@@ -940,6 +1019,7 @@ async def test_homekit_unpair_not_homekit_device(
     not_homekit_entry = MockConfigEntry(
         domain="not_homekit", data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    not_homekit_entry.add_to_hass(hass)
     entity_id = "light.demo"
     hass.states.async_set("light.demo", "on")
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
@@ -966,7 +1046,8 @@ async def test_homekit_unpair_not_homekit_device(
         )
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
+        client_1 = str(uuid1()).encode("utf-8")
+        state.add_paired_client(client_1, "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -975,7 +1056,7 @@ async def test_homekit_unpair_not_homekit_device(
                 blocking=True,
             )
         await hass.async_block_till_done()
-        state.paired_clients = {"client1": "any"}
+        state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
 
@@ -1481,7 +1562,7 @@ async def test_yaml_updates_update_config_entry_for_name(
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1643,7 +1724,6 @@ async def test_homekit_ignored_missing_devices(
     light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
-    before_removal = entity_registry.entities.copy()
     # Delete the device to make sure we fallback
     # to using the platform
     device_registry.async_remove_device(device_entry.id)
@@ -1651,7 +1731,23 @@ async def test_homekit_ignored_missing_devices(
     await asyncio.sleep(0)
     await asyncio.sleep(0)
     # Restore the registry
-    entity_registry.entities = before_removal
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "powerwall",
+        "battery_charging",
+        device_id=device_entry.id,
+        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "powerwall",
+        "battery",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.BATTERY,
+    )
+    light = entity_registry.async_get_or_create(
+        "light", "powerwall", "demo", device_id=device_entry.id
+    )
 
     hass.states.async_set(light.entity_id, STATE_ON)
     hass.states.async_set("light.two", STATE_ON)
@@ -1839,7 +1935,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         False,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1874,7 +1970,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         False,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],

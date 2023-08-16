@@ -16,7 +16,6 @@ import time
 from typing import Any, cast
 
 from aiohttp import client, web
-import async_timeout
 import jwt
 import voluptuous as vol
 from yarl import URL
@@ -287,7 +286,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_external_step_done(next_step_id=next_step)
 
         try:
-            async with async_timeout.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
+            async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
                 url = await self.async_generate_authorize_url()
         except asyncio.TimeoutError as err:
             _LOGGER.error("Timeout generating authorize url: %s", err)
@@ -311,7 +310,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         _LOGGER.debug("Creating config entry from external data")
 
         try:
-            async with async_timeout.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
+            async with asyncio.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
                 token = await self.flow_impl.async_resolve_external_data(
                     self.external_data
                 )
@@ -542,7 +541,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
 
 
 @callback
-def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
+def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
     """JWT encode data."""
     secret: str | None = hass.data.get(DATA_JWT_SECRET)
 
@@ -550,6 +549,6 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
         return None
 
     try:
-        return jwt.decode(encoded, secret, algorithms=["HS256"])
+        return jwt.decode(encoded, secret, algorithms=["HS256"])  # type: ignore[no-any-return]
     except jwt.InvalidTokenError:
         return None

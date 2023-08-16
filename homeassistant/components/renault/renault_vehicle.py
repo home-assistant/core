@@ -15,7 +15,7 @@ from renault_api.renault_vehicle import RenaultVehicle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
 from .coordinator import RenaultDataUpdateCoordinator

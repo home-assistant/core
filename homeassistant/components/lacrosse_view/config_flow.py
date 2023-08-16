@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from lacrosse_view import LaCrosse, Location, LoginError
@@ -13,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -21,6 +22,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("password"): str,
     }
 )
+_LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[Location]:
@@ -29,14 +31,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[Loca
     api = LaCrosse(async_get_clientsession(hass))
 
     try:
-        await api.login(data["username"], data["password"])
+        if await api.login(data["username"], data["password"]):
+            _LOGGER.debug("Successfully logged in")
 
         locations = await api.get_locations()
+        _LOGGER.debug(locations)
     except LoginError as error:
         raise InvalidAuth from error
 
     if not locations:
-        raise NoLocations("No locations found for account {}".format(data["username"]))
+        raise NoLocations(f'No locations found for account {data["username"]}')
 
     return locations
 
@@ -57,6 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
+            _LOGGER.debug("Showing initial form")
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
@@ -66,11 +71,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except InvalidAuth:
+            _LOGGER.exception("Could not login")
             errors["base"] = "invalid_auth"
         except NoLocations:
             errors["base"] = "no_locations"
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception")
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             self.data = user_input
@@ -83,8 +89,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
+
+            _LOGGER.debug("Moving on to location step")
             return await self.async_step_location()
 
+        _LOGGER.debug("Showing errors")
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
@@ -95,6 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the location step."""
 
         if not user_input:
+            _LOGGER.debug("Showing initial location selection")
             return self.async_show_form(
                 step_id="location",
                 data_schema=vol.Schema(
@@ -113,7 +123,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         await self.async_set_unique_id(location_id)
-
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(

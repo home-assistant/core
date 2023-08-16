@@ -67,7 +67,7 @@ LIGHT_ENTITIES = (
         name="Status LED",
         icon="mdi:lightning-bolt-circle",
         entity_category=EntityCategory.CONFIG,
-        supported_fn=lambda api, ch: api.supported(ch, "status_led"),
+        supported_fn=lambda api, ch: api.supported(ch, "power_led"),
         is_on_fn=lambda api, ch: api.status_led_enabled(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_status_led(ch, value),
     ),

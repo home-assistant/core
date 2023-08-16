@@ -153,6 +153,71 @@ async def test_shutdown(
     assert updates == [2]
 
 
+async def test_shutdown_on_entry_unload(
+    hass: HomeAssistant,
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
+    """Test shutdown is requested on entry unload."""
+    entry = MockConfigEntry()
+    config_entries.current_entry.set(entry)
+
+    calls = 0
+
+    async def _refresh() -> int:
+        nonlocal calls
+        calls += 1
+        return calls
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        name="test",
+        update_method=_refresh,
+        update_interval=DEFAULT_UPDATE_INTERVAL,
+    )
+
+    crd.async_add_listener(lambda: None)
+    assert crd._unsub_refresh is not None
+    assert not crd._shutdown_requested
+
+    await entry._async_process_on_unload(hass)
+
+    assert crd._shutdown_requested
+    assert crd._unsub_refresh is None
+
+
+async def test_shutdown_on_hass_stop(
+    hass: HomeAssistant,
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
+    """Test shutdown can be shutdown on STOP event."""
+    calls = 0
+
+    async def _refresh() -> int:
+        nonlocal calls
+        calls += 1
+        return calls
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        name="test",
+        update_method=_refresh,
+        update_interval=DEFAULT_UPDATE_INTERVAL,
+    )
+    await crd.async_register_shutdown()
+
+    crd.async_add_listener(lambda: None)
+    assert crd._unsub_refresh is not None
+    assert not crd._shutdown_requested
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert crd._shutdown_requested
+    assert crd._unsub_refresh is None
+
+
 async def test_update_context(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
@@ -528,4 +593,119 @@ async def test_async_set_update_error(
     update_callback.assert_called_once()
 
     # Remove callbacks to avoid lingering timers
+    remove_callbacks()
+
+
+async def test_only_callback_on_change_when_always_update_is_false(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we do not callback listeners unless something has actually changed when always_update is false."""
+    update_callback = Mock()
+    crd.always_update = False
+    remove_callbacks = crd.async_add_listener(update_callback)
+    mocked_data = None
+    mocked_exception = None
+
+    async def _update_method() -> int:
+        nonlocal mocked_data
+        nonlocal mocked_exception
+        if mocked_exception is not None:
+            raise mocked_exception
+        return mocked_data
+
+    crd.update_method = _update_method
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_exception = None
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2, "b": 3}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    remove_callbacks()
+
+
+async def test_always_callback_when_always_update_is_true(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we callback listeners even though the data is the same when always_update is True."""
+    update_callback = Mock()
+    remove_callbacks = crd.async_add_listener(update_callback)
+    mocked_data = None
+    mocked_exception = None
+
+    async def _update_method() -> int:
+        nonlocal mocked_data
+        nonlocal mocked_exception
+        if mocked_exception is not None:
+            raise mocked_exception
+        return mocked_data
+
+    crd.update_method = _update_method
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    # But still don't fire it if we are only getting
+    # failure over and over
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
     remove_callbacks()

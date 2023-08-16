@@ -165,7 +165,9 @@ class UsgsEarthquakesFeedEntityManager:
             await self.async_update()
 
         # Trigger updates at regular intervals.
-        async_track_time_interval(self._hass, update, self._scan_interval)
+        async_track_time_interval(
+            self._hass, update, self._scan_interval, cancel_on_shutdown=True
+        )
         _LOGGER.debug("Feed entity manager initialized")
 
     async def async_update(self) -> None:

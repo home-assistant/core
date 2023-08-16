@@ -226,6 +226,12 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         if last_state and last_state.state == STATE_ON:
             await self.async_turn_on()
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self.unsub_tracker:
+            self.unsub_tracker()
+        return await super().async_will_remove_from_hass()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on flux."""
         if self.is_on:

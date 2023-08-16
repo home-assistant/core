@@ -13,10 +13,10 @@ class DictRegistry(dict[int | str, _TypeT]):
     def register(self, name: int | str) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific name."""
 
-        def decorator(channel: _TypeT) -> _TypeT:
-            """Register decorated channel or item."""
-            self[name] = channel
-            return channel
+        def decorator(cluster_handler: _TypeT) -> _TypeT:
+            """Register decorated cluster handler or item."""
+            self[name] = cluster_handler
+            return cluster_handler
 
         return decorator
 
@@ -27,9 +27,9 @@ class SetRegistry(set[int | str]):
     def register(self, name: int | str) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific name."""
 
-        def decorator(channel: _TypeT) -> _TypeT:
-            """Register decorated channel or item."""
+        def decorator(cluster_handler: _TypeT) -> _TypeT:
+            """Register decorated cluster handler or item."""
             self.add(name)
-            return channel
+            return cluster_handler
 
         return decorator

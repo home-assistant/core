@@ -1,9 +1,12 @@
 """Test for the default agent."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_get_assistant_settings,
+)
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
@@ -17,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 
 @pytest.fixture
@@ -83,26 +86,30 @@ async def test_exposed_areas(
     area_kitchen = area_registry.async_get_or_create("kitchen")
     area_bedroom = area_registry.async_get_or_create("bedroom")
 
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
     kitchen_device = device_registry.async_get_or_create(
-        config_entry_id="1234", connections=set(), identifiers={("demo", "id-1234")}
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "id-1234")},
     )
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
-    kitchen_light = entity_registry.async_get_or_create(
-        "light", "demo", "1234", original_name="kitchen light"
-    )
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
     entity_registry.async_update_entity(
         kitchen_light.entity_id, device_id=kitchen_device.id
     )
-    hass.states.async_set(kitchen_light.entity_id, "on")
-
-    bedroom_light = entity_registry.async_get_or_create(
-        "light", "demo", "5678", original_name="bedroom light"
+    hass.states.async_set(
+        kitchen_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
     )
+
+    bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
     entity_registry.async_update_entity(
         bedroom_light.entity_id, area_id=area_bedroom.id
     )
-    hass.states.async_set(bedroom_light.entity_id, "on")
+    hass.states.async_set(
+        bedroom_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+    )
 
     # Hide the bedroom light
     expose_entity(hass, bedroom_light.entity_id, False)
@@ -137,3 +144,142 @@ async def test_conversation_agent(
         return_value={"homeassistant": ["dwarvish", "elvish", "entish"]},
     ):
         assert agent.supported_languages == ["dwarvish", "elvish", "entish"]
+
+
+async def test_expose_flag_automatically_set(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test DefaultAgent sets the expose flag on all entities automatically."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    light = entity_registry.async_get_or_create("light", "demo", "1234")
+    test = entity_registry.async_get_or_create("test", "demo", "1234")
+
+    assert async_get_assistant_settings(hass, conversation.DOMAIN) == {}
+
+    assert await async_setup_component(hass, "conversation", {})
+    await hass.async_block_till_done()
+    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+        await hass.async_start()
+
+    # After setting up conversation, the expose flag should now be set on all entities
+    assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        light.entity_id: {"should_expose": True},
+        test.entity_id: {"should_expose": False},
+    }
+
+    # New entities will automatically have the expose flag set
+    new_light = "light.demo_2345"
+    hass.states.async_set(new_light, "test")
+    await hass.async_block_till_done()
+    assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        light.entity_id: {"should_expose": True},
+        new_light: {"should_expose": True},
+        test.entity_id: {"should_expose": False},
+    }
+
+
+async def test_unexposed_entities_skipped(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that unexposed entities are skipped in exposed areas."""
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+
+    # Both lights are in the kitchen
+    exposed_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    entity_registry.async_update_entity(
+        exposed_light.entity_id,
+        area_id=area_kitchen.id,
+    )
+    hass.states.async_set(exposed_light.entity_id, "off")
+
+    unexposed_light = entity_registry.async_get_or_create("light", "demo", "5678")
+    entity_registry.async_update_entity(
+        unexposed_light.entity_id,
+        area_id=area_kitchen.id,
+    )
+    hass.states.async_set(unexposed_light.entity_id, "off")
+
+    # On light is exposed, the other is not
+    expose_entity(hass, exposed_light.entity_id, True)
+    expose_entity(hass, unexposed_light.entity_id, False)
+
+    # Only one light should be turned on
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on kitchen lights", None, Context(), None
+    )
+
+    assert len(calls) == 1
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Only one light should be returned
+    hass.states.async_set(exposed_light.entity_id, "on")
+    hass.states.async_set(unexposed_light.entity_id, "on")
+    result = await conversation.async_converse(
+        hass, "how many lights are on in the kitchen", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == exposed_light.entity_id
+
+
+async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
+    """Test registering/unregistering/matching a few trigger sentences."""
+    trigger_sentences = ["It's party time", "It is time to party"]
+    trigger_response = "Cowabunga!"
+
+    agent = await conversation._get_agent_manager(hass).async_get_agent(
+        conversation.HOME_ASSISTANT_AGENT
+    )
+    assert isinstance(agent, conversation.DefaultAgent)
+
+    callback = AsyncMock(return_value=trigger_response)
+    unregister = agent.register_trigger(trigger_sentences, callback)
+
+    result = await conversation.async_converse(hass, "Not the trigger", None, Context())
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    # Using different case and including punctuation
+    test_sentences = ["it's party time!", "IT IS TIME TO PARTY."]
+    for sentence in test_sentences:
+        callback.reset_mock()
+        result = await conversation.async_converse(hass, sentence, None, Context())
+        assert callback.call_count == 1
+        assert callback.call_args[0][0] == sentence
+        assert (
+            result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        ), sentence
+        assert result.response.speech == {
+            "plain": {"speech": trigger_response, "extra_data": None}
+        }
+
+    unregister()
+
+    # Should produce errors now
+    callback.reset_mock()
+    for sentence in test_sentences:
+        result = await conversation.async_converse(hass, sentence, None, Context())
+        assert (
+            result.response.response_type == intent.IntentResponseType.ERROR
+        ), sentence
+
+    assert len(callback.mock_calls) == 0
+
+
+async def test_shopping_list_add_item(
+    hass: HomeAssistant, init_components, sl_setup
+) -> None:
+    """Test adding an item to the shopping list through the default agent."""
+    result = await conversation.async_converse(
+        hass, "add apples to my shopping list", None, Context()
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech == {
+        "plain": {"speech": "Added apples", "extra_data": None}
+    }

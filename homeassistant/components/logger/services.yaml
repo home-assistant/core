@@ -1,26 +1,14 @@
 set_default_level:
-  name: Set default level
-  description: Set the default log level for integrations.
   fields:
     level:
-      name: Level
-      description: Default severity level for all integrations.
       selector:
         select:
           options:
-            - label: "Debug"
-              value: "debug"
-            - label: "Info"
-              value: "info"
-            - label: "Warning"
-              value: "warning"
-            - label: "Error"
-              value: "error"
-            - label: "Fatal"
-              value: "fatal"
-            - label: "Critical"
-              value: "critical"
-
+            - "debug"
+            - "info"
+            - "warning"
+            - "error"
+            - "fatal"
+            - "critical"
+          translation_key: level
 set_level:
-  name: Set level
-  description: Set log level for integrations.

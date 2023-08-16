@@ -5,16 +5,19 @@ import logging
 from typing import Any
 
 from pymystrom.exceptions import MyStromConnectionError
-from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN, MANUFACTURER
 
 DEFAULT_NAME = "myStrom Switch"
 
@@ -28,6 +31,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the myStrom entities."""
+    device = hass.data[DOMAIN][entry.entry_id].device
+    async_add_entities([MyStromSwitch(device, entry.title)])
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -35,48 +46,43 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the myStrom switch/plug integration."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-
-    try:
-        plug = _MyStromSwitch(host)
-        await plug.get_state()
-    except MyStromConnectionError as err:
-        _LOGGER.error("No route to myStrom plug: %s", host)
-        raise PlatformNotReady() from err
-
-    async_add_entities([MyStromSwitch(plug, name)])
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "myStrom",
+        },
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, plug, name):
         """Initialize the myStrom switch/plug."""
-        self._name = name
         self.plug = plug
-        self._available = True
-        self.relay = None
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return bool(self.relay)
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self.plug._mac  # pylint: disable=protected-access
-
-    @property
-    def available(self):
-        """Could the device be accessed during the last update call."""
-        return self._available
+        self._attr_unique_id = self.plug.mac
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.plug.mac)},
+            name=name,
+            manufacturer=MANUFACTURER,
+            sw_version=self.plug.firmware,
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -96,9 +102,9 @@ class MyStromSwitch(SwitchEntity):
         """Get the latest data from the device and update the data."""
         try:
             await self.plug.get_state()
-            self.relay = self.plug.relay
-            self._available = True
+            self._attr_is_on = self.plug.relay
+            self._attr_available = True
         except MyStromConnectionError:
-            if self._available:
-                self._available = False
+            if self.available:
+                self._attr_available = False
                 _LOGGER.error("No route to myStrom plug")

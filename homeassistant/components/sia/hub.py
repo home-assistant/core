@@ -47,7 +47,7 @@ class SIAHub:
         self._accounts: list[dict[str, Any]] = deepcopy(entry.data[CONF_ACCOUNTS])
         self._protocol: str = entry.data[CONF_PROTOCOL]
         self.sia_accounts: list[SIAAccount] | None = None
-        self.sia_client: SIAClient = None
+        self.sia_client: SIAClient | None = None
 
     @callback
     def async_setup_hub(self) -> None:
@@ -70,7 +70,8 @@ class SIAHub:
 
     async def async_shutdown(self, _: Event | None = None) -> None:
         """Shutdown the SIA server."""
-        await self.sia_client.stop()
+        if self.sia_client:
+            await self.sia_client.async_stop()
 
     async def async_create_and_fire_event(self, event: SIAEvent) -> None:
         """Create a event on HA dispatcher and then on HA's bus, with the data from the SIAEvent.
@@ -108,12 +109,15 @@ class SIAHub:
         if self.sia_client is not None:
             self.sia_client.accounts = self.sia_accounts
             return
-        self.sia_client = SIAClient(
-            host="",
-            port=self._port,
-            accounts=self.sia_accounts,
-            function=self.async_create_and_fire_event,
-            protocol=CommunicationsProtocol(self._protocol),
+        # the new client class method creates a subclass based on protocol, hence the type ignore
+        self.sia_client = (
+            SIAClient(  # pylint: disable=abstract-class-instantiated # type: ignore
+                host="",
+                port=self._port,
+                accounts=self.sia_accounts,
+                function=self.async_create_and_fire_event,
+                protocol=CommunicationsProtocol(self._protocol),
+            )
         )
 
     def _load_options(self) -> None:

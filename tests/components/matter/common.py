@@ -71,6 +71,6 @@ async def trigger_subscription_callback(
     data: Any = None,
 ) -> None:
     """Trigger a subscription callback."""
-    callback = client.subscribe.call_args.kwargs["callback"]
+    callback = client.subscribe_events.call_args.kwargs["callback"]
     callback(event, data)
     await hass.async_block_till_done()

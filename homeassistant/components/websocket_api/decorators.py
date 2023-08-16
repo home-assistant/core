@@ -128,15 +128,31 @@ def ws_require_user(
 
 
 def websocket_command(
-    schema: dict[vol.Marker, Any],
+    schema: dict[vol.Marker, Any] | vol.All,
 ) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
-    """Tag a function as a websocket command."""
-    command = schema["type"]
+    """Tag a function as a websocket command.
+
+    The schema must be either a dictionary where the keys are voluptuous markers, or
+    a voluptuous.All schema where the first item is a voluptuous Mapping schema.
+    """
+    if isinstance(schema, dict):
+        command = schema["type"]
+    else:
+        command = schema.validators[0].schema["type"]
 
     def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
         # pylint: disable=protected-access
-        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
+        if isinstance(schema, dict):
+            func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
+        else:
+            extended_schema = vol.All(
+                schema.validators[0].extend(
+                    messages.BASE_COMMAND_MESSAGE_SCHEMA.schema
+                ),
+                *schema.validators[1:],
+            )
+            func._ws_schema = extended_schema  # type: ignore[attr-defined]
         func._ws_command = command  # type: ignore[attr-defined]
         return func
 

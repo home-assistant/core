@@ -27,8 +27,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import discovery
@@ -93,7 +93,7 @@ if TYPE_CHECKING:
     from logging import Filter, LogRecord
 
     from ..entity import ZhaEntity
-    from .channels.base import ZigbeeChannel
+    from .cluster_handlers import ClusterHandler
 
     _LogFilterType = Filter | Callable[[LogRecord], bool]
 
@@ -105,7 +105,7 @@ class EntityReference(NamedTuple):
 
     reference_id: str
     zha_device: ZHADevice
-    cluster_channels: dict[str, ZigbeeChannel]
+    cluster_handlers: dict[str, ClusterHandler]
     device_info: DeviceInfo
     remove_future: asyncio.Future[Any]
 
@@ -520,7 +520,7 @@ class ZHAGateway:
         ieee: EUI64,
         reference_id: str,
         zha_device: ZHADevice,
-        cluster_channels: dict[str, ZigbeeChannel],
+        cluster_handlers: dict[str, ClusterHandler],
         device_info: DeviceInfo,
         remove_future: asyncio.Future[Any],
     ):
@@ -529,7 +529,7 @@ class ZHAGateway:
             EntityReference(
                 reference_id=reference_id,
                 zha_device=zha_device,
-                cluster_channels=cluster_channels,
+                cluster_handlers=cluster_handlers,
                 device_info=device_info,
                 remove_future=remove_future,
             )
@@ -733,6 +733,8 @@ class ZHAGateway:
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         for unsubscribe in self._unsubs:
             unsubscribe()
+        for device in self.devices.values():
+            device.async_cleanup_handles()
         await self.application_controller.shutdown()
 
     def handle_message(

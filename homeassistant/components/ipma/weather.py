@@ -1,30 +1,16 @@
 """Support for IPMA weather service."""
 from __future__ import annotations
 
-from datetime import timedelta
+import asyncio
+import contextlib
 import logging
+from typing import Literal
 
-import async_timeout
 from pyipma.api import IPMA_API
-from pyipma.forecast import Forecast
+from pyipma.forecast import Forecast as IPMAForecast
 from pyipma.location import Location
 
 from homeassistant.components.weather import (
-    ATTR_CONDITION_CLEAR_NIGHT,
-    ATTR_CONDITION_CLOUDY,
-    ATTR_CONDITION_EXCEPTIONAL,
-    ATTR_CONDITION_FOG,
-    ATTR_CONDITION_HAIL,
-    ATTR_CONDITION_LIGHTNING,
-    ATTR_CONDITION_LIGHTNING_RAINY,
-    ATTR_CONDITION_PARTLYCLOUDY,
-    ATTR_CONDITION_POURING,
-    ATTR_CONDITION_RAINY,
-    ATTR_CONDITION_SNOWY,
-    ATTR_CONDITION_SNOWY_RAINY,
-    ATTR_CONDITION_SUNNY,
-    ATTR_CONDITION_WINDY,
-    ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
@@ -32,7 +18,9 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -42,39 +30,22 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
 
-from .const import DATA_API, DATA_LOCATION, DOMAIN
+from .const import (
+    ATTRIBUTION,
+    CONDITION_CLASSES,
+    DATA_API,
+    DATA_LOCATION,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
+from .entity import IPMADevice
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Instituto Português do Mar e Atmosfera"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-
-CONDITION_CLASSES = {
-    ATTR_CONDITION_CLOUDY: [4, 5, 24, 25, 27],
-    ATTR_CONDITION_FOG: [16, 17, 26],
-    ATTR_CONDITION_HAIL: [21, 22],
-    ATTR_CONDITION_LIGHTNING: [19],
-    ATTR_CONDITION_LIGHTNING_RAINY: [20, 23],
-    ATTR_CONDITION_PARTLYCLOUDY: [2, 3],
-    ATTR_CONDITION_POURING: [8, 11],
-    ATTR_CONDITION_RAINY: [6, 7, 9, 10, 12, 13, 14, 15],
-    ATTR_CONDITION_SNOWY: [18],
-    ATTR_CONDITION_SNOWY_RAINY: [],
-    ATTR_CONDITION_SUNNY: [1],
-    ATTR_CONDITION_WINDY: [],
-    ATTR_CONDITION_WINDY_VARIANT: [],
-    ATTR_CONDITION_EXCEPTIONAL: [],
-    ATTR_CONDITION_CLEAR_NIGHT: [-1],
-}
-
-FORECAST_MODE = ["hourly", "daily"]
 
 
 async def async_setup_entry(
@@ -85,66 +56,57 @@ async def async_setup_entry(
     """Add a weather entity from a config_entry."""
     api = hass.data[DOMAIN][config_entry.entry_id][DATA_API]
     location = hass.data[DOMAIN][config_entry.entry_id][DATA_LOCATION]
-    mode = config_entry.data[CONF_MODE]
-
-    # Migrate old unique_id
-    @callback
-    def _async_migrator(entity_entry: er.RegistryEntry):
-        # Reject if new unique_id
-        if entity_entry.unique_id.count(",") == 2:
-            return None
-
-        new_unique_id = (
-            f"{location.station_latitude}, {location.station_longitude}, {mode}"
-        )
-
-        _LOGGER.info(
-            "Migrating unique_id from [%s] to [%s]",
-            entity_entry.unique_id,
-            new_unique_id,
-        )
-        return {"new_unique_id": new_unique_id}
-
-    await er.async_migrate_entries(hass, config_entry.entry_id, _async_migrator)
-
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
 
 
-class IPMAWeather(WeatherEntity):
+class IPMAWeather(WeatherEntity, IPMADevice):
     """Representation of a weather condition."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
-
-    _attr_attribution = ATTRIBUTION
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
 
     def __init__(self, location: Location, api: IPMA_API, config) -> None:
         """Initialise the platform with a data instance and station name."""
+        IPMADevice.__init__(self, location)
         self._api = api
-        self._location_name = config.get(CONF_NAME, location.name)
+        self._attr_name = config.get(CONF_NAME, location.name)
         self._mode = config.get(CONF_MODE)
         self._period = 1 if config.get(CONF_MODE) == "hourly" else 24
-        self._location = location
         self._observation = None
-        self._forecast: list[Forecast] = []
+        self._daily_forecast: list[IPMAForecast] | None = None
+        self._hourly_forecast: list[IPMAForecast] | None = None
+        if self._mode is not None:
+            self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
+        else:
+            self._attr_unique_id = (
+                f"{self._location.station_latitude}, {self._location.station_longitude}"
+            )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update Condition and Forecast."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             new_observation = await self._location.observation(self._api)
-            new_forecast = await self._location.forecast(self._api, self._period)
 
             if new_observation:
                 self._observation = new_observation
             else:
                 _LOGGER.warning("Could not update weather observation")
 
-            if new_forecast:
-                self._forecast = new_forecast
+            if self._period == 24 or self._forecast_listeners["daily"]:
+                await self._update_forecast("daily", 24, True)
             else:
-                _LOGGER.warning("Could not update weather forecast")
+                self._daily_forecast = None
+
+            if self._period == 1 or self._forecast_listeners["hourly"]:
+                await self._update_forecast("hourly", 1, True)
+            else:
+                self._hourly_forecast = None
 
             _LOGGER.debug(
                 "Updated location %s based on %s, current observation %s",
@@ -153,18 +115,20 @@ class IPMAWeather(WeatherEntity):
                 self._observation,
             )
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id."""
-        return (
-            f"{self._location.station_latitude}, {self._location.station_longitude},"
-            f" {self._mode}"
-        )
-
-    @property
-    def name(self):
-        """Return the name of the station."""
-        return self._location_name
+    async def _update_forecast(
+        self,
+        forecast_type: Literal["daily", "hourly"],
+        period: int,
+        update_listeners: bool,
+    ) -> None:
+        """Update weather forecast."""
+        new_forecast = await self._location.forecast(self._api, period)
+        if new_forecast:
+            setattr(self, f"_{forecast_type}_forecast", new_forecast)
+            if update_listeners:
+                await self.async_update_listeners((forecast_type,))
+        else:
+            _LOGGER.warning("Could not update %s weather forecast", forecast_type)
 
     def _condition_conversion(self, identifier, forecast_dt):
         """Convert from IPMA weather_type id to HA."""
@@ -179,10 +143,12 @@ class IPMAWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        if not self._forecast:
+        forecast = self._hourly_forecast or self._daily_forecast
+
+        if not forecast:
             return
 
-        return self._condition_conversion(self._forecast[0].weather_type.id, None)
+        return self._condition_conversion(forecast[0].weather_type.id, None)
 
     @property
     def native_temperature(self):
@@ -224,10 +190,9 @@ class IPMAWeather(WeatherEntity):
 
         return self._observation.wind_direction
 
-    @property
-    def forecast(self):
+    def _forecast(self, forecast: list[IPMAForecast] | None) -> list[Forecast]:
         """Return the forecast array."""
-        if not self._forecast:
+        if not forecast:
             return []
 
         return [
@@ -242,5 +207,32 @@ class IPMAWeather(WeatherEntity):
                 ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.wind_strength,
                 ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
             }
-            for data_in in self._forecast
+            for data_in in forecast
         ]
+
+    @property
+    def forecast(self) -> list[Forecast]:
+        """Return the forecast array."""
+        return self._forecast(
+            self._hourly_forecast if self._period == 1 else self._daily_forecast
+        )
+
+    async def _try_update_forecast(
+        self,
+        forecast_type: Literal["daily", "hourly"],
+        period: int,
+    ) -> None:
+        """Try to update weather forecast."""
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with asyncio.timeout(10):
+                await self._update_forecast(forecast_type, period, False)
+
+    async def async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        await self._try_update_forecast("daily", 24)
+        return self._forecast(self._daily_forecast)
+
+    async def async_forecast_hourly(self) -> list[Forecast]:
+        """Return the hourly forecast in native units."""
+        await self._try_update_forecast("hourly", 1)
+        return self._forecast(self._hourly_forecast)

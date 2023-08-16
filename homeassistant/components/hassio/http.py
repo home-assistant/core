@@ -35,7 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
-# pylint: disable=implicit-str-concat
 NO_TIMEOUT = re.compile(
     r"^(?:"
     r"|backups/.+/full"
@@ -85,6 +84,13 @@ NO_STORE = re.compile(
 )
 # pylint: enable=implicit-str-concat
 # fmt: on
+
+RESPONSE_HEADERS_FILTER = {
+    TRANSFER_ENCODING,
+    CONTENT_LENGTH,
+    CONTENT_TYPE,
+    CONTENT_ENCODING,
+}
 
 
 class HassIOView(HomeAssistantView):
@@ -171,8 +177,10 @@ class HassIOView(HomeAssistantView):
             )
             response.content_type = client.content_type
 
+            if should_compress(response.content_type):
+                response.enable_compression()
             await response.prepare(request)
-            async for data in client.content.iter_chunked(4096):
+            async for data in client.content.iter_chunked(8192):
                 await response.write(data)
 
             return response
@@ -191,21 +199,13 @@ class HassIOView(HomeAssistantView):
 
 def _response_header(response: aiohttp.ClientResponse, path: str) -> dict[str, str]:
     """Create response header."""
-    headers = {}
-
-    for name, value in response.headers.items():
-        if name in (
-            TRANSFER_ENCODING,
-            CONTENT_LENGTH,
-            CONTENT_TYPE,
-            CONTENT_ENCODING,
-        ):
-            continue
-        headers[name] = value
-
+    headers = {
+        name: value
+        for name, value in response.headers.items()
+        if name not in RESPONSE_HEADERS_FILTER
+    }
     if NO_STORE.match(path):
         headers[CACHE_CONTROL] = "no-store, max-age=0"
-
     return headers
 
 
@@ -214,3 +214,10 @@ def _get_timeout(path: str) -> ClientTimeout:
     if NO_TIMEOUT.match(path):
         return ClientTimeout(connect=10, total=None)
     return ClientTimeout(connect=10, total=300)
+
+
+def should_compress(content_type: str) -> bool:
+    """Return if we should compress a response."""
+    if content_type.startswith("image/"):
+        return "svg" in content_type
+    return not content_type.startswith(("video/", "audio/", "font/"))

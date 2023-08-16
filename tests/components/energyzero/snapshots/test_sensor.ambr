@@ -41,7 +41,7 @@
     'original_name': 'Current hour',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'current_hour_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -105,7 +105,7 @@
     'original_name': 'Average - today',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'average_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -169,7 +169,7 @@
     'original_name': 'Average - today',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'current_hour_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -236,7 +236,7 @@
     'original_name': 'Current hour',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'current_hour_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -303,7 +303,7 @@
     'original_name': 'Current hour',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'average_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -367,7 +367,7 @@
     'original_name': 'Time of highest price - today',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'highest_price_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -431,7 +431,7 @@
     'original_name': 'Highest price - today',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'max_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -495,7 +495,7 @@
     'original_name': 'Average - today',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'average_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -562,7 +562,7 @@
     'original_name': 'Current hour',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'current_hour_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -626,7 +626,7 @@
     'original_name': 'Time of highest price - today',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'highest_price_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -690,7 +690,7 @@
     'original_name': 'Highest price - today',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'max_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -757,7 +757,7 @@
     'original_name': 'Current hour',
     'platform': 'energyzero',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'current_hour_price',
     'unit_of_measurement': '€/m³',
   })
 # ---

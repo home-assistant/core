@@ -22,8 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -39,71 +38,71 @@ _LOGGER = logging.getLogger(__name__)
 SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "radon_1day_avg": SensorEntityDescription(
         key="radon_1day_avg",
+        translation_key="radon_1day_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
-        name="Radon 1-day average",
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
     ),
     "radon_longterm_avg": SensorEntityDescription(
         key="radon_longterm_avg",
+        translation_key="radon_longterm_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
-        name="Radon longterm average",
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
     ),
     "radon_1day_level": SensorEntityDescription(
         key="radon_1day_level",
-        name="Radon 1-day level",
+        translation_key="radon_1day_level",
         icon="mdi:radioactive",
     ),
     "radon_longterm_level": SensorEntityDescription(
         key="radon_longterm_level",
-        name="Radon longterm level",
+        translation_key="radon_longterm_level",
         icon="mdi:radioactive",
     ),
     "temperature": SensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        name="Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        name="Humidity",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
-        name="Pressure",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Battery",
     ),
     "co2": SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        name="co2",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "voc": SensorEntityDescription(
         key="voc",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
-        name="VOC",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:cloud",
     ),
     "illuminance": SensorEntityDescription(
         key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
-        name="Illuminance",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -150,7 +149,6 @@ class AirthingsSensor(
 ):
     """Airthings BLE sensors for the device."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
 
     def __init__(
@@ -163,10 +161,11 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        name = f"{airthings_device.name} {airthings_device.identifier}"
+        name = airthings_device.name
+        if identifier := airthings_device.identifier:
+            name += f" ({identifier})"
 
         self._attr_unique_id = f"{name}_{entity_description.key}"
-
         self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
             connections={
@@ -176,9 +175,10 @@ class AirthingsSensor(
                 )
             },
             name=name,
-            manufacturer="Airthings",
+            manufacturer=airthings_device.manufacturer,
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
+            model=airthings_device.model,
         )
 
     @property

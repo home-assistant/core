@@ -1,6 +1,6 @@
 """Tests for Shelly coordinator."""
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
@@ -13,6 +13,7 @@ from homeassistant.components.shelly.const import (
     ATTR_GENERATION,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
+    MAX_PUSH_UPDATE_FAILURES,
     RPC_RECONNECT_INTERVAL,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
@@ -24,15 +25,18 @@ from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
-from homeassistant.util import dt
+import homeassistant.helpers.issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from . import (
+    MOCK_MAC,
     init_integration,
     inject_rpc_device_event,
     mock_polling_rpc_update,
     mock_rest_update,
     register_entity,
 )
+from .conftest import MOCK_BLOCKS
 
 from tests.common import async_fire_time_changed
 
@@ -64,7 +68,7 @@ async def test_block_reload_on_cfg_change(
 
     # Wait for debouncer
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
     )
     await hass.async_block_till_done()
 
@@ -94,7 +98,7 @@ async def test_block_no_reload_on_bulb_changes(
 
     # Wait for debouncer
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
     )
     await hass.async_block_till_done()
 
@@ -110,7 +114,7 @@ async def test_block_no_reload_on_bulb_changes(
 
     # Wait for debouncer
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
     )
     await hass.async_block_till_done()
 
@@ -132,7 +136,7 @@ async def test_block_polling_auth_error(
 
     # Move time to generate polling
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
     )
     await hass.async_block_till_done()
 
@@ -198,7 +202,7 @@ async def test_block_polling_connection_error(
 
     # Move time to generate polling
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+        hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
     )
     await hass.async_block_till_done()
 
@@ -242,11 +246,36 @@ async def test_block_sleeping_device_no_periodic_updates(
 
     # Move time to generate polling
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=SLEEP_PERIOD_MULTIPLIER * 1000)
+        hass, dt_util.utcnow() + timedelta(seconds=SLEEP_PERIOD_MULTIPLIER * 1000)
     )
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_block_device_push_updates_failure(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
+    """Test block device with push updates failure."""
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+
+    monkeypatch.setattr(
+        mock_block_device,
+        "update",
+        AsyncMock(return_value=MOCK_BLOCKS),
+    )
+    await init_integration(hass, 1)
+
+    # Move time to force polling
+    for _ in range(MAX_PUSH_UPDATE_FAILURES + 1):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
+        )
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
+    )
 
 
 async def test_block_button_click_event(
@@ -328,11 +357,64 @@ async def test_rpc_reload_on_cfg_change(
 
     # Wait for debouncer
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
     )
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.test_switch_0") is None
+
+
+async def test_rpc_reload_with_invalid_auth(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test RPC when InvalidAuthError is raising during config entry reload."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner",
+        side_effect=[None, InvalidAuthError, None],
+    ):
+        entry = await init_integration(hass, 2)
+
+        inject_rpc_device_event(
+            monkeypatch,
+            mock_rpc_device,
+            {
+                "events": [
+                    {
+                        "data": [],
+                        "event": "config_changed",
+                        "id": 1,
+                        "ts": 1668522399.2,
+                    },
+                    {
+                        "data": [],
+                        "id": 2,
+                        "ts": 1668522399.2,
+                    },
+                ],
+                "ts": 1668522399.2,
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        # Move time to generate reconnect
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=RPC_RECONNECT_INTERVAL)
+        )
+        await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
 
 
 async def test_rpc_click_event(
@@ -394,7 +476,7 @@ async def test_rpc_update_entry_sleep_period(
     # Move time to generate sleep period update
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 3600)
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=600 * SLEEP_PERIOD_MULTIPLIER)
+        hass, dt_util.utcnow() + timedelta(seconds=600 * SLEEP_PERIOD_MULTIPLIER)
     )
     await hass.async_block_till_done()
 
@@ -423,7 +505,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
 
     # Move time to generate polling
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=SLEEP_PERIOD_MULTIPLIER * 1000)
+        hass, dt_util.utcnow() + timedelta(seconds=SLEEP_PERIOD_MULTIPLIER * 1000)
     )
     await hass.async_block_till_done()
 
@@ -449,7 +531,7 @@ async def test_rpc_reconnect_auth_error(
 
     # Move time to generate reconnect
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=RPC_RECONNECT_INTERVAL)
+        hass, dt_util.utcnow() + timedelta(seconds=RPC_RECONNECT_INTERVAL)
     )
     await hass.async_block_till_done()
 
@@ -519,7 +601,7 @@ async def test_rpc_reconnect_error(
 
     # Move time to generate reconnect
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=RPC_RECONNECT_INTERVAL)
+        hass, dt_util.utcnow() + timedelta(seconds=RPC_RECONNECT_INTERVAL)
     )
     await hass.async_block_till_done()
 

@@ -18,6 +18,8 @@ TRACKER_BUFFERING_WOBBLE_SECONDS = 5
 class AdvertisementTracker:
     """Tracker to determine the interval that a device is advertising."""
 
+    __slots__ = ("intervals", "sources", "_timings")
+
     def __init__(self) -> None:
         """Initialize the tracker."""
         self.intervals: dict[str, float] = {}

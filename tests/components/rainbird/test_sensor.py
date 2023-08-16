@@ -28,10 +28,10 @@ async def test_sensors(
 
     assert await setup_integration()
 
-    raindelay = hass.states.get("sensor.raindelay")
+    raindelay = hass.states.get("sensor.rain_bird_controller_raindelay")
     assert raindelay is not None
     assert raindelay.state == expected_state
     assert raindelay.attributes == {
-        "friendly_name": "Raindelay",
+        "friendly_name": "Rain Bird Controller Raindelay",
         "icon": "mdi:water-off",
     }

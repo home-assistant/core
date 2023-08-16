@@ -1,5 +1,6 @@
 """Test ZHA Gateway."""
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -8,6 +9,7 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
+from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -238,7 +240,10 @@ async def test_gateway_create_group_with_id(
     ],
 )
 async def test_gateway_initialize_success(
-    startup, hass: HomeAssistant, device_light_1, coordinator
+    startup: list[Any],
+    hass: HomeAssistant,
+    device_light_1: ZHADevice,
+    coordinator: ZHADevice,
 ) -> None:
     """Test ZHA initializing the gateway successfully."""
     zha_gateway = get_zha_gateway(hass)
@@ -252,6 +257,8 @@ async def test_gateway_initialize_success(
         await zha_gateway.async_initialize()
 
     assert mock_new.call_count == len(startup)
+
+    device_light_1.async_cleanup_handles()
 
 
 @patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
@@ -317,12 +324,15 @@ async def test_gateway_initialize_bellows_thread(
     zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
 
     with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        new=AsyncMock(),
-    ) as mock_new:
+        "bellows.zigbee.application.ControllerApplication.new"
+    ) as controller_app_mock:
+        mock = AsyncMock()
+        mock.add_listener = MagicMock()
+        mock.groups = MagicMock()
+        controller_app_mock.return_value = mock
         await zha_gateway.async_initialize()
 
-    assert mock_new.mock_calls[0].args[0]["use_thread"] is thread_state
+    assert controller_app_mock.mock_calls[0].args[0]["use_thread"] is thread_state
 
 
 @pytest.mark.parametrize(

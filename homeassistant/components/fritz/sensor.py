@@ -309,4 +309,4 @@ class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        return self.coordinator.data["entity_states"].get(self.entity_description.key)

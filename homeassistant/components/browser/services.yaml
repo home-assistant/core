@@ -1,10 +1,6 @@
 browse_url:
-  name: Browse
-  description: Open a URL in the default browser on the host machine of Home Assistant.
   fields:
     url:
-      name: URL
-      description: The URL to open.
       required: true
       example: "https://www.home-assistant.io"
       selector:

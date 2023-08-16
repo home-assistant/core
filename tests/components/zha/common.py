@@ -133,7 +133,7 @@ async def send_attributes_report(hass, cluster: zigpy.zcl.Cluster, attributes: d
     await hass.async_block_till_done()
 
 
-async def find_entity_id(domain, zha_device, hass, qualifier=None):
+def find_entity_id(domain, zha_device, hass, qualifier=None):
     """Find the entity id under the testing.
 
     This is used to get the entity id in order to get the state from the state
@@ -167,7 +167,9 @@ def find_entity_ids(domain, zha_device, hass):
 
 def async_find_group_entity_id(hass, domain, group):
     """Find the group entity id under test."""
-    entity_id = f"{domain}.fakemanufacturer_fakemodel_{group.name.lower().replace(' ','_')}_zha_group_0x{group.group_id:04x}"
+    entity_id = (
+        f"{domain}.fakemanufacturer_fakemodel_{group.name.lower().replace(' ', '_')}"
+    )
 
     entity_ids = hass.states.async_entity_ids(domain)
 

@@ -18,10 +18,16 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Honeywell Lyric YAML configuration has been removed",
-      "description": "Configuring Honeywell Lyric using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "services": {
+    "set_hold_time": {
+      "name": "Set Hold Time",
+      "description": "Sets the time to hold until.",
+      "fields": {
+        "time_period": {
+          "name": "Time Period",
+          "description": "Time to hold until."
+        }
+      }
     }
   }
 }

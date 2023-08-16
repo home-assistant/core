@@ -49,6 +49,19 @@ def disable_platform_only():
 
 
 @pytest.fixture(autouse=True)
+def mock_multipan_platform():
+    """Mock the multipan platform."""
+    with patch(
+        "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
+        return_value=False,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
     with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.01):
@@ -61,6 +74,15 @@ def mock_app():
     mock_app = AsyncMock()
     mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
+    mock_app.state.network_info.metadata = {
+        "ezsp": {
+            "can_burn_userdata_custom_eui64": True,
+            "can_rewrite_custom_eui64": False,
+        }
+    }
+    mock_app.add_listener = MagicMock()
+    mock_app.groups = MagicMock()
+    mock_app.devices = MagicMock()
 
     with patch(
         "zigpy.application.ControllerApplication.new", AsyncMock(return_value=mock_app)
@@ -191,23 +213,30 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass: HomeAssistant) -> Non
     )
     assert result1["step_id"] == "manual_port_config"
 
-    # Confirm port settings
+    # Confirm the radio is deprecated
     result2 = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
+    )
+    assert result2["step_id"] == "verify_radio"
+    assert "ZiGate" in result2["description_placeholders"]["name"]
+
+    # Confirm port settings
+    result3 = await hass.config_entries.flow.async_configure(
         result1["flow_id"], user_input={}
     )
 
-    assert result2["type"] == FlowResultType.MENU
-    assert result2["step_id"] == "choose_formation_strategy"
+    assert result3["type"] == FlowResultType.MENU
+    assert result3["step_id"] == "choose_formation_strategy"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "socket://192.168.1.200:1234"
-    assert result3["data"] == {
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "socket://192.168.1.200:1234"
+    assert result4["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
         },
@@ -433,21 +462,26 @@ async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
+    assert result2["step_id"] == "verify_radio"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.MENU
-    assert result2["step_id"] == "choose_formation_strategy"
+    assert result3["type"] == FlowResultType.MENU
+    assert result3["step_id"] == "choose_formation_strategy"
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "zigate radio"
-    assert result3["data"] == {
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "zigate radio"
+    assert result4["data"] == {
         "device": {
             "path": "/dev/ttyZIGBEE",
         },
@@ -1492,6 +1526,7 @@ async def test_ezsp_restore_without_settings_change_ieee(
     mock_app.state.node_info = backup.node_info
     mock_app.state.network_info = copy.deepcopy(backup.network_info)
     mock_app.state.network_info.network_key.tx_counter += 10000
+    mock_app.state.network_info.metadata["ezsp"] = {}
 
     # Include the overwrite option, just in case someone uploads a backup with it
     backup.network_info.metadata["ezsp"] = {EZSP_OVERWRITE_EUI64: True}
