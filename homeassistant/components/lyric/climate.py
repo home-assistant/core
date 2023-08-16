@@ -117,10 +117,7 @@ async def async_setup_entry(
                         name=device.name,
                     ),
                     location,
-                    device,
-                    UnitOfTemperature.FAHRENHEIT
-                    if device.units == "Fahrenheit"
-                    else UnitOfTemperature.CELSIUS
+                    device
                 )
             )
 
@@ -146,11 +143,16 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         coordinator: DataUpdateCoordinator[Lyric],
         description: ClimateEntityDescription,
         location: LyricLocation,
-        device: LyricDevice,
-        temperature_unit: str,
+        device: LyricDevice
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
-        self._temperature_unit = temperature_unit
+        # Use the native temperature unit from the device settings
+        if device.units == "Fahrenheit":
+            self._temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_precision = PRECISION_WHOLE
+        else:
+            self._temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_precision = PRECISION_HALVES
 
         # Setup supported hvac modes
         self._attr_hvac_modes = [HVACMode.OFF]
@@ -187,13 +189,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return self._temperature_unit
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return (
-            PRECISION_WHOLE if self.device.units == "Fahrenheit" else PRECISION_HALVES
-        )
 
     @property
     def current_temperature(self) -> float | None:
