@@ -106,7 +106,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         use_datetime: bool,
         condition: int,
         precipitation: float | None,
-        precipitation_probability: float | None,
+        precipitation_probability: int | None,
         temp: float | None,
         temp_low: float | None,
         humidity: float | None,
@@ -126,7 +126,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
             ATTR_FORECAST_NATIVE_PRECIPITATION: precipitation,
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: round(precipitation_probability),
+            ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
             ATTR_FORECAST_NATIVE_TEMP: temp,
             ATTR_FORECAST_NATIVE_TEMP_LOW: temp_low,
             ATTR_FORECAST_HUMIDITY: humidity,
@@ -229,6 +229,11 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             condition = values.get(TMRW_ATTR_CONDITION)
             precipitation = values.get(TMRW_ATTR_PRECIPITATION)
             precipitation_probability = values.get(TMRW_ATTR_PRECIPITATION_PROBABILITY)
+
+            try:
+                precipitation_probability = round(precipitation_probability)
+            except TypeError:
+                precipitation_probability = None
 
             temp = values.get(TMRW_ATTR_TEMPERATURE_HIGH)
             temp_low = None
