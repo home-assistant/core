@@ -802,7 +802,6 @@ class LogRelayHandler(logging.Handler):
 
         hass_path: str = HOMEASSISTANT_PATH[0]
         config_dir = self.hass.config.config_dir
-        assert config_dir is not None
         paths_re = re.compile(
             r"(?:{})/(.*)".format(
                 "|".join([re.escape(x) for x in (hass_path, config_dir)])
