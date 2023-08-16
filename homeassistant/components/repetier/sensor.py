@@ -170,7 +170,7 @@ class RepetierJobEndSensor(RepetierSensor):
         print_time = data["print_time"]
         from_start = data["from_start"]
         time_end = start + round(print_time, 0)
-        self._state = dt_util.utc_from_timestamp(time_end).replace(tzinfo=None)
+        self._state = dt_util.utc_from_timestamp(time_end)
         remaining = print_time - from_start
         remaining_secs = int(round(remaining, 0))
         _LOGGER.debug(
