@@ -295,7 +295,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_UV_INDEX,
         name="UV Index",
-        state_class=measurement
+        state_class=measurement,
         icon="mdi:sun-wireless",
     ),
     TomorrowioSensorEntityDescription(
