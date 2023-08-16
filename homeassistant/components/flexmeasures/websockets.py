@@ -10,11 +10,12 @@ import aiohttp
 from aiohttp import web
 from flexmeasures_client.s2.cem import CEM
 import pyfiglet
-from python_s2_protocol.common.schemas import ControlType
-from rich import print
-from rich.align import Align
-from rich.json import JSON
-from rich.panel import Panel
+from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
+
+# from rich import print
+# from rich.align import Align
+# from rich.json import JSON
+# from rich.panel import Panel
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
