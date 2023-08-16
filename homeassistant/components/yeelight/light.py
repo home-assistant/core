@@ -291,7 +291,7 @@ async def async_setup_entry(
         lights.append(klass(device, config_entry, custom_effects=custom_effects))
 
     if device_type == BulbType.White:
-        _lights_setup_helper(YeeLightGenericLight)
+        _lights_setup_helper(YeelightGenericLight)
     elif device_type == BulbType.Color:
         if nl_switch_light and device.is_nightlight_supported:
             _lights_setup_helper(YeelightColorLightWithNightlightSwitch)
@@ -312,7 +312,7 @@ async def async_setup_entry(
             _lights_setup_helper(YeelightWithAmbientWithoutNightlight)
         _lights_setup_helper(YeelightAmbientLight)
     else:
-        _lights_setup_helper(YeeLightGenericLight)
+        _lights_setup_helper(YeelightGenericLight)
         _LOGGER.warning(
             "Cannot determine device type for %s, %s. Falling back to white only",
             device.host,
@@ -861,8 +861,8 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         await self._bulb.async_set_scene(scene_class, *args)
 
 
-class YeeLightGenericLight(YeelightBaseLight):
-    """Representation of a generic YeeLight."""
+class YeelightGenericLight(YeelightBaseLight):
+    """Representation of a generic Yeelight."""
 
     _attr_name = None
 
