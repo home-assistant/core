@@ -48,10 +48,7 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
 
 
 def _get_name(discovery_info: BluetoothServiceInfo):
-    if not (data := discovery_info.manufacturer_data.get(ManufacturerData.company)):
-        _LOGGER.debug("Missing manufacturer data: %s", discovery_info)
-        return False
-
+    data = discovery_info.manufacturer_data[ManufacturerData.company]
     manufacturer_data = ManufacturerData.decode(data)
     product_type = ProductType.from_manufacturer_data(manufacturer_data)
 
