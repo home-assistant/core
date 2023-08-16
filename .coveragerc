@@ -216,8 +216,9 @@ omit =
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
     homeassistant/components/doorbird/__init__.py
-    homeassistant/components/doorbird/button.py
     homeassistant/components/doorbird/camera.py
+    homeassistant/components/doorbird/button.py
+    homeassistant/components/doorbird/device.py
     homeassistant/components/doorbird/entity.py
     homeassistant/components/doorbird/util.py
     homeassistant/components/dormakaba_dkey/__init__.py
