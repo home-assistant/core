@@ -293,52 +293,9 @@ BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
-BEOLINK_LEADER_COMMAND: Final[str] = "BEOLINK_LEADER_COMMAND"
-BEOLINK_LISTENER_COMMAND: Final[str] = "BEOLINK_LISTENER_COMMAND"
-BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"
-BEOLINK_RELATIVE_VOLUME: Final[str] = "BEOLINK_RELATIVE_VOLUME"
-
 
 # Misc.
 NO_METADATA: Final[tuple] = (None, "", 0)
-
-# Valid commands and their expected parameter type for beolink_command service
-FLOAT_PARAMETERS: Final[tuple] = (
-    "set_volume_level",
-    "media_seek",
-    "set_relative_volume_level",
-    float,
-)
-BOOL_PARAMETERS: Final[tuple] = ("mute_volume", bool)
-STR_PARAMETERS: Final[tuple] = ("select_source", str)
-NONE_PARAMETERS: Final[tuple] = (
-    "volume_up",
-    "volume_down",
-    "media_play_pause",
-    "media_pause",
-    "media_play",
-    "media_stop",
-    "media_next_track",
-    "media_previous_track",
-    "toggle",
-    None,
-)
-
-# Tuple of accepted commands for input validation
-ACCEPTED_COMMANDS: Final[tuple] = (
-    FLOAT_PARAMETERS[:-1]
-    + BOOL_PARAMETERS[:-1]
-    + STR_PARAMETERS[:-1]
-    + NONE_PARAMETERS[:-1]
-)
-
-# Tuple of all commands and their types for executing commands.
-ACCEPTED_COMMANDS_LISTS: Final[tuple] = (
-    FLOAT_PARAMETERS,
-    BOOL_PARAMETERS,
-    STR_PARAMETERS,
-    NONE_PARAMETERS,
-)
 
 
 def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None:

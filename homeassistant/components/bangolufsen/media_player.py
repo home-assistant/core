@@ -1,7 +1,6 @@
 """Media player entity for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import json
 import logging
@@ -14,7 +13,6 @@ from mozart_api.models import (
     BeolinkLeader,
     BeolinkListener,
     OverlayPlayRequest,
-    OverlayPlayRequestTextToSpeechTextToSpeech,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -33,8 +31,6 @@ from mozart_api.models import (
     VolumeSettings,
     VolumeState,
 )
-from mozart_api.mozart_client import check_valid_jid
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -51,26 +47,14 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    ACCEPTED_COMMANDS,
-    ACCEPTED_COMMANDS_LISTS,
-    BEOLINK_LEADER_COMMAND,
-    BEOLINK_LISTENER_COMMAND,
-    BEOLINK_RELATIVE_VOLUME,
-    BEOLINK_VOLUME,
     CONF_BEOLINK_JID,
     CONF_DEFAULT_VOLUME,
     CONF_MAX_VOLUME,
@@ -108,7 +92,6 @@ BANGOLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.REPEAT_SET
-    | MediaPlayerEntityFeature.GROUPING
     | MediaPlayerEntityFeature.TURN_OFF
 )
 
@@ -127,103 +110,6 @@ async def async_setup_entry(
     # Add MediaPlayer entity
     async_add_entities(new_entities=[entity], update_before_add=True)
 
-    # Register services.
-    platform = async_get_current_platform()
-
-    platform.async_register_entity_service(
-        name="beolink_join",
-        schema={
-            vol.Optional("beolink_jid"): vol.All(
-                vol.Coerce(type=cv.string),
-                vol.Length(min=47, max=47),
-            ),
-        },
-        func="async_beolink_join",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_expand",
-        schema={
-            vol.Required("beolink_jids"): vol.All(
-                cv.ensure_list,
-                [
-                    vol.All(
-                        vol.Coerce(type=cv.string),
-                        vol.Length(min=47, max=47),
-                    )
-                ],
-            )
-        },
-        func="async_beolink_expand",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_unexpand",
-        schema={
-            vol.Required("beolink_jids"): vol.All(
-                cv.ensure_list,
-                [
-                    vol.All(
-                        vol.Coerce(type=cv.string),
-                        vol.Length(min=47, max=47),
-                    )
-                ],
-            )
-        },
-        func="async_beolink_unexpand",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_leave",
-        schema=None,
-        func="async_beolink_leave",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_allstandby",
-        schema=None,
-        func="async_beolink_allstandby",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_set_volume",
-        schema={vol.Required("volume_level"): cv.string},
-        func="async_beolink_set_volume",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_set_relative_volume",
-        schema={vol.Required("volume_level"): cv.string},
-        func="async_beolink_set_relative_volume",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_leader_command",
-        schema={
-            vol.Required("command"): vol.In(ACCEPTED_COMMANDS),
-            vol.Optional("parameter"): cv.string,
-        },
-        func="async_beolink_leader_command",
-    )
-
-    platform.async_register_entity_service(
-        name="overlay_audio",
-        schema={
-            vol.Optional("uri"): cv.string,
-            vol.Optional("absolute_volume"): vol.All(
-                vol.Coerce(int),
-                vol.Range(min=0, max=100),
-            ),
-            vol.Optional("volume_offset"): vol.All(
-                vol.Coerce(int),
-                vol.Range(min=0, max=100),
-            ),
-            vol.Optional("tts"): cv.string,
-            vol.Optional("tts_language"): cv.string,
-        },
-        func="async_overlay_audio",
-    )
-
 
 class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     """Representation of a media player."""
@@ -239,7 +125,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._attr_icon = "mdi:speaker-wireless"
         self._attr_supported_features = BANGOLUFSEN_FEATURES
         self._attr_unique_id = self._unique_id
-        self._attr_group_members = []
         self._attr_should_poll = True
 
         self._beolink_jid: str = self.entry.data[CONF_BEOLINK_JID]
@@ -325,26 +210,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     self.hass,
                     f"{self._unique_id}_{WebSocketNotification.BEOLINK}",
                     self._update_beolink,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._beolink_jid}_{BEOLINK_LEADER_COMMAND}",
-                    self.async_beolink_leader_command,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._beolink_jid}_{BEOLINK_LISTENER_COMMAND}",
-                    self.async_beolink_listener_command,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._beolink_jid}_{BEOLINK_VOLUME}",
-                    self.async_beolink_set_volume,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._beolink_jid}_{BEOLINK_RELATIVE_VOLUME}",
-                    self.async_beolink_set_relative_volume,
                 ),
             ]
         )
@@ -558,15 +423,8 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         ):
             self._remote_leader = None
 
-        # Create group members list
-        group_members = []
-
         # If the device is a listener.
         if self._remote_leader is not None:
-            group_members.append(
-                cast(str, self._get_entity_id_from_jid(self._remote_leader.jid))
-            )
-
             self._beolink_attribute["beolink"]["leader"] = {
                 self._remote_leader.friendly_name: self._remote_leader.jid,
             }
@@ -577,26 +435,17 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 async_req=True
             ).get()
 
-            group_members.append(
-                cast(str, self._get_entity_id_from_jid(self._beolink_jid))
-            )
-
             # Check if the device is a leader.
             if len(self._beolink_listeners) > 0:
                 # Get the friendly names from listeners from the peers
                 beolink_listeners = {}
                 for beolink_listener in self._beolink_listeners:
-                    group_members.append(
-                        cast(str, self._get_entity_id_from_jid(beolink_listener.jid))
-                    )
                     for peer in peers:
                         if peer.jid == beolink_listener.jid:
                             beolink_listeners[peer.friendly_name] = beolink_listener.jid
                             break
 
                 self._beolink_attribute["beolink"]["listeners"] = beolink_listeners
-
-        self._attr_group_members = group_members
 
     async def _update_bluetooth(self) -> None:
         """Update the current bluetooth devices that are connected and paired remotes."""
@@ -957,28 +806,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             # Video
             self._client.post_remote_trigger(id=key, async_req=True)
 
-    async def async_join_players(self, group_members: list[str]) -> None:
-        """Create a Beolink session with defined group members."""
-
-        # Use the touch to join if no entities have been defined
-        if len(group_members) == 0:
-            await self.async_beolink_join()
-            return
-
-        jids = []
-        # Get JID for each group member
-        for group_member in group_members:
-            jid = self._get_beolink_jid(group_member)
-
-            # Invalid entity
-            if jid is None:
-                _LOGGER.warning("Error adding %s to group", group_member)
-                continue
-
-            jids.append(jid)
-
-        await self.async_beolink_expand(jids)
-
     async def async_play_media(
         self,
         media_type: MediaType | str,
@@ -1096,218 +923,3 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         )
 
     # Custom services:
-    async def async_beolink_join(self, beolink_jid: str | None = None) -> None:
-        """Join a Beolink multi-room experience."""
-        if beolink_jid is None:
-            self._client.join_latest_beolink_experience(async_req=True)
-        else:
-            if not check_valid_jid(beolink_jid):
-                return
-
-            self._client.join_beolink_peer(jid=beolink_jid, async_req=True)
-
-    async def async_beolink_expand(self, beolink_jids: list[str]) -> None:
-        """Expand a Beolink multi-room experience with a device or devices."""
-        # Check if the Beolink JIDs are valid.
-        for beolink_jid in beolink_jids:
-            if not check_valid_jid(beolink_jid):
-                _LOGGER.error("Invalid Beolink JID: %s", beolink_jid)
-                return
-
-        self.hass.async_create_task(self._beolink_expand(beolink_jids))
-
-    async def _beolink_expand(self, beolink_jids: list[str]) -> None:
-        """Expand the Beolink experience with a non blocking delay."""
-        for beolink_jid in beolink_jids:
-            self._client.post_beolink_expand(jid=beolink_jid, async_req=True)
-            await asyncio.sleep(1)
-
-    async def async_beolink_unexpand(self, beolink_jids: list[str]) -> None:
-        """Unexpand a Beolink multi-room experience with a device or devices."""
-        # Check if the Beolink JIDs are valid.
-        for beolink_jid in beolink_jids:
-            if not check_valid_jid(beolink_jid):
-                return
-
-        self.hass.async_create_task(self._beolink_unexpand(beolink_jids))
-
-    async def _beolink_unexpand(self, beolink_jids: list[str]) -> None:
-        """Unexpand the Beolink experience with a non blocking delay."""
-        for beolink_jid in beolink_jids:
-            self._client.post_beolink_unexpand(jid=beolink_jid, async_req=True)
-            await asyncio.sleep(1)
-
-    async def async_beolink_leave(self) -> None:
-        """Leave the current Beolink experience."""
-        self._client.post_beolink_leave(async_req=True)
-
-    async def async_beolink_allstandby(self) -> None:
-        """Set all connected Beolink devices to standby."""
-        self._client.post_beolink_allstandby(async_req=True)
-
-    async def async_beolink_listener_command(
-        self, command: str, parameter: str | None = None
-    ) -> None:
-        """Receive a command from the Beolink leader."""
-        for command_list in ACCEPTED_COMMANDS_LISTS:
-            if command in command_list:
-                # Get the parameter type.
-                parameter_type = command_list[-1]
-
-                # Run the command.
-                if parameter is not None:
-                    await getattr(self, f"async_{command}")(parameter_type(parameter))
-
-                elif parameter_type is None:
-                    await getattr(self, f"async_{command}")()
-
-    async def async_beolink_leader_command(
-        self, command: str, parameter: str | None = None
-    ) -> None:
-        """Send a command to the Beolink leader."""
-        for command_list in ACCEPTED_COMMANDS_LISTS:
-            if command in command_list:
-                # Get the parameter type.
-                parameter_type = command_list[-1]
-
-                # Check for valid parameter type.
-                if parameter_type is not None:
-                    try:
-                        parameter = parameter_type(parameter)
-                    except (ValueError, TypeError):
-                        _LOGGER.error("Invalid parameter")
-                        return
-
-                elif parameter_type is None and parameter is not None:
-                    _LOGGER.error("Invalid parameter")
-                    return
-
-                # Forward the command to the leader if a listener.
-                if self._remote_leader is not None:
-                    async_dispatcher_send(
-                        self.hass,
-                        f"{self._remote_leader.jid}_{BEOLINK_LEADER_COMMAND}",
-                        command,
-                        parameter,
-                    )
-
-                # Run the command if leader.
-                elif parameter is not None:
-                    await getattr(self, f"async_{command}")(parameter_type(parameter))
-
-                elif parameter_type is None:
-                    await getattr(self, f"async_{command}")()
-
-    async def async_beolink_set_volume(self, volume_level: str) -> None:
-        """Set volume level for all connected Beolink devices."""
-
-        # Get the remote leader to send the volume command to listeners
-        if self._remote_leader is not None:
-            async_dispatcher_send(
-                self.hass,
-                f"{self._remote_leader.jid}_{BEOLINK_VOLUME}",
-                volume_level,
-            )
-
-        else:
-            await self.async_set_volume_level(volume=float(volume_level))
-
-            for beolink_listener in self._beolink_listeners:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{beolink_listener.jid}_{BEOLINK_LISTENER_COMMAND}",
-                    "set_volume_level",
-                    volume_level,
-                )
-
-    async def async_set_relative_volume_level(self, volume: float) -> None:
-        """Set a volume level relative to the current level."""
-
-        # Ensure that volume level behaves as expected
-        if self.volume_level + volume >= 1.0:
-            new_volume = 1.0
-        elif self.volume_level + volume <= 0:
-            new_volume = 0
-        else:
-            new_volume = self.volume_level + volume
-
-        await self.async_set_volume_level(volume=new_volume)
-
-    async def async_beolink_set_relative_volume(self, volume_level: str) -> None:
-        """Set a volume level to adjust current volume level for all connected Beolink devices."""
-
-        # Get the remote leader to send the volume command to listeners
-        if self._remote_leader is not None:
-            async_dispatcher_send(
-                self.hass,
-                f"{self._remote_leader.jid}_{BEOLINK_RELATIVE_VOLUME}",
-                volume_level,
-            )
-
-        else:
-            await self.async_set_relative_volume_level(volume=float(volume_level))
-
-            for beolink_listener in self._beolink_listeners:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{beolink_listener.jid}_{BEOLINK_LISTENER_COMMAND}",
-                    "set_relative_volume_level",
-                    volume_level,
-                )
-
-    async def async_overlay_audio(
-        self,
-        uri: str | None = None,
-        absolute_volume: int | None = None,
-        volume_offset: int | None = None,
-        tts: str | None = None,
-        tts_language: str | None = None,
-    ) -> None:
-        """Overlay audio over any currently playing audio."""
-
-        if absolute_volume and volume_offset:
-            _LOGGER.error(
-                "Can't define absolute volume and volume offset at the same time"
-            )
-            return
-
-        if tts and uri:
-            _LOGGER.error("Can't define URI and TTS message at the same time")
-            return
-
-        volume = None
-
-        if absolute_volume:
-            volume = absolute_volume
-        elif volume_offset:
-            # Ensure that the volume is not above 100
-            volume = min(self._volume.level.level + volume_offset, 100)
-
-        if uri:
-            media_id = uri
-
-            # Play local HA file.
-            if media_source.is_media_source_id(media_id):
-                sourced_media = await media_source.async_resolve_media(
-                    self.hass, media_id, self.entity_id
-                )
-
-                media_id = async_process_play_media_url(self.hass, sourced_media.url)
-
-            self._client.post_overlay_play(
-                overlay_play_request=OverlayPlayRequest(
-                    uri=Uri(location=media_id), volume_absolute=volume
-                ),
-                async_req=True,
-            )
-
-        elif tts:
-            self._client.post_overlay_play(
-                overlay_play_request=OverlayPlayRequest(
-                    text_to_speech=OverlayPlayRequestTextToSpeechTextToSpeech(
-                        lang=tts_language, text=tts
-                    ),
-                    volume_absolute=volume,
-                ),
-                async_req=True,
-            )
