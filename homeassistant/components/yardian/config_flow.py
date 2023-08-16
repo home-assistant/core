@@ -29,7 +29,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def fetch_device_info(self, host: str, access_token: str):
+    async def async_fetch_device_info(self, host: str, access_token: str):
         yarcli = AsyncYardianClient(
             async_get_clientsession(self.hass),
             host,
@@ -44,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                device_info = await self.fetch_device_info(
+                device_info = await self.async_fetch_device_info(
                     user_input["host"], user_input["access_token"]
                 )
             except NotAuthorizedException:

@@ -21,7 +21,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.yardian.config_flow.ConfigFlow.fetch_device_info",
+        "homeassistant.components.yardian.config_flow.ConfigFlow.async_fetch_device_info",
         return_value={"name": "fake_name", "yid": "fake_yid"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -51,7 +51,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.yardian.config_flow.ConfigFlow.fetch_device_info",
+        "homeassistant.components.yardian.config_flow.ConfigFlow.async_fetch_device_info",
         side_effect=NotAuthorizedException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -73,7 +73,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.yardian.config_flow.ConfigFlow.fetch_device_info",
+        "homeassistant.components.yardian.config_flow.ConfigFlow.async_fetch_device_info",
         side_effect=NetworkException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
