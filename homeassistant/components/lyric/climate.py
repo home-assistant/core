@@ -148,10 +148,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Initialize Honeywell Lyric climate entity."""
         # Use the native temperature unit from the device settings
         if device.units == "Fahrenheit":
-            self._temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._attr_precision = PRECISION_WHOLE
         else:
-            self._temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
             self._attr_precision = PRECISION_HALVES
 
         # Setup supported hvac modes
@@ -184,11 +184,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if self.device.changeableValues.thermostatSetpointStatus:
             return SUPPORT_FLAGS_LCC
         return SUPPORT_FLAGS_TCC
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return self._temperature_unit
 
     @property
     def current_temperature(self) -> float | None:
