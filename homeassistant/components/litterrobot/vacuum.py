@@ -128,6 +128,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start a clean cycle."""
+        await self.robot.set_power_status(True)
         await self.robot.start_cleaning()
 
     async def async_stop(self, **kwargs: Any) -> None:
