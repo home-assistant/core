@@ -246,7 +246,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.15
+aiohomekit==2.6.16
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -280,7 +280,7 @@ aiolivisi==0.0.19
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==1.0.9
+aiolyric==1.1.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1240,7 +1240,7 @@ nad-receiver==0.3.0
 ndms2-client==0.1.2
 
 # homeassistant.components.ness_alarm
-nessclient==0.10.0
+nessclient==1.0.0
 
 # homeassistant.components.netdata
 netdata==1.1.0
@@ -1365,7 +1365,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.26
+opower==0.0.29
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2752,7 +2752,7 @@ zamg==0.2.4
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.78.0
+zeroconf==0.80.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
