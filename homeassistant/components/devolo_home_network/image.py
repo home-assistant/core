@@ -20,8 +20,6 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN, IMAGE_GUEST_WIFI, SWITCH_GUEST_WIFI
 from .entity import DevoloCoordinatorEntity
 
-QR_CODE_SCALE = 4
-
 
 @dataclass
 class DevoloImageRequiredKeysMixin:
@@ -41,7 +39,7 @@ IMAGE_TYPES: dict[str, DevoloImageEntityDescription] = {
     IMAGE_GUEST_WIFI: DevoloImageEntityDescription(
         key=IMAGE_GUEST_WIFI,
         entity_category=EntityCategory.DIAGNOSTIC,
-        image_func=partial(wifi_qr_code, scale=QR_CODE_SCALE),
+        image_func=partial(wifi_qr_code, omitsize=True),
     )
 }
 
