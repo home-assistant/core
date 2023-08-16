@@ -126,7 +126,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
             ATTR_FORECAST_NATIVE_PRECIPITATION: precipitation,
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
+            ATTR_FORECAST_PRECIPITATION_PROBABILITY: round(precipitation_probability),
             ATTR_FORECAST_NATIVE_TEMP: temp,
             ATTR_FORECAST_NATIVE_TEMP_LOW: temp_low,
             ATTR_FORECAST_HUMIDITY: humidity,
