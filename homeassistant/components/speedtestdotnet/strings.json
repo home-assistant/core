@@ -13,7 +13,8 @@
     "step": {
       "init": {
         "data": {
-          "server_name": "Select test server"
+          "server_name": "Select test server",
+          "scan_interval": "Scan interval (minutes)"
         }
       }
     }

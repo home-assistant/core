@@ -10,9 +10,11 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONF_SCAN_INTERVAL,
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
     DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SERVER,
     DOMAIN,
 )
@@ -75,6 +77,13 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_SERVER_NAME,
                 default=self.config_entry.options.get(CONF_SERVER_NAME, DEFAULT_SERVER),
             ): vol.In(self._servers.keys()),
+            # Configure update interval in minutes
+            vol.Optional(
+                CONF_SCAN_INTERVAL,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
         }
 
         return self.async_show_form(
