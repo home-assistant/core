@@ -80,12 +80,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
-    hass_data: NWSData = hass.data[DOMAIN][entry.entry_id]
+    nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            NWSWeather(entry.data, hass_data, DAYNIGHT, hass.config.units),
-            NWSWeather(entry.data, hass_data, HOURLY, hass.config.units),
+            NWSWeather(entry.data, nws_data, DAYNIGHT, hass.config.units),
+            NWSWeather(entry.data, nws_data, HOURLY, hass.config.units),
         ],
         False,
     )
@@ -108,19 +108,19 @@ class NWSWeather(WeatherEntity):
     def __init__(
         self,
         entry_data: MappingProxyType[str, Any],
-        hass_data: NWSData,
+        nws_data: NWSData,
         mode: str,
         units: UnitSystem,
     ) -> None:
         """Initialise the platform with a data instance and station name."""
-        self.nws = hass_data.api
+        self.nws = nws_data.api
         self.latitude = entry_data[CONF_LATITUDE]
         self.longitude = entry_data[CONF_LONGITUDE]
-        self.coordinator_observation = hass_data.coordinator_observation
+        self.coordinator_observation = nws_data.coordinator_observation
         if mode == DAYNIGHT:
-            self.coordinator_forecast = hass_data.coordinator_forecast
+            self.coordinator_forecast = nws_data.coordinator_forecast
         else:
-            self.coordinator_forecast = hass_data.coordinator_forecast_hourly
+            self.coordinator_forecast = nws_data.coordinator_forecast_hourly
         self.station = self.nws.station
 
         self.mode = mode
