@@ -37,7 +37,7 @@ from homeassistant.util import Throttle
 
 from .const import (
     ATTRIBUTION,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DATA_API,
     DATA_LOCATION,
     DOMAIN,
@@ -135,10 +135,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         if identifier == 1 and not is_up(self.hass, forecast_dt):
             identifier = -identifier
 
-        return next(
-            (k for k, v in CONDITION_CLASSES.items() if identifier in v),
-            None,
-        )
+        return CONDITION_MAP.get(identifier)
 
     @property
     def condition(self):

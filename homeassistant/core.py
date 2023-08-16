@@ -288,13 +288,13 @@ class HomeAssistant:
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
-    def __new__(cls) -> HomeAssistant:
+    def __new__(cls, config_dir: str) -> HomeAssistant:
         """Set the _hass thread local data."""
         hass = super().__new__(cls)
         _hass.hass = hass
         return hass
 
-    def __init__(self) -> None:
+    def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
@@ -302,7 +302,7 @@ class HomeAssistant:
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
-        self.config = Config(self)
+        self.config = Config(self, config_dir)
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
@@ -1025,17 +1025,17 @@ class EventBus:
         listeners = self._listeners.get(event_type, [])
         match_all_listeners = self._match_all_listeners
 
+        event = Event(event_type, event_data, origin, time_fired, context)
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Bus:Handling %s", event)
+
         if not listeners and not match_all_listeners:
             return
 
         # EVENT_HOMEASSISTANT_CLOSE should not be sent to MATCH_ALL listeners
         if event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
-
-        event = Event(event_type, event_data, origin, time_fired, context)
-
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Bus:Handling %s", event)
 
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
@@ -2011,7 +2011,7 @@ class ServiceRegistry:
 class Config:
     """Configuration settings for Home Assistant."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
         self.hass = hass
 
@@ -2047,7 +2047,7 @@ class Config:
         self.api: ApiConfig | None = None
 
         # Directory that holds the configuration
-        self.config_dir: str | None = None
+        self.config_dir: str = config_dir
 
         # List of allowed external dirs to access
         self.allowlist_external_dirs: set[str] = set()
@@ -2078,8 +2078,6 @@ class Config:
 
         Async friendly.
         """
-        if self.config_dir is None:
-            raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
     def is_allowed_external_url(self, url: str) -> bool:
