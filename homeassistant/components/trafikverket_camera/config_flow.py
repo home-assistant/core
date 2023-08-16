@@ -38,9 +38,9 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await camera_api.async_get_camera(location)
         except NoCameraFound:
-            errors["base"] = "invalid_location"
+            errors["location"] = "invalid_location"
         except MultipleCamerasFound:
-            errors["base"] = "more_locations"
+            errors["location"] = "more_locations"
         except InvalidAuthentication:
             errors["base"] = "invalid_auth"
         except UnknownError:
