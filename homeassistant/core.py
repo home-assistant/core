@@ -1026,6 +1026,9 @@ class EventBus:
         match_all_listeners = self._match_all_listeners
 
         if not listeners and not match_all_listeners:
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                event = Event(event_type, event_data, origin, time_fired, context)
+                _LOGGER.debug("Bus:Handling %s", event)
             return
 
         # EVENT_HOMEASSISTANT_CLOSE should not be sent to MATCH_ALL listeners
