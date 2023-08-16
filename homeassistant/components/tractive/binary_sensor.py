@@ -14,12 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables, TractiveClient
-from .const import (
-    CLIENT,
-    DOMAIN,
-    TRACKABLES,
-    TRACKER_HARDWARE_STATUS_UPDATED,
-)
+from .const import CLIENT, DOMAIN, TRACKABLES, TRACKER_HARDWARE_STATUS_UPDATED
 from .entity import TractiveEntity
 
 
