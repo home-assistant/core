@@ -195,8 +195,8 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
     assert weather_state.attributes[ATTR_FORECAST][0] == {
         ATTR_FORECAST_CONDITION: ATTR_CONDITION_SUNNY,
         ATTR_FORECAST_TIME: "2021-03-07T11:00:00+00:00",
-        ATTR_FORECAST_DEW_POINT: 12.8,
         ATTR_FORECAST_HUMIDITY: 58,
+        ATTR_FORECAST_DEW_POINT: 12.8,
         ATTR_FORECAST_PRECIPITATION: 0,
         ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
         ATTR_FORECAST_TEMP: 45.9,
