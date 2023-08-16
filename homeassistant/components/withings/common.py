@@ -441,8 +441,8 @@ class DataManager:
         now = dt_util.now()
         yesterday = now - datetime.timedelta(days=1)
         yesterday_noon = dt_util.start_of_local_day(yesterday) + datetime.timedelta(
-+            hours=12
-+        )
+            hours=12
+        )
         yesterday_noon_utc = dt_util.as_utc(yesterday_noon)
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
