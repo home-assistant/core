@@ -22,7 +22,6 @@ from aioesphomeapi import (
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
 from aioesphomeapi.core import BluetoothGATTAPIError
 from async_interrupt import interrupt
-import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
 from bleak.backends.device import BLEDevice
@@ -402,7 +401,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.name,
             self._ble_device.address,
         )
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             await bluetooth_device.wait_for_ble_connections_free()
 
     @property

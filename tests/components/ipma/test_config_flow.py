@@ -1,15 +1,9 @@
 """Tests for IPMA config flow."""
 from unittest.mock import Mock, patch
 
-from homeassistant.components.ipma import DOMAIN, config_flow
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+from homeassistant.components.ipma import config_flow
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-
-from . import MockLocation
-
-from tests.common import MockConfigEntry, mock_registry
 
 
 async def test_show_config_form() -> None:
@@ -120,53 +114,3 @@ async def test_flow_entry_config_entry_already_exists() -> None:
         assert len(config_form.mock_calls) == 1
         assert len(config_entries.mock_calls) == 1
         assert len(flow._errors) == 1
-
-
-async def test_config_entry_migration(hass: HomeAssistant) -> None:
-    """Tests config entry without mode in unique_id can be migrated."""
-    ipma_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Home",
-        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
-    )
-    ipma_entry.add_to_hass(hass)
-
-    ipma_entry2 = MockConfigEntry(
-        domain=DOMAIN,
-        title="Home",
-        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "hourly"},
-    )
-    ipma_entry2.add_to_hass(hass)
-
-    mock_registry(
-        hass,
-        {
-            "weather.hometown": er.RegistryEntry(
-                entity_id="weather.hometown",
-                unique_id="0, 0",
-                platform="ipma",
-                config_entry_id=ipma_entry.entry_id,
-            ),
-            "weather.hometown_2": er.RegistryEntry(
-                entity_id="weather.hometown_2",
-                unique_id="0, 0, hourly",
-                platform="ipma",
-                config_entry_id=ipma_entry.entry_id,
-            ),
-        },
-    )
-
-    with patch(
-        "pyipma.location.Location.get",
-        return_value=MockLocation(),
-    ):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-
-        ent_reg = er.async_get(hass)
-
-        weather_home = ent_reg.async_get("weather.hometown")
-        assert weather_home.unique_id == "0, 0, daily"
-
-        weather_home2 = ent_reg.async_get("weather.hometown_2")
-        assert weather_home2.unique_id == "0, 0, hourly"

@@ -55,6 +55,7 @@ from zwave_js_server.model.utils import (
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
+from homeassistant.components.http import require_admin
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
@@ -65,7 +66,6 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.device_registry as dr
@@ -1138,6 +1138,7 @@ async def websocket_remove_node(
         node = event["node"]
         node_details = {
             "node_id": node.node_id,
+            "reason": event["reason"],
         }
 
         connection.send_message(
@@ -2148,10 +2149,9 @@ class FirmwareUploadView(HomeAssistantView):
         super().__init__()
         self._dev_reg = dev_reg
 
+    @require_admin
     async def post(self, request: web.Request, device_id: str) -> web.Response:
         """Handle upload."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
         hass = request.app["hass"]
 
         try:

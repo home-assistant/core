@@ -26,19 +26,9 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    ParamSpec,
-    Self,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
 from urllib.parse import urlparse
 
-import async_timeout
 import voluptuous as vol
 import yarl
 
@@ -815,7 +805,7 @@ class HomeAssistant:
             )
             task.cancel("Home Assistant stage 2 shutdown")
             try:
-                async with async_timeout.timeout(0.1):
+                async with asyncio.timeout(0.1):
                     await task
             except asyncio.CancelledError:
                 pass

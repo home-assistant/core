@@ -95,6 +95,7 @@ def create_device_registry_devices_fixture(hass: HomeAssistant):
     """Create device registry devices so the device tracker entities are enabled when added."""
     dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
+    config_entry.add_to_hass(hass)
 
     for idx, device in enumerate(
         (
