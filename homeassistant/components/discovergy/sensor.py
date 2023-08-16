@@ -1,7 +1,9 @@
 """Discovergy sensor entity."""
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime
 
-from pydiscovergy.models import Meter
+from pydiscovergy.models import Meter, Reading
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,15 +13,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DiscovergyData, DiscovergyUpdateCoordinator
@@ -32,6 +34,9 @@ PARALLEL_UPDATES = 1
 class DiscovergyMixin:
     """Mixin for alternative keys."""
 
+    value_fn: Callable[[Reading, str, int], datetime | float | None] = field(
+        default=lambda reading, key, scale: float(reading.values[key] / scale)
+    )
     alternative_keys: list[str] = field(default_factory=lambda: [])
     scale: int = field(default_factory=lambda: 1000)
 
@@ -144,6 +149,17 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     ),
 )
 
+ADDITIONAL_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
+    DiscovergySensorEntityDescription(
+        key="last_transmitted",
+        translation_key="last_transmitted",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda reading, key, scale: reading.time_with_timezone,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -154,25 +170,27 @@ async def async_setup_entry(
 
     entities: list[DiscovergySensor] = []
     for meter in meters:
-        meter_id = meter.get_meter_id()
-
         sensors = None
         if meter.measurement_type == "ELECTRICITY":
             sensors = ELECTRICITY_SENSORS
         elif meter.measurement_type == "GAS":
             sensors = GAS_SENSORS
 
+        coordinator: DiscovergyUpdateCoordinator = data.coordinators[meter.meter_id]
+
         if sensors is not None:
             for description in sensors:
                 # check if this meter has this data, then add this sensor
                 for key in {description.key, *description.alternative_keys}:
-                    coordinator: DiscovergyUpdateCoordinator = data.coordinators[
-                        meter_id
-                    ]
                     if key in coordinator.data.values:
                         entities.append(
                             DiscovergySensor(key, description, meter, coordinator)
                         )
+
+        for description in ADDITIONAL_SENSORS:
+            entities.append(
+                DiscovergySensor(description.key, description, meter, coordinator)
+            )
 
     async_add_entities(entities, False)
 
@@ -199,15 +217,15 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
         self.entity_description = description
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, meter.get_meter_id())},
+            identifiers={(DOMAIN, meter.meter_id)},
             name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
             model=f"{meter.type} {meter.full_serial_number}",
             manufacturer=MANUFACTURER,
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | float | None:
         """Return the sensor state."""
-        return float(
-            self.coordinator.data.values[self.data_key] / self.entity_description.scale
+        return self.entity_description.value_fn(
+            self.coordinator.data, self.data_key, self.entity_description.scale
         )

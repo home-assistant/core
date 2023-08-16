@@ -128,6 +128,7 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.LIGHT,
     Platform.NOTIFY,

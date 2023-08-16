@@ -8,8 +8,9 @@ from typing import Any
 import aiohttp.client_exceptions
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import CATEGORY_TO_MODEL, DOMAIN
 from .router import FreeboxRouter

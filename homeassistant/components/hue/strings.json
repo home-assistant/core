@@ -67,6 +67,35 @@
       "start": "[%key:component::hue::device_automation::trigger_type::initial_press%]"
     }
   },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "Initial press",
+              "repeat": "Repeat",
+              "short_release": "Short press",
+              "long_press": "Long press",
+              "long_release": "Long release",
+              "double_short_release": "Double press"
+            }
+          }
+        }
+      },
+      "rotary": {
+        "name": "Rotary",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "clock_wise": "Clockwise",
+              "counter_clock_wise": "Counter clockwise"
+            }
+          }
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

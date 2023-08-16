@@ -97,6 +97,14 @@ SENSORS: Final = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("device", "neutralCurrent"): BlockSensorDescription(
+        key="device|neutralCurrent",
+        name="Neutral current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     ("light", "power"): BlockSensorDescription(
         key="light|power",
         name="Power",
@@ -659,6 +667,16 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    "freq": RpcSensorDescription(
+        key="switch",
+        sub_key="freq",
+        name="Frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     "freq_pm1": RpcSensorDescription(
